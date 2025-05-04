@@ -1,82 +1,83 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h2 class="fw-bold">
-            <i class="fas {% block service_icon %}fa-check-circle{% endblock %} me-2"></i>
-            {% block confirmation_title %}Service Confirmation{% endblock %}
-        </h2>
-        <p class="text-muted">{% block confirmation_subtitle %}Enter confirmation details{% endblock %}</p>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('booking.details', booking_id=service_item.booking.id) }}">Booking #{{ service_item.booking.reference_number }}</a></li>
-                <li class="breadcrumb-item active">{% block breadcrumb_active %}Confirmation{% endblock %}</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+{% block title %}{% block confirmation_title %}Service Confirmation{% endblock %}{% endblock %}
 
-<div class="card">
-    <div class="card-header bg-dark-blue text-white">
-        <h4 class="mb-0">{% block form_title %}Service Details{% endblock %}</h4>
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}">Booking #{{ service_item.booking.reference_number }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% block breadcrumb_active %}Service Confirmation{% endblock %}</li>
+                </ol>
+            </nav>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('booking.confirm_service', item_id=service_item.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="service_type" value="{% block service_type %}SERVICE{% endblock %}">
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="fas {% block service_icon %}fa-check-circle{% endblock %} me-2"></i>
+            <h4 class="m-0">{% block form_title %}Service Confirmation{% endblock %}</h4>
+        </div>
+        <div class="card-body">
+            <p class="lead mb-4">{% block confirmation_subtitle %}Enter confirmation details for this service item{% endblock %}</p>
             
-            {% block form_content %}
-            <!-- Form content will be inserted here by child templates -->
-            {% endblock %}
-            
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Confirmation Reference</label>
-                        <input type="text" name="confirmation_reference" class="form-control" required>
+            <form method="POST" action="{{ url_for('booking.confirm_service', item_id=service_item.id) }}">
+                <div class="mb-4">
+                    <h5 class="card-title text-primary">General Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="confirmation_reference" class="form-label">Confirmation Reference</label>
+                            <input type="text" class="form-control" id="confirmation_reference" name="confirmation_reference" required>
+                            <small class="text-muted">Enter the unique reference/confirmation number</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="supplier" class="form-label">Supplier</label>
+                            <select class="form-select" id="supplier" name="supplier" required>
+                                <option value="">-- Select Supplier --</option>
+                                {% block supplier_options %}
+                                <option value="General Supplier">General Supplier</option>
+                                {% endblock %}
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label class="form-label">Supplier</label>
-                        <select name="supplier" class="form-select">
-                            <option value="">No Supplier</option>
-                            {% block supplier_options %}
-                            <!-- Supplier options will be inserted here by child templates -->
-                            {% endblock %}
-                        </select>
-                    </div>
+                
+                <input type="hidden" name="service_type" value="{% block service_type %}GENERIC{% endblock %}">
+                
+                <!-- Service-specific content -->
+                {% block form_content %}
+                <!-- Base service content - for default implementation -->
+                <div class="mb-3">
+                    <h5 class="card-title text-primary">Additional Details</h5>
+                    <textarea class="form-control" name="additional_details" rows="4" placeholder="Enter any additional details about this service..."></textarea>
                 </div>
-            </div>
-            
-            <div class="row mb-4">
-                <div class="col-md-12">
-                    <div class="mb-3">
-                        <label class="form-label">Additional Notes</label>
-                        <textarea name="notes" class="form-control" rows="3"></textarea>
-                    </div>
+                {% endblock %}
+                
+                <!-- Notes field for all service types -->
+                <div class="mb-4">
+                    <h5 class="card-title text-primary">Notes</h5>
+                    <textarea class="form-control" name="notes" rows="3" placeholder="Enter any notes or special requirements..."></textarea>
                 </div>
-            </div>
-            
-            <div class="d-flex justify-content-between">
-                <a href="{{ url_for('booking.details', booking_id=service_item.booking.id) }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left me-1"></i> Back to Booking
-                </a>
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-check-circle me-1"></i> Confirm Details
-                </button>
-            </div>
-        </form>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Booking
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Confirm Service
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<!-- Common script for all confirmations -->
+{{ super() }}
 <script src="{{ url_for('static', filename='js/confirmation_base.js') }}"></script>
-
-<!-- Service specific script -->
 {% block service_script %}{% endblock %}
 {% endblock %}

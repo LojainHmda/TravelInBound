@@ -1,0 +1,168 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-car{% endblock %}
+{% block confirmation_title %}Transport Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter transport confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Transport Confirmation{% endblock %}
+{% block form_title %}Transport Details{% endblock %}
+{% block service_type %}TRANSPORT{% endblock %}
+
+{% block supplier_options %}
+<option value="Avis">Avis</option>
+<option value="Hertz">Hertz</option>
+<option value="Enterprise">Enterprise</option>
+<option value="Budget">Budget</option>
+<option value="Uber">Uber</option>
+<option value="Taxi Service">Taxi Service</option>
+<option value="Chauffeur Service">Chauffeur Service</option>
+<option value="Airport Transfer">Airport Transfer</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Vehicle Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Transport Type</label>
+            <select name="transport_type" class="form-select" required>
+                <option value="">-- Select Type --</option>
+                <option value="Car Rental">Car Rental</option>
+                <option value="Taxi">Taxi</option>
+                <option value="Private Transfer">Private Transfer</option>
+                <option value="Shuttle">Shuttle</option>
+                <option value="Limousine">Limousine</option>
+                <option value="Bus">Bus</option>
+            </select>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Vehicle Class</label>
+            <select name="vehicle_class" class="form-select">
+                <option value="">-- Select Vehicle Class --</option>
+                <option value="Economy">Economy</option>
+                <option value="Compact">Compact</option>
+                <option value="Midsize">Midsize</option>
+                <option value="Full-size">Full-size</option>
+                <option value="SUV">SUV</option>
+                <option value="Minivan">Minivan</option>
+                <option value="Luxury">Luxury</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Driver's Name</label>
+            <input type="text" name="driver_name" class="form-control">
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Pickup/Dropoff Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Pickup Location</label>
+            <input type="text" name="pickup_location" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Pickup Date</label>
+                <input type="date" name="pickup_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Pickup Time</label>
+                <input type="time" name="pickup_time" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Dropoff Location</label>
+            <input type="text" name="dropoff_location" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Dropoff Date</label>
+                <input type="date" name="dropoff_date" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Dropoff Time</label>
+                <input type="time" name="dropoff_time" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Number of Passengers</label>
+            <input type="number" name="passenger_count" class="form-control" min="1" value="1">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Transport type dependent fields
+    const transportTypeSelect = document.querySelector('select[name="transport_type"]');
+    const vehicleClassField = document.querySelector('select[name="vehicle_class"]');
+    const driverNameField = document.querySelector('input[name="driver_name"]');
+    
+    if (transportTypeSelect) {
+        transportTypeSelect.addEventListener('change', function() {
+            const transportType = this.value;
+            
+            // Show/hide fields based on transport type
+            if (transportType === 'Car Rental') {
+                vehicleClassField.closest('.mb-3').style.display = 'block';
+                driverNameField.closest('.mb-3').style.display = 'none';
+            } else if (transportType === 'Taxi' || transportType === 'Private Transfer' || transportType === 'Limousine') {
+                vehicleClassField.closest('.mb-3').style.display = 'none';
+                driverNameField.closest('.mb-3').style.display = 'block';
+            } else {
+                vehicleClassField.closest('.mb-3').style.display = 'block';
+                driverNameField.closest('.mb-3').style.display = 'block';
+            }
+        });
+        
+        // Initialize based on default value
+        transportTypeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Date validation
+    const pickupDateInput = document.querySelector('input[name="pickup_date"]');
+    const dropoffDateInput = document.querySelector('input[name="dropoff_date"]');
+    
+    if (pickupDateInput && dropoffDateInput) {
+        const validateDates = () => {
+            if (pickupDateInput.value && dropoffDateInput.value) {
+                const pickupDate = new Date(pickupDateInput.value);
+                const dropoffDate = new Date(dropoffDateInput.value);
+                
+                if (dropoffDate < pickupDate) {
+                    dropoffDateInput.setCustomValidity('Dropoff date must be after pickup date');
+                    alert('Dropoff date must be after pickup date');
+                } else {
+                    dropoffDateInput.setCustomValidity('');
+                }
+            }
+        };
+        
+        pickupDateInput.addEventListener('change', validateDates);
+        dropoffDateInput.addEventListener('change', validateDates);
+    }
+});
+</script>
+{% endblock %}

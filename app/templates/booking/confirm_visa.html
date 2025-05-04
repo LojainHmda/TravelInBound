@@ -1,0 +1,193 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-passport{% endblock %}
+{% block confirmation_title %}Visa Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter visa confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Visa Confirmation{% endblock %}
+{% block form_title %}Visa Application Details{% endblock %}
+{% block service_type %}VISA{% endblock %}
+
+{% block supplier_options %}
+<option value="VFS Global">VFS Global</option>
+<option value="TLScontact">TLScontact</option>
+<option value="BLS International">BLS International</option>
+<option value="Embassy Direct">Embassy Direct</option>
+<option value="Travel Agent">Travel Agent</option>
+<option value="Immigration Consultant">Immigration Consultant</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Applicant Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Applicant Name</label>
+            <input type="text" name="applicant_name" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Passport Number</label>
+                <input type="text" name="passport_number" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Nationality</label>
+                <input type="text" name="nationality" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Gender</label>
+                <select name="gender" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Visa Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Destination Country</label>
+            <input type="text" name="destination_country" class="form-control" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Visa Type</label>
+            <select name="visa_type" class="form-select" required>
+                <option value="">-- Select Visa Type --</option>
+                <option value="Tourist">Tourist</option>
+                <option value="Business">Business</option>
+                <option value="Work">Work</option>
+                <option value="Student">Student</option>
+                <option value="Transit">Transit</option>
+                <option value="Medical">Medical</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Application Date</label>
+                <input type="date" name="application_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Status</label>
+                <select name="application_status" class="form-select" required>
+                    <option value="Applied">Applied</option>
+                    <option value="Under Review">Under Review</option>
+                    <option value="Additional Documents">Additional Documents</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Valid From</label>
+                <input type="date" name="valid_from" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Valid Until</label>
+                <input type="date" name="valid_until" class="form-control" 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Number of Entries</label>
+            <select name="number_of_entries" class="form-select">
+                <option value="Single">Single Entry</option>
+                <option value="Double">Double Entry</option>
+                <option value="Multiple">Multiple Entry</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h5>Processing Details</h5>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Processing Type</label>
+                <select name="processing_type" class="form-select">
+                    <option value="Standard">Standard</option>
+                    <option value="Express">Express</option>
+                    <option value="Priority">Priority</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Expected Completion Date</label>
+                <input type="date" name="expected_completion" class="form-control">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Visa application status dependent fields
+    const statusSelect = document.querySelector('select[name="application_status"]');
+    const validFromField = document.querySelector('input[name="valid_from"]');
+    const validUntilField = document.querySelector('input[name="valid_until"]');
+    const entriesField = document.querySelector('select[name="number_of_entries"]');
+    
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            const status = this.value;
+            
+            // Show/hide visa validity fields based on status
+            const validityFields = document.querySelectorAll('input[name="valid_from"], input[name="valid_until"], select[name="number_of_entries"]');
+            validityFields.forEach(field => {
+                if (status === 'Approved') {
+                    field.required = true;
+                    field.closest('.mb-3').style.display = 'block';
+                } else {
+                    field.required = false;
+                    if (status === 'Rejected') {
+                        field.closest('.mb-3').style.display = 'none';
+                    } else {
+                        field.closest('.mb-3').style.display = 'block';
+                    }
+                }
+            });
+        });
+        
+        // Initialize based on default value
+        statusSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Date validation for visa validity
+    if (validFromField && validUntilField) {
+        const validateDates = () => {
+            if (validFromField.value && validUntilField.value) {
+                const fromDate = new Date(validFromField.value);
+                const untilDate = new Date(validUntilField.value);
+                
+                if (untilDate <= fromDate) {
+                    validUntilField.setCustomValidity('Valid until date must be after valid from date');
+                } else {
+                    validUntilField.setCustomValidity('');
+                }
+            }
+        };
+        
+        validFromField.addEventListener('change', validateDates);
+        validUntilField.addEventListener('change', validateDates);
+    }
+});
+</script>
+{% endblock %}

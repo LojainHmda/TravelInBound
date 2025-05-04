@@ -4,7 +4,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
-from app.models.service import ServiceItem
+from app.models.service import ServiceItem, Document
 from app.models import STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
@@ -198,6 +198,107 @@ def update_service_status(item_id):
         flash(f'Service item status updated to {service_item.status}', 'success')
     
     return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+
+@booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
+def confirm_service(item_id):
+    """Confirm details for a specific service item with a dedicated form"""
+    service_item = ServiceItem.query.get_or_404(item_id)
+    
+    # Handle form submission
+    if request.method == 'POST':
+        # Get confirmation reference and supplier
+        confirmation_reference = request.form.get('confirmation_reference', '')
+        supplier = request.form.get('supplier', '')
+        notes = request.form.get('notes', '')
+        
+        # Set item status to IN_PROGRESS
+        service_item.status = STATUS_IN_PROGRESS
+        
+        # Store confirmation details in a new document record
+        document = Document(
+            service_item_id=service_item.id,
+            document_type='CONFIRMATION',
+            document_number=confirmation_reference,
+            notes=notes
+        )
+        
+        # Store the service-specific details as JSON in the notes field
+        if service_item.service_type == 'FLIGHT':
+            flight_details = {
+                'airline': request.form.get('airline', ''),
+                'flight_number': request.form.get('flight_number', ''),
+                'departure_airport': request.form.get('departure_airport', ''),
+                'arrival_airport': request.form.get('arrival_airport', ''),
+                'flight_date': request.form.get('flight_date', ''),
+                'flight_time': request.form.get('flight_time', ''),
+                'travel_class': request.form.get('travel_class', ''),
+                'terminal': request.form.get('terminal', ''),
+                'ticket_number': request.form.get('ticket_number', ''),
+                'supplier': supplier,
+                'pnr': request.form.get('pnr', ''),
+                'passenger_count': {
+                    'adults': request.form.get('adults', 1),
+                    'children': request.form.get('children', 0),
+                    'infants': request.form.get('infants', 0)
+                }
+            }
+            
+            # Get passenger names
+            passenger_names = request.form.getlist('passenger_names[]')
+            if passenger_names:
+                flight_details['passenger_names'] = passenger_names
+            
+            # Convert to JSON string
+            import json
+            document.notes = json.dumps(flight_details)
+        
+        elif service_item.service_type == 'HOTEL':
+            hotel_details = {
+                'hotel_name': request.form.get('hotel_name', ''),
+                'from_date': request.form.get('from_date', ''),
+                'to_date': request.form.get('to_date', ''),
+                'meal_plan': request.form.get('meal_plan', ''),
+                'status': request.form.get('status', ''),
+                'cost': request.form.get('cost', ''),
+                'currency': request.form.get('currency', 'USD'),
+                'supplier': supplier,
+                'special_notes': request.form.get('special_notes', ''),
+                'rooms': {
+                    'single': request.form.get('single_rooms', 0),
+                    'double': request.form.get('double_rooms', 0),
+                    'twin': request.form.get('twin_rooms', 0),
+                    'triple': request.form.get('triple_rooms', 0),
+                    'other': request.form.get('other_rooms', '')
+                }
+            }
+            
+            # Convert to JSON string
+            import json
+            document.notes = json.dumps(hotel_details)
+        
+        # Save changes
+        db.session.add(document)
+        db.session.commit()
+        
+        flash(f'{service_item.service_type} confirmation details saved', 'success')
+        return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+    
+    # Show the appropriate confirmation form based on service type
+    if service_item.service_type == 'FLIGHT':
+        template = 'booking/confirm_flight.html'
+    elif service_item.service_type == 'HOTEL':
+        template = 'booking/confirm_hotel.html'
+    elif service_item.service_type == 'TRANSPORT':
+        template = 'booking/confirm_transport.html'
+    elif service_item.service_type == 'VISA':
+        template = 'booking/confirm_visa.html'
+    elif service_item.service_type == 'INSURANCE':
+        template = 'booking/confirm_insurance.html'
+    else:
+        # Generic confirmation form
+        template = 'booking/confirm_generic.html'
+    
+    return render_template(template, service_item=service_item)
 
 @booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):

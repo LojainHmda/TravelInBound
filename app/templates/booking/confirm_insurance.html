@@ -1,0 +1,267 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-shield-alt{% endblock %}
+{% block confirmation_title %}Insurance Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter insurance confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Insurance Confirmation{% endblock %}
+{% block form_title %}Insurance Policy Details{% endblock %}
+{% block service_type %}INSURANCE{% endblock %}
+
+{% block supplier_options %}
+<option value="Allianz">Allianz</option>
+<option value="AXA">AXA</option>
+<option value="World Nomads">World Nomads</option>
+<option value="Blue Cross">Blue Cross</option>
+<option value="AIG">AIG</option>
+<option value="SafetyWing">SafetyWing</option>
+<option value="Columbus Direct">Columbus Direct</option>
+<option value="Seven Corners">Seven Corners</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Policy Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Insurance Type</label>
+            <select name="insurance_type" class="form-select" required>
+                <option value="">-- Select Type --</option>
+                <option value="Travel Medical">Travel Medical</option>
+                <option value="Trip Cancellation">Trip Cancellation</option>
+                <option value="Comprehensive">Comprehensive Travel</option>
+                <option value="Baggage">Baggage Loss/Delay</option>
+                <option value="Flight">Flight Insurance</option>
+                <option value="Adventure">Adventure/Sports</option>
+                <option value="Business">Business Travel</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Policy Number</label>
+            <input type="text" name="policy_number" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Coverage Start</label>
+                <input type="date" name="coverage_start" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Coverage End</label>
+                <input type="date" name="coverage_end" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Coverage Amount</label>
+            <div class="input-group">
+                <select name="currency" class="form-select" style="max-width: 100px;">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                </select>
+                <input type="number" name="coverage_amount" class="form-control" required min="0" step="0.01">
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Insured Details</h5>
+        <div class="mb-3">
+            <label class="form-label">Primary Insured</label>
+            <input type="text" name="primary_insured" class="form-control" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Additional Insured Persons</label>
+            <div id="additionalInsured">
+                <div class="input-group mb-2">
+                    <input type="text" name="additional_insured[]" class="form-control" placeholder="Full name">
+                    <button type="button" class="btn btn-outline-danger remove-person">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="addInsured">
+                <i class="fas fa-plus-circle"></i> Add Person
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Destination Countries</label>
+            <input type="text" name="destination_countries" class="form-control" required>
+            <small class="text-muted">Separate multiple countries with commas</small>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Emergency Contact Number</label>
+            <input type="text" name="emergency_contact" class="form-control" required>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h5>Coverage Details</h5>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_medical" id="coverage_medical" checked>
+                    <label class="form-check-label" for="coverage_medical">
+                        Medical Expenses
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_evacuation" id="coverage_evacuation">
+                    <label class="form-check-label" for="coverage_evacuation">
+                        Emergency Evacuation
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_cancellation" id="coverage_cancellation">
+                    <label class="form-check-label" for="coverage_cancellation">
+                        Trip Cancellation
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_baggage" id="coverage_baggage">
+                    <label class="form-check-label" for="coverage_baggage">
+                        Baggage Loss
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_delay" id="coverage_delay">
+                    <label class="form-check-label" for="coverage_delay">
+                        Trip Delay
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_personal" id="coverage_personal">
+                    <label class="form-check-label" for="coverage_personal">
+                        Personal Liability
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_activities" id="coverage_activities">
+                    <label class="form-check-label" for="coverage_activities">
+                        Adventure Activities
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_preexisting" id="coverage_preexisting">
+                    <label class="form-check-label" for="coverage_preexisting">
+                        Pre-existing Conditions
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add insured person functionality
+    const addInsuredBtn = document.getElementById('addInsured');
+    const additionalInsured = document.getElementById('additionalInsured');
+    
+    if (addInsuredBtn && additionalInsured) {
+        // Add event listener to add button
+        addInsuredBtn.addEventListener('click', function() {
+            const newRow = document.createElement('div');
+            newRow.className = 'input-group mb-2';
+            newRow.innerHTML = `
+                <input type="text" name="additional_insured[]" class="form-control" placeholder="Full name">
+                <button type="button" class="btn btn-outline-danger remove-person">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            additionalInsured.appendChild(newRow);
+            
+            // Add remove event listener to the new row
+            newRow.querySelector('.remove-person').addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+        
+        // Add remove event listener to the initial row
+        const removeButtons = additionalInsured.querySelectorAll('.remove-person');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+    }
+    
+    // Insurance type selections
+    const insuranceTypeSelect = document.querySelector('select[name="insurance_type"]');
+    
+    if (insuranceTypeSelect) {
+        insuranceTypeSelect.addEventListener('change', function() {
+            const insuranceType = this.value;
+            
+            // Auto-check relevant coverage options based on insurance type
+            if (insuranceType === 'Travel Medical') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+            } else if (insuranceType === 'Trip Cancellation') {
+                document.getElementById('coverage_cancellation').checked = true;
+                document.getElementById('coverage_delay').checked = true;
+            } else if (insuranceType === 'Comprehensive') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+                document.getElementById('coverage_cancellation').checked = true;
+                document.getElementById('coverage_baggage').checked = true;
+                document.getElementById('coverage_delay').checked = true;
+                document.getElementById('coverage_personal').checked = true;
+            } else if (insuranceType === 'Baggage') {
+                document.getElementById('coverage_baggage').checked = true;
+            } else if (insuranceType === 'Adventure') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+                document.getElementById('coverage_activities').checked = true;
+            }
+        });
+    }
+    
+    // Date validation
+    const startDateInput = document.querySelector('input[name="coverage_start"]');
+    const endDateInput = document.querySelector('input[name="coverage_end"]');
+    
+    if (startDateInput && endDateInput) {
+        const validateDates = () => {
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                
+                if (endDate < startDate) {
+                    endDateInput.setCustomValidity('Coverage end date must be after start date');
+                } else {
+                    endDateInput.setCustomValidity('');
+                }
+            }
+        };
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+    }
+});
+</script>
+{% endblock %}
