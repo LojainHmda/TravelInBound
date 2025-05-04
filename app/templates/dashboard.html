@@ -375,36 +375,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tab functionality from URL hash if present
-    if (window.location.hash) {
-        const tabId = window.location.hash.substring(1);
-        const tab = document.querySelector(`#${tabId}-tab`);
-        if (tab) {
-            const tabInstance = new bootstrap.Tab(tab);
-            tabInstance.show();
-        }
-    }
-    
-    // Update URL hash when tab is shown
-    const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
-    tabEls.forEach(tabEl => {
-        tabEl.addEventListener('shown.bs.tab', function (e) {
-            const id = e.target.getAttribute('aria-controls');
-            window.location.hash = id;
-        });
-    });
-});
-
-// Function to filter bookings by status
-function filterBookings(status) {
-    // Get all rows in the booking table
-    const rows = document.querySelectorAll('#bookingTable tbody tr');
-    const tableTitle = document.getElementById('bookingTableTitle');
-    
-    // Update the table title to show what we're filtering
-    if (status) {
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
         const statusMap = {
             'REQUEST': 'Booking Requests',
             'INVOICE': 'Invoiced Bookings',

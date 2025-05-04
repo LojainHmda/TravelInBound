@@ -309,3 +309,33 @@ def get_service_items(service_type):
         })
     
     return jsonify(result)
+
+@booking_bp.route('/api/booking/<int:booking_id>/details', methods=['GET'])
+def booking_details_api(booking_id):
+    """API endpoint to get booking details for AJAX loading"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Format service items
+    service_items = []
+    for item in booking.service_items:
+        service_items.append({
+            'id': item.id,
+            'service_type': item.service_type,
+            'start_date': item.start_date.strftime('%d %b'),
+            'end_date': item.end_date.strftime('%d %b %Y'),
+            'description': item.description,
+            'amount': item.amount,
+            'status': item.status
+        })
+    
+    # Return JSON response with booking details
+    return jsonify({
+        'id': booking.id,
+        'reference_number': booking.reference_number,
+        'status': booking.status,
+        'created_at': booking.created_at.strftime('%d %b %Y'),
+        'total_amount': booking.total_amount,
+        'customer_name': booking.requester.username,
+        'customer_email': booking.requester.email,
+        'service_items': service_items
+    })
