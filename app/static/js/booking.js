@@ -1,59 +1,75 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Service selection enhancement
-    const serviceOptions = document.querySelectorAll('.service-option');
-    if (serviceOptions) {
-        serviceOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
-                const checkbox = this.querySelector('input[type="checkbox"]');
-                if (e.target !== checkbox) {
-                    checkbox.checked = !checkbox.checked;
-                }
+    // Check if we're on a booking form page
+    const isBookingForm = document.getElementById('start_date') !== null;
+    
+    if (isBookingForm) {
+        // Service selection enhancement
+        const serviceOptions = document.querySelectorAll('.service-option');
+        if (serviceOptions.length > 0) {
+            serviceOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    if (e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                });
             });
-        });
-    }
-    
-    // Date range validation
-    const startDateInput = document.getElementById('start_date');
-    const endDateInput = document.getElementById('end_date');
-    
-    if (startDateInput && endDateInput) {
-        startDateInput.addEventListener('change', validateDateRange);
-        endDateInput.addEventListener('change', validateDateRange);
+        }
         
-        // Set min date to today for start_date
-        const today = new Date().toISOString().split('T')[0];
-        startDateInput.setAttribute('min', today);
-    }
-    
-    // Service type change handler
-    const serviceTypeSelect = document.getElementById('service_type');
-    if (serviceTypeSelect) {
-        serviceTypeSelect.addEventListener('change', function() {
-            updateDescriptionPlaceholder(this.value);
-        });
+        // Date range validation
+        const startDateInput = document.getElementById('start_date');
+        const endDateInput = document.getElementById('end_date');
         
-        // Initialize with the current value
-        updateDescriptionPlaceholder(serviceTypeSelect.value);
+        if (startDateInput && endDateInput) {
+            startDateInput.addEventListener('change', validateDateRange);
+            endDateInput.addEventListener('change', validateDateRange);
+            
+            // Set min date to today for start_date
+            const today = new Date().toISOString().split('T')[0];
+            startDateInput.setAttribute('min', today);
+        }
+        
+        // Service type change handler
+        const serviceTypeSelect = document.getElementById('service_type');
+        if (serviceTypeSelect) {
+            serviceTypeSelect.addEventListener('change', function() {
+                updateDescriptionPlaceholder(this.value);
+            });
+            
+            // Initialize with the current value
+            updateDescriptionPlaceholder(serviceTypeSelect.value);
+        }
     }
     
+    // Tab functionality (applies to all pages)
     // Initialize tab functionality from URL hash if present
     if (window.location.hash) {
         const tabId = window.location.hash.substring(1);
         const tab = document.querySelector(`#${tabId}-tab`);
         if (tab) {
-            const tabInstance = new bootstrap.Tab(tab);
-            tabInstance.show();
+            try {
+                const tabInstance = new bootstrap.Tab(tab);
+                tabInstance.show();
+            } catch (error) {
+                console.log('Tab initialization error:', error);
+            }
         }
     }
     
     // Update URL hash when tab is shown
     const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
-    tabEls.forEach(tabEl => {
-        tabEl.addEventListener('shown.bs.tab', function (e) {
-            const id = e.target.getAttribute('aria-controls');
-            window.location.hash = id;
+    if (tabEls.length > 0) {
+        tabEls.forEach(tabEl => {
+            tabEl.addEventListener('shown.bs.tab', function (e) {
+                if (e.target && e.target.getAttribute) {
+                    const id = e.target.getAttribute('aria-controls');
+                    if (id) {
+                        window.location.hash = id;
+                    }
+                }
+            });
         });
-    });
+    }
 });
 
 // Validate that end date is after start date
