@@ -205,7 +205,28 @@
                             {% for item in flight_items %}
                             <tr>
                                 <td>{{ item.booking.reference_number }}</td>
-                                <td>{{ item.description }}</td>
+                                <td>
+                                    {{ item.description }}
+                                    {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                    {% if conf_doc %}
+                                        <div class="mt-1">
+                                            <small class="text-muted d-block">
+                                                <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
+                                                {% if conf_doc.notes %}
+                                                    {% try %}
+                                                        {% set doc_data = conf_doc.notes|from_json %}
+                                                        {% if doc_data and doc_data.supplier %}
+                                                            <span class="ms-2 badge bg-light text-dark border">
+                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
+                                                            </span>
+                                                        {% endif %}
+                                                    {% except %}
+                                                    {% endtry %}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </td>
                                 <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                 <td>
                                     <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
