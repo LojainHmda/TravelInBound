@@ -324,6 +324,26 @@ def confirm_service(item_id):
         flash(f'{service_item.service_type} confirmation details saved', 'success')
         return redirect(url_for('booking.details', booking_id=service_item.booking_id))
     
+    # Get existing confirmation document if available
+    confirmation_doc = Document.query.filter_by(
+        service_item_id=service_item.id, 
+        document_type='CONFIRMATION'
+    ).first()
+    
+    # Prepare data for template
+    confirmation_data = {}
+    if confirmation_doc:
+        # If there's existing confirmation data, parse it
+        try:
+            import json
+            if confirmation_doc.notes:
+                confirmation_data = json.loads(confirmation_doc.notes)
+                # Add confirmation reference number
+                confirmation_data['confirmation_reference'] = confirmation_doc.document_number
+        except (json.JSONDecodeError, TypeError):
+            # If parsing fails, use an empty dict
+            confirmation_data = {}
+    
     # Show the appropriate confirmation form based on service type
     if service_item.service_type == 'FLIGHT':
         template = 'booking/confirm_flight.html'
@@ -339,7 +359,10 @@ def confirm_service(item_id):
         # Generic confirmation form
         template = 'booking/confirm_generic.html'
     
-    return render_template(template, service_item=service_item)
+    return render_template(template, 
+                          service_item=service_item, 
+                          confirmation_data=confirmation_data, 
+                          confirmation_doc=confirmation_doc)
 
 @booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):

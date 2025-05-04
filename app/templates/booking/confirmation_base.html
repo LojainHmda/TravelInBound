@@ -30,7 +30,8 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label for="confirmation_reference" class="form-label">Confirmation Reference</label>
-                            <input type="text" class="form-control" id="confirmation_reference" name="confirmation_reference" required>
+                            <input type="text" class="form-control" id="confirmation_reference" name="confirmation_reference" 
+                                 value="{{ confirmation_data.confirmation_reference|default('') }}" required>
                             <small class="text-muted">Enter the unique reference/confirmation number</small>
                         </div>
                         <div class="col-md-6">
@@ -67,7 +68,11 @@
                         <i class="fas fa-arrow-left"></i> Back to Booking
                     </a>
                     <button type="submit" class="btn btn-primary">
+                        {% if confirmation_doc %}
+                        <i class="fas fa-save"></i> Update Confirmation
+                        {% else %}
                         <i class="fas fa-check-circle"></i> Confirm Service
+                        {% endif %}
                     </button>
                 </div>
             </form>
@@ -79,5 +84,43 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/confirmation_base.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set supplier value if present in confirmation data
+    {% if confirmation_data.supplier %}
+    const supplierSelect = document.getElementById('supplier');
+    if (supplierSelect) {
+        // Look for a matching option
+        const options = supplierSelect.options;
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].value === "{{ confirmation_data.supplier }}") {
+                options[i].selected = true;
+                break;
+            }
+        }
+    }
+    {% endif %}
+    
+    // Additional form fields from confirmation data
+    {% for key, value in confirmation_data.items() %}
+    {% if key != 'confirmation_reference' and key != 'supplier' %}
+    const field = document.querySelector('[name="{{ key }}"]');
+    if (field) {
+        {% if value is string %}
+        field.value = "{{ value }}";
+        {% elif value is mapping %}
+        // Handle nested objects
+        {% for subkey, subvalue in value.items() %}
+        const subfield = document.querySelector('[name="{{ subkey }}"]');
+        if (subfield) {
+            subfield.value = "{{ subvalue }}";
+        }
+        {% endfor %}
+        {% endif %}
+    }
+    {% endif %}
+    {% endfor %}
+});
+</script>
 {% block service_script %}{% endblock %}
 {% endblock %}

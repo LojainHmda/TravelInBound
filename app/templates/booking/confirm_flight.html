@@ -22,15 +22,15 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Adults (12+ years)</label>
-                <input type="number" name="adults" class="form-control" value="1" min="0">
+                <input type="number" name="adults" class="form-control" value="{{ confirmation_data.passenger_count.adults|default(1) }}" min="0">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Children (2-11 years)</label>
-                <input type="number" name="children" class="form-control" value="0" min="0">
+                <input type="number" name="children" class="form-control" value="{{ confirmation_data.passenger_count.children|default(0) }}" min="0">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Infants (0-2 years)</label>
-                <input type="number" name="infants" class="form-control" value="0" min="0">
+                <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
             </div>
         </div>
         
