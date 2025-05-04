@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="fw-bold">
+            <i class="fas {% block service_icon %}fa-check-circle{% endblock %} me-2"></i>
+            {% block confirmation_title %}Service Confirmation{% endblock %}
+        </h2>
+        <p class="text-muted">{% block confirmation_subtitle %}Enter confirmation details{% endblock %}</p>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('booking.details', booking_id=service_item.booking.id) }}">Booking #{{ service_item.booking.reference_number }}</a></li>
+                <li class="breadcrumb-item active">{% block breadcrumb_active %}Confirmation{% endblock %}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-dark-blue text-white">
+        <h4 class="mb-0">{% block form_title %}Service Details{% endblock %}</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('booking.confirm_service', item_id=service_item.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="service_type" value="{% block service_type %}SERVICE{% endblock %}">
+            
+            {% block form_content %}
+            <!-- Form content will be inserted here by child templates -->
+            {% endblock %}
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Confirmation Reference</label>
+                        <input type="text" name="confirmation_reference" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Supplier</label>
+                        <select name="supplier" class="form-select">
+                            <option value="">No Supplier</option>
+                            {% block supplier_options %}
+                            <!-- Supplier options will be inserted here by child templates -->
+                            {% endblock %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('booking.details', booking_id=service_item.booking.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Booking
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle me-1"></i> Confirm Details
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Common script for all confirmations -->
+<script src="{{ url_for('static', filename='js/confirmation_base.js') }}"></script>
+
+<!-- Service specific script -->
+{% block service_script %}{% endblock %}
+{% endblock %}

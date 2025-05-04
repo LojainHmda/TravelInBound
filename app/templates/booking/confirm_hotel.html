@@ -1,0 +1,112 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-hotel{% endblock %}
+{% block confirmation_title %}Hotel Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter hotel confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Hotel Confirmation{% endblock %}
+{% block form_title %}Hotel Reservation Details{% endblock %}
+{% block service_type %}HOTEL{% endblock %}
+
+{% block supplier_options %}
+<option value="Expedia">Expedia</option>
+<option value="Booking.com">Booking.com</option>
+<option value="Hotels.com">Hotels.com</option>
+<option value="Agoda">Agoda</option>
+<option value="Direct Booking">Direct Booking</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Hotel Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Hotel Name</label>
+            <input type="text" name="hotel_name" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Check-in Date</label>
+                <input type="date" name="from_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Check-out Date</label>
+                <input type="date" name="to_date" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Meal Plan</label>
+            <select name="meal_plan" class="form-select">
+                <option value="Room Only">Room Only</option>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Half Board">Half Board</option>
+                <option value="Full Board">Full Board</option>
+                <option value="All Inclusive">All Inclusive</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Special Notes</label>
+            <textarea name="special_notes" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Room Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="confirmed">Confirmed</option>
+                <option value="pending">Pending</option>
+                <option value="on_request">On Request</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Cost</label>
+            <div class="input-group">
+                <input type="number" name="cost" step="0.01" class="form-control" value="{{ service_item.amount }}">
+                <select name="currency" class="form-select" style="max-width: 100px;">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="roomDetails">
+            <h6 class="mt-3">Room Configuration</h6>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Single</label>
+                    <input type="number" name="single_rooms" class="form-control" value="0" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Double</label>
+                    <input type="number" name="double_rooms" class="form-control" value="0" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Twin</label>
+                    <input type="number" name="twin_rooms" class="form-control" value="0" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Triple</label>
+                    <input type="number" name="triple_rooms" class="form-control" value="0" min="0">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Other Room Types</label>
+                <input type="text" name="other_rooms" class="form-control" placeholder="E.g., Family, Suite, etc.">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_hotel.js') }}"></script>
+{% endblock %}

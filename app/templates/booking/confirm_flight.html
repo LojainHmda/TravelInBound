@@ -1,0 +1,112 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-plane{% endblock %}
+{% block confirmation_title %}Flight Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter flight confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Flight Confirmation{% endblock %}
+{% block form_title %}Outbound Flight Details{% endblock %}
+{% block service_type %}FLIGHT{% endblock %}
+
+{% block supplier_options %}
+<option value="Expedia">Expedia</option>
+<option value="Booking.com">Booking.com</option>
+<option value="Airline Direct">Airline Direct</option>
+<option value="Skyscanner">Skyscanner</option>
+<option value="Kayak">Kayak</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <h5>Passenger Information</h5>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Adults (12+ years)</label>
+                <input type="number" name="adults" class="form-control" value="1" min="0">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Children (2-11 years)</label>
+                <input type="number" name="children" class="form-control" value="0" min="0">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Infants (0-2 years)</label>
+                <input type="number" name="infants" class="form-control" value="0" min="0">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Passenger Names</label>
+            <div id="passengerNames">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">Adult 1</span>
+                    <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="addPassenger">
+                <i class="fas fa-plus-circle"></i> Add Passenger
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h5>Flight Information</h5>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Departure Airport</label>
+                <input type="text" name="departure_airport" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Arrival Airport</label>
+                <input type="text" name="arrival_airport" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Airline</label>
+                <input type="text" name="airline" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Flight Number</label>
+                <input type="text" name="flight_number" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Date</label>
+                <input type="date" name="flight_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Time</label>
+                <input type="time" name="flight_time" class="form-control" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Terminal</label>
+                <input type="text" name="terminal" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Class</label>
+                <select name="travel_class" class="form-select" required>
+                    <option value="Economy">Economy</option>
+                    <option value="Premium Economy">Premium Economy</option>
+                    <option value="Business">Business</option>
+                    <option value="First">First</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Ticket Number</label>
+                <input type="text" name="ticket_number" class="form-control">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_flight.js') }}"></script>
+{% endblock %}
