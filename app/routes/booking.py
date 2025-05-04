@@ -310,7 +310,7 @@ def get_service_items(service_type):
     
     return jsonify(result)
 
-@booking_bp.route('/api/booking/<int:booking_id>/details', methods=['GET'])
+@booking_bp.route('/api/<int:booking_id>/details', methods=['GET'])
 def booking_details_api(booking_id):
     """API endpoint to get booking details for AJAX loading"""
     booking = Booking.query.get_or_404(booking_id)

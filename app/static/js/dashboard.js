@@ -117,7 +117,7 @@ function loadBookingDetails(bookingId, button) {
     // Show loading indicator
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
-    fetch(`/booking/api/booking/${bookingId}/details`)
+    fetch(`/booking/api/${bookingId}/details`)
         .then(response => response.json())
         .then(data => {
             // Create details row
