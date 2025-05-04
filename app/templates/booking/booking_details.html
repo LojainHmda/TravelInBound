@@ -36,20 +36,20 @@
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>Service</th>
-                                <th>Dates</th>
-                                <th>Description</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                    <table class="table mb-0">
+                        <thead>
+                            <tr class="bg-dark-blue text-white">
+                                <th style="width: 15%">Service</th>
+                                <th style="width: 20%">Dates</th>
+                                <th style="width: 30%">Description</th>
+                                <th style="width: 10%">Amount</th>
+                                <th style="width: 15%">Status</th>
+                                <th style="width: 10%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for item in booking.service_items %}
-                            <tr>
+                            <tr class="border-bottom">
                                 <td>
                                     <div class="d-flex align-items-center">
                                         {% if item.service_type == 'FLIGHT' %}
@@ -179,7 +179,7 @@
         
         <!-- Documents -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-dark-blue text-white">
                 <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documents</h4>
             </div>
             <div class="card-body">
@@ -230,7 +230,7 @@
     <div class="col-md-4">
         <!-- Customer Information -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-dark-blue text-white">
                 <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
             </div>
             <div class="card-body">
@@ -293,7 +293,7 @@
         
         <!-- Booking Status Timeline -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-dark-blue text-white">
                 <h5 class="mb-0"><i class="fas fa-history me-2"></i>Status Timeline</h5>
             </div>
             <div class="card-body">
@@ -343,7 +343,7 @@
         
         <!-- Quick Actions -->
         <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
+            <div class="card-header bg-dark-blue text-white">
                 <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
             </div>
             <div class="card-body">
