@@ -1,0 +1,470 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold">
+            <i class="fas fa-clipboard-check me-2"></i>Booking #{{ booking.reference_number }}
+        </h2>
+        <p class="text-muted">
+            Created on {{ booking.created_at.strftime('%d %b %Y, %H:%M') }} by {{ booking.requester.username }}
+        </p>
+    </div>
+    <div class="col-md-4 text-end">
+        <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
+        <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="mt-2">
+            {{ status_form.hidden_tag() }}
+            <div class="input-group">
+                {{ status_form.status(class="form-select") }}
+                <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Service Items List -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-list me-2"></i>Service Items</h4>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-plus me-1"></i> Add Service
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>Dates</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in booking.service_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.service_type == 'FLIGHT' %}
+                                            <i class="fas fa-plane service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'HOTEL' %}
+                                            <i class="fas fa-hotel service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'TRANSPORT' %}
+                                            <i class="fas fa-taxi service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'VISA' %}
+                                            <i class="fas fa-passport service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'INSURANCE' %}
+                                            <i class="fas fa-shield-alt service-icon-table text-primary me-2"></i>
+                                        {% endif %}
+                                        {{ item.service_type }}
+                                    </div>
+                                </td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>${{ "%.2f"|format(item.amount) }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
+                                                    <i class="fas fa-edit me-2"></i>Update Status
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                                    <i class="fas fa-file-upload me-2"></i>Upload Document
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a href="#" class="dropdown-item text-danger">
+                                                    <i class="fas fa-trash me-2"></i>Delete
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- Update Status Modal for this Item -->
+                                    <div class="modal fade" id="updateStatusModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Update Service Status</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('booking.update_service_status', item_id=item.id) }}">
+                                                    {{ status_form.hidden_tag() }}
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Service</label>
+                                                            <input type="text" class="form-control" value="{{ item.service_type }}" readonly>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            {{ status_form.status.label(class="form-label") }}
+                                                            {{ status_form.status(class="form-select") }}
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            {{ status_form.notes.label(class="form-label") }}
+                                                            {{ status_form.notes(class="form-control", rows=3) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        {{ status_form.submit(class="btn btn-primary") }}
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="mb-0 text-muted">No service items have been added to this booking yet.</p>
+                                    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                                        <i class="fas fa-plus me-1"></i> Add First Service
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</span>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Documents -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documents</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Document Type</th>
+                                <th>Number</th>
+                                <th>Service</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set has_documents = false %}
+                            {% for item in booking.service_items %}
+                                {% for doc in item.documents %}
+                                    {% set has_documents = true %}
+                                    <tr>
+                                        <td>{{ doc.document_type }}</td>
+                                        <td>{{ doc.document_number }}</td>
+                                        <td>{{ item.service_type }}</td>
+                                        <td>{{ doc.upload_date.strftime('%d %b %Y') }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download me-1"></i> Download
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                            
+                            {% if not has_documents %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-muted mb-0">No documents have been uploaded yet.</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Customer Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ booking.requester.username }}</p>
+                <p><strong>Email:</strong> {{ booking.requester.email }}</p>
+                <hr>
+                <h6 class="fw-bold">History</h6>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <small class="text-muted">{{ booking.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                        <p class="mb-0">Booking request created</p>
+                    </li>
+                    {% if booking.updated_at != booking.created_at %}
+                    <li class="mb-2">
+                        <small class="text-muted">{{ booking.updated_at.strftime('%d %b %Y, %H:%M') }}</small>
+                        <p class="mb-0">Booking last updated</p>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Booking Status Timeline -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Status Timeline</h5>
+            </div>
+            <div class="card-body">
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="process-icon {% if booking.status == 'REQUEST' or booking.status == 'INVOICE' or booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>Request Stage</h5>
+                            <p>Booking request created</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon {% if booking.status == 'INVOICE' or booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>Invoice Stage</h5>
+                            <p>Payment processing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon {% if booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>In-Progress Stage</h5>
+                            <p>Service execution</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon {% if booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>Completion Stage</h5>
+                            <p>All services fulfilled</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-print me-2"></i>Print Details
+                    </button>
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-envelope me-2"></i>Email Customer
+                    </button>
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-edit me-2"></i>Edit Booking
+                    </button>
+                    <button class="btn btn-outline-danger" type="button">
+                        <i class="fas fa-times-circle me-2"></i>Cancel Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div class="modal fade" id="addServiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Service Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('booking.add_service_item', booking_id=booking.id) }}">
+                {{ service_form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        {{ service_form.service_type.label(class="form-label") }}
+                        {{ service_form.service_type(class="form-select") }}
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            {{ service_form.start_date.label(class="form-label") }}
+                            {{ service_form.start_date(class="form-control", type="date") }}
+                        </div>
+                        <div class="col">
+                            {{ service_form.end_date.label(class="form-label") }}
+                            {{ service_form.end_date(class="form-control", type="date") }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        {{ service_form.description.label(class="form-label") }}
+                        {{ service_form.description(class="form-control", rows=3) }}
+                    </div>
+                    <div class="mb-3">
+                        {{ service_form.amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ service_form.amount(class="form-control") }}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ service_form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label class="form-label">Service Item</label>
+                        <select class="form-select">
+                            {% for item in booking.service_items %}
+                            <option value="{{ item.id }}">{{ item.service_type }} - {{ item.description[:30] }}...</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Type</label>
+                        <select class="form-select">
+                            <option value="TICKET">Ticket</option>
+                            <option value="CONFIRMATION">Booking Confirmation</option>
+                            <option value="VISA">Visa Document</option>
+                            <option value="INSURANCE">Insurance Policy</option>
+                            <option value="OTHER">Other Document</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document Number</label>
+                        <input type="text" class="form-control" placeholder="e.g., Ticket number, confirmation code">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">File</label>
+                        <input type="file" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary">Upload Document</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today as min date for dates in modals
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInputs = document.querySelectorAll('input[type="date"][id*="start_date"]');
+    
+    startDateInputs.forEach(function(input) {
+        input.setAttribute('min', today);
+        input.addEventListener('change', function() {
+            const form = this.closest('form');
+            const endDateInput = form.querySelector('input[type="date"][id*="end_date"]');
+            if (endDateInput) {
+                endDateInput.setAttribute('min', this.value);
+            }
+        });
+    });
+    
+    // Update description placeholder based on service type
+    const serviceTypeSelects = document.querySelectorAll('select[id*="service_type"]');
+    serviceTypeSelects.forEach(function(select) {
+        select.addEventListener('change', function() {
+            const form = this.closest('form');
+            const descriptionInput = form.querySelector('textarea[id*="description"]');
+            if (descriptionInput) {
+                updateDescriptionPlaceholder(this.value, descriptionInput);
+            }
+        });
+        
+        // Initialize with current value
+        const form = select.closest('form');
+        const descriptionInput = form.querySelector('textarea[id*="description"]');
+        if (descriptionInput) {
+            updateDescriptionPlaceholder(select.value, descriptionInput);
+        }
+    });
+});
+
+function updateDescriptionPlaceholder(serviceType, element) {
+    let placeholder = '';
+    
+    switch (serviceType) {
+        case 'FLIGHT':
+            placeholder = 'E.g., One-way flight from New York to London, Economy class';
+            break;
+        case 'HOTEL':
+            placeholder = 'E.g., 5 nights at Grand Hotel, Double room with breakfast';
+            break;
+        case 'TRANSPORT':
+            placeholder = 'E.g., Airport transfer from Heathrow to central London';
+            break;
+        case 'VISA':
+            placeholder = 'E.g., Tourist visa application for United Kingdom';
+            break;
+        case 'INSURANCE':
+            placeholder = 'E.g., Comprehensive travel insurance for 7 days';
+            break;
+        default:
+            placeholder = 'Enter service description';
+    }
+    
+    element.setAttribute('placeholder', placeholder);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="fw-bold"><i class="fas fa-tachometer-alt me-2"></i>Booking Dashboard</h2>
+        <p class="text-muted">Overview of all travel booking requests and their current status</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-body bg-request text-white">
+                <div class="stat-card-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ request_count }}</h3>
+                    <p>Booking Requests</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-body bg-invoice text-white">
+                <div class="stat-card-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ invoice_count }}</h3>
+                    <p>Invoiced Bookings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-body bg-in-progress text-white">
+                <div class="stat-card-icon">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ in_progress_count }}</h3>
+                    <p>In Progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-card-body bg-completed text-white">
+                <div class="stat-card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ completed_count }}</h3>
+                    <p>Completed Bookings</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Service Tabs -->
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h4 class="mb-0">Service Requests by Type</h4>
+    </div>
+    <div class="card-body">
+        <ul class="nav nav-tabs" id="serviceTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true">
+                    <i class="fas fa-plane me-2"></i>Flights
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false">
+                    <i class="fas fa-hotel me-2"></i>Hotels
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false">
+                    <i class="fas fa-taxi me-2"></i>Transport
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false">
+                    <i class="fas fa-passport me-2"></i>Visa
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">
+                    <i class="fas fa-shield-alt me-2"></i>Insurance
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content" id="serviceTabContent">
+            <div class="tab-pane fade show active" id="flights" role="tabpanel" aria-labelledby="flights-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref.</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in flight_items %}
+                            <tr>
+                                <td>{{ item.booking.reference_number }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('booking.details', booking_id=item.booking_id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No flight service items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="hotels" role="tabpanel" aria-labelledby="hotels-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref.</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in hotel_items %}
+                            <tr>
+                                <td>{{ item.booking.reference_number }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('booking.details', booking_id=item.booking_id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No hotel service items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="transport" role="tabpanel" aria-labelledby="transport-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref.</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in transport_items %}
+                            <tr>
+                                <td>{{ item.booking.reference_number }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('booking.details', booking_id=item.booking_id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No transport service items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="visa" role="tabpanel" aria-labelledby="visa-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref.</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in visa_items %}
+                            <tr>
+                                <td>{{ item.booking.reference_number }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('booking.details', booking_id=item.booking_id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No visa service items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="insurance" role="tabpanel" aria-labelledby="insurance-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Booking Ref.</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in insurance_items %}
+                            <tr>
+                                <td>{{ item.booking.reference_number }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('booking.details', booking_id=item.booking_id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">No insurance service items found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-plus-circle me-2"></i>New Booking
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="fas fa-file-export me-2"></i>Export Data
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="fas fa-calendar-alt me-2"></i>Calendar View
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-outline-secondary btn-lg w-100">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tab functionality from URL hash if present
+    if (window.location.hash) {
+        const tabId = window.location.hash.substring(1);
+        const tab = document.querySelector(`#${tabId}-tab`);
+        if (tab) {
+            const tabInstance = new bootstrap.Tab(tab);
+            tabInstance.show();
+        }
+    }
+    
+    // Update URL hash when tab is shown
+    const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+    tabEls.forEach(tabEl => {
+        tabEl.addEventListener('shown.bs.tab', function (e) {
+            const id = e.target.getAttribute('aria-controls');
+            window.location.hash = id;
+        });
+    });
+});
+</script>
+{% endblock %}

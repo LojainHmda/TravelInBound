@@ -1,0 +1,55 @@
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from flask_login import LoginManager
+
+# Create the db instance with a model class inheriting from DeclarativeBase
+class Base(DeclarativeBase):
+    pass
+
+db = SQLAlchemy(model_class=Base)
+login_manager = LoginManager()
+
+def create_app():
+    """Application factory function"""
+    # Create the Flask app
+    app = Flask(__name__)
+    
+    # Configure secret key and database URI
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev-key-for-testing")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+    
+    # Initialize extensions
+    db.init_app(app)
+    login_manager.init_app(app)
+    
+    with app.app_context():
+        # Import models to ensure they are registered with SQLAlchemy
+        from app.models import User
+        
+        # Register blueprints
+        from app.routes.main import main_bp
+        app.register_blueprint(main_bp)
+        
+        from app.routes.booking import booking_bp
+        app.register_blueprint(booking_bp, url_prefix='/booking')
+        
+        # Set up login manager
+        from app.models import User
+        @login_manager.user_loader
+        def load_user(user_id):
+            return User.query.get(int(user_id))
+        
+        # Create database tables
+        db.create_all()
+        
+        # Create test data if needed
+        from app.models.user import create_test_data
+        create_test_data()
+        
+    return app

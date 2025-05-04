@@ -1,0 +1,17 @@
+# Define constants for service types
+SERVICE_FLIGHT = 'FLIGHT'
+SERVICE_HOTEL = 'HOTEL'
+SERVICE_TRANSPORT = 'TRANSPORT'
+SERVICE_VISA = 'VISA'
+SERVICE_INSURANCE = 'INSURANCE'
+
+# Define constants for status
+STATUS_REQUEST = 'REQUEST'
+STATUS_INVOICE = 'INVOICE'
+STATUS_IN_PROGRESS = 'IN_PROGRESS'
+STATUS_COMPLETED = 'COMPLETED'
+
+# Import models
+from app.models.user import User, Agent, create_test_data
+from app.models.booking import Booking
+from app.models.service import ServiceItem, Document

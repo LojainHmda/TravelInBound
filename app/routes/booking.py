@@ -1,93 +1,25 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
 import uuid
-from datetime import datetime, timedelta
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from app import db
+from app.models.user import User
+from app.models.booking import Booking
+from app.models.service import ServiceItem
+from app.models import STATUS_REQUEST
 
-from app import app, db
-from models import (
-    User, Agent, Booking, ServiceItem, Document,
-    STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED,
-    SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
-)
-from forms import NewBookingForm, ServiceItemForm, UpdateServiceStatusForm, DocumentUploadForm
+from app.forms.booking import BookingRequestForm, ServiceItemForm
+from app.forms.status import UpdateServiceStatusForm
 
-# Create a test user if none exists
-# Create a function to initialize test data
-def create_test_data():
-    if not User.query.first():
-        test_user = User(
-            username="testuser",
-            email="test@example.com",
-            password_hash="test_hash"  # In production, use proper password hashing
-        )
-        db.session.add(test_user)
-        
-        test_agent_flight = Agent(
-            name="Jane Doe",
-            email="jane@example.com",
-            specialty="FLIGHT"
-        )
-        
-        test_agent_hotel = Agent(
-            name="John Smith",
-            email="john@example.com",
-            specialty="HOTEL"
-        )
-        
-        db.session.add_all([test_agent_flight, test_agent_hotel])
-        db.session.commit()
+# Create a blueprint for booking-related routes
+booking_bp = Blueprint('booking', __name__)
 
-# Add with_appcontext to app startup
-with app.app_context():
-    create_test_data()
-
-# Home page
-@app.route('/')
-def index():
-    # Get latest bookings for demonstration
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
-    return render_template('index.html', bookings=recent_bookings)
-
-# Dashboard
-@app.route('/dashboard')
-def dashboard():
-    # Get counts for each status
-    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    invoice_count = Booking.query.filter_by(status=STATUS_INVOICE).count()
-    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
-    
-    # Get service items for each service type
-    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
-    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
-    transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
-    visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
-    insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
-    
-    return render_template(
-        'booking/dashboard.html',
-        status_counts={
-            'request': request_count,
-            'invoice': invoice_count,
-            'in_progress': in_progress_count,
-            'completed': completed_count
-        },
-        service_items={
-            'flight': flight_items,
-            'hotel': hotel_items,
-            'transport': transport_items,
-            'visa': visa_items,
-            'insurance': insurance_items
-        }
-    )
-
-# New booking request
-@app.route('/booking/new', methods=['GET', 'POST'])
+@booking_bp.route('/new', methods=['GET', 'POST'])
 def new_booking():
-    form = NewBookingForm()
+    """Create a new booking request with itinerary items"""
+    form = BookingRequestForm()
     
     # Get all users for customer selection dropdown
     users = User.query.all()
-    form.customer.choices = [(user.id, f"{user.username} ({user.email})") for user in users]
+    form.customer.choices = [(str(user.id), f"{user.username} ({user.email})") for user in users]
     
     # Generate request ID if not already set
     if not form.request_id.data:
@@ -97,7 +29,7 @@ def new_booking():
     service_items = []
     
     if request.method == 'POST':
-        if form.add_item.data:
+        if form.add_item.data and form.validate():
             # Add an item to the itinerary
             service_item = {
                 'service_type': form.service_type.data,
@@ -107,6 +39,7 @@ def new_booking():
                 'amount': form.amount.data,
                 'currency': form.currency.data
             }
+            service_items.append(service_item)
             
             # In a real application, store this in the session
             # For now, flash it to show functionality
@@ -117,7 +50,7 @@ def new_booking():
             reference = form.request_id.data
             
             # Get the selected user
-            user = User.query.get(form.customer.data)
+            user = User.query.get(int(form.customer.data))
             
             # Create the booking
             booking = Booking(
@@ -145,13 +78,13 @@ def new_booking():
                 db.session.commit()
             
             flash(f'Booking request {reference} created successfully', 'success')
-            return redirect(url_for('booking_details', booking_id=booking.id))
+            return redirect(url_for('booking.details', booking_id=booking.id))
     
-    return render_template('booking/new_request.html', form=form)
+    return render_template('booking/new_request.html', form=form, items=service_items)
 
-# Booking details
-@app.route('/booking/<int:booking_id>', methods=['GET'])
-def booking_details(booking_id):
+@booking_bp.route('/<int:booking_id>', methods=['GET'])
+def details(booking_id):
+    """View details of a specific booking"""
     booking = Booking.query.get_or_404(booking_id)
     service_form = ServiceItemForm()
     status_form = UpdateServiceStatusForm()
@@ -164,9 +97,9 @@ def booking_details(booking_id):
         status_form=status_form
     )
 
-# Add service item to booking
-@app.route('/booking/<int:booking_id>/add_service', methods=['POST'])
+@booking_bp.route('/<int:booking_id>/add_service', methods=['POST'])
 def add_service_item(booking_id):
+    """Add a service item to an existing booking"""
     booking = Booking.query.get_or_404(booking_id)
     form = ServiceItemForm()
     
@@ -181,6 +114,7 @@ def add_service_item(booking_id):
             status=STATUS_REQUEST
         )
         
+        from app.models.user import Agent
         # Assign to an agent with the matching specialty if available
         agent = Agent.query.filter_by(specialty=form.service_type.data).first()
         if agent:
@@ -193,17 +127,17 @@ def add_service_item(booking_id):
         
         db.session.commit()
         
-        flash(f'Service item added successfully', 'success')
+        flash('Service item added successfully', 'success')
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'Error in {field}: {error}', 'danger')
     
-    return redirect(url_for('booking_details', booking_id=booking.id))
+    return redirect(url_for('booking.details', booking_id=booking.id))
 
-# Update booking status
-@app.route('/booking/<int:booking_id>/update_status', methods=['POST'])
+@booking_bp.route('/<int:booking_id>/update_status', methods=['POST'])
 def update_booking_status(booking_id):
+    """Update the status of an entire booking"""
     booking = Booking.query.get_or_404(booking_id)
     form = UpdateServiceStatusForm()
     
@@ -216,11 +150,11 @@ def update_booking_status(booking_id):
             db.session.commit()
             flash(f'Booking status updated to {booking.status}', 'success')
     
-    return redirect(url_for('booking_details', booking_id=booking.id))
+    return redirect(url_for('booking.details', booking_id=booking.id))
 
-# Update service item status
-@app.route('/service_item/<int:item_id>/update_status', methods=['POST'])
+@booking_bp.route('/service_item/<int:item_id>/update_status', methods=['POST'])
 def update_service_status(item_id):
+    """Update the status of a specific service item"""
     service_item = ServiceItem.query.get_or_404(item_id)
     form = UpdateServiceStatusForm()
     
@@ -229,11 +163,11 @@ def update_service_status(item_id):
         db.session.commit()
         flash(f'Service item status updated to {service_item.status}', 'success')
     
-    return redirect(url_for('booking_details', booking_id=service_item.booking_id))
+    return redirect(url_for('booking.details', booking_id=service_item.booking_id))
 
-# API to get service items for a specific service type
-@app.route('/api/service_items/<service_type>', methods=['GET'])
+@booking_bp.route('/api/service_items/<service_type>', methods=['GET'])
 def get_service_items(service_type):
+    """API endpoint to get service items by type"""
     items = ServiceItem.query.filter_by(service_type=service_type).all()
     
     result = []

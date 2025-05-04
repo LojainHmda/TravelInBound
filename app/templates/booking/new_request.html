@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Booking Request</h3>
+            </div>
+            <div class="card-body">
+                <form id="newBookingForm" method="POST" action="{{ url_for('booking.new_booking') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.customer.label(class="form-label") }}
+                                {{ form.customer(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.request_id.label(class="form-label") }}
+                                {{ form.request_id(class="form-control") }}
+                                <small class="text-muted">Unique identifier for this itinerary request</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="mt-4 mb-3">Itinerary Items</h4>
+                    
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>From Date</th>
+                                    <th>To Date</th>
+                                    <th>Service Type</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Currency</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {{ form.from_date(class="form-control", type="date") }}
+                                    </td>
+                                    <td>
+                                        {{ form.to_date(class="form-control", type="date") }}
+                                    </td>
+                                    <td>
+                                        {{ form.service_type(class="form-select") }}
+                                    </td>
+                                    <td>
+                                        {{ form.description(class="form-control", placeholder="Description") }}
+                                    </td>
+                                    <td>
+                                        {{ form.amount(class="form-control", placeholder="Amount") }}
+                                    </td>
+                                    <td>
+                                        {{ form.currency(class="form-select") }}
+                                    </td>
+                                    <td>
+                                        {{ form.add_item(class="btn btn-outline-primary btn-sm") }}
+                                    </td>
+                                </tr>
+                                
+                                <!-- Display previously added items, if any -->
+                                {% if items %}
+                                    {% for item in items %}
+                                    <tr>
+                                        <td>{{ item.from_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ item.to_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ item.service_type }}</td>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ "%.2f"|format(item.amount) }}</td>
+                                        <td>{{ item.currency }}</td>
+                                        <td>
+                                            <button type="button" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td>0.00</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.deposit_amount.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.deposit_amount(class="form-control") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Booking Process</h4>
+            </div>
+            <div class="card-body">
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="process-icon bg-primary">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>1. Request Stage</h5>
+                            <p>Select services and create a booking request</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-info">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>2. Invoice Stage</h5>
+                            <p>Review and process payment for selected services</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-warning">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>3. In-Progress Stage</h5>
+                            <p>Services are assigned to agents for processing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>4. Completion Stage</h5>
+                            <p>All services fulfilled and booking completed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-star me-2"></i>Features</h4>
+            </div>
+            <div class="card-body">
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Multi-service booking in one request</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Real-time tracking of service execution</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Detailed cost breakdown for each service</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Automated agent assignment based on service type</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Comprehensive dashboard for service monitoring</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Document management for travel confirmations</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today as min date for from_date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('from_date').setAttribute('min', today);
+    
+    // Validate date ranges
+    const fromDateInput = document.getElementById('from_date');
+    const toDateInput = document.getElementById('to_date');
+    
+    fromDateInput.addEventListener('change', function() {
+        toDateInput.setAttribute('min', this.value);
+        if (toDateInput.value && new Date(toDateInput.value) < new Date(this.value)) {
+            toDateInput.value = this.value;
+        }
+    });
+    
+    // Update description placeholder based on service type
+    const serviceTypeSelect = document.getElementById('service_type');
+    const descriptionInput = document.getElementById('description');
+    
+    serviceTypeSelect.addEventListener('change', function() {
+        switch(this.value) {
+            case 'FLIGHT':
+                descriptionInput.placeholder = 'E.g., One-way flight from New York to London, Economy class';
+                break;
+            case 'HOTEL':
+                descriptionInput.placeholder = 'E.g., 5 nights at Grand Hotel, Double room with breakfast';
+                break;
+            case 'TRANSPORT':
+                descriptionInput.placeholder = 'E.g., Airport transfer from Heathrow to central London';
+                break;
+            case 'VISA':
+                descriptionInput.placeholder = 'E.g., Tourist visa application for United Kingdom';
+                break;
+            case 'INSURANCE':
+                descriptionInput.placeholder = 'E.g., Comprehensive travel insurance for 7 days';
+                break;
+            default:
+                descriptionInput.placeholder = 'Enter service description';
+        }
+    });
+    
+    // Trigger change to set initial placeholder
+    serviceTypeSelect.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}
