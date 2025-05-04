@@ -28,6 +28,15 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     
+    # Register custom Jinja2 filters
+    @app.template_filter('from_json')
+    def from_json_filter(value):
+        import json
+        try:
+            return json.loads(value)
+        except (ValueError, TypeError):
+            return {}
+    
     with app.app_context():
         # Import models to ensure they are registered with SQLAlchemy
         from app.models import User

@@ -67,34 +67,66 @@
                                     </div>
                                 </td>
                                 <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                <td>{{ item.description }}</td>
+                                <td>
+                                    {{ item.description }}
+                                    {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                    {% if conf_doc %}
+                                        <div class="mt-1">
+                                            <small class="text-muted d-block">
+                                                <strong>Ref:</strong> {{ conf_doc.document_number }}
+                                                {% if conf_doc.notes %}
+                                                    {% set doc_details = conf_doc.notes|tojson|safe %}
+                                                    {% if doc_details %}
+                                                        {% set doc_data = doc_details|from_json %}
+                                                        {% if doc_data and doc_data.supplier %}
+                                                            <span class="ms-2 badge bg-light text-dark border">
+                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
+                                                            </span>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                </td>
                                 <td>${{ "%.2f"|format(item.amount) }}</td>
                                 <td>
                                     <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Actions
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
-                                                    <i class="fas fa-edit me-2"></i>Update Status
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
-                                                    <i class="fas fa-file-upload me-2"></i>Upload Document
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <a href="#" class="dropdown-item text-danger">
-                                                    <i class="fas fa-trash me-2"></i>Delete
-                                                </a>
-                                            </li>
-                                        </ul>
+                                    <div class="btn-group">
+                                        {% if item.status == 'REQUEST' %}
+                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-primary btn-sm me-1">
+                                                <i class="fas fa-check me-1"></i>Confirm
+                                            </a>
+                                        {% elif item.status == 'IN_PROGRESS' %}
+                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-outline-primary btn-sm me-1">
+                                                <i class="fas fa-eye me-1"></i>View
+                                            </a>
+                                        {% endif %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                More
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
+                                                        <i class="fas fa-edit me-2"></i>Update Status
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                                        <i class="fas fa-file-upload me-2"></i>Upload Document
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a href="#" class="dropdown-item text-danger">
+                                                        <i class="fas fa-trash me-2"></i>Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                     
                                     <!-- Update Status Modal for this Item -->
