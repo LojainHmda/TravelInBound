@@ -12,54 +12,62 @@
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-card-body bg-request text-white">
-                <div class="stat-card-icon">
-                    <i class="fas fa-clipboard-list"></i>
+            <a href="#" class="text-decoration-none" onclick="filterBookings('REQUEST'); return false;">
+                <div class="stat-card-body bg-request text-white">
+                    <div class="stat-card-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ request_count }}</h3>
+                        <p>Booking Requests</p>
+                    </div>
                 </div>
-                <div class="stat-card-info">
-                    <h3>{{ request_count }}</h3>
-                    <p>Booking Requests</p>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-card-body bg-invoice text-white">
-                <div class="stat-card-icon">
-                    <i class="fas fa-file-invoice-dollar"></i>
+            <a href="#" class="text-decoration-none" onclick="filterBookings('INVOICE'); return false;">
+                <div class="stat-card-body bg-invoice text-white">
+                    <div class="stat-card-icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ invoice_count }}</h3>
+                        <p>Invoiced Bookings</p>
+                    </div>
                 </div>
-                <div class="stat-card-info">
-                    <h3>{{ invoice_count }}</h3>
-                    <p>Invoiced Bookings</p>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-card-body bg-in-progress text-white">
-                <div class="stat-card-icon">
-                    <i class="fas fa-cogs"></i>
+            <a href="#" class="text-decoration-none" onclick="filterBookings('IN_PROGRESS'); return false;">
+                <div class="stat-card-body bg-in-progress text-white">
+                    <div class="stat-card-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ in_progress_count }}</h3>
+                        <p>In Progress</p>
+                    </div>
                 </div>
-                <div class="stat-card-info">
-                    <h3>{{ in_progress_count }}</h3>
-                    <p>In Progress</p>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-card-body bg-completed text-white">
-                <div class="stat-card-icon">
-                    <i class="fas fa-check-circle"></i>
+            <a href="#" class="text-decoration-none" onclick="filterBookings('COMPLETED'); return false;">
+                <div class="stat-card-body bg-completed text-white">
+                    <div class="stat-card-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-card-info">
+                        <h3>{{ completed_count }}</h3>
+                        <p>Completed Bookings</p>
+                    </div>
                 </div>
-                <div class="stat-card-info">
-                    <h3>{{ completed_count }}</h3>
-                    <p>Completed Bookings</p>
-                </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>

@@ -133,6 +133,22 @@ body {
     color: white;
 }
 
+/* Custom Colors */
+.bg-orange {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.bg-dark-blue {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.table-dark {
+    background-color: var(--primary-color);
+    color: white;
+}
+
 /* Service Option Selection */
 .service-selection {
     background-color: #f8f9fa;
