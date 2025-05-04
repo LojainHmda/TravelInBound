@@ -22,6 +22,9 @@ def dashboard():
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
     completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
     
+    # Get all recent bookings
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    
     # Get recent service items by type
     flight_items = ServiceItem.query.filter_by(service_type='FLIGHT').order_by(ServiceItem.created_at.desc()).limit(5).all()
     hotel_items = ServiceItem.query.filter_by(service_type='HOTEL').order_by(ServiceItem.created_at.desc()).limit(5).all()
@@ -35,6 +38,7 @@ def dashboard():
         invoice_count=invoice_count,
         in_progress_count=in_progress_count,
         completed_count=completed_count,
+        recent_bookings=recent_bookings,
         flight_items=flight_items,
         hotel_items=hotel_items,
         transport_items=transport_items,
