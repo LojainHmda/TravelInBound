@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Booking Request</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">Select the services you require for this booking:</p>
+                
+                <form id="newBookingForm" method="POST" action="{{ url_for('new_booking') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col">
+                            <div class="service-selection">
+                                <div class="row text-center">
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.flight_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.flight_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-plane"></i>
+                                                    </div>
+                                                    <span>Flights</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.hotel_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.hotel_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-hotel"></i>
+                                                    </div>
+                                                    <span>Hotels</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.transport_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.transport_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-car"></i>
+                                                    </div>
+                                                    <span>Transport</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.visa_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.visa_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-passport"></i>
+                                                    </div>
+                                                    <span>Visa</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.insurance_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.insurance_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-shield-alt"></i>
+                                                    </div>
+                                                    <span>Insurance</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> After creating the booking request, you'll be able to add specific details for each selected service.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Booking Process</h4>
+            </div>
+            <div class="card-body">
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="process-icon bg-primary">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>1. Request Stage</h5>
+                            <p>Select services and create a booking request</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-info">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>2. Invoice Stage</h5>
+                            <p>Review and process payment for selected services</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-warning">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>3. In-Progress Stage</h5>
+                            <p>Services are assigned to agents for processing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>4. Completion Stage</h5>
+                            <p>All services fulfilled and booking completed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-star me-2"></i>Features</h4>
+            </div>
+            <div class="card-body">
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Multi-service booking in one request</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Real-time tracking of service execution</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Detailed cost breakdown for each service</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Automated agent assignment based on service type</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Comprehensive dashboard for service monitoring</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Document management for travel confirmations</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

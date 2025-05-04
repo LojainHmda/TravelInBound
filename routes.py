@@ -1,0 +1,209 @@
+from flask import render_template, request, redirect, url_for, flash, jsonify
+import uuid
+from datetime import datetime, timedelta
+
+from app import app, db
+from models import (
+    User, Agent, Booking, ServiceItem, Document,
+    STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED,
+    SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
+)
+from forms import NewBookingForm, ServiceItemForm, UpdateServiceStatusForm, DocumentUploadForm
+
+# Create a test user if none exists
+# Create a function to initialize test data
+def create_test_data():
+    if not User.query.first():
+        test_user = User(
+            username="testuser",
+            email="test@example.com",
+            password_hash="test_hash"  # In production, use proper password hashing
+        )
+        db.session.add(test_user)
+        
+        test_agent_flight = Agent(
+            name="Jane Doe",
+            email="jane@example.com",
+            specialty="FLIGHT"
+        )
+        
+        test_agent_hotel = Agent(
+            name="John Smith",
+            email="john@example.com",
+            specialty="HOTEL"
+        )
+        
+        db.session.add_all([test_agent_flight, test_agent_hotel])
+        db.session.commit()
+
+# Add with_appcontext to app startup
+with app.app_context():
+    create_test_data()
+
+# Home page
+@app.route('/')
+def index():
+    # Get latest bookings for demonstration
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+    return render_template('index.html', bookings=recent_bookings)
+
+# Dashboard
+@app.route('/dashboard')
+def dashboard():
+    # Get counts for each status
+    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
+    invoice_count = Booking.query.filter_by(status=STATUS_INVOICE).count()
+    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
+    completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
+    
+    # Get service items for each service type
+    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
+    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
+    transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
+    visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
+    insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
+    
+    return render_template(
+        'booking/dashboard.html',
+        status_counts={
+            'request': request_count,
+            'invoice': invoice_count,
+            'in_progress': in_progress_count,
+            'completed': completed_count
+        },
+        service_items={
+            'flight': flight_items,
+            'hotel': hotel_items,
+            'transport': transport_items,
+            'visa': visa_items,
+            'insurance': insurance_items
+        }
+    )
+
+# New booking request
+@app.route('/booking/new', methods=['GET', 'POST'])
+def new_booking():
+    form = NewBookingForm()
+    
+    if form.validate_on_submit():
+        # Create a unique reference number
+        reference = f"BK-{str(uuid.uuid4())[:8].upper()}"
+        
+        # Get the first user (in a real app, get the current logged-in user)
+        user = User.query.first()
+        
+        # Create the booking
+        booking = Booking(
+            reference_number=reference,
+            user_id=user.id,
+            status=STATUS_REQUEST
+        )
+        
+        db.session.add(booking)
+        db.session.commit()
+        
+        flash(f'Booking request {reference} created successfully', 'success')
+        return redirect(url_for('booking_details', booking_id=booking.id))
+    
+    return render_template('booking/new_request.html', form=form)
+
+# Booking details
+@app.route('/booking/<int:booking_id>', methods=['GET'])
+def booking_details(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    service_form = ServiceItemForm()
+    status_form = UpdateServiceStatusForm()
+    status_form.status.data = booking.status
+    
+    return render_template(
+        'booking/booking_details.html',
+        booking=booking,
+        service_form=service_form,
+        status_form=status_form
+    )
+
+# Add service item to booking
+@app.route('/booking/<int:booking_id>/add_service', methods=['POST'])
+def add_service_item(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    form = ServiceItemForm()
+    
+    if form.validate_on_submit():
+        service_item = ServiceItem(
+            booking_id=booking.id,
+            service_type=form.service_type.data,
+            start_date=form.start_date.data,
+            end_date=form.end_date.data,
+            description=form.description.data,
+            amount=form.amount.data,
+            status=STATUS_REQUEST
+        )
+        
+        # Assign to an agent with the matching specialty if available
+        agent = Agent.query.filter_by(specialty=form.service_type.data).first()
+        if agent:
+            service_item.agent_id = agent.id
+        
+        db.session.add(service_item)
+        
+        # Update the booking's total amount
+        booking.calculate_total()
+        
+        db.session.commit()
+        
+        flash(f'Service item added successfully', 'success')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'Error in {field}: {error}', 'danger')
+    
+    return redirect(url_for('booking_details', booking_id=booking.id))
+
+# Update booking status
+@app.route('/booking/<int:booking_id>/update_status', methods=['POST'])
+def update_booking_status(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    form = UpdateServiceStatusForm()
+    
+    if form.validate_on_submit():
+        # Check if can move to COMPLETED status
+        if form.status.data == STATUS_COMPLETED and not booking.can_complete():
+            flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
+        else:
+            booking.status = form.status.data
+            db.session.commit()
+            flash(f'Booking status updated to {booking.status}', 'success')
+    
+    return redirect(url_for('booking_details', booking_id=booking.id))
+
+# Update service item status
+@app.route('/service_item/<int:item_id>/update_status', methods=['POST'])
+def update_service_status(item_id):
+    service_item = ServiceItem.query.get_or_404(item_id)
+    form = UpdateServiceStatusForm()
+    
+    if form.validate_on_submit():
+        service_item.status = form.status.data
+        db.session.commit()
+        flash(f'Service item status updated to {service_item.status}', 'success')
+    
+    return redirect(url_for('booking_details', booking_id=service_item.booking_id))
+
+# API to get service items for a specific service type
+@app.route('/api/service_items/<service_type>', methods=['GET'])
+def get_service_items(service_type):
+    items = ServiceItem.query.filter_by(service_type=service_type).all()
+    
+    result = []
+    for item in items:
+        result.append({
+            'id': item.id,
+            'booking_reference': item.booking.reference_number,
+            'description': item.description,
+            'start_date': item.start_date.strftime('%Y-%m-%d'),
+            'end_date': item.end_date.strftime('%Y-%m-%d'),
+            'amount': item.amount,
+            'status': item.status
+        })
+    
+    return jsonify(result)

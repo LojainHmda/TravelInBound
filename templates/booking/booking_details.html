@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-clipboard-list me-2"></i>Booking Details</h2>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-tachometer-alt me-2"></i>Back to Dashboard
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Booking Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Reference:</strong> <span class="text-primary">{{ booking.reference_number }}</span></p>
+                        <p><strong>Created:</strong> {{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p><strong>Last Updated:</strong> {{ booking.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p>
+                            <strong>Status:</strong> 
+                            <span class="badge status-{{ booking.status.lower() }}">{{ booking.status }}</span>
+                        </p>
+                        <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                        <p><strong>Requester:</strong> {{ booking.requester.username }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">Update Booking Status</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('update_booking_status', booking_id=booking.id) }}">
+                    {{ status_form.hidden_tag() }}
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group mb-3">
+                                {{ status_form.status.label(class="form-label") }}
+                                {{ status_form.status(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            {{ status_form.submit(class="btn btn-primary w-100") }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ status_form.notes.label(class="form-label") }}
+                        {{ status_form.notes(class="form-control", rows=3) }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Service Items</h4>
+            </div>
+            <div class="card-body">
+                {% if booking.service_items %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">Type</th>
+                                <th width="15%">Service</th>
+                                <th width="15%">Dates</th>
+                                <th width="30%">Description</th>
+                                <th width="10%">Amount</th>
+                                <th width="10%">Status</th>
+                                <th width="15%">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in booking.service_items %}
+                            <tr>
+                                <td class="text-center">
+                                    {% if item.service_type == 'FLIGHT' %}
+                                        <i class="fas fa-plane service-icon-table text-primary"></i>
+                                    {% elif item.service_type == 'HOTEL' %}
+                                        <i class="fas fa-hotel service-icon-table text-success"></i>
+                                    {% elif item.service_type == 'TRANSPORT' %}
+                                        <i class="fas fa-car service-icon-table text-warning"></i>
+                                    {% elif item.service_type == 'VISA' %}
+                                        <i class="fas fa-passport service-icon-table text-info"></i>
+                                    {% elif item.service_type == 'INSURANCE' %}
+                                        <i class="fas fa-shield-alt service-icon-table text-danger"></i>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.service_type }}</td>
+                                <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ item.description }}</td>
+                                <td>${{ "%.2f"|format(item.amount) }}</td>
+                                <td>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
+                                        <i class="fas fa-edit"></i> Update
+                                    </button>
+                                    
+                                    <!-- Status Update Modal -->
+                                    <div class="modal fade" id="updateStatusModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">Update Service Status</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form method="POST" action="{{ url_for('update_service_status', item_id=item.id) }}">
+                                                    {{ status_form.hidden_tag() }}
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <h6>Service: {{ item.service_type }}</h6>
+                                                            <p>{{ item.description }}</p>
+                                                        </div>
+                                                        <div class="form-group mb-3">
+                                                            {{ status_form.status.label(class="form-label") }}
+                                                            {{ status_form.status(class="form-select", value=item.status) }}
+                                                        </div>
+                                                        <div class="form-group">
+                                                            {{ status_form.notes.label(class="form-label") }}
+                                                            {{ status_form.notes(class="form-control", rows=3) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        {{ status_form.submit(class="btn btn-primary") }}
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <h5>Total Amount: <span class="text-primary">${{ "%.2f"|format(booking.total_amount) }}</span></h5>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <p>No service items added yet. Add services to this booking below.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">Add Service Item</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_service_item', booking_id=booking.id) }}">
+                    {{ service_form.hidden_tag() }}
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group mb-3">
+                                {{ service_form.service_type.label(class="form-label") }}
+                                {{ service_form.service_type(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-3">
+                                {{ service_form.start_date.label(class="form-label") }}
+                                {{ service_form.start_date(class="form-control", type="date") }}
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group mb-3">
+                                {{ service_form.end_date.label(class="form-label") }}
+                                {{ service_form.end_date(class="form-control", type="date") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group mb-3">
+                                {{ service_form.amount.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ service_form.amount(class="form-control") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ service_form.description.label(class="form-label") }}
+                        {{ service_form.description(class="form-control", rows=3) }}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        {{ service_form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
