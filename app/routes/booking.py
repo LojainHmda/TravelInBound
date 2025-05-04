@@ -223,6 +223,8 @@ def confirm_service(item_id):
         )
         
         # Store the service-specific details as JSON in the notes field
+        import json
+        
         if service_item.service_type == 'FLIGHT':
             flight_details = {
                 'airline': request.form.get('airline', ''),
@@ -248,8 +250,6 @@ def confirm_service(item_id):
             if passenger_names:
                 flight_details['passenger_names'] = passenger_names
             
-            # Convert to JSON string
-            import json
             document.notes = json.dumps(flight_details)
         
         elif service_item.service_type == 'HOTEL':
@@ -272,9 +272,50 @@ def confirm_service(item_id):
                 }
             }
             
-            # Convert to JSON string
-            import json
             document.notes = json.dumps(hotel_details)
+            
+        elif service_item.service_type == 'TRANSPORT':
+            transport_details = {
+                'vehicle_type': request.form.get('vehicle_type', ''),
+                'pickup_location': request.form.get('pickup_location', ''),
+                'dropoff_location': request.form.get('dropoff_location', ''),
+                'pickup_date': request.form.get('pickup_date', ''),
+                'pickup_time': request.form.get('pickup_time', ''),
+                'driver_name': request.form.get('driver_name', ''),
+                'driver_contact': request.form.get('driver_contact', ''),
+                'supplier': supplier,
+                'special_requests': request.form.get('special_requests', '')
+            }
+            
+            document.notes = json.dumps(transport_details)
+            
+        elif service_item.service_type == 'VISA':
+            visa_details = {
+                'visa_type': request.form.get('visa_type', ''),
+                'country': request.form.get('country', ''),
+                'issue_date': request.form.get('issue_date', ''),
+                'expiry_date': request.form.get('expiry_date', ''),
+                'processing_time': request.form.get('processing_time', ''),
+                'status': request.form.get('status', ''),
+                'supplier': supplier,
+                'requirements': request.form.get('requirements', '')
+            }
+            
+            document.notes = json.dumps(visa_details)
+            
+        elif service_item.service_type == 'INSURANCE':
+            insurance_details = {
+                'policy_type': request.form.get('policy_type', ''),
+                'provider': request.form.get('provider', ''),
+                'coverage': request.form.get('coverage', ''),
+                'policy_period': request.form.get('policy_period', ''),
+                'insured_amount': request.form.get('insured_amount', ''),
+                'premium': request.form.get('premium', ''),
+                'supplier': supplier,
+                'terms': request.form.get('terms', '')
+            }
+            
+            document.notes = json.dumps(insurance_details)
         
         # Save changes
         db.session.add(document)
