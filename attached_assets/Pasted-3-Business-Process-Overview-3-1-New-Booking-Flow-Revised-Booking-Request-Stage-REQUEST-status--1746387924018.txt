@@ -1,0 +1,103 @@
+3. Business Process Overview
+3.1 New Booking Flow (Revised)
+Booking Request Stage (REQUEST status)
+
+Journey begins by raising a service request.
+
+User selects required services via checkboxes/icons:
+
+✈️ Flights
+
+🏨 Hotels
+
+🚐 Transport
+
+🛂 Visa
+
+🛡️ Insurance
+
+Each service selection creates a table row with:
+
+Service type (from icon/checkbox)
+
+Start Date, End Date
+
+Line item description
+
+Line item amount
+
+System calculates total estimated amount for the request.
+
+No payment is made at this stage.
+
+Invoice & Payment Stage (INVOICE status)
+
+After review, invoice is generated for the selected services.
+
+Payment is processed partially or fully depending on policy.
+
+Booking In-Progress Stage (IN-PROGRESS status)
+
+Upon payment confirmation, request is transferred to active booking.
+
+Services are assigned to respective travel agents for execution.
+
+System links each request to individual line items for tracking progress.
+
+Service Execution Dashboard
+
+A dedicated dashboard shows real-time status of each category:
+
+Flights, Hotels, Transport, Visa, Insurance
+
+Travel agents can update status, upload confirmations, and track delivery.
+
+Completion Stage (COMPLETED status)
+
+All services fulfilled and confirmed.
+
+Final reconciliation and customer feedback collection.
+
+4. Functional Requirements (Updated Highlights)
+4.1 Booking Request Management
+Allow users to raise multi-service requests via checkbox UI.
+
+Auto-generate service tables with start/end dates, service icons, and amounts.
+
+Calculate total estimated cost dynamically.
+
+Convert request to invoice with payment tracking.
+
+4.4 Service Execution Tracking
+Link each line item (flight/hotel/etc.) to assigned agent/team.
+
+Update and track status per line item.
+
+Enable document uploads (e.g., tickets, visa approvals).
+
+Provide centralized dashboard filtered by service type.
+
+5. Data Requirements (Updates)
+5.1 Core Entities (Extended)
+Booking Requests with line items
+
+Line Items linked to:
+
+Service type
+
+Assigned agent
+
+Start/End dates
+
+Amount and status
+
+Dashboards to reflect per-service category execution
+
+5.2 Business Rules (Additions)
+Booking must begin with at least one selected service
+
+Line items must be individually tracked and completed
+
+Agents can only update line items assigned to them
+
+Requests cannot move to COMPLETED unless all items are fulfilled
