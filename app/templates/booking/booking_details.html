@@ -147,10 +147,32 @@
             </div>
             <div class="card-footer bg-light">
                 <div class="d-flex justify-content-between align-items-center">
-                    <span><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</span>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
-                    </button>
+                    <div>
+                        <form method="POST" action="{{ url_for('booking.edit_total', booking_id=booking.id) }}" class="d-flex align-items-center">
+                            <strong class="me-2">Total Amount:</strong>
+                            <div class="input-group input-group-sm" style="width: 150px;">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" min="0" name="total_amount" class="form-control" value="{{ "%.2f"|format(booking.total_amount) }}">
+                                <button type="submit" class="btn btn-outline-secondary">
+                                    <i class="fas fa-save"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="btn-group">
+                        {% if booking.status == 'REQUEST' %}
+                            <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                            </a>
+                        {% elif booking.invoice_number %}
+                            <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-file-invoice me-1"></i> View Invoice
+                            </a>
+                            <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-credit-card me-1"></i> Add Payment
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,6 +236,32 @@
             <div class="card-body">
                 <p><strong>Name:</strong> {{ booking.requester.username }}</p>
                 <p><strong>Email:</strong> {{ booking.requester.email }}</p>
+                
+                <!-- Payment Status Information -->
+                <hr>
+                <h6 class="fw-bold">Payment Information</h6>
+                <p class="mb-1">
+                    <strong>Status:</strong>
+                    {% if booking.payment_status == 'NONE' %}
+                        <span class="badge bg-danger">Unpaid</span>
+                    {% elif booking.payment_status == 'PARTIAL' %}
+                        <span class="badge bg-warning text-dark">Partially Paid</span>
+                    {% elif booking.payment_status == 'FULL' %}
+                        <span class="badge bg-success">Paid in Full</span>
+                    {% endif %}
+                </p>
+                
+                {% if booking.invoice_number %}
+                    <p class="mb-1"><strong>Invoice:</strong> {{ booking.invoice_number }}</p>
+                {% endif %}
+                
+                {% if booking.payments %}
+                    {% set total_paid = booking.payments|sum(attribute='amount') %}
+                    <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
+                    <p class="mb-1"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
+                {% endif %}
+                
+                <!-- Booking History -->
                 <hr>
                 <h6 class="fw-bold">History</h6>
                 <ul class="list-unstyled">
@@ -221,6 +269,18 @@
                         <small class="text-muted">{{ booking.created_at.strftime('%d %b %Y, %H:%M') }}</small>
                         <p class="mb-0">Booking request created</p>
                     </li>
+                    {% if booking.invoice_date %}
+                    <li class="mb-2">
+                        <small class="text-muted">{{ booking.invoice_date.strftime('%d %b %Y, %H:%M') }}</small>
+                        <p class="mb-0">Invoice generated</p>
+                    </li>
+                    {% endif %}
+                    {% if booking.payment_date %}
+                    <li class="mb-2">
+                        <small class="text-muted">{{ booking.payment_date.strftime('%d %b %Y, %H:%M') }}</small>
+                        <p class="mb-0">Payment received</p>
+                    </li>
+                    {% endif %}
                     {% if booking.updated_at != booking.created_at %}
                     <li class="mb-2">
                         <small class="text-muted">{{ booking.updated_at.strftime('%d %b %Y, %H:%M') }}</small>

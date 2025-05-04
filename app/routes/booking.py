@@ -1,13 +1,15 @@
 import uuid
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from app import db
 from app.models.user import User
-from app.models.booking import Booking
+from app.models.booking import Booking, Payment
 from app.models.service import ServiceItem
-from app.models import STATUS_REQUEST
+from app.models import STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
+from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
@@ -142,13 +144,26 @@ def update_booking_status(booking_id):
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
-        # Check if can move to COMPLETED status
-        if form.status.data == STATUS_COMPLETED and not booking.can_complete():
+        old_status = booking.status
+        new_status = form.status.data
+        
+        # Handle special status transitions
+        if new_status == STATUS_COMPLETED and not booking.can_complete():
             flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
-        else:
-            booking.status = form.status.data
-            db.session.commit()
-            flash(f'Booking status updated to {booking.status}', 'success')
+            return redirect(url_for('booking.details', booking_id=booking.id))
+        
+        # If moving to INVOICE status, generate invoice number
+        if new_status == STATUS_INVOICE and old_status != STATUS_INVOICE:
+            booking.generate_invoice_number()
+            flash(f'Invoice {booking.invoice_number} generated', 'success')
+        
+        # Check payment status when moving to IN_PROGRESS
+        if new_status == STATUS_IN_PROGRESS and booking.payment_status != 'FULL':
+            flash('Warning: This booking has not been fully paid', 'warning')
+        
+        booking.status = new_status
+        db.session.commit()
+        flash(f'Booking status updated to {booking.status}', 'success')
     
     return redirect(url_for('booking.details', booking_id=booking.id))
 
@@ -164,6 +179,98 @@ def update_service_status(item_id):
         flash(f'Service item status updated to {service_item.status}', 'success')
     
     return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+
+@booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
+def generate_invoice(booking_id):
+    """Generate an invoice for a booking"""
+    booking = Booking.query.get_or_404(booking_id)
+    form = GenerateInvoiceForm()
+    
+    # Pre-fill the form with the current total
+    if request.method == 'GET':
+        form.total_amount.data = booking.total_amount
+    
+    if form.validate_on_submit():
+        # Update the booking total if changed
+        booking.total_amount = form.total_amount.data
+        
+        # Generate invoice number if not already set
+        if not booking.invoice_number:
+            booking.generate_invoice_number()
+        
+        # Update status to INVOICE
+        booking.status = STATUS_INVOICE
+        
+        db.session.commit()
+        flash(f'Invoice {booking.invoice_number} generated successfully', 'success')
+        return redirect(url_for('booking.invoice_details', booking_id=booking.id))
+    
+    return render_template('booking/generate_invoice.html', form=form, booking=booking)
+
+@booking_bp.route('/<int:booking_id>/invoice', methods=['GET'])
+def invoice_details(booking_id):
+    """View invoice details"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # If no invoice yet, redirect to generate page
+    if not booking.invoice_number:
+        flash('No invoice generated yet. Please generate an invoice first.', 'warning')
+        return redirect(url_for('booking.generate_invoice', booking_id=booking.id))
+    
+    return render_template('booking/invoice_details.html', booking=booking)
+
+@booking_bp.route('/<int:booking_id>/add_payment', methods=['GET', 'POST'])
+def add_payment(booking_id):
+    """Process a payment for a booking"""
+    booking = Booking.query.get_or_404(booking_id)
+    form = PaymentForm()
+    
+    # Default payment date to today
+    if request.method == 'GET':
+        form.payment_date.data = datetime.utcnow().date()
+    
+    if form.validate_on_submit():
+        payment = Payment(
+            booking_id=booking.id,
+            amount=form.amount.data,
+            payment_date=form.payment_date.data,
+            payment_method=form.payment_method.data,
+            transaction_id=form.transaction_id.data,
+            notes=form.notes.data
+        )
+        
+        db.session.add(payment)
+        
+        # Update booking payment status
+        booking.update_payment_status()
+        
+        # Set payment date on booking if not already set
+        if not booking.payment_date:
+            booking.payment_date = datetime.utcnow()
+        
+        db.session.commit()
+        
+        flash(f'Payment of ${form.amount.data:.2f} processed successfully', 'success')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    return render_template('booking/add_payment.html', form=form, booking=booking)
+
+@booking_bp.route('/<int:booking_id>/edit_total', methods=['POST'])
+def edit_total(booking_id):
+    """Edit the total amount of a booking"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Get the new total from the form submission
+    new_total = request.form.get('total_amount', type=float)
+    
+    if new_total is not None:
+        booking.total_amount = new_total
+        db.session.commit()
+        flash(f'Total amount updated to ${new_total:.2f}', 'success')
+    else:
+        flash('Invalid amount provided', 'danger')
+    
+    return redirect(url_for('booking.details', booking_id=booking.id))
 
 @booking_bp.route('/api/service_items/<service_type>', methods=['GET'])
 def get_service_items(service_type):

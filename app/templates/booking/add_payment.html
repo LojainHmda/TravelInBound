@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="fw-bold">
+            <i class="fas fa-credit-card me-2"></i>Record Payment
+        </h2>
+        <p class="text-muted">
+            For Booking #{{ booking.reference_number }} - Invoice #{{ booking.invoice_number }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Payment Details</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('booking.add_payment', booking_id=booking.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.amount.label(class="form-label") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount(class="form-control") }}
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.amount.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.payment_date.label(class="form-label") }}
+                                {{ form.payment_date(class="form-control", type="date") }}
+                                {% if form.payment_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.payment_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.payment_method.label(class="form-label") }}
+                        {{ form.payment_method(class="form-select") }}
+                        {% if form.payment_method.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.payment_method.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.transaction_id.label(class="form-label") }}
+                        {{ form.transaction_id(class="form-control", placeholder="Credit card authorization code, check number, etc.") }}
+                        <div class="form-text">Optional reference number for the transaction</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=3, placeholder="Additional payment notes") }}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-success") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Invoice Summary</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Invoice Number:</strong> {{ booking.invoice_number }}</p>
+                <p class="mb-2"><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') }}</p>
+                <p class="mb-2"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                
+                {% if booking.payments %}
+                    {% set total_paid = booking.payments|sum(attribute='amount') %}
+                    <p class="mb-2"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
+                    <p class="mb-2"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
+                {% else %}
+                    <p class="mb-2"><strong>Amount Paid:</strong> $0.00</p>
+                    <p class="mb-2"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                {% endif %}
+                
+                <hr>
+                <p class="mb-2"><strong>Payment Status:</strong> 
+                    {% if booking.payment_status == 'NONE' %}
+                        <span class="badge bg-danger">Unpaid</span>
+                    {% elif booking.payment_status == 'PARTIAL' %}
+                        <span class="badge bg-warning text-dark">Partially Paid</span>
+                    {% elif booking.payment_status == 'FULL' %}
+                        <span class="badge bg-success">Paid in Full</span>
+                    {% endif %}
+                </p>
+                <p class="mb-2"><strong>Booking Status:</strong> 
+                    <span class="badge status-{{ booking.status.lower() }}">{{ booking.status }}</span>
+                </p>
+                
+                {% if booking.payments %}
+                    <hr>
+                    <h6 class="mb-3">Payment History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in booking.payments %}
+                                <tr>
+                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ payment.payment_method }}</td>
+                                    <td>${{ "%.2f"|format(payment.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
