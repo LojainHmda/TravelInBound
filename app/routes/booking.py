@@ -31,56 +31,75 @@ def new_booking():
     service_items = []
     
     if request.method == 'POST':
-        if form.add_item.data and form.validate():
-            # Add an item to the itinerary
-            service_item = {
-                'service_type': form.service_type.data,
-                'from_date': form.from_date.data,
-                'to_date': form.to_date.data,
-                'description': form.description.data,
-                'amount': form.amount.data,
-                'currency': form.currency.data
-            }
-            service_items.append(service_item)
+        print("POST received. Form data:", request.form)
+        print("Form is valid?", form.validate())
+        if form.errors:
+            print("Form errors:", form.errors)
+
+        # Check which button was clicked
+        if 'add_item' in request.form:
+            print("Add item button clicked")
+            if form.validate():
+                # Add an item to the itinerary
+                service_item = {
+                    'service_type': form.service_type.data,
+                    'from_date': form.from_date.data,
+                    'to_date': form.to_date.data,
+                    'description': form.description.data,
+                    'amount': form.amount.data,
+                    'currency': form.currency.data
+                }
+                service_items.append(service_item)
+                
+                # In a real application, store this in the session
+                # For now, flash it to show functionality
+                flash(f'Item added: {service_item["service_type"]} - {service_item["description"]}', 'success')
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f'Error in {field}: {error}', 'danger')
             
-            # In a real application, store this in the session
-            # For now, flash it to show functionality
-            flash(f'Item added: {service_item["service_type"]} - {service_item["description"]}', 'success')
-            
-        elif form.submit.data and form.validate():
-            # Create a unique reference number
-            reference = form.request_id.data
-            
-            # Get the selected user
-            user = User.query.get(int(form.customer.data))
-            
-            # Create the booking
-            booking = Booking(
-                reference_number=reference,
-                user_id=user.id,
-                status=STATUS_REQUEST
-            )
-            
-            db.session.add(booking)
-            db.session.commit()
-            
-            # Add service item if provided
-            if form.description.data and form.amount.data:
-                service_item = ServiceItem(
-                    booking_id=booking.id,
-                    service_type=form.service_type.data,
-                    start_date=form.from_date.data,
-                    end_date=form.to_date.data,
-                    description=form.description.data,
-                    amount=form.amount.data,
-                    status=STATUS_REQUEST
+        elif 'submit' in request.form:
+            print("Submit button clicked")
+            if form.validate():
+                # Create a unique reference number
+                reference = form.request_id.data
+                
+                # Get the selected user
+                user = User.query.get(int(form.customer.data))
+                
+                # Create the booking with deposit amount
+                booking = Booking(
+                    reference_number=reference,
+                    user_id=user.id,
+                    status=STATUS_REQUEST,
+                    deposit_amount=form.deposit_amount.data or 0.0
                 )
                 
-                db.session.add(service_item)
+                db.session.add(booking)
                 db.session.commit()
-            
-            flash(f'Booking request {reference} created successfully', 'success')
-            return redirect(url_for('booking.details', booking_id=booking.id))
+                
+                # Add service item if provided
+                if form.description.data and form.amount.data:
+                    service_item = ServiceItem(
+                        booking_id=booking.id,
+                        service_type=form.service_type.data,
+                        start_date=form.from_date.data,
+                        end_date=form.to_date.data,
+                        description=form.description.data,
+                        amount=form.amount.data,
+                        status=STATUS_REQUEST
+                    )
+                    
+                    db.session.add(service_item)
+                    db.session.commit()
+                
+                flash(f'Booking request {reference} created successfully', 'success')
+                return redirect(url_for('booking.details', booking_id=booking.id))
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f'Error in {field}: {error}', 'danger')
     
     return render_template('booking/new_request.html', form=form, items=service_items)
 
