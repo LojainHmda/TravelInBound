@@ -106,6 +106,36 @@ body {
 
 .service-icon-table {
     font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* Service Items Table */
+.table > thead > tr.bg-dark-blue {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.table > thead > tr > th {
+    border-bottom: 0;
+    padding: 12px 15px;
+}
+
+.table > tbody > tr {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.table > tbody > tr > td {
+    padding: 12px 15px;
+    vertical-align: middle;
+}
+
+.badge.bg-orange {
+    background-color: var(--secondary-color);
+    color: white;
+    font-weight: normal;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
 }
 
 .service-feature {
