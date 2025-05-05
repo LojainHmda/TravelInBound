@@ -37,7 +37,7 @@ def new_booking():
             print("Form errors:", form.errors)
 
         # Check which button was clicked
-        if 'add_item' in request.form:
+        if 'add_item' in request.form or 'quick_add_service_type' in request.form:
             print("Add item button clicked")
             if form.validate():
                 # Add an item to the itinerary
@@ -51,9 +51,14 @@ def new_booking():
                 }
                 service_items.append(service_item)
                 
-                # In a real application, store this in the session
-                # For now, flash it to show functionality
-                flash(f'Item added: {service_item["service_type"]} - {service_item["description"]}', 'success')
+                # Display a specialized message for quick-added items
+                if 'quick_add_service_type' in request.form:
+                    quick_service_type = request.form.get('quick_add_service_type')
+                    service_name = dict(form.service_type.choices).get(quick_service_type, quick_service_type)
+                    flash(f'Quick added {service_name} service', 'success')
+                else:
+                    # Regular add item message
+                    flash(f'Item added: {service_item["service_type"]} - {service_item["description"]}', 'success')
             else:
                 for field, errors in form.errors.items():
                     for error in errors:

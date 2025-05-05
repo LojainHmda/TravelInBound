@@ -96,8 +96,8 @@
                         </table>
                     </div>
                     
-                    <!-- Deposit Amount Row -->
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <!-- Total Amount Row -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
                         <div class="deposit-amount-section">
                             <label class="form-label mb-0">Deposit Amount</label>
                             <div class="input-group" style="width: 200px;">
@@ -108,20 +108,20 @@
                         
                         <!-- Quick Add Service Buttons -->
                         <div class="quick-add-buttons d-flex">
-                            <button type="button" class="btn btn-outline-primary mx-1 quick-add-service" data-service-type="FLIGHT">
-                                <i class="fas fa-plane"></i> Flight
+                            <button type="button" class="btn btn-light mx-1 quick-add-service flight-btn" data-service-type="FLIGHT">
+                                <i class="fas fa-plane text-primary"></i> Flight
                             </button>
-                            <button type="button" class="btn btn-outline-success mx-1 quick-add-service" data-service-type="HOTEL">
-                                <i class="fas fa-hotel"></i> Hotel
+                            <button type="button" class="btn btn-light mx-1 quick-add-service hotel-btn" data-service-type="HOTEL">
+                                <i class="fas fa-hotel text-success"></i> Hotel
                             </button>
-                            <button type="button" class="btn btn-outline-warning mx-1 quick-add-service" data-service-type="TRANSPORT">
-                                <i class="fas fa-car"></i> Transport
+                            <button type="button" class="btn btn-light mx-1 quick-add-service transport-btn" data-service-type="TRANSPORT">
+                                <i class="fas fa-car text-warning"></i> Transport
                             </button>
-                            <button type="button" class="btn btn-outline-danger mx-1 quick-add-service" data-service-type="VISA">
-                                <i class="fas fa-passport"></i> Visa
+                            <button type="button" class="btn btn-light mx-1 quick-add-service visa-btn" data-service-type="VISA">
+                                <i class="fas fa-passport text-danger"></i> Visa
                             </button>
-                            <button type="button" class="btn btn-outline-info mx-1 quick-add-service" data-service-type="INSURANCE">
-                                <i class="fas fa-shield-alt"></i> Insurance
+                            <button type="button" class="btn btn-light mx-1 quick-add-service insurance-btn" data-service-type="INSURANCE">
+                                <i class="fas fa-shield-alt text-info"></i> Insurance
                             </button>
                         </div>
                     </div>
@@ -309,18 +309,62 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Focus on the description field
-                if (descriptionInput) {
-                    descriptionInput.focus();
+                // Set default values for other fields if they're empty
+                if (!fromDateInput.value) {
+                    fromDateInput.value = today;
                 }
                 
-                // Add a slight highlight effect to the form row
-                const formRow = serviceTypeSelect.closest('tr');
-                if (formRow) {
-                    formRow.classList.add('highlight-row');
-                    setTimeout(() => {
-                        formRow.classList.remove('highlight-row');
-                    }, 1000);
+                if (!toDateInput.value) {
+                    const nextWeek = new Date();
+                    nextWeek.setDate(nextWeek.getDate() + 7);
+                    toDateInput.value = nextWeek.toISOString().split('T')[0];
+                }
+                
+                // Set placeholder description based on service type
+                let description = '';
+                switch(serviceType) {
+                    case 'FLIGHT':
+                        description = 'One-way flight from New York to London, Economy class';
+                        break;
+                    case 'HOTEL':
+                        description = '5 nights at Grand Hotel, Double room with breakfast';
+                        break;
+                    case 'TRANSPORT':
+                        description = 'Airport transfer from Heathrow to central London';
+                        break;
+                    case 'VISA':
+                        description = 'Tourist visa application for United Kingdom';
+                        break;
+                    case 'INSURANCE':
+                        description = 'Comprehensive travel insurance for 7 days';
+                        break;
+                }
+                
+                // Set default values 
+                if (descriptionInput && !descriptionInput.value) {
+                    descriptionInput.value = description;
+                }
+                
+                // Set default amount if empty
+                const amountInput = document.getElementById('amount');
+                if (amountInput && !amountInput.value) {
+                    amountInput.value = '0.00';
+                }
+                
+                // Create a hidden input field to indicate which button was clicked
+                let hiddenInput = document.querySelector('input[name="quick_add_service_type"]');
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'quick_add_service_type';
+                    document.getElementById('newBookingForm').appendChild(hiddenInput);
+                }
+                hiddenInput.value = serviceType;
+                
+                // Get the add_item button and click it
+                const addItemButton = document.querySelector('button[name="add_item"]');
+                if (addItemButton) {
+                    addItemButton.click();
                 }
             });
         });
@@ -341,6 +385,41 @@ document.addEventListener('DOMContentLoaded', function() {
     .quick-add-buttons .btn {
         min-width: 120px;
         margin-bottom: 10px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+        padding: 8px 15px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .quick-add-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .quick-add-buttons .flight-btn:hover {
+        background-color: #f8f9ff;
+        color: #0d6efd;
+    }
+    
+    .quick-add-buttons .hotel-btn:hover {
+        background-color: #f8fff9;
+        color: #198754;
+    }
+    
+    .quick-add-buttons .transport-btn:hover {
+        background-color: #fffdf8;
+        color: #ffc107;
+    }
+    
+    .quick-add-buttons .visa-btn:hover {
+        background-color: #fff8f8;
+        color: #dc3545;
+    }
+    
+    .quick-add-buttons .insurance-btn:hover {
+        background-color: #f8fbff;
+        color: #0dcaf0;
     }
     
     @keyframes highlight {
