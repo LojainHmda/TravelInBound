@@ -67,7 +67,7 @@ def dashboard():
         'booking/dashboard.html',
         status_counts={
             'request': request_count,
-            'invoice': invoice_count,
+            'booked': booked_count,
             'in_progress': in_progress_count,
             'completed': completed_count
         },
@@ -81,7 +81,7 @@ def dashboard():
     )
 
 # New booking request
-@app.route('/booking/new', methods=['GET', 'POST'])
+@app.route('/requests', methods=['GET', 'POST'])
 def new_booking():
     form = NewBookingForm()
     
@@ -230,6 +230,90 @@ def update_service_status(item_id):
         flash(f'Service item status updated to {service_item.status}', 'success')
     
     return redirect(url_for('booking_details', booking_id=service_item.booking_id))
+
+# Generate Invoice
+@app.route('/booking/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
+def generate_invoice(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if request.method == 'POST':
+        total_amount = request.form.get('total_amount', type=float)
+        notes = request.form.get('notes', '')
+        
+        if not total_amount:
+            # If no total amount provided, calculate from service items
+            total_amount = booking.calculate_total()
+        
+        # Generate an invoice number
+        invoice_number = booking.generate_invoice_number()
+        
+        # Update booking status to BOOKED
+        booking.status = STATUS_BOOKED
+        
+        # Set invoice information
+        booking.invoice_date = datetime.utcnow()
+        db.session.commit()
+        
+        flash(f'Invoice #{invoice_number} generated successfully', 'success')
+        
+        # Return to the booking details page instead of invoice_details
+        return redirect(url_for('booking_details', booking_id=booking.id))
+    
+    # Calculate total from service items
+    total_amount = booking.calculate_total()
+    
+    return render_template(
+        'booking/generate_invoice.html',
+        booking=booking,
+        total_amount=total_amount
+    )
+
+# Add Payment
+@app.route('/booking/<int:booking_id>/add_payment', methods=['GET', 'POST'])
+def add_payment(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if request.method == 'POST':
+        amount = request.form.get('amount', type=float)
+        payment_method = request.form.get('payment_method')
+        transaction_id = request.form.get('transaction_id', '')
+        payment_date_str = request.form.get('payment_date')
+        notes = request.form.get('notes', '')
+        
+        if amount and payment_method:
+            try:
+                payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d')
+            except:
+                payment_date = datetime.utcnow()
+                
+            # Create new payment
+            payment = Payment(
+                booking_id=booking.id,
+                amount=amount,
+                payment_method=payment_method,
+                transaction_id=transaction_id,
+                payment_date=payment_date,
+                notes=notes
+            )
+            
+            db.session.add(payment)
+            
+            # Update booking payment status
+            booking.payment_date = datetime.utcnow()
+            booking.update_payment_status()
+            
+            db.session.commit()
+            
+            flash(f'Payment of ${amount} recorded successfully', 'success')
+            
+            # Return to the detail page that initiated the payment addition
+            return redirect(url_for('booking_details', booking_id=booking.id))
+    
+    return render_template(
+        'booking/add_payment.html',
+        booking=booking,
+        remaining_amount=(booking.total_amount - sum(payment.amount for payment in booking.payments))
+    )
 
 # API to get service items for a specific service type
 @app.route('/api/service_items/<service_type>', methods=['GET'])
