@@ -212,14 +212,14 @@ def new_booking():
                     
                     flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
                     
-                    # Only redirect if we're NOT in the new booking form
-                    if action == 'generate_invoice' and not 'new_booking' in request.path:
-                        return redirect(url_for('booking.details', booking_id=booking.id))
+                    # Never redirect for invoice generation - stay on same page
+                    # if action == 'generate_invoice' and not 'new_booking' in request.path:
+                    #     return redirect(url_for('booking.details', booking_id=booking.id))
                 
-                # Check if payment information was provided
+                # Check if payment information was provided - allow various action names
                 payment_method = request.form.get('payment_method')
                 payment_notes = request.form.get('payment_notes')
-                if payment_method and booking and action == 'process_payment':
+                if payment_method and booking and (action == 'process_payment' or action == 'payment'):
                     # Make sure we have a valid booking and the action is explicitly for payment
                     from datetime import datetime  # Import datetime here to fix the undefined issue
                     

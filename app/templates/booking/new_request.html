@@ -318,8 +318,14 @@
                         <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-md-2">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
-                        <button type="submit" name="save_action" value="save" class="btn btn-primary">
+                        <button type="submit" name="save_action" value="save" class="btn btn-primary me-md-2">
                             <i class="fas fa-save me-2"></i>Save Request
+                        </button>
+                        <button type="submit" name="save_action" value="invoice" class="btn btn-info me-md-2">
+                            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Invoice
+                        </button>
+                        <button type="submit" name="save_action" value="payment" class="btn btn-success">
+                            <i class="fas fa-money-bill-wave me-2"></i>Process Payment
                         </button>
                     </div>
                 </form>
