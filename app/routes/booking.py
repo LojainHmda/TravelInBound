@@ -818,20 +818,40 @@ def generate_invoice(booking_id):
         form.total_amount.data = booking.total_amount
     
     if request.method == 'POST':
+        import sys
+        print(f"POST data received in generate_invoice: {request.form}", file=sys.stderr)
+        
         # Handle both direct form submission and AJAX/form submissions with different parameters
         new_total = None
         
-        # Check if we have a form submission with validated data
-        if form.validate_on_submit():
+        # Check for invoice_total in form data first (this comes from the modal in new_request.html)
+        invoice_total = request.form.get('invoice_total')
+        if invoice_total:
+            try:
+                new_total = float(invoice_total)
+                print(f"Using invoice_total from form: {new_total}", file=sys.stderr)
+            except (ValueError, TypeError):
+                print(f"Invalid invoice_total: {invoice_total}", file=sys.stderr)
+        
+        # Then check for regular form validation
+        if new_total is None and form.validate_on_submit():
             new_total = form.total_amount.data
-        else:
-            # Look for total in various parameter names from the new_booking form
-            new_total = request.form.get('invoice_total') or request.form.get('total_amount')
-            if new_total:
+            print(f"Using total_amount from validated form: {new_total}", file=sys.stderr)
+        
+        # Finally, look for other form fields
+        if new_total is None:
+            total_amount = request.form.get('total_amount')
+            if total_amount:
                 try:
-                    new_total = float(new_total)
+                    new_total = float(total_amount)
+                    print(f"Using total_amount from form: {new_total}", file=sys.stderr)
                 except (ValueError, TypeError):
-                    new_total = None
+                    print(f"Invalid total_amount: {total_amount}", file=sys.stderr)
+        
+        # If still no valid total, use the current booking total
+        if new_total is None:
+            new_total = booking.total_amount
+            print(f"Using existing booking total: {new_total}", file=sys.stderr)
         
         # If we have a valid total, update and generate invoice
         if new_total is not None:

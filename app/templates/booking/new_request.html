@@ -169,7 +169,7 @@
                                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
                                     <div>
-                                        <button type="submit" name="save_action" value="invoice" class="btn btn-sm btn-success me-1">
+                                        <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
                                             <i class="fas fa-file-invoice me-1"></i> Generate Invoice
                                         </button>
                                         <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
@@ -517,21 +517,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const createInvoiceBtn = document.getElementById('createInvoiceBtn');
     if (createInvoiceBtn) {
         createInvoiceBtn.addEventListener('click', function() {
-            // Copy data back to main form
+            // Get the total amount from the invoice modal
+            const invoiceTotalInput = document.getElementById('invoice_total');
+            let totalAmount = 0;
+            if (invoiceTotalInput && invoiceTotalInput.value) {
+                totalAmount = parseFloat(invoiceTotalInput.value);
+            }
+            
+            // Copy notes data back to main form
             const invoiceModalNotes = document.getElementById('invoice_modal_notes');
             const invoiceNotes = document.getElementById('invoice_notes');
             if (invoiceModalNotes && invoiceNotes) {
                 invoiceNotes.value = invoiceModalNotes.value;
             }
             
-            // Close the modal
-            const bsModal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
-            if (bsModal) {
-                bsModal.hide();
-            }
+            // Create a hidden input for the invoice total
+            const hiddenTotalInput = document.createElement('input');
+            hiddenTotalInput.type = 'hidden';
+            hiddenTotalInput.name = 'invoice_total';
+            hiddenTotalInput.value = totalAmount;
             
-            // Show confirmation message
-            alert('Invoice information saved. The invoice will be generated after creating the booking.');
+            // Add the hidden input to the form
+            const bookingForm = document.getElementById('newBookingForm');
+            if (bookingForm) {
+                bookingForm.appendChild(hiddenTotalInput);
+                
+                // Set the save_action to generate_invoice
+                const hiddenActionInput = document.createElement('input');
+                hiddenActionInput.type = 'hidden';
+                hiddenActionInput.name = 'save_action';
+                hiddenActionInput.value = 'generate_invoice';
+                bookingForm.appendChild(hiddenActionInput);
+                
+                // Close the modal
+                const bsModal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
+                if (bsModal) {
+                    bsModal.hide();
+                }
+                
+                // Submit the form to generate the invoice
+                bookingForm.submit();
+            } else {
+                // Close the modal
+                const bsModal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
+                if (bsModal) {
+                    bsModal.hide();
+                }
+                
+                // Show confirmation message
+                alert('Error: Booking form not found. Please try again.');
+            }
         });
     }
     
