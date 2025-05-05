@@ -817,20 +817,48 @@ def generate_invoice(booking_id):
     if request.method == 'GET':
         form.total_amount.data = booking.total_amount
     
-    if form.validate_on_submit():
-        # Update the booking total if changed
-        booking.total_amount = form.total_amount.data
+    if request.method == 'POST':
+        # Handle both direct form submission and AJAX/form submissions with different parameters
+        new_total = None
         
-        # Generate invoice number if not already set
-        if not booking.invoice_number:
-            booking.generate_invoice_number()
+        # Check if we have a form submission with validated data
+        if form.validate_on_submit():
+            new_total = form.total_amount.data
+        else:
+            # Look for total in various parameter names from the new_booking form
+            new_total = request.form.get('invoice_total') or request.form.get('total_amount')
+            if new_total:
+                try:
+                    new_total = float(new_total)
+                except (ValueError, TypeError):
+                    new_total = None
         
-        # Update status to INVOICE
-        booking.status = STATUS_INVOICE
-        
-        db.session.commit()
-        flash(f'Invoice {booking.invoice_number} generated successfully', 'success')
-        return redirect(url_for('booking.invoice_details', booking_id=booking.id))
+        # If we have a valid total, update and generate invoice
+        if new_total is not None:
+            # Update the booking total
+            booking.total_amount = new_total
+            
+            # Generate invoice number if not already set
+            if not booking.invoice_number:
+                booking.generate_invoice_number()
+            
+            # Update status to INVOICE
+            booking.status = STATUS_INVOICE
+            
+            # Add invoice notes if provided
+            notes = form.notes.data or request.form.get('invoice_notes', '')
+            # You could save notes to the booking or create a separate model for invoice notes
+            
+            db.session.commit()
+            flash(f'Invoice {booking.invoice_number} generated successfully', 'success')
+            
+            # Check if this is from the new booking form by looking at the referrer or a flag
+            if 'save_action' in request.form:
+                # Return to the new booking form (or stay on current page)
+                return redirect(url_for('booking.new_booking'))
+            else:
+                # Otherwise go to invoice details page
+                return redirect(url_for('booking.invoice_details', booking_id=booking.id))
     
     return render_template('booking/generate_invoice.html', form=form, booking=booking)
 
