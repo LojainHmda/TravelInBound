@@ -92,6 +92,9 @@ def new_booking():
         elif 'save_action' in request.form:
             print("Save button clicked")
             if form.validate():
+                # Get the action type (save or generate_invoice)
+                action = request.form.get('save_action', 'save')
+                
                 # Create a unique reference number
                 reference = form.request_id.data
                 
@@ -157,18 +160,31 @@ def new_booking():
                 # Clear the session
                 session.pop('service_items', None)
                 
-                # Check if invoice information was provided
-                invoice_notes = request.form.get('invoice_notes')
-                if invoice_notes:
-                    # Generate invoice number if one doesnt exist
+                # Handle invoice generation if requested
+                if action == 'generate_invoice' or request.form.get('invoice_notes'):
+                    # Update the total amount if provided
+                    invoice_total = request.form.get('invoice_total')
+                    if invoice_total and float(invoice_total) > 0:
+                        booking.total_amount = float(invoice_total)
+                    
+                    # Generate invoice number if one doesn't exist
                     if not booking.invoice_number:
                         booking.generate_invoice_number()
                     
                     # Update the booking status to INVOICE
                     booking.status = STATUS_INVOICE
+                    
+                    # Save invoice notes
+                    invoice_notes = request.form.get('invoice_notes', '')
+                    # You could add the notes to the booking or create a separate model for invoice notes
+                    
                     db.session.commit()
                     
                     flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
+                    
+                    # If this was a direct invoice action, redirect to the booking details
+                    if action == 'generate_invoice':
+                        return redirect(url_for('booking.details', booking_id=booking.id))
                 
                 # Check if payment information was provided
                 payment_method = request.form.get('payment_method')
@@ -197,9 +213,11 @@ def new_booking():
                     
                     flash(f'Payment of ${booking.total_amount:.2f} processed for booking {reference}', 'success')
                 
-                flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
-                # Don't redirect, stay on the same page
-                return redirect(url_for('booking.new_booking'))
+                # Only flash the success message if we're not redirecting elsewhere
+                if action == 'save':
+                    flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
+                    # Don't redirect, stay on the same page
+                    return redirect(url_for('booking.new_booking'))
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
