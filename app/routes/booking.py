@@ -157,6 +157,46 @@ def new_booking():
                 # Clear the session
                 session.pop('service_items', None)
                 
+                # Check if invoice information was provided
+                invoice_notes = request.form.get('invoice_notes')
+                if invoice_notes:
+                    # Generate invoice number if one doesnt exist
+                    if not booking.invoice_number:
+                        booking.generate_invoice_number()
+                    
+                    # Update the booking status to INVOICE
+                    booking.status = STATUS_INVOICE
+                    db.session.commit()
+                    
+                    flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
+                
+                # Check if payment information was provided
+                payment_method = request.form.get('payment_method')
+                payment_notes = request.form.get('payment_notes')
+                if payment_method:
+                    # Create a payment record
+                    payment = Payment(
+                        booking_id=booking.id,
+                        amount=booking.total_amount,  # Use the calculated total amount
+                        payment_date=datetime.utcnow(),
+                        payment_method=payment_method,
+                        transaction_id='MANUAL-' + datetime.utcnow().strftime('%Y%m%d%H%M%S'),
+                        notes=payment_notes or ''
+                    )
+                    
+                    db.session.add(payment)
+                    
+                    # Update booking payment status
+                    booking.update_payment_status()
+                    
+                    # Set payment date on booking if not already set
+                    if not booking.payment_date:
+                        booking.payment_date = datetime.utcnow()
+                    
+                    db.session.commit()
+                    
+                    flash(f'Payment of ${booking.total_amount:.2f} processed for booking {reference}', 'success')
+                
                 flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
                 return redirect(url_for('booking.details', booking_id=booking.id))
             else:
