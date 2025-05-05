@@ -220,14 +220,14 @@ function createDetailsHTML(booking) {
             // Display different actions based on status
             if (item.status === 'REQUEST') {
                 actionsHtml = `
-                    <button type="button" class="btn btn-sm btn-success me-1 confirm-service-btn" data-service-id="${item.id}">
+                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-success me-1">
                         <i class="fas fa-check me-1"></i>Confirm
-                    </button>`;
+                    </a>`;
             } else if (item.status === 'IN_PROGRESS') {
                 actionsHtml = `
-                    <button type="button" class="btn btn-sm btn-primary me-1 confirm-service-btn" data-service-id="${item.id}">
+                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-primary me-1">
                         <i class="fas fa-edit me-1"></i>Edit
-                    </button>`;
+                    </a>`;
             }
             
             html += `
