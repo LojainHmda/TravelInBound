@@ -4,6 +4,58 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Insurance confirmation script loaded');
     
+    // Set pre-selected values for dropdowns if they're not already selected
+    function setSelectedOption(selectElement, value) {
+        if (!selectElement) {
+            console.warn('Select element not found');
+            return;
+        }
+        
+        if (!value) {
+            console.warn('No value to set for', selectElement.name);
+            return;
+        }
+        
+        // Try to find and select the option with the matching value
+        const options = selectElement.querySelectorAll('option');
+        let found = false;
+        
+        options.forEach(option => {
+            if (option.value === value) {
+                option.selected = true;
+                found = true;
+            }
+        });
+        
+        if (!found) {
+            console.warn(`Could not find matching option for ${selectElement.name} with value: ${value}`);
+        }
+    }
+    
+    // Get saved data from pre-populated fields
+    const supplierValue = document.querySelector('input[name="supplier_value"]')?.value;
+    const insuranceTypeValue = document.querySelector('input[name="insurance_type_value"]')?.value;
+    const currencyValue = document.querySelector('input[name="currency_value"]')?.value;
+    
+    // Get references to the select elements
+    const supplierSelect = document.querySelector('select[name="supplier"]');
+    const insuranceTypeSelect = document.querySelector('select[name="insurance_type"]');
+    const currencySelect = document.querySelector('select[name="currency"]');
+    
+    // Set values in select elements only if they need to be set by JS
+    // The template should have already set selected attributes
+    if (supplierSelect && supplierValue && !supplierSelect.value) {
+        setSelectedOption(supplierSelect, supplierValue);
+    }
+    
+    if (insuranceTypeSelect && insuranceTypeValue && !insuranceTypeSelect.value) {
+        setSelectedOption(insuranceTypeSelect, insuranceTypeValue);
+    }
+    
+    if (currencySelect && currencyValue && !currencySelect.value) {
+        setSelectedOption(currencySelect, currencyValue);
+    }
+    
     // Add insured person functionality
     const addInsuredBtn = document.getElementById('addInsured');
     const additionalInsured = document.getElementById('additionalInsured');
@@ -36,9 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Insurance type selections
-    const insuranceTypeSelect = document.querySelector('select[name="insurance_type"]');
-    
+    // Insurance type selections - we already have the reference from earlier
     if (insuranceTypeSelect) {
         insuranceTypeSelect.addEventListener('change', function() {
             const insuranceType = this.value;
@@ -107,10 +157,5 @@ document.addEventListener('DOMContentLoaded', function() {
         selectElement.appendChild(option);
     }
 
-    // Debug information
-    console.log('Insurance form data loaded:', {
-        'policy_number': document.querySelector('input[name="policy_number"]')?.value,
-        'primary_insured': document.querySelector('input[name="primary_insured"]')?.value,
-        'insurance_type': document.querySelector('select[name="insurance_type"]')?.value
-    });
+    // Initialize any other insurance-specific behavior here
 });

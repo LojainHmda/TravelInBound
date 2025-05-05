@@ -8,14 +8,14 @@
 {% block service_type %}INSURANCE{% endblock %}
 
 {% block supplier_options %}
-<option value="Allianz">Allianz</option>
-<option value="AXA">AXA</option>
-<option value="World Nomads">World Nomads</option>
-<option value="Blue Cross">Blue Cross</option>
-<option value="AIG">AIG</option>
-<option value="SafetyWing">SafetyWing</option>
-<option value="Columbus Direct">Columbus Direct</option>
-<option value="Seven Corners">Seven Corners</option>
+<option value="Allianz" {% if confirmation_data.supplier == 'Allianz' %}selected{% endif %}>Allianz</option>
+<option value="AXA" {% if confirmation_data.supplier == 'AXA' %}selected{% endif %}>AXA</option>
+<option value="World Nomads" {% if confirmation_data.supplier == 'World Nomads' %}selected{% endif %}>World Nomads</option>
+<option value="Blue Cross" {% if confirmation_data.supplier == 'Blue Cross' %}selected{% endif %}>Blue Cross</option>
+<option value="AIG" {% if confirmation_data.supplier == 'AIG' %}selected{% endif %}>AIG</option>
+<option value="SafetyWing" {% if confirmation_data.supplier == 'SafetyWing' %}selected{% endif %}>SafetyWing</option>
+<option value="Columbus Direct" {% if confirmation_data.supplier == 'Columbus Direct' %}selected{% endif %}>Columbus Direct</option>
+<option value="Seven Corners" {% if confirmation_data.supplier == 'Seven Corners' %}selected{% endif %}>Seven Corners</option>
 {% endblock %}
 
 {% block form_content %}
@@ -31,13 +31,13 @@
             <label class="form-label">Insurance Type</label>
             <select name="insurance_type" class="form-select" required>
                 <option value="">-- Select Type --</option>
-                <option value="Travel Medical">Travel Medical</option>
-                <option value="Trip Cancellation">Trip Cancellation</option>
-                <option value="Comprehensive">Comprehensive Travel</option>
-                <option value="Baggage">Baggage Loss/Delay</option>
-                <option value="Flight">Flight Insurance</option>
-                <option value="Adventure">Adventure/Sports</option>
-                <option value="Business">Business Travel</option>
+                <option value="Travel Medical" {% if confirmation_data.insurance_type == 'Travel Medical' %}selected{% endif %}>Travel Medical</option>
+                <option value="Trip Cancellation" {% if confirmation_data.insurance_type == 'Trip Cancellation' %}selected{% endif %}>Trip Cancellation</option>
+                <option value="Comprehensive" {% if confirmation_data.insurance_type == 'Comprehensive' %}selected{% endif %}>Comprehensive Travel</option>
+                <option value="Baggage" {% if confirmation_data.insurance_type == 'Baggage' %}selected{% endif %}>Baggage Loss/Delay</option>
+                <option value="Flight" {% if confirmation_data.insurance_type == 'Flight' %}selected{% endif %}>Flight Insurance</option>
+                <option value="Adventure" {% if confirmation_data.insurance_type == 'Adventure' %}selected{% endif %}>Adventure/Sports</option>
+                <option value="Business" {% if confirmation_data.insurance_type == 'Business' %}selected{% endif %}>Business Travel</option>
             </select>
         </div>
         
@@ -63,9 +63,9 @@
             <label class="form-label">Coverage Amount</label>
             <div class="input-group">
                 <select name="currency" class="form-select" style="max-width: 100px;">
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
+                    <option value="USD" {% if confirmation_data.currency == 'USD' %}selected{% endif %}>USD</option>
+                    <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                    <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
                 </select>
                 <input type="number" name="coverage_amount" class="form-control" required min="0" step="0.01">
             </div>
