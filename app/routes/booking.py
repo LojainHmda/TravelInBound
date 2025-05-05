@@ -214,13 +214,26 @@ def confirm_service(item_id):
         # Set item status to IN_PROGRESS
         service_item.status = STATUS_IN_PROGRESS
         
-        # Store confirmation details in a new document record
-        document = Document(
+        # Check if a confirmation document already exists
+        document = Document.query.filter_by(
             service_item_id=service_item.id,
-            document_type='CONFIRMATION',
-            document_number=confirmation_reference,
-            notes=notes
-        )
+            document_type='CONFIRMATION'
+        ).first()
+        
+        if document:
+            # Update existing document
+            document.document_number = confirmation_reference
+            document.notes = notes
+            print(f"Updating existing confirmation document: {document.id}")
+        else:
+            # Create new document
+            document = Document(
+                service_item_id=service_item.id,
+                document_type='CONFIRMATION',
+                document_number=confirmation_reference,
+                notes=notes
+            )
+            print(f"Creating new confirmation document for service item: {service_item.id}")
         
         # Store the service-specific details as JSON in the notes field
         import json

@@ -3,7 +3,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add passenger function
     const addPassengerBtn = document.getElementById('addPassenger');
     const passengerNames = document.getElementById('passengerNames');
-    let passengerCount = 1;
+    
+    // Calculate the current number of passengers
+    let passengerCount = passengerNames ? passengerNames.querySelectorAll('.input-group').length : 1;
+    
+    // Add event listeners to existing remove passenger buttons
+    document.querySelectorAll('.remove-passenger').forEach(button => {
+        button.addEventListener('click', function() {
+            this.closest('.input-group').remove();
+        });
+    });
     
     if (addPassengerBtn && passengerNames) {
         addPassengerBtn.addEventListener('click', function() {
@@ -21,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const newPassenger = document.createElement('div');
             newPassenger.className = 'input-group mb-2';
             newPassenger.innerHTML = `
-                <span class="input-group-text">${passengerType} ${passengerCount}</span>
+                <span class="input-group-text">Passenger ${passengerCount}</span>
                 <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
                 <button type="button" class="btn btn-outline-danger remove-passenger">
                     <i class="fas fa-times"></i>

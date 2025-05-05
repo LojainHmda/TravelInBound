@@ -37,10 +37,24 @@
         <div class="mb-3">
             <label class="form-label">Passenger Names</label>
             <div id="passengerNames">
+                {% if confirmation_data.passenger_names %}
+                    {% for name in confirmation_data.passenger_names %}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Passenger {{ loop.index }}</span>
+                        <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
+                        {% if not loop.first %}
+                        <button type="button" class="btn btn-outline-danger remove-passenger">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
                 <div class="input-group mb-2">
                     <span class="input-group-text">Adult 1</span>
                     <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
                 </div>
+                {% endif %}
             </div>
             <button type="button" class="btn btn-sm btn-outline-secondary" id="addPassenger">
                 <i class="fas fa-plus-circle"></i> Add Passenger
