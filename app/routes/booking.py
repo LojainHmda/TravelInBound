@@ -852,9 +852,15 @@ def add_payment(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     form = PaymentForm()
     
-    # Default payment date to today
+    # Set defaults on GET request
     if request.method == 'GET':
+        # Default payment date to today
         form.payment_date.data = datetime.utcnow().date()
+        
+        # Default amount to remaining balance
+        total_paid = sum(payment.amount for payment in booking.payments)
+        remaining = booking.total_amount - total_paid
+        form.amount.data = remaining if remaining > 0 else booking.total_amount
     
     if form.validate_on_submit():
         payment = Payment(

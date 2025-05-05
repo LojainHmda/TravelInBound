@@ -1,5 +1,23 @@
 {% extends 'base.html' %}
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+<script>
+// Initialize existing payment data if available
+window.existingPayments = [
+    {% for payment in booking.payments %}
+    {
+        date: "{{ payment.payment_date.strftime('%Y-%m-%d') }}",
+        method: "{{ payment.payment_method }}",
+        amount: "{{ "%.2f"|format(payment.amount) }}",
+        notes: "{{ payment.notes }}",
+        transaction_id: "{{ payment.transaction_id }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="row mb-4">
     <div class="col-md-12">
