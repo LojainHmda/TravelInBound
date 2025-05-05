@@ -34,11 +34,22 @@ class NewBookingForm(FlaskForm):
         ('GBP', 'GBP')
     ], default='USD')
     
-    # Deposit amount
-    deposit_amount = FloatField('Deposit Amount')
+    # Invoice fields
+    invoice_notes = TextAreaField('Invoice Notes', validators=[Optional()])
+    
+    # Payment fields
+    payment_method = SelectField('Payment Method', choices=[
+        ('CREDIT_CARD', 'Credit Card'),
+        ('BANK_TRANSFER', 'Bank Transfer'),
+        ('PAYPAL', 'PayPal'),
+        ('CASH', 'Cash'),
+        ('OTHER', 'Other')
+    ])
+    payment_notes = TextAreaField('Payment Notes', validators=[Optional()])
     
     submit = SubmitField('Create Booking Request')
     add_item = SubmitField('Add Item')
+    save_action = SubmitField('Save')
 
 class ServiceItemForm(FlaskForm):
     service_type = SelectField('Service Type', choices=[
