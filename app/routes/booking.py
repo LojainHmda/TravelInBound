@@ -1,6 +1,7 @@
 import uuid
+import json
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
 from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
@@ -26,30 +27,50 @@ def new_booking():
     # Generate request ID if not already set
     if not form.request_id.data:
         form.request_id.data = f"IR-{str(uuid.uuid4())[:5].upper()}"
+        # Start a new session for this booking
+        session['service_items'] = []
     
-    # Track items added to the booking
-    service_items = []
+    # Initialize service items from session
+    if 'service_items' not in session:
+        session['service_items'] = []
+    
+    service_items = session['service_items']
+    
+    # Handle item removal if requested
+    item_id_to_remove = request.args.get('remove_item')
+    if item_id_to_remove:
+        service_items = [item for item in service_items if item.get('item_id') != item_id_to_remove]
+        session['service_items'] = service_items
+        flash('Service item removed successfully', 'success')
+        return redirect(url_for('booking.new_booking'))
     
     if request.method == 'POST':
         print("POST received. Form data:", request.form)
         print("Form is valid?", form.validate())
         if form.errors:
             print("Form errors:", form.errors)
+            
+        # Reload service items from session to ensure we don't lose anything
+        service_items = session.get('service_items', [])
 
         # Check which button was clicked
         if 'add_item' in request.form or 'quick_add_service_type' in request.form:
             print("Add item button clicked")
             if form.validate():
-                # Add an item to the itinerary
+                # Create a new service item to add to the itinerary
                 service_item = {
                     'service_type': form.service_type.data,
-                    'from_date': form.from_date.data,
-                    'to_date': form.to_date.data,
+                    'from_date': str(form.from_date.data),
+                    'to_date': str(form.to_date.data),
                     'description': form.description.data,
-                    'amount': form.amount.data,
-                    'currency': form.currency.data
+                    'amount': float(form.amount.data) if form.amount.data else 0.0,
+                    'currency': form.currency.data,
+                    'item_id': str(uuid.uuid4())  # Add a unique ID for each item
                 }
+                
+                # Add to list and update session
                 service_items.append(service_item)
+                session['service_items'] = service_items
                 
                 # Display a specialized message for quick-added items
                 if 'quick_add_service_type' in request.form:
@@ -59,6 +80,10 @@ def new_booking():
                 else:
                     # Regular add item message
                     flash(f'Item added: {service_item["service_type"]} - {service_item["description"]}', 'success')
+                
+                # Clear the form fields for next item
+                form.description.data = ''
+                form.amount.data = None
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -84,8 +109,37 @@ def new_booking():
                 db.session.add(booking)
                 db.session.commit()
                 
-                # Add service item if provided
-                if form.description.data and form.amount.data:
+                # Get service items from session
+                session_items = session.get('service_items', [])
+                
+                # Add all service items from the session
+                if session_items:
+                    for item_data in session_items:
+                        # Convert string dates back to Python date objects
+                        from datetime import datetime
+                        
+                        # Parse the date strings
+                        start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
+                        end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
+                        
+                        service_item = ServiceItem(
+                            booking_id=booking.id,
+                            service_type=item_data['service_type'],
+                            start_date=start_date,
+                            end_date=end_date,
+                            description=item_data['description'],
+                            amount=float(item_data['amount']),
+                            status=STATUS_REQUEST
+                        )
+                        
+                        db.session.add(service_item)
+                    
+                    db.session.commit()
+                    booking.calculate_total()
+                    db.session.commit()
+                
+                # Also add the current item if it has data
+                elif form.description.data and form.amount.data:
                     service_item = ServiceItem(
                         booking_id=booking.id,
                         service_type=form.service_type.data,
@@ -98,8 +152,13 @@ def new_booking():
                     
                     db.session.add(service_item)
                     db.session.commit()
+                    booking.calculate_total()
+                    db.session.commit()
                 
-                flash(f'Booking request {reference} created successfully', 'success')
+                # Clear the session
+                session.pop('service_items', None)
+                
+                flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
                 return redirect(url_for('booking.details', booking_id=booking.id))
             else:
                 for field, errors in form.errors.items():
