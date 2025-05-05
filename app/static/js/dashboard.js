@@ -117,7 +117,7 @@ function loadBookingDetails(bookingId, button) {
     // Show loading indicator
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
     
-    fetch(`/booking/api/${bookingId}/details`)
+    fetch(`/api/booking/${bookingId}/details`)
         .then(response => response.json())
         .then(data => {
             // Create details row
@@ -139,6 +139,9 @@ function loadBookingDetails(bookingId, button) {
             
             // Update button
             button.innerHTML = '<i class="fas fa-chevron-up"></i> Hide';
+            
+            // Initialize confirm buttons in the details view
+            initializeConfirmButtons();
         })
         .catch(error => {
             console.error('Error loading booking details:', error);

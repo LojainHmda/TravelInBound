@@ -48,6 +48,10 @@ def create_app():
         from app.routes.booking import booking_bp
         app.register_blueprint(booking_bp, url_prefix='/booking')
         
+        # Register API blueprint
+        from app.routes.api import api_bp
+        app.register_blueprint(api_bp)
+        
         # Set up login manager
         from app.models import User
         @login_manager.user_loader
