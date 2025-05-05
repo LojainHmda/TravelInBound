@@ -16,9 +16,6 @@ def create_app():
     # Create the Flask app
     app = Flask(__name__)
     
-    # Disable template caching
-    app.config['TEMPLATES_AUTO_RELOAD'] = True
-    
     # Configure secret key and database URI
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-key-for-testing")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
