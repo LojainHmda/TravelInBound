@@ -168,9 +168,14 @@
                             <div class="card">
                                 <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
-                                    <a href="#" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
-                                        <i class="fas fa-pencil-alt me-1"></i> Create Invoice
-                                    </a>
+                                    <div>
+                                        <button type="submit" name="save_action" value="invoice" class="btn btn-sm btn-success me-1">
+                                            <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+                                        </button>
+                                        <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
+                                            <i class="fas fa-eye me-1"></i> View Invoice
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="row mb-3">
@@ -320,12 +325,6 @@
                         </a>
                         <button type="submit" name="save_action" value="save" class="btn btn-primary me-md-2">
                             <i class="fas fa-save me-2"></i>Save Request
-                        </button>
-                        <button type="submit" name="save_action" value="invoice" class="btn btn-info me-md-2">
-                            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Invoice
-                        </button>
-                        <button type="submit" name="save_action" value="payment" class="btn btn-success me-md-2">
-                            <i class="fas fa-money-bill-wave me-2"></i>Process Payment
                         </button>
                         <button type="submit" name="save_action" value="start_operations" class="btn btn-warning">
                             <i class="fas fa-play-circle me-2"></i>Start Operations
