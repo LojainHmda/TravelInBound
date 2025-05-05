@@ -1,5 +1,52 @@
 // Flight confirmation specific functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Flight confirmation script loaded');
+    
+    // Set pre-selected values for dropdowns if they're not already selected
+    function setSelectedOption(selectElement, value) {
+        if (!selectElement) {
+            console.warn('Select element not found');
+            return;
+        }
+        
+        if (!value) {
+            console.warn('No value to set for', selectElement.name);
+            return;
+        }
+        
+        // Try to find and select the option with the matching value
+        const options = selectElement.querySelectorAll('option');
+        let found = false;
+        
+        options.forEach(option => {
+            if (option.value === value) {
+                option.selected = true;
+                found = true;
+            }
+        });
+        
+        if (!found) {
+            console.warn(`Could not find matching option for ${selectElement.name} with value: ${value}`);
+        }
+    }
+    
+    // Get saved data from pre-populated fields
+    const supplierValue = document.querySelector('input[name="supplier_value"]')?.value;
+    const travelClassValue = document.querySelector('input[name="travel_class_value"]')?.value;
+    
+    // Get references to the select elements
+    const supplierSelect = document.querySelector('select[name="supplier"]');
+    const travelClassSelect = document.querySelector('select[name="travel_class"]');
+    
+    // Set values in select elements only if they need to be set by JS
+    // The template should have already set selected attributes
+    if (supplierSelect && supplierValue && !supplierSelect.value) {
+        setSelectedOption(supplierSelect, supplierValue);
+    }
+    
+    if (travelClassSelect && travelClassValue && !travelClassSelect.value) {
+        setSelectedOption(travelClassSelect, travelClassValue);
+    }
     // Add passenger function
     const addPassengerBtn = document.getElementById('addPassenger');
     const passengerNames = document.getElementById('passengerNames');

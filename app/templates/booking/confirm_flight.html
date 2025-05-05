@@ -16,6 +16,10 @@
 {% endblock %}
 
 {% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="travel_class_value" value="{{ confirmation_data.travel_class }}">
+
 <div class="row mb-4">
     <div class="col-md-4">
         <h5>Passenger Information</h5>
