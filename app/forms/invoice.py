@@ -22,3 +22,20 @@ class PaymentForm(FlaskForm):
     payment_date = DateField('Payment Date', validators=[DataRequired()], format='%Y-%m-%d')
     notes = TextAreaField('Payment Notes', validators=[Optional()])
     submit = SubmitField('Process Payment')
+    
+    def validate_amount(self, field):
+        """Validate that payment amount doesn't exceed the invoice amount"""
+        from flask import request
+        from app.models.booking import Booking
+        
+        if request.method == 'POST':
+            booking_id = request.view_args.get('booking_id')
+            if booking_id:
+                booking = Booking.query.get(booking_id)
+                if booking:
+                    total_paid = sum(payment.amount for payment in booking.payments)
+                    remaining = booking.total_amount - total_paid
+                    
+                    if field.data > remaining:
+                        from wtforms.validators import ValidationError
+                        raise ValidationError(f'Payment amount cannot exceed remaining balance (${remaining:.2f}).')
