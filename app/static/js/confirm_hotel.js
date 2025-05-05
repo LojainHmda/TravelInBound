@@ -1,5 +1,67 @@
 // Hotel confirmation specific functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Hotel confirmation script loaded');
+    
+    // Set pre-selected values for dropdowns if they're not already selected
+    function setSelectedOption(selectElement, value) {
+        if (!selectElement) {
+            console.warn('Select element not found');
+            return;
+        }
+        
+        if (!value) {
+            console.warn('No value to set for', selectElement.name);
+            return;
+        }
+        
+        console.log(`Setting ${selectElement.name} to value: '${value}'`);
+        
+        // Try to find and select the option with the matching value
+        const options = selectElement.querySelectorAll('option');
+        let found = false;
+        
+        options.forEach(option => {
+            if (option.value === value) {
+                option.selected = true;
+                found = true;
+                console.log(`Found exact match for ${selectElement.name}: ${value}`);
+            }
+        });
+        
+        if (!found) {
+            console.warn(`Could not find matching option for ${selectElement.name} with value: ${value}`);
+        }
+    }
+    
+    // Get saved data from pre-populated fields
+    const supplierValue = document.querySelector('input[name="supplier_value"]')?.value;
+    const mealPlanValue = document.querySelector('input[name="meal_plan_value"]')?.value;
+    const statusValue = document.querySelector('input[name="status_value"]')?.value;
+    const currencyValue = document.querySelector('input[name="currency_value"]')?.value;
+    
+    // Get references to the select elements
+    const supplierSelect = document.querySelector('select[name="supplier"]');
+    const mealPlanSelect = document.querySelector('select[name="meal_plan"]');
+    const statusSelect = document.querySelector('select[name="status"]');
+    const currencySelect = document.querySelector('select[name="currency"]');
+    
+    // Set values in select elements only if they need to be set by JS
+    // The template should have already set selected attributes
+    if (supplierSelect && supplierValue && !supplierSelect.value) {
+        setSelectedOption(supplierSelect, supplierValue);
+    }
+    
+    if (mealPlanSelect && mealPlanValue && !mealPlanSelect.value) {
+        setSelectedOption(mealPlanSelect, mealPlanValue);
+    }
+    
+    if (statusSelect && statusValue && !statusSelect.value) {
+        setSelectedOption(statusSelect, statusValue);
+    }
+    
+    if (currencySelect && currencyValue && !currencySelect.value) {
+        setSelectedOption(currencySelect, currencyValue);
+    }
     // Date range validation (check-out should be after check-in)
     const fromDateInput = document.querySelector('input[name="from_date"]');
     const toDateInput = document.querySelector('input[name="to_date"]');

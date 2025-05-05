@@ -26,7 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Set min date to today for start_date
             const today = new Date().toISOString().split('T')[0];
-            startDateInput.setAttribute('min', today);
+            if (startDateInput) {
+                startDateInput.setAttribute('min', today);
+            }
         }
         
         // Service type change handler
@@ -120,5 +122,8 @@ function updateDescriptionPlaceholder(serviceType) {
             placeholder = 'Enter service description';
     }
     
-    descriptionField.setAttribute('placeholder', placeholder);
+    // Only set attribute if the element exists
+    if (descriptionField) {
+        descriptionField.setAttribute('placeholder', placeholder);
+    }
 }

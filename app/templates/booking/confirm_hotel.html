@@ -16,6 +16,12 @@
 {% endblock %}
 
 {% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="meal_plan_value" value="{{ confirmation_data.meal_plan }}">
+<input type="hidden" name="status_value" value="{{ confirmation_data.status }}">
+<input type="hidden" name="currency_value" value="{{ confirmation_data.currency }}">
+
 <div class="row mb-4">
     <div class="col-md-6">
         <h5>Hotel Information</h5>
