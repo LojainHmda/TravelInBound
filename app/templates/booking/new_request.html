@@ -96,15 +96,33 @@
                         </table>
                     </div>
                     
-                    <div class="row mt-4">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                {{ form.deposit_amount.label(class="form-label") }}
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.deposit_amount(class="form-control") }}
-                                </div>
+                    <!-- Deposit Amount Row -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="deposit-amount-section">
+                            <label class="form-label mb-0">Deposit Amount</label>
+                            <div class="input-group" style="width: 200px;">
+                                <span class="input-group-text">$</span>
+                                {{ form.deposit_amount(class="form-control") }}
                             </div>
+                        </div>
+                        
+                        <!-- Quick Add Service Buttons -->
+                        <div class="quick-add-buttons d-flex">
+                            <button type="button" class="btn btn-outline-primary mx-1 quick-add-service" data-service-type="FLIGHT">
+                                <i class="fas fa-plane"></i> Flight
+                            </button>
+                            <button type="button" class="btn btn-outline-success mx-1 quick-add-service" data-service-type="HOTEL">
+                                <i class="fas fa-hotel"></i> Hotel
+                            </button>
+                            <button type="button" class="btn btn-outline-warning mx-1 quick-add-service" data-service-type="TRANSPORT">
+                                <i class="fas fa-car"></i> Transport
+                            </button>
+                            <button type="button" class="btn btn-outline-danger mx-1 quick-add-service" data-service-type="VISA">
+                                <i class="fas fa-passport"></i> Visa
+                            </button>
+                            <button type="button" class="btn btn-outline-info mx-1 quick-add-service" data-service-type="INSURANCE">
+                                <i class="fas fa-shield-alt"></i> Insurance
+                            </button>
                         </div>
                     </div>
                     
@@ -215,47 +233,124 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Set today as min date for from_date
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('from_date').setAttribute('min', today);
-    
-    // Validate date ranges
     const fromDateInput = document.getElementById('from_date');
     const toDateInput = document.getElementById('to_date');
-    
-    fromDateInput.addEventListener('change', function() {
-        toDateInput.setAttribute('min', this.value);
-        if (toDateInput.value && new Date(toDateInput.value) < new Date(this.value)) {
-            toDateInput.value = this.value;
-        }
-    });
-    
-    // Update description placeholder based on service type
     const serviceTypeSelect = document.getElementById('service_type');
     const descriptionInput = document.getElementById('description');
+    const addItemButton = document.querySelector('button[name="add_item"]');
     
-    serviceTypeSelect.addEventListener('change', function() {
-        switch(this.value) {
-            case 'FLIGHT':
-                descriptionInput.placeholder = 'E.g., One-way flight from New York to London, Economy class';
-                break;
-            case 'HOTEL':
-                descriptionInput.placeholder = 'E.g., 5 nights at Grand Hotel, Double room with breakfast';
-                break;
-            case 'TRANSPORT':
-                descriptionInput.placeholder = 'E.g., Airport transfer from Heathrow to central London';
-                break;
-            case 'VISA':
-                descriptionInput.placeholder = 'E.g., Tourist visa application for United Kingdom';
-                break;
-            case 'INSURANCE':
-                descriptionInput.placeholder = 'E.g., Comprehensive travel insurance for 7 days';
-                break;
-            default:
-                descriptionInput.placeholder = 'Enter service description';
+    if (fromDateInput) {
+        fromDateInput.setAttribute('min', today);
+        
+        // Set default values for dates if empty
+        if (!fromDateInput.value) {
+            fromDateInput.value = today;
         }
-    });
+        
+        // Set default to_date to 7 days from now if empty
+        if (!toDateInput.value) {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            toDateInput.value = nextWeek.toISOString().split('T')[0];
+        }
+    }
     
-    // Trigger change to set initial placeholder
-    serviceTypeSelect.dispatchEvent(new Event('change'));
+    // Validate date ranges
+    if (fromDateInput && toDateInput) {
+        fromDateInput.addEventListener('change', function() {
+            toDateInput.setAttribute('min', this.value);
+            if (toDateInput.value && new Date(toDateInput.value) < new Date(this.value)) {
+                toDateInput.value = this.value;
+            }
+        });
+    }
+    
+    // Update description placeholder based on service type
+    if (serviceTypeSelect && descriptionInput) {
+        serviceTypeSelect.addEventListener('change', function() {
+            switch(this.value) {
+                case 'FLIGHT':
+                    descriptionInput.placeholder = 'E.g., One-way flight from New York to London, Economy class';
+                    break;
+                case 'HOTEL':
+                    descriptionInput.placeholder = 'E.g., 5 nights at Grand Hotel, Double room with breakfast';
+                    break;
+                case 'TRANSPORT':
+                    descriptionInput.placeholder = 'E.g., Airport transfer from Heathrow to central London';
+                    break;
+                case 'VISA':
+                    descriptionInput.placeholder = 'E.g., Tourist visa application for United Kingdom';
+                    break;
+                case 'INSURANCE':
+                    descriptionInput.placeholder = 'E.g., Comprehensive travel insurance for 7 days';
+                    break;
+                default:
+                    descriptionInput.placeholder = 'Enter service description';
+            }
+        });
+        
+        // Trigger change to set initial placeholder
+        serviceTypeSelect.dispatchEvent(new Event('change'));
+    }
+    
+    // Quick add service buttons functionality
+    const quickAddButtons = document.querySelectorAll('.quick-add-service');
+    if (quickAddButtons.length > 0 && serviceTypeSelect) {
+        quickAddButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const serviceType = this.getAttribute('data-service-type');
+                
+                // Set the service type in the dropdown
+                for (let i = 0; i < serviceTypeSelect.options.length; i++) {
+                    if (serviceTypeSelect.options[i].value === serviceType) {
+                        serviceTypeSelect.selectedIndex = i;
+                        serviceTypeSelect.dispatchEvent(new Event('change'));
+                        break;
+                    }
+                }
+                
+                // Focus on the description field
+                if (descriptionInput) {
+                    descriptionInput.focus();
+                }
+                
+                // Add a slight highlight effect to the form row
+                const formRow = serviceTypeSelect.closest('tr');
+                if (formRow) {
+                    formRow.classList.add('highlight-row');
+                    setTimeout(() => {
+                        formRow.classList.remove('highlight-row');
+                    }, 1000);
+                }
+            });
+        });
+    }
+    
+    // Option to auto-submit with Enter key in description field
+    if (descriptionInput && addItemButton) {
+        descriptionInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItemButton.click();
+            }
+        });
+    }
 });
 </script>
+<style>
+    .quick-add-buttons .btn {
+        min-width: 120px;
+        margin-bottom: 10px;
+    }
+    
+    @keyframes highlight {
+        0% { background-color: rgba(255, 255, 200, 0); }
+        50% { background-color: rgba(255, 255, 200, 0.7); }
+        100% { background-color: rgba(255, 255, 200, 0); }
+    }
+    
+    .highlight-row {
+        animation: highlight 1s ease-in-out;
+    }
+</style>
 {% endblock %}
