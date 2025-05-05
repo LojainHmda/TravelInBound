@@ -74,19 +74,29 @@ document.addEventListener('DOMContentLoaded', function() {
     if (startDateInput && endDateInput) {
         const validateDates = () => {
             if (startDateInput.value && endDateInput.value) {
-                const startDate = new Date(startDateInput.value);
-                const endDate = new Date(endDateInput.value);
-                
-                if (endDate < startDate) {
-                    endDateInput.setCustomValidity('Coverage end date must be after start date');
-                } else {
-                    endDateInput.setCustomValidity('');
+                try {
+                    const startDate = new Date(startDateInput.value);
+                    const endDate = new Date(endDateInput.value);
+                    
+                    if (endDate < startDate) {
+                        endDateInput.setCustomValidity('Coverage end date must be after start date');
+                    } else {
+                        endDateInput.setCustomValidity('');
+                    }
+                } catch (e) {
+                    console.error('Error validating dates:', e);
                 }
             }
         };
         
-        startDateInput.addEventListener('change', validateDates);
-        endDateInput.addEventListener('change', validateDates);
+        try {
+            startDateInput.addEventListener('change', validateDates);
+            endDateInput.addEventListener('change', validateDates);
+            // Run validation initially
+            validateDates();
+        } catch (e) {
+            console.error('Error setting up date validation:', e);
+        }
     }
 
     // Helper function to add options to select elements

@@ -17,41 +17,60 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show/hide visa validity fields based on status
             const validityFields = document.querySelectorAll('input[name="valid_from"], input[name="valid_until"], select[name="number_of_entries"]');
             validityFields.forEach(field => {
+                // Check if field exists and has a parent element with mb-3 class
+                const fieldContainer = field ? field.closest('.mb-3') : null;
+                
                 if (status === 'Approved') {
-                    field.required = true;
-                    field.closest('.mb-3').style.display = 'block';
+                    if (field) field.required = true;
+                    if (fieldContainer) fieldContainer.style.display = 'block';
                 } else {
-                    field.required = false;
-                    if (status === 'Rejected') {
-                        field.closest('.mb-3').style.display = 'none';
-                    } else {
-                        field.closest('.mb-3').style.display = 'block';
+                    if (field) field.required = false;
+                    if (fieldContainer) {
+                        if (status === 'Rejected') {
+                            fieldContainer.style.display = 'none';
+                        } else {
+                            fieldContainer.style.display = 'block';
+                        }
                     }
                 }
             });
         });
         
-        // Initialize based on default value
-        statusSelect.dispatchEvent(new Event('change'));
+        try {
+            // Initialize based on default value
+            statusSelect.dispatchEvent(new Event('change'));
+        } catch (e) {
+            console.error('Error dispatching change event:', e);
+        }
     }
     
     // Date validation for visa validity
     if (validFromField && validUntilField) {
         const validateDates = () => {
             if (validFromField.value && validUntilField.value) {
-                const fromDate = new Date(validFromField.value);
-                const untilDate = new Date(validUntilField.value);
-                
-                if (untilDate <= fromDate) {
-                    validUntilField.setCustomValidity('Valid until date must be after valid from date');
-                } else {
-                    validUntilField.setCustomValidity('');
+                try {
+                    const fromDate = new Date(validFromField.value);
+                    const untilDate = new Date(validUntilField.value);
+                    
+                    if (untilDate <= fromDate) {
+                        validUntilField.setCustomValidity('Valid until date must be after valid from date');
+                    } else {
+                        validUntilField.setCustomValidity('');
+                    }
+                } catch (e) {
+                    console.error('Error validating visa dates:', e);
                 }
             }
         };
         
-        validFromField.addEventListener('change', validateDates);
-        validUntilField.addEventListener('change', validateDates);
+        try {
+            validFromField.addEventListener('change', validateDates);
+            validUntilField.addEventListener('change', validateDates);
+            // Run validation initially
+            validateDates();
+        } catch (e) {
+            console.error('Error setting up visa date validation:', e);
+        }
     }
 
     // Debug information
