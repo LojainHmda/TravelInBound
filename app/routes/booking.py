@@ -437,6 +437,40 @@ def confirm_service(item_id):
                 'other': ''
             }
         })
+    elif service_item.service_type == 'VISA':
+        confirmation_data.update({
+            'applicant_name': '',
+            'passport_number': '',
+            'nationality': '',
+            'date_of_birth': '',
+            'gender': '',
+            'destination_country': '',
+            'visa_type': 'Tourist',
+            'application_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'application_status': 'Applied',
+            'valid_from': '',
+            'valid_until': service_item.end_date.strftime('%Y-%m-%d'),
+            'number_of_entries': 'Single',
+            'processing_type': 'Standard',
+            'expected_completion': '',
+            'special_notes': ''
+        })
+    elif service_item.service_type == 'INSURANCE':
+        confirmation_data.update({
+            'policy_number': '',
+            'insurance_company': '',
+            'policy_type': 'Travel',
+            'coverage_type': 'Comprehensive',
+            'insured_name': '',
+            'start_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'end_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'coverage_amount': service_item.amount,
+            'currency': 'USD',
+            'premium_amount': '',
+            'deductible': '',
+            'emergency_contact': '',
+            'special_conditions': ''
+        })
     
     import sys
     print(f"Default confirmation_data for {service_item.service_type}: {confirmation_data}", file=sys.stderr)
@@ -697,6 +731,40 @@ def service_item_details_api(item_id):
                 'triple': 0,
                 'other': ''
             }
+        })
+    elif service_item.service_type == 'VISA':
+        confirmation_data.update({
+            'applicant_name': '',
+            'passport_number': '',
+            'nationality': '',
+            'date_of_birth': '',
+            'gender': '',
+            'destination_country': '',
+            'visa_type': 'Tourist',
+            'application_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'application_status': 'Applied',
+            'valid_from': '',
+            'valid_until': service_item.end_date.strftime('%Y-%m-%d'),
+            'number_of_entries': 'Single',
+            'processing_type': 'Standard',
+            'expected_completion': '',
+            'special_notes': ''
+        })
+    elif service_item.service_type == 'INSURANCE':
+        confirmation_data.update({
+            'policy_number': '',
+            'insurance_company': '',
+            'policy_type': 'Travel',
+            'coverage_type': 'Comprehensive',
+            'insured_name': '',
+            'start_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'end_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'coverage_amount': service_item.amount,
+            'currency': 'USD',
+            'premium_amount': '',
+            'deductible': '',
+            'emergency_contact': '',
+            'special_conditions': ''
         })
     
     if confirmation_doc:
