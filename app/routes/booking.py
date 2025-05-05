@@ -328,28 +328,42 @@ def confirm_service(item_id):
             
         elif service_item.service_type == 'VISA':
             visa_details = {
+                'applicant_name': request.form.get('applicant_name', ''),
+                'passport_number': request.form.get('passport_number', ''),
+                'nationality': request.form.get('nationality', ''),
+                'date_of_birth': request.form.get('date_of_birth', ''),
+                'gender': request.form.get('gender', ''),
+                'destination_country': request.form.get('destination_country', ''),
                 'visa_type': request.form.get('visa_type', ''),
-                'country': request.form.get('country', ''),
-                'issue_date': request.form.get('issue_date', ''),
-                'expiry_date': request.form.get('expiry_date', ''),
-                'processing_time': request.form.get('processing_time', ''),
-                'status': request.form.get('status', ''),
-                'supplier': supplier,
-                'requirements': request.form.get('requirements', '')
+                'application_date': request.form.get('application_date', ''),
+                'application_status': request.form.get('application_status', ''),
+                'valid_from': request.form.get('valid_from', ''),
+                'valid_until': request.form.get('valid_until', ''),
+                'number_of_entries': request.form.get('number_of_entries', ''),
+                'processing_type': request.form.get('processing_type', ''),
+                'expected_completion': request.form.get('expected_completion', ''),
+                'special_notes': request.form.get('special_notes', ''),
+                'supplier': supplier
             }
             
             document.notes = json.dumps(visa_details)
             
         elif service_item.service_type == 'INSURANCE':
             insurance_details = {
+                'policy_number': request.form.get('policy_number', ''),
+                'insurance_company': request.form.get('insurance_company', ''),
                 'policy_type': request.form.get('policy_type', ''),
-                'provider': request.form.get('provider', ''),
-                'coverage': request.form.get('coverage', ''),
-                'policy_period': request.form.get('policy_period', ''),
-                'insured_amount': request.form.get('insured_amount', ''),
-                'premium': request.form.get('premium', ''),
-                'supplier': supplier,
-                'terms': request.form.get('terms', '')
+                'coverage_type': request.form.get('coverage_type', ''),
+                'insured_name': request.form.get('insured_name', ''),
+                'start_date': request.form.get('start_date', ''),
+                'end_date': request.form.get('end_date', ''),
+                'coverage_amount': request.form.get('coverage_amount', ''),
+                'currency': request.form.get('currency', ''),
+                'premium_amount': request.form.get('premium_amount', ''),
+                'deductible': request.form.get('deductible', ''),
+                'emergency_contact': request.form.get('emergency_contact', ''),
+                'special_conditions': request.form.get('special_conditions', ''),
+                'supplier': supplier
             }
             
             document.notes = json.dumps(insurance_details)
