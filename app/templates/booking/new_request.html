@@ -207,9 +207,14 @@
                             <div class="card">
                                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
-                                    <a href="#" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                                        <i class="fas fa-plus me-1"></i> Add Payment
-                                    </a>
+                                    <div>
+                                        <button type="submit" name="save_action" value="payment" class="btn btn-sm btn-success me-1">
+                                            <i class="fas fa-money-bill-wave me-1"></i> Process Payment
+                                        </button>
+                                        <a href="#" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                            <i class="fas fa-plus me-1"></i> Payment Details
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="card-body">
                                     <div class="row mb-3">
@@ -217,7 +222,7 @@
                                             <div class="form-group">
                                                 <label class="form-label"><strong>Payment Status:</strong></label>
                                                 <div>
-                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <span id="payment-status-badge" class="badge bg-warning text-dark">Pending</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -232,6 +237,30 @@
                                                     <option value="OTHER">Other</option>
                                                 </select>
                                             </div>
+                                        </div>
+                                    </div>
+                                    <div class="payment-records-section mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label mb-0"><strong>Payment Records:</strong></label>
+                                            <span id="total-paid-amount" class="badge bg-success">$0.00</span>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover" id="payment-records-table">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Method</th>
+                                                        <th>Amount</th>
+                                                        <th>Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="payment-records-body">
+                                                    <!-- Payments will be added here dynamically -->
+                                                    <tr class="text-center text-muted">
+                                                        <td colspan="4">No payments recorded yet</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                     <div class="form-group">

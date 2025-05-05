@@ -60,13 +60,19 @@ def new_booking():
                 # Create a new service item to add to the itinerary
                 service_item = {
                     'service_type': form.service_type.data,
-                    'from_date': str(form.from_date.data),
-                    'to_date': str(form.to_date.data),
+                    'from_date': str(form.from_date.data) if form.from_date.data else '',
+                    'to_date': str(form.to_date.data) if form.to_date.data else '',
+                    'start_date': str(form.from_date.data) if form.from_date.data else '',  # For compatibility
+                    'end_date': str(form.to_date.data) if form.to_date.data else '',        # For compatibility
                     'description': form.description.data,
                     'amount': float(form.amount.data) if form.amount.data else 0.0,
                     'currency': form.currency.data,
                     'item_id': str(uuid.uuid4())  # Add a unique ID for each item
                 }
+                
+                # Debug output for the added item
+                import sys
+                print(f"Adding item to session: {service_item}", file=sys.stderr)
                 
                 # Add to list and update session
                 service_items.append(service_item)
@@ -121,6 +127,10 @@ def new_booking():
                 # Get service items from session
                 session_items = session.get('service_items', [])
                 
+                # Debug information about session items
+                import sys
+                print(f"Session items: {session_items}", file=sys.stderr)
+                
                 # Only add service items if we just created a new booking
                 # or if there are no existing service items for this booking
                 if not booking.service_items or len(booking.service_items) == 0:
@@ -130,9 +140,39 @@ def new_booking():
                             # Convert string dates back to Python date objects
                             from datetime import datetime
                             
-                            # Parse the date strings
-                            start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
-                            end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
+                            # Debug output for the item data
+                            print(f"Processing item: {item_data}", file=sys.stderr)
+                            
+                            # Parse the date strings with proper error handling
+                            try:
+                                # Check if we're using from_date/to_date or start_date/end_date
+                                if 'from_date' in item_data and 'to_date' in item_data:
+                                    if item_data['from_date'] and item_data['to_date']:
+                                        start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
+                                        end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
+                                    else:
+                                        # Use today's date and a week later as defaults
+                                        start_date = datetime.now().date()
+                                        end_date = datetime.now().date()
+                                elif 'start_date' in item_data and 'end_date' in item_data:
+                                    if item_data['start_date'] and item_data['end_date']:
+                                        start_date = datetime.strptime(item_data['start_date'], '%Y-%m-%d').date()
+                                        end_date = datetime.strptime(item_data['end_date'], '%Y-%m-%d').date()
+                                    else:
+                                        # Use today's date and a week later as defaults
+                                        start_date = datetime.now().date()
+                                        end_date = datetime.now().date()
+                                else:
+                                    # Use today's date and a week later as defaults
+                                    start_date = datetime.now().date()
+                                    end_date = datetime.now().date()
+                                
+                                print(f"Parsed dates: start_date={start_date}, end_date={end_date}", file=sys.stderr)
+                            except (ValueError, TypeError) as e:
+                                # Use today's date as a fallback if parsing fails
+                                print(f"Error parsing dates: {e}", file=sys.stderr)
+                                start_date = datetime.now().date()
+                                end_date = datetime.now().date()
                             
                             service_item = ServiceItem(
                                 booking_id=booking.id,
