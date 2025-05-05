@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 
 from app import app, db
 from models import (
-    User, Agent, Booking, ServiceItem, Document,
-    STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED,
+    User, Agent, Booking, ServiceItem, Document, Payment,
+    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED,
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
 )
 from forms import NewBookingForm, ServiceItemForm, UpdateServiceStatusForm, DocumentUploadForm
@@ -52,7 +52,7 @@ def index():
 def dashboard():
     # Get counts for each status
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    invoice_count = Booking.query.filter_by(status=STATUS_INVOICE).count()
+    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
     completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
     

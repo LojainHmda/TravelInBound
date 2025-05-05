@@ -2,10 +2,10 @@ from datetime import datetime
 from app import db
 
 # Status constants
-STATUS_REQUEST = 'REQUEST'
-STATUS_INVOICE = 'INVOICE'
-STATUS_IN_PROGRESS = 'IN-PROGRESS'
-STATUS_COMPLETED = 'COMPLETED'
+STATUS_REQUEST = 'REQUEST'     # Initial booking request state
+STATUS_BOOKED = 'BOOKED'       # Confirmed booking (after invoice/payment)
+STATUS_IN_PROGRESS = 'IN-PROGRESS'  # Operations started
+STATUS_COMPLETED = 'COMPLETED'      # All services fulfilled
 
 # Service types
 SERVICE_FLIGHT = 'FLIGHT'
@@ -47,8 +47,15 @@ class Booking(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     total_amount = db.Column(db.Float, default=0.0)
     
-    # Relationship with service items
+    # Invoice and payment tracking
+    invoice_number = db.Column(db.String(20), nullable=True)
+    invoice_date = db.Column(db.DateTime, nullable=True)
+    payment_status = db.Column(db.String(20), default='NONE')  # NONE, PARTIAL, FULL
+    payment_date = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
     service_items = db.relationship('ServiceItem', backref='booking', lazy=True, cascade="all, delete-orphan")
+    payments = db.relationship('Payment', backref='booking', lazy=True, cascade="all, delete-orphan")
     
     def __repr__(self):
         return f'<Booking {self.reference_number}>'
@@ -62,6 +69,31 @@ class Booking(db.Model):
     def can_complete(self):
         """Check if all service items are fulfilled"""
         return all(item.status == STATUS_COMPLETED for item in self.service_items)
+        
+    def update_payment_status(self):
+        """Update payment status based on payments received"""
+        if not self.payments:
+            self.payment_status = 'NONE'
+            return
+            
+        total_paid = sum(payment.amount for payment in self.payments)
+        if total_paid >= self.total_amount:
+            self.payment_status = 'FULL'
+        elif total_paid > 0:
+            self.payment_status = 'PARTIAL'
+        else:
+            self.payment_status = 'NONE'
+            
+    def generate_invoice_number(self):
+        """Generate a unique invoice number"""
+        if not self.invoice_number:
+            year = datetime.utcnow().strftime('%y')
+            count = db.session.query(Booking).filter(
+                Booking.invoice_number.isnot(None)
+            ).count()
+            self.invoice_number = f"INV-{year}-{count+1:04d}"
+            self.invoice_date = datetime.utcnow()
+        return self.invoice_number
 
 class ServiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,3 +125,15 @@ class Document(db.Model):
     
     def __repr__(self):
         return f'<Document {self.document_type} for Service {self.service_item_id}>'
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    payment_date = db.Column(db.DateTime, default=datetime.utcnow)
+    payment_method = db.Column(db.String(50), nullable=False)
+    transaction_id = db.Column(db.String(100), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    
+    def __repr__(self):
+        return f'<Payment ${self.amount} for Booking {self.booking_id}>'
