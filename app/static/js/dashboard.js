@@ -184,6 +184,7 @@ function createDetailsHTML(booking) {
                                     <th>Description</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>`;
@@ -191,6 +192,21 @@ function createDetailsHTML(booking) {
     // Add service items
     if (booking.service_items && booking.service_items.length > 0) {
         booking.service_items.forEach(item => {
+            let actionsHtml = '';
+            
+            // Display different actions based on status
+            if (item.status === 'REQUEST') {
+                actionsHtml = `
+                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-success me-1">
+                        <i class="fas fa-check me-1"></i>Confirm
+                    </a>`;
+            } else if (item.status === 'IN_PROGRESS') {
+                actionsHtml = `
+                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-primary me-1">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>`;
+            }
+            
             html += `
                 <tr>
                     <td>
@@ -203,6 +219,7 @@ function createDetailsHTML(booking) {
                     <td>${item.description}</td>
                     <td>$${parseFloat(item.amount).toFixed(2)}</td>
                     <td><span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">${item.status}</span></td>
+                    <td>${actionsHtml}</td>
                 </tr>`;
         });
     } else {

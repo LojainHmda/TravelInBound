@@ -526,6 +526,27 @@ def booking_details_api(booking_id):
     # Format service items
     service_items = []
     for item in booking.service_items:
+        # Check if this item has confirmation details
+        confirmation_doc = Document.query.filter_by(
+            service_item_id=item.id, 
+            document_type='CONFIRMATION'
+        ).first()
+        
+        confirmation_data = None
+        if confirmation_doc:
+            confirmation_data = {
+                'reference': confirmation_doc.document_number
+            }
+            
+            # Add supplier info if available
+            try:
+                if confirmation_doc.notes:
+                    doc_data = json.loads(confirmation_doc.notes)
+                    if 'supplier' in doc_data:
+                        confirmation_data['supplier'] = doc_data['supplier']
+            except (json.JSONDecodeError, ValueError):
+                pass
+                
         service_items.append({
             'id': item.id,
             'service_type': item.service_type,
@@ -533,7 +554,8 @@ def booking_details_api(booking_id):
             'end_date': item.end_date.strftime('%d %b %Y'),
             'description': item.description,
             'amount': item.amount,
-            'status': item.status
+            'status': item.status,
+            'confirmation': confirmation_data
         })
     
     # Return JSON response with booking details
@@ -546,4 +568,64 @@ def booking_details_api(booking_id):
         'customer_name': booking.requester.username,
         'customer_email': booking.requester.email,
         'service_items': service_items
+    })
+
+@booking_bp.route('/api/service/<int:item_id>/details', methods=['GET'])
+def service_item_details_api(item_id):
+    """API endpoint to get service item details including confirmation form HTML"""
+    service_item = ServiceItem.query.get_or_404(item_id)
+    
+    # Get confirmation document if available
+    confirmation_doc = Document.query.filter_by(
+        service_item_id=service_item.id, 
+        document_type='CONFIRMATION'
+    ).first()
+    
+    # Prepare confirmation data
+    confirmation_data = {}
+    if confirmation_doc:
+        try:
+            if confirmation_doc.notes:
+                confirmation_data = json.loads(confirmation_doc.notes)
+                # Add confirmation reference number
+                confirmation_data['confirmation_reference'] = confirmation_doc.document_number
+        except (json.JSONDecodeError, TypeError) as e:
+            confirmation_data = {}
+    
+    # Determine which form template to use
+    if service_item.service_type == 'FLIGHT':
+        form_template = 'booking/forms/confirm_flight_form.html'
+    elif service_item.service_type == 'HOTEL':
+        form_template = 'booking/forms/confirm_hotel_form.html'
+    elif service_item.service_type == 'TRANSPORT':
+        form_template = 'booking/forms/confirm_transport_form.html'
+    elif service_item.service_type == 'VISA':
+        form_template = 'booking/forms/confirm_visa_form.html'
+    elif service_item.service_type == 'INSURANCE':
+        form_template = 'booking/forms/confirm_insurance_form.html'
+    else:
+        form_template = 'booking/forms/confirm_generic_form.html'
+    
+    # Render the form template to HTML
+    form_html = render_template(
+        form_template,
+        service_item=service_item,
+        confirmation_data=confirmation_data,
+        confirmation_doc=confirmation_doc,
+        inline_form=True  # Flag to indicate this is for inline display
+    )
+    
+    # Return both the data and the rendered form HTML
+    return jsonify({
+        'id': service_item.id,
+        'booking_id': service_item.booking_id,
+        'service_type': service_item.service_type,
+        'description': service_item.description,
+        'start_date': service_item.start_date.strftime('%Y-%m-%d'),
+        'end_date': service_item.end_date.strftime('%Y-%m-%d'),
+        'amount': service_item.amount,
+        'status': service_item.status,
+        'has_confirmation': confirmation_doc is not None,
+        'confirmation_reference': confirmation_doc.document_number if confirmation_doc else None,
+        'form_html': form_html
     })
