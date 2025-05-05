@@ -166,11 +166,16 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'REQUEST' %}
+                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                            {% if conf_doc %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -232,11 +237,16 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'REQUEST' %}
+                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                            {% if conf_doc %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -298,11 +308,16 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'REQUEST' %}
+                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                            {% if conf_doc %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -364,11 +379,16 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'REQUEST' %}
+                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                            {% if conf_doc %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -430,11 +450,16 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'REQUEST' %}
+                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
+                                            {% if conf_doc %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -454,6 +479,31 @@
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Detail Modal -->
+<div class="modal fade" id="bookingDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-dark-blue text-white">
+                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Booking Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="bookingDetailContent">
+                    <div class="d-flex justify-content-center my-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="viewFullBookingBtn" class="btn btn-primary">View Full Details</a>
             </div>
         </div>
     </div>
