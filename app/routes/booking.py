@@ -198,7 +198,10 @@ def new_booking():
                     flash(f'Payment of ${booking.total_amount:.2f} processed for booking {reference}', 'success')
                 
                 flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
-                return redirect(url_for('booking.details', booking_id=booking.id))
+                # Set the booking ID in the session for later use
+                session['current_booking_id'] = booking.id
+                # Return to the same page instead of redirecting
+                return render_template('booking/new_request.html', form=form, items=service_items, booking=booking)
             else:
                 for field, errors in form.errors.items():
                     for error in errors:

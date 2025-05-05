@@ -1,10 +1,10 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session
 import uuid
 from datetime import datetime, timedelta
 
 from app import app, db
 from models import (
-    User, Agent, Booking, ServiceItem, Document,
+    User, Agent, Booking, ServiceItem, Document, Payment,
     STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED,
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
 )
@@ -144,8 +144,35 @@ def new_booking():
                 db.session.add(service_item)
                 db.session.commit()
             
+            # Run invoice and payment actions if provided
+            if form.invoice_notes.data:
+                # Set invoice date
+                booking.invoice_number = f"INV-{reference[3:]}"
+                booking.invoice_date = datetime.now()
+                booking.status = STATUS_INVOICE
+                flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
+            
+            if form.payment_method.data:
+                # Process payment (simplified)
+                amount = booking.total_amount or 0
+                payment = Payment(
+                    booking_id=booking.id,
+                    amount=amount,
+                    payment_date=datetime.now(),
+                    payment_method=form.payment_method.data,
+                    notes=form.payment_notes.data
+                )
+                booking.payment_status = 'FULL' if amount > 0 else 'NONE'
+                db.session.add(payment)
+                db.session.commit()
+                
+                flash(f'Payment of ${amount:.2f} processed for booking {reference}', 'success')
+            
             flash(f'Booking request {reference} created successfully', 'success')
-            return redirect(url_for('booking_details', booking_id=booking.id))
+            # Set the booking ID in the session for later use
+            session['current_booking_id'] = booking.id
+            # Return to the same page instead of redirecting
+            return render_template('booking/new_request.html', form=form, booking=booking)
     
     return render_template('booking/new_request.html', form=form)
 
@@ -217,6 +244,36 @@ def update_booking_status(booking_id):
             flash(f'Booking status updated to {booking.status}', 'success')
     
     return redirect(url_for('booking_details', booking_id=booking.id))
+
+# Start operations for a booking
+@app.route('/booking/<int:booking_id>/start_operations', methods=['GET'])
+def start_operations(booking_id):
+    """Start operations for a booking after payment (partial or full)"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Ensure booking has an invoice and at least partial payment
+    if not booking.invoice_number:
+        flash('Cannot start operations until an invoice is generated', 'danger')
+        return redirect(url_for('booking_details', booking_id=booking.id))
+    
+    if booking.payment_status not in ['PARTIAL', 'FULL']:
+        flash('Cannot start operations until at least a partial payment is recorded', 'danger')
+        return redirect(url_for('booking_details', booking_id=booking.id))
+    
+    # Update booking and all service items to IN_PROGRESS status
+    booking.status = STATUS_IN_PROGRESS
+    for item in booking.service_items:
+        item.status = STATUS_IN_PROGRESS
+    
+    db.session.commit()
+    flash('Operations started! You can now confirm each service item.', 'success')
+    
+    # Get the first service item to confirm
+    first_item = ServiceItem.query.filter_by(booking_id=booking.id).first()
+    if first_item:
+        return redirect(url_for('confirm_service', item_id=first_item.id))
+    else:
+        return redirect(url_for('booking_details', booking_id=booking.id))
 
 # Update service item status
 @app.route('/service_item/<int:item_id>/update_status', methods=['POST'])
