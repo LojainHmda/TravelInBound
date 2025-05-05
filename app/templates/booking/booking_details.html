@@ -219,6 +219,65 @@
             </div>
         </div>
         
+        <!-- Payment Records -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Records</h5>
+                {% if booking.invoice_number %}
+                    <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i> Add Payment
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="payment-records-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Reference</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payment-records-body">
+                            {% if booking.payments %}
+                                {% for payment in booking.payments %}
+                                    <tr>
+                                        <td>{{ payment.payment_date.strftime('%d %b %Y') }}</td>
+                                        <td>{{ payment.payment_method }}</td>
+                                        <td>${{ "%.2f"|format(payment.amount) }}</td>
+                                        <td>{{ payment.transaction_id }}</td>
+                                        <td>{{ payment.notes }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr class="text-center text-muted">
+                                    <td colspan="5">No payments recorded yet</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                        {% if booking.payments %}
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2"><strong>Total Paid:</strong></td>
+                                    <td colspan="3">
+                                        <strong>${{ "%.2f"|format(booking.payments|sum(attribute='amount')) }}</strong>
+                                        {% if booking.payment_status != 'FULL' and booking.total_amount > 0 %}
+                                            <span class="badge bg-warning text-dark ms-2">
+                                                Balance Due: ${{ "%.2f"|format(booking.total_amount - booking.payments|sum(attribute='amount')) }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+        
         <!-- Documents -->
         <div class="card mb-4">
             <div class="card-header bg-dark-blue text-white">
@@ -344,65 +403,6 @@
                     </li>
                     {% endif %}
                 </ul>
-            </div>
-        </div>
-        
-        <!-- Payment Records -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Records</h5>
-                {% if booking.invoice_number %}
-                    <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-light btn-sm">
-                        <i class="fas fa-plus me-1"></i> Add Payment
-                    </a>
-                {% endif %}
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="payment-records-table">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Date</th>
-                                <th>Method</th>
-                                <th>Amount</th>
-                                <th>Reference</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody id="payment-records-body">
-                            {% if booking.payments %}
-                                {% for payment in booking.payments %}
-                                    <tr>
-                                        <td>{{ payment.payment_date.strftime('%d %b %Y') }}</td>
-                                        <td>{{ payment.payment_method }}</td>
-                                        <td>${{ "%.2f"|format(payment.amount) }}</td>
-                                        <td>{{ payment.transaction_id }}</td>
-                                        <td>{{ payment.notes }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr class="text-center text-muted">
-                                    <td colspan="5">No payments recorded yet</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                        {% if booking.payments %}
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="2"><strong>Total Paid:</strong></td>
-                                    <td colspan="3">
-                                        <strong>${{ "%.2f"|format(booking.payments|sum(attribute='amount')) }}</strong>
-                                        {% if booking.payment_status != 'FULL' and booking.total_amount > 0 %}
-                                            <span class="badge bg-warning text-dark ms-2">
-                                                Balance Due: ${{ "%.2f"|format(booking.total_amount - booking.payments|sum(attribute='amount')) }}
-                                            </span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        {% endif %}
-                    </table>
-                </div>
             </div>
         </div>
         
