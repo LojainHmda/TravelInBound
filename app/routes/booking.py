@@ -157,9 +157,28 @@ def new_booking():
                     booking.calculate_total()
                     db.session.commit()
                 
-                # DON'T clear the session if we're staying on same page
+                # DON'T clear the session for save
                 if action != 'save':
                     session.pop('service_items', None)
+                
+                # For save action, refresh service_items from the database so they don't disappear
+                if action == 'save':
+                    # Clear service_items and reload from DB
+                    service_items = []
+                    db_items = ServiceItem.query.filter_by(booking_id=booking.id).all()
+                    for item in db_items:
+                        service_items.append({
+                            'id': item.id,
+                            'service_type': item.service_type,
+                            'start_date': item.start_date.strftime('%Y-%m-%d'),
+                            'end_date': item.end_date.strftime('%Y-%m-%d'),
+                            'description': item.description,
+                            'amount': item.amount,
+                            'status': item.status
+                        })
+                    session['service_items'] = service_items
+                    # Update for our current scope
+                    service_items = session.get('service_items', [])
                 
                 # Handle invoice generation if requested
                 if action == 'generate_invoice' or request.form.get('invoice_notes'):
@@ -217,8 +236,9 @@ def new_booking():
                 # Only flash the success message if we're not redirecting elsewhere
                 if action == 'save':
                     flash(f'Booking request {reference} created successfully with {len(session_items) or 0} service items', 'success')
-                    # Don't redirect, stay on the same page
-                    return redirect(url_for('booking.new_booking'))
+                    # Instead of redirecting, we'll continue with the same request
+                    # which will render the template with the current service items
+                    # return redirect(url_for('booking.new_booking'))
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
