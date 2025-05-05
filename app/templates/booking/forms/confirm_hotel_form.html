@@ -69,27 +69,27 @@
         <div class="row mb-2">
             <div class="col-md-6">
                 <label class="form-label">Single Rooms</label>
-                <input type="number" name="single_rooms" class="form-control" value="{{ confirmation_data.rooms.single if confirmation_data.rooms and confirmation_data.rooms.single }}" min="0">
+                <input type="number" name="single_rooms" class="form-control" value="{{ confirmation_data.rooms.single|default(0) }}" min="0">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Double Rooms</label>
-                <input type="number" name="double_rooms" class="form-control" value="{{ confirmation_data.rooms.double if confirmation_data.rooms and confirmation_data.rooms.double }}" min="0">
+                <input type="number" name="double_rooms" class="form-control" value="{{ confirmation_data.rooms.double|default(0) }}" min="0">
             </div>
         </div>
         <div class="row">
             <div class="col-md-6">
                 <label class="form-label">Twin Rooms</label>
-                <input type="number" name="twin_rooms" class="form-control" value="{{ confirmation_data.rooms.twin if confirmation_data.rooms and confirmation_data.rooms.twin }}" min="0">
+                <input type="number" name="twin_rooms" class="form-control" value="{{ confirmation_data.rooms.twin|default(0) }}" min="0">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Triple Rooms</label>
-                <input type="number" name="triple_rooms" class="form-control" value="{{ confirmation_data.rooms.triple if confirmation_data.rooms and confirmation_data.rooms.triple }}" min="0">
+                <input type="number" name="triple_rooms" class="form-control" value="{{ confirmation_data.rooms.triple|default(0) }}" min="0">
             </div>
         </div>
         <div class="row mt-2">
             <div class="col-md-12">
                 <label class="form-label">Other Rooms</label>
-                <input type="text" name="other_rooms" class="form-control" value="{{ confirmation_data.rooms.other if confirmation_data.rooms and confirmation_data.rooms.other }}" placeholder="e.g., 1 Family Room, 2 Adjoining Rooms">
+                <input type="text" name="other_rooms" class="form-control" value="{{ confirmation_data.rooms.other|default('') }}" placeholder="e.g., 1 Family Room, 2 Adjoining Rooms">
             </div>
         </div>
     </div>

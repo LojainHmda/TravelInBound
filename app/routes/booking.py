@@ -278,6 +278,17 @@ def confirm_service(item_id):
             document.notes = json.dumps(flight_details)
         
         elif service_item.service_type == 'HOTEL':
+            import sys
+            print("Processing HOTEL confirmation form submission", file=sys.stderr)
+            
+            # Log form values for debugging
+            single_rooms = request.form.get('single_rooms', '0')
+            double_rooms = request.form.get('double_rooms', '0')
+            twin_rooms = request.form.get('twin_rooms', '0')
+            triple_rooms = request.form.get('triple_rooms', '0')
+            
+            print(f"Room counts from form - single: {single_rooms}, double: {double_rooms}, twin: {twin_rooms}, triple: {triple_rooms}", file=sys.stderr)
+            
             hotel_details = {
                 'hotel_name': request.form.get('hotel_name', ''),
                 'from_date': request.form.get('from_date', ''),
@@ -289,14 +300,15 @@ def confirm_service(item_id):
                 'supplier': supplier,
                 'special_notes': request.form.get('special_notes', ''),
                 'rooms': {
-                    'single': request.form.get('single_rooms', 0),
-                    'double': request.form.get('double_rooms', 0),
-                    'twin': request.form.get('twin_rooms', 0),
-                    'triple': request.form.get('triple_rooms', 0),
+                    'single': int(single_rooms) if single_rooms.isdigit() else 0,
+                    'double': int(double_rooms) if double_rooms.isdigit() else 0,
+                    'twin': int(twin_rooms) if twin_rooms.isdigit() else 0,
+                    'triple': int(triple_rooms) if triple_rooms.isdigit() else 0,
                     'other': request.form.get('other_rooms', '')
                 }
             }
             
+            print(f"Hotel details to save: {hotel_details}", file=sys.stderr)
             document.notes = json.dumps(hotel_details)
             
         elif service_item.service_type == 'TRANSPORT':
@@ -380,16 +392,54 @@ def confirm_service(item_id):
     
     # Prepare data for template with default values
     import json
+    
+    # Set up base confirmation data
     confirmation_data = {
         'confirmation_reference': '',
-        'supplier': 'Direct',
-        'passenger_count': {
-            'adults': 1,
-            'children': 0,
-            'infants': 0
-        },
-        'passenger_names': []
+        'supplier': 'Direct'
     }
+    
+    # Add service-specific default fields
+    if service_item.service_type == 'FLIGHT':
+        confirmation_data.update({
+            'passenger_count': {
+                'adults': 1,
+                'children': 0,
+                'infants': 0
+            },
+            'passenger_names': [],
+            'airline': '',
+            'flight_number': '',
+            'departure_airport': '',
+            'arrival_airport': '',
+            'flight_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'flight_time': '',
+            'travel_class': 'Economy',
+            'terminal': '',
+            'ticket_number': '',
+            'pnr': ''
+        })
+    elif service_item.service_type == 'HOTEL':
+        confirmation_data.update({
+            'hotel_name': '',
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'meal_plan': 'Room Only',
+            'status': 'confirmed',
+            'cost': service_item.amount,
+            'currency': 'USD',
+            'special_notes': '',
+            'rooms': {
+                'single': 1,
+                'double': 0,
+                'twin': 0,
+                'triple': 0,
+                'other': ''
+            }
+        })
+    
+    import sys
+    print(f"Default confirmation_data for {service_item.service_type}: {confirmation_data}", file=sys.stderr)
     
     if confirmation_doc:
         # If there's existing confirmation data, parse it
@@ -607,14 +657,47 @@ def service_item_details_api(item_id):
     # Prepare confirmation data with defaults
     confirmation_data = {
         'confirmation_reference': '',
-        'supplier': 'Direct',
-        'passenger_count': {
-            'adults': 1,
-            'children': 0,
-            'infants': 0
-        },
-        'passenger_names': []
+        'supplier': 'Direct'
     }
+    
+    # Add service-specific default fields
+    if service_item.service_type == 'FLIGHT':
+        confirmation_data.update({
+            'passenger_count': {
+                'adults': 1,
+                'children': 0,
+                'infants': 0
+            },
+            'passenger_names': [],
+            'airline': '',
+            'flight_number': '',
+            'departure_airport': '',
+            'arrival_airport': '',
+            'flight_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'flight_time': '',
+            'travel_class': 'Economy',
+            'terminal': '',
+            'ticket_number': '',
+            'pnr': ''
+        })
+    elif service_item.service_type == 'HOTEL':
+        confirmation_data.update({
+            'hotel_name': '',
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'meal_plan': 'Room Only',
+            'status': 'confirmed',
+            'cost': service_item.amount,
+            'currency': 'USD',
+            'special_notes': '',
+            'rooms': {
+                'single': 1,
+                'double': 0,
+                'twin': 0,
+                'triple': 0,
+                'other': ''
+            }
+        })
     
     if confirmation_doc:
         try:
