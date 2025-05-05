@@ -10,7 +10,7 @@
     
     /* Status Colors */
     --status-request: #FF7F00; /* Orange */
-    --status-invoice: #9c27b0; /* Purple */
+    --status-booked: #9c27b0; /* Purple */
     --status-in-progress: #0288d1; /* Blue */
     --status-completed: #43a047; /* Green */
 }

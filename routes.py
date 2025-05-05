@@ -199,7 +199,12 @@ def add_service_item(booking_id):
             for error in errors:
                 flash(f'Error in {field}: {error}', 'danger')
     
-    return redirect(url_for('booking_details', booking_id=booking.id))
+    # Get the referrer URL if available, otherwise default to booking details
+    referrer = request.referrer
+    if referrer and '/booking/' in referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('booking_details', booking_id=booking.id))
 
 # Update booking status
 @app.route('/booking/<int:booking_id>/update_status', methods=['POST'])
@@ -216,7 +221,12 @@ def update_booking_status(booking_id):
             db.session.commit()
             flash(f'Booking status updated to {booking.status}', 'success')
     
-    return redirect(url_for('booking_details', booking_id=booking.id))
+    # Get the referrer URL if available, otherwise default to booking details
+    referrer = request.referrer
+    if referrer and '/booking/' in referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('booking_details', booking_id=booking.id))
 
 # Update service item status
 @app.route('/service_item/<int:item_id>/update_status', methods=['POST'])
@@ -229,7 +239,12 @@ def update_service_status(item_id):
         db.session.commit()
         flash(f'Service item status updated to {service_item.status}', 'success')
     
-    return redirect(url_for('booking_details', booking_id=service_item.booking_id))
+    # Get the referrer URL if available, otherwise default to booking details
+    referrer = request.referrer
+    if referrer and '/booking/' in referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('booking_details', booking_id=service_item.booking_id))
 
 # Generate Invoice
 @app.route('/booking/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
@@ -256,8 +271,12 @@ def generate_invoice(booking_id):
         
         flash(f'Invoice #{invoice_number} generated successfully', 'success')
         
-        # Return to the booking details page instead of invoice_details
-        return redirect(url_for('booking_details', booking_id=booking.id))
+        # Get the referrer URL if available, otherwise default to booking details
+        referrer = request.referrer
+        if referrer and '/booking/' in referrer:
+            return redirect(referrer)
+        else:
+            return redirect(url_for('booking_details', booking_id=booking.id))
     
     # Calculate total from service items
     total_amount = booking.calculate_total()
@@ -306,8 +325,12 @@ def add_payment(booking_id):
             
             flash(f'Payment of ${amount} recorded successfully', 'success')
             
-            # Return to the detail page that initiated the payment addition
-            return redirect(url_for('booking_details', booking_id=booking.id))
+            # Get the referrer URL if available, otherwise default to booking details
+            referrer = request.referrer
+            if referrer and '/booking/' in referrer:
+                return redirect(referrer)
+            else:
+                return redirect(url_for('booking_details', booking_id=booking.id))
     
     return render_template(
         'booking/add_payment.html',

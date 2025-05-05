@@ -33,6 +33,17 @@
                         </p>
                         <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
                         <p><strong>Requester:</strong> {{ booking.requester.username }}</p>
+                        
+                        {% if booking.invoice_number %}
+                        <p><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
+                        <p><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%Y-%m-%d') }}</p>
+                        <p>
+                            <strong>Payment Status:</strong> 
+                            <span class="badge {% if booking.payment_status == 'FULL' %}bg-success{% elif booking.payment_status == 'PARTIAL' %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ booking.payment_status }}
+                            </span>
+                        </p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -155,7 +166,18 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="text-end mt-3">
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        {% if booking.status == 'REQUEST' %}
+                        <a href="{{ url_for('generate_invoice', booking_id=booking.id) }}" class="btn btn-primary">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                        </a>
+                        {% elif booking.invoice_number %}
+                        <a href="{{ url_for('add_payment', booking_id=booking.id) }}" class="btn btn-success">
+                            <i class="fas fa-money-bill-wave me-1"></i> Add Payment
+                        </a>
+                        {% endif %}
+                    </div>
                     <h5>Total Amount: <span class="text-primary">${{ "%.2f"|format(booking.total_amount) }}</span></h5>
                 </div>
                 {% else %}
