@@ -4,78 +4,91 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Insurance confirmation script loaded');
     
-    // Policy type dependent fields
-    const policyTypeSelect = document.querySelector('select[name="policy_type"]');
-    const coverageTypeSelect = document.querySelector('select[name="coverage_type"]');
+    // Add insured person functionality
+    const addInsuredBtn = document.getElementById('addInsured');
+    const additionalInsured = document.getElementById('additionalInsured');
     
-    if (policyTypeSelect) {
-        policyTypeSelect.addEventListener('change', function() {
-            const policyType = this.value;
+    if (addInsuredBtn && additionalInsured) {
+        // Add event listener to add button
+        addInsuredBtn.addEventListener('click', function() {
+            const newRow = document.createElement('div');
+            newRow.className = 'input-group mb-2';
+            newRow.innerHTML = `
+                <input type="text" name="additional_insured[]" class="form-control" placeholder="Full name">
+                <button type="button" class="btn btn-outline-danger remove-person">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            additionalInsured.appendChild(newRow);
             
-            // Update coverage type options based on policy type
-            if (coverageTypeSelect) {
-                // Clear existing options
-                coverageTypeSelect.innerHTML = '';
-                
-                // Add options based on policy type
-                if (policyType === 'Travel') {
-                    addOption(coverageTypeSelect, 'Comprehensive', 'Comprehensive');
-                    addOption(coverageTypeSelect, 'Medical Only', 'Medical Only');
-                    addOption(coverageTypeSelect, 'Cancellation Only', 'Cancellation Only');
-                    addOption(coverageTypeSelect, 'Baggage Only', 'Baggage Only');
-                } else if (policyType === 'Medical') {
-                    addOption(coverageTypeSelect, 'Basic', 'Basic');
-                    addOption(coverageTypeSelect, 'Standard', 'Standard');
-                    addOption(coverageTypeSelect, 'Premium', 'Premium');
-                } else if (policyType === 'Life') {
-                    addOption(coverageTypeSelect, 'Term', 'Term');
-                    addOption(coverageTypeSelect, 'Whole Life', 'Whole Life');
-                    addOption(coverageTypeSelect, 'Universal', 'Universal');
-                } else {
-                    // Default options
-                    addOption(coverageTypeSelect, 'Basic', 'Basic');
-                    addOption(coverageTypeSelect, 'Standard', 'Standard');
-                    addOption(coverageTypeSelect, 'Premium', 'Premium');
-                }
+            // Add remove event listener to the new row
+            newRow.querySelector('.remove-person').addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+        
+        // Add remove event listener to the initial row
+        const removeButtons = additionalInsured.querySelectorAll('.remove-person');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                this.closest('.input-group').remove();
+            });
+        });
+    }
+    
+    // Insurance type selections
+    const insuranceTypeSelect = document.querySelector('select[name="insurance_type"]');
+    
+    if (insuranceTypeSelect) {
+        insuranceTypeSelect.addEventListener('change', function() {
+            const insuranceType = this.value;
+            
+            // Auto-check relevant coverage options based on insurance type
+            if (insuranceType === 'Travel Medical') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+            } else if (insuranceType === 'Trip Cancellation') {
+                document.getElementById('coverage_cancellation').checked = true;
+                document.getElementById('coverage_delay').checked = true;
+            } else if (insuranceType === 'Comprehensive') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+                document.getElementById('coverage_cancellation').checked = true;
+                document.getElementById('coverage_baggage').checked = true;
+                document.getElementById('coverage_delay').checked = true;
+                document.getElementById('coverage_personal').checked = true;
+            } else if (insuranceType === 'Baggage') {
+                document.getElementById('coverage_baggage').checked = true;
+            } else if (insuranceType === 'Adventure') {
+                document.getElementById('coverage_medical').checked = true;
+                document.getElementById('coverage_evacuation').checked = true;
+                document.getElementById('coverage_activities').checked = true;
             }
         });
     }
     
-    // Date validation for insurance policy validity
-    const startDateField = document.querySelector('input[name="start_date"]');
-    const endDateField = document.querySelector('input[name="end_date"]');
+    // Date validation
+    const startDateInput = document.querySelector('input[name="coverage_start"]');
+    const endDateInput = document.querySelector('input[name="coverage_end"]');
     
-    if (startDateField && endDateField) {
+    if (startDateInput && endDateInput) {
         const validateDates = () => {
-            if (startDateField.value && endDateField.value) {
-                const startDate = new Date(startDateField.value);
-                const endDate = new Date(endDateField.value);
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
                 
-                if (endDate <= startDate) {
-                    endDateField.setCustomValidity('End date must be after start date');
+                if (endDate < startDate) {
+                    endDateInput.setCustomValidity('Coverage end date must be after start date');
                 } else {
-                    endDateField.setCustomValidity('');
+                    endDateInput.setCustomValidity('');
                 }
             }
         };
         
-        startDateField.addEventListener('change', validateDates);
-        endDateField.addEventListener('change', validateDates);
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
     }
-    
-    // Premium amount calculation based on coverage amount
-    const coverageAmountField = document.querySelector('input[name="coverage_amount"]');
-    const premiumAmountField = document.querySelector('input[name="premium_amount"]');
-    
-    if (coverageAmountField && premiumAmountField) {
-        coverageAmountField.addEventListener('change', function() {
-            // Simple calculation for example purposes
-            const coverageAmount = parseFloat(this.value) || 0;
-            const premiumAmount = (coverageAmount * 0.05).toFixed(2); // 5% of coverage amount
-            premiumAmountField.value = premiumAmount;
-        });
-    }
-    
+
     // Helper function to add options to select elements
     function addOption(selectElement, value, text) {
         const option = document.createElement('option');
@@ -87,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Debug information
     console.log('Insurance form data loaded:', {
         'policy_number': document.querySelector('input[name="policy_number"]')?.value,
-        'insurance_company': document.querySelector('input[name="insurance_company"]')?.value,
-        'policy_type': document.querySelector('select[name="policy_type"]')?.value
+        'primary_insured': document.querySelector('input[name="primary_insured"]')?.value,
+        'insurance_type': document.querySelector('select[name="insurance_type"]')?.value
     });
 });
