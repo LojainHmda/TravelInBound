@@ -15,6 +15,63 @@ from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
 
+@booking_bp.route('/api/<int:booking_id>/details', methods=['GET'])
+def booking_api_details(booking_id):
+    """API endpoint to get booking details for the dashboard"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Prepare service items data
+    service_items = []
+    for item in booking.service_items:
+        # Find confirmation document if it exists
+        confirmation_doc = next((doc for doc in item.documents if doc.document_type == 'CONFIRMATION'), None)
+        confirmation_data = None
+        
+        if confirmation_doc:
+            try:
+                # Parse JSON notes if available
+                confirmation_data = {
+                    'reference': confirmation_doc.document_number,
+                    'supplier': ''
+                }
+                
+                if confirmation_doc.notes:
+                    notes_data = json.loads(confirmation_doc.notes)
+                    if 'supplier' in notes_data:
+                        confirmation_data['supplier'] = notes_data['supplier']
+            except:
+                # If JSON parsing fails, just use document number
+                pass
+        
+        # Format dates for display
+        start_date = item.start_date.strftime('%d %b %Y')
+        end_date = item.end_date.strftime('%d %b %Y')
+        
+        service_items.append({
+            'id': item.id,
+            'service_type': item.service_type,
+            'start_date': start_date,
+            'end_date': end_date,
+            'description': item.description,
+            'amount': item.amount,
+            'status': item.status,
+            'confirmation': confirmation_data
+        })
+    
+    # Format data for response
+    booking_data = {
+        'id': booking.id,
+        'reference_number': booking.reference_number,
+        'user_id': booking.user_id,
+        'user_name': booking.requester.username,
+        'status': booking.status,
+        'created_at': booking.created_at.strftime('%d %b %Y'),
+        'total_amount': booking.total_amount,
+        'service_items': service_items
+    }
+    
+    return jsonify(booking_data)
+
 @booking_bp.route('/new', methods=['GET', 'POST'])
 def new_booking():
     """Create a new booking request with itinerary items"""

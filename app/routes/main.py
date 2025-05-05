@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from app import db
 from app.models.booking import Booking
 from app.models.service import ServiceItem
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED
 
 # Create a blueprint for main routes
 main_bp = Blueprint('main', __name__)
@@ -20,7 +20,7 @@ def dashboard():
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
     booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
+    completed_count = Booking.query.filter_by(status=STATUS_FULFILLED).count()
     
     # Get all recent bookings
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
@@ -33,7 +33,7 @@ def dashboard():
     insurance_items = ServiceItem.query.filter_by(service_type='INSURANCE').order_by(ServiceItem.created_at.desc()).limit(5).all()
     
     return render_template(
-        'dashboard.html',
+        'dashboard_redesigned.html',
         request_count=request_count,
         booked_count=booked_count,
         in_progress_count=in_progress_count,
