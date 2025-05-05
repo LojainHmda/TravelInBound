@@ -36,6 +36,11 @@ def create_app():
             return json.loads(value)
         except (ValueError, TypeError):
             return {}
+            
+    @app.template_filter('pprint')
+    def pprint_filter(value):
+        import pprint
+        return pprint.pformat(value)
     
     with app.app_context():
         # Import models to ensure they are registered with SQLAlchemy
