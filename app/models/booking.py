@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from app.models import STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
 
 # Payment status constants
 PAYMENT_NONE = 'NONE'
@@ -51,8 +51,8 @@ class Booking(db.Model):
             self.payment_status = PAYMENT_NONE
         elif total_paid >= self.total_amount:
             self.payment_status = PAYMENT_FULL
-            # If payment is complete and status is INVOICE, automatically move to IN_PROGRESS
-            if self.status == STATUS_INVOICE:
+            # If payment is complete and status is BOOKED, automatically move to IN_PROGRESS
+            if self.status == STATUS_BOOKED:
                 self.status = STATUS_IN_PROGRESS
         else:
             self.payment_status = PAYMENT_PARTIAL

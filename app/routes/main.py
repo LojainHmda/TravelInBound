@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from app import db
 from app.models.booking import Booking
 from app.models.service import ServiceItem
-from app.models import STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
 
 # Create a blueprint for main routes
 main_bp = Blueprint('main', __name__)
@@ -18,7 +18,7 @@ def dashboard():
     """Dashboard showing booking statistics and status"""
     # Get counts for various statuses
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    invoice_count = Booking.query.filter_by(status=STATUS_INVOICE).count()
+    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
     completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
     
@@ -35,7 +35,7 @@ def dashboard():
     return render_template(
         'dashboard.html',
         request_count=request_count,
-        invoice_count=invoice_count,
+        booked_count=booked_count,
         in_progress_count=in_progress_count,
         completed_count=completed_count,
         recent_bookings=recent_bookings,

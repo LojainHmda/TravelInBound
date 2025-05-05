@@ -3,14 +3,14 @@ from wtforms import StringField, TextAreaField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Optional
 
 from app.models import (
-    STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
+    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
 )
 
 class UpdateServiceStatusForm(FlaskForm):
     """Form for updating the status of a service item"""
     status = SelectField('Status', choices=[
         (STATUS_REQUEST, 'Request'),
-        (STATUS_INVOICE, 'Invoice'),
+        (STATUS_BOOKED, 'Booked'),
         (STATUS_IN_PROGRESS, 'In Progress'),
         (STATUS_COMPLETED, 'Completed')
     ], validators=[DataRequired()])

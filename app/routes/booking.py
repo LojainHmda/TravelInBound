@@ -6,7 +6,7 @@ from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.service import ServiceItem, Document
-from app.models import STATUS_REQUEST, STATUS_INVOICE, STATUS_IN_PROGRESS, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -258,7 +258,7 @@ def new_booking():
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
                     # Update the booking status to INVOICE
-                    booking.status = STATUS_INVOICE
+                    booking.status = STATUS_BOOKED
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
@@ -428,8 +428,8 @@ def update_booking_status(booking_id):
             flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
-        # If moving to INVOICE status, generate invoice number
-        if new_status == STATUS_INVOICE and old_status != STATUS_INVOICE:
+        # If moving to BOOKED status, generate invoice number
+        if new_status == STATUS_BOOKED and old_status != STATUS_BOOKED:
             booking.generate_invoice_number()
             flash(f'Invoice {booking.invoice_number} generated', 'success')
         
@@ -878,7 +878,7 @@ def generate_invoice(booking_id):
                 booking.generate_invoice_number()
             
             # Update status to INVOICE
-            booking.status = STATUS_INVOICE
+            booking.status = STATUS_BOOKED
             
             # Add invoice notes if provided
             notes = form.notes.data or request.form.get('invoice_notes', '')
