@@ -349,6 +349,9 @@ def confirm_service(item_id):
         form_notes = request.form.get('notes', '')
         service_type = request.form.get('service_type', '')
         
+        # Get the action type (save, next, complete)
+        action = request.form.get('action', 'save')
+        
         print(f"confirmation_reference: {confirmation_reference}", file=sys.stderr)
         print(f"supplier: {supplier}", file=sys.stderr)
         print(f"form_notes: {form_notes}", file=sys.stderr)
@@ -520,33 +523,37 @@ def confirm_service(item_id):
         
         flash(f'{service_item.service_type} confirmation details saved', 'success')
         
-        # Check if there are more service items to confirm
+        # Get the booking ID for subsequent operations
         booking_id = service_item.booking_id
-        next_item = ServiceItem.query.filter_by(
-            booking_id=booking_id,
-            status=STATUS_IN_PROGRESS
-        ).first()
         
-        if next_item:
-            # Redirect to the next service item confirmation
-            flash('Moving to next service item for confirmation', 'info')
-            return redirect(url_for('booking.confirm_service', item_id=next_item.id))
-        else:
-            # Check if all items are now completed
-            pending_items = ServiceItem.query.filter(
-                ServiceItem.booking_id == booking_id,
-                ServiceItem.status != STATUS_COMPLETED
-            ).count()
+        # Handle the form action
+        if action == 'next':
+            # Find the next service item that needs confirmation
+            next_item = ServiceItem.query.filter_by(
+                booking_id=booking_id,
+                status=STATUS_IN_PROGRESS
+            ).filter(ServiceItem.id != service_item.id).first()
             
-            if pending_items == 0:
-                # All service items are completed, update booking status
-                booking = Booking.query.get(booking_id)
-                booking.status = STATUS_COMPLETED
-                db.session.commit()
-                flash('All services confirmed! Booking is now complete.', 'success')
-            
-            # Redirect to the booking details page
-            return redirect(url_for('booking.details', booking_id=booking_id))
+            if next_item:
+                # Redirect to the next service item confirmation
+                flash('Moving to next service item for confirmation', 'info')
+                return redirect(url_for('booking.confirm_service', item_id=next_item.id))
+        
+        # Check if all items are now completed regardless of the action
+        pending_items = ServiceItem.query.filter(
+            ServiceItem.booking_id == booking_id,
+            ServiceItem.status != STATUS_COMPLETED
+        ).count()
+        
+        if pending_items == 0:
+            # All service items are completed, update booking status
+            booking = Booking.query.get(booking_id)
+            booking.status = STATUS_COMPLETED
+            db.session.commit()
+            flash('All services confirmed! Booking is now complete.', 'success')
+        
+        # Default behavior: redirect to the booking details page
+        return redirect(url_for('booking.details', booking_id=booking_id))
     
     # Get existing confirmation document if available
     import sys
