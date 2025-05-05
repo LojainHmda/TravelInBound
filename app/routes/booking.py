@@ -157,8 +157,9 @@ def new_booking():
                     booking.calculate_total()
                     db.session.commit()
                 
-                # Clear the session
-                session.pop('service_items', None)
+                # DON'T clear the session if we're staying on same page
+                if action != 'save':
+                    session.pop('service_items', None)
                 
                 # Handle invoice generation if requested
                 if action == 'generate_invoice' or request.form.get('invoice_notes'):
@@ -182,8 +183,8 @@ def new_booking():
                     
                     flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
                     
-                    # If this was a direct invoice action, redirect to the booking details
-                    if action == 'generate_invoice':
+                    # Only redirect if we're NOT in the new booking form
+                    if action == 'generate_invoice' and not 'new_booking' in request.path:
                         return redirect(url_for('booking.details', booking_id=booking.id))
                 
                 # Check if payment information was provided
@@ -303,8 +304,8 @@ def update_booking_status(booking_id):
         flash(f'Operations started: Booking status updated to {booking.status}', 'success')
         
         # Get the first service item to confirm
-        first_item = booking.service_items.first()
-        if first_item:
+        if booking.service_items and len(booking.service_items) > 0:
+            first_item = booking.service_items[0]
             return redirect(url_for('booking.confirm_service', item_id=first_item.id))
         else:
             return redirect(url_for('booking.details', booking_id=booking.id))
