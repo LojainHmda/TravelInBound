@@ -369,23 +369,34 @@ def confirm_service(item_id):
     else:
         print("No confirmation document found", file=sys.stderr)
     
-    # Prepare data for template
-    confirmation_data = {}
+    # Prepare data for template with default values
+    import json
+    confirmation_data = {
+        'confirmation_reference': '',
+        'supplier': 'Direct',
+        'passenger_count': {
+            'adults': 1,
+            'children': 0,
+            'infants': 0
+        },
+        'passenger_names': []
+    }
+    
     if confirmation_doc:
         # If there's existing confirmation data, parse it
         try:
-            import json
             if confirmation_doc.notes:
-                confirmation_data = json.loads(confirmation_doc.notes)
+                parsed_data = json.loads(confirmation_doc.notes)
+                # Update our defaults with the parsed data
+                confirmation_data.update(parsed_data)
                 # Add confirmation reference number
                 confirmation_data['confirmation_reference'] = confirmation_doc.document_number
                 print(f"Parsed confirmation data: {list(confirmation_data.keys())}", file=sys.stderr)
             else:
                 print("Document notes field is empty", file=sys.stderr)
         except (json.JSONDecodeError, TypeError) as e:
-            # If parsing fails, use an empty dict
+            # If parsing fails, we keep our defaults
             print(f"Error parsing JSON: {str(e)}", file=sys.stderr)
-            confirmation_data = {}
     
     # Show the appropriate confirmation form based on service type
     if service_item.service_type == 'FLIGHT':
@@ -573,6 +584,9 @@ def booking_details_api(booking_id):
 @booking_bp.route('/api/service/<int:item_id>/details', methods=['GET'])
 def service_item_details_api(item_id):
     """API endpoint to get service item details including confirmation form HTML"""
+    import sys
+    import json
+    
     service_item = ServiceItem.query.get_or_404(item_id)
     
     # Get confirmation document if available
@@ -581,16 +595,28 @@ def service_item_details_api(item_id):
         document_type='CONFIRMATION'
     ).first()
     
-    # Prepare confirmation data
-    confirmation_data = {}
+    # Prepare confirmation data with defaults
+    confirmation_data = {
+        'confirmation_reference': '',
+        'supplier': 'Direct',
+        'passenger_count': {
+            'adults': 1,
+            'children': 0,
+            'infants': 0
+        },
+        'passenger_names': []
+    }
+    
     if confirmation_doc:
         try:
             if confirmation_doc.notes:
-                confirmation_data = json.loads(confirmation_doc.notes)
+                parsed_data = json.loads(confirmation_doc.notes)
+                # Update defaults with parsed data
+                confirmation_data.update(parsed_data)
                 # Add confirmation reference number
                 confirmation_data['confirmation_reference'] = confirmation_doc.document_number
         except (json.JSONDecodeError, TypeError) as e:
-            confirmation_data = {}
+            print(f"Error parsing JSON in API: {str(e)}", file=sys.stderr)
     
     # Determine which form template to use
     if service_item.service_type == 'FLIGHT':
