@@ -494,11 +494,14 @@ def confirm_service(item_id):
         try:
             if confirmation_doc.notes:
                 parsed_data = json.loads(confirmation_doc.notes)
+                # Debug output to see what's in the parsed data
+                print(f"PARSED DATA CONTENTS: {parsed_data}", file=sys.stderr)
                 # Update our defaults with the parsed data
                 confirmation_data.update(parsed_data)
                 # Add confirmation reference number
                 confirmation_data['confirmation_reference'] = confirmation_doc.document_number
                 print(f"Parsed confirmation data: {list(confirmation_data.keys())}", file=sys.stderr)
+                print(f"FINAL DATA: {confirmation_data}", file=sys.stderr)
             else:
                 print("Document notes field is empty", file=sys.stderr)
         except (json.JSONDecodeError, TypeError) as e:
