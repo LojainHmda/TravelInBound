@@ -456,7 +456,11 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 <script>
+// Initialize any existing payment data if available
+window.existingPayments = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     // Set today as min date for from_date
     const today = new Date().toISOString().split('T')[0];
