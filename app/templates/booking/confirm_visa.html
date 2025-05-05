@@ -8,12 +8,13 @@
 {% block service_type %}VISA{% endblock %}
 
 {% block supplier_options %}
-<option value="VFS Global">VFS Global</option>
-<option value="TLScontact">TLScontact</option>
-<option value="BLS International">BLS International</option>
-<option value="Embassy Direct">Embassy Direct</option>
-<option value="Travel Agent">Travel Agent</option>
-<option value="Immigration Consultant">Immigration Consultant</option>
+<option value="">-- Select Supplier --</option>
+<option value="VFS Global" {% if confirmation_data.supplier == 'VFS Global' %}selected{% endif %}>VFS Global</option>
+<option value="TLScontact" {% if confirmation_data.supplier == 'TLScontact' %}selected{% endif %}>TLScontact</option>
+<option value="BLS International" {% if confirmation_data.supplier == 'BLS International' %}selected{% endif %}>BLS International</option>
+<option value="Embassy Direct" {% if confirmation_data.supplier == 'Embassy Direct' %}selected{% endif %}>Embassy Direct</option>
+<option value="Travel Agent" {% if confirmation_data.supplier == 'Travel Agent' %}selected{% endif %}>Travel Agent</option>
+<option value="Immigration Consultant" {% if confirmation_data.supplier == 'Immigration Consultant' %}selected{% endif %}>Immigration Consultant</option>
 {% endblock %}
 
 {% block form_content %}

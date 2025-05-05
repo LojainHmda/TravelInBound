@@ -327,6 +327,10 @@ def confirm_service(item_id):
             document.notes = json.dumps(transport_details)
             
         elif service_item.service_type == 'VISA':
+            import sys
+            print("Processing VISA confirmation form submission", file=sys.stderr)
+            print(f"Supplier from form: '{supplier}'", file=sys.stderr)
+            
             visa_details = {
                 'applicant_name': request.form.get('applicant_name', ''),
                 'passport_number': request.form.get('passport_number', ''),
@@ -346,7 +350,9 @@ def confirm_service(item_id):
                 'supplier': supplier
             }
             
+            print(f"VISA details to save: {visa_details}", file=sys.stderr)
             document.notes = json.dumps(visa_details)
+            print(f"Document notes after setting: {document.notes[:100]}...", file=sys.stderr)
             
         elif service_item.service_type == 'INSURANCE':
             insurance_details = {

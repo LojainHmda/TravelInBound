@@ -6,7 +6,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set pre-selected values for dropdowns
     function setSelectedOption(selectElement, value) {
-        if (!selectElement || !value) return;
+        if (!selectElement) {
+            console.warn('Select element not found');
+            return;
+        }
+        
+        if (!value) {
+            console.warn('No value to set for', selectElement.name);
+            return;
+        }
+        
+        console.log(`Setting ${selectElement.name} to value: '${value}'`);
         
         // Try to find and select the option with the matching value
         const options = selectElement.querySelectorAll('option');
@@ -16,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (option.value === value) {
                 option.selected = true;
                 found = true;
+                console.log(`Found exact match for ${selectElement.name}: ${value}`);
             }
         });
         
@@ -24,8 +35,16 @@ document.addEventListener('DOMContentLoaded', function() {
             options.forEach(option => {
                 if (option.value.toLowerCase() === value.toLowerCase()) {
                     option.selected = true;
+                    found = true;
+                    console.log(`Found case-insensitive match for ${selectElement.name}: ${value}`);
                 }
             });
+        }
+        
+        if (!found) {
+            console.warn(`Could not find matching option for ${selectElement.name} with value: ${value}`);
+            // List available options
+            console.log('Available options:', Array.from(options).map(o => o.value));
         }
     }
     
@@ -36,12 +55,43 @@ document.addEventListener('DOMContentLoaded', function() {
     const entriesValue = document.querySelector('input[name="number_of_entries_value"]')?.value;
     const processingTypeValue = document.querySelector('input[name="processing_type_value"]')?.value;
     
-    // Set values in select elements
-    setSelectedOption(document.querySelector('select[name="supplier"]'), supplierValue);
-    setSelectedOption(document.querySelector('select[name="visa_type"]'), visaTypeValue);
-    setSelectedOption(document.querySelector('select[name="application_status"]'), applicationStatusValue);
-    setSelectedOption(document.querySelector('select[name="number_of_entries"]'), entriesValue);
-    setSelectedOption(document.querySelector('select[name="processing_type"]'), processingTypeValue);
+    // Get references to the select elements
+    const supplierSelect = document.querySelector('select[name="supplier"]');
+    const visaTypeSelect = document.querySelector('select[name="visa_type"]');
+    const applicationStatusSelect = document.querySelector('select[name="application_status"]');
+    const entriesSelect = document.querySelector('select[name="number_of_entries"]');
+    const processingTypeSelect = document.querySelector('select[name="processing_type"]');
+    
+    console.log('Hidden field values:', {
+        supplierValue,
+        visaTypeValue,
+        applicationStatusValue,
+        entriesValue,
+        processingTypeValue
+    });
+    
+    // Set values in select elements only if they need to be set by JS
+    // The template should have already set selected attributes
+    // This is backup in case the template selection doesn't work
+    if (supplierSelect && supplierValue && !supplierSelect.value) {
+        setSelectedOption(supplierSelect, supplierValue);
+    }
+    
+    if (visaTypeSelect && visaTypeValue && !visaTypeSelect.value) {
+        setSelectedOption(visaTypeSelect, visaTypeValue);
+    }
+    
+    if (applicationStatusSelect && applicationStatusValue && !applicationStatusSelect.value) {
+        setSelectedOption(applicationStatusSelect, applicationStatusValue);
+    }
+    
+    if (entriesSelect && entriesValue && !entriesSelect.value) {
+        setSelectedOption(entriesSelect, entriesValue);
+    }
+    
+    if (processingTypeSelect && processingTypeValue && !processingTypeSelect.value) {
+        setSelectedOption(processingTypeSelect, processingTypeValue);
+    }
     
     // Visa application status dependent fields
     const statusSelect = document.querySelector('select[name="application_status"]');
