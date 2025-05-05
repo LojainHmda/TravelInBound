@@ -217,10 +217,12 @@ def confirm_service(item_id):
         confirmation_reference = request.form.get('confirmation_reference', '')
         supplier = request.form.get('supplier', '')
         form_notes = request.form.get('notes', '')
+        service_type = request.form.get('service_type', '')
         
         print(f"confirmation_reference: {confirmation_reference}", file=sys.stderr)
         print(f"supplier: {supplier}", file=sys.stderr)
         print(f"form_notes: {form_notes}", file=sys.stderr)
+        print(f"service_type: {service_type}, actual service type: {service_item.service_type}", file=sys.stderr)
         
         # Set item status to IN_PROGRESS
         service_item.status = STATUS_IN_PROGRESS
@@ -350,8 +352,15 @@ def confirm_service(item_id):
         saved_doc = Document.query.get(document.id)
         print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
+        # Make sure the status is updated
+        service_item.status = STATUS_IN_PROGRESS
+        db.session.commit()
+        
         flash(f'{service_item.service_type} confirmation details saved', 'success')
-        return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+        
+        # Redirect to the booking details page
+        booking_id = service_item.booking_id
+        return redirect(url_for('booking.details', booking_id=booking_id))
     
     # Get existing confirmation document if available
     import sys
