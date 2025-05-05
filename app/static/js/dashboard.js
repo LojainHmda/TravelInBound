@@ -29,7 +29,27 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.view-booking-btn').forEach(btn => {
                 btn.innerHTML = '<i class="fas fa-eye"></i> View';
             });
+            
+            // Clear any open confirmation forms
+            document.querySelectorAll('.service-confirmation-container').forEach(container => {
+                container.remove();
+            });
         });
+    });
+    
+    // Set up global event delegation for confirm service buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.confirm-service-btn')) {
+            const btn = e.target.closest('.confirm-service-btn');
+            const serviceId = btn.getAttribute('data-service-id');
+            loadServiceConfirmationForm(serviceId, btn);
+        }
+        
+        if (e.target.closest('.cancel-confirm-btn')) {
+            const btn = e.target.closest('.cancel-confirm-btn');
+            const serviceId = btn.getAttribute('data-service-id');
+            removeServiceConfirmationForm(serviceId);
+        }
     });
 });
 
@@ -200,14 +220,14 @@ function createDetailsHTML(booking) {
             // Display different actions based on status
             if (item.status === 'REQUEST') {
                 actionsHtml = `
-                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-success me-1">
+                    <button type="button" class="btn btn-sm btn-success me-1 confirm-service-btn" data-service-id="${item.id}">
                         <i class="fas fa-check me-1"></i>Confirm
-                    </a>`;
+                    </button>`;
             } else if (item.status === 'IN_PROGRESS') {
                 actionsHtml = `
-                    <a href="/booking/service/${item.id}/confirm" class="btn btn-sm btn-primary me-1">
+                    <button type="button" class="btn btn-sm btn-primary me-1 confirm-service-btn" data-service-id="${item.id}">
                         <i class="fas fa-edit me-1"></i>Edit
-                    </a>`;
+                    </button>`;
             }
             
             html += `
@@ -270,4 +290,140 @@ function createDetailsHTML(booking) {
     </div>`;
     
     return html;
+}
+
+// Function to initialize confirm buttons in loaded booking details
+function initializeConfirmButtons() {
+    // This is handled by the global event delegation setup in the DOMContentLoaded event
+}
+
+// Load service confirmation form via AJAX
+function loadServiceConfirmationForm(serviceId, button) {
+    // Show loading indicator
+    const originalButtonHtml = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    button.disabled = true;
+    
+    // Remove any existing confirmation forms
+    removeAllServiceConfirmationForms();
+    
+    fetch(`/api/service/${serviceId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            // Create form container
+            const serviceRow = button.closest('tr');
+            const confirmRow = document.createElement('tr');
+            confirmRow.id = `service-confirmation-${serviceId}`;
+            confirmRow.className = 'service-confirmation-container';
+            
+            const confirmCell = document.createElement('td');
+            confirmCell.colSpan = serviceRow.cells.length;
+            confirmCell.className = 'bg-light p-3';
+            
+            // Insert the form HTML from the API
+            confirmCell.innerHTML = data.form_html;
+            
+            confirmRow.appendChild(confirmCell);
+            
+            // Insert after the service row
+            serviceRow.parentNode.insertBefore(confirmRow, serviceRow.nextSibling);
+            
+            // Update button to show active state
+            button.innerHTML = '<i class="fas fa-times me-1"></i> Cancel';
+            button.classList.remove('btn-success', 'btn-primary');
+            button.classList.add('btn-outline-dark');
+            button.disabled = false;
+            
+            // Initialize the form event listeners
+            initializeConfirmationForm(serviceId);
+        })
+        .catch(error => {
+            console.error('Error loading service confirmation form:', error);
+            button.innerHTML = originalButtonHtml;
+            button.disabled = false;
+            alert('Failed to load confirmation form. Please try again.');
+        });
+}
+
+// Initialize a loaded confirmation form
+function initializeConfirmationForm(serviceId) {
+    const formContainer = document.getElementById(`service-confirmation-${serviceId}`);
+    if (!formContainer) return;
+    
+    const form = formContainer.querySelector('form');
+    if (!form) return;
+    
+    // Override form submission to use AJAX
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show loading indicator
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        submitBtn.disabled = true;
+        
+        // Collect form data
+        const formData = new FormData(form);
+        
+        // Submit form via AJAX
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                // Refresh the entire booking details section
+                const bookingRow = formContainer.closest('.booking-details-row');
+                if (bookingRow) {
+                    const bookingId = bookingRow.id.replace('booking-details-', '');
+                    const viewButton = document.querySelector(`.view-booking-btn[data-booking-id="${bookingId}"]`);
+                    
+                    // Remove confirmation form
+                    formContainer.remove();
+                    
+                    // Re-fetch booking details
+                    loadBookingDetails(bookingId, viewButton);
+                } else {
+                    // Just reload the page if we can't find the booking row
+                    window.location.reload();
+                }
+            } else {
+                throw new Error('Failed to save confirmation');
+            }
+        })
+        .catch(error => {
+            console.error('Error saving confirmation:', error);
+            submitBtn.innerHTML = originalBtnHtml;
+            submitBtn.disabled = false;
+            alert('Failed to save confirmation. Please try again.');
+        });
+    });
+}
+
+// Remove a specific service confirmation form
+function removeServiceConfirmationForm(serviceId) {
+    const formContainer = document.getElementById(`service-confirmation-${serviceId}`);
+    if (formContainer) {
+        formContainer.remove();
+        
+        // Reset the button
+        const button = document.querySelector(`.confirm-service-btn[data-service-id="${serviceId}"]`);
+        if (button) {
+            const isRequest = button.classList.contains('btn-success');
+            button.classList.remove('btn-outline-dark');
+            button.classList.add(isRequest ? 'btn-success' : 'btn-primary');
+            button.innerHTML = isRequest ? 
+                '<i class="fas fa-check me-1"></i>Confirm' : 
+                '<i class="fas fa-edit me-1"></i>Edit';
+        }
+    }
+}
+
+// Remove all service confirmation forms
+function removeAllServiceConfirmationForms() {
+    document.querySelectorAll('.service-confirmation-container').forEach(container => {
+        const serviceId = container.id.replace('service-confirmation-', '');
+        removeServiceConfirmationForm(serviceId);
+    });
 }
