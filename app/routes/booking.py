@@ -89,8 +89,8 @@ def new_booking():
                     for error in errors:
                         flash(f'Error in {field}: {error}', 'danger')
             
-        elif 'submit' in request.form:
-            print("Submit button clicked")
+        elif 'save_action' in request.form:
+            print("Save button clicked")
             if form.validate():
                 # Create a unique reference number
                 reference = form.request_id.data
@@ -263,8 +263,23 @@ def add_service_item(booking_id):
 def update_booking_status(booking_id):
     """Update the status of an entire booking"""
     booking = Booking.query.get_or_404(booking_id)
-    form = UpdateServiceStatusForm()
     
+    # Check if this is a direct status transition to IN_PROGRESS (Start Operations)
+    if 'new_status' in request.form and request.form['new_status'] == STATUS_IN_PROGRESS:
+        old_status = booking.status
+        new_status = STATUS_IN_PROGRESS
+        
+        # Check payment status when moving to IN_PROGRESS
+        if booking.payment_status != 'FULL':
+            flash('Warning: This booking has not been fully paid', 'warning')
+        
+        booking.status = new_status
+        db.session.commit()
+        flash(f'Operations started: Booking status updated to {booking.status}', 'success')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    # Regular form submission
+    form = UpdateServiceStatusForm()
     if form.validate_on_submit():
         old_status = booking.status
         new_status = form.status.data

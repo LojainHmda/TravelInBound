@@ -12,6 +12,19 @@
     </div>
     <div class="col-md-4 text-end">
         <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
+        
+        {% if booking.status == 'REQUEST' %}
+        <div class="mb-2">
+            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                {{ status_form.hidden_tag() }}
+                <input type="hidden" name="new_status" value="IN_PROGRESS">
+                <button type="submit" class="btn btn-warning w-100">
+                    <i class="fas fa-cogs me-2"></i>Start Operations
+                </button>
+            </form>
+        </div>
+        {% endif %}
+        
         <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="mt-2">
             {{ status_form.hidden_tag() }}
             <div class="input-group">
