@@ -202,14 +202,25 @@ def update_service_status(item_id):
 @booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
 def confirm_service(item_id):
     """Confirm details for a specific service item with a dedicated form"""
+    import sys
+    print(f"Confirm service route called for item_id: {item_id}", file=sys.stderr)
     service_item = ServiceItem.query.get_or_404(item_id)
     
     # Handle form submission
     if request.method == 'POST':
+        import sys
+        print(f"POST request received for confirm_service. Form data:", file=sys.stderr)
+        for key, value in request.form.items():
+            print(f"  {key}: {value}", file=sys.stderr)
+
         # Get confirmation reference and supplier
         confirmation_reference = request.form.get('confirmation_reference', '')
         supplier = request.form.get('supplier', '')
-        notes = request.form.get('notes', '')
+        form_notes = request.form.get('notes', '')
+        
+        print(f"confirmation_reference: {confirmation_reference}", file=sys.stderr)
+        print(f"supplier: {supplier}", file=sys.stderr)
+        print(f"form_notes: {form_notes}", file=sys.stderr)
         
         # Set item status to IN_PROGRESS
         service_item.status = STATUS_IN_PROGRESS
@@ -221,17 +232,16 @@ def confirm_service(item_id):
         ).first()
         
         if document:
-            # Update existing document
+            # Update existing document - don't overwrite notes yet, just update the doc number
             document.document_number = confirmation_reference
-            document.notes = notes
             print(f"Updating existing confirmation document: {document.id}")
         else:
-            # Create new document
+            # Create new document - notes will be set later with the JSON data
             document = Document(
                 service_item_id=service_item.id,
                 document_type='CONFIRMATION',
                 document_number=confirmation_reference,
-                notes=notes
+                notes=""  # Will be set below with service-specific data
             )
             print(f"Creating new confirmation document for service item: {service_item.id}")
         
@@ -331,17 +341,33 @@ def confirm_service(item_id):
             document.notes = json.dumps(insurance_details)
         
         # Save changes
+        import sys
+        print(f"About to save document with notes: {document.notes[:100]}...", file=sys.stderr)
         db.session.add(document)
         db.session.commit()
+        
+        # Verify the document was saved by retrieving it again
+        saved_doc = Document.query.get(document.id)
+        print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
         flash(f'{service_item.service_type} confirmation details saved', 'success')
         return redirect(url_for('booking.details', booking_id=service_item.booking_id))
     
     # Get existing confirmation document if available
+    import sys
+    print(f"GET request for item_id: {item_id} - Loading confirmation data", file=sys.stderr)
+    
     confirmation_doc = Document.query.filter_by(
         service_item_id=service_item.id, 
         document_type='CONFIRMATION'
     ).first()
+    
+    if confirmation_doc:
+        print(f"Found confirmation document ID: {confirmation_doc.id}", file=sys.stderr)
+        print(f"Document number: {confirmation_doc.document_number}", file=sys.stderr)
+        print(f"Notes length: {len(confirmation_doc.notes) if confirmation_doc.notes else 0}", file=sys.stderr)
+    else:
+        print("No confirmation document found", file=sys.stderr)
     
     # Prepare data for template
     confirmation_data = {}
@@ -353,8 +379,12 @@ def confirm_service(item_id):
                 confirmation_data = json.loads(confirmation_doc.notes)
                 # Add confirmation reference number
                 confirmation_data['confirmation_reference'] = confirmation_doc.document_number
-        except (json.JSONDecodeError, TypeError):
+                print(f"Parsed confirmation data: {list(confirmation_data.keys())}", file=sys.stderr)
+            else:
+                print("Document notes field is empty", file=sys.stderr)
+        except (json.JSONDecodeError, TypeError) as e:
             # If parsing fails, use an empty dict
+            print(f"Error parsing JSON: {str(e)}", file=sys.stderr)
             confirmation_data = {}
     
     # Show the appropriate confirmation form based on service type
