@@ -118,8 +118,8 @@ body {
     color: white;
 }
 
-.badge.status-invoice {
-    background-color: var(--status-invoice);
+.badge.status-booked {
+    background-color: var(--status-booked);
     color: white;
 }
 
@@ -267,8 +267,8 @@ body {
     background-color: var(--status-request);
 }
 
-.bg-invoice {
-    background-color: var(--status-invoice);
+.bg-booked {
+    background-color: var(--status-booked);
 }
 
 .bg-in-progress {

@@ -57,7 +57,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('update_booking_status', booking_id=booking.id) }}">
-                    {{ status_form.hidden_tag() }}
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="row">
                         <div class="col-md-8">
                             <div class="form-group mb-3">

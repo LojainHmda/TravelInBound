@@ -4,6 +4,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from flask_wtf.csrf import CSRFProtect
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -13,6 +14,9 @@ class Base(DeclarativeBase):
 
 # Initialize SQLAlchemy with the Base class
 db = SQLAlchemy(model_class=Base)
+
+# Initialize CSRF protection
+csrf = CSRFProtect()
 
 # Create the Flask app
 app = Flask(__name__)
@@ -26,8 +30,9 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Initialize the app with the extension
+# Initialize the app with extensions
 db.init_app(app)
+csrf.init_app(app)
 
 with app.app_context():
     # Import models to ensure tables are created
