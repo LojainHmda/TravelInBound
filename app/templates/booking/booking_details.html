@@ -13,18 +13,18 @@
     <div class="col-md-4 text-end">
         <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
         
-        {% if booking.status == 'INVOICE' and booking.payment_status in ['PARTIAL', 'FULL'] %}
+        {% if booking.status == 'INVOICE' %}
         <div class="mb-2">
-            <a href="{{ url_for('booking.start_operations', booking_id=booking.id) }}" class="btn btn-success w-100">
-                <i class="fas fa-cogs me-2"></i>Start Operations
-            </a>
-        </div>
-        {% elif booking.status == 'INVOICE' %}
-        <div class="mb-2">
-            <button class="btn btn-secondary w-100" disabled title="Payment required to start operations">
-                <i class="fas fa-cogs me-2"></i>Start Operations
-            </button>
-            <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Payment required</small>
+            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                {{ status_form.hidden_tag() }}
+                <input type="hidden" name="new_status" value="IN_PROGRESS">
+                <button type="submit" class="btn btn-warning w-100" {% if booking.payment_status != 'FULL' %}title="Warning: Payment is not complete"{% endif %}>
+                    <i class="fas fa-cogs me-2"></i>Start Operations
+                </button>
+            </form>
+            {% if booking.payment_status != 'FULL' %}
+            <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Payment not complete</small>
+            {% endif %}
         </div>
         {% endif %}
         
