@@ -349,76 +349,8 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function() {
                 const serviceType = this.getAttribute('data-service-type');
                 
-                // Set the service type in the dropdown
-                for (let i = 0; i < serviceTypeSelect.options.length; i++) {
-                    if (serviceTypeSelect.options[i].value === serviceType) {
-                        serviceTypeSelect.selectedIndex = i;
-                        serviceTypeSelect.dispatchEvent(new Event('change'));
-                        break;
-                    }
-                }
-                
-                // Default dates if empty
-                if (!fromDateInput.value) {
-                    fromDateInput.value = today;
-                }
-                
-                if (!toDateInput.value) {
-                    const nextWeek = new Date();
-                    nextWeek.setDate(nextWeek.getDate() + 7);
-                    toDateInput.value = nextWeek.toISOString().split('T')[0];
-                }
-                
-                // Generate description based on service type
-                let description = '';
-                let defaultAmount = '0.00';
-                
-                switch(serviceType) {
-                    case 'FLIGHT':
-                        description = 'One-way flight from New York to London, Economy class';
-                        defaultAmount = '350.00';
-                        break;
-                    case 'HOTEL':
-                        description = '5 nights at Grand Hotel, Double room with breakfast';
-                        defaultAmount = '500.00';
-                        break;
-                    case 'TRANSPORT':
-                        description = 'Airport transfer from Heathrow to central London';
-                        defaultAmount = '75.00';
-                        break;
-                    case 'VISA':
-                        description = 'Tourist visa application for United Kingdom';
-                        defaultAmount = '120.00';
-                        break;
-                    case 'INSURANCE':
-                        description = 'Comprehensive travel insurance for 7 days';
-                        defaultAmount = '80.00';
-                        break;
-                }
-                
-                // Set the description and amount
-                if (descriptionInput) {
-                    descriptionInput.value = description;
-                }
-                
-                if (amountInput) {
-                    amountInput.value = defaultAmount;
-                }
-                
-                // Create a hidden input field to indicate which button was clicked
-                let hiddenInput = document.querySelector('input[name="quick_add_service_type"]');
-                if (!hiddenInput) {
-                    hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'quick_add_service_type';
-                    bookingForm.appendChild(hiddenInput);
-                }
-                hiddenInput.value = serviceType;
-                
-                // Click the add item button to submit the form
-                if (addItemButton) {
-                    addItemButton.click();
-                }
+                // Just redirect to the same page with a query parameter
+                window.location.href = `${window.location.pathname}?quick_add=${serviceType}`;
             });
         });
     }

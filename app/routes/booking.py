@@ -43,6 +43,59 @@ def new_booking():
         session['service_items'] = service_items
         flash('Service item removed successfully', 'success')
         return redirect(url_for('booking.new_booking'))
+        
+    # Handle direct quick-add from URL parameters
+    quick_add_type = request.args.get('quick_add')
+    if quick_add_type:
+        # Set default values based on service type
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+        end_date = today + timedelta(days=7)
+        
+        # Default values by service type
+        defaults = {
+            'FLIGHT': {
+                'description': 'One-way flight from New York to London, Economy class',
+                'amount': 350.00
+            },
+            'HOTEL': {
+                'description': '5 nights at Grand Hotel, Double room with breakfast',
+                'amount': 500.00
+            },
+            'TRANSPORT': {
+                'description': 'Airport transfer from Heathrow to central London',
+                'amount': 75.00
+            },
+            'VISA': {
+                'description': 'Tourist visa application for United Kingdom',
+                'amount': 120.00
+            },
+            'INSURANCE': {
+                'description': 'Comprehensive travel insurance for 7 days',
+                'amount': 80.00
+            }
+        }
+        
+        default_data = defaults.get(quick_add_type, {'description': '', 'amount': 0.00})
+        
+        # Create a service item with defaults
+        service_item = {
+            'service_type': quick_add_type,
+            'from_date': str(today),
+            'to_date': str(end_date),
+            'description': default_data['description'],
+            'amount': default_data['amount'],
+            'currency': 'USD',
+            'item_id': str(uuid.uuid4())
+        }
+        
+        # Add to list and update session
+        service_items.append(service_item)
+        session['service_items'] = service_items
+        
+        service_name = dict(form.service_type.choices).get(quick_add_type, quick_add_type)
+        flash(f'Quick added {service_name} service', 'success')
+        return redirect(url_for('booking.new_booking'))
     
     if request.method == 'POST':
         print("POST received. Form data:", request.form)
