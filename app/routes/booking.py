@@ -191,7 +191,8 @@ def new_booking():
                     service_items = session.get('service_items', [])
                 
                 # Handle invoice generation if requested (but do not try to create a new booking)
-                if (action == 'generate_invoice' or action == 'invoice' or request.form.get('invoice_notes')) and booking:
+                # Check for invoice generation request - prioritize this over checking invoice_notes
+                if (action == 'generate_invoice' or action == 'invoice') and booking:
                     # Update the total amount if provided
                     invoice_total = request.form.get('invoice_total')
                     if invoice_total and float(invoice_total) > 0:
@@ -245,6 +246,24 @@ def new_booking():
                     db.session.commit()
                     
                     flash(f'Payment of ${booking.total_amount:.2f} processed for booking {reference}', 'success')
+                
+                # Handle Start Operations action
+                if action == 'start_operations' and booking:
+                    # Update booking status to IN_PROGRESS
+                    booking.status = STATUS_IN_PROGRESS
+                    
+                    # Update all service items to IN_PROGRESS too
+                    for item in booking.service_items:
+                        if item.status == STATUS_REQUEST:
+                            item.status = STATUS_IN_PROGRESS
+                    
+                    db.session.commit()
+                    flash(f'Operations started: Booking status updated to {booking.status}', 'success')
+                    
+                    # Get the first service item to confirm if any exists
+                    if booking.service_items and len(booking.service_items) > 0:
+                        first_item = booking.service_items[0]
+                        return redirect(url_for('booking.confirm_service', item_id=first_item.id))
                 
                 # Only flash the success message if we're not redirecting elsewhere
                 if action == 'save':
