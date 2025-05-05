@@ -39,7 +39,7 @@
                             <select class="form-select" id="supplier" name="supplier" required>
                                 <option value="">-- Select Supplier --</option>
                                 {% block supplier_options %}
-                                <option value="General Supplier">General Supplier</option>
+                                <option value="General Supplier" {% if confirmation_data.supplier == 'General Supplier' %}selected{% endif %}>General Supplier</option>
                                 {% endblock %}
                             </select>
                         </div>
@@ -84,43 +84,5 @@
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/confirmation_base.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set supplier value if present in confirmation data
-    {% if confirmation_data.supplier %}
-    const supplierSelect = document.getElementById('supplier');
-    if (supplierSelect) {
-        // Look for a matching option
-        const options = supplierSelect.options;
-        for (let i = 0; i < options.length; i++) {
-            if (options[i].value === "{{ confirmation_data.supplier }}") {
-                options[i].selected = true;
-                break;
-            }
-        }
-    }
-    {% endif %}
-    
-    // Additional form fields from confirmation data
-    {% for key, value in confirmation_data.items() %}
-    {% if key != 'confirmation_reference' and key != 'supplier' %}
-    const field = document.querySelector('[name="{{ key }}"]');
-    if (field) {
-        {% if value is string %}
-        field.value = "{{ value }}";
-        {% elif value is mapping %}
-        // Handle nested objects
-        {% for subkey, subvalue in value.items() %}
-        const subfield = document.querySelector('[name="{{ subkey }}"]');
-        if (subfield) {
-            subfield.value = "{{ subvalue }}";
-        }
-        {% endfor %}
-        {% endif %}
-    }
-    {% endif %}
-    {% endfor %}
-});
-</script>
 {% block service_script %}{% endblock %}
 {% endblock %}

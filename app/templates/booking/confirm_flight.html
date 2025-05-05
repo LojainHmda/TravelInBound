@@ -8,11 +8,11 @@
 {% block service_type %}FLIGHT{% endblock %}
 
 {% block supplier_options %}
-<option value="Expedia">Expedia</option>
-<option value="Booking.com">Booking.com</option>
-<option value="Airline Direct">Airline Direct</option>
-<option value="Skyscanner">Skyscanner</option>
-<option value="Kayak">Kayak</option>
+<option value="Expedia" {% if confirmation_data.supplier == 'Expedia' %}selected{% endif %}>Expedia</option>
+<option value="Booking.com" {% if confirmation_data.supplier == 'Booking.com' %}selected{% endif %}>Booking.com</option>
+<option value="Airline Direct" {% if confirmation_data.supplier == 'Airline Direct' %}selected{% endif %}>Airline Direct</option>
+<option value="Skyscanner" {% if confirmation_data.supplier == 'Skyscanner' %}selected{% endif %}>Skyscanner</option>
+<option value="Kayak" {% if confirmation_data.supplier == 'Kayak' %}selected{% endif %}>Kayak</option>
 {% endblock %}
 
 {% block form_content %}
@@ -22,15 +22,15 @@
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Adults (12+ years)</label>
-                <input type="number" name="adults" class="form-control" value="1" min="0">
+                <input type="number" name="adults" class="form-control" value="{{ confirmation_data.passenger_count.adults|default(1) }}" min="0">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Children (2-11 years)</label>
-                <input type="number" name="children" class="form-control" value="0" min="0">
+                <input type="number" name="children" class="form-control" value="{{ confirmation_data.passenger_count.children|default(0) }}" min="0">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Infants (0-2 years)</label>
-                <input type="number" name="infants" class="form-control" value="0" min="0">
+                <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
             </div>
         </div>
         
@@ -67,22 +67,22 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Departure Airport</label>
-                <input type="text" name="departure_airport" class="form-control" required>
+                <input type="text" name="departure_airport" class="form-control" value="{{ confirmation_data.departure_airport|default('') }}" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Arrival Airport</label>
-                <input type="text" name="arrival_airport" class="form-control" required>
+                <input type="text" name="arrival_airport" class="form-control" value="{{ confirmation_data.arrival_airport|default('') }}" required>
             </div>
         </div>
         
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Airline</label>
-                <input type="text" name="airline" class="form-control" required>
+                <input type="text" name="airline" class="form-control" value="{{ confirmation_data.airline|default('') }}" required>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Flight Number</label>
-                <input type="text" name="flight_number" class="form-control" required>
+                <input type="text" name="flight_number" class="form-control" value="{{ confirmation_data.flight_number|default('') }}" required>
             </div>
         </div>
         
@@ -90,31 +90,39 @@
             <div class="col-md-6">
                 <label class="form-label">Date</label>
                 <input type="date" name="flight_date" class="form-control" required 
-                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+                       value="{{ confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Time</label>
-                <input type="time" name="flight_time" class="form-control" required>
+                <input type="time" name="flight_time" class="form-control" value="{{ confirmation_data.flight_time|default('') }}" required>
             </div>
         </div>
         
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Terminal</label>
-                <input type="text" name="terminal" class="form-control">
+                <input type="text" name="terminal" class="form-control" value="{{ confirmation_data.terminal|default('') }}">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Class</label>
                 <select name="travel_class" class="form-select" required>
-                    <option value="Economy">Economy</option>
-                    <option value="Premium Economy">Premium Economy</option>
-                    <option value="Business">Business</option>
-                    <option value="First">First</option>
+                    <option value="Economy" {% if confirmation_data.travel_class == 'Economy' %}selected{% endif %}>Economy</option>
+                    <option value="Premium Economy" {% if confirmation_data.travel_class == 'Premium Economy' %}selected{% endif %}>Premium Economy</option>
+                    <option value="Business" {% if confirmation_data.travel_class == 'Business' %}selected{% endif %}>Business</option>
+                    <option value="First" {% if confirmation_data.travel_class == 'First' %}selected{% endif %}>First</option>
                 </select>
             </div>
             <div class="col-md-4">
                 <label class="form-label">Ticket Number</label>
-                <input type="text" name="ticket_number" class="form-control">
+                <input type="text" name="ticket_number" class="form-control" value="{{ confirmation_data.ticket_number|default('') }}">
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label class="form-label">PNR (Booking Reference)</label>
+                <input type="text" name="pnr" class="form-control" value="{{ confirmation_data.pnr|default('') }}">
+                <small class="text-muted">Airline's 6-character reference code</small>
             </div>
         </div>
     </div>
