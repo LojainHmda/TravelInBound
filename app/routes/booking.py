@@ -233,29 +233,44 @@ def new_booking():
                 # Handle invoice generation if requested (but do not try to create a new booking)
                 # Check for invoice generation request - prioritize this over checking invoice_notes
                 if (action == 'generate_invoice' or action == 'invoice') and booking:
-                    # Update the total amount if provided
+                    import sys
+                    print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
+                    
+                    # Update the total amount if provided in the modal form
                     invoice_total = request.form.get('invoice_total')
-                    if invoice_total and float(invoice_total) > 0:
-                        booking.total_amount = float(invoice_total)
+                    if invoice_total:
+                        try:
+                            invoice_total = float(invoice_total)
+                            if invoice_total > 0:
+                                print(f"Setting booking total to {invoice_total}", file=sys.stderr)
+                                booking.total_amount = invoice_total
+                        except (ValueError, TypeError):
+                            print(f"Invalid invoice_total: {invoice_total}", file=sys.stderr)
+                    
+                    # If no invoice_total was provided, calculate from service items
+                    if not invoice_total and booking.service_items:
+                        booking.calculate_total()
+                        print(f"Calculated total from service items: {booking.total_amount}", file=sys.stderr)
                     
                     # Generate invoice number if one doesn't exist
                     if not booking.invoice_number:
                         booking.generate_invoice_number()
+                        print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
                     # Update the booking status to INVOICE
                     booking.status = STATUS_INVOICE
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
+                    print(f"Invoice notes: {invoice_notes}", file=sys.stderr)
                     # You could add the notes to the booking or create a separate model for invoice notes
                     
                     db.session.commit()
                     
                     flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
                     
-                    # Never redirect for invoice generation - stay on same page
-                    # if action == 'generate_invoice' and not 'new_booking' in request.path:
-                    #     return redirect(url_for('booking.details', booking_id=booking.id))
+                    # Redirect to the invoice details page
+                    return redirect(url_for('booking.invoice_details', booking_id=booking.id))
                 
                 # Check if payment information was provided - allow various action names
                 payment_method = request.form.get('payment_method')
@@ -885,6 +900,9 @@ def generate_invoice(booking_id):
 @booking_bp.route('/<int:booking_id>/invoice', methods=['GET'])
 def invoice_details(booking_id):
     """View invoice details"""
+    import sys
+    print(f"Invoice details route called for booking_id: {booking_id}", file=sys.stderr)
+    
     booking = Booking.query.get_or_404(booking_id)
     
     # If no invoice yet, redirect to generate page
@@ -892,6 +910,14 @@ def invoice_details(booking_id):
         flash('No invoice generated yet. Please generate an invoice first.', 'warning')
         return redirect(url_for('booking.generate_invoice', booking_id=booking.id))
     
+    # Ensure we have an invoice date
+    if not booking.invoice_date:
+        from datetime import datetime
+        booking.invoice_date = datetime.utcnow()
+        db.session.commit()
+        print(f"Added missing invoice date for booking {booking.id}", file=sys.stderr)
+    
+    print(f"Rendering invoice template with invoice #{booking.invoice_number}", file=sys.stderr)
     return render_template('booking/invoice_details.html', booking=booking)
 
 @booking_bp.route('/<int:booking_id>/add_payment', methods=['GET', 'POST'])
