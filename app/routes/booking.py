@@ -424,8 +424,8 @@ def update_booking_status(booking_id):
         new_status = form.status.data
         
         # Handle special status transitions
-        if new_status == STATUS_COMPLETED and not booking.can_complete():
-            flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
+        if new_status == STATUS_FULFILLED and not booking.can_complete():
+            flash('Cannot mark as FULFILLED until all service items are fulfilled', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
         # If moving to BOOKED status, generate invoice number
@@ -447,12 +447,26 @@ def update_booking_status(booking_id):
 def update_service_status(item_id):
     """Update the status of a specific service item"""
     service_item = ServiceItem.query.get_or_404(item_id)
+    booking = service_item.booking
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
         service_item.status = form.status.data
         db.session.commit()
+        
+        # If the status is changed to FULFILLED, check if all items are now fulfilled
+        if service_item.status == STATUS_FULFILLED:
+            if booking.can_complete():
+                booking.status = STATUS_FULFILLED
+                db.session.commit()
+                flash('All services are fulfilled. Booking marked as fulfilled!', 'success')
+            
         flash(f'Service item status updated to {service_item.status}', 'success')
+    
+    # Check for referrer to return to the correct page
+    referrer = request.referrer
+    if referrer:
+        return redirect(referrer)
     
     return redirect(url_for('booking.details', booking_id=service_item.booking_id))
 
@@ -644,8 +658,8 @@ def confirm_service(item_id):
         saved_doc = Document.query.get(document.id)
         print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
-        # Mark this service item as COMPLETED
-        service_item.status = STATUS_COMPLETED
+        # Mark this service item as FULFILLED
+        service_item.status = STATUS_FULFILLED
         db.session.commit()
         
         flash(f'{service_item.service_type} confirmation details saved', 'success')
@@ -666,18 +680,18 @@ def confirm_service(item_id):
                 flash('Moving to next service item for confirmation', 'info')
                 return redirect(url_for('booking.confirm_service', item_id=next_item.id))
         
-        # Check if all items are now completed regardless of the action
+        # Check if all items are now fulfilled regardless of the action
         pending_items = ServiceItem.query.filter(
             ServiceItem.booking_id == booking_id,
-            ServiceItem.status != STATUS_COMPLETED
+            ServiceItem.status != STATUS_FULFILLED
         ).count()
         
         if pending_items == 0:
-            # All service items are completed, update booking status
+            # All service items are fulfilled, update booking status
             booking = Booking.query.get(booking_id)
-            booking.status = STATUS_COMPLETED
+            booking.status = STATUS_FULFILLED
             db.session.commit()
-            flash('All services confirmed! Booking is now complete.', 'success')
+            flash('All services confirmed! Booking is now fulfilled.', 'success')
         
         # Default behavior: redirect to the booking details page
         return redirect(url_for('booking.details', booking_id=booking_id))
