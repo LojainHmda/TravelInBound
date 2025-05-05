@@ -162,13 +162,52 @@
                         </table>
                     </div>
                     
-                    <!-- Total Amount Row -->
-                    <div class="d-flex align-items-center mt-3 mb-3">
-                        <div class="deposit-amount-section">
-                            <label class="form-label mb-0">Deposit Amount</label>
-                            <div class="input-group" style="width: 200px;">
-                                <span class="input-group-text">$</span>
-                                {{ form.deposit_amount(class="form-control") }}
+                    <!-- Payment and Invoice Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="invoice-status mb-3">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <span>An invoice will be generated after creating the booking request.</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Status:</strong> <span class="badge bg-primary">Draft</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Invoice #:</strong> <span class="text-muted">Pending</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="payment-status mb-3">
+                                        <div class="alert alert-secondary">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            <span>You'll be able to record payments after creating the booking.</span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Payment Status:</strong> <span class="badge bg-warning text-dark">Pending</span></p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-2"><strong>Last Payment:</strong> <span class="text-muted">None</span></p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

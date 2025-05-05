@@ -35,8 +35,7 @@ class BookingRequestForm(FlaskForm):
         ('GBP', 'GBP')
     ], default='USD')
     
-    # Deposit amount
-    deposit_amount = FloatField('Deposit Amount', validators=[Optional()])
+    # No deposit amount field anymore
     
     submit = SubmitField('Create Booking Request')
     add_item = SubmitField('Add Item')

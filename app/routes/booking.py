@@ -98,12 +98,11 @@ def new_booking():
                 # Get the selected user
                 user = User.query.get(int(form.customer.data))
                 
-                # Create the booking with deposit amount
+                # Create the booking without deposit amount
                 booking = Booking(
                     reference_number=reference,
                     user_id=user.id,
-                    status=STATUS_REQUEST,
-                    deposit_amount=form.deposit_amount.data or 0.0
+                    status=STATUS_REQUEST
                 )
                 
                 db.session.add(booking)
