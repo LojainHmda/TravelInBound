@@ -98,47 +98,57 @@ def new_booking():
                 # Create a unique reference number
                 reference = form.request_id.data
                 
-                # Get the selected user
-                user = User.query.get(int(form.customer.data))
+                # Check if a booking with this reference already exists
+                booking = Booking.query.filter_by(reference_number=reference).first()
                 
-                # Create the booking without deposit amount
-                booking = Booking(
-                    reference_number=reference,
-                    user_id=user.id,
-                    status=STATUS_REQUEST
-                )
-                
-                db.session.add(booking)
-                db.session.commit()
+                # Only create a new booking if one doesn't already exist with this reference
+                if not booking:
+                    # Get the selected user
+                    user = User.query.get(int(form.customer.data))
+                    
+                    # Create the booking without deposit amount
+                    booking = Booking(
+                        reference_number=reference,
+                        user_id=user.id,
+                        status=STATUS_REQUEST
+                    )
+                    
+                    db.session.add(booking)
+                    db.session.commit()
+                else:
+                    print(f"Found existing booking with reference {reference}, using it instead of creating a new one.")
                 
                 # Get service items from session
                 session_items = session.get('service_items', [])
                 
-                # Add all service items from the session
-                if session_items:
-                    for item_data in session_items:
-                        # Convert string dates back to Python date objects
-                        from datetime import datetime
+                # Only add service items if we just created a new booking
+                # or if there are no existing service items for this booking
+                if not booking.service_items or len(booking.service_items) == 0:
+                    # Add all service items from the session
+                    if session_items:
+                        for item_data in session_items:
+                            # Convert string dates back to Python date objects
+                            from datetime import datetime
+                            
+                            # Parse the date strings
+                            start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
+                            end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
+                            
+                            service_item = ServiceItem(
+                                booking_id=booking.id,
+                                service_type=item_data['service_type'],
+                                start_date=start_date,
+                                end_date=end_date,
+                                description=item_data['description'],
+                                amount=float(item_data['amount']),
+                                status=STATUS_REQUEST
+                            )
+                            
+                            db.session.add(service_item)
                         
-                        # Parse the date strings
-                        start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
-                        end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
-                        
-                        service_item = ServiceItem(
-                            booking_id=booking.id,
-                            service_type=item_data['service_type'],
-                            start_date=start_date,
-                            end_date=end_date,
-                            description=item_data['description'],
-                            amount=float(item_data['amount']),
-                            status=STATUS_REQUEST
-                        )
-                        
-                        db.session.add(service_item)
-                    
-                    db.session.commit()
-                    booking.calculate_total()
-                    db.session.commit()
+                        db.session.commit()
+                        booking.calculate_total()
+                        db.session.commit()
                 
                 # Also add the current item if it has data
                 elif form.description.data and form.amount.data:
@@ -180,8 +190,8 @@ def new_booking():
                     # Update for our current scope
                     service_items = session.get('service_items', [])
                 
-                # Handle invoice generation if requested
-                if action == 'generate_invoice' or request.form.get('invoice_notes'):
+                # Handle invoice generation if requested (but do not try to create a new booking)
+                if (action == 'generate_invoice' or action == 'invoice' or request.form.get('invoice_notes')) and booking:
                     # Update the total amount if provided
                     invoice_total = request.form.get('invoice_total')
                     if invoice_total and float(invoice_total) > 0:
@@ -209,7 +219,10 @@ def new_booking():
                 # Check if payment information was provided
                 payment_method = request.form.get('payment_method')
                 payment_notes = request.form.get('payment_notes')
-                if payment_method:
+                if payment_method and booking and action == 'process_payment':
+                    # Make sure we have a valid booking and the action is explicitly for payment
+                    from datetime import datetime  # Import datetime here to fix the undefined issue
+                    
                     # Create a payment record
                     payment = Payment(
                         booking_id=booking.id,
