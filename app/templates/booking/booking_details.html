@@ -120,8 +120,26 @@
                                             </button>
                                             <ul class="dropdown-menu">
                                                 <li>
+                                                    <form method="POST" action="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="d-inline">
+                                                        {{ status_form.hidden_tag() }}
+                                                        <input type="hidden" name="status" value="{{ STATUS_IN_PROGRESS }}">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-cogs me-2"></i>Mark In Progress
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form method="POST" action="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="d-inline">
+                                                        {{ status_form.hidden_tag() }}
+                                                        <input type="hidden" name="status" value="{{ STATUS_FULFILLED }}">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fas fa-check-circle me-2"></i>Mark Fulfilled
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
                                                     <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
-                                                        <i class="fas fa-edit me-2"></i>Update Status
+                                                        <i class="fas fa-edit me-2"></i>Edit Status
                                                     </a>
                                                 </li>
                                                 <li>
