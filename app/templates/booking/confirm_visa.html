@@ -17,6 +17,13 @@
 {% endblock %}
 
 {% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="visa_type_value" value="{{ confirmation_data.visa_type }}">
+<input type="hidden" name="application_status_value" value="{{ confirmation_data.application_status }}">
+<input type="hidden" name="number_of_entries_value" value="{{ confirmation_data.number_of_entries }}">
+<input type="hidden" name="processing_type_value" value="{{ confirmation_data.processing_type }}">
+
 <!-- Debug information -->
 <div class="alert alert-info">
     <h6>Debug Information:</h6>

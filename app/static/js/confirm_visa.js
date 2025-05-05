@@ -4,6 +4,45 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Visa confirmation script loaded');
     
+    // Set pre-selected values for dropdowns
+    function setSelectedOption(selectElement, value) {
+        if (!selectElement || !value) return;
+        
+        // Try to find and select the option with the matching value
+        const options = selectElement.querySelectorAll('option');
+        let found = false;
+        
+        options.forEach(option => {
+            if (option.value === value) {
+                option.selected = true;
+                found = true;
+            }
+        });
+        
+        // If exact match wasn't found, try a case-insensitive match
+        if (!found) {
+            options.forEach(option => {
+                if (option.value.toLowerCase() === value.toLowerCase()) {
+                    option.selected = true;
+                }
+            });
+        }
+    }
+    
+    // Get saved data from pre-populated fields
+    const supplierValue = document.querySelector('input[name="supplier_value"]')?.value;
+    const visaTypeValue = document.querySelector('input[name="visa_type_value"]')?.value;
+    const applicationStatusValue = document.querySelector('input[name="application_status_value"]')?.value;
+    const entriesValue = document.querySelector('input[name="number_of_entries_value"]')?.value;
+    const processingTypeValue = document.querySelector('input[name="processing_type_value"]')?.value;
+    
+    // Set values in select elements
+    setSelectedOption(document.querySelector('select[name="supplier"]'), supplierValue);
+    setSelectedOption(document.querySelector('select[name="visa_type"]'), visaTypeValue);
+    setSelectedOption(document.querySelector('select[name="application_status"]'), applicationStatusValue);
+    setSelectedOption(document.querySelector('select[name="number_of_entries"]'), entriesValue);
+    setSelectedOption(document.querySelector('select[name="processing_type"]'), processingTypeValue);
+    
     // Visa application status dependent fields
     const statusSelect = document.querySelector('select[name="application_status"]');
     const validFromField = document.querySelector('input[name="valid_from"]');
@@ -74,9 +113,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Debug information
+    const hiddenFields = {
+        'supplier_value': document.querySelector('input[name="supplier_value"]')?.value,
+        'visa_type_value': document.querySelector('input[name="visa_type_value"]')?.value,
+        'application_status_value': document.querySelector('input[name="application_status_value"]')?.value,
+        'number_of_entries_value': document.querySelector('input[name="number_of_entries_value"]')?.value,
+        'processing_type_value': document.querySelector('input[name="processing_type_value"]')?.value
+    };
+    
     console.log('Visa form data loaded:', {
         'applicant_name': document.querySelector('input[name="applicant_name"]')?.value,
         'passport_number': document.querySelector('input[name="passport_number"]')?.value,
-        'destination_country': document.querySelector('input[name="destination_country"]')?.value
+        'destination_country': document.querySelector('input[name="destination_country"]')?.value,
+        'Hidden values': hiddenFields,
+        'Current supplier dropdown value': document.querySelector('select[name="supplier"]')?.value
     });
 });
