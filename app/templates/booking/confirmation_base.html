@@ -25,6 +25,7 @@
             <p class="lead mb-4">{% block confirmation_subtitle %}Enter confirmation details for this service item{% endblock %}</p>
             
             <form method="POST" action="{{ url_for('booking.confirm_service', item_id=service_item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-4">
                     <h5 class="card-title text-primary">General Information</h5>
                     <div class="row g-3">
