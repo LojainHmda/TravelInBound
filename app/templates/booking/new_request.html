@@ -86,6 +86,7 @@
                                 </div>
                                 <div class="mt-3 d-flex justify-content-end">
                                     {{ form.add_item(class="btn btn-primary") }}
+                                    <input type="hidden" name="quick_add_service_type" id="quick_add_service_type" value="">
                                 </div>
                             </div>
                         </div>
@@ -319,8 +320,13 @@
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
                         <button type="submit" name="save_action" value="save" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Save Request
+                            <i class="fas fa-save me-2"></i>Save
                         </button>
+                        {% if items and booking and booking.invoice_number and booking.payment_status in ['PARTIAL', 'FULL'] %}
+                        <a href="{{ url_for('booking.start_operations', booking_id=booking.id) }}" class="btn btn-success ms-2">
+                            <i class="fas fa-cogs me-2"></i>Start Operations
+                        </a>
+                        {% endif %}
                     </div>
                 </form>
             </div>

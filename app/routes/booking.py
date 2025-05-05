@@ -316,6 +316,31 @@ def update_booking_status(booking_id):
     
     return redirect(url_for('booking.details', booking_id=booking.id))
 
+@booking_bp.route('/booking/<int:booking_id>/start_operations', methods=['GET'])
+def start_operations(booking_id):
+    """Start operations for a booking after payment (partial or full)"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Ensure booking has an invoice and at least partial payment
+    if not booking.invoice_number:
+        flash('Cannot start operations until an invoice is generated', 'danger')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    if booking.payment_status not in ['PARTIAL', 'FULL']:
+        flash('Cannot start operations until at least a partial payment is recorded', 'danger')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    # Update booking and all service items to IN_PROGRESS status
+    booking.status = STATUS_IN_PROGRESS
+    for item in booking.service_items:
+        item.status = STATUS_IN_PROGRESS
+    
+    db.session.commit()
+    flash('Operations started! You can now confirm each service item.', 'success')
+    
+    # Render the operations page with all service items that need confirmation
+    return render_template('booking/operations.html', booking=booking)
+
 @booking_bp.route('/service_item/<int:item_id>/update_status', methods=['POST'])
 def update_service_status(item_id):
     """Update the status of a specific service item"""
