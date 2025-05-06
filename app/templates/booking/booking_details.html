@@ -259,6 +259,52 @@
             </div>
         </div>
         
+        <!-- Invoice Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
+                <div>
+                    {% if not booking.invoice_number %}
+                        <button type="button" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#invoiceModal">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                        </button>
+                    {% else %}
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-dark">
+                            <i class="fas fa-file-invoice me-1"></i> View Invoice
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                {% if booking.invoice_number %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'Not set' }}</p>
+                            <p class="mb-1"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Credit Memos -->
+                            {% set credit_items = booking.service_items|selectattr('is_cancelled', 'equalto', true)|selectattr('credit_memo_number', 'defined')|list %}
+                            {% if credit_items %}
+                                <div class="mt-2">
+                                    <h6 class="text-danger"><i class="fas fa-file-invoice me-1"></i>Credit Memos</h6>
+                                    {% for item in credit_items %}
+                                        <div class="border-bottom pb-1 mb-1">
+                                            <small><strong>{{ item.credit_memo_number }}</strong>: ${{ "%.2f"|format(item.amount|abs) }} 
+                                            <span class="badge bg-secondary">{{ item.service_type }}</span></small>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No invoice has been generated for this booking yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        
         <!-- Payment Records -->
         <div class="card mb-4">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
@@ -380,23 +426,7 @@
                 
                 <!-- Payment Status Information -->
                 <hr>
-                <h6 class="fw-bold">Invoice & Payment Information</h6>
-                
-                <!-- Invoice Information -->
-                <div class="mb-3">
-                    {% if booking.invoice_number %}
-                        <p class="mb-1"><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
-                        <p class="mb-1"><strong>Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'Not set' }}</p>
-                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-info mb-2">
-                            <i class="fas fa-file-invoice me-1"></i> View Invoice
-                        </a>
-                    {% else %}
-                        <p class="mb-1 text-muted">No invoice generated yet</p>
-                        <button type="button" class="btn btn-sm btn-outline-primary mb-2" data-bs-toggle="modal" data-bs-target="#invoiceModal">
-                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
-                        </button>
-                    {% endif %}
-                </div>
+                <h6 class="fw-bold">Payment Information</h6>
                 
                 <!-- Payment Status -->
                 <p class="mb-1">

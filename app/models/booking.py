@@ -74,7 +74,6 @@ class Booking(db.Model):
         prefix = "CM"
         year = datetime.utcnow().strftime("%y")
         # Generate a unique memo number using timestamp
-        from datetime import datetime
         timestamp = datetime.utcnow().strftime("%H%M%S")
         credit_memo_number = f"{prefix}-{year}-{self.id:04d}-{timestamp}"
         return credit_memo_number
