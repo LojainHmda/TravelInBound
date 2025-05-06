@@ -319,8 +319,16 @@ def add_payment(booking_id):
             
             # Update booking payment status
             booking.payment_date = datetime.utcnow()
-            booking.update_payment_status()
             
+            # Calculate total paid to check if payment is complete
+            total_paid = sum(p.amount for p in booking.payments) + amount
+            if total_paid >= booking.total_amount:
+                booking.payment_status = 'FULL'
+            elif total_paid > 0:
+                booking.payment_status = 'PARTIAL'
+            else:
+                booking.payment_status = 'NONE'
+                
             db.session.commit()
             
             flash(f'Payment of ${amount} recorded successfully', 'success')
