@@ -4,36 +4,66 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('REQUEST')">
-                <div class="card-body">
-                    <h5 class="card-title">Requests</h5>
-                    <p class="card-text display-4">{{ request_count }}</p>
-                </div>
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <h5 class="mb-0">Booking Process</h5>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('BOOKED')">
-                <div class="card-body">
-                    <h5 class="card-title">Booked</h5>
-                    <p class="card-text display-4">{{ booked_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body">
-                    <h5 class="card-title">In Progress</h5>
-                    <p class="card-text display-4">{{ in_progress_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-dark-blue text-white" style="cursor: pointer;" onclick="filterBookings('FULFILLED')">
-                <div class="card-body">
-                    <h5 class="card-title">Fulfilled</h5>
-                    <p class="card-text display-4">{{ completed_count }}</p>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="process-timeline d-flex justify-content-between align-items-center">
+                        <!-- Request Stage -->
+                        <div class="process-step text-center" style="cursor: pointer;" onclick="filterBookings('REQUEST')">
+                            <div class="process-icon rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px; background-color: var(--dark-blue); color: white;">
+                                <i class="fas fa-clipboard-list fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">1. Request Stage</h5>
+                            <p class="text-muted small mb-1">Select services and create a booking request</p>
+                            <span class="badge bg-orange">{{ request_count }}</span>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line flex-grow-1 mx-2" style="height: 3px; background-color: #dee2e6;"></div>
+                        
+                        <!-- Booked Stage -->
+                        <div class="process-step text-center" style="cursor: pointer;" onclick="filterBookings('BOOKED')">
+                            <div class="process-icon rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px; background-color: #17a2b8; color: white;">
+                                <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">2. Booked Stage</h5>
+                            <p class="text-muted small mb-1">Review and process payment for selected services</p>
+                            <span class="badge bg-orange">{{ booked_count }}</span>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line flex-grow-1 mx-2" style="height: 3px; background-color: #dee2e6;"></div>
+                        
+                        <!-- In-Progress Stage -->
+                        <div class="process-step text-center" style="cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
+                            <div class="process-icon rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px; background-color: #ffc107; color: white;">
+                                <i class="fas fa-cogs fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">3. In-Progress Stage</h5>
+                            <p class="text-muted small mb-1">Services are assigned to agents for processing</p>
+                            <span class="badge bg-orange">{{ in_progress_count }}</span>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line flex-grow-1 mx-2" style="height: 3px; background-color: #dee2e6;"></div>
+                        
+                        <!-- Fulfilled Stage -->
+                        <div class="process-step text-center" style="cursor: pointer;" onclick="filterBookings('FULFILLED')">
+                            <div class="process-icon rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px; background-color: #28a745; color: white;">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">4. Fulfilled Stage</h5>
+                            <p class="text-muted small mb-1">All services fulfilled and booking completed</p>
+                            <span class="badge bg-orange">{{ completed_count }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -559,6 +589,62 @@
 </div>
 {% endblock %}
 
+{% block head %}
+{{ super() }}
+<style>
+    .process-step {
+        flex: 1;
+        max-width: 200px;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .process-icon {
+        transition: all 0.3s ease;
+    }
+    
+    .process-step:hover .process-icon {
+        transform: scale(1.1);
+    }
+    
+    .process-line {
+        position: relative;
+    }
+    
+    .process-line.active {
+        background-color: var(--bs-orange) !important;
+    }
+    
+    .process-step.active .process-icon {
+        box-shadow: 0 0 15px rgba(255, 153, 0, 0.7);
+        border: 2px solid var(--bs-orange);
+    }
+    
+    .badge.count-badge {
+        min-width: 30px;
+    }
+    
+    @media (max-width: 768px) {
+        .process-timeline {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .process-step {
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: none;
+        }
+        
+        .process-line {
+            width: 3px;
+            height: 30px !important;
+            margin: 10px 0 !important;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
 {{ super() }}
 <script>
@@ -739,11 +825,35 @@
             const tableRows = document.querySelectorAll('#bookingTable tbody tr');
             const tableTitle = document.getElementById('bookingTableTitle');
             const resetBtn = document.getElementById('resetFilterBtn');
+            const processSteps = document.querySelectorAll('.process-step');
+            const processLines = document.querySelectorAll('.process-line');
+            
+            // Reset all process steps and lines first
+            processSteps.forEach(step => step.classList.remove('active'));
+            processLines.forEach(line => line.classList.remove('active'));
             
             if (status) {
                 tableTitle.innerHTML = `<i class="fas fa-list-alt me-2"></i>Bookings - ${status}`;
                 resetBtn.style.display = 'block';
                 
+                // Highlight the active process step
+                let activeStepIndex = -1;
+                if (status === 'REQUEST') activeStepIndex = 0;
+                else if (status === 'BOOKED') activeStepIndex = 1;
+                else if (status === 'IN_PROGRESS') activeStepIndex = 2;
+                else if (status === 'FULFILLED') activeStepIndex = 3;
+                
+                if (activeStepIndex >= 0) {
+                    // Activate the current step
+                    processSteps[activeStepIndex].classList.add('active');
+                    
+                    // Activate all lines up to this step
+                    for (let i = 0; i < activeStepIndex; i++) {
+                        processLines[i].classList.add('active');
+                    }
+                }
+                
+                // Filter the table rows
                 tableRows.forEach(row => {
                     const statusCell = row.querySelector('td:nth-child(2) .badge');
                     if (statusCell && statusCell.textContent.trim() === status) {
