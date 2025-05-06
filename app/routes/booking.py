@@ -314,7 +314,11 @@ def new_booking():
                         booking.generate_invoice_number()
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
-                    # Update the booking status to INVOICE
+                    # Set invoice date if it doesn't exist
+                    if not booking.invoice_date:
+                        booking.invoice_date = datetime.utcnow()
+                    
+                    # Update the booking status to BOOKED
                     booking.status = STATUS_BOOKED
                     
                     # Save invoice notes
@@ -326,8 +330,8 @@ def new_booking():
                     
                     flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
                     
-                    # Redirect to the invoice details page
-                    return redirect(url_for('booking.invoice_details', booking_id=booking.id))
+                    # Simply redirect to the booking details page with the invoice
+                    return redirect(url_for('booking.details', booking_id=booking.id))
                 
                 # In the simplified form, there's no payment processing from the new booking page
                 # Payment processing happens on the booking details page after creation
