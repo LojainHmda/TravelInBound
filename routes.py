@@ -64,7 +64,7 @@ def dashboard():
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
     return render_template(
-        'booking/dashboard.html',
+        'booking/dashboard_new.html',
         status_counts={
             'request': request_count,
             'booked': booked_count,

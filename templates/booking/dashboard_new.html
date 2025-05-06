@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-tachometer-alt me-2"></i>Service Dashboard (NEW)</h2>
+            <a href="{{ url_for('new_booking') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>New Booking
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<!-- Status Cards -->
+<div class="row mb-4">
+    <!-- Request Card -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #ff9800;" onclick="filterBookings('REQUEST')">
+            <div class="card-body p-3 text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-clipboard-list fa-2x"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-0 fw-bold">{{ status_counts.request }}</h1>
+                        <div class="text-white-50">Booking Requests</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booked Card -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #9c27b0;" onclick="filterBookings('BOOKED')">
+            <div class="card-body p-3 text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-file-invoice-dollar fa-2x"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-0 fw-bold">{{ status_counts.booked }}</h1>
+                        <div class="text-white-50">Invoiced Bookings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- In Progress Card -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #0277bd;" onclick="filterBookings('IN_PROGRESS')">
+            <div class="card-body p-3 text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-cogs fa-2x"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-0 fw-bold">{{ status_counts.in_progress }}</h1>
+                        <div class="text-white-50">In Progress</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fulfilled Card -->
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #4caf50;" onclick="filterBookings('FULFILLED')">
+            <div class="card-body p-3 text-white">
+                <div class="d-flex align-items-center">
+                    <div class="me-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <div>
+                        <h1 class="mb-0 fw-bold">{{ status_counts.completed }}</h1>
+                        <div class="text-white-50">Completed Bookings</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <ul class="nav nav-tabs card-header-tabs" id="servicesTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-dark" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true">
+                            <i class="fas fa-plane me-2"></i>Flights
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false">
+                            <i class="fas fa-hotel me-2"></i>Hotels
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false">
+                            <i class="fas fa-car me-2"></i>Transport
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false">
+                            <i class="fas fa-passport me-2"></i>Visa
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">
+                            <i class="fas fa-shield-alt me-2"></i>Insurance
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="servicesTabContent">
+                    <!-- Flights Tab -->
+                    <div class="tab-pane fade show active" id="flights" role="tabpanel" aria-labelledby="flights-tab">
+                        <h4 class="service-title"><i class="fas fa-plane me-2 text-primary"></i>Flight Services</h4>
+                        {% if service_items.flight %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Booking Ref</th>
+                                        <th>Description</th>
+                                        <th>Dates</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in service_items.flight %}
+                                    <tr>
+                                        <td>{{ item.booking.reference_number }}</td>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>${{ "%.2f"|format(item.amount) }}</td>
+                                        <td>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-plane fa-3x text-muted mb-3"></i>
+                            <p>No flight services found</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Other tabs would go here... -->
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Function to filter bookings by status
+    function filterBookings(status) {
+        // Get all status cards and remove active class
+        document.querySelectorAll('.card[onclick^="filterBookings"]').forEach(card => {
+            card.classList.remove('border-3');
+            card.classList.remove('border-dark');
+        });
+        
+        // Add active class to the clicked card
+        const clickedCard = document.querySelector(`.card[onclick*="filterBookings('${status}')"]`);
+        if (clickedCard) {
+            clickedCard.classList.add('border-3');
+            clickedCard.classList.add('border-dark');
+        }
+        
+        // Loop through all service tabs
+        const serviceTabs = ['flights', 'hotels', 'transport', 'visa', 'insurance'];
+        
+        serviceTabs.forEach(tabId => {
+            const tableBody = document.querySelector(`#${tabId} table tbody`);
+            if (!tableBody) return;
+            
+            // Loop through all rows in the table
+            Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
+                const statusBadge = row.querySelector('.badge');
+                if (statusBadge) {
+                    const rowStatus = statusBadge.textContent.trim();
+                    
+                    // Show/hide row based on status filter
+                    if (status === 'ALL' || rowStatus === status) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+            
+            // Show "no items" message if all rows are hidden
+            const visibleRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => 
+                row.style.display !== 'none'
+            );
+            
+            const noItemsMessage = document.querySelector(`#${tabId} .text-center.py-4`);
+            const table = document.querySelector(`#${tabId} .table-responsive`);
+            
+            if (visibleRows.length === 0 && table) {
+                table.style.display = 'none';
+                if (noItemsMessage) {
+                    noItemsMessage.style.display = '';
+                    noItemsMessage.querySelector('p').textContent = `No ${tabId} services with status "${status}"`;
+                }
+            } else if (table) {
+                table.style.display = '';
+                if (noItemsMessage) {
+                    noItemsMessage.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Initialize with all bookings visible
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add click handler for "All" filter if needed
+        // filterBookings('ALL');
+    });
+</script>
+{% endblock %}
