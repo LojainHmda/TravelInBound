@@ -1,46 +1,235 @@
 {% extends 'base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Travel Booking Dashboard{% endblock %}
+
+{% block styles %}
+<style>
+    :root {
+        --orange: #ff9800;
+        --dark-blue: #0d47a1;
+        --teal: #009688;
+        --yellow: #ffc107;
+        --green: #4caf50;
+    }
+    
+    .bg-orange {
+        background-color: var(--orange) !important;
+    }
+    
+    .bg-dark-blue {
+        background-color: var(--dark-blue) !important;
+    }
+    
+    .bg-teal {
+        background-color: var(--teal) !important;
+    }
+    
+    .bg-custom-yellow {
+        background-color: var(--yellow) !important;
+    }
+    
+    .bg-custom-green {
+        background-color: var(--green) !important;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .status-card {
+        cursor: pointer;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .status-card.active {
+        border: 3px solid #343a40;
+    }
+    
+    .process-timeline {
+        padding: 20px 0;
+    }
+    
+    .process-step {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .process-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+    }
+    
+    .process-line {
+        height: 3px;
+        margin-top: 30px;
+        background-color: #dee2e6;
+        flex-grow: 1;
+    }
+    
+    .badge.status-request { background-color: var(--orange); color: white; }
+    .badge.status-booked { background-color: var(--teal); color: white; }
+    .badge.status-in_progress { background-color: var(--yellow); color: black; }
+    .badge.status-fulfilled { background-color: var(--green); color: white; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1 class="mb-4">Dashboard</h1>
-    
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('REQUEST')">
-                <div class="card-body">
-                    <h5 class="card-title">Requests</h5>
-                    <p class="card-text display-4">{{ request_count }}</p>
-                </div>
+<div class="container-fluid mt-4">
+    <!-- Process Flow Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark-blue text-white">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-project-diagram me-2"></i>
+                <h5 class="mb-0">Booking Process Flow</h5>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('BOOKED')">
-                <div class="card-body">
-                    <h5 class="card-title">Booked</h5>
-                    <p class="card-text display-4">{{ booked_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body">
-                    <h5 class="card-title">In Progress</h5>
-                    <p class="card-text display-4">{{ in_progress_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-dark-blue text-white" style="cursor: pointer;" onclick="filterBookings('COMPLETED')">
-                <div class="card-body">
-                    <h5 class="card-title">Completed</h5>
-                    <p class="card-text display-4">{{ completed_count }}</p>
+        <div class="card-body bg-white">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="process-timeline d-flex justify-content-between align-items-center">
+                        <!-- Request Stage -->
+                        <div class="process-step text-center" id="step-request" onclick="filterBookings('REQUEST')">
+                            <div class="process-icon rounded-circle bg-orange text-white">
+                                <i class="fas fa-clipboard-list fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">Request</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-dark px-3 py-2 fs-6">{{ request_count }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line"></div>
+                        
+                        <!-- Booked Stage -->
+                        <div class="process-step text-center" id="step-booked" onclick="filterBookings('BOOKED')">
+                            <div class="process-icon rounded-circle bg-teal text-white">
+                                <i class="fas fa-file-invoice-dollar fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">Booked</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-dark px-3 py-2 fs-6">{{ booked_count }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line"></div>
+                        
+                        <!-- In-Progress Stage -->
+                        <div class="process-step text-center" id="step-inprogress" onclick="filterBookings('IN_PROGRESS')">
+                            <div class="process-icon rounded-circle bg-custom-yellow text-dark">
+                                <i class="fas fa-cogs fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">In Progress</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-dark px-3 py-2 fs-6">{{ in_progress_count }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Connecting line -->
+                        <div class="process-line"></div>
+                        
+                        <!-- Fulfilled Stage -->
+                        <div class="process-step text-center" id="step-fulfilled" onclick="filterBookings('FULFILLED')">
+                            <div class="process-icon rounded-circle bg-custom-green text-white">
+                                <i class="fas fa-check-circle fa-lg"></i>
+                            </div>
+                            <h5 class="mb-1">Fulfilled</h5>
+                            <div class="mt-2">
+                                <span class="badge bg-dark px-3 py-2 fs-6">{{ completed_count }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Status Cards Section -->
+    <div class="row mb-4">
+        <!-- Request Card -->
+        <div class="col-md-3">
+            <div class="card status-card" id="card-request" onclick="filterBookings('REQUEST')">
+                <div class="card-body p-3 bg-orange text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-clipboard-list fa-2x"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-0 fw-bold">{{ request_count }}</h1>
+                            <div class="text-white-50">Booking Requests</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booked Card -->
+        <div class="col-md-3">
+            <div class="card status-card" id="card-booked" onclick="filterBookings('BOOKED')">
+                <div class="card-body p-3 bg-teal text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-file-invoice-dollar fa-2x"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-0 fw-bold">{{ booked_count }}</h1>
+                            <div class="text-white-50">Booked</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- In Progress Card -->
+        <div class="col-md-3">
+            <div class="card status-card" id="card-inprogress" onclick="filterBookings('IN_PROGRESS')">
+                <div class="card-body p-3 bg-custom-yellow text-dark">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-cogs fa-2x"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-0 fw-bold">{{ in_progress_count }}</h1>
+                            <div class="text-secondary">In Progress</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fulfilled Card -->
+        <div class="col-md-3">
+            <div class="card status-card" id="card-fulfilled" onclick="filterBookings('FULFILLED')">
+                <div class="card-body p-3 bg-custom-green text-white">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h1 class="mb-0 fw-bold">{{ completed_count }}</h1>
+                            <div class="text-white-50">Fulfilled</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bookings Table Section -->
     <div class="card mb-4">
         <div class="card-header bg-dark-blue text-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0" id="bookingTableTitle"><i class="fas fa-list-alt me-2"></i>Recent Bookings</h5>
@@ -50,7 +239,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0" id="bookingTable">
+                <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th>Reference</th>
@@ -61,27 +250,21 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="bookingTableBody">
                         {% for booking in recent_bookings %}
-                        <tr>
-                            <td>{{ booking.reference_number }}</td>
+                        <tr data-status="{{ booking.status }}">
+                            <td><strong>{{ booking.reference_number }}</strong></td>
                             <td>{{ booking.requester.username }}</td>
                             <td>
-                                <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">
-                                    {{ booking.status }}
-                                </span>
+                                <span class="badge status-{{ booking.status.lower() }}">{{ booking.status }}</span>
                             </td>
                             <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
-                            <td>${{ booking.total_amount }}</td>
+                            <td>${{ "%.2f"|format(booking.total_amount) }}</td>
                             <td>
-                                <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ booking.id }}">
+                                <a href="{{ url_for('booking_bp.details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-eye"></i> View
-                                </button>
+                                </a>
                             </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center">No bookings found</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -90,420 +273,258 @@
         </div>
     </div>
     
+    <!-- Service Tabs Section -->
     <div class="card">
         <div class="card-header bg-dark-blue text-white">
-            <h5 class="mb-0">Service Items</h5>
-        </div>
-        
-        <div class="card-body p-0">
-            <ul class="nav nav-tabs nav-fill" id="serviceTabs" role="tablist">
+            <ul class="nav nav-tabs card-header-tabs" id="servicesTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true">
-                        <i class="fas fa-plane"></i> Flights
+                    <button class="nav-link active text-dark" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true">
+                        <i class="fas fa-plane me-2"></i>Flights
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false">
-                        <i class="fas fa-hotel"></i> Hotels
+                    <button class="nav-link text-dark" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false">
+                        <i class="fas fa-hotel me-2"></i>Hotels
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false">
-                        <i class="fas fa-car"></i> Transport
+                    <button class="nav-link text-dark" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false">
+                        <i class="fas fa-car me-2"></i>Transport
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false">
-                        <i class="fas fa-passport"></i> Visa
+                    <button class="nav-link text-dark" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false">
+                        <i class="fas fa-passport me-2"></i>Visa
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">
-                        <i class="fas fa-shield-alt"></i> Insurance
+                    <button class="nav-link text-dark" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">
+                        <i class="fas fa-shield-alt me-2"></i>Insurance
                     </button>
                 </li>
             </ul>
-            
-            <div class="tab-content" id="serviceTabsContent">
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="servicesTabContent">
+                <!-- Flights Tab -->
                 <div class="tab-pane fade show active" id="flights" role="tabpanel" aria-labelledby="flights-tab">
-                    <div class="table-responsive p-3">
+                    <h4><i class="fas fa-plane me-2 text-primary"></i>Flight Services</h4>
+                    {% if flight_items %}
+                    <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Booking Ref.</th>
+                                    <th>Booking Ref</th>
                                     <th>Description</th>
                                     <th>Dates</th>
+                                    <th>Amount</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in flight_items %}
-                                <tr>
+                                <tr data-status="{{ item.status }}">
                                     <td>{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">
-                                                    <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
-                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
-                                                            </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
+                                        <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                            {% if conf_doc %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% elif item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-check me-1"></i>Confirm
-                                                </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('booking.details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No flight service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-plane fa-3x text-muted mb-3"></i>
+                        <p>No flight services found</p>
+                    </div>
+                    {% endif %}
                 </div>
                 
+                <!-- Hotels Tab -->
                 <div class="tab-pane fade" id="hotels" role="tabpanel" aria-labelledby="hotels-tab">
-                    <div class="table-responsive p-3">
+                    <h4><i class="fas fa-hotel me-2 text-primary"></i>Hotel Services</h4>
+                    {% if hotel_items %}
+                    <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Booking Ref.</th>
+                                    <th>Booking Ref</th>
                                     <th>Description</th>
                                     <th>Dates</th>
+                                    <th>Amount</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in hotel_items %}
-                                <tr>
+                                <tr data-status="{{ item.status }}">
                                     <td>{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">
-                                                    <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
-                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
-                                                            </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
+                                        <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                            {% if conf_doc %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% elif item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-check me-1"></i>Confirm
-                                                </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('booking.details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No hotel service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-hotel fa-3x text-muted mb-3"></i>
+                        <p>No hotel services found</p>
+                    </div>
+                    {% endif %}
                 </div>
                 
+                <!-- Transport Tab -->
                 <div class="tab-pane fade" id="transport" role="tabpanel" aria-labelledby="transport-tab">
-                    <div class="table-responsive p-3">
+                    <h4><i class="fas fa-car me-2 text-primary"></i>Transport Services</h4>
+                    {% if transport_items %}
+                    <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Booking Ref.</th>
+                                    <th>Booking Ref</th>
                                     <th>Description</th>
                                     <th>Dates</th>
+                                    <th>Amount</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in transport_items %}
-                                <tr>
+                                <tr data-status="{{ item.status }}">
                                     <td>{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">
-                                                    <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
-                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
-                                                            </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
+                                        <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                            {% if conf_doc %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% elif item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-check me-1"></i>Confirm
-                                                </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('booking.details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No transport service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                        <p>No transport services found</p>
+                    </div>
+                    {% endif %}
                 </div>
                 
+                <!-- Visa Tab -->
                 <div class="tab-pane fade" id="visa" role="tabpanel" aria-labelledby="visa-tab">
-                    <div class="table-responsive p-3">
+                    <h4><i class="fas fa-passport me-2 text-primary"></i>Visa Services</h4>
+                    {% if visa_items %}
+                    <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Booking Ref.</th>
+                                    <th>Booking Ref</th>
                                     <th>Description</th>
                                     <th>Dates</th>
+                                    <th>Amount</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in visa_items %}
-                                <tr>
+                                <tr data-status="{{ item.status }}">
                                     <td>{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">
-                                                    <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
-                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
-                                                            </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
+                                        <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                            {% if conf_doc %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% elif item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-check me-1"></i>Confirm
-                                                </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('booking.details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No visa service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-passport fa-3x text-muted mb-3"></i>
+                        <p>No visa services found</p>
+                    </div>
+                    {% endif %}
                 </div>
                 
+                <!-- Insurance Tab -->
                 <div class="tab-pane fade" id="insurance" role="tabpanel" aria-labelledby="insurance-tab">
-                    <div class="table-responsive p-3">
+                    <h4><i class="fas fa-shield-alt me-2 text-primary"></i>Insurance Services</h4>
+                    {% if insurance_items %}
+                    <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Booking Ref.</th>
+                                    <th>Booking Ref</th>
                                     <th>Description</th>
                                     <th>Dates</th>
+                                    <th>Amount</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in insurance_items %}
-                                <tr>
+                                <tr data-status="{{ item.status }}">
                                     <td>{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-1">
-                                                <small class="text-muted d-block">
-                                                    <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
-                                                                <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
-                                                            </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
+                                        <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                     </td>
                                     <td>
-                                        <div class="btn-group">
-                                            {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                            {% if conf_doc %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% elif item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-check me-1"></i>Confirm
-                                                </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i>View
-                                                </a>
-                                            {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </div>
+                                        <a href="{{ url_for('booking.details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
                                     </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No insurance service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Booking Detail Modal -->
-<div class="modal fade" id="bookingDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-dark-blue text-white">
-                <h5 class="modal-title"><i class="fas fa-info-circle me-2"></i>Booking Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div id="bookingDetailContent">
-                    <div class="d-flex justify-content-center my-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                        <p>No insurance services found</p>
                     </div>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="#" id="viewFullBookingBtn" class="btn btn-primary">View Full Details</a>
             </div>
         </div>
     </div>
@@ -511,5 +532,111 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Function to filter bookings by status
+    function filterBookings(status) {
+        // Update the table title and show/hide reset button
+        const tableTitle = document.getElementById('bookingTableTitle');
+        const resetBtn = document.getElementById('resetFilterBtn');
+        
+        if (status) {
+            tableTitle.innerHTML = `<i class="fas fa-list-alt me-2"></i>Bookings with Status: <span class="badge status-${status.toLowerCase()}">${status}</span>`;
+            resetBtn.style.display = 'inline-block';
+            
+            // Add active class to the clicked card and step
+            document.querySelectorAll('.status-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelectorAll('.process-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            if (status === 'REQUEST') {
+                document.getElementById('card-request').classList.add('active');
+                document.getElementById('step-request').classList.add('active');
+            } else if (status === 'BOOKED') {
+                document.getElementById('card-booked').classList.add('active');
+                document.getElementById('step-booked').classList.add('active');
+            } else if (status === 'IN_PROGRESS') {
+                document.getElementById('card-inprogress').classList.add('active');
+                document.getElementById('step-inprogress').classList.add('active');
+            } else if (status === 'FULFILLED') {
+                document.getElementById('card-fulfilled').classList.add('active');
+                document.getElementById('step-fulfilled').classList.add('active');
+            }
+        } else {
+            tableTitle.innerHTML = '<i class="fas fa-list-alt me-2"></i>Recent Bookings';
+            resetBtn.style.display = 'none';
+            
+            // Remove active class from all cards and steps
+            document.querySelectorAll('.status-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            document.querySelectorAll('.process-step').forEach(step => {
+                step.classList.remove('active');
+            });
+        }
+        
+        // Filter rows in the main bookings table
+        const bookingRows = document.querySelectorAll('#bookingTableBody tr');
+        bookingRows.forEach(row => {
+            if (!status || row.getAttribute('data-status') === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Filter rows in service tabs
+        const serviceTabs = ['flights', 'hotels', 'transport', 'visa', 'insurance'];
+        serviceTabs.forEach(tabId => {
+            const serviceRows = document.querySelectorAll(`#${tabId} tbody tr`);
+            serviceRows.forEach(row => {
+                if (!status || row.getAttribute('data-status') === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            // Update empty state messages
+            const tabPane = document.getElementById(tabId);
+            const tableResponsive = tabPane.querySelector('.table-responsive');
+            const emptyState = tabPane.querySelector('.text-center.py-4');
+            
+            // Check if all rows are hidden
+            const visibleRows = Array.from(serviceRows).filter(row => row.style.display !== 'none');
+            
+            if (tableResponsive && emptyState) {
+                if (visibleRows.length === 0) {
+                    tableResponsive.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    if (status) {
+                        const messageP = emptyState.querySelector('p');
+                        if (messageP) {
+                            const serviceName = tabId.charAt(0).toUpperCase() + tabId.slice(1, -1);
+                            messageP.textContent = `No ${serviceName} services with status "${status}"`;
+                        }
+                    }
+                } else {
+                    tableResponsive.style.display = 'block';
+                    emptyState.style.display = 'none';
+                }
+            }
+        });
+    }
+    
+    // Add click event listeners to process steps and status cards
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight process steps on hover
+        document.querySelectorAll('.process-step').forEach(step => {
+            step.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            step.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    });
+</script>
 {% endblock %}
