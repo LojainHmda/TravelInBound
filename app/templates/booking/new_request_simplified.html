@@ -152,6 +152,78 @@
                         </table>
                     </div>
                     
+                    <!-- Invoice Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
+                                    <div>
+                                        <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
+                                            <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+                                        </button>
+                                        <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
+                                            <i class="fas fa-eye me-1"></i> View Invoice
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label"><strong>Invoice Status:</strong></label>
+                                                <div>
+                                                    <span class="badge bg-primary">Draft</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="form-label"><strong>Invoice #:</strong></label>
+                                                <div>
+                                                    <span class="text-muted">Will be generated</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label"><strong>Invoice Notes:</strong></label>
+                                        <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the invoice"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Invoice Modal -->
+                    <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title" id="invoiceModalLabel">Create Invoice</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="invoice_total" class="form-label">Total Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="invoice_total" step="0.01" min="0" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="invoice_modal_notes" class="form-label">Invoice Notes</label>
+                                        <textarea class="form-control" id="invoice_modal_notes" rows="3" placeholder="Enter any special instructions or notes for this invoice"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="createInvoiceBtn">Generate Invoice</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Action Buttons -->
                     <div class="d-flex justify-content-end mb-4">
                         <button type="submit" name="save_action" value="save" class="btn btn-primary">
@@ -198,6 +270,72 @@
         
         // Call the function on page load
         updateServiceItemsTable();
+        
+        // Handle the invoice modal
+        const viewInvoiceBtn = document.getElementById('view-invoice-btn');
+        const createInvoiceBtn = document.getElementById('createInvoiceBtn');
+        
+        if (viewInvoiceBtn) {
+            viewInvoiceBtn.addEventListener('click', function() {
+                // Calculate total from the service items table
+                let total = 0;
+                const rows = document.querySelectorAll('#service-items-body tr');
+                rows.forEach(row => {
+                    const amountCell = row.querySelector('td:nth-child(4)');
+                    if (amountCell) {
+                        const amountText = amountCell.textContent;
+                        // Extract the numeric part (assuming format like "USD 500.00")
+                        const match = amountText.match(/[0-9.]+/);
+                        if (match) {
+                            total += parseFloat(match[0]);
+                        }
+                    }
+                });
+                
+                // Set the total in the modal
+                document.getElementById('invoice_total').value = total.toFixed(2);
+                
+                // Copy notes from the main form to the modal
+                const notesField = document.getElementById('invoice_notes');
+                if (notesField) {
+                    document.getElementById('invoice_modal_notes').value = notesField.value;
+                }
+            });
+        }
+        
+        if (createInvoiceBtn) {
+            createInvoiceBtn.addEventListener('click', function() {
+                // When clicking the create button in the modal, transfer values back to the form
+                const invoiceTotal = document.getElementById('invoice_total').value;
+                const invoiceNotes = document.getElementById('invoice_modal_notes').value;
+                
+                // Set values in hidden fields or in the main form fields
+                if (document.getElementById('invoice_notes')) {
+                    document.getElementById('invoice_notes').value = invoiceNotes;
+                }
+                
+                // Add a hidden field for the invoice total if it doesn't exist
+                let invoiceTotalField = document.getElementById('hidden_invoice_total');
+                if (!invoiceTotalField) {
+                    invoiceTotalField = document.createElement('input');
+                    invoiceTotalField.type = 'hidden';
+                    invoiceTotalField.id = 'hidden_invoice_total';
+                    invoiceTotalField.name = 'invoice_total';
+                    document.getElementById('newBookingForm').appendChild(invoiceTotalField);
+                }
+                invoiceTotalField.value = invoiceTotal;
+                
+                // Submit the form with the generate_invoice action
+                const form = document.getElementById('newBookingForm');
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'save_action';
+                actionInput.value = 'generate_invoice';
+                form.appendChild(actionInput);
+                
+                form.submit();
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -155,8 +155,8 @@ def new_booking():
         elif 'save_action' in request.form:
             print("Save button clicked")
             if form.validate():
-                # In the simplified form, there's only a 'save' action
-                action = 'save'
+                # Get the action type (save or generate_invoice)
+                action = request.form.get('save_action', 'save')
                 
                 # Create a unique reference number
                 reference = form.request_id.data
@@ -287,8 +287,47 @@ def new_booking():
                     # Update for our current scope
                     service_items = session.get('service_items', [])
                 
-                # In the simplified form, there's no invoice generation from the new booking page
-                # Invoice generation happens on the booking details page after creation
+                # Handle invoice generation if requested (but do not try to create a new booking)
+                # Check for invoice generation request - prioritize this over checking invoice_notes
+                if (action == 'generate_invoice' or action == 'invoice') and booking:
+                    import sys
+                    print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
+                    
+                    # Update the total amount if provided in the modal form
+                    invoice_total = request.form.get('invoice_total')
+                    if invoice_total:
+                        try:
+                            invoice_total = float(invoice_total)
+                            if invoice_total > 0:
+                                print(f"Setting booking total to {invoice_total}", file=sys.stderr)
+                                booking.total_amount = invoice_total
+                        except (ValueError, TypeError):
+                            print(f"Invalid invoice_total: {invoice_total}", file=sys.stderr)
+                    
+                    # If no invoice_total was provided, calculate from service items
+                    if not invoice_total and booking.service_items:
+                        booking.calculate_total()
+                        print(f"Calculated total from service items: {booking.total_amount}", file=sys.stderr)
+                    
+                    # Generate invoice number if one doesn't exist
+                    if not booking.invoice_number:
+                        booking.generate_invoice_number()
+                        print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
+                    
+                    # Update the booking status to INVOICE
+                    booking.status = STATUS_BOOKED
+                    
+                    # Save invoice notes
+                    invoice_notes = request.form.get('invoice_notes', '')
+                    print(f"Invoice notes: {invoice_notes}", file=sys.stderr)
+                    # You could add the notes to the booking or create a separate model for invoice notes
+                    
+                    db.session.commit()
+                    
+                    flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
+                    
+                    # Redirect to the invoice details page
+                    return redirect(url_for('booking.invoice_details', booking_id=booking.id))
                 
                 # In the simplified form, there's no payment processing from the new booking page
                 # Payment processing happens on the booking details page after creation
