@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Booking Request</h3>
+            </div>
+            <div class="card-body">
+                <form id="newBookingForm" method="POST" action="{{ url_for('booking.new_booking') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.customer.label(class="form-label") }}
+                                {{ form.customer(class="form-select") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.request_id.label(class="form-label") }}
+                                {{ form.request_id(class="form-control") }}
+                                <small class="text-muted">Unique identifier for this itinerary request</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4 class="mt-4 mb-3">Add Services</h4>
+                    
+                    <div class="service-input-card mb-4">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>Quick Add Services</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Quick Add Service Buttons -->
+                                <div class="quick-add-buttons d-flex flex-wrap">
+                                    <button type="button" class="btn btn-light mx-1 mb-2 quick-add-service flight-btn" data-service-type="FLIGHT">
+                                        <i class="fas fa-plane text-primary"></i> Flight
+                                    </button>
+                                    <button type="button" class="btn btn-light mx-1 mb-2 quick-add-service hotel-btn" data-service-type="HOTEL">
+                                        <i class="fas fa-hotel text-success"></i> Hotel
+                                    </button>
+                                    <button type="button" class="btn btn-light mx-1 mb-2 quick-add-service transport-btn" data-service-type="TRANSPORT">
+                                        <i class="fas fa-car text-warning"></i> Transport
+                                    </button>
+                                    <button type="button" class="btn btn-light mx-1 mb-2 quick-add-service visa-btn" data-service-type="VISA">
+                                        <i class="fas fa-passport text-danger"></i> Visa
+                                    </button>
+                                    <button type="button" class="btn btn-light mx-1 mb-2 quick-add-service insurance-btn" data-service-type="INSURANCE">
+                                        <i class="fas fa-shield-alt text-info"></i> Insurance
+                                    </button>
+                                </div>
+                                
+                                <!-- Quick add hidden inputs -->
+                                <input type="hidden" name="quick_add_service_type" id="quick_add_service_type" value="">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-input-card mb-4">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>Service Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            {{ form.service_type.label(class="form-label") }}
+                                            {{ form.service_type(class="form-select") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            {{ form.from_date.label(class="form-label") }}
+                                            {{ form.from_date(class="form-control", type="date") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            {{ form.to_date.label(class="form-label") }}
+                                            {{ form.to_date(class="form-control", type="date") }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group mb-3">
+                                            {{ form.amount.label(class="form-label") }}
+                                            <div class="input-group">
+                                                {{ form.amount(class="form-control", placeholder="0.00") }}
+                                                {{ form.currency(class="form-select", style="max-width: 80px;") }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control", rows=2, placeholder="Enter service details...") }}
+                                </div>
+                                <div class="d-flex justify-content-end">
+                                    {{ form.add_item(class="btn btn-primary") }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-items-section mb-4">
+                        <h4 class="mb-3">Service Items</h4>
+                        <div class="alert alert-info" id="empty-services-alert" style="{% if items %}display: none;{% endif %}">
+                            <i class="fas fa-info-circle me-2"></i> No services added yet. Use the form above to add services to this booking.
+                        </div>
+                        <table class="table table-striped" id="services-table" style="{% if not items %}display: none;{% endif %}">
+                            <thead>
+                                <tr>
+                                    <th>Service Type</th>
+                                    <th>Dates</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="service-items-body">
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.service_type }}</td>
+                                    <td>{{ item.from_date }} to {{ item.to_date }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.currency }} {{ "%.2f"|format(item.amount) }}</td>
+                                    <td>
+                                        <a href="{{ url_for('booking.new_booking', remove_item=item.item_id) }}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td>
+                                        {% set total = 0 %}
+                                        {% for item in items %}
+                                            {% set total = total + item.amount %}
+                                        {% endfor %}
+                                        {{ "%.2f"|format(total) }}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-end mb-4">
+                        <button type="submit" name="save_action" value="save" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Save Booking Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle quick add buttons
+        document.querySelectorAll('.quick-add-service').forEach(button => {
+            button.addEventListener('click', function() {
+                const serviceType = this.getAttribute('data-service-type');
+                document.getElementById('quick_add_service_type').value = serviceType;
+                document.getElementById('service_type').value = serviceType;
+                
+                // Submit the form
+                document.getElementById('newBookingForm').requestSubmit();
+            });
+        });
+        
+        // Function to update the service items table visibility
+        function updateServiceItemsTable() {
+            const tableBody = document.getElementById('service-items-body');
+            const table = document.getElementById('services-table');
+            const emptyAlert = document.getElementById('empty-services-alert');
+            
+            if (tableBody.children.length === 0) {
+                table.style.display = 'none';
+                emptyAlert.style.display = 'block';
+            } else {
+                table.style.display = 'table';
+                emptyAlert.style.display = 'none';
+            }
+        }
+        
+        // Call the function on page load
+        updateServiceItemsTable();
+    });
+</script>
+{% endblock %}
