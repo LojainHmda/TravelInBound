@@ -105,6 +105,39 @@ class Booking(db.Model):
             self.invoice_number = f"INV-{year}-{count+1:04d}"
             self.invoice_date = datetime.utcnow()
         return self.invoice_number
+        
+    def generate_credit_memo_number(self):
+        """Generate a unique credit memo number"""
+        year = datetime.utcnow().strftime('%y')
+        count = db.session.query(Booking).filter(
+            Booking.invoice_number.isnot(None)
+        ).count()
+        return f"CM-{year}-{count+1:04d}"
+        
+    def generate_separate_invoice_for_items(self, service_items):
+        """
+        Generate a separate invoice number for specific service items
+        and mark them as invoiced
+        """
+        # First, make sure we have service items to invoice
+        if not service_items or len(service_items) == 0:
+            return None
+            
+        # Generate a new invoice number  
+        year = datetime.utcnow().strftime('%y')
+        count = db.session.query(Booking).filter(
+            Booking.invoice_number.isnot(None)
+        ).count()
+        invoice_number = f"INV-{year}-{count+1:04d}"
+        invoice_date = datetime.utcnow()
+        
+        # Update each service item
+        for item in service_items:
+            item.invoice_number = invoice_number
+            item.invoice_date = invoice_date
+            item.is_invoiced = True
+            
+        return invoice_number
 
 class ServiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -118,6 +151,13 @@ class ServiceItem(db.Model):
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Invoice related fields
+    invoice_number = db.Column(db.String(20), nullable=True)
+    invoice_date = db.Column(db.DateTime, nullable=True)
+    is_invoiced = db.Column(db.Boolean, default=False)
+    is_cancelled = db.Column(db.Boolean, default=False)
+    credit_memo_number = db.Column(db.String(20), nullable=True)
     
     # Documents/confirmations for this service item
     documents = db.relationship('Document', backref='service_item', lazy=True, cascade="all, delete-orphan")

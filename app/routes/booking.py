@@ -437,28 +437,23 @@ def add_service_item(booking_id):
         import sys
         db.session.add(service_item)
         
-        # Update the booking's total amount
+        # Update the booking's total amount (for display purposes only)
         booking.calculate_total()
         
         # Check if booking already has an invoice
         has_invoice = booking.invoice_number is not None
         print(f"Booking has invoice: {has_invoice} - Invoice #: {booking.invoice_number}", file=sys.stderr)
         
-        # Update invoice status based on booking status
+        # Generate a new invoice for the service item, separate from the booking's main invoice
         if booking.status == STATUS_BOOKED:
             # Set the new service item to BOOKED as well
             service_item.status = STATUS_BOOKED
             print(f"Set new service item to BOOKED status", file=sys.stderr)
             
-            if has_invoice:
-                # Update the invoice total to match the new total
-                print(f"Updating existing invoice #{booking.invoice_number} with new total: ${booking.total_amount}", file=sys.stderr)
-                flash(f'Invoice {booking.invoice_number} updated with new total amount: ${booking.total_amount:.2f}', 'success')
-            else:
-                # Generate a new invoice number if one doesn't exist
-                booking.generate_invoice_number()
-                print(f"Generated new invoice #{booking.invoice_number} for total: ${booking.total_amount}", file=sys.stderr)
-                flash(f'New invoice {booking.invoice_number} generated for updated booking', 'success')
+            # Generate separate invoice for this new item
+            new_invoice_number = booking.generate_separate_invoice_for_items([service_item])
+            print(f"Generated separate invoice #{new_invoice_number} for new service item", file=sys.stderr)
+            flash(f'New invoice {new_invoice_number} generated for additional service item', 'success')
         
         db.session.commit()
         
@@ -516,11 +511,14 @@ def update_booking_status(booking_id):
         if new_status == STATUS_BOOKED and old_status != STATUS_BOOKED:
             booking.generate_invoice_number()
             
-            # Update all service items to BOOKED status too
+            # Update all service items to BOOKED status and mark as invoiced
             for item in booking.service_items:
                 if item.status == STATUS_REQUEST:
                     item.status = STATUS_BOOKED
-                    print(f"Updated service item {item.id} status to BOOKED", file=sys.stderr)
+                    item.invoice_number = booking.invoice_number
+                    item.invoice_date = booking.invoice_date
+                    item.is_invoiced = True
+                    print(f"Updated service item {item.id} status to BOOKED and marked as invoiced", file=sys.stderr)
             
             flash(f'Invoice {booking.invoice_number} generated', 'success')
         
