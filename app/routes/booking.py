@@ -434,10 +434,31 @@ def add_service_item(booking_id):
         if agent:
             service_item.agent_id = agent.id
         
+        import sys
         db.session.add(service_item)
         
         # Update the booking's total amount
         booking.calculate_total()
+        
+        # Check if booking already has an invoice
+        has_invoice = booking.invoice_number is not None
+        print(f"Booking has invoice: {has_invoice} - Invoice #: {booking.invoice_number}", file=sys.stderr)
+        
+        # Update invoice status based on booking status
+        if booking.status == STATUS_BOOKED:
+            # Set the new service item to BOOKED as well
+            service_item.status = STATUS_BOOKED
+            print(f"Set new service item to BOOKED status", file=sys.stderr)
+            
+            if has_invoice:
+                # Update the invoice total to match the new total
+                print(f"Updating existing invoice #{booking.invoice_number} with new total: ${booking.total_amount}", file=sys.stderr)
+                flash(f'Invoice {booking.invoice_number} updated with new total amount: ${booking.total_amount:.2f}', 'success')
+            else:
+                # Generate a new invoice number if one doesn't exist
+                booking.generate_invoice_number()
+                print(f"Generated new invoice #{booking.invoice_number} for total: ${booking.total_amount}", file=sys.stderr)
+                flash(f'New invoice {booking.invoice_number} generated for updated booking', 'success')
         
         db.session.commit()
         
