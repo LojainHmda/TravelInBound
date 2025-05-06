@@ -15,6 +15,13 @@ class ServiceItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Invoice related fields
+    invoice_number = db.Column(db.String(20), nullable=True)
+    invoice_date = db.Column(db.DateTime, nullable=True)
+    is_invoiced = db.Column(db.Boolean, default=False)
+    is_cancelled = db.Column(db.Boolean, default=False)
+    credit_memo_number = db.Column(db.String(20), nullable=True)
+    
     # Relationships
     documents = db.relationship('Document', backref='service_item', lazy=True, cascade="all, delete-orphan")
     
