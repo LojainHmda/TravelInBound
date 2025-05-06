@@ -33,7 +33,7 @@ def dashboard():
     insurance_items = ServiceItem.query.filter_by(service_type='INSURANCE').order_by(ServiceItem.created_at.desc()).limit(5).all()
     
     return render_template(
-        'dashboard.html',
+        'dashboard_redesigned.html',
         request_count=request_count,
         booked_count=booked_count,
         in_progress_count=in_progress_count,

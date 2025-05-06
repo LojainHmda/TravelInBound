@@ -348,49 +348,40 @@
                 
                 <!-- Payment Status Information -->
                 <hr>
-                {% if booking.invoice_number %}
-                    <div class="card mb-3">
-                        <div class="card-header bg-dark-blue text-white">
-                            <h6 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice & Payment Information</h6>
-                        </div>
-                        <div class="card-body py-2">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <p class="mb-1"><strong>Invoice #:</strong></p>
-                                    <h6>{{ booking.invoice_number }}</h6>
-                                </div>
-                                <div class="col-md-3">
-                                    <p class="mb-1"><strong>Date:</strong></p>
-                                    <h6>{{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'Not set' }}</h6>
-                                </div>
-                                <div class="col-md-3">
-                                    <p class="mb-1"><strong>Status:</strong></p>
-                                    <h6>
-                                        {% if booking.payment_status == 'NONE' %}
-                                            <span class="badge bg-danger">Unpaid</span>
-                                        {% elif booking.payment_status == 'PARTIAL' %}
-                                            <span class="badge bg-warning text-dark">Partially Paid</span>
-                                        {% elif booking.payment_status == 'FULL' %}
-                                            <span class="badge bg-success">Paid in Full</span>
-                                        {% endif %}
-                                    </h6>
-                                </div>
-                                <div class="col-md-3 text-end">
-                                    <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-file-invoice me-1"></i> View Invoice
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                {% else %}
-                    <div class="mb-3">
-                        <h6 class="fw-bold mb-2">Invoice & Payment Information</h6>
+                <h6 class="fw-bold">Invoice & Payment Information</h6>
+                
+                <!-- Invoice Information -->
+                <div class="mb-3">
+                    {% if booking.invoice_number %}
+                        <p class="mb-1"><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
+                        <p class="mb-1"><strong>Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'Not set' }}</p>
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-outline-info mb-2">
+                            <i class="fas fa-file-invoice me-1"></i> View Invoice
+                        </a>
+                    {% else %}
                         <p class="mb-1 text-muted">No invoice generated yet</p>
                         <button type="button" class="btn btn-sm btn-outline-primary mb-2" data-bs-toggle="modal" data-bs-target="#invoiceModal">
                             <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
                         </button>
-                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Payment Status -->
+                <p class="mb-1">
+                    <strong>Payment Status:</strong>
+                    {% if booking.payment_status == 'NONE' %}
+                        <span class="badge bg-danger">Unpaid</span>
+                    {% elif booking.payment_status == 'PARTIAL' %}
+                        <span class="badge bg-warning text-dark">Partially Paid</span>
+                    {% elif booking.payment_status == 'FULL' %}
+                        <span class="badge bg-success">Paid in Full</span>
+                    {% endif %}
+                </p>
+                
+                {% if booking.payments %}
+                    {% set total_paid = booking.payments|sum(attribute='amount') %}
+                    <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
+                    <p class="mb-1"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
                 {% endif %}
                 
                 <!-- Booking History -->

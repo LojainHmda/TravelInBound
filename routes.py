@@ -64,7 +64,7 @@ def dashboard():
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
     return render_template(
-        'booking/dashboard_new.html',
+        'booking/dashboard.html',
         status_counts={
             'request': request_count,
             'booked': booked_count,
@@ -317,17 +317,10 @@ def add_payment(booking_id):
             
             db.session.add(payment)
             
-            # Update booking payment date
+            # Update booking payment status
             booking.payment_date = datetime.utcnow()
-            
-            # First commit the payment to the database so it's available
-            # in the booking.payments relationship
-            db.session.commit()
-            
-            # Now update the payment status using the method from the model
             booking.update_payment_status()
             
-            # Commit the status change
             db.session.commit()
             
             flash(f'Payment of ${amount} recorded successfully', 'success')

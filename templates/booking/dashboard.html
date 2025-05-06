@@ -14,69 +14,54 @@
 </div>
 
 <div class="row mb-4">
-    <!-- Request Card -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #ff9800;" onclick="filterBookings('REQUEST')">
-            <div class="card-body p-3 text-white">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-clipboard-list fa-2x"></i>
-                    </div>
-                    <div>
-                        <h1 class="mb-0 fw-bold">{{ status_counts.request }}</h1>
-                        <div class="text-white-50">Booking Requests</div>
-                    </div>
+        <div class="stat-card bg-request text-white">
+            <div class="stat-card-body">
+                <div class="stat-card-icon">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ status_counts.request }}</h3>
+                    <p>Requests</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Booked Card -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #9c27b0;" onclick="filterBookings('BOOKED')">
-            <div class="card-body p-3 text-white">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-file-invoice-dollar fa-2x"></i>
-                    </div>
-                    <div>
-                        <h1 class="mb-0 fw-bold">{{ status_counts.booked }}</h1>
-                        <div class="text-white-50">Invoiced Bookings</div>
-                    </div>
+        <div class="stat-card bg-invoice text-white">
+            <div class="stat-card-body">
+                <div class="stat-card-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ status_counts.invoice }}</h3>
+                    <p>Invoices</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- In Progress Card -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #0277bd;" onclick="filterBookings('IN_PROGRESS')">
-            <div class="card-body p-3 text-white">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-cogs fa-2x"></i>
-                    </div>
-                    <div>
-                        <h1 class="mb-0 fw-bold">{{ status_counts.in_progress }}</h1>
-                        <div class="text-white-50">In Progress</div>
-                    </div>
+        <div class="stat-card bg-in-progress text-white">
+            <div class="stat-card-body">
+                <div class="stat-card-icon">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ status_counts.in_progress }}</h3>
+                    <p>In Progress</p>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- Fulfilled Card -->
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm" style="cursor: pointer; background-color: #4caf50;" onclick="filterBookings('FULFILLED')">
-            <div class="card-body p-3 text-white">
-                <div class="d-flex align-items-center">
-                    <div class="me-3">
-                        <i class="fas fa-check-circle fa-2x"></i>
-                    </div>
-                    <div>
-                        <h1 class="mb-0 fw-bold">{{ status_counts.completed }}</h1>
-                        <div class="text-white-50">Completed Bookings</div>
-                    </div>
+        <div class="stat-card bg-completed text-white">
+            <div class="stat-card-body">
+                <div class="stat-card-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-card-info">
+                    <h3>{{ status_counts.completed }}</h3>
+                    <p>Completed</p>
                 </div>
             </div>
         </div>
@@ -341,74 +326,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Function to filter bookings by status
-    function filterBookings(status) {
-        // Get all status cards and remove active class
-        document.querySelectorAll('.card[onclick^="filterBookings"]').forEach(card => {
-            card.classList.remove('border-3');
-            card.classList.remove('border-dark');
-        });
-        
-        // Add active class to the clicked card
-        const clickedCard = document.querySelector(`.card[onclick*="filterBookings('${status}')"]`);
-        if (clickedCard) {
-            clickedCard.classList.add('border-3');
-            clickedCard.classList.add('border-dark');
-        }
-        
-        // Loop through all service tabs
-        const serviceTabs = ['flights', 'hotels', 'transport', 'visa', 'insurance'];
-        
-        serviceTabs.forEach(tabId => {
-            const tableBody = document.querySelector(`#${tabId} table tbody`);
-            if (!tableBody) return;
-            
-            // Loop through all rows in the table
-            Array.from(tableBody.querySelectorAll('tr')).forEach(row => {
-                const statusBadge = row.querySelector('.badge');
-                if (statusBadge) {
-                    const rowStatus = statusBadge.textContent.trim();
-                    
-                    // Show/hide row based on status filter
-                    if (status === 'ALL' || rowStatus === status) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                }
-            });
-            
-            // Show "no items" message if all rows are hidden
-            const visibleRows = Array.from(tableBody.querySelectorAll('tr')).filter(row => 
-                row.style.display !== 'none'
-            );
-            
-            const noItemsMessage = document.querySelector(`#${tabId} .text-center.py-4`);
-            const table = document.querySelector(`#${tabId} .table-responsive`);
-            
-            if (visibleRows.length === 0 && table) {
-                table.style.display = 'none';
-                if (noItemsMessage) {
-                    noItemsMessage.style.display = '';
-                    noItemsMessage.querySelector('p').textContent = `No ${tabId} services with status "${status}"`;
-                }
-            } else if (table) {
-                table.style.display = '';
-                if (noItemsMessage) {
-                    noItemsMessage.style.display = 'none';
-                }
-            }
-        });
-    }
-    
-    // Initialize with all bookings visible
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add click handler for "All" filter if needed
-        // filterBookings('ALL');
-    });
-</script>
 {% endblock %}

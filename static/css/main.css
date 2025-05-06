@@ -128,13 +128,8 @@ body {
     color: white;
 }
 
-.badge.status-completed, .badge.status-fulfilled {
+.badge.status-completed {
     background-color: var(--status-completed);
-    color: white;
-}
-
-.bg-orange {
-    background-color: #ff9800 !important;
     color: white;
 }
 
