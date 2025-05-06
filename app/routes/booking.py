@@ -314,8 +314,14 @@ def new_booking():
                         booking.generate_invoice_number()
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
-                    # Update the booking status to INVOICE
+                    # Update the booking status to BOOKED
                     booking.status = STATUS_BOOKED
+                    
+                    # Update all service items to BOOKED status too
+                    for item in booking.service_items:
+                        if item.status == STATUS_REQUEST:
+                            item.status = STATUS_BOOKED
+                            print(f"Updated service item {item.id} status to BOOKED", file=sys.stderr)
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
@@ -485,9 +491,16 @@ def update_booking_status(booking_id):
             flash('Cannot mark as FULFILLED until all service items are fulfilled', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
-        # If moving to BOOKED status, generate invoice number
+        # If moving to BOOKED status, generate invoice number and update service items
         if new_status == STATUS_BOOKED and old_status != STATUS_BOOKED:
             booking.generate_invoice_number()
+            
+            # Update all service items to BOOKED status too
+            for item in booking.service_items:
+                if item.status == STATUS_REQUEST:
+                    item.status = STATUS_BOOKED
+                    print(f"Updated service item {item.id} status to BOOKED", file=sys.stderr)
+            
             flash(f'Invoice {booking.invoice_number} generated', 'success')
         
         # Check payment status when moving to IN_PROGRESS
@@ -1017,15 +1030,25 @@ def add_payment(booking_id):
             notes=form.notes.data
         )
         
+        import sys
+        print(f"Processing payment of ${form.amount.data} for booking #{booking.id}", file=sys.stderr)
+        
         db.session.add(payment)
         
-        # Update booking payment status
+        # First commit to save the payment
+        db.session.commit()
+        
+        # Now refresh the booking to get the updated payments relationship
+        db.session.refresh(booking)
+        
+        # Now update payment status with the refreshed booking
         booking.update_payment_status()
         
         # Set payment date on booking if not already set
         if not booking.payment_date:
             booking.payment_date = datetime.utcnow()
         
+        # Commit again to save the payment status updates
         db.session.commit()
         
         flash(f'Payment of ${form.amount.data:.2f} processed successfully', 'success')

@@ -72,17 +72,28 @@ class Booking(db.Model):
         
     def update_payment_status(self):
         """Update payment status based on payments received"""
+        import sys
+        print(f"Updating payment status for booking #{self.id} - {self.reference_number}", file=sys.stderr)
+        
         if not self.payments:
+            print(f"  No payments found - setting status to NONE", file=sys.stderr)
             self.payment_status = 'NONE'
             return
-            
+        
         total_paid = sum(payment.amount for payment in self.payments)
+        print(f"  Total paid: ${total_paid}, Total amount: ${self.total_amount}", file=sys.stderr)
+        
         if total_paid >= self.total_amount:
+            print(f"  Payment is FULL (${total_paid} >= ${self.total_amount})", file=sys.stderr)
             self.payment_status = 'FULL'
         elif total_paid > 0:
+            print(f"  Payment is PARTIAL (${total_paid} < ${self.total_amount})", file=sys.stderr)
             self.payment_status = 'PARTIAL'
         else:
+            print(f"  Payment is NONE (${total_paid})", file=sys.stderr)
             self.payment_status = 'NONE'
+        
+        print(f"  Updated payment_status to: {self.payment_status}", file=sys.stderr)
             
     def generate_invoice_number(self):
         """Generate a unique invoice number"""
