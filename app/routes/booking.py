@@ -288,12 +288,60 @@ def new_booking():
                     service_items = session.get('service_items', [])
                 
                 # Handle invoice generation if requested (but do not try to create a new booking)
-                # Check for invoice generation request - prioritize this over checking invoice_notes
-                if (action == 'generate_invoice' or action == 'invoice') and booking:
+                # Check for invoice generation request
+                if action == 'generate_invoice' and booking:
                     import sys
-                    print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
+                    print(f"Generate invoice action detected, action: {action}", file=sys.stderr)
+                    print(f"Form data: {request.form}", file=sys.stderr)
                     
-                    # Update the total amount if provided in the modal form
+                    # Only create a new booking with session items if it doesn't exist
+                    if not booking.service_items or len(booking.service_items) == 0:
+                        # Add service items from session - this is essential for new bookings
+                        session_items = session.get('service_items', [])
+                        for item_data in session_items:
+                            # Process the service items as before
+                            from datetime import datetime
+                            
+                            # Parse the date strings with proper error handling
+                            try:
+                                # Check if we're using from_date/to_date or start_date/end_date
+                                if 'from_date' in item_data and 'to_date' in item_data:
+                                    if item_data['from_date'] and item_data['to_date']:
+                                        start_date = datetime.strptime(item_data['from_date'], '%Y-%m-%d').date()
+                                        end_date = datetime.strptime(item_data['to_date'], '%Y-%m-%d').date()
+                                    else:
+                                        start_date = datetime.now().date()
+                                        end_date = datetime.now().date()
+                                elif 'start_date' in item_data and 'end_date' in item_data:
+                                    if item_data['start_date'] and item_data['end_date']:
+                                        start_date = datetime.strptime(item_data['start_date'], '%Y-%m-%d').date()
+                                        end_date = datetime.strptime(item_data['end_date'], '%Y-%m-%d').date()
+                                    else:
+                                        start_date = datetime.now().date()
+                                        end_date = datetime.now().date()
+                                else:
+                                    start_date = datetime.now().date()
+                                    end_date = datetime.now().date()
+                            except (ValueError, TypeError) as e:
+                                print(f"Error parsing dates: {e}", file=sys.stderr)
+                                start_date = datetime.now().date()
+                                end_date = datetime.now().date()
+                            
+                            service_item = ServiceItem(
+                                booking_id=booking.id,
+                                service_type=item_data['service_type'],
+                                start_date=start_date,
+                                end_date=end_date,
+                                description=item_data['description'],
+                                amount=float(item_data['amount']),
+                                status=STATUS_REQUEST
+                            )
+                            
+                            db.session.add(service_item)
+                        
+                        db.session.commit()
+                    
+                    # Update the total amount if provided
                     invoice_total = request.form.get('invoice_total')
                     if invoice_total:
                         try:
@@ -301,11 +349,15 @@ def new_booking():
                             if invoice_total > 0:
                                 print(f"Setting booking total to {invoice_total}", file=sys.stderr)
                                 booking.total_amount = invoice_total
+                            else:
+                                # Calculate total from service items
+                                booking.calculate_total()
+                                print(f"Invoice total was 0, calculated: {booking.total_amount}", file=sys.stderr)
                         except (ValueError, TypeError):
-                            print(f"Invalid invoice_total: {invoice_total}", file=sys.stderr)
-                    
-                    # If no invoice_total was provided, calculate from service items
-                    if not invoice_total and booking.service_items:
+                            print(f"Invalid invoice_total: {invoice_total}, calculating from items", file=sys.stderr)
+                            booking.calculate_total()
+                    else:
+                        # No invoice total provided, calculate from service items
                         booking.calculate_total()
                         print(f"Calculated total from service items: {booking.total_amount}", file=sys.stderr)
                     
@@ -315,6 +367,7 @@ def new_booking():
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
                     # Set invoice date if it doesn't exist
+                    from datetime import datetime
                     if not booking.invoice_date:
                         booking.invoice_date = datetime.utcnow()
                     
@@ -324,13 +377,16 @@ def new_booking():
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
                     print(f"Invoice notes: {invoice_notes}", file=sys.stderr)
-                    # You could add the notes to the booking or create a separate model for invoice notes
                     
+                    # Clear the session since we're done with this booking
+                    session.pop('service_items', None)
+                    
+                    # Save all changes
                     db.session.commit()
                     
-                    flash(f'Invoice {booking.invoice_number} generated for booking {reference}', 'success')
+                    flash(f'Invoice {booking.invoice_number} generated successfully!', 'success')
                     
-                    # Simply redirect to the booking details page with the invoice
+                    # Redirect to the booking details page
                     return redirect(url_for('booking.details', booking_id=booking.id))
                 
                 # In the simplified form, there's no payment processing from the new booking page

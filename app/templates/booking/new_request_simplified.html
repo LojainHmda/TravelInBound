@@ -204,17 +204,19 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="invoice_total" class="form-label">Total Amount</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="invoice_total" step="0.01" min="0" placeholder="0.00">
+                                    <form id="invoiceModalForm">
+                                        <div class="mb-3">
+                                            <label for="modal_invoice_total" class="form-label">Total Amount</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" class="form-control" id="modal_invoice_total" name="modal_invoice_total" step="0.01" min="0" placeholder="0.00">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="invoice_modal_notes" class="form-label">Invoice Notes</label>
-                                        <textarea class="form-control" id="invoice_modal_notes" rows="3" placeholder="Enter any special instructions or notes for this invoice"></textarea>
-                                    </div>
+                                        <div class="mb-3">
+                                            <label for="modal_invoice_notes" class="form-label">Invoice Notes</label>
+                                            <textarea class="form-control" id="modal_invoice_notes" name="modal_invoice_notes" rows="3" placeholder="Enter any special instructions or notes for this invoice"></textarea>
+                                        </div>
+                                    </form>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -293,12 +295,12 @@
                 });
                 
                 // Set the total in the modal
-                document.getElementById('invoice_total').value = total.toFixed(2);
+                document.getElementById('modal_invoice_total').value = total.toFixed(2);
                 
                 // Copy notes from the main form to the modal
                 const notesField = document.getElementById('invoice_notes');
                 if (notesField) {
-                    document.getElementById('invoice_modal_notes').value = notesField.value;
+                    document.getElementById('modal_invoice_notes').value = notesField.value;
                 }
             });
         }
@@ -306,33 +308,40 @@
         if (createInvoiceBtn) {
             createInvoiceBtn.addEventListener('click', function() {
                 // When clicking the create button in the modal, transfer values back to the form
-                const invoiceTotal = document.getElementById('invoice_total').value;
-                const invoiceNotes = document.getElementById('invoice_modal_notes').value;
+                const invoiceTotal = document.getElementById('modal_invoice_total').value;
+                const invoiceNotes = document.getElementById('modal_invoice_notes').value;
                 
-                // Set values in hidden fields or in the main form fields
-                if (document.getElementById('invoice_notes')) {
-                    document.getElementById('invoice_notes').value = invoiceNotes;
-                }
-                
-                // Add a hidden field for the invoice total if it doesn't exist
-                let invoiceTotalField = document.getElementById('hidden_invoice_total');
-                if (!invoiceTotalField) {
-                    invoiceTotalField = document.createElement('input');
-                    invoiceTotalField.type = 'hidden';
-                    invoiceTotalField.id = 'hidden_invoice_total';
-                    invoiceTotalField.name = 'invoice_total';
-                    document.getElementById('newBookingForm').appendChild(invoiceTotalField);
-                }
-                invoiceTotalField.value = invoiceTotal;
-                
-                // Submit the form with the generate_invoice action
+                // Create a separate form for invoice generation
                 const form = document.getElementById('newBookingForm');
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'save_action';
-                actionInput.value = 'generate_invoice';
-                form.appendChild(actionInput);
                 
+                // Add invoice data as hidden fields
+                const hiddenFields = {
+                    'save_action': 'generate_invoice',
+                    'invoice_total': invoiceTotal,
+                    'invoice_notes': invoiceNotes
+                };
+                
+                // Remove any existing hidden fields with these names to avoid duplication
+                form.querySelectorAll('input[type="hidden"][name="save_action"], input[type="hidden"][name="invoice_total"], input[type="hidden"][name="invoice_notes"]').forEach(el => {
+                    el.remove();
+                });
+                
+                // Add the hidden fields
+                for (const [name, value] of Object.entries(hiddenFields)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    form.appendChild(input);
+                }
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Submit the form
                 form.submit();
             });
         }
