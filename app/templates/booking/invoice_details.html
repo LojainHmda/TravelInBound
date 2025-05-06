@@ -30,6 +30,47 @@
     <div class="col-md-12">
         <div class="card mb-4">
             <div class="card-body p-4">
+                <!-- Invoice & Payment Information - Horizontal Layout -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark-blue text-white">
+                        <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice & Payment Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Invoice #:</strong></p>
+                                <h5>{{ booking.invoice_number }}</h5>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Date:</strong></p>
+                                <h5>{{ booking.invoice_date.strftime('%d %b %Y') }}</h5>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Payment Status:</strong></p>
+                                <h5>
+                                    {% if booking.payment_status == 'NONE' %}
+                                        <span class="badge bg-danger">Unpaid</span>
+                                    {% elif booking.payment_status == 'PARTIAL' %}
+                                        <span class="badge bg-warning text-dark">Partially Paid</span>
+                                    {% elif booking.payment_status == 'FULL' %}
+                                        <span class="badge bg-success">Paid in Full</span>
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="mb-1"><strong>Balance Due:</strong></p>
+                                {% if booking.payments %}
+                                    {% set total_paid = booking.payments|sum(attribute='amount') %}
+                                    {% set balance = booking.total_amount - total_paid %}
+                                    <h5>${{ "%.2f"|format(balance) }}</h5>
+                                {% else %}
+                                    <h5>${{ "%.2f"|format(booking.total_amount) }}</h5>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -40,31 +81,15 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="mb-3">
-                            <h5 class="text-muted mb-1">Invoice Details:</h5>
+                            <h5 class="text-muted mb-1">Booking Details:</h5>
                             <table class="ms-md-auto">
-                                <tr>
-                                    <td class="pe-3"><strong>Invoice Number:</strong></td>
-                                    <td>{{ booking.invoice_number }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-3"><strong>Invoice Date:</strong></td>
-                                    <td>{{ booking.invoice_date.strftime('%d %b %Y') }}</td>
-                                </tr>
                                 <tr>
                                     <td class="pe-3"><strong>Booking Reference:</strong></td>
                                     <td>{{ booking.reference_number }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="pe-3"><strong>Payment Status:</strong></td>
-                                    <td>
-                                        {% if booking.payment_status == 'NONE' %}
-                                            <span class="badge bg-danger">Unpaid</span>
-                                        {% elif booking.payment_status == 'PARTIAL' %}
-                                            <span class="badge bg-warning text-dark">Partially Paid</span>
-                                        {% elif booking.payment_status == 'FULL' %}
-                                            <span class="badge bg-success">Paid in Full</span>
-                                        {% endif %}
-                                    </td>
+                                    <td class="pe-3"><strong>Created On:</strong></td>
+                                    <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
                                 </tr>
                             </table>
                         </div>
