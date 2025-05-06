@@ -559,6 +559,43 @@ def update_service_status(item_id):
     
     return redirect(url_for('booking.details', booking_id=service_item.booking_id))
 
+@booking_bp.route('/service_item/<int:item_id>/cancel', methods=['POST'])
+def cancel_service_item(item_id):
+    """Cancel a service item and generate a credit memo if it was already invoiced"""
+    import sys
+    service_item = ServiceItem.query.get_or_404(item_id)
+    booking = service_item.booking
+    
+    # Check if this item can be cancelled
+    if service_item.is_cancelled:
+        flash('This service item has already been cancelled', 'warning')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    # Only allow cancellation of items that are not fulfilled
+    if service_item.status == STATUS_FULFILLED:
+        flash('Cannot cancel a service item that has already been fulfilled', 'danger')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
+    # Process cancellation
+    reason = request.form.get('cancel_reason', '')
+    
+    # Mark item as cancelled
+    service_item.is_cancelled = True
+    
+    # If the item was invoiced, generate a credit memo
+    if service_item.is_invoiced and service_item.invoice_number:
+        credit_memo_number = booking.generate_credit_memo_number()
+        service_item.credit_memo_number = credit_memo_number
+        
+        print(f"Generated credit memo {credit_memo_number} for cancelled item {item_id}", file=sys.stderr)
+        flash(f'Credit memo {credit_memo_number} generated for cancelled service item', 'success')
+    
+    # Update item status and save
+    db.session.commit()
+    
+    flash(f'Service item successfully cancelled', 'success')
+    return redirect(url_for('booking.details', booking_id=booking.id))
+
 @booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
 def confirm_service(item_id):
     """Confirm details for a specific service item with a dedicated form"""
