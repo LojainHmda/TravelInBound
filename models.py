@@ -77,7 +77,8 @@ class Booking(db.Model):
             return
             
         total_paid = sum(payment.amount for payment in self.payments)
-        if total_paid >= self.total_amount:
+        # Use a small epsilon to account for floating point precision issues
+        if total_paid >= self.total_amount - 0.01:  
             self.payment_status = 'FULL'
         elif total_paid > 0:
             self.payment_status = 'PARTIAL'

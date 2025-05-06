@@ -317,18 +317,17 @@ def add_payment(booking_id):
             
             db.session.add(payment)
             
-            # Update booking payment status
+            # Update booking payment date
             booking.payment_date = datetime.utcnow()
             
-            # Calculate total paid to check if payment is complete
-            total_paid = sum(p.amount for p in booking.payments) + amount
-            if total_paid >= booking.total_amount:
-                booking.payment_status = 'FULL'
-            elif total_paid > 0:
-                booking.payment_status = 'PARTIAL'
-            else:
-                booking.payment_status = 'NONE'
-                
+            # First commit the payment to the database so it's available
+            # in the booking.payments relationship
+            db.session.commit()
+            
+            # Now update the payment status using the method from the model
+            booking.update_payment_status()
+            
+            # Commit the status change
             db.session.commit()
             
             flash(f'Payment of ${amount} recorded successfully', 'success')
