@@ -480,11 +480,15 @@
             <div class="card-body">
                 <p><strong>Name:</strong> {{ booking.requester.username }}</p>
                 <p><strong>Email:</strong> {{ booking.requester.email }}</p>
-                
-                <!-- Payment Status Information -->
-                <hr>
-                <h6 class="fw-bold">Payment Information</h6>
-                
+            </div>
+        </div>
+        
+        <!-- Payment Information Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
+            </div>
+            <div class="card-body">
                 <!-- Payment Status -->
                 <p class="mb-1">
                     <strong>Payment Status:</strong>
@@ -502,10 +506,15 @@
                     <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
                     <p class="mb-1"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
                 {% endif %}
-                
-                <!-- Booking History -->
-                <hr>
-                <h6 class="fw-bold">History</h6>
+            </div>
+        </div>
+        
+        <!-- Booking History Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>History</h5>
+            </div>
+            <div class="card-body">
                 <ul class="list-unstyled">
                     <li class="mb-2">
                         <small class="text-muted">{{ booking.created_at.strftime('%d %b %Y, %H:%M') }}</small>
