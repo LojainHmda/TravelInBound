@@ -272,11 +272,68 @@
                         <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-dark">
                             <i class="fas fa-file-invoice me-1"></i> View Invoice
                         </a>
+                        <button type="button" class="btn btn-sm btn-dark" data-bs-toggle="modal" data-bs-target="#invoiceModal">
+                            <i class="fas fa-plus me-1"></i> New Invoice
+                        </button>
                     {% endif %}
                 </div>
             </div>
             <div class="card-body">
-                {% if booking.invoice_number %}
+                {% if booking.invoices %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Number</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in booking.invoices %}
+                                    <tr {% if invoice.is_credit_memo %}class="table-danger"{% endif %}>
+                                        <td>{{ invoice.invoice_number }}</td>
+                                        <td>{{ invoice.invoice_date.strftime('%d %b %Y') }}</td>
+                                        <td>
+                                            {% if invoice.is_credit_memo %}
+                                                <span class="badge bg-danger">Credit Memo</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Invoice</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if invoice.is_credit_memo %}
+                                                <span class="text-danger">${{ "%.2f"|format(invoice.total_amount|abs) }}</span>
+                                            {% else %}
+                                                ${{ "%.2f"|format(invoice.total_amount) }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ invoice.notes }}</td>
+                                        <td>
+                                            <a href="{{ url_for('booking.invoice_details', booking_id=booking.id, invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <td colspan="3"><strong>Total Due:</strong></td>
+                                    <td colspan="3">
+                                        {% set total_invoiced = booking.invoices|selectattr('is_credit_memo', 'equalto', false)|sum(attribute='total_amount') %}
+                                        {% set total_credited = booking.invoices|selectattr('is_credit_memo', 'equalto', true)|sum(attribute='total_amount')|abs %}
+                                        {% set final_total = total_invoiced - total_credited %}
+                                        <strong>${{ "%.2f"|format(final_total) }}</strong>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% elif booking.invoice_number %}
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p class="mb-1"><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
