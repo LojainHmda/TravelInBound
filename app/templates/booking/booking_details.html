@@ -414,56 +414,6 @@
             </div>
         </div>
         
-        <!-- Booking Status Timeline -->
-        <div class="card mb-4">
-            <div class="card-header bg-dark-blue text-white">
-                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Status Timeline</h5>
-            </div>
-            <div class="card-body">
-                <div class="process-steps">
-                    <div class="process-step">
-                        <div class="process-icon {% if booking.status == 'REQUEST' or booking.status == 'INVOICE' or booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="process-content">
-                            <h5>Request Stage</h5>
-                            <p>Booking request created</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="process-icon {% if booking.status == 'INVOICE' or booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                        </div>
-                        <div class="process-content">
-                            <h5>Invoice Stage</h5>
-                            <p>Payment processing</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="process-icon {% if booking.status == 'IN_PROGRESS' or booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
-                            <i class="fas fa-cogs"></i>
-                        </div>
-                        <div class="process-content">
-                            <h5>In-Progress Stage</h5>
-                            <p>Service execution</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="process-icon {% if booking.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="process-content">
-                            <h5>Completion Stage</h5>
-                            <p>All services fulfilled</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- Quick Actions -->
         <div class="card mb-4">
             <div class="card-header bg-dark-blue text-white">
