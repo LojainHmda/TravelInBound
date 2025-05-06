@@ -13,83 +13,62 @@
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <!-- Status Cards Row -->
-        <div class="d-flex align-items-center mb-4">
-            <!-- Request Card -->
-            <div class="card flex-grow-1 border-0 shadow-sm" style="cursor: pointer; background-color: #ff9800; max-width: 220px;" onclick="filterBookings('REQUEST')">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="fas fa-clipboard-list fa-2x"></i>
-                        </div>
-                        <div>
-                            <h1 class="mb-0 fw-bold">{{ status_counts.request }}</h1>
-                            <div class="text-white-50">Booking Requests</div>
-                        </div>
-                    </div>
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-info-circle me-2"></i>
+            <h5 class="mb-0">Booking Process</h5>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center px-4 py-3">
+            <!-- Step 1: Request -->
+            <div class="text-center" style="cursor: pointer;" onclick="filterBookings('REQUEST')">
+                <span class="d-block mb-2">1. Request</span>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" 
+                     style="width: 60px; height: 60px; background-color: #ff9800; color: white;">
+                    <i class="fas fa-clipboard-list fa-lg"></i>
                 </div>
+                <span class="badge bg-orange px-2 py-1">{{ status_counts.request }}</span>
             </div>
+
+            <!-- Connecting line -->
+            <div class="flex-grow-1 mx-2" style="height: 2px; background-color: #dee2e6;"></div>
             
-            <!-- Arrow -->
-            <div class="mx-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-chevron-right fa-2x text-muted"></i>
-            </div>
-            
-            <!-- Booked Card -->
-            <div class="card flex-grow-1 border-0 shadow-sm" style="cursor: pointer; background-color: #9c27b0; max-width: 220px;" onclick="filterBookings('BOOKED')">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="fas fa-file-invoice-dollar fa-2x"></i>
-                        </div>
-                        <div>
-                            <h1 class="mb-0 fw-bold">{{ status_counts.booked }}</h1>
-                            <div class="text-white-50">Invoiced Bookings</div>
-                        </div>
-                    </div>
+            <!-- Step 2: Booked -->
+            <div class="text-center" style="cursor: pointer;" onclick="filterBookings('BOOKED')">
+                <span class="d-block mb-2">2. Booked</span>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" 
+                     style="width: 60px; height: 60px; background-color: #20b2aa; color: white;">
+                    <i class="fas fa-file-invoice-dollar fa-lg"></i>
                 </div>
+                <span class="badge bg-orange px-2 py-1">{{ status_counts.booked }}</span>
             </div>
             
-            <!-- Arrow -->
-            <div class="mx-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-chevron-right fa-2x text-muted"></i>
-            </div>
+            <!-- Connecting line -->
+            <div class="flex-grow-1 mx-2" style="height: 2px; background-color: #dee2e6;"></div>
             
-            <!-- In Progress Card -->
-            <div class="card flex-grow-1 border-0 shadow-sm" style="cursor: pointer; background-color: #0277bd; max-width: 220px;" onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="fas fa-cogs fa-2x"></i>
-                        </div>
-                        <div>
-                            <h1 class="mb-0 fw-bold">{{ status_counts.in_progress }}</h1>
-                            <div class="text-white-50">In Progress</div>
-                        </div>
-                    </div>
+            <!-- Step 3: In-Progress -->
+            <div class="text-center" style="cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
+                <span class="d-block mb-2">3. In-Progress</span>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" 
+                     style="width: 60px; height: 60px; background-color: #FFC107; color: white;">
+                    <i class="fas fa-cogs fa-lg"></i>
                 </div>
+                <span class="badge bg-orange px-2 py-1">{{ status_counts.in_progress }}</span>
             </div>
             
-            <!-- Arrow -->
-            <div class="mx-2 d-flex align-items-center justify-content-center">
-                <i class="fas fa-chevron-right fa-2x text-muted"></i>
-            </div>
+            <!-- Connecting line -->
+            <div class="flex-grow-1 mx-2" style="height: 2px; background-color: #dee2e6;"></div>
             
-            <!-- Fulfilled Card -->
-            <div class="card flex-grow-1 border-0 shadow-sm" style="cursor: pointer; background-color: #4caf50; max-width: 220px;" onclick="filterBookings('FULFILLED')">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <i class="fas fa-check-circle fa-2x"></i>
-                        </div>
-                        <div>
-                            <h1 class="mb-0 fw-bold">{{ status_counts.completed }}</h1>
-                            <div class="text-white-50">Completed Bookings</div>
-                        </div>
-                    </div>
+            <!-- Step 4: Fulfilled -->
+            <div class="text-center" style="cursor: pointer;" onclick="filterBookings('FULFILLED')">
+                <span class="d-block mb-2">4. Fulfilled</span>
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" 
+                     style="width: 60px; height: 60px; background-color: #28A745; color: white;">
+                    <i class="fas fa-check-circle fa-lg"></i>
                 </div>
+                <span class="badge bg-orange px-2 py-1">{{ status_counts.completed }}</span>
             </div>
         </div>
     </div>
