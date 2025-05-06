@@ -31,6 +31,10 @@ body {
     border-color: var(--primary-color);
 }
 
+.text-orange {
+    color: #FF7F00 !important;
+}
+
 .btn-primary:hover, .btn-primary:focus {
     background-color: #0a2d5e;
     border-color: #0a2d5e;
