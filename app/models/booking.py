@@ -68,6 +68,16 @@ class Booking(db.Model):
             self.invoice_number = f"{prefix}-{year}-{self.id:04d}"
             self.invoice_date = datetime.utcnow()
         return self.invoice_number
+    
+    def generate_credit_memo_number(self):
+        """Generate a unique credit memo number"""
+        prefix = "CM"
+        year = datetime.utcnow().strftime("%y")
+        # Generate a unique memo number using timestamp
+        from datetime import datetime
+        timestamp = datetime.utcnow().strftime("%H%M%S")
+        credit_memo_number = f"{prefix}-{year}-{self.id:04d}-{timestamp}"
+        return credit_memo_number
 
 
 class Payment(db.Model):

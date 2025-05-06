@@ -588,9 +588,34 @@ def cancel_service_item(item_id):
         credit_memo_number = booking.generate_credit_memo_number()
         service_item.credit_memo_number = credit_memo_number
         
+        # Create a credit memo with negative amount
+        # This is a record of the refund that would be issued
+        from datetime import datetime
+        credit_memo_date = datetime.utcnow()
+        
+        # Create a new payment record with negative amount (refund)
+        refund_amount = -service_item.amount  # Negative amount for refund
+        refund_payment = Payment(
+            booking_id=booking.id,
+            amount=refund_amount,
+            payment_date=credit_memo_date,
+            payment_method="CREDIT_MEMO",
+            transaction_id=credit_memo_number,
+            notes=f"Credit memo for cancelled service: {service_item.service_type} - {service_item.description}"
+        )
+        db.session.add(refund_payment)
+        
+        # Update booking total
+        booking.calculate_total()
+        booking.update_payment_status()
+        
         print(f"Generated credit memo {credit_memo_number} for cancelled item {item_id}", file=sys.stderr)
-        flash(f'Credit memo {credit_memo_number} generated for cancelled service item', 'success')
-    
+        print(f"Credit memo amount: ${refund_amount}", file=sys.stderr)
+        flash(f'Credit memo {credit_memo_number} generated for cancelled service item with amount ${abs(refund_amount):.2f}', 'success')
+    else:
+        # Just mark the item as cancelled without credit memo
+        print(f"Item {item_id} cancelled but no credit memo generated (not invoiced)", file=sys.stderr)
+        
     # Update item status and save
     db.session.commit()
     
