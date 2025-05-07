@@ -56,6 +56,17 @@ def create_app():
         from app.routes.booking import booking_bp
         app.register_blueprint(booking_bp, url_prefix='/booking')
         
+        # Register supplier and customer blueprints
+        from app.routes.supplier import supplier_bp
+        app.register_blueprint(supplier_bp)
+        
+        from app.routes.customer import customer_bp
+        app.register_blueprint(customer_bp)
+        
+        # Register confirmation blueprint
+        from app.routes.confirmation import confirmation_bp
+        app.register_blueprint(confirmation_bp)
+        
         # Register API blueprint
         from app.routes.api import api_bp
         app.register_blueprint(api_bp)

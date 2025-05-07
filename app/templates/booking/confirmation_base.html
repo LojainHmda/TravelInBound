@@ -81,6 +81,11 @@
                             <i class="fas fa-check-circle"></i> Confirm Service
                         </button>
                         {% endif %}
+                        
+                        <!-- Link to supplier costs page -->
+                        <a href="{{ url_for('confirmation.add_supplier_confirmation', item_id=service_item.id) }}" class="btn btn-outline-info ms-2">
+                            <i class="fas fa-dollar-sign"></i> Add Supplier Costs
+                        </a>
 
                         <!-- Check if there are other services that need confirmation -->
                         {% set other_items = service_item.booking.service_items|selectattr('status', 'equalto', 'IN_PROGRESS')|list %}
