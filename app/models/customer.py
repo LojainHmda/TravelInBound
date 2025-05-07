@@ -4,7 +4,8 @@ from app import db
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100))
     email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
@@ -26,6 +27,14 @@ class Customer(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Property to get full name
+    @property
+    def name(self):
+        """Return full name (first + last)"""
+        if self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.first_name
     
     # Relationships
     documents = db.relationship('CustomerDocument', backref='customer', lazy=True, cascade="all, delete-orphan")
