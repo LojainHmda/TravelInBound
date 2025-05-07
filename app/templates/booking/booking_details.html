@@ -86,34 +86,34 @@
     <div class="col-12">
         <!-- Service Items List -->
         <div class="card mb-4">
-            <div class="card-header bg-dark-blue text-white py-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0"><i class="fas fa-list me-2"></i>Service Items</h4>
-                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal" style="border-radius: 4px;">
-                        <i class="fas fa-plus me-1"></i> Add Service
-                    </button>
+            <!-- Single Orange Header Bar with Service Items and Quick Add -->
+            <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #ff9800;">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 text-white me-4"><i class="fas fa-list me-2"></i>Service Items</h5>
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2 text-white">Quick Add:</strong>
+                        <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plane"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-hotel"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-car"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-passport"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-shield-alt"></i>
+                        </button>
+                    </div>
                 </div>
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal" style="border-radius: 4px;">
+                    <i class="fas fa-plus me-1"></i> Add Service
+                </button>
             </div>
             <div class="card-body p-0">
-                <!-- Service Type Icons for Quick Add - Redesigned -->
-                <div class="d-flex align-items-center px-3 py-2 service-icons-bar border-bottom" style="background-color: #ff9800;">
-                    <div class="me-2"><strong style="color: white;">Quick Add:</strong></div>
-                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="fas fa-plane"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="fas fa-hotel"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="fas fa-car"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="fas fa-passport"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                        <i class="fas fa-shield-alt"></i>
-                    </button>
-                </div>
                 <div class="table-responsive">
                     <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
                         <thead>
