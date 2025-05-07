@@ -236,6 +236,10 @@ def generate_statement():
         to_date = form.to_date.data.strftime('%Y-%m-%d') if form.to_date.data else ''
         status = form.status.data
         
+        # Debug log
+        import sys
+        print(f"Redirecting to supplier statement for supplier_id={supplier_id}, from={from_date}, to={to_date}, status={status}", file=sys.stderr)
+        
         # Redirect to the supplier statement view with filters
         return redirect(url_for(
             'supplier.supplier_statement', 
@@ -275,7 +279,7 @@ def supplier_statement(supplier_id):
         to_date = date.today()
     
     # Query for service confirmations
-    from app.models.document import Document
+    from models import Document
     
     # Find all confirmation documents for this supplier
     confirmations = []
