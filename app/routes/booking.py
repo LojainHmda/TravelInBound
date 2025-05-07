@@ -451,10 +451,24 @@ def add_service_item(booking_id):
             service_item.status = STATUS_BOOKED
             print(f"Set new service item to BOOKED status", file=sys.stderr)
             
-            # Generate separate invoice for this new item
-            new_invoice_number = booking.generate_separate_invoice_for_items([service_item])
-            print(f"Generated separate invoice #{new_invoice_number} for new service item", file=sys.stderr)
-            flash(f'New invoice {new_invoice_number} generated for additional service item', 'success')
+            # Use existing invoice for now - we'll recalculate the total
+            if booking.invoice_number:
+                service_item.invoice_number = booking.invoice_number
+                service_item.invoice_date = booking.invoice_date
+                service_item.is_invoiced = True
+                print(f"Added service item to existing invoice #{booking.invoice_number}", file=sys.stderr)
+                flash(f'Service item added to invoice {booking.invoice_number}', 'success')
+            else:
+                # Generate a new invoice if one doesn't exist
+                invoice_number = booking.generate_invoice_number()
+                service_item.invoice_number = invoice_number
+                service_item.invoice_date = datetime.utcnow()
+                service_item.is_invoiced = True
+                print(f"Generated new invoice #{invoice_number} for service item", file=sys.stderr)
+                flash(f'New invoice {invoice_number} generated for service item', 'success')
+                
+            # Recalculate booking total
+            booking.calculate_total()
         
         db.session.commit()
         
