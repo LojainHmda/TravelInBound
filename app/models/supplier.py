@@ -1,6 +1,6 @@
 from datetime import datetime
 from app import db
-from sqlalchemy.sql import func
+from app.models.service import ServiceConfirmation
 
 class Supplier(db.Model):
     """Model for suppliers that provide services."""
@@ -32,7 +32,7 @@ class Supplier(db.Model):
     
     def get_balance(self):
         """Calculate the total balance (amount owed to supplier)"""
-        from app.models.service import ServiceConfirmation
+        from sqlalchemy import func
         total_amount = db.session.query(func.sum(ServiceConfirmation.cost_amount)).filter(
             ServiceConfirmation.supplier_id == self.id,
             ServiceConfirmation.is_paid == False

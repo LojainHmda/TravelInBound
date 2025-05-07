@@ -21,9 +21,6 @@ class Customer(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship with bookings
-    bookings = db.relationship('Booking', backref='customer', lazy=True)
-    
     # Relationship with documents
     documents = db.relationship('CustomerDocument', backref='customer', lazy=True, cascade="all, delete-orphan")
     

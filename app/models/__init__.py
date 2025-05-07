@@ -15,4 +15,6 @@ STATUS_COMPLETED = 'COMPLETED'
 # Import models
 from app.models.user import User, Agent, create_test_data
 from app.models.booking import Booking, Payment, PAYMENT_NONE, PAYMENT_PARTIAL, PAYMENT_FULL
-from app.models.service import ServiceItem, Document
+from app.models.service import ServiceItem, Document, ServiceConfirmation
+from app.models.supplier import Supplier, SupplierDocument
+from app.models.customer import Customer, CustomerDocument
