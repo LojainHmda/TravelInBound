@@ -95,22 +95,22 @@
                 </div>
             </div>
             <div class="card-body p-0">
-                <!-- Service Type Icons for Quick Add -->
-                <div class="d-flex flex-wrap p-3 service-icons-bar border-bottom">
-                    <div class="me-2"><strong>Quick Add:</strong></div>
-                    <button type="button" class="btn btn-sm btn-primary mx-1 direct-add-service" data-service-type="FLIGHT" data-bs-toggle="tooltip" title="Add Flight Service">
+                <!-- Service Type Icons for Quick Add - Redesigned -->
+                <div class="d-flex align-items-center px-3 py-2 service-icons-bar border-bottom" style="background-color: #ff9800;">
+                    <div class="me-2"><strong style="color: white;">Quick Add:</strong></div>
+                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <i class="fas fa-plane"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-success mx-1 direct-add-service" data-service-type="HOTEL" data-bs-toggle="tooltip" title="Add Hotel Service">
+                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <i class="fas fa-hotel"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-warning mx-1 direct-add-service" data-service-type="TRANSPORT" data-bs-toggle="tooltip" title="Add Transport Service">
+                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <i class="fas fa-car"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-danger mx-1 direct-add-service" data-service-type="VISA" data-bs-toggle="tooltip" title="Add Visa Service">
+                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <i class="fas fa-passport"></i>
                     </button>
-                    <button type="button" class="btn btn-sm btn-info mx-1 direct-add-service" data-service-type="INSURANCE" data-bs-toggle="tooltip" title="Add Insurance Service">
+                    <button type="button" class="btn btn-sm btn-light mx-1 icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                         <i class="fas fa-shield-alt"></i>
                     </button>
                 </div>
@@ -779,16 +779,14 @@ function updateDescriptionPlaceholder(serviceType, element) {
     element.setAttribute('placeholder', placeholder);
 }
 
-// Direct add service functionality
+// Icon popup functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const directAddButtons = document.querySelectorAll('.direct-add-service');
+    const iconPopupTriggers = document.querySelectorAll('.icon-popup-trigger');
     const serviceForm = document.getElementById('addServiceForm');
     
-    if (directAddButtons.length > 0 && serviceForm) {
-        directAddButtons.forEach(button => {
+    if (iconPopupTriggers.length > 0 && serviceForm) {
+        iconPopupTriggers.forEach(button => {
             button.addEventListener('click', function(e) {
-                e.preventDefault();
-                
                 const serviceType = this.getAttribute('data-service-type');
                 
                 // Set today and a week from now as default dates
@@ -799,7 +797,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 nextWeek.setDate(today.getDate() + 7);
                 const nextWeekStr = nextWeek.toISOString().split('T')[0];
                 
-                // Find form elements
+                // Find form elements and pre-select the service type that was clicked
                 const serviceTypeSelect = serviceForm.querySelector('#service_type');
                 const startDateInput = serviceForm.querySelector('#start_date');
                 const endDateInput = serviceForm.querySelector('#end_date');
@@ -850,8 +848,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 descriptionInput.value = description;
                 amountInput.value = amount;
                 
-                // Submit the form
-                serviceForm.submit();
+                // No automatic form submission - the modal will be shown and user can review before submitting
             });
         });
     }
