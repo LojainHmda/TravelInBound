@@ -730,6 +730,20 @@ def confirm_service(item_id):
         # Store the service-specific details as JSON in the notes field
         import json
         
+        # Process cost tracking data (common for all service types)
+        cost_amount = request.form.get('cost_amount', '0.00')
+        cost_currency = request.form.get('cost_currency', 'USD')
+        payment_due_date = request.form.get('payment_due_date', '')
+        is_paid = 'is_paid' in request.form
+        
+        # Convert cost amount to float
+        try:
+            cost_amount = float(cost_amount)
+        except ValueError:
+            cost_amount = 0.00
+        
+        print(f"Cost tracking data: amount={cost_amount}, currency={cost_currency}, due_date={payment_due_date}, is_paid={is_paid}", file=sys.stderr)
+        
         if service_item.service_type == 'FLIGHT':
             flight_details = {
                 'airline': request.form.get('airline', ''),
@@ -749,7 +763,13 @@ def confirm_service(item_id):
                     'adults': request.form.get('adults', 1),
                     'children': request.form.get('children', 0),
                     'infants': request.form.get('infants', 0)
-                }
+                },
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
             }
             
             # Get passenger names
@@ -789,7 +809,13 @@ def confirm_service(item_id):
                     'twin': int(twin_rooms) if twin_rooms.isdigit() else 0,
                     'triple': int(triple_rooms) if triple_rooms.isdigit() else 0,
                     'other': request.form.get('other_rooms', '')
-                }
+                },
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
             }
             
             print(f"Hotel details to save: {hotel_details}", file=sys.stderr)
@@ -807,7 +833,13 @@ def confirm_service(item_id):
                 'supplier': supplier_code,
                 'supplier_id': supplier_object.id if supplier_object else None,
                 'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
-                'special_requests': request.form.get('special_requests', '')
+                'special_requests': request.form.get('special_requests', ''),
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
             }
             
             document.notes = json.dumps(transport_details)
@@ -835,7 +867,13 @@ def confirm_service(item_id):
                 'special_notes': request.form.get('special_notes', ''),
                 'supplier': supplier_code,
                 'supplier_id': supplier_object.id if supplier_object else None,
-                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier'
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
             }
             
             print(f"VISA details to save: {visa_details}", file=sys.stderr)
@@ -859,7 +897,13 @@ def confirm_service(item_id):
                 'special_conditions': request.form.get('special_conditions', ''),
                 'supplier': supplier_code,
                 'supplier_id': supplier_object.id if supplier_object else None,
-                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier'
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
             }
             
             document.notes = json.dumps(insurance_details)
@@ -934,7 +978,12 @@ def confirm_service(item_id):
     # Set up base confirmation data
     confirmation_data = {
         'confirmation_reference': '',
-        'supplier': 'Direct'
+        'supplier': 'Direct',
+        'cost_amount': 0.00,
+        'cost_currency': 'USD',
+        'payment_due_date': '',
+        'is_paid': False,
+        'notes': ''
     }
     
     # Add service-specific default fields
