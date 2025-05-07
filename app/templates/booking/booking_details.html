@@ -38,8 +38,52 @@
     </div>
 </div>
 
+<!-- Top Horizontal Information Cards -->
+<div class="row mb-4">
+    <!-- Customer Information Card -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-dark-blue text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Name:</strong> {{ booking.requester.username }}</p>
+                <p class="mb-0"><strong>Email:</strong> {{ booking.requester.email }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Information Card -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
+            </div>
+            <div class="card-body">
+                <!-- Payment Status -->
+                <p class="mb-1">
+                    <strong>Payment Status:</strong>
+                    {% if booking.payment_status == 'NONE' %}
+                        <span class="badge bg-danger">Unpaid</span>
+                    {% elif booking.payment_status == 'PARTIAL' %}
+                        <span class="badge bg-warning text-dark">Partially Paid</span>
+                    {% elif booking.payment_status == 'FULL' %}
+                        <span class="badge bg-success">Paid in Full</span>
+                    {% endif %}
+                </p>
+                
+                {% if booking.payments %}
+                    {% set total_paid = booking.payments|sum(attribute='amount') %}
+                    <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
+                    <p class="mb-0"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-12">
         <!-- Service Items List -->
         <div class="card mb-4">
             <div class="card-header bg-dark-blue text-white py-3">
@@ -489,45 +533,10 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4">
-        <!-- Customer Information -->
-        <div class="card mb-4">
-            <div class="card-header bg-dark-blue text-white">
-                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Name:</strong> {{ booking.requester.username }}</p>
-                <p><strong>Email:</strong> {{ booking.requester.email }}</p>
-            </div>
-        </div>
-        
-        <!-- Payment Information Card -->
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
-            </div>
-            <div class="card-body">
-                <!-- Payment Status -->
-                <p class="mb-1">
-                    <strong>Payment Status:</strong>
-                    {% if booking.payment_status == 'NONE' %}
-                        <span class="badge bg-danger">Unpaid</span>
-                    {% elif booking.payment_status == 'PARTIAL' %}
-                        <span class="badge bg-warning text-dark">Partially Paid</span>
-                    {% elif booking.payment_status == 'FULL' %}
-                        <span class="badge bg-success">Paid in Full</span>
-                    {% endif %}
-                </p>
-                
-                {% if booking.payments %}
-                    {% set total_paid = booking.payments|sum(attribute='amount') %}
-                    <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
-                    <p class="mb-1"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
+</div>
+
+<div class="row">
+    <div class="col-md-8">
         <!-- Booking History Card -->
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
