@@ -127,7 +127,8 @@ def view_customer(customer_id):
     return render_template(
         'customer/view.html',
         customer=customer,
-        document_form=document_form
+        document_form=document_form,
+        now=datetime.utcnow()  # Pass current date for expiry checks
     )
 
 @customer_bp.route('/<int:customer_id>/upload-document', methods=['POST'])
