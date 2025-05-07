@@ -8,11 +8,14 @@
 {% block service_type %}FLIGHT{% endblock %}
 
 {% block supplier_options %}
-<option value="Expedia" {% if confirmation_data.supplier == 'Expedia' %}selected{% endif %}>Expedia</option>
-<option value="Booking.com" {% if confirmation_data.supplier == 'Booking.com' %}selected{% endif %}>Booking.com</option>
+<!-- Dynamic airline suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
 <option value="Airline Direct" {% if confirmation_data.supplier == 'Airline Direct' %}selected{% endif %}>Airline Direct</option>
-<option value="Skyscanner" {% if confirmation_data.supplier == 'Skyscanner' %}selected{% endif %}>Skyscanner</option>
-<option value="Kayak" {% if confirmation_data.supplier == 'Kayak' %}selected{% endif %}>Kayak</option>
+{% endif %}
 {% endblock %}
 
 {% block form_content %}

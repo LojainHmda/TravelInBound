@@ -9,12 +9,14 @@
 
 {% block supplier_options %}
 <option value="">-- Select Supplier --</option>
-<option value="VFS Global" {% if confirmation_data.supplier == 'VFS Global' %}selected{% endif %}>VFS Global</option>
-<option value="TLScontact" {% if confirmation_data.supplier == 'TLScontact' %}selected{% endif %}>TLScontact</option>
-<option value="BLS International" {% if confirmation_data.supplier == 'BLS International' %}selected{% endif %}>BLS International</option>
+<!-- Dynamic visa suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
 <option value="Embassy Direct" {% if confirmation_data.supplier == 'Embassy Direct' %}selected{% endif %}>Embassy Direct</option>
-<option value="Travel Agent" {% if confirmation_data.supplier == 'Travel Agent' %}selected{% endif %}>Travel Agent</option>
-<option value="Immigration Consultant" {% if confirmation_data.supplier == 'Immigration Consultant' %}selected{% endif %}>Immigration Consultant</option>
+{% endif %}
 {% endblock %}
 
 {% block form_content %}

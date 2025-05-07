@@ -8,14 +8,14 @@
 {% block service_type %}INSURANCE{% endblock %}
 
 {% block supplier_options %}
-<option value="Allianz" {% if confirmation_data.supplier == 'Allianz' %}selected{% endif %}>Allianz</option>
-<option value="AXA" {% if confirmation_data.supplier == 'AXA' %}selected{% endif %}>AXA</option>
-<option value="World Nomads" {% if confirmation_data.supplier == 'World Nomads' %}selected{% endif %}>World Nomads</option>
-<option value="Blue Cross" {% if confirmation_data.supplier == 'Blue Cross' %}selected{% endif %}>Blue Cross</option>
-<option value="AIG" {% if confirmation_data.supplier == 'AIG' %}selected{% endif %}>AIG</option>
+<!-- Dynamic insurance suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
 <option value="SafetyWing" {% if confirmation_data.supplier == 'SafetyWing' %}selected{% endif %}>SafetyWing</option>
-<option value="Columbus Direct" {% if confirmation_data.supplier == 'Columbus Direct' %}selected{% endif %}>Columbus Direct</option>
-<option value="Seven Corners" {% if confirmation_data.supplier == 'Seven Corners' %}selected{% endif %}>Seven Corners</option>
+{% endif %}
 {% endblock %}
 
 {% block form_content %}
