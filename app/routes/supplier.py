@@ -217,7 +217,7 @@ def supplier_statements():
     suppliers = [(str(s.id), s.name) for s in Supplier.query.order_by(Supplier.name).all()]
     form.supplier_id.choices = suppliers
     
-    return render_template('supplier/statement.html', form=form)
+    return render_template('supplier/statements_index.html', form=form)
 
 @supplier_bp.route('/generate-statement', methods=['POST'])
 def generate_statement():
@@ -230,70 +230,129 @@ def generate_statement():
     
     if form.validate_on_submit():
         supplier_id = form.supplier_id.data
-        supplier = Supplier.query.get_or_404(supplier_id)
         
-        from_date = form.from_date.data or date(1900, 1, 1)
-        to_date = form.to_date.data or date.today()
+        # Build query parameters for the supplier_statement view
+        from_date = form.from_date.data.strftime('%Y-%m-%d') if form.from_date.data else ''
+        to_date = form.to_date.data.strftime('%Y-%m-%d') if form.to_date.data else ''
         status = form.status.data
         
-        # Query service confirmations
-        confirmations_query = ServiceConfirmation.query.filter_by(
-            supplier_id=supplier_id
-        ).filter(
-            ServiceConfirmation.created_at.between(from_date, to_date)
-        )
-        
-        # Apply status filter
-        if status == 'PAID':
-            confirmations_query = confirmations_query.filter_by(is_paid=True)
-        elif status == 'UNPAID':
-            confirmations_query = confirmations_query.filter_by(is_paid=False)
-        
-        confirmations = confirmations_query.order_by(ServiceConfirmation.created_at).all()
-        
-        # Query payments
-        payments_query = SupplierPayment.query.filter_by(
-            supplier_id=supplier_id
-        ).filter(
-            SupplierPayment.payment_date.between(from_date, to_date)
-        )
-        
-        payments = payments_query.order_by(SupplierPayment.payment_date).all()
-        
-        # Calculate totals
-        total_owed = sum(c.cost_amount for c in confirmations)
-        total_paid = sum(p.amount for p in payments)
-        balance = total_owed - total_paid
-        
-        # Get unpaid confirmations for dropdown
-        unpaid_confirmations = [(str(sc.id), f"{sc.confirmation_reference} - {sc.service_item.service_type} - ${sc.cost_amount:.2f}") 
-                              for sc in ServiceConfirmation.query.filter_by(
-                                  supplier_id=supplier_id,
-                                  is_paid=False
-                              ).order_by(ServiceConfirmation.created_at).all()]
-        
-        # Initialize payment form
-        payment_form = SupplierPaymentForm()
-        payment_form.supplier_id.data = supplier_id
-        
-        # Add general payment option
-        payment_form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
-        
-        return render_template(
-            'supplier/statement_result.html',
-            supplier=supplier,
-            confirmations=confirmations,
-            payments=payments,
+        # Redirect to the supplier statement view with filters
+        return redirect(url_for(
+            'supplier.supplier_statement', 
+            supplier_id=supplier_id,
             from_date=from_date,
             to_date=to_date,
-            status=status,
-            total_owed=total_owed,
-            total_paid=total_paid,
-            balance=balance,
-            payment_form=payment_form
-        )
+            status=status
+        ))
     
-    return render_template('supplier/statement.html', form=form)
+    # If form validation fails, go back to the statements index page
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(f'{getattr(form, field).label.text}: {error}', 'danger')
+            
+    return redirect(url_for('supplier.supplier_statements'))
+
+@supplier_bp.route('/statement/<int:supplier_id>')
+def supplier_statement(supplier_id):
+    """View statement for a specific supplier"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    # Get query parameters
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
+    status = request.args.get('status', 'ALL')
+    
+    # Parse dates
+    from datetime import datetime, date
+    try:
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date() if from_date_str else None
+    except (ValueError, TypeError):
+        from_date = date.today().replace(day=1)  # First day of current month
+        
+    try:
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else None
+    except (ValueError, TypeError):
+        to_date = date.today()
+    
+    # Query for service confirmations
+    from app.models.document import Document
+    
+    # Find all confirmation documents for this supplier
+    confirmations = []
+    
+    # Get all documents of type CONFIRMATION
+    confirmation_docs = Document.query.filter_by(document_type='CONFIRMATION').all()
+    
+    for doc in confirmation_docs:
+        try:
+            if doc.notes:
+                # Parse the JSON data
+                import json
+                data = json.loads(doc.notes)
+                
+                # Check if this document is for our supplier
+                if data.get('supplier_id') == supplier.id:
+                    # Create a confirmation object from document data
+                    confirmation = {
+                        'id': doc.id,
+                        'confirmation_reference': doc.document_number,
+                        'service_item': doc.service_item,
+                        'confirmation_date': doc.upload_date,
+                        'cost_amount': data.get('cost_amount', 0.0),
+                        'cost_currency': data.get('cost_currency', 'USD'),
+                        'payment_due_date': data.get('payment_due_date'),
+                        'is_paid': data.get('is_paid', False)
+                    }
+                    
+                    # Parse payment_due_date if it's a string
+                    if isinstance(confirmation['payment_due_date'], str) and confirmation['payment_due_date']:
+                        try:
+                            confirmation['payment_due_date'] = datetime.strptime(
+                                confirmation['payment_due_date'], '%Y-%m-%d'
+                            ).date()
+                        except ValueError:
+                            confirmation['payment_due_date'] = None
+                    
+                    # Apply date filters
+                    if from_date and doc.upload_date.date() < from_date:
+                        continue
+                    if to_date and doc.upload_date.date() > to_date:
+                        continue
+                    
+                    # Apply status filter
+                    if status == 'PAID' and not confirmation['is_paid']:
+                        continue
+                    if status == 'UNPAID' and confirmation['is_paid']:
+                        continue
+                    
+                    confirmations.append(confirmation)
+        except Exception as e:
+            # Log error but continue processing other documents
+            import sys
+            print(f"Error processing document {doc.id}: {str(e)}", file=sys.stderr)
+            continue
+    
+    # Calculate totals
+    total_amount = sum(c['cost_amount'] for c in confirmations)
+    paid_amount = sum(c['cost_amount'] for c in confirmations if c['is_paid'])
+    unpaid_amount = total_amount - paid_amount
+    
+    # Get today's date for comparing overdue payments
+    today = date.today()
+    
+    # Render the statement
+    return render_template(
+        'supplier/statement.html',
+        supplier=supplier,
+        confirmations=confirmations,
+        from_date=from_date,
+        to_date=to_date,
+        status=status,
+        total_amount=total_amount,
+        paid_amount=paid_amount,
+        unpaid_amount=unpaid_amount,
+        today=today
+    )
 
 @supplier_bp.route('/api/list')
 def api_list_suppliers():
