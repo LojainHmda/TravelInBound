@@ -36,10 +36,10 @@
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label for="service_type" class="form-label">Service Type</label>
-                    <select id="service_type" name="service_type" class="form-select">
-                        {% for choice in form.service_type.choices %}
-                        <option value="{{ choice[0] }}" {% if service_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
+                    <label for="supplier_type" class="form-label">Supplier Type</label>
+                    <select id="supplier_type" name="supplier_type" class="form-select">
+                        {% for choice in form.supplier_type.choices %}
+                        <option value="{{ choice[0] }}" {% if supplier_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -89,7 +89,7 @@
                             </td>
                             <td>{{ supplier.country }}</td>
                             <td>
-                                {% set balance = supplier.get_balance() %}
+                                {% set balance = supplier.unpaid_balance %}
                                 {% if balance > 0 %}
                                 <span class="text-danger fw-bold">${{ "%.2f"|format(balance) }}</span>
                                 {% else %}
@@ -103,7 +103,7 @@
                                 <a href="{{ url_for('supplier.edit_supplier', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-secondary">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{{ url_for('supplier.supplier_statement', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-info">
+                                <a href="{{ url_for('supplier.supplier_statements') }}" class="btn btn-sm btn-outline-info">
                                     <i class="fas fa-file-invoice-dollar"></i>
                                 </a>
                             </td>
