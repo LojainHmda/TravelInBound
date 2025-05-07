@@ -8,14 +8,14 @@
 {% block service_type %}TRANSPORT{% endblock %}
 
 {% block supplier_options %}
-<option value="Avis">Avis</option>
-<option value="Hertz">Hertz</option>
-<option value="Enterprise">Enterprise</option>
-<option value="Budget">Budget</option>
-<option value="Uber">Uber</option>
-<option value="Taxi Service">Taxi Service</option>
-<option value="Chauffeur Service">Chauffeur Service</option>
-<option value="Airport Transfer">Airport Transfer</option>
+<!-- Dynamic transport suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
+<option value="Airport Transfer" {% if confirmation_data.supplier == 'Airport Transfer' %}selected{% endif %}>Airport Transfer</option>
+{% endif %}
 {% endblock %}
 
 {% block form_content %}
