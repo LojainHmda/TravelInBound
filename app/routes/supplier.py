@@ -1,80 +1,78 @@
+from datetime import datetime, date
 import os
 import uuid
-from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import (
+    Blueprint, render_template, request, redirect, 
+    url_for, flash, jsonify, current_app
+)
 from werkzeug.utils import secure_filename
 from app import db
-from app.models.supplier import Supplier, SupplierDocument
+from app.forms.supplier import SupplierForm, SupplierPaymentForm, SupplierStatementForm
+from app.models.supplier import Supplier, SupplierService, SupplierPayment
 from app.models.service import ServiceConfirmation
-from app.forms.supplier import SupplierForm, SupplierDocumentForm, SupplierSearchForm
-from app.forms.confirmation import SupplierPaymentForm, SupplierStatementForm
-from sqlalchemy import func
+from sqlalchemy import func, desc
 
-# Create a blueprint for supplier-related routes
+# Create blueprint
 supplier_bp = Blueprint('supplier', __name__, url_prefix='/suppliers')
 
-# Helper function to handle file uploads
-def save_file(file, directory='uploads/supplier_documents'):
-    """Save an uploaded file to the specified directory and return the file path"""
-    if not file:
-        return None
-        
-    # Create the directory if it doesn't exist
-    upload_dir = os.path.join(current_app.root_path, 'static', directory)
-    os.makedirs(upload_dir, exist_ok=True)
-    
-    # Generate a unique filename
-    filename = secure_filename(file.filename)
-    unique_filename = f"{uuid.uuid4()}_{filename}"
-    file_path = os.path.join(directory, unique_filename)
-    
-    # Save the file
-    file.save(os.path.join(current_app.root_path, 'static', file_path))
-    
-    return file_path
+# Ensure upload directory exists
+def ensure_upload_dir(directory):
+    """Create upload directory if it doesn't exist"""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
 @supplier_bp.route('/')
 def list_suppliers():
-    """Display a list of suppliers"""
-    form = SupplierSearchForm()
-    
+    """Display list of suppliers with filtering options"""
     # Get search parameters
     query = request.args.get('query', '')
+    supplier_type = request.args.get('supplier_type', '')
     country = request.args.get('country', '')
-    service_type = request.args.get('service_type', '')
     
-    # Base query
+    # Create base query
     suppliers_query = Supplier.query
     
     # Apply filters
     if query:
-        suppliers_query = suppliers_query.filter(Supplier.name.ilike(f'%{query}%') | 
-                                               Supplier.code.ilike(f'%{query}%') |
-                                               Supplier.contact_person.ilike(f'%{query}%') |
-                                               Supplier.email.ilike(f'%{query}%'))
+        suppliers_query = suppliers_query.filter(
+            Supplier.name.ilike(f'%{query}%') |
+            Supplier.email.ilike(f'%{query}%') |
+            Supplier.code.ilike(f'%{query}%') |
+            Supplier.website.ilike(f'%{query}%')
+        )
+    
+    if supplier_type:
+        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
     
     if country:
         suppliers_query = suppliers_query.filter(Supplier.country == country)
     
-    # If service_type is specified, filter by suppliers that provide that service
-    if service_type:
-        suppliers_query = suppliers_query.join(ServiceConfirmation).filter(
-            ServiceConfirmation.service_item.has(service_type=service_type)
-        ).distinct()
-    
-    # Get all unique countries for the dropdown
-    countries = db.session.query(Supplier.country).distinct().order_by(Supplier.country).all()
-    form.country.choices = [('', 'All Countries')] + [(c[0], c[0]) for c in countries if c[0]]
-    
-    # Get suppliers and their balances
+    # Get results with unpaid balance information
     suppliers = suppliers_query.order_by(Supplier.name).all()
     
-    return render_template('supplier/list.html', 
-                          suppliers=suppliers,
-                          form=form,
-                          query=query,
-                          country=country,
-                          service_type=service_type)
+    # Calculate unpaid balances
+    for supplier in suppliers:
+        supplier.unpaid_balance = supplier.get_unpaid_balance()
+    
+    # Prepare search form with country options
+    form = SupplierForm()
+    
+    # Get unique countries for dropdown
+    countries = [(c.country, c.country) for c in Supplier.query.filter(
+        Supplier.country.isnot(None)
+    ).with_entities(Supplier.country).distinct().order_by(Supplier.country)]
+    
+    # Add 'All Countries' option at the start
+    form.country.choices = [('', 'All Countries')] + countries
+    
+    return render_template(
+        'supplier/list.html',
+        suppliers=suppliers,
+        form=form,
+        query=query,
+        supplier_type=supplier_type,
+        country=country
+    )
 
 @supplier_bp.route('/new', methods=['GET', 'POST'])
 def new_supplier():
@@ -85,15 +83,18 @@ def new_supplier():
         supplier = Supplier(
             name=form.name.data,
             code=form.code.data,
-            contact_person=form.contact_person.data,
+            supplier_type=form.supplier_type.data,
             email=form.email.data,
             phone=form.phone.data,
+            website=form.website.data,
+            contact_person=form.contact_person.data,
             address=form.address.data,
             city=form.city.data,
             country=form.country.data,
-            website=form.website.data,
             payment_terms=form.payment_terms.data,
-            account_number=form.account_number.data,
+            default_currency=form.default_currency.data,
+            bank_name=form.bank_name.data,
+            bank_account=form.bank_account.data,
             tax_number=form.tax_number.data,
             notes=form.notes.data
         )
@@ -101,60 +102,10 @@ def new_supplier():
         db.session.add(supplier)
         db.session.commit()
         
-        flash(f'Supplier {supplier.name} has been created', 'success')
+        flash(f'Supplier {supplier.name} created successfully', 'success')
         return redirect(url_for('supplier.view_supplier', supplier_id=supplier.id))
     
-    return render_template('supplier/edit.html', form=form, title='New Supplier')
-
-@supplier_bp.route('/<int:supplier_id>', methods=['GET'])
-def view_supplier(supplier_id):
-    """View supplier details"""
-    supplier = Supplier.query.get_or_404(supplier_id)
-    
-    # Get supplier's documents
-    documents = SupplierDocument.query.filter_by(supplier_id=supplier_id).order_by(SupplierDocument.upload_date.desc()).all()
-    
-    # Get service confirmations related to this supplier
-    confirmations = (ServiceConfirmation.query
-                    .filter_by(supplier_id=supplier_id)
-                    .order_by(ServiceConfirmation.confirmation_date.desc())
-                    .all())
-    
-    # Calculate unpaid balance
-    unpaid_balance = supplier.get_balance()
-    
-    # Prepare document upload form
-    document_form = SupplierDocumentForm()
-    
-    # Prepare statement form
-    statement_form = SupplierStatementForm()
-    statement_form.supplier_id.choices = [(supplier.id, supplier.name)]
-    statement_form.supplier_id.default = supplier.id
-    
-    # Prepare payment form
-    payment_form = SupplierPaymentForm()
-    payment_form.supplier_id.choices = [(supplier.id, supplier.name)]
-    payment_form.supplier_id.default = supplier.id
-    
-    # Get list of unpaid confirmations for payment form
-    unpaid_confirmations = (ServiceConfirmation.query
-                          .filter_by(supplier_id=supplier_id, is_paid=False)
-                          .order_by(ServiceConfirmation.confirmation_date.desc())
-                          .all())
-    
-    payment_form.service_confirmation_id.choices = [('', 'General Payment')] + [
-        (c.id, f'{c.confirmation_reference} - {c.service_item.service_type} ({c.cost_amount} {c.cost_currency})')
-        for c in unpaid_confirmations
-    ]
-    
-    return render_template('supplier/view.html',
-                          supplier=supplier,
-                          documents=documents,
-                          confirmations=confirmations,
-                          unpaid_balance=unpaid_balance,
-                          document_form=document_form,
-                          payment_form=payment_form,
-                          statement_form=statement_form)
+    return render_template('supplier/edit.html', form=form, is_new=True)
 
 @supplier_bp.route('/<int:supplier_id>/edit', methods=['GET', 'POST'])
 def edit_supplier(supplier_id):
@@ -166,132 +117,195 @@ def edit_supplier(supplier_id):
         form.populate_obj(supplier)
         db.session.commit()
         
-        flash(f'Supplier {supplier.name} has been updated', 'success')
+        flash(f'Supplier {supplier.name} updated successfully', 'success')
         return redirect(url_for('supplier.view_supplier', supplier_id=supplier.id))
     
-    return render_template('supplier/edit.html', form=form, supplier=supplier, title='Edit Supplier')
+    return render_template('supplier/edit.html', form=form, supplier=supplier, is_new=False)
 
-@supplier_bp.route('/<int:supplier_id>/documents/upload', methods=['POST'])
-def upload_document(supplier_id):
-    """Upload a document for a supplier"""
+@supplier_bp.route('/<int:supplier_id>')
+def view_supplier(supplier_id):
+    """View supplier details"""
     supplier = Supplier.query.get_or_404(supplier_id)
-    form = SupplierDocumentForm()
     
-    if form.validate_on_submit():
-        # Save the uploaded file
-        file_path = save_file(form.file.data)
-        
-        if file_path:
-            # Create the document record
-            document = SupplierDocument(
-                supplier_id=supplier_id,
-                document_type=form.document_type.data,
-                document_number=form.document_number.data,
-                issue_date=form.issue_date.data,
-                expiry_date=form.expiry_date.data,
-                file_path=file_path,
-                notes=form.notes.data,
-                upload_date=datetime.utcnow()
-            )
-            
-            db.session.add(document)
-            db.session.commit()
-            
-            flash(f'Document {document.document_type} has been uploaded', 'success')
-        else:
-            flash('Error uploading document', 'danger')
-    else:
-        for field, errors in form.errors.items():
-            flash(f'{field}: {", ".join(errors)}', 'danger')
+    # Get active service confirmations for this supplier
+    confirmations = ServiceConfirmation.query.filter_by(
+        supplier_id=supplier.id
+    ).order_by(ServiceConfirmation.created_at.desc()).limit(5).all()
     
-    return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    # Get recent payments
+    payments = SupplierPayment.query.filter_by(
+        supplier_id=supplier.id
+    ).order_by(SupplierPayment.payment_date.desc()).limit(5).all()
+    
+    # Initialize payment form
+    payment_form = SupplierPaymentForm()
+    payment_form.supplier_id.data = supplier.id
+    
+    # Get unpaid service confirmations for dropdown
+    unpaid_confirmations = [(str(sc.id), f"{sc.confirmation_reference} - {sc.service_item.service_type} - ${sc.cost_amount:.2f}") 
+                          for sc in ServiceConfirmation.query.filter_by(
+                              supplier_id=supplier.id,
+                              is_paid=False
+                          ).order_by(ServiceConfirmation.created_at).all()]
+    
+    # Add general payment option
+    payment_form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
+    
+    return render_template(
+        'supplier/view.html',
+        supplier=supplier,
+        confirmations=confirmations,
+        payments=payments,
+        payment_form=payment_form,
+        unpaid_balance=supplier.get_unpaid_balance()
+    )
 
-@supplier_bp.route('/<int:supplier_id>/statement', methods=['GET', 'POST'])
-def supplier_statement(supplier_id):
-    """Generate a statement of account for a supplier"""
-    supplier = Supplier.query.get_or_404(supplier_id)
-    form = SupplierStatementForm()
-    form.supplier_id.choices = [(supplier.id, supplier.name)]
-    form.supplier_id.default = supplier.id
-    
-    # Default date range is current month
-    from_date = request.form.get('from_date') or request.args.get('from_date')
-    to_date = request.form.get('to_date') or request.args.get('to_date')
-    status = request.form.get('status') or request.args.get('status', 'ALL')
-    
-    # Get confirmation records
-    query = ServiceConfirmation.query.filter(ServiceConfirmation.supplier_id == supplier_id)
-    
-    if from_date:
-        query = query.filter(ServiceConfirmation.confirmation_date >= from_date)
-    
-    if to_date:
-        query = query.filter(ServiceConfirmation.confirmation_date <= to_date)
-    
-    if status == 'PAID':
-        query = query.filter(ServiceConfirmation.is_paid == True)
-    elif status == 'UNPAID':
-        query = query.filter(ServiceConfirmation.is_paid == False)
-    
-    confirmations = query.order_by(ServiceConfirmation.confirmation_date).all()
-    
-    # Calculate totals
-    total_amount = sum(c.cost_amount for c in confirmations)
-    paid_amount = sum(c.cost_amount for c in confirmations if c.is_paid)
-    unpaid_amount = sum(c.cost_amount for c in confirmations if not c.is_paid)
-    
-    return render_template('supplier/statement.html',
-                          supplier=supplier,
-                          confirmations=confirmations,
-                          form=form,
-                          from_date=from_date,
-                          to_date=to_date,
-                          status=status,
-                          total_amount=total_amount,
-                          paid_amount=paid_amount,
-                          unpaid_amount=unpaid_amount)
-
-@supplier_bp.route('/<int:supplier_id>/payment', methods=['POST'])
-def record_payment(supplier_id):
-    """Record a payment to a supplier"""
+@supplier_bp.route('/<int:supplier_id>/add-payment', methods=['POST'])
+def add_payment(supplier_id):
+    """Add a payment to a supplier"""
     supplier = Supplier.query.get_or_404(supplier_id)
     form = SupplierPaymentForm()
     
-    # Set up form choices
-    form.supplier_id.choices = [(supplier.id, supplier.name)]
+    # Get unpaid service confirmations for dropdown
+    unpaid_confirmations = [(str(sc.id), f"{sc.confirmation_reference} - {sc.service_item.service_type} - ${sc.cost_amount:.2f}") 
+                          for sc in ServiceConfirmation.query.filter_by(
+                              supplier_id=supplier.id,
+                              is_paid=False
+                          ).order_by(ServiceConfirmation.created_at).all()]
     
-    unpaid_confirmations = (ServiceConfirmation.query
-                          .filter_by(supplier_id=supplier_id, is_paid=False)
-                          .order_by(ServiceConfirmation.confirmation_date.desc())
-                          .all())
-    
-    form.service_confirmation_id.choices = [('', 'General Payment')] + [
-        (c.id, f'{c.confirmation_reference} - {c.service_item.service_type} ({c.cost_amount} {c.cost_currency})')
-        for c in unpaid_confirmations
-    ]
+    # Add general payment option
+    form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
     
     if form.validate_on_submit():
-        # If a specific confirmation was selected, mark it as paid
+        payment = SupplierPayment(
+            supplier_id=supplier.id,
+            amount=form.amount.data,
+            payment_date=form.payment_date.data,
+            payment_reference=form.payment_reference.data,
+            payment_method=form.payment_method.data,
+            notes=form.notes.data
+        )
+        
+        # If specific service confirmation, link and mark as paid if full amount
         if form.service_confirmation_id.data:
-            confirmation = ServiceConfirmation.query.get(form.service_confirmation_id.data)
-            if confirmation:
+            confirmation_id = int(form.service_confirmation_id.data)
+            payment.service_confirmation_id = confirmation_id
+            
+            # Check if this payment covers the confirmation amount
+            confirmation = ServiceConfirmation.query.get(confirmation_id)
+            if confirmation and payment.amount >= confirmation.cost_amount:
                 confirmation.is_paid = True
                 confirmation.payment_date = form.payment_date.data
-                confirmation.payment_reference = form.payment_reference.data
-                db.session.commit()
-                
-                flash(f'Payment of {confirmation.cost_amount} {confirmation.cost_currency} recorded for {confirmation.confirmation_reference}', 'success')
-        else:
-            # Record general payment (not tied to a specific confirmation)
-            flash(f'General payment of {form.amount.data} recorded', 'success')
+        
+        db.session.add(payment)
+        db.session.commit()
+        
+        flash(f'Payment of ${payment.amount:.2f} recorded successfully', 'success')
     else:
         for field, errors in form.errors.items():
-            flash(f'{field}: {", ".join(errors)}', 'danger')
+            for error in errors:
+                flash(f'{getattr(form, field).label.text}: {error}', 'danger')
     
-    return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    return redirect(url_for('supplier.view_supplier', supplier_id=supplier.id))
 
-@supplier_bp.route('/api/list', methods=['GET'])
-def supplier_api_list():
-    """API endpoint to get supplier list for dynamic dropdowns"""
+@supplier_bp.route('/statements')
+def supplier_statements():
+    """Page to generate supplier statements"""
+    form = SupplierStatementForm()
+    
+    # Get suppliers for dropdown
+    suppliers = [(str(s.id), s.name) for s in Supplier.query.order_by(Supplier.name).all()]
+    form.supplier_id.choices = suppliers
+    
+    return render_template('supplier/statement.html', form=form)
+
+@supplier_bp.route('/generate-statement', methods=['POST'])
+def generate_statement():
+    """Generate a statement for a supplier"""
+    form = SupplierStatementForm()
+    
+    # Get suppliers for dropdown
+    suppliers = [(str(s.id), s.name) for s in Supplier.query.order_by(Supplier.name).all()]
+    form.supplier_id.choices = suppliers
+    
+    if form.validate_on_submit():
+        supplier_id = form.supplier_id.data
+        supplier = Supplier.query.get_or_404(supplier_id)
+        
+        from_date = form.from_date.data or date(1900, 1, 1)
+        to_date = form.to_date.data or date.today()
+        status = form.status.data
+        
+        # Query service confirmations
+        confirmations_query = ServiceConfirmation.query.filter_by(
+            supplier_id=supplier_id
+        ).filter(
+            ServiceConfirmation.created_at.between(from_date, to_date)
+        )
+        
+        # Apply status filter
+        if status == 'PAID':
+            confirmations_query = confirmations_query.filter_by(is_paid=True)
+        elif status == 'UNPAID':
+            confirmations_query = confirmations_query.filter_by(is_paid=False)
+        
+        confirmations = confirmations_query.order_by(ServiceConfirmation.created_at).all()
+        
+        # Query payments
+        payments_query = SupplierPayment.query.filter_by(
+            supplier_id=supplier_id
+        ).filter(
+            SupplierPayment.payment_date.between(from_date, to_date)
+        )
+        
+        payments = payments_query.order_by(SupplierPayment.payment_date).all()
+        
+        # Calculate totals
+        total_owed = sum(c.cost_amount for c in confirmations)
+        total_paid = sum(p.amount for p in payments)
+        balance = total_owed - total_paid
+        
+        # Get unpaid confirmations for dropdown
+        unpaid_confirmations = [(str(sc.id), f"{sc.confirmation_reference} - {sc.service_item.service_type} - ${sc.cost_amount:.2f}") 
+                              for sc in ServiceConfirmation.query.filter_by(
+                                  supplier_id=supplier_id,
+                                  is_paid=False
+                              ).order_by(ServiceConfirmation.created_at).all()]
+        
+        # Initialize payment form
+        payment_form = SupplierPaymentForm()
+        payment_form.supplier_id.data = supplier_id
+        
+        # Add general payment option
+        payment_form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
+        
+        return render_template(
+            'supplier/statement_result.html',
+            supplier=supplier,
+            confirmations=confirmations,
+            payments=payments,
+            from_date=from_date,
+            to_date=to_date,
+            status=status,
+            total_owed=total_owed,
+            total_paid=total_paid,
+            balance=balance,
+            payment_form=payment_form
+        )
+    
+    return render_template('supplier/statement.html', form=form)
+
+@supplier_bp.route('/api/list')
+def api_list_suppliers():
+    """API endpoint to return suppliers as JSON"""
     suppliers = Supplier.query.order_by(Supplier.name).all()
-    return jsonify([{'id': s.id, 'name': s.name, 'code': s.code} for s in suppliers])
+    
+    suppliers_list = [{
+        'id': s.id,
+        'name': s.name,
+        'code': s.code,
+        'email': s.email,
+        'supplier_type': s.supplier_type
+    } for s in suppliers]
+    
+    return jsonify(suppliers_list)

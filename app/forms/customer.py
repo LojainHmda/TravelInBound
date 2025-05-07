@@ -1,7 +1,8 @@
+from datetime import date
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, DateField, FileField
+from flask_wtf.file import FileField, FileRequired
+from wtforms import StringField, TextAreaField, SelectField, DateField, SubmitField
 from wtforms.validators import DataRequired, Email, Optional, Length
-from datetime import datetime
 
 class CustomerForm(FlaskForm):
     """Form for creating and editing customers"""
@@ -41,7 +42,7 @@ class CustomerDocumentForm(FlaskForm):
     expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
     issuing_country = StringField('Issuing Country', validators=[Optional(), Length(max=50)])
     notes = TextAreaField('Notes', validators=[Optional()])
-    file = FileField('Upload Document', validators=[DataRequired()])
+    file = FileField('Upload Document', validators=[FileRequired()])
     submit = SubmitField('Upload Document')
 
 class CustomerSearchForm(FlaskForm):

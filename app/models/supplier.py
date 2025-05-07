@@ -1,55 +1,100 @@
 from datetime import datetime
 from app import db
-from app.models.service import ServiceConfirmation
+from sqlalchemy import func, desc, or_
 
 class Supplier(db.Model):
-    """Model for suppliers that provide services."""
+    """Supplier model for tracking vendors of travel services"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    code = db.Column(db.String(20), unique=True, nullable=False)
-    contact_person = db.Column(db.String(100))
+    code = db.Column(db.String(20), nullable=False, unique=True)  # Short supplier code like "BA" for British Airways
+    supplier_type = db.Column(db.String(20))  # AIRLINE, HOTEL, TRANSPORT, VISA, INSURANCE
+    
+    # Contact information
     email = db.Column(db.String(120))
     phone = db.Column(db.String(20))
+    website = db.Column(db.String(100))
+    contact_person = db.Column(db.String(100))
+    
+    # Address
     address = db.Column(db.Text)
     city = db.Column(db.String(50))
     country = db.Column(db.String(50))
-    website = db.Column(db.String(255))
-    payment_terms = db.Column(db.String(100))
-    account_number = db.Column(db.String(50))
+    
+    # Payment information
+    payment_terms = db.Column(db.String(100))  # e.g., "NET 30", "Prepaid"
+    default_currency = db.Column(db.String(3), default='USD')
+    bank_name = db.Column(db.String(100))
+    bank_account = db.Column(db.String(100))
     tax_number = db.Column(db.String(50))
+    
+    # Additional information
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    services = db.relationship('SupplierService', backref='supplier', lazy=True, cascade="all, delete-orphan")
+    payments = db.relationship('SupplierPayment', backref='supplier', lazy=True, cascade="all, delete-orphan")
+    service_confirmations = db.relationship('ServiceConfirmation', backref='supplier', lazy=True)
+    
+    def __repr__(self):
+        return f'<Supplier {self.name} ({self.code})>'
+    
+    def get_full_address(self):
+        """Return formatted full address"""
+        address_parts = [part for part in [self.address, self.city, self.country] if part]
+        return ', '.join(address_parts) if address_parts else 'No address provided'
+    
+    def get_unpaid_balance(self):
+        """Calculate outstanding balance for this supplier"""
+        # Sum of all confirmation costs
+        from app.models.service import ServiceConfirmation
+        costs = db.session.query(func.sum(ServiceConfirmation.cost_amount)).filter(
+            ServiceConfirmation.supplier_id == self.id,
+            ServiceConfirmation.is_paid == False
+        ).scalar() or 0
+        
+        # Sum of payments not directly linked to confirmations
+        general_payments = db.session.query(func.sum(SupplierPayment.amount)).filter(
+            SupplierPayment.supplier_id == self.id,
+            SupplierPayment.service_confirmation_id == None
+        ).scalar() or 0
+        
+        return costs - general_payments
+
+
+class SupplierService(db.Model):
+    """Services offered by a supplier"""
+    id = db.Column(db.Integer, primary_key=True)
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=False)
+    service_type = db.Column(db.String(20), nullable=False)  # FLIGHT, HOTEL, etc.
+    service_name = db.Column(db.String(100), nullable=False)  # e.g. "Economy Flights", "Business Hotels"
+    description = db.Column(db.Text)
+    commission_rate = db.Column(db.Float)  # Percentage
+    currency = db.Column(db.String(3), default='USD')
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship with service confirmations
-    service_confirmations = db.relationship('ServiceConfirmation', backref='supplier', lazy=True)
-    
-    # Relationship with documents
-    documents = db.relationship('SupplierDocument', backref='supplier', lazy=True, cascade="all, delete-orphan")
-    
     def __repr__(self):
-        return f'<Supplier {self.name}>'
-    
-    def get_balance(self):
-        """Calculate the total balance (amount owed to supplier)"""
-        from sqlalchemy import func
-        total_amount = db.session.query(func.sum(ServiceConfirmation.cost_amount)).filter(
-            ServiceConfirmation.supplier_id == self.id,
-            ServiceConfirmation.is_paid == False
-        ).scalar() or 0
-        return total_amount
+        return f'<SupplierService {self.service_name} for {self.supplier.name}>'
 
-class SupplierDocument(db.Model):
-    """Documents related to suppliers such as contracts, payment confirmations, etc."""
+
+class SupplierPayment(db.Model):
+    """Payments made to suppliers"""
     id = db.Column(db.Integer, primary_key=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=False)
-    document_type = db.Column(db.String(50), nullable=False)  # e.g., contract, agreement, invoice
-    file_path = db.Column(db.String(255))
-    document_number = db.Column(db.String(100))  # e.g., contract number
-    issue_date = db.Column(db.Date)
-    expiry_date = db.Column(db.Date)
-    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    service_confirmation_id = db.Column(db.Integer, db.ForeignKey('service_confirmation.id'), nullable=True)
+    amount = db.Column(db.Float, nullable=False)
+    payment_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    payment_reference = db.Column(db.String(100))
+    payment_method = db.Column(db.String(50))  # BANK_TRANSFER, CREDIT_CARD, etc.
     notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship with service confirmation
+    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy=True)
     
     def __repr__(self):
-        return f'<SupplierDocument {self.document_type} for Supplier {self.supplier_id}>'
+        return f'<SupplierPayment ${self.amount:.2f} to {self.supplier.name}>'

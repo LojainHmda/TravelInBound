@@ -1,8 +1,22 @@
 from datetime import datetime
 from app import db
-from app.models import STATUS_REQUEST, STATUS_FULFILLED
+
+# Constants for service item status
+STATUS_REQUEST = 'REQUEST'
+STATUS_BOOKED = 'BOOKED'
+STATUS_IN_PROGRESS = 'IN_PROGRESS'
+STATUS_FULFILLED = 'FULFILLED'
+STATUS_COMPLETED = 'COMPLETED'
+
+# Service types
+SERVICE_FLIGHT = 'FLIGHT'
+SERVICE_HOTEL = 'HOTEL'
+SERVICE_TRANSPORT = 'TRANSPORT'
+SERVICE_VISA = 'VISA'
+SERVICE_INSURANCE = 'INSURANCE'
 
 class ServiceItem(db.Model):
+    """Service items for bookings"""
     id = db.Column(db.Integer, primary_key=True)
     booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
     service_type = db.Column(db.String(50), nullable=False)
@@ -29,6 +43,7 @@ class ServiceItem(db.Model):
         return f'<ServiceItem {self.service_type} for Booking {self.booking_id}>'
 
 class Document(db.Model):
+    """Document attachments for service items"""
     id = db.Column(db.Integer, primary_key=True)
     service_item_id = db.Column(db.Integer, db.ForeignKey('service_item.id'), nullable=False)
     document_type = db.Column(db.String(50), nullable=False)  # e.g., ticket, confirmation, visa
@@ -38,42 +53,62 @@ class Document(db.Model):
     notes = db.Column(db.Text)
     
     def __repr__(self):
-        return f'<Document {self.document_type} for Service {self.service_item_id}>'
+        return f'<Document {self.document_type} for ServiceItem {self.service_item_id}>'
 
 class ServiceConfirmation(db.Model):
-    """Model for service confirmations that links service items with suppliers and tracks costs."""
+    """Confirmation records for service bookings with supplier details and costs"""
     id = db.Column(db.Integer, primary_key=True)
     service_item_id = db.Column(db.Integer, db.ForeignKey('service_item.id'), nullable=False)
     supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=False)
-    confirmation_reference = db.Column(db.String(100), nullable=False)
-    confirmation_date = db.Column(db.DateTime, default=datetime.utcnow)
-    cost_amount = db.Column(db.Float, default=0.0)  # Amount paid to supplier
+    confirmation_reference = db.Column(db.String(100), nullable=False)  # Supplier booking reference
+    
+    # Cost information (what we pay to the supplier)
+    cost_amount = db.Column(db.Float, nullable=False)
     cost_currency = db.Column(db.String(3), default='USD')
-    selling_amount = db.Column(db.Float, default=0.0)  # Amount charged to customer (same as service_item.amount)
-    selling_currency = db.Column(db.String(3), default='USD')
-    margin = db.Column(db.Float, default=0.0)  # selling_amount - cost_amount
-    margin_percentage = db.Column(db.Float, default=0.0)  # (selling_amount - cost_amount) / cost_amount * 100
     payment_due_date = db.Column(db.Date)
     is_paid = db.Column(db.Boolean, default=False)
     payment_date = db.Column(db.Date)
-    payment_reference = db.Column(db.String(100))
+    
+    # Internal information
+    selling_amount = db.Column(db.Float, nullable=True)  # Service item amount (what we charge the customer)
+    selling_currency = db.Column(db.String(3), default='USD')
+    confirmation_date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Detailed confirmation data stored as JSON in Document.notes
-    document_id = db.Column(db.Integer, db.ForeignKey('document.id'))
-    document = db.relationship('Document', foreign_keys=[document_id])
-    
-    # Relationship with service item - use uselist=False to make it one-to-one
-    service_item = db.relationship('ServiceItem', foreign_keys=[service_item_id], backref=db.backref('service_confirmation', uselist=False))
+    # Relationship to service item
+    service_item = db.relationship('ServiceItem', backref='confirmation', uselist=False)
     
     def __repr__(self):
-        return f'<ServiceConfirmation {self.confirmation_reference} for Service {self.service_item_id}>'
+        return f'<ServiceConfirmation {self.confirmation_reference} for service #{self.service_item_id}>'
     
-    def calculate_margin(self):
-        """Calculate the margin and margin percentage"""
-        if self.cost_amount > 0:
-            self.margin = self.selling_amount - self.cost_amount
-            self.margin_percentage = (self.margin / self.cost_amount) * 100
-        return self.margin
+    @property
+    def margin(self):
+        """Calculate margin between selling price and cost"""
+        if self.cost_amount and self.cost_amount > 0 and self.selling_amount:
+            return self.selling_amount - self.cost_amount
+        return 0
+    
+    @property
+    def margin_percentage(self):
+        """Calculate margin as percentage of cost"""
+        if self.cost_amount and self.cost_amount > 0 and self.selling_amount:
+            return ((self.selling_amount - self.cost_amount) / self.cost_amount) * 100
+        return 0
+    
+    @property
+    def payment_status_text(self):
+        """Return human-readable payment status"""
+        if self.is_paid:
+            return f"Paid on {self.payment_date.strftime('%d %b %Y')}"
+        elif self.payment_due_date:
+            days_to_due = (self.payment_due_date - datetime.utcnow().date()).days
+            if days_to_due < 0:
+                return f"Overdue by {abs(days_to_due)} days"
+            elif days_to_due == 0:
+                return "Due today"
+            else:
+                return f"Due in {days_to_due} days"
+        else:
+            return "Not paid"

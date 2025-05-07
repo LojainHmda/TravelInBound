@@ -33,6 +33,23 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-users"></i> Customers & Suppliers
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('customer.list_customers') }}">
+                                <i class="fas fa-user-friends"></i> Customers
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('supplier.list_suppliers') }}">
+                                <i class="fas fa-building"></i> Suppliers
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('supplier.supplier_statements') }}">
+                                <i class="fas fa-file-invoice-dollar"></i> Supplier Statements
+                            </a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <span class="navbar-text">
                     <i class="fas fa-user-circle"></i> Test User

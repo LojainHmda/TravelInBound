@@ -11,6 +11,7 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reference_number = db.Column(db.String(20), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
