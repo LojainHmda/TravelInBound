@@ -33,10 +33,13 @@ def list_customers():
     # Apply filters
     if query:
         customers_query = customers_query.filter(
-            Customer.name.ilike(f'%{query}%') |
-            Customer.email.ilike(f'%{query}%') |
-            Customer.phone.ilike(f'%{query}%') |
-            Customer.company_name.ilike(f'%{query}%')
+            db.or_(
+                Customer.first_name.ilike(f'%{query}%'),
+                Customer.last_name.ilike(f'%{query}%'),
+                Customer.email.ilike(f'%{query}%'),
+                Customer.phone.ilike(f'%{query}%'),
+                Customer.company_name.ilike(f'%{query}%')
+            )
         )
     
     if customer_type:
@@ -45,8 +48,8 @@ def list_customers():
     if country:
         customers_query = customers_query.filter(Customer.country == country)
     
-    # Get results
-    customers = customers_query.order_by(Customer.name).all()
+    # Get results - order by first name, then last name
+    customers = customers_query.order_by(Customer.first_name, Customer.last_name).all()
     
     # Prepare search form with country options
     form = CustomerSearchForm()
@@ -75,7 +78,8 @@ def new_customer():
     
     if form.validate_on_submit():
         customer = Customer(
-            name=form.name.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
             email=form.email.data,
             phone=form.phone.data,
             address=form.address.data,
@@ -204,7 +208,7 @@ def delete_document(customer_id, document_id):
 @customer_bp.route('/api/list')
 def api_list_customers():
     """API endpoint to return customers as JSON"""
-    customers = Customer.query.order_by(Customer.name).all()
+    customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
     
     customers_list = [{
         'id': c.id,

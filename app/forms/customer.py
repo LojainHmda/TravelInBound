@@ -6,7 +6,8 @@ from wtforms.validators import DataRequired, Email, Optional, Length
 
 class CustomerForm(FlaskForm):
     """Form for creating and editing customers"""
-    name = StringField('Customer Name', validators=[DataRequired(), Length(min=3, max=100)])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=100)])
+    last_name = StringField('Last Name', validators=[Optional(), Length(max=100)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
     address = TextAreaField('Address', validators=[Optional()])

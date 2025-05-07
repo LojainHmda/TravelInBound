@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if is_new %}
+    New Customer
+  {% else %}
+    Edit Customer
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          {% if is_new %}
+            <h5 class="card-title mb-0">New Customer</h5>
+          {% else %}
+            <h5 class="card-title mb-0">Edit Customer: {{ customer.name }}</h5>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            {{ form.csrf_token }}
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.first_name.label(class="form-label") }}
+                  {{ form.first_name(class="form-control") }}
+                  {% if form.first_name.errors %}
+                    <div class="text-danger">
+                      {% for error in form.first_name.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.last_name.label(class="form-label") }}
+                  {{ form.last_name(class="form-control") }}
+                  {% if form.last_name.errors %}
+                    <div class="text-danger">
+                      {% for error in form.last_name.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.email.label(class="form-label") }}
+                  {{ form.email(class="form-control") }}
+                  {% if form.email.errors %}
+                    <div class="text-danger">
+                      {% for error in form.email.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.phone.label(class="form-label") }}
+                  {{ form.phone(class="form-control") }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-3">
+              {{ form.customer_type.label(class="form-label") }}
+              {{ form.customer_type(class="form-select") }}
+            </div>
+            
+            <div class="company-fields">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    {{ form.company_name.label(class="form-label") }}
+                    {{ form.company_name(class="form-control") }}
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-group mb-3">
+                    {{ form.tax_number.label(class="form-label") }}
+                    {{ form.tax_number(class="form-control") }}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-3">
+              {{ form.address.label(class="form-label") }}
+              {{ form.address(class="form-control", rows=3) }}
+            </div>
+            
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.city.label(class="form-label") }}
+                  {{ form.city(class="form-control") }}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  {{ form.country.label(class="form-label") }}
+                  {{ form.country(class="form-control") }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="card mb-4">
+              <div class="card-header">
+                <h6 class="mb-0">Travel Document Information</h6>
+              </div>
+              <div class="card-body">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form.nationality.label(class="form-label") }}
+                      {{ form.nationality(class="form-control") }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form.date_of_birth.label(class="form-label") }}
+                      {{ form.date_of_birth(class="form-control", type="date") }}
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form.passport_number.label(class="form-label") }}
+                      {{ form.passport_number(class="form-control") }}
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-group mb-3">
+                      {{ form.passport_expiry.label(class="form-label") }}
+                      {{ form.passport_expiry(class="form-control", type="date") }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-4">
+              {{ form.notes.label(class="form-label") }}
+              {{ form.notes(class="form-control", rows=3) }}
+            </div>
+            
+            <div class="form-group">
+              <a href="{{ url_for('customer.list_customers') }}" class="btn btn-secondary">Cancel</a>
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show/hide company fields based on customer type
+  document.addEventListener('DOMContentLoaded', function() {
+    const customerTypeSelect = document.getElementById('customer_type');
+    const companyFields = document.querySelector('.company-fields');
+    
+    function toggleCompanyFields() {
+      if (customerTypeSelect.value === 'Corporate' || customerTypeSelect.value === 'Group') {
+        companyFields.style.display = 'block';
+      } else {
+        companyFields.style.display = 'none';
+      }
+    }
+    
+    // Initial state
+    toggleCompanyFields();
+    
+    // On change
+    customerTypeSelect.addEventListener('change', toggleCompanyFields);
+  });
+</script>
+{% endblock %}
