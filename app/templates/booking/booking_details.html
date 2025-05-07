@@ -51,6 +51,25 @@
                 </div>
             </div>
             <div class="card-body p-0">
+                <!-- Service Type Icons for Quick Add -->
+                <div class="d-flex flex-wrap p-3 service-icons-bar border-bottom">
+                    <div class="me-2"><strong>Quick Add:</strong></div>
+                    <button type="button" class="btn btn-sm btn-primary mx-1 direct-add-service" data-service-type="FLIGHT" data-bs-toggle="tooltip" title="Add Flight Service">
+                        <i class="fas fa-plane"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success mx-1 direct-add-service" data-service-type="HOTEL" data-bs-toggle="tooltip" title="Add Hotel Service">
+                        <i class="fas fa-hotel"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning mx-1 direct-add-service" data-service-type="TRANSPORT" data-bs-toggle="tooltip" title="Add Transport Service">
+                        <i class="fas fa-car"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger mx-1 direct-add-service" data-service-type="VISA" data-bs-toggle="tooltip" title="Add Visa Service">
+                        <i class="fas fa-passport"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-info mx-1 direct-add-service" data-service-type="INSURANCE" data-bs-toggle="tooltip" title="Add Insurance Service">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                </div>
                 <div class="table-responsive">
                     <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
                         <thead>
@@ -575,7 +594,7 @@
                 <h5 class="modal-title">Add Service Item</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('booking.add_service_item', booking_id=booking.id) }}">
+            <form method="POST" action="{{ url_for('booking.add_service_item', booking_id=booking.id) }}" id="addServiceForm">
                 {{ service_form.hidden_tag() }}
                 <div class="modal-body">
                     <div class="mb-3">
@@ -750,6 +769,90 @@ function updateDescriptionPlaceholder(serviceType, element) {
     
     element.setAttribute('placeholder', placeholder);
 }
+
+// Direct add service functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const directAddButtons = document.querySelectorAll('.direct-add-service');
+    const serviceForm = document.getElementById('addServiceForm');
+    
+    if (directAddButtons.length > 0 && serviceForm) {
+        directAddButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const serviceType = this.getAttribute('data-service-type');
+                
+                // Set today and a week from now as default dates
+                const today = new Date();
+                const todayStr = today.toISOString().split('T')[0];
+                
+                const nextWeek = new Date();
+                nextWeek.setDate(today.getDate() + 7);
+                const nextWeekStr = nextWeek.toISOString().split('T')[0];
+                
+                // Find form elements
+                const serviceTypeSelect = serviceForm.querySelector('#service_type');
+                const startDateInput = serviceForm.querySelector('#start_date');
+                const endDateInput = serviceForm.querySelector('#end_date');
+                const descriptionInput = serviceForm.querySelector('#description');
+                const amountInput = serviceForm.querySelector('#amount');
+                
+                // Set default values based on service type
+                startDateInput.value = todayStr;
+                endDateInput.value = nextWeekStr;
+                
+                // Select the correct service type
+                for (let i = 0; i < serviceTypeSelect.options.length; i++) {
+                    if (serviceTypeSelect.options[i].value === serviceType) {
+                        serviceTypeSelect.selectedIndex = i;
+                        // Trigger the change event to update the description placeholder
+                        serviceTypeSelect.dispatchEvent(new Event('change'));
+                        break;
+                    }
+                }
+                
+                // Set default description and amount based on service type
+                let description = '';
+                let amount = '';
+                
+                switch(serviceType) {
+                    case 'FLIGHT':
+                        description = 'Flight Ticket';
+                        amount = '350.00';
+                        break;
+                    case 'HOTEL':
+                        description = 'Hotel Accommodation';
+                        amount = '200.00';
+                        break;
+                    case 'TRANSPORT':
+                        description = 'Transport Service';
+                        amount = '75.00';
+                        break;
+                    case 'VISA':
+                        description = 'Visa Processing';
+                        amount = '120.00';
+                        break;
+                    case 'INSURANCE':
+                        description = 'Travel Insurance';
+                        amount = '80.00';
+                        break;
+                }
+                
+                descriptionInput.value = description;
+                amountInput.value = amount;
+                
+                // Submit the form
+                serviceForm.submit();
+            });
+        });
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
 </script>
 
 <!-- Invoice Modal -->

@@ -95,13 +95,33 @@
                                                 {{ item.service_type }}
                                             {% endif %}
                                         </td>
-                                        <td>{{ item.description }}</td>
-                                        <td>{{ "%.2f"|format(item.amount) }}</td>
+                                        <td>
+                                            <div class="editable-field">
+                                                <span class="editable-text">{{ item.description }}</span>
+                                                <input type="text" class="form-control form-control-sm edit-input d-none" 
+                                                       value="{{ item.description }}" data-item-id="{{ item.item_id }}" data-field="description">
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="editable-field">
+                                                <span class="editable-text">{{ "%.2f"|format(item.amount) }}</span>
+                                                <input type="number" step="0.01" min="0" class="form-control form-control-sm edit-input d-none" 
+                                                       value="{{ "%.2f"|format(item.amount) }}" data-item-id="{{ item.item_id }}" data-field="amount">
+                                            </div>
+                                        </td>
                                         <td>{{ item.currency }}</td>
                                         <td>
-                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item" data-item-id="{{ item.item_id }}">
-                                                <i class="fas fa-times"></i>
-                                            </button>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-secondary btn-sm edit-item" data-item-id="{{ item.item_id }}">
+                                                    <i class="fas fa-pencil-alt"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success btn-sm save-item d-none" data-item-id="{{ item.item_id }}">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item" data-item-id="{{ item.item_id }}">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -129,112 +149,52 @@
                         </table>
                     </div>
                     
-                    <!-- Payment and Invoice Section -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
-                                    <div>
-                                        <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
-                                            <i class="fas fa-file-invoice me-1"></i> Generate Invoice
-                                        </button>
-                                        <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
-                                            <i class="fas fa-eye me-1"></i> View Invoice
-                                        </a>
+                    <!-- Invoice Section -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
+                            <div>
+                                <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
+                                    <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+                                </button>
+                                <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
+                                    <i class="fas fa-eye me-1"></i> View Invoice
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label"><strong>Invoice Status:</strong></label>
+                                        <div>
+                                            <span class="badge bg-primary">Draft</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label"><strong>Invoice Status:</strong></label>
-                                                <div>
-                                                    <span class="badge bg-primary">Draft</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label"><strong>Invoice #:</strong></label>
-                                                <div>
-                                                    <span class="text-muted">Will be generated</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label"><strong>Invoice Notes:</strong></label>
-                                        <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the invoice"></textarea>
+                                        <label class="form-label"><strong>Invoice #:</strong></label>
+                                        <div>
+                                            <span class="text-muted">Will be generated</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                                    <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
-                                    <div>
-                                        <button type="submit" name="save_action" value="payment" class="btn btn-sm btn-success me-1">
-                                            <i class="fas fa-money-bill-wave me-1"></i> Process Payment
-                                        </button>
-                                        <a href="#" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                                            <i class="fas fa-plus me-1"></i> Payment Details
-                                        </a>
-                                    </div>
+                            <div class="form-group">
+                                <label class="form-label"><strong>Invoice Notes:</strong></label>
+                                <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the invoice"></textarea>
+                            </div>
+                            
+                            <!-- Total Amount Editable Field -->
+                            <div class="form-group mt-3">
+                                <label class="form-label"><strong>Total Amount:</strong></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" min="0" class="form-control" id="total_amount" name="total_amount" 
+                                       value="{% set total = 0 %}{% for item in items %}{% set total = total + item.amount %}{% endfor %}{{ "%.2f"|format(total) }}">
                                 </div>
-                                <div class="card-body">
-                                    <div class="row mb-3">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label"><strong>Payment Status:</strong></label>
-                                                <div>
-                                                    <span id="payment-status-badge" class="badge bg-warning text-dark">Pending</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label"><strong>Payment Method:</strong></label>
-                                                <select id="payment_method" name="payment_method" class="form-select">
-                                                    <option value="CREDIT_CARD">Credit Card</option>
-                                                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                                                    <option value="PAYPAL">PayPal</option>
-                                                    <option value="CASH">Cash</option>
-                                                    <option value="OTHER">Other</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="payment-records-section mb-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <label class="form-label mb-0"><strong>Payment Records:</strong></label>
-                                            <span id="total-paid-amount" class="badge bg-success">$0.00</span>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-hover" id="payment-records-table">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Date</th>
-                                                        <th>Method</th>
-                                                        <th>Amount</th>
-                                                        <th>Notes</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="payment-records-body">
-                                                    <!-- Payments will be added here dynamically -->
-                                                    <tr class="text-center text-muted">
-                                                        <td colspan="4">No payments recorded yet</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label"><strong>Payment Notes:</strong></label>
-                                        <textarea id="payment_notes" name="payment_notes" class="form-control" rows="2" placeholder="Enter any notes for this payment"></textarea>
-                                    </div>
-                                </div>
+                                <div class="form-text">You can adjust the total amount if needed</div>
                             </div>
                         </div>
                     </div>
@@ -637,6 +597,81 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Handle inline editing of service items
+    const editButtons = document.querySelectorAll('.edit-item');
+    const saveButtons = document.querySelectorAll('.save-item');
+    
+    if (editButtons.length > 0) {
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const row = this.closest('tr');
+                
+                // Toggle visibility of text/input fields
+                row.querySelectorAll('.editable-text').forEach(el => el.classList.add('d-none'));
+                row.querySelectorAll('.edit-input').forEach(el => el.classList.remove('d-none'));
+                
+                // Toggle buttons
+                this.classList.add('d-none');
+                row.querySelector('.save-item').classList.remove('d-none');
+            });
+        });
+    }
+    
+    if (saveButtons.length > 0) {
+        saveButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const itemId = this.getAttribute('data-item-id');
+                const row = this.closest('tr');
+                
+                // Get updated values
+                const descriptionInput = row.querySelector('.edit-input[data-field="description"]');
+                const amountInput = row.querySelector('.edit-input[data-field="amount"]');
+                
+                if (descriptionInput && amountInput) {
+                    const description = descriptionInput.value;
+                    const amount = amountInput.value;
+                    
+                    // Update the displayed text
+                    row.querySelector('.editable-text:first-child').textContent = description;
+                    row.querySelector('.editable-text:nth-child(2)').textContent = parseFloat(amount).toFixed(2);
+                    
+                    // Create hidden inputs to store updated values
+                    let descInput = document.querySelector(`input[name="updated_description_${itemId}"]`);
+                    let amountInput = document.querySelector(`input[name="updated_amount_${itemId}"]`);
+                    
+                    if (!descInput) {
+                        descInput = document.createElement('input');
+                        descInput.type = 'hidden';
+                        descInput.name = `updated_description_${itemId}`;
+                        bookingForm.appendChild(descInput);
+                    }
+                    
+                    if (!amountInput) {
+                        amountInput = document.createElement('input');
+                        amountInput.type = 'hidden';
+                        amountInput.name = `updated_amount_${itemId}`;
+                        bookingForm.appendChild(amountInput);
+                    }
+                    
+                    descInput.value = description;
+                    amountInput.value = amount;
+                }
+                
+                // Toggle visibility back
+                row.querySelectorAll('.editable-text').forEach(el => el.classList.remove('d-none'));
+                row.querySelectorAll('.edit-input').forEach(el => el.classList.add('d-none'));
+                
+                // Toggle buttons
+                this.classList.add('d-none');
+                row.querySelector('.edit-item').classList.remove('d-none');
+                
+                // Update total amount
+                updateTotalAmount();
+            });
+        });
+    }
+    
     // Handle item removal
     const removeButtons = document.querySelectorAll('.remove-item');
     if (removeButtons.length > 0) {
@@ -649,6 +684,30 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+    }
+    
+    // Function to update the total amount
+    function updateTotalAmount() {
+        let total = 0;
+        document.querySelectorAll('.editable-field').forEach(field => {
+            if (field.closest('td').nextElementSibling && field.closest('td').nextElementSibling.textContent === 'USD') {
+                const amountText = field.querySelector('.editable-text').textContent;
+                const amount = parseFloat(amountText) || 0;
+                total += amount;
+            }
+        });
+        
+        // Update total in the table footer
+        const totalCell = document.querySelector('tfoot td:nth-child(5)');
+        if (totalCell) {
+            totalCell.textContent = total.toFixed(2);
+        }
+        
+        // Update the total amount field in the invoice section
+        const totalAmountInput = document.getElementById('total_amount');
+        if (totalAmountInput) {
+            totalAmountInput.value = total.toFixed(2);
+        }
     }
 });
 </script>
@@ -753,6 +812,32 @@ document.addEventListener('DOMContentLoaded', function() {
     .service-icons-bar button:hover {
         transform: translateY(-2px);
         box-shadow: 0 3px 5px rgba(0,0,0,0.1);
+    }
+    
+    /* Editable fields styling */
+    .editable-field {
+        position: relative;
+    }
+    
+    .editable-text {
+        display: inline-block;
+        min-height: 24px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    tr:hover .editable-text {
+        background-color: #f8f9fa;
+    }
+    
+    .edit-input {
+        width: 100%;
+    }
+    
+    .edit-item, .save-item, .remove-item {
+        padding: 3px 8px;
+        font-size: 12px;
     }
 </style>
 {% endblock %}
