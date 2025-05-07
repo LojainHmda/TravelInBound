@@ -668,7 +668,7 @@ def confirm_service(item_id):
 
         # Get confirmation reference and supplier
         confirmation_reference = request.form.get('confirmation_reference', '')
-        supplier = request.form.get('supplier', '')
+        supplier_code = request.form.get('supplier', '')
         form_notes = request.form.get('notes', '')
         service_type = request.form.get('service_type', '')
         
@@ -676,9 +676,19 @@ def confirm_service(item_id):
         action = request.form.get('action', 'save')
         
         print(f"confirmation_reference: {confirmation_reference}", file=sys.stderr)
-        print(f"supplier: {supplier}", file=sys.stderr)
+        print(f"supplier_code: {supplier_code}", file=sys.stderr)
         print(f"form_notes: {form_notes}", file=sys.stderr)
         print(f"service_type: {service_type}, actual service type: {service_item.service_type}", file=sys.stderr)
+        
+        # Look up the supplier object by code if provided
+        from app.models.supplier import Supplier
+        supplier_object = None
+        if supplier_code:
+            supplier_object = Supplier.query.filter_by(code=supplier_code).first()
+            if supplier_object:
+                print(f"Found supplier: {supplier_object.name} (ID: {supplier_object.id})", file=sys.stderr)
+            else:
+                print(f"No supplier found with code: {supplier_code}", file=sys.stderr)
         
         # Set item status to IN_PROGRESS
         service_item.status = STATUS_IN_PROGRESS
@@ -717,7 +727,9 @@ def confirm_service(item_id):
                 'travel_class': request.form.get('travel_class', ''),
                 'terminal': request.form.get('terminal', ''),
                 'ticket_number': request.form.get('ticket_number', ''),
-                'supplier': supplier,
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
                 'pnr': request.form.get('pnr', ''),
                 'passenger_count': {
                     'adults': request.form.get('adults', 1),
@@ -753,7 +765,9 @@ def confirm_service(item_id):
                 'status': request.form.get('status', ''),
                 'cost': request.form.get('cost', ''),
                 'currency': request.form.get('currency', 'USD'),
-                'supplier': supplier,
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
                 'special_notes': request.form.get('special_notes', ''),
                 'rooms': {
                     'single': int(single_rooms) if single_rooms.isdigit() else 0,
@@ -776,7 +790,9 @@ def confirm_service(item_id):
                 'pickup_time': request.form.get('pickup_time', ''),
                 'driver_name': request.form.get('driver_name', ''),
                 'driver_contact': request.form.get('driver_contact', ''),
-                'supplier': supplier,
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
                 'special_requests': request.form.get('special_requests', '')
             }
             
@@ -785,7 +801,7 @@ def confirm_service(item_id):
         elif service_item.service_type == 'VISA':
             import sys
             print("Processing VISA confirmation form submission", file=sys.stderr)
-            print(f"Supplier from form: '{supplier}'", file=sys.stderr)
+            print(f"Supplier from form: '{supplier_code}'", file=sys.stderr)
             
             visa_details = {
                 'applicant_name': request.form.get('applicant_name', ''),
@@ -803,7 +819,9 @@ def confirm_service(item_id):
                 'processing_type': request.form.get('processing_type', ''),
                 'expected_completion': request.form.get('expected_completion', ''),
                 'special_notes': request.form.get('special_notes', ''),
-                'supplier': supplier
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier'
             }
             
             print(f"VISA details to save: {visa_details}", file=sys.stderr)
@@ -825,7 +843,9 @@ def confirm_service(item_id):
                 'deductible': request.form.get('deductible', ''),
                 'emergency_contact': request.form.get('emergency_contact', ''),
                 'special_conditions': request.form.get('special_conditions', ''),
-                'supplier': supplier
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier'
             }
             
             document.notes = json.dumps(insurance_details)
@@ -998,6 +1018,27 @@ def confirm_service(item_id):
             # If parsing fails, we keep our defaults
             print(f"Error parsing JSON: {str(e)}", file=sys.stderr)
     
+    # Get suppliers from database for the dropdown
+    from app.models.supplier import Supplier
+    
+    # Get all suppliers as base list
+    all_suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
+    
+    # Filter suppliers by service type if needed
+    service_type_suppliers = []
+    if service_item.service_type == 'FLIGHT':
+        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'AIRLINE' or not s.supplier_type]
+    elif service_item.service_type == 'HOTEL':
+        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'HOTEL' or not s.supplier_type]
+    elif service_item.service_type == 'TRANSPORT':
+        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'TRANSPORT' or not s.supplier_type]
+    elif service_item.service_type == 'VISA':
+        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'VISA' or not s.supplier_type]
+    elif service_item.service_type == 'INSURANCE':
+        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'INSURANCE' or not s.supplier_type]
+    else:
+        service_type_suppliers = all_suppliers
+    
     # Show the appropriate confirmation form based on service type
     if service_item.service_type == 'FLIGHT':
         template = 'booking/confirm_flight.html'
@@ -1016,7 +1057,9 @@ def confirm_service(item_id):
     return render_template(template, 
                           service_item=service_item, 
                           confirmation_data=confirmation_data, 
-                          confirmation_doc=confirmation_doc)
+                          confirmation_doc=confirmation_doc,
+                          suppliers=service_type_suppliers,
+                          all_suppliers=all_suppliers)
 
 @booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
