@@ -75,8 +75,8 @@ class Booking(db.Model):
         return total
     
     def can_complete(self):
-        """Check if all service items are fulfilled"""
-        return all(item.status == STATUS_COMPLETED for item in self.service_items)
+        """Check if all service items are confirmed"""
+        return all(item.status == STATUS_CONFIRMED for item in self.service_items)
         
     def update_payment_status(self):
         """Update payment status based on payments received"""

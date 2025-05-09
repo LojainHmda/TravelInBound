@@ -141,7 +141,7 @@ def new_booking():
             booking = Booking(
                 reference_number=reference,
                 user_id=user.id,
-                status=STATUS_REQUEST
+                status=STATUS_PLANNED
             )
             
             db.session.add(booking)
@@ -156,7 +156,7 @@ def new_booking():
                     end_date=form.to_date.data,
                     description=form.description.data,
                     amount=form.amount.data,
-                    status=STATUS_REQUEST
+                    status=STATUS_PLANNED
                 )
                 
                 db.session.add(service_item)
@@ -196,7 +196,7 @@ def add_service_item(booking_id):
             end_date=form.end_date.data,
             description=form.description.data,
             amount=form.amount.data,
-            status=STATUS_REQUEST
+            status=STATUS_PLANNED
         )
         
         # Assign to an agent with the matching specialty if available
@@ -231,9 +231,9 @@ def update_booking_status(booking_id):
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
-        # Check if can move to COMPLETED status
-        if form.status.data == STATUS_COMPLETED and not booking.can_complete():
-            flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
+        # Check if can move to CLOSED status
+        if form.status.data == STATUS_CLOSED and not booking.can_complete():
+            flash('Cannot mark as CLOSED until all service items are confirmed', 'danger')
         else:
             booking.status = form.status.data
             db.session.commit()
