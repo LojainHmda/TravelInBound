@@ -8,7 +8,13 @@ from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+from app.models import (
+    # New status constants
+    STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, 
+    STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED,
+    # Legacy status constants for backward compatibility
+    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+)
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -178,7 +184,7 @@ def new_booking():
                         reference_number=reference,
                         user_id=1,  # Use a default user_id (first admin user)
                         customer_id=customer.id,  # Store customer ID
-                        status=STATUS_REQUEST
+                        status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
                     )
                     
                     db.session.add(booking)
@@ -243,7 +249,7 @@ def new_booking():
                                 end_date=end_date,
                                 description=item_data['description'],
                                 amount=float(item_data['amount']),
-                                status=STATUS_REQUEST
+                                status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
                             )
                             
                             db.session.add(service_item)
@@ -261,7 +267,7 @@ def new_booking():
                         end_date=form.to_date.data,
                         description=form.description.data,
                         amount=form.amount.data,
-                        status=STATUS_REQUEST
+                        status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
                     )
                     
                     db.session.add(service_item)
