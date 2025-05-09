@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
+from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
 from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
 
@@ -78,9 +79,10 @@ def new_booking():
     """Create a new booking request with itinerary items"""
     form = BookingRequestForm()
     
-    # Get all users for customer selection dropdown
-    users = User.query.all()
-    form.customer.choices = [(str(user.id), f"{user.username} ({user.email})") for user in users]
+    # Get all customers for customer selection dropdown
+    from app.models.customer import Customer
+    customers = Customer.query.all()
+    form.customer.choices = [(str(customer.id), f"{customer.name} ({customer.email})") for customer in customers]
     
     # Generate request ID if not already set
     if not form.request_id.data:
@@ -167,13 +169,15 @@ def new_booking():
                 
                 # Only create a new booking if one doesn't already exist with this reference
                 if not booking:
-                    # Get the selected user
-                    user = User.query.get(int(form.customer.data))
+                    # Get the selected customer
+                    from app.models.customer import Customer
+                    customer = Customer.query.get(int(form.customer.data))
                     
-                    # Create the booking without deposit amount
+                    # Create the booking with customer ID
                     booking = Booking(
                         reference_number=reference,
-                        user_id=user.id,
+                        user_id=1,  # Use a default user_id (first admin user)
+                        customer_id=customer.id,  # Store customer ID
                         status=STATUS_REQUEST
                     )
                     
