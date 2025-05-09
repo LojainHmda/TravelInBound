@@ -4,8 +4,9 @@ from wtforms.validators import DataRequired, Optional, Length
 
 from models import (
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, 
-    SERVICE_VISA, SERVICE_INSURANCE, STATUS_REQUEST, 
-    STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
+    SERVICE_VISA, SERVICE_INSURANCE, 
+    STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, 
+    STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED
 )
 
 class NewBookingForm(FlaskForm):
@@ -58,10 +59,12 @@ class ServiceItemForm(FlaskForm):
 
 class UpdateServiceStatusForm(FlaskForm):
     status = SelectField('Status', choices=[
-        (STATUS_REQUEST, 'Request'),
-        (STATUS_BOOKED, 'Booked'),
-        (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_COMPLETED, 'Completed')
+        (STATUS_PLANNED, 'Planned'),
+        (STATUS_PREPAID, 'Prepaid'),
+        (STATUS_QUEUED, 'Queued'),
+        (STATUS_PROCESSING, 'Processing'),
+        (STATUS_CONFIRMED, 'Confirmed'),
+        (STATUS_CLOSED, 'Closed')
     ], validators=[DataRequired()])
     
     notes = TextAreaField('Notes', validators=[Optional()])
