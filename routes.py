@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from app import app, db
 from models import (
     User, Agent, Booking, ServiceItem, Document, Payment,
+    STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED,
+    # Legacy status constants kept for backward compatibility
     STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED,
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
 )
@@ -50,7 +52,14 @@ def index():
 # Dashboard
 @app.route('/dashboard')
 def dashboard():
-    # Get counts for each status
+    # Get counts for each status using new status constants
+    planned_count = Booking.query.filter_by(status=STATUS_PLANNED).count()
+    prepaid_count = Booking.query.filter_by(status=STATUS_PREPAID).count()
+    processing_count = Booking.query.filter_by(status=STATUS_PROCESSING).count()
+    confirmed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
+    closed_count = Booking.query.filter_by(status=STATUS_CLOSED).count()
+    
+    # Also count legacy statuses for backward compatibility
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
     booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
@@ -66,6 +75,14 @@ def dashboard():
     return render_template(
         'booking/dashboard.html',
         status_counts={
+            # New status flow
+            'planned': planned_count,
+            'prepaid': prepaid_count,
+            'queued': processing_count, 
+            'processing': processing_count,
+            'confirmed': confirmed_count,
+            'closed': closed_count,
+            # Legacy statuses for backward compatibility
             'request': request_count,
             'booked': booked_count,
             'in_progress': in_progress_count,
@@ -262,8 +279,8 @@ def generate_invoice(booking_id):
         # Generate an invoice number
         invoice_number = booking.generate_invoice_number()
         
-        # Update booking status to BOOKED
-        booking.status = STATUS_BOOKED
+        # Update booking status to PREPAID
+        booking.status = STATUS_PREPAID
         
         # Set invoice information
         booking.invoice_date = datetime.utcnow()
