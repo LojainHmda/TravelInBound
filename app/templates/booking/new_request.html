@@ -5,7 +5,7 @@
     <div class="col-md-12">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Booking Request</h3>
+                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create Trip Plan</h3>
             </div>
             <div class="card-body">
                 <form id="newBookingForm" method="POST" action="{{ url_for('booking.new_booking') }}">
@@ -160,16 +160,16 @@
                         </table>
                     </div>
                     
-                    <!-- Invoice Section -->
+                    <!-- Prepayment Section -->
                     <div class="card mb-4">
                         <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoice Information</h5>
+                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Prepayment Information</h5>
                             <div>
                                 <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
-                                    <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+                                    <i class="fas fa-file-invoice me-1"></i> Generate Prepayment
                                 </button>
                                 <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
-                                    <i class="fas fa-eye me-1"></i> View Invoice
+                                    <i class="fas fa-eye me-1"></i> View Prepayment
                                 </a>
                             </div>
                         </div>
@@ -177,15 +177,15 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label"><strong>Invoice Status:</strong></label>
+                                        <label class="form-label"><strong>Payment Status:</strong></label>
                                         <div>
-                                            <span class="badge bg-primary">Draft</span>
+                                            <span class="badge bg-secondary">Planned</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="form-label"><strong>Invoice #:</strong></label>
+                                        <label class="form-label"><strong>Prepayment #:</strong></label>
                                         <div>
                                             <span class="text-muted">Will be generated</span>
                                         </div>
@@ -193,8 +193,8 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label"><strong>Invoice Notes:</strong></label>
-                                <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the invoice"></textarea>
+                                <label class="form-label"><strong>Prepayment Notes:</strong></label>
+                                <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the prepayment"></textarea>
                             </div>
                             
                             <!-- Total Amount Editable Field -->
@@ -210,12 +210,12 @@
                         </div>
                     </div>
                     
-                    <!-- Invoice Modal -->
+                    <!-- Prepayment Modal -->
                     <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
                                 <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title" id="invoiceModalLabel">Create Invoice</h5>
+                                    <h5 class="modal-title" id="invoiceModalLabel">Create Prepayment</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
@@ -227,13 +227,13 @@
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label for="invoice_modal_notes" class="form-label">Invoice Notes</label>
-                                        <textarea class="form-control" id="invoice_modal_notes" rows="3" placeholder="Enter any special instructions or notes for this invoice"></textarea>
+                                        <label for="invoice_modal_notes" class="form-label">Prepayment Notes</label>
+                                        <textarea class="form-control" id="invoice_modal_notes" rows="3" placeholder="Enter any special instructions or notes for this prepayment"></textarea>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="createInvoiceBtn">Generate Invoice</button>
+                                    <button type="button" class="btn btn-primary" id="createInvoiceBtn">Generate Prepayment</button>
                                 </div>
                             </div>
                         </div>

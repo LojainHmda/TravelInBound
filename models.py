@@ -2,10 +2,18 @@ from datetime import datetime
 from app import db
 
 # Status constants
-STATUS_REQUEST = 'REQUEST'     # Initial booking request state
-STATUS_BOOKED = 'BOOKED'       # Confirmed booking (after invoice/payment)
-STATUS_IN_PROGRESS = 'IN-PROGRESS'  # Operations started
-STATUS_COMPLETED = 'COMPLETED'      # All services fulfilled
+STATUS_PLANNED = 'PLANNED'         # Itinerary shared with customer
+STATUS_PREPAID = 'PREPAID'         # Payment received
+STATUS_QUEUED = 'QUEUED'           # Waiting to be processed
+STATUS_PROCESSING = 'PROCESSING'   # Confirmation in progress
+STATUS_CONFIRMED = 'CONFIRMED'     # All components booked
+STATUS_CLOSED = 'CLOSED'           # Manually closed
+
+# Legacy status constants (keeping for backward compatibility)
+STATUS_REQUEST = 'REQUEST'     # Initial booking request state (now PLANNED)
+STATUS_BOOKED = 'BOOKED'       # Confirmed booking (now PREPAID)
+STATUS_IN_PROGRESS = 'IN-PROGRESS'  # Operations started (now PROCESSING)
+STATUS_COMPLETED = 'COMPLETED'      # All services fulfilled (now CONFIRMED)
 
 # Service types
 SERVICE_FLIGHT = 'FLIGHT'
@@ -42,7 +50,7 @@ class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reference_number = db.Column(db.String(20), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default=STATUS_REQUEST)
+    status = db.Column(db.String(20), default=STATUS_PLANNED)  # Changed from REQUEST to PLANNED
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     total_amount = db.Column(db.Float, default=0.0)
@@ -86,9 +94,17 @@ class Booking(db.Model):
         if total_paid >= self.total_amount:
             print(f"  Payment is FULL (${total_paid} >= ${self.total_amount})", file=sys.stderr)
             self.payment_status = 'FULL'
+            # Update booking status to PREPAID if a payment has been made
+            if self.status not in [STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED]:
+                self.status = STATUS_PREPAID
+                print(f"  Automatically updated booking status to {STATUS_PREPAID}", file=sys.stderr)
         elif total_paid > 0:
             print(f"  Payment is PARTIAL (${total_paid} < ${self.total_amount})", file=sys.stderr)
             self.payment_status = 'PARTIAL'
+            # Update booking status to PREPAID if a payment has been made
+            if self.status not in [STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED]:
+                self.status = STATUS_PREPAID
+                print(f"  Automatically updated booking status to {STATUS_PREPAID}", file=sys.stderr)
         else:
             print(f"  Payment is NONE (${total_paid})", file=sys.stderr)
             self.payment_status = 'NONE'
@@ -138,6 +154,13 @@ class Booking(db.Model):
             item.is_invoiced = True
             
         return invoice_number
+        
+    def can_add_or_cancel_items(self):
+        """
+        Check if service items can be added or canceled based on booking status
+        Returns False if the booking is in CLOSED status
+        """
+        return self.status != STATUS_CLOSED
 
 class ServiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -147,7 +170,7 @@ class ServiceItem(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(200))
     amount = db.Column(db.Float, default=0.0)
-    status = db.Column(db.String(20), default=STATUS_REQUEST)
+    status = db.Column(db.String(20), default=STATUS_PLANNED)  # Changed from REQUEST to PLANNED
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
