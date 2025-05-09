@@ -34,8 +34,25 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <h5 class="text-muted mb-1">Billed To:</h5>
-                            <h4>{{ booking.requester.username }}</h4>
-                            <p class="mb-0">{{ booking.requester.email }}</p>
+                            {% if booking.customer %}
+                                <h4>{{ booking.customer.name }}</h4>
+                                <p class="mb-0">{{ booking.customer.email }}</p>
+                                {% if booking.customer.phone %}
+                                    <p class="mb-0">{{ booking.customer.phone }}</p>
+                                {% endif %}
+                                {% if booking.customer.customer_type == 'Corporate' and booking.customer.company_name %}
+                                    <p class="mb-0">{{ booking.customer.company_name }}</p>
+                                    {% if booking.customer.tax_number %}
+                                        <p class="mb-0">Tax ID: {{ booking.customer.tax_number }}</p>
+                                    {% endif %}
+                                {% endif %}
+                                {% if booking.customer.address %}
+                                    <p class="mb-0">{{ booking.customer.get_full_address() }}</p>
+                                {% endif %}
+                            {% else %}
+                                <h4>{{ booking.requester.username }}</h4>
+                                <p class="mb-0">{{ booking.requester.email }}</p>
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-6 text-md-end">

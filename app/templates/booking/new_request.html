@@ -15,7 +15,18 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 {{ form.customer.label(class="form-label") }}
-                                {{ form.customer(class="form-select") }}
+                                <div class="input-group">
+                                    <select id="customer-select" name="customer" class="form-select select2-search">
+                                        <option value="">Search for a customer...</option>
+                                        {% for choice in form.customer.choices %}
+                                        <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Search by name, email, or phone number</small>
                             </div>
                         </div>
                         <div class="col-md-6">

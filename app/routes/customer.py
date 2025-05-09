@@ -221,3 +221,101 @@ def api_list_customers():
     } for c in customers]
     
     return jsonify(customers_list)
+
+@customer_bp.route('/api/search')
+def api_search_customers():
+    """API endpoint to search customers with filters"""
+    # Get search parameters
+    query = request.args.get('query', '')
+    customer_type = request.args.get('customer_type', '')
+    
+    # Create base query
+    customers_query = Customer.query
+    
+    # Apply filters
+    if query:
+        customers_query = customers_query.filter(
+            db.or_(
+                Customer.first_name.ilike(f'%{query}%'),
+                Customer.last_name.ilike(f'%{query}%'),
+                Customer.email.ilike(f'%{query}%'),
+                Customer.phone.ilike(f'%{query}%'),
+                Customer.company_name.ilike(f'%{query}%')
+            )
+        )
+    
+    if customer_type:
+        customers_query = customers_query.filter(Customer.customer_type == customer_type)
+    
+    # Limit results
+    limit = request.args.get('limit', 10, type=int)
+    customers = customers_query.order_by(Customer.first_name, Customer.last_name).limit(limit).all()
+    
+    # Format for select2
+    results = [{
+        'id': str(c.id),
+        'text': f"{c.name} ({c.email})",
+        'name': c.name,
+        'email': c.email,
+        'phone': c.phone,
+        'customer_type': c.customer_type,
+        'company_name': c.company_name or ''
+    } for c in customers]
+    
+    return jsonify({'results': results})
+
+@customer_bp.route('/api/create', methods=['POST'])
+def api_create_customer():
+    """API endpoint to create a new customer via AJAX"""
+    data = request.json
+    
+    if not data or not data.get('first_name') or not data.get('email'):
+        return jsonify({
+            'success': False,
+            'message': 'First name and email are required'
+        }), 400
+    
+    # Check if customer with this email already exists
+    existing_customer = Customer.query.filter_by(email=data.get('email')).first()
+    if existing_customer:
+        return jsonify({
+            'success': False,
+            'message': 'A customer with this email already exists',
+            'customer': {
+                'id': existing_customer.id,
+                'name': existing_customer.name,
+                'email': existing_customer.email
+            }
+        }), 400
+    
+    # Create a new customer
+    try:
+        customer = Customer(
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name', ''),
+            email=data.get('email'),
+            phone=data.get('phone', ''),
+            customer_type=data.get('customer_type', 'Individual'),
+            company_name=data.get('company_name', '') if data.get('customer_type') == 'Corporate' else '',
+        )
+        
+        db.session.add(customer)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Customer created successfully',
+            'customer': {
+                'id': customer.id,
+                'name': customer.name,
+                'email': customer.email,
+                'value': str(customer.id),
+                'text': f"{customer.name} ({customer.email})"
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error creating customer: {str(e)}'
+        }), 500
