@@ -55,6 +55,7 @@ def dashboard():
     # Get counts for each status using new status constants
     planned_count = Booking.query.filter_by(status=STATUS_PLANNED).count()
     prepaid_count = Booking.query.filter_by(status=STATUS_PREPAID).count()
+    queued_count = Booking.query.filter_by(status=STATUS_QUEUED).count()
     processing_count = Booking.query.filter_by(status=STATUS_PROCESSING).count()
     confirmed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
     closed_count = Booking.query.filter_by(status=STATUS_CLOSED).count()
@@ -75,18 +76,18 @@ def dashboard():
     return render_template(
         'booking/dashboard.html',
         status_counts={
-            # New status flow
-            'planned': planned_count,
-            'prepaid': prepaid_count,
-            'queued': processing_count, 
-            'processing': processing_count,
-            'confirmed': confirmed_count,
-            'closed': closed_count,
+            # New status flow (uppercase keys to match template)
+            'PLANNED': planned_count,
+            'PREPAID': prepaid_count,
+            'QUEUED': queued_count, 
+            'PROCESSING': processing_count,
+            'CONFIRMED': confirmed_count,
+            'CLOSED': closed_count,
             # Legacy statuses for backward compatibility
-            'request': request_count,
-            'booked': booked_count,
-            'in_progress': in_progress_count,
-            'completed': completed_count
+            'REQUEST': request_count,
+            'BOOKED': booked_count,
+            'IN-PROGRESS': in_progress_count,
+            'COMPLETED': completed_count
         },
         service_items={
             'flight': flight_items,
