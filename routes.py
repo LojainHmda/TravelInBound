@@ -1,5 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 import uuid
+import sys
 from datetime import datetime, timedelta
 
 from app import app, db
@@ -339,6 +340,17 @@ def add_payment(booking_id):
             # Update booking payment status
             booking.payment_date = datetime.utcnow()
             booking.update_payment_status()
+            
+            # Automatically move to QUEUED status after payment
+            if booking.status == STATUS_PREPAID:
+                booking.status = STATUS_QUEUED
+                print(f"Automatically updating booking status to {STATUS_QUEUED} after payment", file=sys.stderr)
+                
+                # Also update all service items to QUEUED status
+                for item in booking.service_items:
+                    if item.status == STATUS_PREPAID:
+                        item.status = STATUS_QUEUED
+                        print(f"Automatically updating service item {item.id} status to {STATUS_QUEUED}", file=sys.stderr)
             
             db.session.commit()
             

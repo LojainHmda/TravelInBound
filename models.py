@@ -1,4 +1,5 @@
 from datetime import datetime
+import sys
 from app import db
 
 # Status constants
@@ -80,7 +81,6 @@ class Booking(db.Model):
         
     def update_payment_status(self):
         """Update payment status based on payments received"""
-        import sys
         print(f"Updating payment status for booking #{self.id} - {self.reference_number}", file=sys.stderr)
         
         if not self.payments:
