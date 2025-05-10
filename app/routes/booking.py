@@ -562,7 +562,7 @@ def update_service_status(item_id):
         service_item.status = form.status.data
         db.session.commit()
         
-        # If the status is changed to FULFILLED, check if all items are now fulfilled
+        # If the status is changed to FULFILLED, check if all items are now confirmed
         if service_item.status == STATUS_FULFILLED:
             if booking.can_complete():
                 booking.status = STATUS_FULFILLED
@@ -590,7 +590,7 @@ def cancel_service_item(item_id):
         flash('This service item has already been cancelled', 'warning')
         return redirect(url_for('booking.details', booking_id=booking.id))
     
-    # Only allow cancellation of items that are not fulfilled
+    # Only allow cancellation of items that are not confirmed
     if service_item.status == STATUS_FULFILLED:
         flash('Cannot cancel a service item that has already been confirmed', 'danger')
         return redirect(url_for('booking.details', booking_id=booking.id))
@@ -944,18 +944,18 @@ def confirm_service(item_id):
                 flash('Moving to next service item for confirmation', 'info')
                 return redirect(url_for('booking.confirm_service', item_id=next_item.id))
         
-        # Check if all items are now fulfilled regardless of the action
+        # Check if all items are now confirmed regardless of the action
         pending_items = ServiceItem.query.filter(
             ServiceItem.booking_id == booking_id,
-            ServiceItem.status != STATUS_FULFILLED
+            ServiceItem.status != STATUS_CONFIRMED
         ).count()
         
         if pending_items == 0:
-            # All service items are fulfilled, update booking status
+            # All service items are confirmed, update booking status
             booking = Booking.query.get(booking_id)
             booking.status = STATUS_FULFILLED
             db.session.commit()
-            flash('All services confirmed! Booking is now fulfilled.', 'success')
+            flash('All services confirmed! Booking is now confirmed.', 'success')
         
         # Default behavior: redirect to the booking details page
         return redirect(url_for('booking.details', booking_id=booking_id))
