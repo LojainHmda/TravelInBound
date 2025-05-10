@@ -4,7 +4,7 @@
 <div class="row mb-4">
     <div class="col-md-9">
         <h2 class="fw-bold">
-            <i class="fas fa-file-invoice-dollar me-2"></i>Invoice #{{ booking.invoice_number }}
+            <i class="fas fa-file-invoice-dollar me-2"></i>Prepayment #{{ booking.invoice_number }}
         </h2>
         <p class="text-muted">
             Generated on {{ booking.invoice_date.strftime('%d %b %Y') }} for Booking #{{ booking.reference_number }}
@@ -13,13 +13,13 @@
     <div class="col-md-3 text-end">
         <div class="btn-group">
             <button type="button" class="btn btn-primary">
-                <i class="fas fa-print me-2"></i>Print Invoice
+                <i class="fas fa-print me-2"></i>Print Prepayment
             </button>
             <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
                 <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Download PDF</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>Download Prepayment PDF</a></li>
                 <li><a class="dropdown-item" href="#"><i class="fas fa-envelope me-2"></i>Email to Customer</a></li>
             </ul>
         </div>
@@ -57,14 +57,14 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="mb-3">
-                            <h5 class="text-muted mb-1">Invoice Details:</h5>
+                            <h5 class="text-muted mb-1">Prepayment Details:</h5>
                             <table class="ms-md-auto">
                                 <tr>
-                                    <td class="pe-3"><strong>Invoice Number:</strong></td>
+                                    <td class="pe-3"><strong>Prepayment Number:</strong></td>
                                     <td>{{ booking.invoice_number }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="pe-3"><strong>Invoice Date:</strong></td>
+                                    <td class="pe-3"><strong>Prepayment Date:</strong></td>
                                     <td>{{ booking.invoice_date.strftime('%d %b %Y') }}</td>
                                 </tr>
                                 <tr>
@@ -162,7 +162,7 @@
                         <div class="card bg-light">
                             <div class="card-body">
                                 <h5>Payment Terms</h5>
-                                <p class="mb-0">Please make payment within 14 days of invoice date. Thank you for your business.</p>
+                                <p class="mb-0">Please make payment within 14 days of prepayment date. Thank you for your business.</p>
                             </div>
                         </div>
                     </div>

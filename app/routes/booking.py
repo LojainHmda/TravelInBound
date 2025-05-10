@@ -1227,9 +1227,9 @@ def invoice_details(booking_id):
         from datetime import datetime
         booking.invoice_date = datetime.utcnow()
         db.session.commit()
-        print(f"Added missing invoice date for booking {booking.id}", file=sys.stderr)
+        print(f"Added missing prepayment date for booking {booking.id}", file=sys.stderr)
     
-    print(f"Rendering invoice template with invoice #{booking.invoice_number}", file=sys.stderr)
+    print(f"Rendering prepayment template with prepayment #{booking.invoice_number}", file=sys.stderr)
     return render_template('booking/invoice_details.html', booking=booking)
 
 @booking_bp.route('/<int:booking_id>/add_payment', methods=['GET', 'POST'])
