@@ -154,7 +154,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -198,7 +198,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -242,7 +242,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -286,7 +286,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -330,7 +330,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
