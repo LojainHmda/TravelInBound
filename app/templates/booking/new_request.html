@@ -152,9 +152,17 @@
                                         {% for item in items %}
                                             {% set total = total + item.amount %}
                                         {% endfor %}
-                                        {{ "%.2f"|format(total) }}
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="itinerary_total" 
+                                                value="{{ "%.2f"|format(total) }}" data-calculated-total="{{ "%.2f"|format(total) }}">
+                                        </div>
                                     </td>
-                                    <td colspan="2"></td>
+                                    <td colspan="2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="update-itinerary-total">
+                                            <i class="fas fa-sync-alt me-1"></i> Update
+                                        </button>
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -872,17 +880,50 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Update total in the table footer
-        const totalCell = document.querySelector('tfoot td:nth-child(5)');
-        if (totalCell) {
-            totalCell.textContent = total.toFixed(2);
+        // Update total in the table footer - now with editable input
+        const itineraryTotalInput = document.getElementById('itinerary_total');
+        if (itineraryTotalInput) {
+            itineraryTotalInput.value = total.toFixed(2);
+            itineraryTotalInput.dataset.calculatedTotal = total.toFixed(2);
         }
         
-        // Update the total amount field in the invoice section
+        // Also update prepayment amount for convenience
         const totalAmountInput = document.getElementById('total_amount');
         if (totalAmountInput) {
             totalAmountInput.value = total.toFixed(2);
         }
+        
+        // Update modal amount if it exists
+        const invoiceTotalInput = document.getElementById('invoice_total');
+        if (invoiceTotalInput) {
+            invoiceTotalInput.value = total.toFixed(2);
+        }
+    }
+    
+    // Handle update itinerary total button
+    const updateItineraryTotalBtn = document.getElementById('update-itinerary-total');
+    if (updateItineraryTotalBtn) {
+        updateItineraryTotalBtn.addEventListener('click', function() {
+            const itineraryTotalInput = document.getElementById('itinerary_total');
+            const totalAmountInput = document.getElementById('total_amount');
+            const invoiceTotalInput = document.getElementById('invoice_total');
+            
+            if (itineraryTotalInput && totalAmountInput) {
+                const newTotal = parseFloat(itineraryTotalInput.value);
+                if (!isNaN(newTotal)) {
+                    // Update the prepayment amount to match the itinerary total
+                    totalAmountInput.value = newTotal.toFixed(2);
+                    
+                    // Also update the modal if it exists
+                    if (invoiceTotalInput) {
+                        invoiceTotalInput.value = newTotal.toFixed(2);
+                    }
+                    
+                    // Show a success message
+                    alert('Total amount updated successfully!');
+                }
+            }
+        });
     }
 });
 </script>
