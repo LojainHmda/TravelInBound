@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Generate Invoice - {{ booking.reference_number }}{% endblock %}
+{% block title %}Generate Prepayment - {{ booking.reference_number }}{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -8,7 +8,7 @@
         <div class="col-md-8 offset-md-2">
             <div class="card">
                 <div class="card-header bg-dark text-white">
-                    <h4 class="mb-0">Generate Invoice for {{ booking.reference_number }}</h4>
+                    <h4 class="mb-0">Generate Prepayment for {{ booking.reference_number }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -20,13 +20,13 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="notes" class="form-label">Invoice Notes</label>
+                            <label for="notes" class="form-label">Prepayment Notes</label>
                             <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                         </div>
 
                         <div class="d-flex justify-content-between">
                             <a href="{{ url_for('booking_details', booking_id=booking.id) }}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Generate Invoice</button>
+                            <button type="submit" class="btn btn-primary">Generate Prepayment</button>
                         </div>
                     </form>
                 </div>

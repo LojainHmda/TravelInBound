@@ -267,6 +267,7 @@ def update_service_status(item_id):
 # Generate Prepayment
 @app.route('/booking/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
+    """Generate a prepayment for a booking"""
     booking = Booking.query.get_or_404(booking_id)
     
     if request.method == 'POST':
