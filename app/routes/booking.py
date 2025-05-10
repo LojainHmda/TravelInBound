@@ -8,7 +8,10 @@ from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
+
+# Define STATUS_CONFIRMED as an alias for STATUS_COMPLETED for clarity
+STATUS_CONFIRMED = STATUS_COMPLETED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -522,7 +525,7 @@ def update_booking_status(booking_id):
         new_status = form.status.data
         
         # Handle special status transitions
-        if new_status == STATUS_FULFILLED and not booking.can_complete():
+        if new_status == STATUS_CONFIRMED and not booking.can_complete():
             flash('Cannot mark as CONFIRMED until all service items are confirmed', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
@@ -953,7 +956,7 @@ def confirm_service(item_id):
         if pending_items == 0:
             # All service items are confirmed, update booking status
             booking = Booking.query.get(booking_id)
-            booking.status = STATUS_FULFILLED
+            booking.status = STATUS_CONFIRMED
             db.session.commit()
             flash('All services confirmed! Booking is now confirmed.', 'success')
         
