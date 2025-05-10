@@ -4,7 +4,7 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <h2 class="fw-bold">
-            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Prepayment
+            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Invoice
         </h2>
         <p class="text-muted">
             Booking #{{ booking.reference_number }} for {{ booking.requester.username }}
@@ -16,7 +16,7 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Prepayment Details</h4>
+                <h4 class="mb-0">Invoice Details</h4>
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}">
@@ -74,7 +74,7 @@
                             <span class="input-group-text">$</span>
                             {{ form.total_amount(class="form-control") }}
                         </div>
-                        <div class="form-text">You can adjust the final prepayment amount if needed</div>
+                        <div class="form-text">You can adjust the final invoice amount if needed</div>
                     </div>
                     
                     <div class="mb-3">
@@ -96,20 +96,20 @@
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Prepayment Information</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Invoice Information</h5>
             </div>
             <div class="card-body">
                 <p>
-                    Generating a prepayment will:
+                    Generating an invoice will:
                 </p>
                 <ul>
-                    <li>Create a unique prepayment number</li>
-                    <li>Update the booking status to 'PREPAID'</li>
-                    <li>Allow you to record payments against this prepayment</li>
+                    <li>Create a unique invoice number</li>
+                    <li>Update the booking status to 'INVOICE'</li>
+                    <li>Allow you to record payments against this invoice</li>
                 </ul>
                 <hr>
                 <p>
-                    <strong>Note:</strong> You can adjust the total amount before generating the prepayment. This is useful if you need to apply discounts or additional fees.
+                    <strong>Note:</strong> You can adjust the total amount before generating the invoice. This is useful if you need to apply discounts or additional fees.
                 </p>
             </div>
         </div>

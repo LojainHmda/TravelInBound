@@ -1,13 +1,10 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 import uuid
-import sys
 from datetime import datetime, timedelta
 
 from app import app, db
 from models import (
     User, Agent, Booking, ServiceItem, Document, Payment,
-    STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED,
-    # Legacy status constants kept for backward compatibility
     STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED,
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
 )
@@ -53,15 +50,7 @@ def index():
 # Dashboard
 @app.route('/dashboard')
 def dashboard():
-    # Get counts for each status using new status constants
-    planned_count = Booking.query.filter_by(status=STATUS_PLANNED).count()
-    prepaid_count = Booking.query.filter_by(status=STATUS_PREPAID).count()
-    queued_count = Booking.query.filter_by(status=STATUS_QUEUED).count()
-    processing_count = Booking.query.filter_by(status=STATUS_PROCESSING).count()
-    confirmed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
-    closed_count = Booking.query.filter_by(status=STATUS_CLOSED).count()
-    
-    # Also count legacy statuses for backward compatibility
+    # Get counts for each status
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
     booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
@@ -77,18 +66,10 @@ def dashboard():
     return render_template(
         'booking/dashboard.html',
         status_counts={
-            # New status flow (uppercase keys to match template)
-            'PLANNED': planned_count,
-            'PREPAID': prepaid_count,
-            'QUEUED': queued_count, 
-            'PROCESSING': processing_count,
-            'CONFIRMED': confirmed_count,
-            'CLOSED': closed_count,
-            # Legacy statuses for backward compatibility
-            'REQUEST': request_count,
-            'BOOKED': booked_count,
-            'IN-PROGRESS': in_progress_count,
-            'COMPLETED': completed_count
+            'request': request_count,
+            'booked': booked_count,
+            'in_progress': in_progress_count,
+            'completed': completed_count
         },
         service_items={
             'flight': flight_items,
@@ -142,7 +123,7 @@ def new_booking():
             booking = Booking(
                 reference_number=reference,
                 user_id=user.id,
-                status=STATUS_PLANNED
+                status=STATUS_REQUEST
             )
             
             db.session.add(booking)
@@ -157,7 +138,7 @@ def new_booking():
                     end_date=form.to_date.data,
                     description=form.description.data,
                     amount=form.amount.data,
-                    status=STATUS_PLANNED
+                    status=STATUS_REQUEST
                 )
                 
                 db.session.add(service_item)
@@ -175,10 +156,6 @@ def booking_details(booking_id):
     service_form = ServiceItemForm()
     status_form = UpdateServiceStatusForm()
     status_form.status.data = booking.status
-    
-    # Debug status values
-    print(f"Booking Status from DB: {booking.status}", file=sys.stderr)
-    print(f"Available status choices: {status_form.status.choices}", file=sys.stderr)
     
     return render_template(
         'booking/booking_details.html',
@@ -201,7 +178,7 @@ def add_service_item(booking_id):
             end_date=form.end_date.data,
             description=form.description.data,
             amount=form.amount.data,
-            status=STATUS_PLANNED
+            status=STATUS_REQUEST
         )
         
         # Assign to an agent with the matching specialty if available
@@ -236,9 +213,9 @@ def update_booking_status(booking_id):
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
-        # Check if can move to CLOSED status
-        if form.status.data == STATUS_CLOSED and not booking.can_complete():
-            flash('Cannot mark as CLOSED until all service items are confirmed', 'danger')
+        # Check if can move to COMPLETED status
+        if form.status.data == STATUS_COMPLETED and not booking.can_complete():
+            flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
         else:
             booking.status = form.status.data
             db.session.commit()
@@ -269,10 +246,9 @@ def update_service_status(item_id):
     else:
         return redirect(url_for('booking_details', booking_id=service_item.booking_id))
 
-# Generate Prepayment
+# Generate Invoice
 @app.route('/booking/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
-    """Generate a prepayment for a booking"""
     booking = Booking.query.get_or_404(booking_id)
     
     if request.method == 'POST':
@@ -283,17 +259,17 @@ def generate_invoice(booking_id):
             # If no total amount provided, calculate from service items
             total_amount = booking.calculate_total()
         
-        # Generate a prepayment number
+        # Generate an invoice number
         invoice_number = booking.generate_invoice_number()
         
-        # Update booking status to PREPAID
-        booking.status = STATUS_PREPAID
+        # Update booking status to BOOKED
+        booking.status = STATUS_BOOKED
         
-        # Set prepayment information
+        # Set invoice information
         booking.invoice_date = datetime.utcnow()
         db.session.commit()
         
-        flash(f'Prepayment #{invoice_number} generated successfully', 'success')
+        flash(f'Invoice #{invoice_number} generated successfully', 'success')
         
         # Get the referrer URL if available, otherwise default to booking details
         referrer = request.referrer
@@ -344,17 +320,6 @@ def add_payment(booking_id):
             # Update booking payment status
             booking.payment_date = datetime.utcnow()
             booking.update_payment_status()
-            
-            # Automatically move to QUEUED status after payment
-            if booking.status == STATUS_PREPAID:
-                booking.status = STATUS_QUEUED
-                print(f"Automatically updating booking status to {STATUS_QUEUED} after payment", file=sys.stderr)
-                
-                # Also update all service items to QUEUED status
-                for item in booking.service_items:
-                    if item.status == STATUS_PREPAID:
-                        item.status = STATUS_QUEUED
-                        print(f"Automatically updating service item {item.id} status to {STATUS_QUEUED}", file=sys.stderr)
             
             db.session.commit()
             

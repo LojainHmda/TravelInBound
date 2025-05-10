@@ -14,82 +14,54 @@
 </div>
 
 <div class="row mb-4">
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-planned); color: white;">
+    <div class="col-md-3">
+        <div class="stat-card bg-request text-white">
             <div class="stat-card-body">
                 <div class="stat-card-icon">
                     <i class="fas fa-clipboard-list"></i>
                 </div>
                 <div class="stat-card-info">
-                    <h3>{{ status_counts.get('PLANNED', 0) }}</h3>
-                    <p>Planned</p>
+                    <h3>{{ status_counts.request }}</h3>
+                    <p>Requests</p>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-prepaid); color: white;">
+    <div class="col-md-3">
+        <div class="stat-card bg-invoice text-white">
             <div class="stat-card-body">
                 <div class="stat-card-icon">
                     <i class="fas fa-file-invoice-dollar"></i>
                 </div>
                 <div class="stat-card-info">
-                    <h3>{{ status_counts.get('PREPAID', 0) }}</h3>
-                    <p>Prepaid</p>
+                    <h3>{{ status_counts.invoice }}</h3>
+                    <p>Invoices</p>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-queued); color: black;">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.get('QUEUED', 0) }}</h3>
-                    <p>Queued</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-processing); color: white;">
+    <div class="col-md-3">
+        <div class="stat-card bg-in-progress text-white">
             <div class="stat-card-body">
                 <div class="stat-card-icon">
                     <i class="fas fa-spinner"></i>
                 </div>
                 <div class="stat-card-info">
-                    <h3>{{ status_counts.get('PROCESSING', 0) }}</h3>
-                    <p>Processing</p>
+                    <h3>{{ status_counts.in_progress }}</h3>
+                    <p>In Progress</p>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-confirmed); color: white;">
+    <div class="col-md-3">
+        <div class="stat-card bg-completed text-white">
             <div class="stat-card-body">
                 <div class="stat-card-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
                 <div class="stat-card-info">
-                    <h3>{{ status_counts.get('CONFIRMED', 0) }}</h3>
-                    <p>Confirmed</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="stat-card" style="background-color: var(--status-closed); color: white;">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.get('CLOSED', 0) }}</h3>
-                    <p>Closed</p>
+                    <h3>{{ status_counts.completed }}</h3>
+                    <p>Completed</p>
                 </div>
             </div>
         </div>
@@ -154,7 +126,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -198,7 +170,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -242,7 +214,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -286,7 +258,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">
@@ -330,7 +302,7 @@
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>${{ "%.2f"|format(item.amount) }}</td>
                                         <td>
-                                            {% set status_class = item.status.lower().replace("-", "_") %}<span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                            <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                         </td>
                                         <td>
                                             <a href="{{ url_for('booking_details', booking_id=item.booking.id) }}" class="btn btn-sm btn-outline-primary">

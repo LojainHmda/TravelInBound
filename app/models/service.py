@@ -1,20 +1,12 @@
 from datetime import datetime
 from app import db
 
-# Constants for service item status - new status flow
-STATUS_PLANNED = 'PLANNED'         # Itinerary shared with customer
-STATUS_PREPAID = 'PREPAID'         # Payment received
-STATUS_QUEUED = 'QUEUED'           # Waiting to be processed
-STATUS_PROCESSING = 'PROCESSING'   # Confirmation in progress
-STATUS_CONFIRMED = 'CONFIRMED'     # All components booked
-STATUS_CLOSED = 'CLOSED'           # Manually closed
-
-# Legacy status constants (keeping for backward compatibility)
-STATUS_REQUEST = 'REQUEST'     # Initial booking request state (now PLANNED)
-STATUS_BOOKED = 'BOOKED'       # Confirmed booking (now PREPAID)
-STATUS_IN_PROGRESS = 'IN_PROGRESS'  # Operations started (now PROCESSING)
-STATUS_FULFILLED = 'FULFILLED'     # Services delivered (now CONFIRMED)
-STATUS_COMPLETED = 'COMPLETED'      # All services fulfilled (now CONFIRMED)
+# Constants for service item status
+STATUS_REQUEST = 'REQUEST'
+STATUS_BOOKED = 'BOOKED'
+STATUS_IN_PROGRESS = 'IN_PROGRESS'
+STATUS_FULFILLED = 'FULFILLED'
+STATUS_COMPLETED = 'COMPLETED'
 
 # Service types
 SERVICE_FLIGHT = 'FLIGHT'
@@ -32,7 +24,7 @@ class ServiceItem(db.Model):
     end_date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(200))
     amount = db.Column(db.Float, default=0.0)
-    status = db.Column(db.String(20), default=STATUS_PLANNED)  # Changed from REQUEST to PLANNED
+    status = db.Column(db.String(20), default=STATUS_REQUEST)
     agent_id = db.Column(db.Integer, db.ForeignKey('agent.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

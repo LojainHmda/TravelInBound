@@ -9,19 +9,10 @@
     --background-color: #ffffff; /* White Background */
     
     /* Status Colors */
-    /* Legacy status colors (kept for backward compatibility) */
     --status-request: #FF7F00; /* Orange */
     --status-booked: #9c27b0; /* Purple */
     --status-in-progress: #0288d1; /* Blue */
     --status-completed: #43a047; /* Green */
-    
-    /* New status colors */
-    --status-planned: #FF7F00; /* Orange */
-    --status-prepaid: #9c27b0; /* Purple */
-    --status-queued: #ffc107; /* Amber */
-    --status-processing: #0288d1; /* Blue */
-    --status-confirmed: #43a047; /* Green */
-    --status-closed: #607d8b; /* Blue Grey */
 }
 
 /* General Styles */
@@ -122,7 +113,6 @@ body {
 }
 
 /* Status Badges */
-/* Legacy status badges (kept for backward compatibility) */
 .badge.status-request {
     background-color: var(--status-request);
     color: white;
@@ -140,37 +130,6 @@ body {
 
 .badge.status-completed {
     background-color: var(--status-completed);
-    color: white;
-}
-
-/* New status badges */
-.badge.status-planned {
-    background-color: var(--status-planned);
-    color: white;
-}
-
-.badge.status-prepaid {
-    background-color: var(--status-prepaid);
-    color: white;
-}
-
-.badge.status-queued {
-    background-color: var(--status-queued);
-    color: black;
-}
-
-.badge.status-processing {
-    background-color: var(--status-processing);
-    color: white;
-}
-
-.badge.status-confirmed {
-    background-color: var(--status-confirmed);
-    color: white;
-}
-
-.badge.status-closed {
-    background-color: var(--status-closed);
     color: white;
 }
 
@@ -304,7 +263,6 @@ body {
     opacity: 0.8;
 }
 
-/* Legacy background colors */
 .bg-request {
     background-color: var(--status-request);
 }
@@ -319,31 +277,6 @@ body {
 
 .bg-completed {
     background-color: var(--status-completed);
-}
-
-/* New background colors */
-.bg-planned {
-    background-color: var(--status-planned);
-}
-
-.bg-prepaid {
-    background-color: var(--status-prepaid);
-}
-
-.bg-queued {
-    background-color: var(--status-queued);
-}
-
-.bg-processing {
-    background-color: var(--status-processing);
-}
-
-.bg-confirmed {
-    background-color: var(--status-confirmed);
-}
-
-.bg-closed {
-    background-color: var(--status-closed);
 }
 
 /* Service Tabs */

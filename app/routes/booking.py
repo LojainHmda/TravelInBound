@@ -8,13 +8,7 @@ from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
-from app.models import (
-    # New status constants
-    STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, 
-    STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED,
-    # Legacy status constants for backward compatibility
-    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
-)
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -184,7 +178,7 @@ def new_booking():
                         reference_number=reference,
                         user_id=1,  # Use a default user_id (first admin user)
                         customer_id=customer.id,  # Store customer ID
-                        status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
+                        status=STATUS_REQUEST
                     )
                     
                     db.session.add(booking)
@@ -249,7 +243,7 @@ def new_booking():
                                 end_date=end_date,
                                 description=item_data['description'],
                                 amount=float(item_data['amount']),
-                                status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
+                                status=STATUS_REQUEST
                             )
                             
                             db.session.add(service_item)
@@ -267,7 +261,7 @@ def new_booking():
                         end_date=form.to_date.data,
                         description=form.description.data,
                         amount=form.amount.data,
-                        status=STATUS_PLANNED  # Changed from REQUEST to PLANNED
+                        status=STATUS_REQUEST
                     )
                     
                     db.session.add(service_item)
@@ -325,14 +319,14 @@ def new_booking():
                         booking.generate_invoice_number()
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
-                    # Update the booking status to PREPAID (previously BOOKED)
-                    booking.status = STATUS_PREPAID
+                    # Update the booking status to BOOKED
+                    booking.status = STATUS_BOOKED
                     
-                    # Update all service items to PREPAID status too
+                    # Update all service items to BOOKED status too
                     for item in booking.service_items:
-                        if item.status == STATUS_PLANNED or item.status == STATUS_REQUEST:
-                            item.status = STATUS_PREPAID
-                            print(f"Updated service item {item.id} status to PREPAID", file=sys.stderr)
+                        if item.status == STATUS_REQUEST:
+                            item.status = STATUS_BOOKED
+                            print(f"Updated service item {item.id} status to BOOKED", file=sys.stderr)
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
@@ -378,13 +372,13 @@ def new_booking():
                 
                 # Handle Start Operations action
                 if action == 'start_operations' and booking:
-                    # Update booking status to PROCESSING (previously IN_PROGRESS)
-                    booking.status = STATUS_PROCESSING
+                    # Update booking status to IN_PROGRESS
+                    booking.status = STATUS_IN_PROGRESS
                     
-                    # Update all service items to PROCESSING too
+                    # Update all service items to IN_PROGRESS too
                     for item in booking.service_items:
-                        if item.status == STATUS_PLANNED or item.status == STATUS_PREPAID or item.status == STATUS_QUEUED:
-                            item.status = STATUS_PROCESSING
+                        if item.status == STATUS_REQUEST:
+                            item.status = STATUS_IN_PROGRESS
                     
                     db.session.commit()
                     flash(f'Operations started: Booking status updated to {booking.status}', 'success')
@@ -495,21 +489,21 @@ def update_booking_status(booking_id):
     """Update the status of an entire booking"""
     booking = Booking.query.get_or_404(booking_id)
     
-    # Check if this is a direct status transition to PROCESSING (Start Operations)
-    if 'new_status' in request.form and request.form['new_status'] == STATUS_PROCESSING:
+    # Check if this is a direct status transition to IN_PROGRESS (Start Operations)
+    if 'new_status' in request.form and request.form['new_status'] == STATUS_IN_PROGRESS:
         old_status = booking.status
-        new_status = STATUS_PROCESSING
+        new_status = STATUS_IN_PROGRESS
         
-        # Check payment status when moving to PROCESSING
+        # Check payment status when moving to IN_PROGRESS
         if booking.payment_status != 'FULL':
             flash('Warning: This booking has not been fully paid', 'warning')
         
         booking.status = new_status
         
-        # Update all service items to PROCESSING too
+        # Update all service items to IN_PROGRESS too
         for item in booking.service_items:
-            if item.status in [STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED]:
-                item.status = STATUS_PROCESSING
+            if item.status == STATUS_REQUEST:
+                item.status = STATUS_IN_PROGRESS
         
         db.session.commit()
         flash(f'Operations started: Booking status updated to {booking.status}', 'success')
@@ -714,8 +708,8 @@ def confirm_service(item_id):
             else:
                 print(f"No supplier found with code: {supplier_code}", file=sys.stderr)
         
-        # Set item status to PROCESSING (previously IN_PROGRESS)
-        service_item.status = STATUS_PROCESSING
+        # Set item status to IN_PROGRESS
+        service_item.status = STATUS_IN_PROGRESS
         
         # Check if a confirmation document already exists
         document = Document.query.filter_by(
@@ -928,8 +922,8 @@ def confirm_service(item_id):
         saved_doc = Document.query.get(document.id)
         print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
-        # Mark this service item as CONFIRMED (previously FULFILLED)
-        service_item.status = STATUS_CONFIRMED
+        # Mark this service item as FULFILLED
+        service_item.status = STATUS_FULFILLED
         db.session.commit()
         
         flash(f'{service_item.service_type} confirmation details saved', 'success')
@@ -942,7 +936,7 @@ def confirm_service(item_id):
             # Find the next service item that needs confirmation
             next_item = ServiceItem.query.filter_by(
                 booking_id=booking_id,
-                status=STATUS_PROCESSING
+                status=STATUS_IN_PROGRESS
             ).filter(ServiceItem.id != service_item.id).first()
             
             if next_item:
@@ -950,18 +944,18 @@ def confirm_service(item_id):
                 flash('Moving to next service item for confirmation', 'info')
                 return redirect(url_for('booking.confirm_service', item_id=next_item.id))
         
-        # Check if all items are now confirmed regardless of the action
+        # Check if all items are now fulfilled regardless of the action
         pending_items = ServiceItem.query.filter(
             ServiceItem.booking_id == booking_id,
-            ServiceItem.status != STATUS_CONFIRMED
+            ServiceItem.status != STATUS_FULFILLED
         ).count()
         
         if pending_items == 0:
-            # All service items are confirmed, update booking status
+            # All service items are fulfilled, update booking status
             booking = Booking.query.get(booking_id)
-            booking.status = STATUS_CONFIRMED
+            booking.status = STATUS_FULFILLED
             db.session.commit()
-            flash('All services confirmed! Booking is now fully confirmed.', 'success')
+            flash('All services confirmed! Booking is now fulfilled.', 'success')
         
         # Default behavior: redirect to the booking details page
         return redirect(url_for('booking.details', booking_id=booking_id))
@@ -1136,7 +1130,7 @@ def confirm_service(item_id):
 
 @booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
-    """Generate a prepayment for a booking"""
+    """Generate an invoice for a booking"""
     booking = Booking.query.get_or_404(booking_id)
     form = GenerateInvoiceForm()
     
@@ -1189,15 +1183,15 @@ def generate_invoice(booking_id):
             if not booking.invoice_number:
                 booking.generate_invoice_number()
             
-            # Update status to PREPAID (previously BOOKED)
-            booking.status = STATUS_PREPAID
+            # Update status to INVOICE
+            booking.status = STATUS_BOOKED
             
-            # Add prepayment notes if provided
+            # Add invoice notes if provided
             notes = form.notes.data or request.form.get('invoice_notes', '')
-            # You could save notes to the booking or create a separate model for prepayment notes
+            # You could save notes to the booking or create a separate model for invoice notes
             
             db.session.commit()
-            flash(f'Prepayment {booking.invoice_number} generated successfully', 'success')
+            flash(f'Invoice {booking.invoice_number} generated successfully', 'success')
             
             # Check if this is from the new booking form by looking at the referrer or a flag
             if 'save_action' in request.form:
@@ -1211,15 +1205,15 @@ def generate_invoice(booking_id):
 
 @booking_bp.route('/<int:booking_id>/invoice', methods=['GET'])
 def invoice_details(booking_id):
-    """View prepayment details"""
+    """View invoice details"""
     import sys
-    print(f"Prepayment details route called for booking_id: {booking_id}", file=sys.stderr)
+    print(f"Invoice details route called for booking_id: {booking_id}", file=sys.stderr)
     
     booking = Booking.query.get_or_404(booking_id)
     
     # If no invoice yet, redirect to generate page
     if not booking.invoice_number:
-        flash('No prepayment generated yet. Please generate a prepayment first.', 'warning')
+        flash('No invoice generated yet. Please generate an invoice first.', 'warning')
         return redirect(url_for('booking.generate_invoice', booking_id=booking.id))
     
     # Ensure we have an invoice date
@@ -1227,9 +1221,9 @@ def invoice_details(booking_id):
         from datetime import datetime
         booking.invoice_date = datetime.utcnow()
         db.session.commit()
-        print(f"Added missing prepayment date for booking {booking.id}", file=sys.stderr)
+        print(f"Added missing invoice date for booking {booking.id}", file=sys.stderr)
     
-    print(f"Rendering prepayment template with prepayment #{booking.invoice_number}", file=sys.stderr)
+    print(f"Rendering invoice template with invoice #{booking.invoice_number}", file=sys.stderr)
     return render_template('booking/invoice_details.html', booking=booking)
 
 @booking_bp.route('/<int:booking_id>/add_payment', methods=['GET', 'POST'])

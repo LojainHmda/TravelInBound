@@ -29,15 +29,14 @@
                     <div class="col-md-6">
                         <p>
                             <strong>Status:</strong> 
-                            {% set status_class = booking.status.lower().replace('-', '_') %}
-                            <span class="badge status-{{ status_class }}">{{ booking.status }}</span>
+                            <span class="badge status-{{ booking.status.lower() }}">{{ booking.status }}</span>
                         </p>
                         <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
                         <p><strong>Requester:</strong> {{ booking.requester.username }}</p>
                         
                         {% if booking.invoice_number %}
-                        <p><strong>Prepayment #:</strong> {{ booking.invoice_number }}</p>
-                        <p><strong>Prepayment Date:</strong> {{ booking.invoice_date.strftime('%Y-%m-%d') }}</p>
+                        <p><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
+                        <p><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%Y-%m-%d') }}</p>
                         <p>
                             <strong>Payment Status:</strong> 
                             <span class="badge {% if booking.payment_status == 'FULL' %}bg-success{% elif booking.payment_status == 'PARTIAL' %}bg-warning{% else %}bg-danger{% endif %}">
@@ -122,8 +121,7 @@
                                 <td>{{ item.description }}</td>
                                 <td>${{ "%.2f"|format(item.amount) }}</td>
                                 <td>
-                                    {% set status_class = item.status.lower().replace('-', '_') %}
-                                    <span class="badge status-{{ status_class }}">{{ item.status }}</span>
+                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
@@ -170,9 +168,9 @@
                 </div>
                 <div class="d-flex justify-content-between align-items-center mt-3">
                     <div>
-                        {% if booking.status == 'PLANNED' %}
+                        {% if booking.status == 'REQUEST' %}
                         <a href="{{ url_for('generate_invoice', booking_id=booking.id) }}" class="btn btn-primary">
-                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Prepayment
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
                         </a>
                         {% elif booking.invoice_number %}
                         <a href="{{ url_for('add_payment', booking_id=booking.id) }}" class="btn btn-success">
@@ -193,7 +191,6 @@
     </div>
 </div>
 
-{% if booking.status != 'CLOSED' %}
 <div class="row">
     <div class="col-md-12">
         <div class="card">
@@ -246,17 +243,4 @@
         </div>
     </div>
 </div>
-{% else %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card bg-light">
-            <div class="card-body text-center py-4">
-                <i class="fas fa-lock fa-3x text-muted mb-3"></i>
-                <h5>Booking is Closed</h5>
-                <p class="text-muted">This booking has been closed and no new service items can be added.</p>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}

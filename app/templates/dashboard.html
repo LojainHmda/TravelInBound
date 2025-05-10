@@ -8,33 +8,33 @@
 
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('PLANNED')">
+            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('REQUEST')">
                 <div class="card-body">
-                    <h5 class="card-title">Planned</h5>
+                    <h5 class="card-title">Requests</h5>
                     <p class="card-text display-4">{{ request_count }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('PREPAID')">
+            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('BOOKED')">
                 <div class="card-body">
-                    <h5 class="card-title">Prepaid</h5>
+                    <h5 class="card-title">Booked</h5>
                     <p class="card-text display-4">{{ booked_count }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('PROCESSING')">
+            <div class="card bg-orange text-white" style="cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
                 <div class="card-body">
-                    <h5 class="card-title">Processing</h5>
+                    <h5 class="card-title">In Progress</h5>
                     <p class="card-text display-4">{{ in_progress_count }}</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card bg-dark-blue text-white" style="cursor: pointer;" onclick="filterBookings('CONFIRMED')">
+            <div class="card bg-dark-blue text-white" style="cursor: pointer;" onclick="filterBookings('COMPLETED')">
                 <div class="card-body">
-                    <h5 class="card-title">Confirmed</h5>
+                    <h5 class="card-title">Completed</h5>
                     <p class="card-text display-4">{{ completed_count }}</p>
                 </div>
             </div>
@@ -166,11 +166,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'PLANNED' %}
+                                            {% if item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'PROCESSING' %}
+                                            {% elif item.status == 'IN_PROGRESS' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -232,11 +232,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'PLANNED' %}
+                                            {% if item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'PROCESSING' %}
+                                            {% elif item.status == 'IN_PROGRESS' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -298,11 +298,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'PLANNED' %}
+                                            {% if item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'PROCESSING' %}
+                                            {% elif item.status == 'IN_PROGRESS' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -364,11 +364,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'PLANNED' %}
+                                            {% if item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'PROCESSING' %}
+                                            {% elif item.status == 'IN_PROGRESS' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
@@ -430,11 +430,11 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            {% if item.status == 'PLANNED' %}
+                                            {% if item.status == 'REQUEST' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'PROCESSING' %}
+                                            {% elif item.status == 'IN_PROGRESS' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
