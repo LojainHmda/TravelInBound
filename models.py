@@ -112,13 +112,13 @@ class Booking(db.Model):
         print(f"  Updated payment_status to: {self.payment_status}", file=sys.stderr)
             
     def generate_invoice_number(self):
-        """Generate a unique invoice number"""
+        """Generate a unique prepayment number"""
         if not self.invoice_number:
             year = datetime.utcnow().strftime('%y')
             count = db.session.query(Booking).filter(
                 Booking.invoice_number.isnot(None)
             ).count()
-            self.invoice_number = f"INV-{year}-{count+1:04d}"
+            self.invoice_number = f"PRE-{year}-{count+1:04d}"
             self.invoice_date = datetime.utcnow()
         return self.invoice_number
         
@@ -132,19 +132,19 @@ class Booking(db.Model):
         
     def generate_separate_invoice_for_items(self, service_items):
         """
-        Generate a separate invoice number for specific service items
+        Generate a separate prepayment number for specific service items
         and mark them as invoiced
         """
         # First, make sure we have service items to invoice
         if not service_items or len(service_items) == 0:
             return None
             
-        # Generate a new invoice number  
+        # Generate a new prepayment number  
         year = datetime.utcnow().strftime('%y')
         count = db.session.query(Booking).filter(
             Booking.invoice_number.isnot(None)
         ).count()
-        invoice_number = f"INV-{year}-{count+1:04d}"
+        invoice_number = f"PRE-{year}-{count+1:04d}"
         invoice_date = datetime.utcnow()
         
         # Update each service item
@@ -175,7 +175,7 @@ class ServiceItem(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Invoice related fields
+    # Prepayment related fields
     invoice_number = db.Column(db.String(20), nullable=True)
     invoice_date = db.Column(db.DateTime, nullable=True)
     is_invoiced = db.Column(db.Boolean, default=False)

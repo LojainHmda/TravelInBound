@@ -264,7 +264,7 @@ def update_service_status(item_id):
     else:
         return redirect(url_for('booking_details', booking_id=service_item.booking_id))
 
-# Generate Invoice
+# Generate Prepayment
 @app.route('/booking/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
     booking = Booking.query.get_or_404(booking_id)
@@ -277,17 +277,17 @@ def generate_invoice(booking_id):
             # If no total amount provided, calculate from service items
             total_amount = booking.calculate_total()
         
-        # Generate an invoice number
+        # Generate a prepayment number
         invoice_number = booking.generate_invoice_number()
         
         # Update booking status to PREPAID
         booking.status = STATUS_PREPAID
         
-        # Set invoice information
+        # Set prepayment information
         booking.invoice_date = datetime.utcnow()
         db.session.commit()
         
-        flash(f'Invoice #{invoice_number} generated successfully', 'success')
+        flash(f'Prepayment #{invoice_number} generated successfully', 'success')
         
         # Get the referrer URL if available, otherwise default to booking details
         referrer = request.referrer
