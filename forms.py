@@ -61,7 +61,7 @@ class UpdateServiceStatusForm(FlaskForm):
         (STATUS_REQUEST, 'Request'),
         (STATUS_BOOKED, 'Booked'),
         (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_COMPLETED, 'Completed')
+        (STATUS_COMPLETED, 'Confirmed')  # Changed 'Completed' to 'Confirmed' to match terminology
     ], validators=[DataRequired()])
     
     notes = TextAreaField('Notes', validators=[Optional()])

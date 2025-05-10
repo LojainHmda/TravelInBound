@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app import app, db
 from models import (
     User, Agent, Booking, ServiceItem, Document, Payment,
-    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED,
+    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED,
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
 )
 from forms import NewBookingForm, ServiceItemForm, UpdateServiceStatusForm, DocumentUploadForm
@@ -54,7 +54,7 @@ def dashboard():
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
     booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_COMPLETED).count()
+    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
     
     # Get service items for each service type
     flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
@@ -213,9 +213,9 @@ def update_booking_status(booking_id):
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
-        # Check if can move to COMPLETED status
-        if form.status.data == STATUS_COMPLETED and not booking.can_complete():
-            flash('Cannot mark as COMPLETED until all service items are fulfilled', 'danger')
+        # Check if can move to CONFIRMED status
+        if form.status.data == STATUS_CONFIRMED and not booking.can_complete():
+            flash('Cannot mark as CONFIRMED until all service items are fulfilled', 'danger')
         else:
             booking.status = form.status.data
             db.session.commit()

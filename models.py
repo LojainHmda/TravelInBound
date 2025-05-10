@@ -5,7 +5,8 @@ from app import db
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
 STATUS_BOOKED = 'BOOKED'       # Confirmed booking (after invoice/payment)
 STATUS_IN_PROGRESS = 'IN-PROGRESS'  # Operations started
-STATUS_COMPLETED = 'COMPLETED'      # All services confirmed
+STATUS_CONFIRMED = 'CONFIRMED'      # All services confirmed
+STATUS_COMPLETED = STATUS_CONFIRMED  # Alias for backward compatibility
 
 # Service types
 SERVICE_FLIGHT = 'FLIGHT'
@@ -68,7 +69,7 @@ class Booking(db.Model):
     
     def can_complete(self):
         """Check if all service items are confirmed"""
-        return all(item.status == STATUS_COMPLETED for item in self.service_items)
+        return all(item.status == STATUS_CONFIRMED for item in self.service_items)
         
     def update_payment_status(self):
         """Update payment status based on payments received"""
