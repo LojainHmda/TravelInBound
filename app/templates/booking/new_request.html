@@ -303,12 +303,167 @@
     </div>
 </div>
 
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickAddCustomerForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">First Name *</label>
+                                <input type="text" id="quick_first_name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Last Name</label>
+                                <input type="text" id="quick_last_name" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" id="quick_email" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" id="quick_phone" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Customer Type</label>
+                                <select id="quick_customer_type" class="form-select">
+                                    <option value="Individual">Individual</option>
+                                    <option value="Corporate">Corporate</option>
+                                    <option value="Group">Group</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 corporate-field" style="display: none;">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" id="quick_company_name" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger" id="quickAddCustomerError" style="display: none;"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveQuickCustomerBtn">Save Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 <script>
+// Initialize Select2 for customer search
+$(document).ready(function() {
+    // Initialize Select2 for customer search
+    $('#customer-select').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        placeholder: 'Search for a customer...',
+        allowClear: true,
+        ajax: {
+            url: '{{ url_for("customer.api_search_customers") }}',
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    query: params.term || '',
+                    limit: 10
+                };
+            },
+            processResults: function(data) {
+                return data;
+            },
+            cache: true
+        },
+        minimumInputLength: 1
+    });
+    
+    // Handle customer type change to show/hide company field
+    $('#quick_customer_type').on('change', function() {
+        if ($(this).val() === 'Corporate') {
+            $('.corporate-field').show();
+        } else {
+            $('.corporate-field').hide();
+        }
+    });
+    
+    // Handle quick add customer form submission
+    $('#saveQuickCustomerBtn').on('click', function() {
+        // Get form data
+        var customerData = {
+            first_name: $('#quick_first_name').val(),
+            last_name: $('#quick_last_name').val(),
+            email: $('#quick_email').val(),
+            phone: $('#quick_phone').val(),
+            customer_type: $('#quick_customer_type').val(),
+            company_name: $('#quick_company_name').val()
+        };
+        
+        // Validate required fields
+        if (!customerData.first_name || !customerData.email) {
+            $('#quickAddCustomerError').text('First name and email are required.').show();
+            return;
+        }
+        
+        // Submit form via AJAX
+        $.ajax({
+            url: '{{ url_for("customer.api_create_customer") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(customerData),
+            success: function(response) {
+                if (response.success) {
+                    // Create new option and select it
+                    var newOption = new Option(
+                        response.customer.text, 
+                        response.customer.id, 
+                        true, 
+                        true
+                    );
+                    $('#customer-select').append(newOption).trigger('change');
+                    
+                    // Close modal and reset form
+                    $('#addCustomerModal').modal('hide');
+                    $('#quickAddCustomerForm')[0].reset();
+                    $('#quickAddCustomerError').hide();
+                } else {
+                    $('#quickAddCustomerError').text(response.message).show();
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                $('#quickAddCustomerError').text(message).show();
+            }
+        });
+    });
+});
+
 // Initialize any existing payment data if available
 window.existingPayments = [];
 
