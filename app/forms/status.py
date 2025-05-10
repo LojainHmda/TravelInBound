@@ -12,7 +12,7 @@ class UpdateServiceStatusForm(FlaskForm):
         (STATUS_REQUEST, 'Request'),
         (STATUS_BOOKED, 'Booked'),
         (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_FULFILLED, 'Fulfilled')
+        (STATUS_FULFILLED, 'Confirmed')
     ], validators=[DataRequired()])
     
     notes = TextAreaField('Notes', validators=[Optional()])
