@@ -29,7 +29,8 @@
                     <div class="col-md-6">
                         <p>
                             <strong>Status:</strong> 
-                            <span class="badge status-{{ booking.status.lower() }}">{{ booking.status }}</span>
+                            {% set status_class = booking.status.lower().replace('-', '_') %}
+                            <span class="badge status-{{ status_class }}">{{ booking.status }}</span>
                         </p>
                         <p><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
                         <p><strong>Requester:</strong> {{ booking.requester.username }}</p>
@@ -121,7 +122,8 @@
                                 <td>{{ item.description }}</td>
                                 <td>${{ "%.2f"|format(item.amount) }}</td>
                                 <td>
-                                    <span class="badge status-{{ item.status.lower() }}">{{ item.status }}</span>
+                                    {% set status_class = item.status.lower().replace('-', '_') %}
+                                    <span class="badge status-{{ status_class }}">{{ item.status }}</span>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal{{ item.id }}">
