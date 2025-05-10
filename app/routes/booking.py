@@ -523,7 +523,7 @@ def update_booking_status(booking_id):
         
         # Handle special status transitions
         if new_status == STATUS_FULFILLED and not booking.can_complete():
-            flash('Cannot mark as FULFILLED until all service items are fulfilled', 'danger')
+            flash('Cannot mark as CONFIRMED until all service items are confirmed', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
         # If moving to BOOKED status, generate invoice number and update service items
@@ -567,7 +567,7 @@ def update_service_status(item_id):
             if booking.can_complete():
                 booking.status = STATUS_FULFILLED
                 db.session.commit()
-                flash('All services are fulfilled. Booking marked as fulfilled!', 'success')
+                flash('All services are confirmed. Booking marked as confirmed!', 'success')
             
         flash(f'Service item status updated to {service_item.status}', 'success')
     
@@ -592,7 +592,7 @@ def cancel_service_item(item_id):
     
     # Only allow cancellation of items that are not fulfilled
     if service_item.status == STATUS_FULFILLED:
-        flash('Cannot cancel a service item that has already been fulfilled', 'danger')
+        flash('Cannot cancel a service item that has already been confirmed', 'danger')
         return redirect(url_for('booking.details', booking_id=booking.id))
     
     # Process cancellation

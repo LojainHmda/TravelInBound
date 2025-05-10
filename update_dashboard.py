@@ -30,7 +30,7 @@ new_button_section = '''                                        <div class="btn-
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
-                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'FULFILLED' %}
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'CONFIRMED' %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
