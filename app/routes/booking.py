@@ -1136,7 +1136,7 @@ def confirm_service(item_id):
 
 @booking_bp.route('/<int:booking_id>/generate_invoice', methods=['GET', 'POST'])
 def generate_invoice(booking_id):
-    """Generate an invoice for a booking"""
+    """Generate a prepayment for a booking"""
     booking = Booking.query.get_or_404(booking_id)
     form = GenerateInvoiceForm()
     
@@ -1197,7 +1197,7 @@ def generate_invoice(booking_id):
             # You could save notes to the booking or create a separate model for prepayment notes
             
             db.session.commit()
-            flash(f'Prepayment invoice {booking.invoice_number} generated successfully', 'success')
+            flash(f'Prepayment {booking.invoice_number} generated successfully', 'success')
             
             # Check if this is from the new booking form by looking at the referrer or a flag
             if 'save_action' in request.form:
@@ -1211,15 +1211,15 @@ def generate_invoice(booking_id):
 
 @booking_bp.route('/<int:booking_id>/invoice', methods=['GET'])
 def invoice_details(booking_id):
-    """View invoice details"""
+    """View prepayment details"""
     import sys
-    print(f"Invoice details route called for booking_id: {booking_id}", file=sys.stderr)
+    print(f"Prepayment details route called for booking_id: {booking_id}", file=sys.stderr)
     
     booking = Booking.query.get_or_404(booking_id)
     
     # If no invoice yet, redirect to generate page
     if not booking.invoice_number:
-        flash('No invoice generated yet. Please generate an invoice first.', 'warning')
+        flash('No prepayment generated yet. Please generate a prepayment first.', 'warning')
         return redirect(url_for('booking.generate_invoice', booking_id=booking.id))
     
     # Ensure we have an invoice date

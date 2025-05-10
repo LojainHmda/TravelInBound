@@ -25,7 +25,7 @@ window.existingPayments = [
             <i class="fas fa-credit-card me-2"></i>Record Payment
         </h2>
         <p class="text-muted">
-            For Booking #{{ booking.reference_number }} - Invoice #{{ booking.invoice_number }}
+            For Booking #{{ booking.reference_number }} - Prepayment #{{ booking.invoice_number }}
         </p>
     </div>
 </div>
@@ -109,11 +109,11 @@ window.existingPayments = [
     <div class="col-md-4">
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Invoice Summary</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Prepayment Summary</h5>
             </div>
             <div class="card-body">
-                <p class="mb-2"><strong>Invoice Number:</strong> {{ booking.invoice_number }}</p>
-                <p class="mb-2"><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') }}</p>
+                <p class="mb-2"><strong>Prepayment Number:</strong> {{ booking.invoice_number }}</p>
+                <p class="mb-2"><strong>Prepayment Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') }}</p>
                 <p class="mb-2"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
                 
                 {% if booking.payments %}
