@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+from app.models import STATUS_PLANNED, STATUS_PREPAID, STATUS_QUEUED, STATUS_PROCESSING, STATUS_CONFIRMED, STATUS_CLOSED
 
 # Payment status constants
 PAYMENT_NONE = 'NONE'
@@ -12,7 +12,7 @@ class Booking(db.Model):
     reference_number = db.Column(db.String(20), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
-    status = db.Column(db.String(20), default=STATUS_REQUEST)
+    status = db.Column(db.String(20), default=STATUS_PLANNED)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     total_amount = db.Column(db.Float, default=0.0)
@@ -38,11 +38,11 @@ class Booking(db.Model):
         return total
     
     def can_complete(self):
-        """Check if all service items are fulfilled"""
+        """Check if all service items are confirmed"""
         if not self.service_items:
             return False
         
-        return all(item.status == STATUS_FULFILLED for item in self.service_items)
+        return all(item.status == STATUS_CONFIRMED for item in self.service_items)
     
     def update_payment_status(self):
         """Update payment status based on payments received"""
@@ -52,18 +52,18 @@ class Booking(db.Model):
             self.payment_status = PAYMENT_NONE
         elif total_paid >= self.total_amount:
             self.payment_status = PAYMENT_FULL
-            # If payment is complete and status is BOOKED, automatically move to IN_PROGRESS
-            if self.status == STATUS_BOOKED:
-                self.status = STATUS_IN_PROGRESS
+            # If payment is complete and status is PREPAID, automatically move to QUEUED
+            if self.status == STATUS_PREPAID:
+                self.status = STATUS_QUEUED
         else:
             self.payment_status = PAYMENT_PARTIAL
         
         return self.payment_status
     
     def generate_invoice_number(self):
-        """Generate a unique invoice number"""
+        """Generate a unique prepayment number"""
         if not self.invoice_number:
-            prefix = "INV"
+            prefix = "PRE"
             year = datetime.utcnow().strftime("%y")
             # Use the booking ID to ensure uniqueness
             self.invoice_number = f"{prefix}-{year}-{self.id:04d}"
