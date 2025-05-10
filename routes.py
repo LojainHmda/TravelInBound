@@ -176,6 +176,10 @@ def booking_details(booking_id):
     status_form = UpdateServiceStatusForm()
     status_form.status.data = booking.status
     
+    # Debug status values
+    print(f"Booking Status from DB: {booking.status}", file=sys.stderr)
+    print(f"Available status choices: {status_form.status.choices}", file=sys.stderr)
+    
     return render_template(
         'booking/booking_details.html',
         booking=booking,
