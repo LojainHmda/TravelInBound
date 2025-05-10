@@ -160,7 +160,50 @@ def new_booking():
             
         elif 'save_action' in request.form:
             print("Save button clicked")
-            if form.validate():
+            
+            # Check if we already have a booking reference in the request - if so, this is likely an update
+            reference = form.request_id.data
+            existing_booking = Booking.query.filter_by(reference_number=reference).first()
+            
+            # When updating an existing booking with invoice amount, we'll bypass strict validation
+            # This allows updating just the total_amount without requiring customer selection again
+            if existing_booking and request.form.get('save_action') == 'generate_invoice' and (request.form.get('total_amount') or request.form.get('invoice_total')):
+                # We have an existing booking, we're generating invoice, and we have a total amount
+                print(f"Updating existing booking {reference} with new invoice amount")
+                action = 'generate_invoice'
+                booking = existing_booking
+                
+                # Jump directly to the invoice generation code
+                import sys
+                print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
+                
+                # Update the total amount if provided
+                invoice_total = request.form.get('invoice_total') or request.form.get('total_amount')
+                try:
+                    invoice_total = float(invoice_total) if invoice_total else None
+                    if invoice_total and invoice_total > 0:
+                        print(f"Setting booking total to {invoice_total}", file=sys.stderr)
+                        booking.total_amount = invoice_total
+                except (ValueError, TypeError):
+                    print(f"Invalid invoice_total: {invoice_total}", file=sys.stderr)
+                
+                # Generate invoice number if one doesn't exist
+                if not booking.invoice_number:
+                    booking.generate_invoice_number()
+                    print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
+                
+                # Update the booking status to BOOKED
+                booking.status = STATUS_BOOKED
+                
+                # Save changes
+                db.session.commit()
+                flash(f'Invoice {booking.invoice_number} updated successfully with new amount: {booking.total_amount}', 'success')
+                
+                # Redirect to the booking details page
+                return redirect(url_for('booking.booking_details', booking_id=booking.id))
+                
+            elif form.validate():
+                # Regular validation for new bookings
                 # Get the action type (save or generate_invoice)
                 action = request.form.get('save_action', 'save')
                 
@@ -301,8 +344,14 @@ def new_booking():
                     import sys
                     print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
                     
-                    # Update the total amount if provided in the modal form
+                    # Update the total amount if provided either in the modal form or direct form
+                    # First check for invoice_total (from modal)
                     invoice_total = request.form.get('invoice_total')
+                    
+                    # If not found, try total_amount (from direct form field)
+                    if not invoice_total:
+                        invoice_total = request.form.get('total_amount')
+                        
                     if invoice_total:
                         try:
                             invoice_total = float(invoice_total)
