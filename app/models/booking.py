@@ -1,6 +1,6 @@
 from app import db
 from datetime import datetime
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_COMPLETED
 
 # Payment status constants
 PAYMENT_NONE = 'NONE'
@@ -38,11 +38,11 @@ class Booking(db.Model):
         return total
     
     def can_complete(self):
-        """Check if all service items are fulfilled"""
+        """Check if all service items are confirmed"""
         if not self.service_items:
             return False
         
-        return all(item.status == STATUS_FULFILLED for item in self.service_items)
+        return all(item.status == STATUS_CONFIRMED for item in self.service_items)
     
     def update_payment_status(self):
         """Update payment status based on payments received"""

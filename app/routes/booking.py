@@ -565,10 +565,10 @@ def update_service_status(item_id):
         service_item.status = form.status.data
         db.session.commit()
         
-        # If the status is changed to FULFILLED, check if all items are now confirmed
-        if service_item.status == STATUS_FULFILLED:
+        # If the status is changed to CONFIRMED, check if all items are now confirmed
+        if service_item.status == STATUS_CONFIRMED:
             if booking.can_complete():
-                booking.status = STATUS_FULFILLED
+                booking.status = STATUS_CONFIRMED
                 db.session.commit()
                 flash('All services are confirmed. Booking marked as confirmed!', 'success')
             
@@ -594,7 +594,7 @@ def cancel_service_item(item_id):
         return redirect(url_for('booking.details', booking_id=booking.id))
     
     # Only allow cancellation of items that are not confirmed
-    if service_item.status == STATUS_FULFILLED:
+    if service_item.status == STATUS_CONFIRMED:
         flash('Cannot cancel a service item that has already been confirmed', 'danger')
         return redirect(url_for('booking.details', booking_id=booking.id))
     
@@ -925,8 +925,8 @@ def confirm_service(item_id):
         saved_doc = Document.query.get(document.id)
         print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
-        # Mark this service item as FULFILLED
-        service_item.status = STATUS_FULFILLED
+        # Mark this service item as CONFIRMED
+        service_item.status = STATUS_CONFIRMED
         db.session.commit()
         
         flash(f'{service_item.service_type} confirmation details saved', 'success')

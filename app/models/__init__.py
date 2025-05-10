@@ -9,8 +9,8 @@ SERVICE_INSURANCE = 'INSURANCE'
 STATUS_REQUEST = 'REQUEST'
 STATUS_BOOKED = 'BOOKED'
 STATUS_IN_PROGRESS = 'IN_PROGRESS'
-STATUS_FULFILLED = 'CONFIRMED'
-STATUS_COMPLETED = 'COMPLETED'
+STATUS_CONFIRMED = 'CONFIRMED'  # New standard term
+STATUS_COMPLETED = 'COMPLETED'  # Consider deprecating in favor of STATUS_CONFIRMED
 
 # Import models
 from app.models.user import User, Agent, create_test_data
@@ -22,5 +22,5 @@ from app.models.customer import Customer, CustomerDocument
 
 # Import service models
 from app.models.service import ServiceConfirmation, ServiceItem, Document
-from app.models.service import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_FULFILLED, STATUS_COMPLETED
+from app.models.service import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_COMPLETED
 from app.models.service import SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
