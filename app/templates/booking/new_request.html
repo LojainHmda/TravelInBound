@@ -614,10 +614,19 @@ document.addEventListener('DOMContentLoaded', function() {
             hiddenTotalInput.name = 'invoice_total';
             hiddenTotalInput.value = totalAmount;
             
-            // Add the hidden input to the form
+            // Ensure customer selection is preserved
+            const customerSelect = document.getElementById('customer-select');
+            const selectedCustomerId = customerSelect ? customerSelect.value : '';
+            const hiddenCustomerInput = document.createElement('input');
+            hiddenCustomerInput.type = 'hidden';
+            hiddenCustomerInput.name = 'customer';
+            hiddenCustomerInput.value = selectedCustomerId;
+            
+            // Add the hidden inputs to the form
             const bookingForm = document.getElementById('newBookingForm');
             if (bookingForm) {
                 bookingForm.appendChild(hiddenTotalInput);
+                bookingForm.appendChild(hiddenCustomerInput);
                 
                 // Set the save_action to generate_invoice
                 const hiddenActionInput = document.createElement('input');
