@@ -111,6 +111,30 @@ def create_booking_from_detail():
     # If something went wrong, redirect back to the dashboard
     return redirect(url_for('main.dashboard'))
 
+@booking_bp.route('/new/detail', methods=['GET'])
+def new_booking_detail():
+    """Create a new booking using the booking details page"""
+    # Create an empty booking form
+    service_form = ServiceItemForm()
+    status_form = UpdateServiceStatusForm()
+    
+    # Get all customers for the customer selection modal
+    from app.models.customer import Customer
+    customers = Customer.query.all()
+    
+    # Generate a new request ID
+    request_id = f"IR-{str(uuid.uuid4())[:5].upper()}"
+    
+    return render_template(
+        'booking/booking_details.html',
+        booking=None,
+        service_form=service_form,
+        status_form=status_form,
+        customers=customers,
+        is_new_booking=True,
+        request_id=request_id
+    )
+
 @booking_bp.route('/new', methods=['GET', 'POST'])
 def new_booking():
     """Create a new booking request with itinerary items"""

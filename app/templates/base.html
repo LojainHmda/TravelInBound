@@ -15,103 +15,290 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=2) }}">
     <!-- Button Theme CSS (loads last to override other styles) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css', v=1) }}">
+    
+    <style>
+        /* Sidebar Styles */
+        body {
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .app-container {
+            display: flex;
+            flex: 1;
+        }
+        
+        #sidebar {
+            width: 260px;
+            background-color: #0d3c74;
+            color: #fff;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+            transition: all 0.3s;
+            box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        #sidebar.collapsed {
+            margin-left: -260px;
+        }
+        
+        #content {
+            flex: 1;
+            margin-left: 260px;
+            transition: all 0.3s;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #content.expanded {
+            margin-left: 0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand:hover {
+            color: white;
+            text-decoration: none;
+        }
+        
+        .sidebar-nav {
+            padding: 0;
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .sidebar-nav li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-nav a {
+            padding: 15px 20px;
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: #FFBF00;
+        }
+        
+        .sidebar-nav a i {
+            width: 25px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 15px 20px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        #toggle-sidebar {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -260px;
+            }
+            
+            #sidebar.active {
+                margin-left: 0;
+            }
+            
+            #content {
+                margin-left: 0;
+            }
+            
+            #sidebar-overlay {
+                display: none;
+                position: fixed;
+                width: 100%;
+                height: 100%;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 99;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            #sidebar-overlay.active {
+                display: block;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-plane-departure me-2"></i>
-                TravelBookPro
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('booking.new_booking') }}">New Booking</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.dashboard') }}">Dashboard</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-users"></i> Customers & Suppliers
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('customer.list_customers') }}">
-                                <i class="fas fa-user-friends"></i> Customers
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('supplier.list_suppliers') }}">
-                                <i class="fas fa-building"></i> Suppliers
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('supplier.supplier_statements') }}">
-                                <i class="fas fa-file-invoice-dollar"></i> Supplier Statements
-                            </a></li>
-                        </ul>
-                    </li>
-                </ul>
-                <span class="navbar-text">
-                    <i class="fas fa-user-circle"></i> Test User
-                </span>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <a href="{{ url_for('main.index') }}" class="sidebar-brand">
+                    <i class="fas fa-plane-departure me-2"></i>
+                    TravelBookPro
+                </a>
+                <button id="toggle-sidebar" aria-label="Close Menu">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-        </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    <div class="container mt-3">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-    </div>
-
-    <!-- Main Content -->
-    <main class="container my-4">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>TravelBookPro</h5>
-                    <p>Your professional travel booking management solution</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ url_for('main.index') }}" class="text-light">Home</a></li>
-                        <li><a href="{{ url_for('booking.new_booking') }}" class="text-light">New Booking</a></li>
-                        <li><a href="{{ url_for('main.dashboard') }}" class="text-light">Dashboard</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Contact</h5>
-                    <address>
-                        <i class="fas fa-envelope me-2"></i> info@travelbookpro.com<br>
-                        <i class="fas fa-phone me-2"></i> +1 (555) 123-4567
-                    </address>
+            
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{{ url_for('main.index') }}" class="{% if request.path == url_for('main.index') %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        Home
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="{% if request.path == url_for('booking.new_booking_detail') %}active{% endif %}">
+                        <i class="fas fa-plus-circle"></i>
+                        New Booking
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('main.dashboard') }}" class="{% if request.path == url_for('main.dashboard') %}active{% endif %}">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('customer.list_customers') }}" class="{% if request.path == url_for('customer.list_customers') %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        Customers
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('supplier.list_suppliers') }}" class="{% if request.path == url_for('supplier.list_suppliers') %}active{% endif %}">
+                        <i class="fas fa-building"></i>
+                        Suppliers
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('supplier.supplier_statements') }}" class="{% if request.path == url_for('supplier.supplier_statements') %}active{% endif %}">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        Supplier Statements
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-user-circle me-2"></i>
+                    <span>Test User</span>
                 </div>
             </div>
-            <div class="text-center mt-3">
-                <p>&copy; 2025 TravelBookPro. All rights reserved.</p>
+        </nav>
+        
+        <!-- Main Content Area -->
+        <div id="content">
+            <!-- Mobile Navbar for Toggling Sidebar -->
+            <nav class="navbar navbar-light bg-light d-md-none" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div class="container-fluid">
+                    <button class="btn" type="button" id="mobile-sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <span class="navbar-brand mb-0 h1">
+                        <i class="fas fa-plane-departure me-2"></i>
+                        TravelBookPro
+                    </span>
+                    <div style="width: 42px;"><!-- Placeholder to balance the navbar --></div>
+                </div>
+            </nav>
+            
+            <!-- Flash Messages -->
+            <div class="container-fluid mt-3">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
             </div>
-        </div>
-    </footer>
+            
+            <!-- Sidebar Toggle Button (Fixed Position) -->
+            <div class="position-fixed" style="top: 10px; left: 10px; z-index: 99; display: none;" id="fixed-sidebar-toggle">
+                <button class="btn btn-primary" style="width: 50px; height: 45px; border-radius: 8px; background-color: #0d3c74; border: 2px solid #fff;">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- Main Content -->
+            <main class="container-fluid my-4">
+                {% block content %}{% endblock %}
+            </main>
+            
+            <!-- Footer -->
+            <footer class="bg-dark text-light py-4 mt-auto">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>TravelBookPro</h5>
+                            <p>Your professional travel booking management solution</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Quick Links</h5>
+                            <ul class="list-unstyled">
+                                <li><a href="{{ url_for('main.index') }}" class="text-light">Home</a></li>
+                                <li><a href="{{ url_for('booking.new_booking') }}" class="text-light">New Booking</a></li>
+                                <li><a href="{{ url_for('main.dashboard') }}" class="text-light">Dashboard</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>Contact</h5>
+                            <address>
+                                <i class="fas fa-envelope me-2"></i> info@travelbookpro.com<br>
+                                <i class="fas fa-phone me-2"></i> +1 (555) 123-4567
+                            </address>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <p>&copy; 2025 TravelBookPro. All rights reserved.</p>
+                    </div>
+                </div>
+            </footer>
+        </div><!-- end of #content -->
 
+    </div><!-- end of .app-container -->
+    
+    <!-- Sidebar Overlay for Mobile -->
+    <div id="sidebar-overlay"></div>
+    
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS Bundle with Popper -->
@@ -121,6 +308,57 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
     <script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
+    
+    <!-- Sidebar Toggle JS -->
+    <script>
+        $(document).ready(function() {
+            // Toggle sidebar on button click
+            $('#toggle-sidebar, #mobile-sidebar-toggle, #fixed-sidebar-toggle button').on('click', function() {
+                $('#sidebar').toggleClass('collapsed');
+                $('#content').toggleClass('expanded');
+                $('#sidebar-overlay').toggleClass('active');
+                updateFixedToggleButton();
+            });
+            
+            // Close sidebar when clicking on overlay (mobile)
+            $('#sidebar-overlay').on('click', function() {
+                $('#sidebar').addClass('collapsed');
+                $('#content').addClass('expanded');
+                $('#sidebar-overlay').removeClass('active');
+                updateFixedToggleButton();
+            });
+            
+            // Function to update the fixed toggle button visibility
+            function updateFixedToggleButton() {
+                if ($('#sidebar').hasClass('collapsed')) {
+                    $('#fixed-sidebar-toggle').show();
+                } else {
+                    $('#fixed-sidebar-toggle').hide();
+                }
+            }
+            
+            // Auto-collapse sidebar on small screens
+            function handleResize() {
+                if ($(window).width() < 768) {
+                    $('#sidebar').addClass('collapsed');
+                    $('#content').addClass('expanded');
+                } else {
+                    $('#sidebar').removeClass('collapsed');
+                    $('#content').removeClass('expanded');
+                }
+                updateFixedToggleButton();
+            }
+            
+            // Run on page load
+            handleResize();
+            
+            // Run on window resize
+            $(window).on('resize', function() {
+                handleResize();
+            });
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
