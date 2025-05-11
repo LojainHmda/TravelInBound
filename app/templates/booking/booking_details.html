@@ -35,13 +35,19 @@
                 <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions</h5>
             </div>
             <div class="card-body">
-                <a href="{{ url_for('booking.new_booking') }}" class="btn btn-yellow action-button">
+                <a href="#" class="btn btn-yellow action-button" data-bs-toggle="modal" data-bs-target="#newBookingModal">
                     <i class="fas fa-plus-circle"></i> New Booking
                 </a>
                 
-                <a href="#" class="btn btn-yellow action-button" id="startOperationsBtn">
-                    <i class="fas fa-play-circle"></i> Start Operations
-                </a>
+                <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="mb-0">
+                    {% if status_form %}
+                    {{ status_form.hidden_tag() }}
+                    {% endif %}
+                    <input type="hidden" name="new_status" value="IN_PROGRESS">
+                    <button type="submit" class="btn btn-yellow action-button">
+                        <i class="fas fa-play-circle"></i> Start Operations
+                    </button>
+                </form>
                 
                 {% if booking.status == 'REQUEST' %}
                 <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-yellow action-button">
@@ -1039,4 +1045,88 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 {% endfor %}
+
+<!-- New Booking Modal -->
+<div class="modal fade" id="newBookingModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #FFBF00; color: black;">
+                <h5 class="modal-title"><i class="fas fa-plus-circle me-2"></i>New Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newBookingForm" method="POST" action="{{ url_for('booking.create_booking_from_detail') }}">
+                    {% if booking_form %}
+                    {{ booking_form.hidden_tag() }}
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Customer</label>
+                        <div class="input-group">
+                            <input type="text" id="selectedCustomerDisplay" class="form-control" readonly placeholder="No customer selected" required>
+                            <input type="hidden" id="customerId" name="customer" required>
+                            <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                                <i class="fas fa-users me-1"></i> Browse
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Request ID</label>
+                                <input type="text" name="request_id" class="form-control" value="REQ-{{ '%05d'|format(range(10000, 99999)|random) }}">
+                                <small class="text-muted">Unique identifier for this request</small>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-yellow" id="createBookingBtn" disabled>
+                            <i class="fas fa-plus-circle me-1"></i>Create Booking
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include the customer selection modal -->
+{% include 'customer_selection_modal.html' %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle customer selection for new booking
+        document.querySelectorAll('.customer-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const customerId = this.getAttribute('data-customer-id');
+                const customerName = this.getAttribute('data-customer-name');
+                const customerEmail = this.getAttribute('data-customer-email');
+                
+                // Update the hidden input with customer ID
+                document.getElementById('customerId').value = customerId;
+                
+                // Update the display field
+                document.getElementById('selectedCustomerDisplay').value = `${customerName} (${customerEmail})`;
+                
+                // Enable create booking button
+                document.getElementById('createBookingBtn').disabled = false;
+                
+                // Select the radio button
+                const radio = this.querySelector('.customer-select');
+                if (radio) radio.checked = true;
+            });
+        });
+        
+        // Handle submit to create a new booking
+        document.getElementById('newBookingForm').addEventListener('submit', function(e) {
+            if (!document.getElementById('customerId').value) {
+                e.preventDefault();
+                alert('Please select a customer first');
+            }
+        });
+    });
+</script>
 {% endblock %}
