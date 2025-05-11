@@ -2,6 +2,7 @@
 :root {
     --primary-color: #123E7A; /* Dark Blue */
     --secondary-color: #FF7F00; /* Orange */
+    --button-color: #FFBF00; /* Yellow - main button color */
     --light-color: #ffffff; /* White */
     --text-dark: #333333;
     --text-light: #f8f9fa;
@@ -27,8 +28,9 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
+    background-color: var(--button-color);
+    border-color: var(--button-color);
+    color: #000000;
 }
 
 .text-orange {
@@ -36,8 +38,21 @@ body {
 }
 
 .btn-primary:hover, .btn-primary:focus {
-    background-color: #0a2d5e;
-    border-color: #0a2d5e;
+    background-color: #E6AC00;
+    border-color: #E6AC00;
+    color: #000000;
+}
+
+.btn-yellow {
+    background-color: var(--button-color);
+    border-color: var(--button-color);
+    color: #000000;
+}
+
+.btn-yellow:hover, .btn-yellow:focus {
+    background-color: #E6AC00;
+    border-color: #E6AC00;
+    color: #000000;
 }
 
 .text-primary {
@@ -367,13 +382,27 @@ body {
 }
 
 .btn-dark-blue {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--button-color);
+    color: #000000;
 }
 
 .btn-dark-blue:hover {
-    background-color: #0e2d58;
-    color: white;
+    background-color: #E6AC00;
+    color: #000000;
+}
+
+/* Make all button styles consistent with our yellow theme */
+.btn-success, .btn-info, .btn-secondary {
+    background-color: var(--button-color);
+    border-color: var(--button-color);
+    color: #000000;
+}
+
+.btn-success:hover, .btn-info:hover, .btn-secondary:hover,
+.btn-success:focus, .btn-info:focus, .btn-secondary:focus {
+    background-color: #E6AC00;
+    border-color: #E6AC00;
+    color: #000000;
 }
 
 /* Dashboard Icon */

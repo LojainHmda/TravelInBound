@@ -1,42 +1,105 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2 class="fw-bold">
-            <i class="fas fa-clipboard-check me-2"></i>Booking #{{ booking.reference_number }}
-        </h2>
-        <p class="text-muted">
-            Created on {{ booking.created_at.strftime('%d %b %Y, %H:%M') }} by {{ booking.requester.username }}
-        </p>
-    </div>
-    <div class="col-md-4 text-end">
-        <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
-        
-        {% if booking.status == 'INVOICE' %}
-        <div class="mb-2">
-            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
-                {{ status_form.hidden_tag() }}
-                <input type="hidden" name="new_status" value="IN_PROGRESS">
-                <button type="submit" class="btn btn-warning w-100" {% if booking.payment_status != 'FULL' %}title="Warning: Payment is not complete"{% endif %}>
-                    <i class="fas fa-cogs me-2"></i>Start Operations
-                </button>
-            </form>
-            {% if booking.payment_status != 'FULL' %}
-            <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Payment not complete</small>
-            {% endif %}
-        </div>
-        {% endif %}
-        
-        <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="mt-2">
-            {{ status_form.hidden_tag() }}
-            <div class="input-group">
-                {{ status_form.status(class="form-select") }}
-                <button type="submit" class="btn btn-primary">Update</button>
+<style>
+    .action-box {
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
+    }
+    .action-button {
+        display: block;
+        margin-bottom: 10px;
+        width: 100%;
+        text-align: left;
+        padding: 12px 15px;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    .action-button i {
+        width: 24px;
+        margin-right: 8px;
+        text-align: center;
+    }
+    .action-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="row">
+    <!-- Left Sidebar with Action Buttons -->
+    <div class="col-md-3 mb-4">
+        <div class="card action-box">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions</h5>
             </div>
-        </form>
+            <div class="card-body">
+                <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary action-button">
+                    <i class="fas fa-plus-circle"></i> New Booking
+                </a>
+                
+                <a href="#" class="btn btn-success action-button" id="startOperationsBtn">
+                    <i class="fas fa-play-circle"></i> Start Operations
+                </a>
+                
+                {% if booking.status == 'REQUEST' %}
+                <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-info action-button">
+                    <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
+                </a>
+                {% endif %}
+                
+                <a href="#" class="btn btn-warning action-button">
+                    <i class="fas fa-file-export"></i> Export Details
+                </a>
+                
+                <hr>
+                
+                <a href="#" class="btn btn-outline-danger action-button">
+                    <i class="fas fa-trash-alt"></i> Cancel Booking
+                </a>
+            </div>
+        </div>
     </div>
-</div>
+    
+    <!-- Main Content Area -->
+    <div class="col-md-9">
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h2 class="fw-bold">
+                    <i class="fas fa-clipboard-check me-2"></i>Booking #{{ booking.reference_number }}
+                </h2>
+                <p class="text-muted">
+                    Created on {{ booking.created_at.strftime('%d %b %Y, %H:%M') }} by {{ booking.requester.username }}
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
+                
+                {% if booking.status == 'INVOICE' %}
+                <div class="mb-2">
+                    <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                        {{ status_form.hidden_tag() }}
+                        <input type="hidden" name="new_status" value="IN_PROGRESS">
+                        <button type="submit" class="btn btn-warning w-100" {% if booking.payment_status != 'FULL' %}title="Warning: Payment is not complete"{% endif %}>
+                            <i class="fas fa-cogs me-2"></i>Start Operations
+                        </button>
+                    </form>
+                    {% if booking.payment_status != 'FULL' %}
+                    <small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Payment not complete</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="mt-2">
+                    {{ status_form.hidden_tag() }}
+                    <div class="input-group">
+                        {{ status_form.status(class="form-select") }}
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
+        </div>
 
 <!-- Top Horizontal Information Section -->
 <div class="row mb-4">
@@ -103,23 +166,23 @@
                     <div class="d-flex align-items-center">
                         <strong class="me-2 text-dark">Quick Add:</strong>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal" 
-                               style="background: linear-gradient(135deg, #ff9800, #f44336); border: none; color: white;">
+                               style="background-color: #FFBF00; border: none; color: black;">
                             <i class="fas fa-plane"></i>
                         </button>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                               style="background: linear-gradient(135deg, #ff9800, #f44336); border: none; color: white;">
+                               style="background-color: #FFBF00; border: none; color: black;">
                             <i class="fas fa-hotel"></i>
                         </button>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                               style="background: linear-gradient(135deg, #ff9800, #f44336); border: none; color: white;">
+                               style="background-color: #FFBF00; border: none; color: black;">
                             <i class="fas fa-car"></i>
                         </button>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                               style="background: linear-gradient(135deg, #ff9800, #f44336); border: none; color: white;">
+                               style="background-color: #FFBF00; border: none; color: black;">
                             <i class="fas fa-passport"></i>
                         </button>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                               style="background: linear-gradient(135deg, #ff9800, #f44336); border: none; color: white;">
+                               style="background-color: #FFBF00; border: none; color: black;">
                             <i class="fas fa-shield-alt"></i>
                         </button>
                     </div>

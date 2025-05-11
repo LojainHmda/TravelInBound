@@ -1,0 +1,33 @@
+<!-- Left Sidebar with Action Buttons -->
+<div class="col-md-3 mb-4">
+    <div class="card action-box">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('booking.new_booking') }}" class="btn btn-primary action-button">
+                <i class="fas fa-plus-circle"></i> New Booking
+            </a>
+            
+            <a href="#" class="btn btn-success action-button" id="startOperationsBtn">
+                <i class="fas fa-play-circle"></i> Start Operations
+            </a>
+            
+            {% if booking.status == 'REQUEST' %}
+            <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-info action-button">
+                <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
+            </a>
+            {% endif %}
+            
+            <a href="#" class="btn btn-warning action-button">
+                <i class="fas fa-file-export"></i> Export Details
+            </a>
+            
+            <hr>
+            
+            <a href="#" class="btn btn-outline-danger action-button">
+                <i class="fas fa-trash-alt"></i> Cancel Booking
+            </a>
+        </div>
+    </div>
+</div>
