@@ -74,6 +74,43 @@ def booking_api_details(booking_id):
     
     return jsonify(booking_data)
 
+@booking_bp.route('/create-from-detail', methods=['POST'])
+def create_booking_from_detail():
+    """Create a new booking from the booking details page"""
+    from app.models.customer import Customer
+    
+    if request.method == 'POST':
+        # Get the customer ID from the form
+        customer_id = request.form.get('customer')
+        request_id = request.form.get('request_id')
+        
+        if customer_id:
+            customer = Customer.query.get(int(customer_id))
+            if customer:
+                # Generate reference number (same format as request_id if provided)
+                reference = request_id or f"REQ-{str(uuid.uuid4())[:8].upper()}"
+                
+                # Create the booking
+                booking = Booking(
+                    reference_number=reference,
+                    user_id=1,  # Use a default user_id (first admin user)
+                    customer_id=customer.id,
+                    status=STATUS_REQUEST
+                )
+                
+                db.session.add(booking)
+                db.session.commit()
+                
+                flash(f'Booking {reference} created successfully!', 'success')
+                return redirect(url_for('booking.details', booking_id=booking.id))
+            else:
+                flash('Customer not found!', 'danger')
+        else:
+            flash('Please select a customer!', 'danger')
+    
+    # If something went wrong, redirect back to the dashboard
+    return redirect(url_for('main.dashboard'))
+
 @booking_bp.route('/new', methods=['GET', 'POST'])
 def new_booking():
     """Create a new booking request with itinerary items"""
