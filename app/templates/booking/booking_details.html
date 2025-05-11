@@ -44,9 +44,12 @@
                     {{ status_form.hidden_tag() }}
                     {% endif %}
                     <input type="hidden" name="new_status" value="IN_PROGRESS">
-                    <button type="submit" class="btn btn-yellow action-button">
+                    <button type="submit" class="btn btn-yellow action-button" {% if booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' %}disabled title="Payment required before starting operations"{% endif %}>
                         <i class="fas fa-play-circle"></i> Start Operations
                     </button>
+                    {% if booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' %}
+                    <small class="text-danger d-block mt-1"><i class="fas fa-exclamation-triangle"></i> Payment required</small>
+                    {% endif %}
                 </form>
                 
                 {% if booking.status == 'REQUEST' %}
@@ -80,7 +83,7 @@
                 </p>
             </div>
             <div class="col-md-4 text-end">
-                <span class="badge status-{{ booking.status.lower() }} fs-5 mb-2">{{ booking.status }}</span>
+                <span class="badge bg-dark-blue fs-5 mb-2">{{ booking.status }}</span>
                 
                 {% if booking.status == 'INVOICE' %}
                 <div class="mb-2">
@@ -109,32 +112,36 @@
 
 <!-- Top Horizontal Information Section -->
 <div class="row mb-4">
-    <!-- Customer Information (No Box) -->
+    <!-- Customer Information with Dark Blue Header -->
     <div class="col-md-6">
-        <div class="ps-2 pt-2">
-            <h5><i class="fas fa-user me-2"></i>Customer Information</h5>
-            {% if booking.customer %}
-                <p><strong>Name:</strong> {{ booking.customer.name }}</p>
-                <p><strong>Email:</strong> {{ booking.customer.email }}</p>
-                {% if booking.customer.phone %}
-                    <p class="mb-0"><strong>Phone:</strong> {{ booking.customer.phone }}</p>
+        <div class="card h-100">
+            <div class="card-header bg-dark-blue text-white">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+            </div>
+            <div class="card-body">
+                {% if booking.customer %}
+                    <p><strong>Name:</strong> {{ booking.customer.name }}</p>
+                    <p><strong>Email:</strong> {{ booking.customer.email }}</p>
+                    {% if booking.customer.phone %}
+                        <p class="mb-0"><strong>Phone:</strong> {{ booking.customer.phone }}</p>
+                    {% endif %}
+                    {% if booking.customer.customer_type == 'Corporate' and booking.customer.company_name %}
+                        <p class="mb-0"><strong>Company:</strong> {{ booking.customer.company_name }}</p>
+                    {% endif %}
+                {% else %}
+                    <p><strong>Name:</strong> {{ booking.requester.username }}</p>
+                    <p class="mb-0"><strong>Email:</strong> {{ booking.requester.email }}</p>
                 {% endif %}
-                {% if booking.customer.customer_type == 'Corporate' and booking.customer.company_name %}
-                    <p class="mb-0"><strong>Company:</strong> {{ booking.customer.company_name }}</p>
-                {% endif %}
-            {% else %}
-                <p><strong>Name:</strong> {{ booking.requester.username }}</p>
-                <p class="mb-0"><strong>Email:</strong> {{ booking.requester.email }}</p>
-            {% endif %}
+            </div>
         </div>
     </div>
     
-    <!-- Payment Information Card with Dark Blue Header -->
+    <!-- Payment & Invoice Card with Dark Blue Header -->
     <div class="col-md-6">
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between align-items-center bg-dark-blue text-white">
-                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h5>
-                <a href="#" class="btn btn-sm btn-warning" style="background-color: #ff9800; border-color: #ff9800;" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment & Invoice</h5>
+                <a href="#" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
                     <i class="fas fa-plus me-1"></i> Add Payment
                 </a>
             </div>
@@ -151,10 +158,28 @@
                     {% endif %}
                 </p>
                 
+                <p class="mb-1"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
+                
                 {% if booking.payments %}
                     {% set total_paid = booking.payments|sum(attribute='amount') %}
                     <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
                     <p class="mb-0"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
+                {% endif %}
+                
+                <!-- Invoice Status -->
+                {% if booking.invoice_number %}
+                    <div class="mt-3">
+                        <p class="mb-1"><strong>Invoice #:</strong> {{ booking.invoice_number }}</p>
+                        <p class="mb-0">
+                            <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-yellow mt-2">
+                                <i class="fas fa-file-invoice me-1"></i> View Invoice
+                            </a>
+                        </p>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>No invoice generated yet.
+                    </div>
                 {% endif %}
             </div>
         </div>
