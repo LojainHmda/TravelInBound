@@ -162,15 +162,33 @@
             const customerName = this.getAttribute('data-customer-name');
             const customerEmail = this.getAttribute('data-customer-email');
             
-            // Update the form's customer field
-            const customerSelect = document.getElementById('customer');
-            if (customerSelect) {
-                customerSelect.value = customerId;
+            // Update the form's customer field - check for both types of fields
+            const customerHiddenField = document.getElementById('customerId');
+            if (customerHiddenField) {
+                customerHiddenField.value = customerId;
             }
             
-            // Close the modal
+            // Update the display field if it exists
+            const customerDisplayField = document.getElementById('selectedCustomerDisplay');
+            if (customerDisplayField) {
+                customerDisplayField.value = `${customerName} (${customerEmail})`;
+            }
+            
+            // Enable the create booking button
+            const createBookingBtn = document.getElementById('createBookingBtn');
+            if (createBookingBtn) {
+                createBookingBtn.disabled = false;
+            }
+            
+            // Close the customer selection modal
             const modal = bootstrap.Modal.getInstance(customerModal);
             modal.hide();
+            
+            // Re-open the new booking modal after a short delay
+            setTimeout(() => {
+                const bookingModal = new bootstrap.Modal(document.getElementById('newBookingModal'));
+                bookingModal.show();
+            }, 500);
         });
     });
 </script>

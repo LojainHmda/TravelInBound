@@ -1099,23 +1099,41 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Booking form validation
-        document.getElementById('booking-form').addEventListener('submit', function(e) {
-            const customerField = document.getElementById('customer');
-            if (!customerField || !customerField.value) {
-                e.preventDefault();
-                alert('Please select a customer first');
-                // Open customer selection modal
-                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
-                customerModal.show();
-            }
-        });
+        const newBookingForm = document.getElementById('newBookingForm');
+        if (newBookingForm) {
+            newBookingForm.addEventListener('submit', function(e) {
+                const customerField = document.getElementById('customerId');
+                if (!customerField || !customerField.value) {
+                    e.preventDefault();
+                    alert('Please select a customer first');
+                    // Close this modal first
+                    const bookingModal = bootstrap.Modal.getInstance(document.getElementById('newBookingModal'));
+                    bookingModal.hide();
+                    
+                    // Then open customer selection modal
+                    setTimeout(() => {
+                        const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                        customerModal.show();
+                    }, 500);
+                }
+            });
+        }
         
-        // Add customer button should open the modal
-        const selectCustomerBtn = document.getElementById('selectCustomerBtn');
-        if (selectCustomerBtn) {
-            selectCustomerBtn.addEventListener('click', function() {
-                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
-                customerModal.show();
+        // Browse button in new booking form should open the modal
+        const browseCustomerBtn = document.querySelector('#newBookingForm button[data-bs-toggle="modal"]');
+        if (browseCustomerBtn) {
+            browseCustomerBtn.addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent default action to avoid possible nested modal issues
+                
+                // Close booking modal
+                const bookingModal = bootstrap.Modal.getInstance(document.getElementById('newBookingModal'));
+                bookingModal.hide();
+                
+                // Open customer selection modal after a short delay
+                setTimeout(() => {
+                    const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                    customerModal.show();
+                }, 500);
             });
         }
     });
