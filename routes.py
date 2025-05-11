@@ -80,7 +80,7 @@ def dashboard():
         }
     )
 
-# New booking request
+# New booking request (legacy - will be replaced by new_booking_detail)
 @app.route('/requests', methods=['GET', 'POST'])
 def new_booking():
     form = NewBookingForm()
@@ -149,6 +149,63 @@ def new_booking():
     
     return render_template('booking/new_request.html', form=form)
 
+# Create new booking from the booking details screen
+@app.route('/booking/create', methods=['POST'])
+def create_booking_from_detail():
+    # Get form data
+    reference = request.form.get('request_id')
+    customer_id = request.form.get('customer_id')
+    
+    if not customer_id:
+        flash('Please select a customer', 'danger')
+        return redirect(url_for('new_booking_detail'))
+    
+    # Get the selected user
+    user = User.query.get(customer_id)
+    
+    # Create the booking
+    booking = Booking(
+        reference_number=reference,
+        user_id=user.id,
+        status=STATUS_REQUEST
+    )
+    
+    db.session.add(booking)
+    db.session.commit()
+    
+    # Optionally add service item if data is provided
+    service_type = request.form.get('service_type')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    description = request.form.get('description')
+    amount = request.form.get('amount')
+    
+    if description and amount and start_date and end_date:
+        try:
+            # Convert string dates to date objects
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            amount = float(amount)
+            
+            service_item = ServiceItem(
+                booking_id=booking.id,
+                service_type=service_type,
+                start_date=start_date,
+                end_date=end_date,
+                description=description,
+                amount=amount,
+                status=STATUS_REQUEST
+            )
+            
+            db.session.add(service_item)
+            db.session.commit()
+        except Exception as e:
+            # Log the exception but continue with booking creation
+            print(f"Error adding service item: {e}")
+    
+    flash(f'Booking request {reference} created successfully', 'success')
+    return redirect(url_for('booking_details', booking_id=booking.id))
+
 # Booking details
 @app.route('/booking/<int:booking_id>', methods=['GET'])
 def booking_details(booking_id):
@@ -157,11 +214,39 @@ def booking_details(booking_id):
     status_form = UpdateServiceStatusForm()
     status_form.status.data = booking.status
     
+    # Get all customers for the customer selection modal
+    customers = User.query.all()  # Using User model for now; will be replaced with actual Customer model
+    
     return render_template(
         'booking/booking_details.html',
         booking=booking,
         service_form=service_form,
-        status_form=status_form
+        status_form=status_form,
+        customers=customers,
+        is_new_booking=False
+    )
+
+# New booking screen using the booking details template
+@app.route('/booking/new', methods=['GET'])
+def new_booking_detail():
+    # Create an empty booking form
+    service_form = ServiceItemForm()
+    status_form = UpdateServiceStatusForm()
+    
+    # Get all customers for the customer selection modal
+    customers = User.query.all()  # Using User model for now; will be replaced with actual Customer model
+    
+    # Generate a new request ID
+    request_id = f"IR-{str(uuid.uuid4())[:5].upper()}"
+    
+    return render_template(
+        'booking/booking_details.html',
+        booking=None,
+        service_form=service_form,
+        status_form=status_form,
+        customers=customers,
+        is_new_booking=True,
+        request_id=request_id
     )
 
 # Add service item to booking
@@ -353,6 +438,30 @@ def get_service_items(service_type):
             'end_date': item.end_date.strftime('%Y-%m-%d'),
             'amount': item.amount,
             'status': item.status
+        })
+    
+    return jsonify(result)
+
+# API to search for customers
+@app.route('/api/customers/search', methods=['GET'])
+def search_customers():
+    query = request.args.get('query', '')
+    
+    # Search in users table (will be replaced with Customer model later)
+    if query:
+        users = User.query.filter(
+            (User.username.ilike(f'%{query}%')) | 
+            (User.email.ilike(f'%{query}%'))
+        ).all()
+    else:
+        users = User.query.all()
+    
+    result = []
+    for user in users:
+        result.append({
+            'id': user.id,
+            'name': user.username,
+            'email': user.email
         })
     
     return jsonify(result)
