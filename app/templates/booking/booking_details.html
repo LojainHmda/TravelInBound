@@ -1098,35 +1098,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle customer selection for new booking
-        document.querySelectorAll('.customer-card').forEach(card => {
-            card.addEventListener('click', function() {
-                const customerId = this.getAttribute('data-customer-id');
-                const customerName = this.getAttribute('data-customer-name');
-                const customerEmail = this.getAttribute('data-customer-email');
-                
-                // Update the hidden input with customer ID
-                document.getElementById('customerId').value = customerId;
-                
-                // Update the display field
-                document.getElementById('selectedCustomerDisplay').value = `${customerName} (${customerEmail})`;
-                
-                // Enable create booking button
-                document.getElementById('createBookingBtn').disabled = false;
-                
-                // Select the radio button
-                const radio = this.querySelector('.customer-select');
-                if (radio) radio.checked = true;
-            });
-        });
-        
-        // Handle submit to create a new booking
-        document.getElementById('newBookingForm').addEventListener('submit', function(e) {
-            if (!document.getElementById('customerId').value) {
+        // Booking form validation
+        document.getElementById('booking-form').addEventListener('submit', function(e) {
+            const customerField = document.getElementById('customer');
+            if (!customerField || !customerField.value) {
                 e.preventDefault();
                 alert('Please select a customer first');
+                // Open customer selection modal
+                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                customerModal.show();
             }
         });
+        
+        // Add customer button should open the modal
+        const selectCustomerBtn = document.getElementById('selectCustomerBtn');
+        if (selectCustomerBtn) {
+            selectCustomerBtn.addEventListener('click', function() {
+                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                customerModal.show();
+            });
+        }
     });
 </script>
 {% endblock %}

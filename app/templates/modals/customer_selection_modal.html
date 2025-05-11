@@ -7,19 +7,33 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="form-control" id="customerSearchInput" placeholder="Search customers...">
+                <div class="search-box mb-3 position-relative">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" class="form-control" id="customerSearchInput" placeholder="Search by name, email, or phone..." autofocus>
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="customerList" class="row">
                     {% for customer in customers %}
-                    <div class="col-md-6 mb-3 customer-item">
-                        <div class="card customer-card p-3" data-customer-id="{{ customer.id }}" data-customer-name="{{ customer.name }}" data-customer-email="{{ customer.email }}">
+                    <div class="col-md-6 mb-3 customer-item" 
+                         data-customer-id="{{ customer.id }}" 
+                         data-customer-name="{{ customer.name }}" 
+                         data-customer-email="{{ customer.email }}"
+                         data-search-text="{{ customer.name|lower }} {{ customer.email|lower }} {{ customer.phone|lower if customer.phone else '' }}">
+                        <div class="card customer-card p-3 cursor-pointer">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">{{ customer.name }}</h6>
                                     <small class="text-muted">{{ customer.email }}</small>
+                                    {% if customer.phone %}
+                                    <br><small class="text-muted"><i class="fas fa-phone-alt me-1"></i>{{ customer.phone }}</small>
+                                    {% endif %}
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input customer-select" type="radio" name="customerRadio" value="{{ customer.id }}">
@@ -43,3 +57,120 @@
         </div>
     </div>
 </div>
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    .customer-card {
+        transition: all 0.2s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .customer-card:hover {
+        border-color: #FFBF00;
+        box-shadow: 0 0 0 0.2rem rgba(255, 191, 0, 0.25);
+    }
+    
+    .customer-card.selected {
+        border-color: #FFBF00;
+        background-color: rgba(255, 191, 0, 0.1);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const customerSearchInput = document.getElementById('customerSearchInput');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const customerItems = document.querySelectorAll('.customer-item');
+        const noCustomersFound = document.getElementById('noCustomersFound');
+        const selectCustomerBtn = document.getElementById('selectCustomerBtn');
+        
+        // Focus search input when modal opens
+        const customerModal = document.getElementById('customerSelectionModal');
+        customerModal.addEventListener('shown.bs.modal', function() {
+            customerSearchInput.focus();
+        });
+        
+        // Clear search button
+        clearSearchBtn.addEventListener('click', function() {
+            customerSearchInput.value = '';
+            filterCustomers('');
+        });
+        
+        // Filter customers as user types
+        customerSearchInput.addEventListener('input', function() {
+            filterCustomers(this.value.toLowerCase());
+        });
+        
+        // Function to filter customers
+        function filterCustomers(searchText) {
+            let visibleCount = 0;
+            
+            customerItems.forEach(item => {
+                const searchableText = item.getAttribute('data-search-text');
+                
+                if (searchableText.includes(searchText)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show "no results" message if needed
+            noCustomersFound.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+        
+        // Handle customer card selection
+        document.querySelectorAll('.customer-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selection from all cards
+                document.querySelectorAll('.customer-card').forEach(c => {
+                    c.classList.remove('selected');
+                });
+                
+                // Add selection to this card
+                this.classList.add('selected');
+                
+                // Find and select the radio button
+                const radio = this.querySelector('.customer-select');
+                if (radio) {
+                    radio.checked = true;
+                }
+                
+                // Get parent item with data attributes
+                const parent = this.closest('.customer-item');
+                const customerId = parent.getAttribute('data-customer-id');
+                const customerName = parent.getAttribute('data-customer-name');
+                const customerEmail = parent.getAttribute('data-customer-email');
+                
+                // Enable the select button
+                selectCustomerBtn.disabled = false;
+                
+                // Store selected customer info (for transfer to main form)
+                selectCustomerBtn.setAttribute('data-customer-id', customerId);
+                selectCustomerBtn.setAttribute('data-customer-name', customerName);
+                selectCustomerBtn.setAttribute('data-customer-email', customerEmail);
+            });
+        });
+        
+        // Handle select customer button click
+        selectCustomerBtn.addEventListener('click', function() {
+            const customerId = this.getAttribute('data-customer-id');
+            const customerName = this.getAttribute('data-customer-name');
+            const customerEmail = this.getAttribute('data-customer-email');
+            
+            // Update the form's customer field
+            const customerSelect = document.getElementById('customer');
+            if (customerSelect) {
+                customerSelect.value = customerId;
+            }
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(customerModal);
+            modal.hide();
+        });
+    });
+</script>
