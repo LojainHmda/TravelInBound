@@ -495,11 +495,20 @@ def details(booking_id):
     status_form = UpdateServiceStatusForm()
     status_form.status.data = booking.status
     
+    # Get all customers for the customer selection modal
+    from app.models.customer import Customer
+    customers = Customer.query.all()
+    
+    # Optionally add a booking form for new bookings
+    booking_form = BookingRequestForm()
+    
     return render_template(
         'booking/booking_details.html',
         booking=booking,
         service_form=service_form,
-        status_form=status_form
+        status_form=status_form,
+        customers=customers,
+        booking_form=booking_form
     )
 
 @booking_bp.route('/<int:booking_id>/add_service', methods=['POST'])
