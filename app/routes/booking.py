@@ -126,7 +126,7 @@ def new_booking_detail():
     request_id = f"IR-{str(uuid.uuid4())[:5].upper()}"
     
     return render_template(
-        'booking/booking_details.html',
+        'booking/booking_details_new.html',
         booking=None,
         service_form=service_form,
         status_form=status_form,
@@ -527,7 +527,7 @@ def details(booking_id):
     booking_form = BookingRequestForm()
     
     return render_template(
-        'booking/booking_details.html',
+        'booking/booking_details_new.html',
         booking=booking,
         service_form=service_form,
         status_form=status_form,
