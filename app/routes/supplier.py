@@ -7,7 +7,8 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from app import db
-from app.forms.supplier import SupplierForm, SupplierPaymentForm, SupplierStatementForm
+from app.forms.supplier import SupplierForm, SupplierStatementForm
+from app.forms.supplier_payment import SupplierPaymentForm, SupplierInvoiceFilterForm
 from app.models.supplier import Supplier, SupplierService, SupplierPayment
 from app.models.service import ServiceConfirmation
 from sqlalchemy import func, desc
