@@ -614,9 +614,14 @@ def update_booking_status(booking_id):
         new_status = STATUS_IN_PROGRESS
         
         # Check payment status when moving to IN_PROGRESS
-        if booking.payment_status != 'FULL':
-            flash('Warning: This booking has not been fully paid', 'warning')
+        if booking.payment_status not in ['FULL', 'PARTIAL']:
+            flash('Error: Payment is required before starting operations', 'danger')
+            return redirect(url_for('booking.details', booking_id=booking.id))
         
+        # If it's only partially paid, show a warning
+        if booking.payment_status == 'PARTIAL':
+            flash('Warning: This booking has only been partially paid', 'warning')
+            
         booking.status = new_status
         
         # Update all service items to IN_PROGRESS too
