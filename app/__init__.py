@@ -75,6 +75,10 @@ def create_app():
         from app.routes.finance import finance
         app.register_blueprint(finance)
         
+        # Register auth blueprint
+        from app.routes.auth import auth_bp
+        app.register_blueprint(auth_bp)
+        
         # Set up login manager
         from app.models import User
         @login_manager.user_loader

@@ -25,7 +25,9 @@ def login():
             user = User.query.filter_by(username='admin').first()
             if not user:
                 # Create admin user if it doesn't exist
-                user = User(username='admin', email='admin@example.com')
+                user = User()
+                user.username = 'admin'
+                user.email = 'admin@example.com'
                 # In a real app, you'd hash the password
                 user.password_hash = 'admin' 
                 db.session.add(user)

@@ -16,6 +16,104 @@ from sqlalchemy import func, desc
 # Create blueprint
 supplier_bp = Blueprint('supplier', __name__, url_prefix='/suppliers')
 
+# Route for API access to service confirmation data
+@supplier_bp.route('/api/service-confirmations/<int:confirmation_id>')
+def get_confirmation_json(confirmation_id):
+    """Get service confirmation data as JSON"""
+    confirmation = ServiceConfirmation.query.get_or_404(confirmation_id)
+    return jsonify({
+        'success': True,
+        'cost_amount': confirmation.cost_amount,
+        'cost_currency': confirmation.cost_currency,
+        'payment_due_date': confirmation.payment_due_date.isoformat() if confirmation.payment_due_date else None,
+        'confirmation_reference': confirmation.confirmation_reference
+    })
+    
+@supplier_bp.route('/<int:supplier_id>/payments/create', methods=['GET', 'POST'])
+def create_payment(supplier_id):
+    """Create a new payment for a supplier"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    # Check if creating from a service confirmation
+    confirmation_id = request.args.get('confirmation_id')
+    confirmation = None
+    if confirmation_id:
+        confirmation = ServiceConfirmation.query.get_or_404(confirmation_id)
+        # Verify this confirmation belongs to this supplier
+        if confirmation.supplier_id != supplier_id:
+            flash('The selected service confirmation does not belong to this supplier', 'danger')
+            return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    
+    form = SupplierPaymentForm()
+    
+    # Get service confirmations for this supplier to populate dropdown
+    confirmations = ServiceConfirmation.query.filter_by(
+        supplier_id=supplier_id, 
+        is_paid=False
+    ).all()
+    
+    # Populate the service_confirmation_id field choices
+    confirmation_choices = [('', 'General Payment')]
+    for conf in confirmations:
+        # Use service description in the label if available
+        service_desc = ""
+        if conf.service_item:
+            service_desc = f" - {conf.service_item.service_type}: {conf.service_item.description[:30]}"
+            
+        label = f"{conf.confirmation_reference}{service_desc} (${conf.cost_amount:.2f})"
+        confirmation_choices.append((str(conf.id), label))
+    
+    form.service_confirmation_id.choices = confirmation_choices
+    
+    # Initialize form values from confirmation if provided
+    if confirmation and request.method == 'GET':
+        form.amount.data = confirmation.cost_amount
+        if confirmation.payment_due_date:
+            form.due_date.data = confirmation.payment_due_date
+        
+        # Set invoice number from confirmation reference if available
+        if confirmation.confirmation_reference:
+            form.invoice_number.data = f"INV-{confirmation.confirmation_reference}"
+    
+    if form.validate_on_submit():
+        # Create new payment
+        payment = SupplierPayment(
+            supplier_id=supplier_id,
+            amount=form.amount.data,
+            payment_date=form.payment_date.data,
+            payment_reference=form.payment_reference.data,
+            payment_method=form.payment_method.data,
+            invoice_number=form.invoice_number.data,
+            invoice_date=form.invoice_date.data,
+            due_date=form.due_date.data,
+            status=form.status.data,
+            notes=form.notes.data
+        )
+        
+        # Link to service confirmation if selected
+        confirmation_id = form.service_confirmation_id.data if not confirmation else confirmation.id
+        if confirmation_id:
+            payment.service_confirmation_id = confirmation_id
+            # Update the service confirmation as paid if payment status is PAID
+            if form.status.data == 'PAID':
+                service_conf = ServiceConfirmation.query.get(confirmation_id)
+                if service_conf:
+                    service_conf.is_paid = True
+                    service_conf.payment_date = form.payment_date.data
+        
+        db.session.add(payment)
+        db.session.commit()
+        
+        flash(f'Payment of ${payment.amount:.2f} has been recorded', 'success')
+        return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    
+    return render_template(
+        'supplier/create_payment.html',
+        supplier=supplier,
+        form=form,
+        confirmation=confirmation
+    )
+
 # Ensure upload directory exists
 def ensure_upload_dir(directory):
     """Create upload directory if it doesn't exist"""
