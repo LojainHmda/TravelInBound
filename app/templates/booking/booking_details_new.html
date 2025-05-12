@@ -48,6 +48,57 @@
     <div class="row">
         <!-- Main Content Area (full width now) -->
         <div class="col-12">
+            <!-- Action Buttons Row (above header) -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex flex-wrap gap-2">
+                    <!-- New Booking Button (always visible) -->
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow">
+                        <i class="fas fa-plus me-2"></i> New Booking
+                    </a>
+                    
+                    {% if booking %}
+                    <!-- Add Service -->
+                    <a href="#" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-plus me-2"></i> Add Service
+                    </a>
+                    
+                    <!-- Generate/View Invoice -->
+                    {% if booking.invoice_number %}
+                    <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
+                       class="btn btn-yellow">
+                        <i class="fas fa-file-invoice me-2"></i> View Invoice
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
+                       class="btn btn-yellow">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Generate Invoice
+                    </a>
+                    {% endif %}
+                    
+                    <!-- Add Payment -->
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
+                       class="btn btn-yellow">
+                        <i class="fas fa-credit-card me-2"></i> Add Payment
+                    </a>
+                    {% endif %}
+                </div>
+                
+                {% if booking %}
+                <!-- Cancel on the right side -->
+                <a href="#" class="btn btn-outline-warning" style="border-color: #FFBF00;">
+                    <i class="fas fa-times-circle me-2"></i> Cancel Booking
+                </a>
+                {% else %}
+                <!-- Customer Selection Button (only for new booking) -->
+                <button class="btn btn-yellow" 
+                       id="showCustomerSelectionBtn" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#customerSelectionModal">
+                    <i class="fas fa-user me-2"></i> Select Customer
+                </button>
+                {% endif %}
+            </div>
+            
             <!-- Booking Header -->
             <div class="card mb-4">
                 <div class="card-header bg-navy text-white d-flex justify-content-between align-items-center">
@@ -58,8 +109,27 @@
                         <i class="fas fa-bookmark me-2"></i>New Booking
                         {% endif %}
                     </h5>
-                    <div>
+                    <div class="d-flex gap-2 align-items-center">
                         {% if booking %}
+                        <!-- Payment Status Badge -->
+                        {% if booking.payment_status == 'FULL' %}
+                        <span class="badge bg-success text-white px-3 py-2">
+                            <i class="fas fa-check-circle me-1"></i> Fully Paid
+                        </span>
+                        {% elif booking.payment_status == 'PARTIAL' %}
+                        <span class="badge bg-info text-white px-3 py-2">
+                            <i class="fas fa-credit-card me-1"></i> Partially Paid
+                        </span>
+                        {% elif booking.invoice_number %}
+                        <span class="badge bg-warning text-dark px-3 py-2">
+                            <i class="fas fa-file-invoice me-1"></i> Invoiced - Not Paid
+                        </span>
+                        {% else %}
+                        <span class="badge bg-secondary text-white px-3 py-2">
+                            <i class="fas fa-times-circle me-1"></i> Not Invoiced
+                        </span>
+                        {% endif %}
+                        
                         <!-- Status Badge for existing booking -->
                         <span class="badge bg-yellow text-dark px-3 py-2">
                             <i class="fas fa-clock me-1"></i>
