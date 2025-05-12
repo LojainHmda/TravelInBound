@@ -20,7 +20,7 @@ def create_app():
     
     # Configure secret key and database URI
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-key-for-testing")
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
         "pool_recycle": 300,
         "pool_pre_ping": True,
@@ -29,6 +29,9 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page'
+    login_manager.login_message_category = 'warning'
     csrf.init_app(app)
     
     # Register custom Jinja2 filters
