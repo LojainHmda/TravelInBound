@@ -42,61 +42,55 @@
 </style>
 
 <div class="container-fluid mt-4">
-    <div class="row">
-        <!-- Left Sidebar with Action Buttons -->
-        <div class="col-md-3 col-lg-2 mb-4">
-            <div class="action-box">
-                <h5 class="mb-3 border-bottom pb-2">Actions</h5>
-                
-                <!-- Horizontal Action Buttons -->
-                <div class="action-buttons">
-                    <!-- New Booking Button - Always visible -->
-                    <a href="{{ url_for('booking.new_booking_detail') }}" class="action-button">
-                        <i class="fas fa-plus-circle"></i> New Booking
+    <!-- Top Action Buttons -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f2f2f2;">
+            <div class="d-flex align-items-center">
+                <h5 class="mb-0 text-dark me-3">Actions</h5>
+            </div>
+            <div class="quick-add-section">
+                <div class="quick-add-buttons">
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="quick-add-button">
+                        <i class="fas fa-plus-circle"></i>
                     </a>
                     
                     {% if booking %}
-                        <!-- Action buttons for existing booking -->
-                        <a href="#" class="action-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                            <i class="fas fa-plus"></i> Add Service
+                        {% if booking.payment_status == 'FULL' %}
+                        <a href="#" class="quick-add-button start-operations-btn" data-booking-id="{{ booking.id }}">
+                            <i class="fas fa-play-circle"></i>
+                        </a>
+                        {% endif %}
+                        
+                        <a href="#" class="quick-add-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plus"></i>
                         </a>
                         
                         {% if booking.invoice_number %}
-                            <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="action-button">
-                                <i class="fas fa-file-invoice"></i> View Invoice
-                            </a>
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="quick-add-button">
+                            <i class="fas fa-file-invoice"></i>
+                        </a>
                         {% else %}
-                            <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="action-button">
-                                <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
-                            </a>
+                        <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="quick-add-button">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </a>
                         {% endif %}
                         
                         {% if booking.invoice_number %}
-                            <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="action-button">
-                                <i class="fas fa-credit-card"></i> Add Payment
-                            </a>
+                        <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="quick-add-button">
+                            <i class="fas fa-credit-card"></i>
+                        </a>
                         {% endif %}
                         
-                        {% if booking.status == 'REQUEST' %}
-                            <a href="#" class="action-button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                                <i class="fas fa-check-circle"></i> Confirm
-                            </a>
-                        {% endif %}
-                        
-                        {% if booking.payment_status == 'FULL' %}
-                            <button type="button" class="action-button">
-                                <i class="fas fa-play-circle"></i> Start Operations
-                            </button>
-                        {% endif %}
-                        
-                        <a href="#" class="action-button">
-                            <i class="fas fa-times-circle"></i> Cancel Booking
+                        <a href="#" class="quick-add-button">
+                            <i class="fas fa-times-circle"></i>
                         </a>
                     {% endif %}
-                </div><!-- End of .action-buttons -->
+                </div>
             </div>
         </div>
-        
+    </div>
+    
+    <div class="row">
         <!-- Main Content Area -->
         <div class="col-md-9 col-lg-10">
             <!-- Booking Header -->
@@ -187,33 +181,30 @@
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f2f2f2;">
                     <div class="d-flex align-items-center">
-                        <h5 class="mb-0 text-dark me-4"><i class="fas fa-list me-2"></i>Service Items</h5>
-                        {% if booking %}
-                        <div class="d-flex align-items-center">
-                            <strong class="me-2 text-dark">Quick Add:</strong>
-                            <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal" 
-                                   style="background-color: #FFBF00; border: none; color: black;">
+                        <h5 class="mb-0 text-dark me-3"><i class="fas fa-list me-2"></i>Service Items</h5>
+                    </div>
+                    {% if booking %}
+                    <div class="quick-add-section">
+                        <div class="quick-add-label">Quick Add:</div>
+                        <div class="quick-add-buttons">
+                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                                 <i class="fas fa-plane"></i>
                             </button>
-                            <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                                   style="background-color: #FFBF00; border: none; color: black;">
+                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                                 <i class="fas fa-hotel"></i>
                             </button>
-                            <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                                   style="background-color: #FFBF00; border: none; color: black;">
-                                <i class="fas fa-taxi"></i>
+                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                                <i class="fas fa-car"></i>
                             </button>
-                            <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                                   style="background-color: #FFBF00; border: none; color: black;">
+                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                                 <i class="fas fa-passport"></i>
                             </button>
-                            <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                                   style="background-color: #FFBF00; border: none; color: black;">
+                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                                 <i class="fas fa-shield-alt"></i>
                             </button>
                         </div>
-                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">

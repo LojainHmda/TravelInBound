@@ -464,6 +464,45 @@ body {
     color: #6c757d;
 }
 
+/* Quick Add Service Buttons */
+.quick-add-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.quick-add-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+}
+
+.quick-add-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.quick-add-button {
+    width: 40px;
+    height: 40px;
+    background-color: #FFBF00;
+    border: none;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.quick-add-button:hover {
+    background-color: #E6AC00;
+    transform: translateY(-2px);
+}
+
 /* Media Queries */
 @media (max-width: 768px) {
     .hero-section {
