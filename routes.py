@@ -1,8 +1,24 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, session
 import uuid
 from datetime import datetime, timedelta
+import logging
 
 from app import app, db
+from replit_auth import make_replit_blueprint, login_required
+from app.routes.auth import auth_bp
+
+# Register blueprints
+replit_bp = make_replit_blueprint()
+app.register_blueprint(replit_bp, url_prefix="/auth")
+app.register_blueprint(auth_bp, url_prefix="/auth")
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Make session permanent
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 from models import (
     User, Agent, Booking, ServiceItem, Document, Payment,
     STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED,

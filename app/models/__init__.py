@@ -18,6 +18,7 @@ from app.models.booking import Booking, Payment, PAYMENT_NONE, PAYMENT_PARTIAL, 
 from app.models.supplier import Supplier, SupplierService, SupplierPayment
 from app.models.customer import Customer, CustomerDocument
 from app.models.service import ServiceConfirmation, ServiceItem, Document
+from app.models.oauth import OAuth  # Add OAuth model
 
 # Import finance models
 from app.models.finance import (

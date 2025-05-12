@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Authentication Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Authentication Error</h4>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Something went wrong during authentication</h5>
+                    <p class="card-text">There was an error during the authentication process. Please try again or contact support if the problem persists.</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">Try Again</a>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Return to Home</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
