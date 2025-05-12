@@ -1,0 +1,500 @@
+{% extends 'base.html' %}
+
+{% block title %}Finance Dashboard - TravelBookPro{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .metric-card {
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .trend-up {
+        color: #198754;
+    }
+    
+    .trend-down {
+        color: #dc3545;
+    }
+    
+    .trend-icon {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Finance Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Finance Dashboard</h1>
+        <div>
+            <a href="{{ url_for('finance.expenses') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-list me-1"></i> View Expenses
+            </a>
+            <a href="{{ url_for('finance.reports') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-chart-bar me-1"></i> Financial Reports
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Financial Overview - {{ current_month }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Revenue Metric -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-primary shadow-sm h-100 py-2 metric-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Revenue
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_revenue) }}</div>
+                                            <div class="small mt-2">
+                                                {% if revenue_change_pct > 0 %}
+                                                <span class="trend-up">
+                                                    <i class="fas fa-arrow-up trend-icon"></i> {{ "%.1f"|format(revenue_change_pct) }}%
+                                                </span>
+                                                {% elif revenue_change_pct < 0 %}
+                                                <span class="trend-down">
+                                                    <i class="fas fa-arrow-down trend-icon"></i> {{ "%.1f"|format(revenue_change_pct|abs) }}%
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-equals trend-icon"></i> 0%
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-muted ml-1">vs {{ prev_month }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expenses Metric -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-danger shadow-sm h-100 py-2 metric-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                Expenses
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_expenses) }}</div>
+                                            <div class="small mt-2">
+                                                {% if expenses_change_pct < 0 %}
+                                                <span class="trend-up">
+                                                    <i class="fas fa-arrow-down trend-icon"></i> {{ "%.1f"|format(expenses_change_pct|abs) }}%
+                                                </span>
+                                                {% elif expenses_change_pct > 0 %}
+                                                <span class="trend-down">
+                                                    <i class="fas fa-arrow-up trend-icon"></i> {{ "%.1f"|format(expenses_change_pct) }}%
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-equals trend-icon"></i> 0%
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-muted ml-1">vs {{ prev_month }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-receipt fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Supplier Costs Metric -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-warning shadow-sm h-100 py-2 metric-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Supplier Costs
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_supplier_costs) }}</div>
+                                            <div class="small mt-2">
+                                                <span class="text-muted">{{ "%.1f"|format((current_month_supplier_costs / current_month_revenue * 100) if current_month_revenue > 0 else 0) }}% of revenue</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-handshake fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Profit Metric -->
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-success shadow-sm h-100 py-2 metric-card">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Net Profit
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_profit) }}</div>
+                                            <div class="small mt-2">
+                                                {% if profit_change_pct > 0 %}
+                                                <span class="trend-up">
+                                                    <i class="fas fa-arrow-up trend-icon"></i> {{ "%.1f"|format(profit_change_pct) }}%
+                                                </span>
+                                                {% elif profit_change_pct < 0 %}
+                                                <span class="trend-down">
+                                                    <i class="fas fa-arrow-down trend-icon"></i> {{ "%.1f"|format(profit_change_pct|abs) }}%
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-equals trend-icon"></i> 0%
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-muted ml-1">vs {{ prev_month }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Financial Trends Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="financialTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Breakdown Chart -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Expense Breakdown - {{ current_month }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4 pb-2">
+                        <canvas id="expensePieChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-center small">
+                        {% for category in expense_by_category %}
+                        <span class="mr-2">
+                            <i class="fas fa-circle" style="color: {{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}"></i> {{ category.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Expenses -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Recent Expenses</h6>
+                    <a href="{{ url_for('finance.expenses') }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in recent_expenses %}
+                                <tr>
+                                    <td>{{ expense.date_incurred.strftime('%b %d, %Y') }}</td>
+                                    <td>{{ expense.title }}</td>
+                                    <td>
+                                        {% set category = expense.category %}
+                                        {% if category %}
+                                            {{ category.name }}
+                                        {% else %}
+                                            <span class="text-muted">Uncategorized</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-right">${{ "%.2f"|format(expense.amount) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No recent expenses found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Payments -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Upcoming Supplier Payments</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Due Date</th>
+                                    <th>Supplier</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in upcoming_payments %}
+                                <tr class="{% if payment.due_date and payment.due_date < today %}table-danger{% endif %}">
+                                    <td>{{ payment.due_date.strftime('%b %d, %Y') if payment.due_date else 'N/A' }}</td>
+                                    <td>
+                                        {% if payment.supplier_id %}
+                                            Supplier #{{ payment.supplier_id }}
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ payment.description or 'No description' }}</td>
+                                    <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No upcoming payments due</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Financial Trends Chart
+        var trendsCtx = document.getElementById('financialTrendsChart').getContext('2d');
+        var trendsData = {
+            labels: [
+                {% for month in last_12_months %}
+                    "{{ month.month }}",
+                {% endfor %}
+            ],
+            datasets: [
+                {
+                    label: 'Revenue',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    pointBackgroundColor: 'rgba(78, 115, 223, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 10,
+                    data: [
+                        {% for month in last_12_months %}
+                            {{ month.revenue }},
+                        {% endfor %}
+                    ],
+                    fill: true
+                },
+                {
+                    label: 'Expenses',
+                    backgroundColor: 'rgba(231, 74, 59, 0.05)',
+                    borderColor: 'rgba(231, 74, 59, 1)',
+                    pointBackgroundColor: 'rgba(231, 74, 59, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 10,
+                    data: [
+                        {% for month in last_12_months %}
+                            {{ month.expenses }},
+                        {% endfor %}
+                    ],
+                    fill: true
+                },
+                {
+                    label: 'Profit',
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    pointBackgroundColor: 'rgba(28, 200, 138, 1)',
+                    pointBorderColor: '#fff',
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointHitRadius: 10,
+                    data: [
+                        {% for month in last_12_months %}
+                            {{ month.profit }},
+                        {% endfor %}
+                    ],
+                    fill: true
+                }
+            ]
+        };
+        
+        var trendsChart = new Chart(trendsCtx, {
+            type: 'line',
+            data: trendsData,
+            options: {
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: 10,
+                        right: 25,
+                        top: 25,
+                        bottom: 0
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: "rgb(255,255,255)",
+                        bodyColor: "#858796",
+                        titleMarginBottom: 10,
+                        titleColor: '#6e707e',
+                        titleFontSize: 14,
+                        borderColor: '#dddfeb',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += '$' + context.parsed.y.toLocaleString();
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Expense Breakdown Pie Chart
+        var expenseCtx = document.getElementById('expensePieChart').getContext('2d');
+        var expenseData = {
+            labels: [
+                {% for category in expense_by_category %}
+                    "{{ category.name }}",
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for category in expense_by_category %}
+                        {{ category.total }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    {% for category in expense_by_category %}
+                        "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}",
+                    {% endfor %}
+                ],
+                hoverBackgroundColor: [
+                    {% for category in expense_by_category %}
+                        "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 205), ((loop.index0 * 121) % 205), ((loop.index0 * 173) % 205)) }}",
+                    {% endfor %}
+                ],
+                hoverBorderColor: "rgba(234, 236, 244, 1)"
+            }]
+        };
+        
+        var expenseChart = new Chart(expenseCtx, {
+            type: 'doughnut',
+            data: expenseData,
+            options: {
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    tooltip: {
+                        backgroundColor: "rgb(255,255,255)",
+                        bodyColor: "#858796",
+                        borderColor: '#dddfeb',
+                        borderWidth: 1,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.formattedValue;
+                                var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                var percentage = Math.round((context.parsed / total) * 100);
+                                return label + ': $' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
