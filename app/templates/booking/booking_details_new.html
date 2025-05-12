@@ -50,20 +50,11 @@
         <div class="col-12">
             <!-- Main Action Buttons -->
             <div class="d-flex justify-content-between mb-4">
-                <div>
-                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-lg px-4 py-2 fw-bold">
-                        <i class="fas fa-plus me-2"></i> New Booking
-                    </a>
-                </div>
+          
                 
                 <div>
                     {% if not booking %}
-                        <button class="btn btn-yellow btn-lg px-4 py-2 fw-bold" 
-                               id="showCustomerSelectionBtn" 
-                               data-bs-toggle="modal" 
-                               data-bs-target="#customerSelectionModal">
-                            <i class="fas fa-user me-2"></i> Select Customer
-                        </button>
+                   
                     {% endif %}
                 </div>
             </div>
@@ -115,10 +106,7 @@
                             {% endif %}
                         </span>
                         {% else %}
-                        <!-- For new booking - Single Main Customer Selection Button -->
-                        <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                            <i class="fas fa-user-plus me-1"></i> Select Customer
-                        </button>
+                 
                         {% endif %}
                     </div>
                 </div>
