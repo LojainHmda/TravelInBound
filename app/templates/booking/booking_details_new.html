@@ -43,56 +43,36 @@
 
 <div class="container-fluid mt-4">
     <!-- Top Action Buttons -->
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f2f2f2;">
-            <div class="d-flex align-items-center">
-                <h5 class="mb-0 text-dark me-3">Actions</h5>
+    <div class="w-100 mb-4 bg-dark text-white p-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-bolt me-2"></i>
+            <h5 class="mb-0">Actions</h5>
+            <div class="ms-auto">
+                <button type="button" class="btn text-white" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
             </div>
-            <div class="quick-add-section">
-                <div class="quick-add-buttons">
-                    <a href="{{ url_for('booking.new_booking_detail') }}" class="quick-add-button">
-                        <i class="fas fa-plus-circle"></i>
-                    </a>
-                    
-                    {% if booking %}
-                        {% if booking.payment_status == 'FULL' %}
-                        <a href="#" class="quick-add-button start-operations-btn" data-booking-id="{{ booking.id }}">
-                            <i class="fas fa-play-circle"></i>
-                        </a>
-                        {% endif %}
-                        
-                        <a href="#" class="quick-add-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                            <i class="fas fa-plus"></i>
-                        </a>
-                        
-                        {% if booking.invoice_number %}
-                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="quick-add-button">
-                            <i class="fas fa-file-invoice"></i>
-                        </a>
-                        {% else %}
-                        <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="quick-add-button">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                        </a>
-                        {% endif %}
-                        
-                        {% if booking.invoice_number %}
-                        <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="quick-add-button">
-                            <i class="fas fa-credit-card"></i>
-                        </a>
-                        {% endif %}
-                        
-                        <a href="#" class="quick-add-button">
-                            <i class="fas fa-times-circle"></i>
-                        </a>
-                    {% endif %}
-                </div>
+        </div>
+        
+        <div class="row g-2">
+            <div class="col-md-6">
+                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow w-100 p-3">
+                    <i class="fas fa-plus-circle me-2"></i> New Booking
+                </a>
             </div>
+            
+            {% if booking and booking.payment_status == 'FULL' %}
+            <div class="col-md-6">
+                <a href="#" class="btn btn-yellow w-100 p-3 start-operations-btn" data-booking-id="{{ booking.id }}">
+                    <i class="fas fa-play-circle me-2"></i> Start Operations
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
     
-    <div class="row">
-        <!-- Main Content Area -->
-        <div class="col-md-9 col-lg-10">
+    <!-- Main Content Area -->
+    <div class="w-100">
             <!-- Booking Header -->
             <div class="card mb-4">
                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
