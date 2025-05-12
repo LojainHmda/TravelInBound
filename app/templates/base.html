@@ -28,7 +28,7 @@
         .app-container {
             display: flex;
             flex: 1;
-            margin-top: 56px; /* Height of the navbar */
+            margin-top: 0; /* No navbar anymore */
         }
         
         #sidebar {
@@ -37,7 +37,7 @@
             color: #fff;
             position: fixed;
             left: 0;
-            top: 56px; /* Position below navbar */
+            top: 0; /* Start from top of page */
             bottom: 0;
             z-index: 1050;
             transition: transform 0.3s ease;
@@ -195,33 +195,7 @@
     </style>
 </head>
 <body>
-    <!-- Top Navigation Bar - Exactly matching screenshot -->
-    <nav class="navbar navbar-dark fixed-top" style="background-color: #1a4282;">
-        <div class="container-fluid">
-            <!-- Burger Menu Toggle (Left) -->
-            <button class="navbar-toggler border-0" type="button" id="main-sidebar-toggle">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Brand Logo (Centered) -->
-            <a class="navbar-brand mx-auto" href="{{ url_for('main.index') }}">
-                <i class="fas fa-plane-departure me-2"></i>TravelBookPro
-            </a>
-            
-            <!-- User Dropdown (Right) -->
-            <div class="dropdown">
-                <a class="text-white dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                    <i class="fas fa-user-circle me-1"></i> Test User
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Top Navigation Bar Removed -->
     
     <div class="app-container">
         <!-- Sidebar -->
