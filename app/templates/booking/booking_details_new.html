@@ -785,7 +785,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" enctype="multipart/form-data">
+                <form id="document-upload-form" method="POST" action="{{ url_for('booking.upload_document', booking_id=booking.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Select Service Item</label>
                         <select class="form-select" name="service_item_id">
@@ -806,21 +807,21 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Document Number</label>
-                        <input type="text" class="form-control" placeholder="e.g., Ticket number, confirmation code">
+                        <input type="text" class="form-control" name="document_number" placeholder="e.g., Ticket number, confirmation code">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">File</label>
-                        <input type="file" class="form-control">
+                        <input type="file" class="form-control" name="file">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <textarea class="form-control" rows="3"></textarea>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-yellow">Upload Document</button>
+                <button type="submit" class="btn btn-yellow" form="document-upload-form">Upload Document</button>
             </div>
         </div>
     </div>
