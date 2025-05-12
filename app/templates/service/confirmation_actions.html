@@ -1,0 +1,41 @@
+{% if confirmation and not confirmation.is_paid %}
+<div class="card mb-3">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Payment Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-2">
+            <strong>Payment Status:</strong>
+            {% if confirmation.is_paid %}
+                <span class="badge bg-success">Paid</span>
+            {% else %}
+                <span class="badge bg-warning text-dark">Unpaid</span>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            <strong>Due Date:</strong>
+            {% if confirmation.payment_due_date %}
+                {{ confirmation.payment_due_date.strftime('%d %b %Y') }}
+                {% set days_to_due = (confirmation.payment_due_date - now.date()).days %}
+                {% if days_to_due < 0 %}
+                    <span class="badge bg-danger">Overdue by {{ abs(days_to_due) }} days</span>
+                {% elif days_to_due == 0 %}
+                    <span class="badge bg-warning text-dark">Due today</span>
+                {% else %}
+                    <span class="badge bg-info">Due in {{ days_to_due }} days</span>
+                {% endif %}
+            {% else %}
+                <span class="text-muted">Not specified</span>
+            {% endif %}
+        </div>
+        
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('supplier.create_payment', supplier_id=confirmation.supplier_id, confirmation_id=confirmation.id) }}" 
+               class="btn btn-primary">
+                <i class="fas fa-money-bill-wave me-1"></i> Record Payment
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
