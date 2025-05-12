@@ -28,6 +28,7 @@
         .app-container {
             display: flex;
             flex: 1;
+            margin-top: 56px; /* Height of the navbar */
         }
         
         #sidebar {
@@ -36,7 +37,7 @@
             color: #fff;
             position: fixed;
             left: 0;
-            top: 0;
+            top: 56px; /* Position below navbar */
             bottom: 0;
             z-index: 1050;
             transition: transform 0.3s ease;
@@ -194,6 +195,33 @@
     </style>
 </head>
 <body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #1a4282;">
+        <div class="container-fluid">
+            <button class="navbar-toggler border-0" type="button" id="main-sidebar-toggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <a class="navbar-brand mx-auto mx-lg-0" href="{{ url_for('main.index') }}">
+                <i class="fas fa-plane-departure me-2"></i> TravelBookPro
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> Test User
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
     <div class="app-container">
         <!-- Sidebar -->
         <nav id="sidebar">
@@ -256,19 +284,6 @@
         
         <!-- Main Content Area -->
         <div id="content">
-            <!-- Mobile Navbar for Toggling Sidebar -->
-            <nav class="navbar navbar-light bg-light d-md-none" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <div class="container-fluid">
-                    <button class="btn btn-yellow" type="button" id="mobile-sidebar-toggle" style="background-color: #FFBF00; color: black;">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    <span class="navbar-brand mb-0 h1">
-                        <i class="fas fa-plane-departure me-2"></i>
-                        TravelBookPro
-                    </span>
-                    <div style="width: 42px;"><!-- Placeholder to balance the navbar --></div>
-                </div>
-            </nav>
             
             <!-- Flash Messages -->
             <div class="container-fluid mt-3">
@@ -284,10 +299,7 @@
                 {% endwith %}
             </div>
             
-            <!-- Floating Menu Button for Mobile -->
-            <button class="menu-button-float" id="mobile-menu-button">
-                <i class="fas fa-bars"></i>
-            </button>
+            <!-- Main navigation is now in the top navbar -->
             
             <!-- Main Content -->
             <main class="container-fluid my-4">
@@ -351,7 +363,7 @@
             }
             
             // Toggle sidebar with all buttons
-            $('#toggle-sidebar, #mobile-sidebar-toggle, #mobile-menu-button').on('click', function(e) {
+            $('#toggle-sidebar, #mobile-sidebar-toggle, #mobile-menu-button, #main-sidebar-toggle').on('click', function(e) {
                 e.preventDefault();
                 toggleSidebar();
             });
