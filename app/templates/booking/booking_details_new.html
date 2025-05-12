@@ -115,13 +115,13 @@
                 <div class="card-body bg-light py-2 border-bottom">
                     <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
                         <!-- New Booking Button (always visible) -->
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-sm">
+                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow">
                             <i class="fas fa-plus me-1"></i> New Booking
                         </a>
                         
                         {% if not booking %}
                         <!-- Customer Selection Button (only for new booking) -->
-                        <button class="btn btn-outline-warning btn-sm text-warning" 
+                        <button class="btn btn-outline-warning text-warning" 
                                style="border-color: #FFBF00;" 
                                id="showCustomerSelectionBtn" 
                                data-bs-toggle="modal" 
@@ -132,53 +132,56 @@
                         
                         {% if booking %}
                         <!-- Add Service -->
-                        <a href="#" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <a href="#" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                             <i class="fas fa-plus me-1"></i> Add Service
                         </a>
                         
                         <!-- View/Generate Invoice -->
                         {% if booking.invoice_number %}
                         <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
-                           class="btn btn-yellow btn-sm">
+                           class="btn btn-yellow">
                             <i class="fas fa-file-invoice me-1"></i> View Invoice
                         </a>
                         {% else %}
                         <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
-                           class="btn btn-yellow btn-sm">
+                           class="btn btn-yellow">
                             <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
                         </a>
                         {% endif %}
                         
                         <!-- Add Payment -->
                         <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
-                           class="btn btn-yellow btn-sm">
+                           class="btn btn-yellow">
                             <i class="fas fa-credit-card me-1"></i> Add Payment
                         </a>
                         
                         <!-- Cancel Booking -->
-                        <a href="#" class="btn btn-outline-warning btn-sm text-warning" style="border-color: #FFBF00;">
+                        <a href="#" class="btn btn-yellow">
                             <i class="fas fa-times-circle me-1"></i> Cancel Booking
                         </a>
                         
                         <!-- Update Status button -->
-                        <button type="button" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                        <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
                             <i class="fas fa-edit me-1"></i> Update Status
                         </button>
                         
-                        <!-- Start Operations (only when payment is full or partial) -->
-                        {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
-                        <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="new_status" value="IN_PROGRESS">
-                            <button type="submit" class="btn btn-yellow btn-sm">
+                        <!-- Button container (adds spacing between buttons) -->
+                        <div style="width: 100%; display: flex; gap: 10px; margin-top: 15px;">
+                            <!-- Start Operations (only when payment is full or partial) -->
+                            {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
+                            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="new_status" value="IN_PROGRESS">
+                                <button type="submit" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px;">
+                                    <i class="fas fa-play-circle me-1"></i> Start Operations
+                                </button>
+                            </form>
+                            {% else %}
+                            <button type="button" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px;" disabled title="Payment required before starting operations">
                                 <i class="fas fa-play-circle me-1"></i> Start Operations
                             </button>
-                        </form>
-                        {% else %}
-                        <button type="button" class="btn btn-yellow btn-sm" disabled title="Payment required before starting operations">
-                            <i class="fas fa-play-circle me-1"></i> Start Operations
-                        </button>
-                        {% endif %}
+                            {% endif %}
+                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -200,13 +203,7 @@
                             <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') }}</p>
                         </div>
                     </div>
-                    
-                    <!-- Status Update Button -->
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                            <i class="fas fa-sync-alt me-1"></i> Update Status
-                        </button>
-                    </div>
+            
                     
                     <!-- Invoice Status -->
                     {% if booking.invoice_number %}
@@ -724,10 +721,7 @@
                         <label for="notes_{{ item.id }}" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes_{{ item.id }}" name="notes" rows="3"></textarea>
                     </div>
-                    <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-yellow">Update Status</button>
-                    </div>
+           
                 </form>
             </div>
         </div>
