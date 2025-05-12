@@ -531,7 +531,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {% if booking %}
                 <form action="{{ url_for('booking.add_service_item', booking_id=booking.id) }}" method="POST">
+                {% else %}
+                <div class="alert alert-info">
+                    Please select a customer first to add services.
+                </div>
+                <form action="#" method="POST" id="add-service-form">
+                {% endif %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -596,7 +603,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {% if booking %}
                 <form action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" method="POST">
+                {% else %}
+                <form action="#" method="POST" id="update-status-form">
+                {% endif %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="booking_status" class="form-label">Status</label>
@@ -735,7 +746,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {% if booking %}
                 <form action="{{ url_for('booking.add_payment', booking_id=booking.id) }}" method="POST">
+                {% else %}
+                <form action="#" method="POST" id="add-payment-form">
+                {% endif %}
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="amount" class="form-label">Amount</label>
