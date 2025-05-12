@@ -533,8 +533,10 @@
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>Select a customer and create a booking first to manage invoices.
                 </div>
+            </div>
+        </div>
         {% endif %}
-                {% if booking.invoices %}
+                {% if booking and booking.invoices %}
                     <div class="table-responsive">
                         <table class="table table-striped">
                             <thead>
@@ -612,10 +614,15 @@
                         </div>
                     </div>
                 {% else %}
+                    {% if booking %}
                     <p class="text-muted mb-0">No invoice has been generated for this booking yet.</p>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
+        {% if booking %}
+        </div>
+        {% endif %}
         
         <!-- Payment Records -->
         <div class="card mb-4">
