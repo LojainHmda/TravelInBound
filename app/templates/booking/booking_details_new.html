@@ -43,73 +43,8 @@
 
 <div class="container-fluid mt-4">
     <div class="row">
-        <!-- Left Sidebar - Action Buttons -->
-        <div class="col-md-3 col-lg-2 mb-4">
-            <div class="action-box p-3 bg-light">
-                <h5 class="mb-3 border-bottom pb-2">Actions</h5>
-                
-                <!-- New Booking Button (always visible) -->
-                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-block w-100 mb-3 fw-bold">
-                    <i class="fas fa-plus me-2"></i> New Booking
-                </a>
-                
-                {% if not booking %}
-                <!-- Customer Selection Button (only for new booking) -->
-                <button class="btn btn-outline-warning btn-block w-100 mb-3 text-warning" 
-                       style="border-color: #FFBF00;" 
-                       id="showCustomerSelectionBtn" 
-                       data-bs-toggle="modal" 
-                       data-bs-target="#customerSelectionModal">
-                    <i class="fas fa-user me-2"></i> Select Customer
-                </button>
-                {% endif %}
-                
-                {% if booking %}
-                <!-- Buttons for existing booking -->
-                <div class="mb-2 small text-muted">Booking Actions</div>
-                
-                <!-- Add Service -->
-                <a href="#" class="btn btn-outline-warning btn-block w-100 mb-2 text-warning" 
-                   style="border-color: #FFBF00;" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                    <i class="fas fa-plus me-2"></i> Add Service
-                </a>
-                
-                <!-- View/Generate Invoice -->
-                {% if booking.invoice_number %}
-                <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
-                   class="btn btn-outline-warning btn-block w-100 mb-2 text-warning" style="border-color: #FFBF00;">
-                    <i class="fas fa-file-invoice me-2"></i> View Invoice
-                </a>
-                {% else %}
-                <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
-                   class="btn btn-outline-warning btn-block w-100 mb-2 text-warning" style="border-color: #FFBF00;">
-                    <i class="fas fa-file-invoice-dollar me-2"></i> Generate Invoice
-                </a>
-                {% endif %}
-                
-                <!-- Add Payment -->
-                <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
-                   class="btn btn-outline-warning btn-block w-100 mb-2 text-warning" style="border-color: #FFBF00;">
-                    <i class="fas fa-credit-card me-2"></i> Add Payment
-                </a>
-                
-                <!-- Cancel Booking -->
-                <a href="#" class="btn btn-outline-warning btn-block w-100 mb-2 text-warning" style="border-color: #FFBF00;">
-                    <i class="fas fa-times-circle me-2"></i> Cancel Booking
-                </a>
-                
-                <!-- Start Operations (only when payment is full) -->
-                {% if booking.payment_status == 'FULL' %}
-                <a href="#" class="btn btn-success btn-block w-100 mb-2">
-                    <i class="fas fa-play-circle me-2"></i> Start Operations
-                </a>
-                {% endif %}
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Main Content Area -->
-        <div class="col-md-9 col-lg-10">
+        <!-- Main Content Area (full width now) -->
+        <div class="col-12">
             <!-- Booking Header -->
             <div class="card mb-4">
                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
@@ -145,6 +80,66 @@
                         {% endif %}
                     </div>
                 </div>
+                
+                <!-- Horizontal Action Buttons Bar -->
+                <div class="card-body bg-light py-2 border-bottom">
+                    <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
+                        <!-- New Booking Button (always visible) -->
+                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-sm">
+                            <i class="fas fa-plus me-1"></i> New Booking
+                        </a>
+                        
+                        {% if not booking %}
+                        <!-- Customer Selection Button (only for new booking) -->
+                        <button class="btn btn-outline-warning btn-sm text-warning" 
+                               style="border-color: #FFBF00;" 
+                               id="showCustomerSelectionBtn" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#customerSelectionModal">
+                            <i class="fas fa-user me-1"></i> Select Customer
+                        </button>
+                        {% endif %}
+                        
+                        {% if booking %}
+                        <!-- Add Service -->
+                        <a href="#" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plus me-1"></i> Add Service
+                        </a>
+                        
+                        <!-- View/Generate Invoice -->
+                        {% if booking.invoice_number %}
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-file-invoice me-1"></i> View Invoice
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Add Payment -->
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-credit-card me-1"></i> Add Payment
+                        </a>
+                        
+                        <!-- Cancel Booking -->
+                        <a href="#" class="btn btn-outline-warning btn-sm text-warning" style="border-color: #FFBF00;">
+                            <i class="fas fa-times-circle me-1"></i> Cancel Booking
+                        </a>
+                        
+                        <!-- Start Operations (only when payment is full) -->
+                        {% if booking.payment_status == 'FULL' %}
+                        <a href="#" class="btn btn-success btn-sm">
+                            <i class="fas fa-play-circle me-1"></i> Start Operations
+                        </a>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+                
                 <div class="card-body">
                     {% if booking %}
                     <!-- Customer Info for existing booking -->
