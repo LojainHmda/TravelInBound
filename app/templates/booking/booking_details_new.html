@@ -164,25 +164,29 @@
                         <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
                             <i class="fas fa-edit me-1"></i> Update Status
                         </button>
-                        
-                        <!-- Button container (adds spacing between buttons) -->
-                        <div style="width: 100%; display: flex; gap: 10px; margin-top: 15px;">
-                            <!-- Start Operations (only when payment is full or partial) -->
-                            {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
-                            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="new_status" value="IN_PROGRESS">
-                                <button type="submit" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px;">
-                                    <i class="fas fa-play-circle me-1"></i> Start Operations
-                                </button>
-                            </form>
-                            {% else %}
-                            <button type="button" class="btn" style="background-color: #6c757d; color: white; padding: 10px 20px;" disabled title="Payment required before starting operations">
-                                <i class="fas fa-play-circle me-1"></i> Start Operations
-                            </button>
-                            {% endif %}
-                        </div>
                         {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Start Operations (on its own row with grey background) -->
+                {% if booking and booking.status != 'COMPLETED' %}
+                <div style="margin-top: 10px;">
+                    <!-- Start Operations (only when payment is full or partial) -->
+                    {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
+                    <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="new_status" value="IN_PROGRESS">
+                        <button type="submit" class="btn" style="background-color: #6c757d; color: white; padding: 8px 16px;">
+                            <i class="fas fa-play-circle me-1"></i> Start Operations
+                        </button>
+                    </form>
+                    {% else %}
+                    <button type="button" class="btn" style="background-color: #6c757d; color: white; padding: 8px 16px;" disabled title="Payment required before starting operations">
+                        <i class="fas fa-play-circle me-1"></i> Start Operations
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
                     </div>
                 </div>
                 
