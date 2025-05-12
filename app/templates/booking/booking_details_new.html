@@ -57,22 +57,7 @@
                 </div>
                 
                 <div>
-                    {% if booking %}
-                        {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
-                            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-inline">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="new_status" value="IN_PROGRESS">
-                                <button type="submit" class="btn btn-success btn-lg px-4 py-2 fw-bold">
-                                    <i class="fas fa-play-circle me-2"></i> Start Operations
-                                </button>
-                            </form>
-                        {% else %}
-                            <button type="button" class="btn btn-success btn-lg px-4 py-2 fw-bold" disabled title="Payment required before starting operations">
-                                <i class="fas fa-play-circle me-2"></i> Start Operations
-                            </button>
-                            <div class="text-danger mt-1"><i class="fas fa-exclamation-triangle"></i> Payment required</div>
-                        {% endif %}
-                    {% else %}
+                    {% if not booking %}
                         <button class="btn btn-yellow btn-lg px-4 py-2 fw-bold" 
                                id="showCustomerSelectionBtn" 
                                data-bs-toggle="modal" 
@@ -187,11 +172,19 @@
                             <i class="fas fa-times-circle me-1"></i> Cancel Booking
                         </a>
                         
-                        <!-- Start Operations (only when payment is full) -->
-                        {% if booking.payment_status == 'FULL' %}
-                        <a href="#" class="btn btn-success btn-sm">
+                        <!-- Start Operations (only when payment is full or partial) -->
+                        {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
+                        <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="new_status" value="IN_PROGRESS">
+                            <button type="submit" class="btn btn-yellow btn-sm">
+                                <i class="fas fa-play-circle me-1"></i> Start Operations
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-yellow btn-sm" disabled title="Payment required before starting operations">
                             <i class="fas fa-play-circle me-1"></i> Start Operations
-                        </a>
+                        </button>
                         {% endif %}
                         {% endif %}
                     </div>
