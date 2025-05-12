@@ -503,20 +503,6 @@ body {
     transform: translateY(-2px);
 }
 
-/* Sidebar Toggle */
-.sidebar {
-    transition: all 0.3s ease;
-}
-
-body.sidebar-collapsed .sidebar {
-    margin-left: -250px;
-}
-
-body.sidebar-collapsed .main-content {
-    margin-left: 0;
-    width: 100%;
-}
-
 /* Media Queries */
 @media (max-width: 768px) {
     .hero-section {
@@ -545,19 +531,5 @@ body.sidebar-collapsed .main-content {
     
     .action-buttons {
         flex-direction: column;
-    }
-    
-    .sidebar {
-        position: fixed;
-        left: -250px;
-        top: 0;
-        height: 100%;
-        z-index: 1000;
-        background: white;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    body.sidebar-collapsed .sidebar {
-        left: 0;
     }
 }
