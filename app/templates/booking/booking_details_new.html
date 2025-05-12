@@ -536,6 +536,7 @@
             </div>
             <div class="modal-body">
                 <form action="{{ url_for('booking.add_service_item', booking_id=booking.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="service_type" class="form-label">Service Type</label>
