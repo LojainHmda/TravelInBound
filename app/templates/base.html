@@ -198,18 +198,27 @@
     <!-- Top Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top" style="background-color: #1a4282;">
         <div class="container-fluid">
-            <!-- Keep only the burger menu toggle -->
             <button class="navbar-toggler border-0" type="button" id="main-sidebar-toggle">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <!-- Centered brand logo -->
-            <a class="navbar-brand mx-auto" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand mx-auto mx-lg-0" href="{{ url_for('main.index') }}">
                 <i class="fas fa-plane-departure me-2"></i> TravelBookPro
             </a>
             
-            <!-- Empty div to balance the navbar -->
-            <div style="width: 42px;"></div>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> Test User
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </nav>
     

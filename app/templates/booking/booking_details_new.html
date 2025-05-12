@@ -48,11 +48,24 @@
     <div class="row">
         <!-- Main Content Area (full width now) -->
         <div class="col-12">
-            <!-- Main Action Buttons - Only New Booking -->
-            <div class="mb-4">
-                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-lg px-4 py-2 fw-bold">
-                    <i class="fas fa-plus me-2"></i> New Booking
-                </a>
+            <!-- Main Action Buttons -->
+            <div class="d-flex justify-content-between mb-4">
+                <div>
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-lg px-4 py-2 fw-bold">
+                        <i class="fas fa-plus me-2"></i> New Booking
+                    </a>
+                </div>
+                
+                <div>
+                    {% if not booking %}
+                    <button class="btn btn-yellow btn-lg px-4 py-2 fw-bold" 
+                           id="showCustomerSelectionBtn" 
+                           data-bs-toggle="modal" 
+                           data-bs-target="#customerSelectionModal">
+                        <i class="fas fa-user me-2"></i> Select Customer
+                    </button>
+                    {% endif %}
+                </div>
             </div>
             
             <!-- Booking Header -->
@@ -110,44 +123,61 @@
                     </div>
                 </div>
                 
-                <!-- Status Update Bar -->
-                {% if booking %}
+                <!-- Horizontal Action Buttons Bar -->
                 <div class="card-body bg-light py-2 border-bottom">
-                    <div class="d-flex flex-wrap justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-flex align-items-center gap-2">
-                                {% if status_form %}
-                                {{ status_form.hidden_tag() }}
-                                <select name="new_status" class="form-select form-select-sm" style="max-width: 150px;">
-                                    <option value="REQUEST" {% if booking.status == 'REQUEST' %}selected{% endif %}>Request</option>
-                                    <option value="BOOKED" {% if booking.status == 'BOOKED' %}selected{% endif %}>Booked</option>
-                                    <option value="IN_PROGRESS" {% if booking.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                                    <option value="CONFIRMED" {% if booking.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
-                                </select>
-                                {% endif %}
-                                <button type="submit" class="btn btn-yellow btn-sm" {% if booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' and booking.status == 'REQUEST' %}disabled title="Payment required before starting operations"{% endif %}>
-                                    <i class="fas fa-check me-1"></i> Update Status
-                                </button>
-                            </form>
-                        </div>
+                    <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
+                        <!-- New Booking Button (always visible) -->
+                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow btn-sm">
+                            <i class="fas fa-plus me-1"></i> New Booking
+                        </a>
                         
-                        <!-- Payment Status -->
-                        <div>
-                            {% if booking.payment_status == 'FULL' %}
-                            <span class="badge bg-success px-3 py-2">Fully Paid</span>
-                            {% elif booking.payment_status == 'PARTIAL' %}
-                            <span class="badge bg-info px-3 py-2">Partially Paid</span>
-                            {% elif booking.invoice_number %}
-                            <span class="badge bg-warning px-3 py-2">Invoiced - Not Paid</span>
-                            {% else %}
-                            <span class="badge bg-secondary px-3 py-2">Not Invoiced</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                
-                <!-- Action buttons that were below the status bar have been moved to a dropdown or organized elsewhere -->
+                        {% if not booking %}
+                        <!-- Customer Selection Button (only for new booking) -->
+                        <button class="btn btn-outline-warning btn-sm text-warning" 
+                               style="border-color: #FFBF00;" 
+                               id="showCustomerSelectionBtn" 
+                               data-bs-toggle="modal" 
+                               data-bs-target="#customerSelectionModal">
+                            <i class="fas fa-user me-1"></i> Select Customer
+                        </button>
+                        {% endif %}
+                        
+                        {% if booking %}
+                        <!-- Add Service -->
+                        <a href="#" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plus me-1"></i> Add Service
+                        </a>
+                        
+                        <!-- View/Generate Invoice -->
+                        {% if booking.invoice_number %}
+                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-file-invoice me-1"></i> View Invoice
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                        </a>
+                        {% endif %}
+                        
+                        <!-- Add Payment -->
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
+                           class="btn btn-yellow btn-sm">
+                            <i class="fas fa-credit-card me-1"></i> Add Payment
+                        </a>
+                        
+                        <!-- Cancel Booking -->
+                        <a href="#" class="btn btn-outline-warning btn-sm text-warning" style="border-color: #FFBF00;">
+                            <i class="fas fa-times-circle me-1"></i> Cancel Booking
+                        </a>
+                        
+                        <!-- Start Operations (only when payment is full) -->
+                        {% if booking.payment_status == 'FULL' %}
+                        <a href="#" class="btn btn-success btn-sm">
+                            <i class="fas fa-play-circle me-1"></i> Start Operations
+                        </a>
+                        {% endif %}
                         {% endif %}
                     </div>
                 </div>
