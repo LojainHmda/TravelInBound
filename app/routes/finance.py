@@ -15,9 +15,10 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import (
     ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric, 
-    SupplierPayment, Booking, ServiceItem, Payment, User, Document,
+    Booking, ServiceItem, Payment, User, Document,
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
+from app.models.supplier import SupplierPayment
 from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
     ExpenseAttachmentForm, FinancialReportFilterForm
@@ -129,12 +130,10 @@ def index():
     # Get recent expenses
     recent_expenses = Expense.query.order_by(Expense.date_incurred.desc()).limit(5).all()
     
-    # Get upcoming payments due
+    # Get recent supplier payments
     upcoming_payments = SupplierPayment.query.filter(
-        SupplierPayment.status == 'PENDING',
-        SupplierPayment.due_date >= today,
-        SupplierPayment.due_date <= today + timedelta(days=30)
-    ).order_by(SupplierPayment.due_date).limit(5).all()
+        SupplierPayment.payment_date >= today - timedelta(days=30)
+    ).order_by(SupplierPayment.payment_date.desc()).limit(5).all()
     
     return render_template(
         'finance/index.html',
