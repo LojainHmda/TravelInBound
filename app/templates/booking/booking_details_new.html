@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Include CSRF token for AJAX requests -->
+<meta name="csrf-token" content="{{ csrf_token() }}"
 <style>
     .action-box {
         border-radius: 10px;
@@ -157,38 +159,36 @@
                 </div>
             </div>
 
-            <!-- Service Items List -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f2f2f2;">
-                    <div class="d-flex align-items-center">
-                        <h5 class="mb-0 text-dark me-3"><i class="fas fa-list me-2"></i>Service Items</h5>
-                    </div>
-                    {% if booking %}
-                    <div class="quick-add-section">
-                        <div class="quick-add-label">Quick Add:</div>
-                        <div class="quick-add-buttons">
-                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                <i class="fas fa-plane"></i>
-                            </button>
-                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                <i class="fas fa-hotel"></i>
-                            </button>
-                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                <i class="fas fa-car"></i>
-                            </button>
-                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                <i class="fas fa-passport"></i>
-                            </button>
-                            <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                                <i class="fas fa-shield-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                    {% endif %}
+        <!-- Service Items List -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #f2f2f2;">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 text-dark me-3"><i class="fas fa-list me-2"></i>Service Items</h5>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
+                {% if booking %}
+                <div class="d-flex align-items-center">
+                    <span class="me-2">Quick Add:</span>
+                    <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-plane"></i>
+                    </button>
+                    <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-hotel"></i>
+                    </button>
+                    <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-car"></i>
+                    </button>
+                    <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="VISA" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-passport"></i>
+                    </button>
+                    <button type="button" class="quick-add-button icon-popup-trigger" data-service-type="INSURANCE" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                        <i class="fas fa-shield-alt"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
                             <thead>
                                 <tr class="bg-dark-blue text-white">
                                     <th style="width: 15%">Service</th>
@@ -821,6 +821,63 @@ document.addEventListener('DOMContentLoaded', function() {
                 endDate.value = startDate.value;
             }
         });
+    }
+    
+    // Start Operations button - Move booking to IN_PROGRESS status
+    const startOpsButtons = document.querySelectorAll('.start-operations-btn');
+    startOpsButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const bookingId = this.getAttribute('data-booking-id');
+            if (bookingId) {
+                // Create form data
+                const formData = new FormData();
+                formData.append('status', 'IN_PROGRESS');
+                formData.append('notes', 'Status automatically updated to In Progress by Start Operations button');
+                formData.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+                
+                // Send request to update booking status
+                fetch(`/booking/${bookingId}/update-status`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Refresh the page to show updated status
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to update booking status');
+                        alert('Failed to start operations. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+        });
+    });
+    
+    // Sidebar Toggle
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+            document.body.classList.toggle('sidebar-collapsed');
+            
+            // Store state in localStorage
+            const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed);
+        });
+        
+        // Check if sidebar was previously collapsed
+        const wasCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+        if (wasCollapsed) {
+            document.body.classList.add('sidebar-collapsed');
+        }
     }
 });
 </script>
