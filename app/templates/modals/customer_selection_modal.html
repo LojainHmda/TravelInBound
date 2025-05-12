@@ -117,12 +117,22 @@ document.addEventListener('DOMContentLoaded', function() {
             csrfInput.value = csrfToken;
             form.appendChild(csrfInput);
             
+            // Add customer ID
             const customerIdInput = document.createElement('input');
             customerIdInput.type = 'hidden';
-            customerIdInput.name = 'customer_id';
+            customerIdInput.name = 'customer';
             customerIdInput.value = customerId;
             
+            // Add request ID - generate a unique one if not already available
+            const requestIdInput = document.createElement('input');
+            requestIdInput.type = 'hidden';
+            requestIdInput.name = 'request_id';
+            requestIdInput.value = document.getElementById('request_id_field') ? 
+                                  document.getElementById('request_id_field').value : 
+                                  `IR-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+            
             form.appendChild(customerIdInput);
+            form.appendChild(requestIdInput);
             document.body.appendChild(form);
             form.submit();
         }
