@@ -126,7 +126,7 @@
                             {% endif %}
                         </span>
                         {% else %}
-                        <!-- For new booking -->
+                        <!-- For new booking - Single Main Customer Selection Button -->
                         <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
                             <i class="fas fa-user-plus me-1"></i> Select Customer
                         </button>
@@ -331,10 +331,7 @@
                                             <i class="fas fa-plus me-1"></i> Add First Service
                                         </button>
                                         {% else %}
-                                        <p class="mb-0 text-muted">Please select a customer first to create a booking</p>
-                                        <button type="button" class="btn btn-yellow mt-2" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                                            <i class="fas fa-user-plus me-1"></i> Select Customer
-                                        </button>
+                                        <p class="mb-0 text-muted">Please select a customer using the button at the top of the page</p>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -379,9 +376,7 @@
                                     </a>
                                 {% endif %}
                             {% else %}
-                                <button type="button" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                                    <i class="fas fa-user-plus me-1"></i> Select Customer to Start
-                                </button>
+                                <span class="text-muted">Select a customer to set total amount</span>
                             {% endif %}
                         </div>
                     </div>
