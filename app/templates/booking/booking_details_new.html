@@ -304,9 +304,10 @@
                                                 </li>
                                                 {% endif %}
                                                 
+                                                <!-- Document upload temporarily disabled -->
                                                 <li>
-                                                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal{{ item.id }}">
-                                                        <i class="fas fa-file-upload me-2"></i>Upload Document
+                                                    <a href="#" class="dropdown-item disabled">
+                                                        <i class="fas fa-file-upload me-2"></i>Upload Document (Coming Soon)
                                                     </a>
                                                 </li>
                                                 
@@ -771,7 +772,7 @@
     </div>
 </div>
 
-<!-- Upload Document Modal -->
+<!-- Upload Document Modal - Temporarily disabled until route is implemented -->
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -780,43 +781,12 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="document-upload-form" method="POST" action="{{ url_for('booking.upload_document', booking_id=booking.id) }}" enctype="multipart/form-data">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="mb-3">
-                        <label class="form-label">Select Service Item</label>
-                        <select class="form-select" name="service_item_id">
-                            {% for item in booking.service_items %}
-                                <option value="{{ item.id }}">{{ item.service_type }} - {{ item.description|truncate(30) }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Document Type</label>
-                        <select class="form-select" name="document_type">
-                            <option value="TICKET">Ticket</option>
-                            <option value="CONFIRMATION">Booking Confirmation</option>
-                            <option value="VISA">Visa Document</option>
-                            <option value="INSURANCE">Insurance Policy</option>
-                            <option value="OTHER">Other Document</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Document Number</label>
-                        <input type="text" class="form-control" name="document_number" placeholder="e.g., Ticket number, confirmation code">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">File</label>
-                        <input type="file" class="form-control" name="file">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" name="notes" rows="3"></textarea>
-                    </div>
-                </form>
+                <div class="alert alert-info">
+                    Document upload functionality will be available soon.
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-yellow" form="document-upload-form">Upload Document</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
