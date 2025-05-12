@@ -109,6 +109,14 @@ document.addEventListener('DOMContentLoaded', function() {
             form.method = 'POST';
             form.action = '/booking/create-from-detail';
             
+            // Add CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
             const customerIdInput = document.createElement('input');
             customerIdInput.type = 'hidden';
             customerIdInput.name = 'customer_id';
