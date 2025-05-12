@@ -278,6 +278,24 @@
                         Supplier Statements
                     </a>
                 </li>
+                <li>
+                    <a href="{{ url_for('finance.index') }}" class="{% if '/finance/' in request.path %}active{% endif %}">
+                        <i class="fas fa-money-bill-wave"></i>
+                        Finance
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('finance.expenses') }}" class="{% if '/finance/expenses' in request.path %}active{% endif %}">
+                        <i class="fas fa-receipt"></i>
+                        Expenses
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('finance.reports') }}" class="{% if '/finance/reports' in request.path %}active{% endif %}">
+                        <i class="fas fa-chart-pie"></i>
+                        Financial Reports
+                    </a>
+                </li>
             </ul>
             
             <div class="sidebar-footer">
