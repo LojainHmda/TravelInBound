@@ -91,10 +91,39 @@ class SupplierPayment(db.Model):
     payment_reference = db.Column(db.String(100))
     payment_method = db.Column(db.String(50))  # BANK_TRANSFER, CREDIT_CARD, etc.
     notes = db.Column(db.Text)
+    invoice_number = db.Column(db.String(100))  # Supplier invoice number
+    invoice_date = db.Column(db.Date, nullable=True)
+    due_date = db.Column(db.Date, nullable=True)  # Payment due date
+    status = db.Column(db.String(20), default='PENDING')  # PENDING, PAID, CANCELLED
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationship with service confirmation
     service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy=True)
+    
+    @property
+    def get_confirmation_cost(self):
+        """Get the confirmation cost from the related service confirmation"""
+        if self.service_confirmation:
+            return self.service_confirmation.cost_amount
+        return self.amount
+    
+    @property
+    def get_payment_status(self):
+        """Get a formatted payment status"""
+        if self.status == 'PAID':
+            return f"Paid on {self.payment_date.strftime('%d %b %Y')}"
+        elif self.status == 'CANCELLED':
+            return "Cancelled"
+        elif self.due_date:
+            days_to_due = (self.due_date - datetime.utcnow().date()).days
+            if days_to_due < 0:
+                return f"Overdue by {abs(days_to_due)} days"
+            elif days_to_due == 0:
+                return "Due today"
+            else:
+                return f"Due in {days_to_due} days"
+        return "Pending"
     
     def __repr__(self):
         return f'<SupplierPayment ${self.amount:.2f} to {self.supplier.name}>'
