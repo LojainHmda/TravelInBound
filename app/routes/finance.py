@@ -13,10 +13,9 @@ from flask import (
 from flask_login import login_required, current_user
 
 from app import db
-from models import (
-    ExpenseCategory, Expense, ExpenseAttachment,
-    FinancialMetric, SupplierPayment, Booking, ServiceItem, 
-    Payment, User, Document,
+from app.models import (
+    ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric, 
+    SupplierPayment, Booking, ServiceItem, Payment, User, Document,
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
 from app.forms.expense import (

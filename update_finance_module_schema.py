@@ -3,9 +3,9 @@ Initialize the finance module schema with necessary tables and seed data
 """
 import sys
 from datetime import datetime, timedelta
-from app import app, db
-from models import (
-    ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric, SupplierPayment,
+from app import create_app, db
+from app.models.finance import (
+    ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric,
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES, EXPENSE_CATEGORY_SALARIES,
     EXPENSE_CATEGORY_MARKETING, EXPENSE_CATEGORY_INSURANCE, EXPENSE_CATEGORY_SUPPLIES,
     EXPENSE_CATEGORY_TRAVEL, EXPENSE_CATEGORY_TAXES, EXPENSE_CATEGORY_SOFTWARE,
@@ -44,6 +44,7 @@ def create_expense_categories():
 def main():
     """Initialize the finance module schema"""
     print("Creating finance module database schema...", file=sys.stderr)
+    app = create_app()
     with app.app_context():
         # Create tables
         db.create_all()

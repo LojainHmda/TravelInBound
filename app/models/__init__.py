@@ -15,12 +15,19 @@ STATUS_COMPLETED = 'COMPLETED'  # Consider deprecating in favor of STATUS_CONFIR
 # Import models
 from app.models.user import User, Agent, create_test_data
 from app.models.booking import Booking, Payment, PAYMENT_NONE, PAYMENT_PARTIAL, PAYMENT_FULL
-
-# Import supplier and customer models
 from app.models.supplier import Supplier, SupplierService, SupplierPayment
 from app.models.customer import Customer, CustomerDocument
-
-# Import service models
 from app.models.service import ServiceConfirmation, ServiceItem, Document
-from app.models.service import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED, STATUS_COMPLETED
-from app.models.service import SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_VISA, SERVICE_INSURANCE
+
+# Import finance models
+from app.models.finance import (
+    ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric,
+    EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES, EXPENSE_CATEGORY_SALARIES,
+    EXPENSE_CATEGORY_MARKETING, EXPENSE_CATEGORY_INSURANCE, EXPENSE_CATEGORY_SUPPLIES,
+    EXPENSE_CATEGORY_TRAVEL, EXPENSE_CATEGORY_TAXES, EXPENSE_CATEGORY_SOFTWARE,
+    EXPENSE_CATEGORY_TELECOM, EXPENSE_CATEGORY_MAINTENANCE, EXPENSE_CATEGORY_OTHER,
+    PAYMENT_METHOD_CASH, PAYMENT_METHOD_CREDIT_CARD, PAYMENT_METHOD_BANK_TRANSFER,
+    PAYMENT_METHOD_CHECK, PAYMENT_METHOD_PAYPAL, PAYMENT_METHOD_OTHER,
+    RECURRENCE_NONE, RECURRENCE_DAILY, RECURRENCE_WEEKLY, RECURRENCE_MONTHLY,
+    RECURRENCE_QUARTERLY, RECURRENCE_YEARLY
+)

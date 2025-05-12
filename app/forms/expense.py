@@ -5,7 +5,7 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Optional, Length, NumberRange
 from datetime import date
-from models import (
+from app.models import (
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES, EXPENSE_CATEGORY_SALARIES,
     EXPENSE_CATEGORY_MARKETING, EXPENSE_CATEGORY_INSURANCE, EXPENSE_CATEGORY_SUPPLIES,
     EXPENSE_CATEGORY_TRAVEL, EXPENSE_CATEGORY_TAXES, EXPENSE_CATEGORY_SOFTWARE,
