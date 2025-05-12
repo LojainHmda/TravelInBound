@@ -160,6 +160,11 @@
                             <i class="fas fa-times-circle me-1"></i> Cancel Booking
                         </a>
                         
+                        <!-- Update Status button -->
+                        <button type="button" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                            <i class="fas fa-edit me-1"></i> Update Status
+                        </button>
+                        
                         <!-- Start Operations (only when payment is full or partial) -->
                         {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
                         <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-inline">
@@ -174,11 +179,6 @@
                             <i class="fas fa-play-circle me-1"></i> Start Operations
                         </button>
                         {% endif %}
-                        
-                        <!-- Update Status button -->
-                        <button type="button" class="btn btn-yellow btn-sm" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                            <i class="fas fa-edit me-1"></i> Update Status
-                        </button>
                         {% endif %}
                     </div>
                 </div>
