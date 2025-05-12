@@ -38,19 +38,20 @@
             left: 0;
             top: 0;
             bottom: 0;
-            z-index: 100;
-            transition: all 0.3s;
+            z-index: 1050;
+            transition: transform 0.3s ease;
             box-shadow: 3px 0 5px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
         }
         
         #sidebar.collapsed {
-            margin-left: -260px;
+            transform: translateX(-100%);
         }
         
         #content {
             flex: 1;
             margin-left: 260px;
-            transition: all 0.3s;
+            transition: margin 0.3s ease;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -127,18 +128,36 @@
             cursor: pointer;
         }
         
+        /* Floating menu button for mobile */
+        .menu-button-float {
+            display: none;
+            position: fixed;
+            z-index: 1060;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: #FFBF00;
+            color: #000;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            border: none;
+            font-size: 24px;
+            text-align: center;
+            cursor: pointer;
+        }
+        
         @media (max-width: 768px) {
             #sidebar {
-                margin-left: -260px;
-                z-index: 1050; /* Higher z-index to appear above content */
-            }
-            
-            #sidebar.active {
-                margin-left: 0;
+                transform: translateX(-100%);
             }
             
             #sidebar.collapsed {
-                margin-left: -260px;
+                transform: translateX(-100%);
+            }
+            
+            #sidebar:not(.collapsed) {
+                transform: translateX(0);
             }
             
             #content {
@@ -149,8 +168,8 @@
                 margin-left: 0;
             }
             
-            #fixed-sidebar-toggle {
-                display: block !important;
+            .menu-button-float {
+                display: block;
             }
             
             #sidebar-overlay {
@@ -163,21 +182,13 @@
                 right: 0;
                 bottom: 0;
                 background-color: rgba(0, 0, 0, 0.5);
-                z-index: 1040; /* Just below the sidebar */
+                z-index: 1040;
                 cursor: pointer;
                 transition: all 0.3s;
             }
             
             #sidebar-overlay.active {
                 display: block;
-            }
-            
-            /* Make the sidebar toggle button fixed and visible on mobile */
-            #fixed-sidebar-toggle {
-                position: fixed !important;
-                top: 70px !important;
-                left: 10px !important;
-                z-index: 1060 !important;
             }
         }
     </style>
@@ -273,12 +284,10 @@
                 {% endwith %}
             </div>
             
-            <!-- Sidebar Toggle Button (Fixed Position) -->
-            <div class="position-fixed" style="top: 10px; left: 10px; z-index: 99; display: none;" id="fixed-sidebar-toggle">
-                <button class="btn btn-yellow" style="width: 45px; height: 45px; border-radius: 8px; background-color: #FFBF00; border: 2px solid #0d3c74; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </div>
+            <!-- Floating Menu Button for Mobile -->
+            <button class="menu-button-float" id="mobile-menu-button">
+                <i class="fas fa-bars"></i>
+            </button>
             
             <!-- Main Content -->
             <main class="container-fluid my-4">
@@ -334,42 +343,41 @@
     <!-- Sidebar Toggle JS -->
     <script>
         $(document).ready(function() {
-            // Toggle sidebar on button click
-            $('#toggle-sidebar, #mobile-sidebar-toggle, #fixed-sidebar-toggle button').on('click', function() {
+            // Toggle sidebar function
+            function toggleSidebar() {
                 $('#sidebar').toggleClass('collapsed');
                 $('#content').toggleClass('expanded');
                 $('#sidebar-overlay').toggleClass('active');
-                updateFixedToggleButton();
-            });
-            
-            // Close sidebar when clicking on overlay (mobile)
-            $('#sidebar-overlay').on('click', function() {
-                $('#sidebar').addClass('collapsed');
-                $('#content').addClass('expanded');
-                $('#sidebar-overlay').removeClass('active');
-                updateFixedToggleButton();
-            });
-            
-            // Function to update the fixed toggle button visibility
-            function updateFixedToggleButton() {
-                if ($('#sidebar').hasClass('collapsed')) {
-                    $('#fixed-sidebar-toggle').show();
-                } else {
-                    $('#fixed-sidebar-toggle').hide();
-                }
             }
             
-            // Auto-collapse sidebar on small screens
+            // Toggle sidebar with all buttons
+            $('#toggle-sidebar, #mobile-sidebar-toggle, #mobile-menu-button').on('click', function(e) {
+                e.preventDefault();
+                toggleSidebar();
+            });
+            
+            // Close sidebar when clicking on overlay
+            $('#sidebar-overlay').on('click', function() {
+                toggleSidebar();
+            });
+            
+            // Close sidebar when clicking a nav link on mobile
+            $('.sidebar-nav a').on('click', function() {
+                if ($(window).width() < 768) {
+                    toggleSidebar();
+                }
+            });
+            
+            // Auto-handle sidebar on different screen sizes
             function handleResize() {
                 if ($(window).width() < 768) {
+                    // On mobile, collapse sidebar by default
                     $('#sidebar').addClass('collapsed');
                     $('#content').addClass('expanded');
-                    $('#fixed-sidebar-toggle').show();
                 } else {
-                    // On larger screens, show sidebar by default
+                    // On desktop, show sidebar by default
                     $('#sidebar').removeClass('collapsed');
                     $('#content').removeClass('expanded');
-                    $('#fixed-sidebar-toggle').hide();
                 }
             }
             
@@ -380,17 +388,6 @@
             $(window).on('resize', function() {
                 handleResize();
             });
-            
-            // Make the toggle button always visible on mobile
-            if ($(window).width() < 768) {
-                $('#fixed-sidebar-toggle').css({
-                    'display': 'block',
-                    'position': 'fixed',
-                    'top': '10px',
-                    'left': '10px',
-                    'z-index': '999'
-                });
-            }
         });
     </script>
     
