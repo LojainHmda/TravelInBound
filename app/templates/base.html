@@ -130,14 +130,27 @@
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -260px;
+                z-index: 1050; /* Higher z-index to appear above content */
             }
             
             #sidebar.active {
                 margin-left: 0;
             }
             
+            #sidebar.collapsed {
+                margin-left: -260px;
+            }
+            
             #content {
                 margin-left: 0;
+            }
+            
+            #content.expanded {
+                margin-left: 0;
+            }
+            
+            #fixed-sidebar-toggle {
+                display: block !important;
             }
             
             #sidebar-overlay {
@@ -150,13 +163,21 @@
                 right: 0;
                 bottom: 0;
                 background-color: rgba(0, 0, 0, 0.5);
-                z-index: 99;
+                z-index: 1040; /* Just below the sidebar */
                 cursor: pointer;
                 transition: all 0.3s;
             }
             
             #sidebar-overlay.active {
                 display: block;
+            }
+            
+            /* Make the sidebar toggle button fixed and visible on mobile */
+            #fixed-sidebar-toggle {
+                position: fixed !important;
+                top: 70px !important;
+                left: 10px !important;
+                z-index: 1060 !important;
             }
         }
     </style>
@@ -227,7 +248,7 @@
             <!-- Mobile Navbar for Toggling Sidebar -->
             <nav class="navbar navbar-light bg-light d-md-none" style="box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 <div class="container-fluid">
-                    <button class="btn" type="button" id="mobile-sidebar-toggle">
+                    <button class="btn btn-yellow" type="button" id="mobile-sidebar-toggle" style="background-color: #FFBF00; color: black;">
                         <i class="fas fa-bars"></i>
                     </button>
                     <span class="navbar-brand mb-0 h1">
@@ -254,7 +275,7 @@
             
             <!-- Sidebar Toggle Button (Fixed Position) -->
             <div class="position-fixed" style="top: 10px; left: 10px; z-index: 99; display: none;" id="fixed-sidebar-toggle">
-                <button class="btn btn-primary" style="width: 50px; height: 45px; border-radius: 8px; background-color: #0d3c74; border: 2px solid #fff;">
+                <button class="btn btn-yellow" style="width: 45px; height: 45px; border-radius: 8px; background-color: #FFBF00; border: 2px solid #0d3c74; color: black; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
                     <i class="fas fa-bars"></i>
                 </button>
             </div>
@@ -343,11 +364,13 @@
                 if ($(window).width() < 768) {
                     $('#sidebar').addClass('collapsed');
                     $('#content').addClass('expanded');
+                    $('#fixed-sidebar-toggle').show();
                 } else {
+                    // On larger screens, show sidebar by default
                     $('#sidebar').removeClass('collapsed');
                     $('#content').removeClass('expanded');
+                    $('#fixed-sidebar-toggle').hide();
                 }
-                updateFixedToggleButton();
             }
             
             // Run on page load
@@ -357,6 +380,17 @@
             $(window).on('resize', function() {
                 handleResize();
             });
+            
+            // Make the toggle button always visible on mobile
+            if ($(window).width() < 768) {
+                $('#fixed-sidebar-toggle').css({
+                    'display': 'block',
+                    'position': 'fixed',
+                    'top': '10px',
+                    'left': '10px',
+                    'z-index': '999'
+                });
+            }
         });
     </script>
     
