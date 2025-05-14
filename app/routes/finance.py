@@ -137,6 +137,7 @@ def index():
     
     return render_template(
         'finance/index.html',
+        today=today,
         current_month=today.strftime('%B %Y'),
         prev_month=prev_month.strftime('%B %Y'),
         current_month_revenue=current_month_revenue,
