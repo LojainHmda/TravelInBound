@@ -2,14 +2,13 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 import uuid
 from datetime import datetime, timedelta
 import logging
+from werkzeug.security import check_password_hash
 
 from app import app, db
-from replit_auth import make_replit_blueprint, login_required
+from flask_login import login_user, logout_user, login_required, current_user
 from app.routes.auth import auth_bp
 
 # Register blueprints
-replit_bp = make_replit_blueprint()
-app.register_blueprint(replit_bp, url_prefix="/auth")
 app.register_blueprint(auth_bp, url_prefix="/auth")
 
 # Set up logging
@@ -55,6 +54,33 @@ def create_test_data():
 # Add with_appcontext to app startup
 with app.app_context():
     create_test_data()
+
+# Login action
+@app.route('/login', methods=['POST'])
+def login_action():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+        
+    username = request.form.get('username')
+    password = request.form.get('password')
+    
+    user = User.query.filter_by(username=username).first()
+    
+    if user and user.check_password(password):
+        login_user(user)
+        flash('You have been logged in successfully!', 'success')
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('dashboard'))
+    else:
+        flash('Login failed. Please check your username and password.', 'danger')
+        return redirect(url_for('auth.login'))
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('index'))
 
 # Home page
 @app.route('/')
