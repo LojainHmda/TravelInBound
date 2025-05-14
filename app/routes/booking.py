@@ -1050,6 +1050,65 @@ def confirm_service(item_id):
         service_item.status = STATUS_CONFIRMED
         db.session.commit()
         
+        # Create a supplier payment record based on the confirmation document
+        try:
+            from app.models.supplier import SupplierPayment, Supplier
+            from datetime import datetime
+            
+            # Parse the document notes to get cost information
+            confirmation_data = json.loads(document.notes)
+            
+            # Check if it has cost information
+            if 'cost_amount' in confirmation_data and confirmation_data['cost_amount'] > 0:
+                cost_amount = float(confirmation_data['cost_amount'])
+                
+                # Get supplier information
+                supplier_id = None
+                if 'supplier_id' in confirmation_data and confirmation_data['supplier_id']:
+                    supplier_id = int(confirmation_data['supplier_id'])
+                else:
+                    # Try to find supplier by name
+                    supplier_name = confirmation_data.get('supplier', 'Direct')
+                    supplier = Supplier.query.filter_by(name=supplier_name).first()
+                    if supplier:
+                        supplier_id = supplier.id
+                
+                if supplier_id:
+                    # Check if payment record exists for this document
+                    existing_payment = SupplierPayment.query.filter_by(
+                        notes=f"Payment for {service_item.service_type} confirmation document #{document.id}"
+                    ).first()
+                    
+                    if not existing_payment:
+                        # Get payment due date if available
+                        payment_date = datetime.now().date()
+                        due_date = payment_date
+                        
+                        if 'payment_due_date' in confirmation_data and confirmation_data['payment_due_date']:
+                            try:
+                                due_date = datetime.strptime(confirmation_data['payment_due_date'], '%Y-%m-%d').date()
+                            except ValueError:
+                                pass
+                        
+                        # Create payment record
+                        payment = SupplierPayment(
+                            supplier_id=supplier_id,
+                            amount=cost_amount,
+                            payment_date=payment_date,
+                            due_date=due_date,
+                            status='PENDING',
+                            payment_reference=document.document_number,
+                            payment_method='BANK_TRANSFER',
+                            notes=f"Payment for {service_item.service_type} confirmation document #{document.id}"
+                        )
+                        
+                        db.session.add(payment)
+                        db.session.commit()
+                        print(f"Created supplier payment of ${cost_amount} for confirmation document #{document.id}", file=sys.stderr)
+        except Exception as e:
+            # Log the error but don't fail the response
+            print(f"Error creating supplier payment: {str(e)}", file=sys.stderr)
+        
         flash(f'{service_item.service_type} confirmation details saved', 'success')
         
         # Get the booking ID for subsequent operations
