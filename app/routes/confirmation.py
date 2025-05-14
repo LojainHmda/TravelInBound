@@ -54,6 +54,26 @@ def add_supplier_confirmation(item_id):
         
         db.session.commit()
         
+        # Create or update a SupplierPayment record to track in finance module
+        from app.models.supplier import SupplierPayment
+        
+        # Check if a payment record already exists for this confirmation
+        supplier_payment = SupplierPayment.query.filter_by(service_confirmation_id=confirmation.id).first()
+        
+        if not supplier_payment:
+            # Create a new supplier payment record
+            supplier_payment = SupplierPayment(
+                supplier_id=confirmation.supplier_id,
+                service_confirmation_id=confirmation.id,
+                amount=confirmation.cost_amount,
+                payment_date=confirmation.payment_due_date or datetime.now().date(),
+                due_date=confirmation.payment_due_date,
+                status='PENDING',
+                notes=f"Automatic payment record for {service_item.service_type} confirmation {confirmation.confirmation_reference}"
+            )
+            db.session.add(supplier_payment)
+            db.session.commit()
+        
         flash('Supplier confirmation details saved successfully', 'success')
         return redirect(url_for('booking.details', booking_id=service_item.booking_id))
     
