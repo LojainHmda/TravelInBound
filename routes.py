@@ -55,28 +55,64 @@ def create_test_data():
 with app.app_context():
     create_test_data()
 
-# Login action
-@app.route('/login', methods=['POST'])
-def login_action():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+# Dashboard route accepts POST for login too
+@app.route('/dashboard', methods=['GET', 'POST'])
+def dashboard():
+    # Handle login POST request 
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
         
-    username = request.form.get('username')
-    password = request.form.get('password')
+        # Auto-login for demo purposes
+        if username == 'testuser' and password == 'password':
+            user = User.query.filter_by(username='testuser').first()
+            if user:
+                login_user(user)
+                flash('You have been logged in as the test user!', 'success')
+            else:
+                flash('Test user not found. Please run create_test_data() first.', 'danger')
+                return redirect(url_for('auth.login'))
+        else:
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                flash('You have been logged in successfully!', 'success')
+            else:
+                flash('Login failed. Please check your username and password.', 'danger')
+                return redirect(url_for('auth.login'))
     
-    user = User.query.filter_by(username=username).first()
+    # GET request handling for dashboard view
+    # Get counts for each status
+    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
+    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
+    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
+    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
     
-    if user and user.check_password(password):
-        login_user(user)
-        flash('You have been logged in successfully!', 'success')
-        next_page = request.args.get('next')
-        return redirect(next_page or url_for('dashboard'))
-    else:
-        flash('Login failed. Please check your username and password.', 'danger')
-        return redirect(url_for('auth.login'))
+    # Get service items for each service type
+    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
+    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
+    transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
+    visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
+    insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
+    
+    return render_template(
+        'booking/dashboard.html',
+        status_counts={
+            'request': request_count,
+            'booked': booked_count,
+            'in_progress': in_progress_count,
+            'completed': completed_count
+        },
+        service_items={
+            'flight': flight_items,
+            'hotel': hotel_items,
+            'transport': transport_items,
+            'visa': visa_items,
+            'insurance': insurance_items
+        }
+    )
 
 @app.route('/logout')
-@login_required
 def logout():
     logout_user()
     flash('You have been logged out.', 'info')
