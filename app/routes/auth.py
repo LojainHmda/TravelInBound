@@ -23,10 +23,31 @@ def profile():
     """User profile page"""
     return redirect('/dashboard')
 
-@auth_bp.route('/login')
+@auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Login page with Replit Auth option"""
+    """Login page with auto-login for demo"""
+    from flask import request
+    from flask_login import login_user
+    from app.models import User
+    
+    # If user is logged in, redirect to dashboard
     if current_user.is_authenticated:
-        flash('You are already logged in.', 'info')
-        return redirect(url_for('dashboard'))
+        logger.debug(f"User {current_user.username} is logged in, redirecting to dashboard")
+        return redirect('/dashboard')
+    
+    # For demo purposes, automatically log in as testuser
+    user = User.query.filter_by(username='testuser').first()
+    if user:
+        login_user(user)
+        logger.debug("Auto-login as testuser for demo")
+        
+        # Redirect to the requested page or default to dashboard
+        next_page = request.args.get('next')
+        if next_page:
+            return redirect(next_page)
+        return redirect('/dashboard')
+    else:
+        logger.error("Test user not found in database")
+        flash('Demo user not found. Please check if test data was created.', 'danger')
+    
     return render_template('auth/login.html')
