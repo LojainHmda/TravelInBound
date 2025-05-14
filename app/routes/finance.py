@@ -30,12 +30,32 @@ finance = Blueprint('finance', __name__, url_prefix='/finance')
 @login_required
 def index():
     """Finance module home with financial KPIs"""
-    # Get current month's data
+    # Get selected month from query parameter or default to current
     today = date.today()
-    first_day = date(today.year, today.month, 1)
-    last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+    selected_month = request.args.get('month', 'current')
     
-    # Get previous month for comparison
+    # Determine date range based on selected month
+    if selected_month == 'current':
+        first_day = date(today.year, today.month, 1)
+        last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+    elif selected_month == 'all':
+        # All time data - use a wide range
+        first_day = date(2020, 1, 1)  # Far in the past
+        last_day = today
+    else:
+        # Handle relative months (-1, -2, -3)
+        try:
+            months_offset = int(selected_month)
+            target_date = today + relativedelta(months=months_offset)
+            first_day = date(target_date.year, target_date.month, 1)
+            last_day = date(target_date.year, target_date.month, 
+                          monthrange(target_date.year, target_date.month)[1])
+        except (ValueError, TypeError):
+            # Default to current month if invalid value
+            first_day = date(today.year, today.month, 1)
+            last_day = date(today.year, today.month, monthrange(today.year, today.month)[1])
+    
+    # Get previous period for comparison (always one month before the selected period)
     prev_month = first_day - timedelta(days=1)
     prev_first = date(prev_month.year, prev_month.month, 1)
     prev_last = date(prev_month.year, prev_month.month, monthrange(prev_month.year, prev_month.month)[1])
@@ -135,10 +155,29 @@ def index():
         SupplierPayment.payment_date >= today - timedelta(days=30)
     ).order_by(SupplierPayment.payment_date.desc()).limit(5).all()
     
+    # Get supplier payments for the selected period for the breakdown modal
+    supplier_payments = SupplierPayment.query.filter(
+        SupplierPayment.payment_date >= first_day,
+        SupplierPayment.payment_date <= last_day
+    ).order_by(SupplierPayment.payment_date.desc()).all()
+
+    # Get display name for the selected period
+    if selected_month == 'current':
+        period_display = today.strftime('%B %Y')
+    elif selected_month == 'all':
+        period_display = 'All Time'
+    else:
+        try:
+            months_offset = int(selected_month)
+            target_date = today + relativedelta(months=months_offset)
+            period_display = target_date.strftime('%B %Y')
+        except (ValueError, TypeError):
+            period_display = today.strftime('%B %Y')
+    
     return render_template(
         'finance/index.html',
         today=today,
-        current_month=today.strftime('%B %Y'),
+        current_month=period_display,
         prev_month=prev_month.strftime('%B %Y'),
         current_month_revenue=current_month_revenue,
         prev_month_revenue=prev_month_revenue,
@@ -154,7 +193,9 @@ def index():
         expense_by_category=expense_by_category,
         last_12_months=last_12_months,
         recent_expenses=recent_expenses,
-        upcoming_payments=upcoming_payments
+        upcoming_payments=upcoming_payments,
+        supplier_payments=supplier_payments,
+        selected_month=selected_month
     )
 
 @finance.route('/expenses')
@@ -603,3 +644,30 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     """Export supplier payments report to CSV"""
     # Placeholder - implement actual CSV export for supplier payments report
     pass
+
+@finance.route('/supplier/<int:supplier_id>')
+@login_required
+def supplier_details(supplier_id):
+    """Show supplier details and payment history"""
+    from app.models.supplier import Supplier
+    
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    # Get all payments for this supplier
+    payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).order_by(
+        SupplierPayment.payment_date.desc()
+    ).all()
+    
+    # Calculate financial metrics
+    total_paid = sum(payment.amount for payment in payments if payment.is_paid)
+    total_due = sum(payment.amount for payment in payments if not payment.is_paid)
+    total_confirmed = len(payments)
+    
+    return render_template(
+        'finance/supplier_details.html',
+        supplier=supplier,
+        payments=payments,
+        total_paid=total_paid,
+        total_due=total_due,
+        total_confirmed=total_confirmed
+    )

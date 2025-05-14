@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier Details - {{ supplier.name }} - TravelBookPro{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .metric-card {
+        transition: all 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .supplier-header {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .supplier-name {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .supplier-details {
+        color: #6c757d;
+    }
+    
+    .payment-badge {
+        font-size: 0.8rem;
+    }
+    
+    .payment-badge.paid {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .payment-badge.unpaid {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Supplier Details Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Supplier Details</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('finance.index') }}">Finance Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ supplier.name }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div>
+            <a href="{{ url_for('finance.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Supplier Information -->
+    <div class="supplier-header">
+        <h2 class="supplier-name">{{ supplier.name }}</h2>
+        <div class="supplier-details">
+            <p class="mb-1"><strong>Code:</strong> {{ supplier.code or 'N/A' }}</p>
+            {% if supplier.email %}
+            <p class="mb-1"><strong>Email:</strong> {{ supplier.email }}</p>
+            {% endif %}
+            {% if supplier.phone %}
+            <p class="mb-1"><strong>Phone:</strong> {{ supplier.phone }}</p>
+            {% endif %}
+            <p class="mb-0"><strong>Created:</strong> {{ supplier.created_at.strftime('%b %d, %Y') }}</p>
+        </div>
+    </div>
+
+    <!-- Financial Metrics -->
+    <div class="row mb-4">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow-sm h-100 py-2 metric-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Confirmed Services
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_confirmed }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow-sm h-100 py-2 metric-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Total Paid
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(total_paid) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow-sm h-100 py-2 metric-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Total Outstanding
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(total_due) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clock fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold">Payment History</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Service</th>
+                            <th>Booking</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                {% if payment.service_confirmation and payment.service_confirmation.service_item %}
+                                    {{ payment.service_confirmation.service_item.service_type }}
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
+                                    <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}">
+                                        {{ payment.service_confirmation.service_item.booking.reference_number }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
+                            <td>{{ payment.payment_due_date.strftime('%b %d, %Y') if payment.payment_due_date else 'N/A' }}</td>
+                            <td>
+                                <span class="badge payment-badge {{ 'paid' if payment.is_paid else 'unpaid' }}">
+                                    {{ 'Paid' if payment.is_paid else 'Unpaid' }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-sm btn-outline-primary" 
+                                   data-bs-toggle="tooltip" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if not payment.is_paid %}
+                                <a href="#" class="btn btn-sm btn-outline-success"
+                                   data-bs-toggle="tooltip" title="Mark as Paid">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No payment history found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %}
