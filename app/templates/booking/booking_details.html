@@ -61,7 +61,7 @@
                 {% endif %}
                 
                 {% if booking %}
-                <a href="#" class="btn btn-yellow action-button" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-yellow action-button">
                     <i class="fas fa-plus-circle"></i> Add Payment
                 </a>
                 {% endif %}
