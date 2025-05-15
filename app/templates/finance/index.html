@@ -388,11 +388,11 @@
                                 </td>
                                 <td>
                                     {% if payment.service_type %}
-                                        {{ payment.service_type }}
+                                        <span class="badge bg-primary">{{ payment.service_type }}</span>
                                     {% elif payment.service_confirmation and payment.service_confirmation.service_item %}
-                                        {{ payment.service_confirmation.service_item.service_type }}
+                                        <span class="badge bg-primary">{{ payment.service_confirmation.service_item.service_type }}</span>
                                     {% else %}
-                                        <span class="text-muted">Unknown</span>
+                                        <span class="badge bg-secondary">General</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -405,7 +405,9 @@
                                             {{ payment.service_confirmation.service_item.booking.reference_number }}
                                         </a>
                                     {% else %}
-                                        <span class="text-muted">Unknown</span>
+                                        <a href="#" class="badge bg-info text-white" data-bs-toggle="tooltip" title="This is a general supplier payment not tied to a specific booking">
+                                            <i class="fas fa-info-circle me-1"></i> General Payment
+                                        </a>
                                     {% endif %}
                                 </td>
                                 <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
