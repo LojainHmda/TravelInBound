@@ -162,14 +162,20 @@
                         <tr>
                             <td>{{ payment.created_at.strftime('%b %d, %Y') }}</td>
                             <td>
-                                {% if payment.service_confirmation and payment.service_confirmation.service_item %}
+                                {% if payment.service_type %}
+                                    {{ payment.service_type }}
+                                {% elif payment.service_confirmation and payment.service_confirmation.service_item %}
                                     {{ payment.service_confirmation.service_item.service_type }}
                                 {% else %}
                                     <span class="text-muted">Unknown</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
+                                {% if payment.booking %}
+                                    <a href="{{ url_for('booking.details', booking_id=payment.booking.id) }}">
+                                        {{ payment.booking_reference }}
+                                    </a>
+                                {% elif payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
                                     <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}">
                                         {{ payment.service_confirmation.service_item.booking.reference_number }}
                                     </a>

@@ -78,7 +78,7 @@ class ServiceConfirmation(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationship to service item
-    service_item = db.relationship('ServiceItem', backref='confirmation', uselist=False)
+    service_item = db.relationship('ServiceItem', backref=db.backref('confirmation', uselist=False), lazy='joined')
     
     def __repr__(self):
         return f'<ServiceConfirmation {self.confirmation_reference} for service #{self.service_item_id}>'

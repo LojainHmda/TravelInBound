@@ -78,7 +78,11 @@ class SupplierService(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
-        return f'<SupplierService {self.service_name} for {self.supplier.name}>'
+        try:
+            supplier_name = self.supplier.name
+        except:
+            supplier_name = "Unknown"
+        return f'<SupplierService {self.service_name} for {supplier_name}>'
 
 
 class SupplierPayment(db.Model):
@@ -99,7 +103,7 @@ class SupplierPayment(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationship with service confirmation
-    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy=True)
+    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='joined')
     
     @property
     def get_confirmation_cost(self):
@@ -107,6 +111,27 @@ class SupplierPayment(db.Model):
         if self.service_confirmation:
             return self.service_confirmation.cost_amount
         return self.amount
+        
+    @property
+    def service_type(self):
+        """Get the service type from the related service item"""
+        if self.service_confirmation and self.service_confirmation.service_item:
+            return self.service_confirmation.service_item.service_type
+        return None
+        
+    @property
+    def booking(self):
+        """Get the booking from the related service item"""
+        if self.service_confirmation and self.service_confirmation.service_item:
+            return self.service_confirmation.service_item.booking
+        return None
+        
+    @property
+    def booking_reference(self):
+        """Get the booking reference from the related booking"""
+        if self.booking:
+            return self.booking.reference_number
+        return None
     
     @property
     def get_payment_status(self):
@@ -126,4 +151,8 @@ class SupplierPayment(db.Model):
         return "Pending"
     
     def __repr__(self):
-        return f'<SupplierPayment ${self.amount:.2f} to {self.supplier.name}>'
+        try:
+            supplier_name = self.supplier.name
+        except:
+            supplier_name = "Unknown"
+        return f'<SupplierPayment ${self.amount:.2f} to {supplier_name}>'
