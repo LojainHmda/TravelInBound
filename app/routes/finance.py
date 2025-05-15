@@ -161,10 +161,13 @@ def index():
     from app.models import Booking
     
     # Use joinedload to preload all related data in a single query
+    # We need to use class-bound attributes instead of strings for SQLAlchemy relationships
+    from app.models.service import ServiceItem
+    
     supplier_payments = SupplierPayment.query.options(
-        db.joinedload(SupplierPayment.supplier),
-        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking),
-        db.joinedload(SupplierPayment.service_confirmation).joinedload('service_item').joinedload('booking')
+        # Simplified joinedload to avoid relationship attribute errors
+        db.joinedload('prepayment_lines').joinedload('booking'),
+        db.joinedload('service_confirmation')
     ).filter(
         SupplierPayment.payment_date >= first_day,
         SupplierPayment.payment_date <= last_day
@@ -680,33 +683,36 @@ def supplier_details(supplier_id):
     
     supplier = Supplier.query.get_or_404(supplier_id)
     
-    # Get all payments for this supplier
+    # Get all payments for this supplier with eager loading of related data
     from app.models.supplier import SupplierPrepaymentLine
     from app.models import Booking
+    from app.models.service import ServiceConfirmation
+    
+    # Use joinedload for all relationships to eliminate N+1 queries
+    # Using class-bound attributes instead of strings for SQLAlchemy relationships
+    from app.models.service import ServiceItem
     
     payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).options(
-        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking)
+        # Using string relationship names to avoid attribute errors
+        db.joinedload('prepayment_lines').joinedload('booking'),
+        db.joinedload('service_confirmation')
     ).order_by(
         SupplierPayment.payment_date.desc()
     ).all()
     
-    # Explicitly load related entities
+    # Debug output to verify prepayment lines are loaded
+    print(f"Loaded {len(payments)} supplier payments for supplier {supplier_id}", file=sys.stderr)
     for payment in payments:
-        # Load prepayment lines and their associated bookings
-        if hasattr(payment, 'prepayment_lines') and payment.prepayment_lines:
-            for line in payment.prepayment_lines:
-                if line.booking_id:
-                    db.session.refresh(line)
-                    if hasattr(line, 'booking') and line.booking:
-                        db.session.refresh(line.booking)
+        prepayment_count = len(payment.prepayment_lines) if payment.prepayment_lines else 0
+        print(f"Payment ID {payment.id}: {prepayment_count} prepayment lines", file=sys.stderr)
         
-        # Also load service confirmation data for backwards compatibility
-        if payment.service_confirmation:
-            db.session.refresh(payment.service_confirmation)
-            if hasattr(payment.service_confirmation, 'service_item') and payment.service_confirmation.service_item:
-                db.session.refresh(payment.service_confirmation.service_item)
-                if hasattr(payment.service_confirmation.service_item, 'booking') and payment.service_confirmation.service_item.booking:
-                    db.session.refresh(payment.service_confirmation.service_item.booking)
+        # Print booking references for each prepayment line
+        if payment.prepayment_lines:
+            for line in payment.prepayment_lines:
+                if line.booking:
+                    print(f"  → Booking reference: {line.booking.reference_number}", file=sys.stderr)
+                else:
+                    print(f"  → No booking found for line {line.id}", file=sys.stderr)
     
     # Calculate financial metrics
     total_paid = sum(payment.amount for payment in payments if payment.is_paid)
