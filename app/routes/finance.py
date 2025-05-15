@@ -157,38 +157,36 @@ def index():
     
     # Get supplier payments for the selected period for the breakdown modal
     from app.models.service import ServiceConfirmation
-    from app.models.supplier import SupplierPrepaymentLine
+    from app.models.supplier import Supplier, SupplierPrepaymentLine
     from app.models import Booking
     
-    supplier_payments = SupplierPayment.query.outerjoin(
-        ServiceConfirmation, 
-        SupplierPayment.service_confirmation_id == ServiceConfirmation.id
-    ).options(
-        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking)
+    # Use joinedload to preload all related data in a single query
+    supplier_payments = SupplierPayment.query.options(
+        db.joinedload(SupplierPayment.supplier),
+        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking),
+        db.joinedload(SupplierPayment.service_confirmation).joinedload('service_item').joinedload('booking')
     ).filter(
         SupplierPayment.payment_date >= first_day,
         SupplierPayment.payment_date <= last_day
     ).order_by(SupplierPayment.payment_date.desc()).all()
     
-    # Explicitly load booking and service item data
+    # Debug output to verify prepayment lines are loaded
+    print(f"Loaded {len(supplier_payments)} supplier payments for breakdown", file=sys.stderr)
     for payment in supplier_payments:
-        # Load prepayment lines and their associated bookings
-        if hasattr(payment, 'prepayment_lines') and payment.prepayment_lines:
-            for line in payment.prepayment_lines:
-                if line.booking_id:
-                    db.session.refresh(line)
-                    if hasattr(line, 'booking') and line.booking:
-                        db.session.refresh(line.booking)
+        prepayment_count = len(payment.prepayment_lines) if payment.prepayment_lines else 0
+        print(f"Payment ID {payment.id}: {prepayment_count} prepayment lines", file=sys.stderr)
         
-        # Also load service confirmation data for backwards compatibility
-        if payment.service_confirmation:
-            # Ensure service_item is loaded
-            db.session.refresh(payment.service_confirmation)
-            # Force load the service item and booking
-            if hasattr(payment.service_confirmation, 'service_item') and payment.service_confirmation.service_item:
-                db.session.refresh(payment.service_confirmation.service_item)
-                if hasattr(payment.service_confirmation.service_item, 'booking') and payment.service_confirmation.service_item.booking:
-                    db.session.refresh(payment.service_confirmation.service_item.booking)
+        # Print booking references for each prepayment line
+        if payment.prepayment_lines:
+            for line in payment.prepayment_lines:
+                if line.booking:
+                    print(f"  → Booking reference: {line.booking.reference_number}", file=sys.stderr)
+                else:
+                    print(f"  → No booking found for line {line.id}", file=sys.stderr)
+                    
+        # Also verify service confirmation path for backwards compatibility
+        if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking:
+            print(f"  → Service confirmation booking reference: {payment.service_confirmation.service_item.booking.reference_number}", file=sys.stderr)
 
     # Get display name for the selected period
     if selected_month == 'current':
