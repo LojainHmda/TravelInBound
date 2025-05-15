@@ -27,6 +27,7 @@ class Booking(db.Model):
     # Relationships
     service_items = db.relationship('ServiceItem', backref='booking', lazy=True, cascade="all, delete-orphan")
     payments = db.relationship('Payment', backref='booking', lazy=True, cascade="all, delete-orphan")
+    supplier_prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='booking', lazy=True)
     
     def __repr__(self):
         return f'<Booking {self.reference_number}>'

@@ -15,7 +15,7 @@ STATUS_COMPLETED = 'COMPLETED'  # Consider deprecating in favor of STATUS_CONFIR
 # Import models
 from app.models.user import User, Agent, create_test_data
 from app.models.booking import Booking, Payment, PAYMENT_NONE, PAYMENT_PARTIAL, PAYMENT_FULL
-from app.models.supplier import Supplier, SupplierService, SupplierPayment
+from app.models.supplier import Supplier, SupplierService, SupplierPayment, SupplierPrepaymentLine
 from app.models.customer import Customer, CustomerDocument
 from app.models.service import ServiceConfirmation, ServiceItem, Document
 from app.models.oauth import OAuth  # Add OAuth model

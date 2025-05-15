@@ -2,6 +2,23 @@ from datetime import datetime
 from app import db
 from sqlalchemy import func, desc, or_
 
+class SupplierPrepaymentLine(db.Model):
+    """Links supplier payments to specific bookings and services"""
+    id = db.Column(db.Integer, primary_key=True)
+    supplier_payment_id = db.Column(db.Integer, db.ForeignKey('supplier_payment.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
+    service_item_id = db.Column(db.Integer, db.ForeignKey('service_item.id'), nullable=True)
+    amount = db.Column(db.Float, nullable=False)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='joined')
+    
+    def __repr__(self):
+        return f'<SupplierPrepaymentLine {self.id}: ${self.amount:.2f} for Booking #{self.booking_id}>'
+
 class Supplier(db.Model):
     """Supplier model for tracking vendors of travel services"""
     id = db.Column(db.Integer, primary_key=True)
@@ -102,8 +119,9 @@ class SupplierPayment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship with service confirmation
+    # Relationships
     service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='joined')
+    prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='payment', lazy='joined', cascade="all, delete-orphan")
     
     @property
     def get_confirmation_cost(self):
