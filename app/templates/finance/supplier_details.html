@@ -171,7 +171,13 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if payment.booking %}
+                                {% if payment.prepayment_lines and payment.prepayment_lines|length > 0 %}
+                                    {% for line in payment.prepayment_lines %}
+                                        <a href="{{ url_for('booking.details', booking_id=line.booking_id) }}" class="badge bg-primary me-1">
+                                            {{ line.booking.reference_number }}
+                                        </a>
+                                    {% endfor %}
+                                {% elif payment.booking %}
                                     <a href="{{ url_for('booking.details', booking_id=payment.booking.id) }}">
                                         {{ payment.booking_reference }}
                                     </a>
