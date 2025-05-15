@@ -156,10 +156,26 @@ def index():
     ).order_by(SupplierPayment.payment_date.desc()).limit(5).all()
     
     # Get supplier payments for the selected period for the breakdown modal
-    supplier_payments = SupplierPayment.query.filter(
+    from app.models.service import ServiceConfirmation
+    
+    supplier_payments = SupplierPayment.query.outerjoin(
+        ServiceConfirmation, 
+        SupplierPayment.service_confirmation_id == ServiceConfirmation.id
+    ).filter(
         SupplierPayment.payment_date >= first_day,
         SupplierPayment.payment_date <= last_day
     ).order_by(SupplierPayment.payment_date.desc()).all()
+    
+    # Explicitly load booking and service item data
+    for payment in supplier_payments:
+        if payment.service_confirmation:
+            # Ensure service_item is loaded
+            db.session.refresh(payment.service_confirmation)
+            # Force load the service item and booking
+            if hasattr(payment.service_confirmation, 'service_item') and payment.service_confirmation.service_item:
+                db.session.refresh(payment.service_confirmation.service_item)
+                if hasattr(payment.service_confirmation.service_item, 'booking') and payment.service_confirmation.service_item.booking:
+                    db.session.refresh(payment.service_confirmation.service_item.booking)
 
     # Get display name for the selected period
     if selected_month == 'current':
@@ -657,6 +673,15 @@ def supplier_details(supplier_id):
     payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).order_by(
         SupplierPayment.payment_date.desc()
     ).all()
+    
+    # Explicitly load related entities
+    for payment in payments:
+        if payment.service_confirmation:
+            db.session.refresh(payment.service_confirmation)
+            if hasattr(payment.service_confirmation, 'service_item') and payment.service_confirmation.service_item:
+                db.session.refresh(payment.service_confirmation.service_item)
+                if hasattr(payment.service_confirmation.service_item, 'booking') and payment.service_confirmation.service_item.booking:
+                    db.session.refresh(payment.service_confirmation.service_item.booking)
     
     # Calculate financial metrics
     total_paid = sum(payment.amount for payment in payments if payment.is_paid)
