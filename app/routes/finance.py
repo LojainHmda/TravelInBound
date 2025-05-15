@@ -683,12 +683,26 @@ def supplier_details(supplier_id):
     supplier = Supplier.query.get_or_404(supplier_id)
     
     # Get all payments for this supplier
-    payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).order_by(
+    from app.models.supplier import SupplierPrepaymentLine
+    from app.models import Booking
+    
+    payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).options(
+        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking)
+    ).order_by(
         SupplierPayment.payment_date.desc()
     ).all()
     
     # Explicitly load related entities
     for payment in payments:
+        # Load prepayment lines and their associated bookings
+        if hasattr(payment, 'prepayment_lines') and payment.prepayment_lines:
+            for line in payment.prepayment_lines:
+                if line.booking_id:
+                    db.session.refresh(line)
+                    if hasattr(line, 'booking') and line.booking:
+                        db.session.refresh(line.booking)
+        
+        # Also load service confirmation data for backwards compatibility
         if payment.service_confirmation:
             db.session.refresh(payment.service_confirmation)
             if hasattr(payment.service_confirmation, 'service_item') and payment.service_confirmation.service_item:
