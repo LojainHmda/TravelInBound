@@ -157,10 +157,14 @@ def index():
     
     # Get supplier payments for the selected period for the breakdown modal
     from app.models.service import ServiceConfirmation
+    from app.models.supplier import SupplierPrepaymentLine
+    from app.models import Booking
     
     supplier_payments = SupplierPayment.query.outerjoin(
         ServiceConfirmation, 
         SupplierPayment.service_confirmation_id == ServiceConfirmation.id
+    ).options(
+        db.joinedload(SupplierPayment.prepayment_lines).joinedload(SupplierPrepaymentLine.booking)
     ).filter(
         SupplierPayment.payment_date >= first_day,
         SupplierPayment.payment_date <= last_day
@@ -168,6 +172,15 @@ def index():
     
     # Explicitly load booking and service item data
     for payment in supplier_payments:
+        # Load prepayment lines and their associated bookings
+        if hasattr(payment, 'prepayment_lines') and payment.prepayment_lines:
+            for line in payment.prepayment_lines:
+                if line.booking_id:
+                    db.session.refresh(line)
+                    if hasattr(line, 'booking') and line.booking:
+                        db.session.refresh(line.booking)
+        
+        # Also load service confirmation data for backwards compatibility
         if payment.service_confirmation:
             # Ensure service_item is loaded
             db.session.refresh(payment.service_confirmation)
