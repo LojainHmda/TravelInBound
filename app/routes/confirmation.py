@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app import db
 from datetime import datetime
+import sys
 from app.models import ServiceItem, Document, ServiceConfirmation
 from app.forms.confirmation import ServiceConfirmationBaseForm
 
@@ -57,7 +58,7 @@ def add_supplier_confirmation(item_id):
         
         # Directly create a Supplier Prepayment Line to track supplier costs
         from app.models.supplier import SupplierPrepaymentLine
-        from app.models.service import ServiceConfirmation, Document
+        from app.models.service import Document
         
         # Check if document exists
         confirmation_doc = Document.query.filter_by(
@@ -70,9 +71,9 @@ def add_supplier_confirmation(item_id):
         supplier = Supplier.query.get(confirmation.supplier_id)
         supplier_name = supplier.name if supplier else "Unknown Supplier"
         
-        # Create the prepayment line directly
+        # Create the prepayment line directly - with no link to a payment
         prepayment_line = SupplierPrepaymentLine(
-            supplier_payment_id=None,  # Will be linked to an actual payment later
+            supplier_payment_id=None,  # Will NOT be linked to a payment
             booking_id=service_item.booking_id,
             service_item_id=service_item.id,
             amount=confirmation.cost_amount,
@@ -85,24 +86,8 @@ def add_supplier_confirmation(item_id):
         db.session.add(prepayment_line)
         db.session.commit()
         
-        # For legacy support, create a payment record with document reference
-        from app.models.supplier import SupplierPayment
-        document_id = confirmation_doc.id if confirmation_doc else None
-        
-        supplier_payment = SupplierPayment(
-            supplier_id=confirmation.supplier_id,
-            amount=confirmation.cost_amount,
-            payment_date=confirmation.payment_due_date or datetime.now().date(),
-            due_date=confirmation.payment_due_date,
-            status='PENDING',
-            notes=f"Payment for {service_item.service_type} confirmation document #{document_id}"
-        )
-        db.session.add(supplier_payment)
-        db.session.commit()
-        
-        # Update the prepayment line with the payment ID
-        prepayment_line.supplier_payment_id = supplier_payment.id
-        db.session.commit()
+        # Log the creation of the supplier cost
+        print(f"Created supplier cost line of ${confirmation.cost_amount} for booking #{service_item.booking_id}", file=sys.stderr)
         
         flash('Supplier cost recorded and linked to booking successfully', 'success')
         
