@@ -74,6 +74,22 @@ def add_supplier_confirmation(item_id):
             )
             db.session.add(supplier_payment)
             db.session.commit()
+            
+            # Now create a prepayment line to link this payment with the booking
+            from app.models.supplier import SupplierPrepaymentLine
+            
+            # Create the prepayment line
+            prepayment_line = SupplierPrepaymentLine(
+                supplier_payment_id=supplier_payment.id,
+                booking_id=service_item.booking_id,
+                service_item_id=service_item.id,
+                amount=confirmation.cost_amount,
+                notes=f"Auto-created for {service_item.service_type} confirmation {confirmation.confirmation_reference}"
+            )
+            db.session.add(prepayment_line)
+            db.session.commit()
+            
+            flash('Supplier payment and booking link created successfully', 'success')
         
         flash('Supplier confirmation details saved successfully', 'success')
         return redirect(url_for('booking.details', booking_id=service_item.booking_id))
