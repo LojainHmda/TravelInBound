@@ -194,8 +194,11 @@ def index():
         # Print booking references for each prepayment line
         if payment.prepayment_lines:
             for line in payment.prepayment_lines:
-                if line.booking:
-                    print(f"  → Booking reference: {line.booking.reference_number}", file=sys.stderr)
+                # Get booking reference using the booking_id directly
+                from app.models import Booking
+                booking = Booking.query.get(line.booking_id)
+                if booking:
+                    print(f"  → Booking reference: {booking.reference_number}", file=sys.stderr)
                 else:
                     print(f"  → No booking found for line {line.id}", file=sys.stderr)
                     
