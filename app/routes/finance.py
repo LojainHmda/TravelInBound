@@ -18,7 +18,7 @@ from app.models import (
     Booking, ServiceItem, Payment, User, Document,
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
-from app.models.supplier import SupplierPayment
+from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine
 from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
     ExpenseAttachmentForm, FinancialReportFilterForm
@@ -689,6 +689,57 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     """Export supplier payments report to CSV"""
     # Placeholder - implement actual CSV export for supplier payments report
     pass
+
+@finance.route('/supplier-costs')
+@login_required
+def supplier_costs():
+    """Supplier costs view - shows prepayment lines across all suppliers"""
+    # Get filter parameters
+    supplier_id = request.args.get('supplier_id')
+    service_type = request.args.get('service_type')
+    payment_status = request.args.get('payment_status')
+    from_date = request.args.get('from_date')
+    to_date = request.args.get('to_date')
+    
+    # Build query
+    query = SupplierPrepaymentLine.query
+    
+    # Apply filters
+    if supplier_id:
+        query = query.filter(SupplierPrepaymentLine.supplier_id == int(supplier_id))
+    if service_type:
+        query = query.filter(SupplierPrepaymentLine.service_type == service_type)
+    if payment_status:
+        query = query.filter(SupplierPrepaymentLine.payment_status == payment_status)
+    if from_date:
+        try:
+            from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
+            query = query.filter(SupplierPrepaymentLine.created_at >= from_date_obj)
+        except (ValueError, TypeError):
+            flash('Invalid from date format', 'warning')
+    if to_date:
+        try:
+            to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
+            to_date_obj = datetime.combine(to_date_obj, datetime.max.time())
+            query = query.filter(SupplierPrepaymentLine.created_at <= to_date_obj)
+        except (ValueError, TypeError):
+            flash('Invalid to date format', 'warning')
+    
+    # Order by date descending
+    prepayment_lines = query.order_by(SupplierPrepaymentLine.created_at.desc()).all()
+    
+    # Calculate total amount
+    total_amount = sum(line.amount for line in prepayment_lines)
+    
+    # Get all suppliers for the filter dropdown
+    suppliers = Supplier.query.order_by(Supplier.name).all()
+    
+    return render_template(
+        'finance/supplier_costs.html', 
+        prepayment_lines=prepayment_lines,
+        total_amount=total_amount,
+        suppliers=suppliers
+    )
 
 @finance.route('/supplier/<int:supplier_id>')
 @login_required
