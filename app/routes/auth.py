@@ -32,7 +32,11 @@ def login():
     
     # If user is logged in, redirect to dashboard
     if current_user.is_authenticated:
-        logger.debug(f"User {current_user.username} is logged in, redirecting to dashboard")
+        logger.debug(f"User {current_user.username} is logged in, redirecting to requested page")
+        next_page = request.args.get('next')
+        if next_page:
+            logger.debug(f"Redirecting to next page: {next_page}")
+            return redirect(next_page)
         return redirect('/dashboard')
     
     # For demo purposes, automatically log in as testuser
@@ -44,6 +48,7 @@ def login():
         # Redirect to the requested page or default to dashboard
         next_page = request.args.get('next')
         if next_page:
+            logger.debug(f"Redirecting to next page: {next_page}")
             return redirect(next_page)
         return redirect('/dashboard')
     else:
