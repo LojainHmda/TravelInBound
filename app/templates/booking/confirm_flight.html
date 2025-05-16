@@ -74,18 +74,21 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Departure Airport</label>
-                <input type="text" name="departure_airport" class="form-control" value="{{ confirmation_data.departure_airport|default('') }}" required>
+                <input type="text" name="departure_airport" class="form-control" value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Arrival Airport</label>
-                <input type="text" name="arrival_airport" class="form-control" value="{{ confirmation_data.arrival_airport|default('') }}" required>
+                <input type="text" name="arrival_airport" class="form-control" value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
             </div>
         </div>
         
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Airline</label>
-                <input type="text" name="airline" class="form-control" value="{{ confirmation_data.airline|default('') }}" required>
+                <input type="text" name="airline" class="form-control" value="{{ confirmation_data.airline|default('') }}" placeholder="Type to search by airline code or name" required>
+                <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
             </div>
             <div class="col-md-6">
                 <label class="form-label">Flight Number</label>
@@ -138,4 +141,5 @@
 
 {% block service_script %}
 <script src="{{ url_for('static', filename='js/confirm_flight.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flight_autocomplete.js') }}"></script>
 {% endblock %}

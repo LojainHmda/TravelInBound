@@ -63,6 +63,13 @@ def create_app():
         from app.routes.supplier import supplier_bp
         app.register_blueprint(supplier_bp)
         
+        # Register aviation API blueprint for flight autocomplete
+        try:
+            from app.routes.api import api_bp
+            app.register_blueprint(api_bp, name='aviation_api_blueprint')
+        except Exception as e:
+            app.logger.error(f"Could not register aviation API blueprint: {str(e)}")
+        
         from app.routes.customer import customer_bp
         app.register_blueprint(customer_bp)
         
