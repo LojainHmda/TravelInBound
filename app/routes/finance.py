@@ -691,50 +691,52 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
 @login_required
 def supplier_details(supplier_id):
     """Show supplier details and payment history"""
-    from app.models.supplier import Supplier
+    from app.models.supplier import Supplier, SupplierPrepaymentLine
     
     supplier = Supplier.query.get_or_404(supplier_id)
     
-    # Get all payments for this supplier with eager loading of related data
-    from app.models.supplier import SupplierPrepaymentLine
-    from app.models import Booking
-    from app.models.service import ServiceConfirmation
-    
-    # Use joinedload for all relationships to eliminate N+1 queries
-    # Using class-bound attributes instead of strings for SQLAlchemy relationships
-    from app.models.service import ServiceItem
-    
-    payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).options(
-        # Using direct attributes to avoid relationship errors
-        db.joinedload(SupplierPayment.prepayment_lines),
-        db.joinedload(SupplierPayment.service_confirmation)
+    # Get prepayment lines for this supplier
+    # This is our new approach - show costs directly from prepayment lines
+    prepayment_lines = SupplierPrepaymentLine.query.filter_by(
+        supplier_name=supplier.name
+    ).options(
+        db.joinedload('service_item')
     ).order_by(
-        SupplierPayment.payment_date.desc()
+        SupplierPrepaymentLine.created_at.desc()
     ).all()
     
-    # Debug output to verify prepayment lines are loaded
-    print(f"Loaded {len(payments)} supplier payments for supplier {supplier_id}", file=sys.stderr)
-    for payment in payments:
-        prepayment_count = len(payment.prepayment_lines) if payment.prepayment_lines else 0
-        print(f"Payment ID {payment.id}: {prepayment_count} prepayment lines", file=sys.stderr)
-        
-        # Print booking references for each prepayment line
-        if payment.prepayment_lines:
-            for line in payment.prepayment_lines:
-                if line.booking:
-                    print(f"  → Booking reference: {line.booking.reference_number}", file=sys.stderr)
-                else:
-                    print(f"  → No booking found for line {line.id}", file=sys.stderr)
+    # Also get legacy supplier payments for this supplier
+    supplier_payments = SupplierPayment.query.filter_by(
+        supplier_id=supplier_id
+    ).options(
+        db.joinedload(SupplierPayment.prepayment_lines)
+    ).all()
+    
+    # Debug output
+    print(f"Loaded {len(prepayment_lines)} supplier prepayment lines for supplier {supplier_id}", file=sys.stderr)
+    for line in prepayment_lines:
+        booking_ref = "Unknown"
+        try:
+            # Get booking reference from the booking relationship
+            from app.models import Booking
+            booking = Booking.query.get(line.booking_id)
+            if booking:
+                booking_ref = booking.reference_number
+        except Exception as e:
+            print(f"Error getting booking: {str(e)}", file=sys.stderr)
+            
+        print(f"Prepayment line ID {line.id}: {line.service_type} for booking {booking_ref}", file=sys.stderr)
     
     # Calculate financial metrics
-    total_paid = sum(payment.amount for payment in payments if payment.is_paid)
-    total_due = sum(payment.amount for payment in payments if not payment.is_paid)
-    total_confirmed = len(payments)
+    total_paid = sum(payment.amount for payment in supplier_payments if payment.status == 'PAID')
+    total_due = sum(line.amount for line in prepayment_lines if line.payment_status != 'PAID')
+    total_confirmed = len(prepayment_lines)
     
     return render_template(
-        'finance/supplier_details.html',
+        'finance/supplier_details_new.html',
         supplier=supplier,
-        payments=payments,
+        prepayment_lines=prepayment_lines,
+        supplier_payments=supplier_payments,
         total_paid=total_paid,
         total_due=total_due,
         total_confirmed=total_confirmed
