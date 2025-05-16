@@ -22,6 +22,23 @@ def index():
 def profile():
     """User profile page"""
     return redirect('/dashboard')
+    
+@auth_bp.route('/direct-finance')
+def direct_finance():
+    """Direct access to finance dashboard with auto-login"""
+    from flask_login import login_user
+    from app.models import User
+    
+    # Auto-login as testuser
+    user = User.query.filter_by(username='testuser').first()
+    if user:
+        login_user(user)
+        logger.debug("Auto-login as testuser for direct finance access")
+        return redirect('/finance/')
+    else:
+        logger.error("Test user not found in database")
+        flash('Demo user not found. Please check if test data was created.', 'danger')
+        return redirect('/auth/')
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
