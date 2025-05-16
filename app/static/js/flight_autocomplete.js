@@ -1,6 +1,6 @@
 /**
  * Flight confirmation form autocomplete functionality
- * Provides autocomplete for airlines and airports from the aviation API
+ * Provides autocomplete for airlines and airports using static data
  */
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Flight autocomplete script loaded');
@@ -44,22 +44,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Keep track of selected suggestion index
         let selectedIndex = -1;
         
-        // Input event listener to fetch suggestions
-        inputElement.addEventListener('input', async function() {
-            const query = this.value.trim();
+        // Input event listener to search for suggestions
+        inputElement.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
             
-            if (query.length < 2) {
+            if (query.length < 1) {
                 suggestionsContainer.style.display = 'none';
                 return;
             }
             
             try {
-                const response = await fetch(`/api/aviation/airlines/search?q=${encodeURIComponent(query)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch airline data');
-                }
-                
-                const airlines = await response.json();
+                // Search through static airline data (defined in flight_autocomplete_data.js)
+                const airlines = AIRLINE_DATA.filter(airline => 
+                    airline.code.toLowerCase().includes(query) || 
+                    airline.name.toLowerCase().includes(query)
+                );
                 
                 // Clear and hide suggestions if no results
                 if (!airlines || airlines.length === 0) {
@@ -103,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedIndex = -1;
                 
             } catch (error) {
-                console.error('Error fetching airline data:', error);
+                console.error('Error processing airline data:', error);
                 suggestionsContainer.innerHTML = '';
                 suggestionsContainer.style.display = 'none';
             }
@@ -199,22 +198,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Keep track of selected suggestion index
         let selectedIndex = -1;
         
-        // Input event listener to fetch suggestions
-        inputElement.addEventListener('input', async function() {
-            const query = this.value.trim();
+        // Input event listener to search for suggestions
+        inputElement.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
             
-            if (query.length < 2) {
+            if (query.length < 1) {
                 suggestionsContainer.style.display = 'none';
                 return;
             }
             
             try {
-                const response = await fetch(`/api/aviation/airports/search?q=${encodeURIComponent(query)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch airport data');
-                }
-                
-                const airports = await response.json();
+                // Search through static airport data (defined in flight_autocomplete_data.js)
+                const airports = AIRPORT_DATA.filter(airport => 
+                    airport.code.toLowerCase().includes(query) || 
+                    airport.name.toLowerCase().includes(query)
+                );
                 
                 // Clear and hide suggestions if no results
                 if (!airports || airports.length === 0) {
@@ -258,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedIndex = -1;
                 
             } catch (error) {
-                console.error('Error fetching airport data:', error);
+                console.error('Error processing airport data:', error);
                 suggestionsContainer.innerHTML = '';
                 suggestionsContainer.style.display = 'none';
             }
