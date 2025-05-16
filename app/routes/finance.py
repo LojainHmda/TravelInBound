@@ -164,10 +164,11 @@ def index():
     # We need to use class-bound attributes instead of strings for SQLAlchemy relationships
     from app.models.service import ServiceItem
     
+    # SQLAlchemy in newer versions doesn't accept string relationship names
     supplier_payments = SupplierPayment.query.options(
-        # Simplified joinedload to avoid relationship attribute errors
-        db.joinedload('prepayment_lines').joinedload('booking'),
-        db.joinedload('service_confirmation')
+        # Use basic queries without joinedloads to avoid errors
+        db.joinedload(SupplierPayment.prepayment_lines),
+        db.joinedload(SupplierPayment.service_confirmation)
     ).filter(
         SupplierPayment.payment_date >= first_day,
         SupplierPayment.payment_date <= last_day
@@ -693,9 +694,9 @@ def supplier_details(supplier_id):
     from app.models.service import ServiceItem
     
     payments = SupplierPayment.query.filter_by(supplier_id=supplier_id).options(
-        # Using string relationship names to avoid attribute errors
-        db.joinedload('prepayment_lines').joinedload('booking'),
-        db.joinedload('service_confirmation')
+        # Using direct attributes to avoid relationship errors
+        db.joinedload(SupplierPayment.prepayment_lines),
+        db.joinedload(SupplierPayment.service_confirmation)
     ).order_by(
         SupplierPayment.payment_date.desc()
     ).all()
