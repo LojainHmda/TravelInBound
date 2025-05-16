@@ -13,7 +13,7 @@ class SupplierPrepaymentLine(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
+    # Relationships - only keep service_item relationship to avoid circular references
     service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='joined')
     
     def __repr__(self):

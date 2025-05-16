@@ -398,23 +398,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if payment.prepayment_lines and payment.prepayment_lines|length > 0 %}
-                                        {% for line in payment.prepayment_lines %}
-                                            <a href="{{ url_for('booking.details', booking_id=line.booking_id) }}" class="badge bg-primary me-1">
-                                                {{ line.booking.reference_number }}
-                                            </a>
-                                        {% endfor %}
-                                    {% elif payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
+                                    <!-- Simplified booking reference display -->
+                                    {% if payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
                                         <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}" class="badge bg-primary me-1">
                                             {{ payment.service_confirmation.service_item.booking.reference_number }}
                                         </a>
-                                    {% elif payment.booking %}
-                                        <a href="{{ url_for('booking.details', booking_id=payment.booking.id) }}" class="badge bg-primary me-1">
-                                            {{ payment.booking_reference }}
-                                        </a>
                                     {% else %}
                                         <span class="badge bg-secondary">
-                                            <i class="fas fa-building me-1"></i> Supplier Payment
+                                            <i class="fas fa-building me-1"></i> Supplier Cost
                                         </span>
                                     {% endif %}
                                 </td>

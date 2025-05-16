@@ -72,16 +72,27 @@ def index():
         Payment.payment_date <= prev_last
     ).scalar() or 0
     
-    # 2. Expenses
-    current_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
-        Expense.date_incurred >= first_day,
-        Expense.date_incurred <= last_day
-    ).scalar() or 0
+    # 2. Expenses - with error handling to prevent SSL connection issues
+    try:
+        current_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+            Expense.date_incurred >= first_day,
+            Expense.date_incurred <= last_day
+        ).scalar() or 0
+    except Exception as e:
+        # Import current_app for logging
+        from flask import current_app
+        current_app.logger.error(f"Error fetching current month expenses: {str(e)}")
+        current_month_expenses = 0
     
-    prev_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
-        Expense.date_incurred >= prev_first,
-        Expense.date_incurred <= prev_last
-    ).scalar() or 0
+    try:
+        prev_month_expenses = db.session.query(func.sum(Expense.amount)).filter(
+            Expense.date_incurred >= prev_first,
+            Expense.date_incurred <= prev_last
+        ).scalar() or 0
+    except Exception as e:
+        from flask import current_app
+        current_app.logger.error(f"Error fetching previous month expenses: {str(e)}")
+        prev_month_expenses = 0
     
     # 3. Supplier Costs
     current_month_supplier_costs = db.session.query(func.sum(SupplierPayment.amount)).filter(
