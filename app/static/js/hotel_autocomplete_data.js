@@ -1,5 +1,5 @@
 /**
- * Static hotel cities and hotel chains data for autocomplete functionality
+ * Static hotel cities, hotel chains, and specific hotel names data for autocomplete functionality
  * This provides offline data that doesn't require API calls
  */
 const HOTEL_CITIES = [
@@ -87,4 +87,81 @@ const HOTEL_CHAINS = [
     { code: "MEI", name: "Meininger Hotels" },
     { code: "MVM", name: "Movenpick Hotels & Resorts" },
     { code: "PUL", name: "Pullman Hotels" }
+];
+
+// Specific hotel names by region and city
+const HOTEL_NAMES = [
+    // Dubai Hotels
+    { code: "BHD", name: "Burj Al Arab Hotel, Dubai" },
+    { code: "ATD", name: "Atlantis The Palm, Dubai" },
+    { code: "JBH", name: "Jumeirah Beach Hotel, Dubai" },
+    { code: "ARM", name: "Armani Hotel Dubai" },
+    { code: "PFD", name: "Palace Downtown, Dubai" },
+    { code: "MED", name: "Meydan Hotel, Dubai" },
+    { code: "KHD", name: "Kempinski Hotel Mall of the Emirates, Dubai" },
+    { code: "ROD", name: "Rotana Al Murooj, Dubai" },
+    
+    // London Hotels
+    { code: "SAV", name: "The Savoy, London" },
+    { code: "RITT", name: "The Ritz, London" },
+    { code: "CLRG", name: "Claridge's, London" },
+    { code: "DCHT", name: "Dorchester Hotel, London" },
+    { code: "SHR", name: "Shangri-La Hotel at The Shard, London" },
+    { code: "JWHM", name: "JW Marriott Grosvenor House, London" },
+    
+    // New York Hotels
+    { code: "PLZA", name: "The Plaza Hotel, New York" },
+    { code: "STRS", name: "St. Regis New York" },
+    { code: "WALD", name: "The Waldorf Astoria, New York" },
+    { code: "PNIN", name: "Peninsula New York" },
+    { code: "FOUR", name: "Four Seasons Hotel New York" },
+    
+    // Paris Hotels
+    { code: "RITZ", name: "Ritz Paris" },
+    { code: "GPAL", name: "Le Grand Palais, Paris" },
+    { code: "SHPA", name: "Shangri-La Hotel, Paris" },
+    { code: "FOUP", name: "Four Seasons Hotel George V, Paris" },
+    { code: "MAND", name: "Mandarin Oriental Paris" },
+    
+    // Istanbul Hotels
+    { code: "FOUR", name: "Four Seasons Hotel Istanbul at Sultanahmet" },
+    { code: "RITZ", name: "The Ritz-Carlton, Istanbul" },
+    { code: "CIRG", name: "Ciragan Palace Kempinski, Istanbul" },
+    { code: "PARK", name: "Park Hyatt Istanbul" },
+    
+    // Singapore Hotels
+    { code: "MARI", name: "Marina Bay Sands, Singapore" },
+    { code: "RAFL", name: "Raffles Hotel, Singapore" },
+    { code: "SHAN", name: "Shangri-La Hotel, Singapore" },
+    { code: "FULL", name: "The Fullerton Hotel, Singapore" },
+    
+    // Cairo Hotels
+    { code: "SHCA", name: "Sheraton Cairo Hotel & Casino" },
+    { code: "FOUC", name: "Four Seasons Hotel Cairo at Nile Plaza" },
+    { code: "SOFM", name: "Sofitel Cairo Nile El Gezirah" },
+    { code: "MARR", name: "Marriott Mena House, Cairo" },
+    { code: "CAIR", name: "Cairo Marriott Hotel & Omar Khayyam Casino" },
+    
+    // Amman Hotels
+    { code: "INTA", name: "InterContinental Amman" },
+    { code: "ROTG", name: "Rotana Grand Amman" },
+    { code: "KEMP", name: "Kempinski Hotel Amman" },
+    { code: "FOUR", name: "Four Seasons Hotel Amman" },
+    { code: "SHER", name: "Sheraton Amman Al Nabil Hotel" },
+    { code: "FAIR", name: "Fairmont Amman" },
+    
+    // Beijing Hotels
+    { code: "PENI", name: "Peninsula Beijing" },
+    { code: "REGB", name: "Regent Beijing" },
+    { code: "ROSB", name: "Rosewood Beijing" },
+    
+    // Tokyo Hotels
+    { code: "ANDT", name: "Andaz Tokyo Toranomon Hills" },
+    { code: "RIST", name: "The Ritz-Carlton, Tokyo" },
+    { code: "CONT", name: "Conrad Tokyo" },
+    
+    // Sydney Hotels
+    { code: "PARS", name: "Park Hyatt Sydney" },
+    { code: "FORT", name: "Four Seasons Hotel Sydney" },
+    { code: "SHAS", name: "Shangri-La Hotel, Sydney" }
 ];

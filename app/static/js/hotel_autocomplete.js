@@ -44,7 +44,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             try {
-                // Get suggestions from hotel chains
+                // Get suggestions from specific hotel names (highest priority)
+                const hotelSuggestions = HOTEL_NAMES.filter(hotel => 
+                    hotel.name.toLowerCase().includes(query)
+                ).map(hotel => ({
+                    text: hotel.name,
+                    type: 'hotel'
+                }));
+                
+                // Get suggestions from hotel chains (medium priority)
                 const chainSuggestions = HOTEL_CHAINS.filter(chain => 
                     chain.name.toLowerCase().includes(query)
                 ).map(chain => ({
@@ -52,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'chain'
                 }));
                 
-                // Get suggestions from cities
+                // Get suggestions from cities (lowest priority)
                 const citySuggestions = HOTEL_CITIES.filter(city => 
                     city.name.toLowerCase().includes(query)
                 ).map(city => ({
@@ -60,8 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     type: 'city'
                 }));
                 
-                // Combine suggestions, putting hotel chains first
-                const suggestions = [...chainSuggestions, ...citySuggestions];
+                // Combine suggestions, putting specific hotels first, then chains, then cities
+                const suggestions = [...hotelSuggestions, ...chainSuggestions, ...citySuggestions];
                 
                 // Limit to 10 suggestions
                 const limitedSuggestions = suggestions.slice(0, 10);
@@ -76,21 +84,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Populate suggestions
                 suggestionsContainer.innerHTML = '';
                 
-                // Add a heading for chains if there are any
-                if (chainSuggestions.length > 0 && citySuggestions.length > 0) {
-                    const chainHeading = document.createElement('div');
-                    chainHeading.className = 'autocomplete-heading';
-                    chainHeading.textContent = 'Hotel Chains';
-                    chainHeading.style.padding = '8px 12px';
-                    chainHeading.style.fontWeight = 'bold';
-                    chainHeading.style.backgroundColor = '#f8f9fa';
-                    chainHeading.style.fontSize = '0.8em';
-                    suggestionsContainer.appendChild(chainHeading);
-                }
+                // Add headings for each category if needed
+                let hasAddedHotelHeading = false;
+                let hasAddedChainHeading = false;
+                let hasAddedCityHeading = false;
                 
                 limitedSuggestions.forEach((suggestion, index) => {
-                    // Add a heading for cities if there are any and we're on the first city
-                    if (suggestion.type === 'city' && index > 0 && limitedSuggestions[index-1].type === 'chain') {
+                    // Add headings before the first item of each type
+                    if (suggestion.type === 'hotel' && !hasAddedHotelHeading) {
+                        hasAddedHotelHeading = true;
+                        const hotelHeading = document.createElement('div');
+                        hotelHeading.className = 'autocomplete-heading';
+                        hotelHeading.textContent = 'Specific Hotels';
+                        hotelHeading.style.padding = '8px 12px';
+                        hotelHeading.style.fontWeight = 'bold';
+                        hotelHeading.style.backgroundColor = '#f8f9fa';
+                        hotelHeading.style.fontSize = '0.8em';
+                        suggestionsContainer.appendChild(hotelHeading);
+                    } else if (suggestion.type === 'chain' && !hasAddedChainHeading) {
+                        hasAddedChainHeading = true;
+                        const chainHeading = document.createElement('div');
+                        chainHeading.className = 'autocomplete-heading';
+                        chainHeading.textContent = 'Hotel Chains';
+                        chainHeading.style.padding = '8px 12px';
+                        chainHeading.style.fontWeight = 'bold';
+                        chainHeading.style.backgroundColor = '#f8f9fa';
+                        chainHeading.style.fontSize = '0.8em';
+                        suggestionsContainer.appendChild(chainHeading);
+                    } else if (suggestion.type === 'city' && !hasAddedCityHeading) {
+                        hasAddedCityHeading = true;
                         const cityHeading = document.createElement('div');
                         cityHeading.className = 'autocomplete-heading';
                         cityHeading.textContent = 'Cities';
@@ -108,7 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     suggestionElement.style.cursor = 'pointer';
                     
                     // Add an icon based on the type
-                    if (suggestion.type === 'chain') {
+                    if (suggestion.type === 'hotel') {
+                        suggestionElement.innerHTML = '<i class="fas fa-hotel mr-2"></i> ' + suggestion.text;
+                    } else if (suggestion.type === 'chain') {
                         suggestionElement.innerHTML = '<i class="fas fa-building mr-2"></i> ' + suggestion.text;
                     } else {
                         suggestionElement.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i> ' + suggestion.text;
