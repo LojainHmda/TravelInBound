@@ -55,41 +55,56 @@ def add_supplier_confirmation(item_id):
         
         db.session.commit()
         
-        # Create or update a SupplierPayment record to track in finance module
+        # Directly create a Supplier Prepayment Line to track supplier costs
+        from app.models.supplier import SupplierPrepaymentLine
+        from app.models.service import ServiceConfirmation, Document
+        
+        # Check if document exists
+        confirmation_doc = Document.query.filter_by(
+            service_item_id=service_item.id, 
+            document_type='CONFIRMATION'
+        ).first()
+        
+        # Get the supplier details
+        from app.models.supplier import Supplier
+        supplier = Supplier.query.get(confirmation.supplier_id)
+        supplier_name = supplier.name if supplier else "Unknown Supplier"
+        
+        # Create the prepayment line directly
+        prepayment_line = SupplierPrepaymentLine(
+            supplier_payment_id=None,  # Will be linked to an actual payment later
+            booking_id=service_item.booking_id,
+            service_item_id=service_item.id,
+            amount=confirmation.cost_amount,
+            supplier_name=supplier_name,
+            service_type=service_item.service_type,
+            confirmation_reference=confirmation_doc.document_number if confirmation_doc else None,
+            payment_status='PENDING',
+            notes=f"Supplier cost for {service_item.service_type} confirmation {confirmation.confirmation_reference}"
+        )
+        db.session.add(prepayment_line)
+        db.session.commit()
+        
+        # For legacy support, create a payment record with document reference
         from app.models.supplier import SupplierPayment
+        document_id = confirmation_doc.id if confirmation_doc else None
         
-        # Check if a payment record already exists for this confirmation
-        supplier_payment = SupplierPayment.query.filter_by(service_confirmation_id=confirmation.id).first()
+        supplier_payment = SupplierPayment(
+            supplier_id=confirmation.supplier_id,
+            amount=confirmation.cost_amount,
+            payment_date=confirmation.payment_due_date or datetime.now().date(),
+            due_date=confirmation.payment_due_date,
+            status='PENDING',
+            notes=f"Payment for {service_item.service_type} confirmation document #{document_id}"
+        )
+        db.session.add(supplier_payment)
+        db.session.commit()
         
-        if not supplier_payment:
-            # Create a new supplier payment record
-            supplier_payment = SupplierPayment(
-                supplier_id=confirmation.supplier_id,
-                service_confirmation_id=confirmation.id,
-                amount=confirmation.cost_amount,
-                payment_date=confirmation.payment_due_date or datetime.now().date(),
-                due_date=confirmation.payment_due_date,
-                status='PENDING',
-                notes=f"Automatic payment record for {service_item.service_type} confirmation {confirmation.confirmation_reference}"
-            )
-            db.session.add(supplier_payment)
-            db.session.commit()
-            
-            # Now create a prepayment line to link this payment with the booking
-            from app.models.supplier import SupplierPrepaymentLine
-            
-            # Create the prepayment line
-            prepayment_line = SupplierPrepaymentLine(
-                supplier_payment_id=supplier_payment.id,
-                booking_id=service_item.booking_id,
-                service_item_id=service_item.id,
-                amount=confirmation.cost_amount,
-                notes=f"Auto-created for {service_item.service_type} confirmation {confirmation.confirmation_reference}"
-            )
-            db.session.add(prepayment_line)
-            db.session.commit()
-            
-            flash('Supplier payment and booking link created successfully', 'success')
+        # Update the prepayment line with the payment ID
+        prepayment_line.supplier_payment_id = supplier_payment.id
+        db.session.commit()
+        
+        flash('Supplier cost recorded and linked to booking successfully', 'success')
         
         flash('Supplier confirmation details saved successfully', 'success')
         return redirect(url_for('booking.details', booking_id=service_item.booking_id))
