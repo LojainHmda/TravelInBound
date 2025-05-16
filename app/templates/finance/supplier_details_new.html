@@ -96,8 +96,46 @@
             </div>
         </div>
         <div class="card-body">
+            <!-- Filter Controls -->
+            <div class="row mb-3">
+                <div class="col-md-3 mb-2">
+                    <label for="filterStatus" class="form-label small text-muted mb-1">Payment Status</label>
+                    <select id="filterStatus" class="form-select form-select-sm">
+                        <option value="ALL">All Statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="PAID">Paid</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterService" class="form-label small text-muted mb-1">Service Type</label>
+                    <select id="filterService" class="form-select form-select-sm">
+                        <option value="ALL">All Services</option>
+                        <option value="FLIGHT">Flight</option>
+                        <option value="HOTEL">Hotel</option>
+                        <option value="TRANSPORT">Transport</option>
+                        <option value="VISA">Visa</option>
+                        <option value="INSURANCE">Insurance</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterBooking" class="form-label small text-muted mb-1">Booking ID</label>
+                    <input type="text" id="filterBooking" class="form-control form-control-sm" placeholder="Enter booking ID">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filterDateRange" class="form-label small text-muted mb-1">Date Range</label>
+                    <select id="filterDateRange" class="form-select form-select-sm">
+                        <option value="ALL">All Time</option>
+                        <option value="TODAY">Today</option>
+                        <option value="LAST_7_DAYS">Last 7 Days</option>
+                        <option value="THIS_MONTH">This Month</option>
+                        <option value="LAST_MONTH">Last Month</option>
+                    </select>
+                </div>
+            </div>
+            
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover" id="supplierCostsTable">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -154,46 +192,7 @@
         </div>
     </div>
     
-    <!-- Legacy Payment History (if any) -->
-    {% if supplier_payments %}
-    <div class="card shadow-sm mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold">Legacy Payment History</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Amount</th>
-                            <th>Reference</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for payment in supplier_payments %}
-                        <tr>
-                            <td>{{ payment.created_at.strftime('%b %d, %Y') }}</td>
-                            <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
-                            <td>{{ payment.payment_reference or 'N/A' }}</td>
-                            <td>
-                                <span class="badge payment-badge {{ 'paid' if payment.status == 'PAID' else 'unpaid' }}">
-                                    {{ payment.status }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">No payment records found</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    {% endif %}
+    <!-- No legacy payment history section as per request -->
 </div>
 
 <!-- Payment Modal -->
@@ -274,6 +273,98 @@
                 var modal = bootstrap.Modal.getInstance(paymentModal);
                 modal.hide();
                 alert('Payment recorded successfully!');
+            });
+        }
+        
+        // Table filtering functionality
+        const filterStatus = document.getElementById('filterStatus');
+        const filterService = document.getElementById('filterService');
+        const filterBooking = document.getElementById('filterBooking');
+        const filterDateRange = document.getElementById('filterDateRange');
+        const table = document.getElementById('supplierCostsTable');
+        const tableRows = table.querySelectorAll('tbody tr');
+        
+        // Apply filters when any filter changes
+        [filterStatus, filterService, filterDateRange].forEach(filter => {
+            filter.addEventListener('change', applyFilters);
+        });
+        
+        // Apply filter on booking id text input with debounce
+        let typingTimer;
+        filterBooking.addEventListener('keyup', function() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(applyFilters, 500);
+        });
+        
+        function applyFilters() {
+            const statusFilter = filterStatus.value;
+            const serviceFilter = filterService.value;
+            const bookingFilter = filterBooking.value.trim().toLowerCase();
+            const dateFilter = filterDateRange.value;
+            
+            // Get today's date for date filtering
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Get 7 days ago
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(today.getDate() - 7);
+            
+            // Get first day of this month
+            const firstDayThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            // Get first day of last month
+            const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            
+            // Get last day of last month
+            const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            
+            tableRows.forEach(row => {
+                // Get row data
+                const dateCell = row.cells[0].textContent;
+                const serviceCell = row.cells[1].textContent.trim();
+                const bookingCell = row.cells[2].textContent.trim().toLowerCase();
+                const statusCell = row.cells[5].textContent.trim();
+                
+                // Convert date for comparison
+                const rowDate = new Date(dateCell);
+                
+                // Check each filter condition
+                let showRow = true;
+                
+                // Status filter
+                if (statusFilter !== 'ALL' && !statusCell.includes(statusFilter)) {
+                    showRow = false;
+                }
+                
+                // Service filter
+                if (serviceFilter !== 'ALL' && !serviceCell.includes(serviceFilter)) {
+                    showRow = false;
+                }
+                
+                // Booking ID filter
+                if (bookingFilter && !bookingCell.includes(bookingFilter)) {
+                    showRow = false;
+                }
+                
+                // Date range filter
+                if (dateFilter !== 'ALL') {
+                    if (dateFilter === 'TODAY' && rowDate.toDateString() !== today.toDateString()) {
+                        showRow = false;
+                    } else if (dateFilter === 'LAST_7_DAYS' && rowDate < sevenDaysAgo) {
+                        showRow = false;
+                    } else if (dateFilter === 'THIS_MONTH' && 
+                        (rowDate.getMonth() !== today.getMonth() || 
+                         rowDate.getFullYear() !== today.getFullYear())) {
+                        showRow = false;
+                    } else if (dateFilter === 'LAST_MONTH' && 
+                        (rowDate < firstDayLastMonth || rowDate > lastDayLastMonth)) {
+                        showRow = false;
+                    }
+                }
+                
+                // Show/hide row based on filter results
+                row.style.display = showRow ? '' : 'none';
             });
         }
     });
