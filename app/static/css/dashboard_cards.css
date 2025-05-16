@@ -1,0 +1,124 @@
+/* Enhanced Dashboard Status Cards with Gradients */
+
+.status-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.status-card-body {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-card-info {
+    z-index: 1;
+}
+
+.status-card-info h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    line-height: 1;
+}
+
+.status-card-info p {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0;
+    opacity: 0.9;
+}
+
+.status-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+    font-size: 1.75rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+}
+
+/* Status Card Variations */
+
+/* Request Card - Gray with darker gradient */
+.card-requests {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    color: white;
+}
+
+.card-requests .status-card-icon {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Booked Card - Yellow to orange gradient */
+.card-booked {
+    background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+    color: #212529;
+}
+
+.card-booked .status-card-icon {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #212529;
+}
+
+/* In Progress Card - Orange to red gradient */
+.card-in-progress {
+    background: linear-gradient(135deg, #fd7e14 0%, #e74c3c 100%);
+    color: white;
+}
+
+.card-in-progress .status-card-icon {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Fulfilled Card - Green gradient */
+.card-fulfilled {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.card-fulfilled .status-card-icon {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Card background pattern */
+.status-card:after {
+    content: '';
+    position: absolute;
+    right: -15px;
+    bottom: -15px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}
+
+.status-card:before {
+    content: '';
+    position: absolute;
+    right: 20px;
+    top: -20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    pointer-events: none;
+}

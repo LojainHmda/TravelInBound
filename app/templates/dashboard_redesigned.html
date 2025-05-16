@@ -2,6 +2,11 @@
 
 {% block title %}Requests Dashboard{% endblock %}
 
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_cards.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
     <!-- Quick Actions Bar -->
@@ -11,13 +16,13 @@
                 <div class="card-body d-flex justify-content-between align-items-center py-2">
                     <h5 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Req Dashboard</h5>
                     <div>
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-light btn-sm me-2">
+                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-warning btn-sm me-2">
                             <i class="fas fa-plus me-1"></i> New Booking
                         </a>
-                        <a href="#" class="btn btn-outline-light btn-sm me-2">
+                        <a href="#" class="btn btn-outline-warning btn-sm me-2">
                             <i class="fas fa-calendar me-1"></i> Today's Schedule
                         </a>
-                        <a href="#" class="btn btn-outline-light btn-sm">
+                        <a href="#" class="btn btn-outline-warning btn-sm">
                             <i class="fas fa-file-export me-1"></i> Export Data
                         </a>
                     </div>
@@ -26,20 +31,18 @@
         </div>
     </div>
 
-    <!-- Dashboard Stats -->
+    <!-- Dashboard Stats with Enhanced Gradient Cards -->
     <div class="row mb-4 px-2">
         <!-- Requests Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background-color: #6c757d; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('REQUEST')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Requests</h6>
-                            <h3 class="fw-bold mb-0">{{ request_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-clipboard-list text-secondary"></i>
-                        </div>
+            <div class="status-card card-requests" onclick="filterBookings('REQUEST')">
+                <div class="status-card-body">
+                    <div class="status-card-info">
+                        <p>Requests</p>
+                        <h2>{{ request_count }}</h2>
+                    </div>
+                    <div class="status-card-icon">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
                 </div>
             </div>
@@ -47,16 +50,14 @@
         
         <!-- Booked Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background-color: #FFA500; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('BOOKED')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Booked</h6>
-                            <h3 class="fw-bold mb-0">{{ booked_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-file-invoice-dollar text-orange"></i>
-                        </div>
+            <div class="status-card card-booked" onclick="filterBookings('BOOKED')">
+                <div class="status-card-body">
+                    <div class="status-card-info">
+                        <p>Booked</p>
+                        <h2>{{ booked_count }}</h2>
+                    </div>
+                    <div class="status-card-icon">
+                        <i class="fas fa-bookmark"></i>
                     </div>
                 </div>
             </div>
@@ -64,16 +65,14 @@
         
         <!-- In Progress Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background-color: #FF7F00; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">In Progress</h6>
-                            <h3 class="fw-bold mb-0">{{ in_progress_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-cogs text-orange"></i>
-                        </div>
+            <div class="status-card card-in-progress" onclick="filterBookings('IN_PROGRESS')">
+                <div class="status-card-body">
+                    <div class="status-card-info">
+                        <p>In Progress</p>
+                        <h2>{{ in_progress_count }}</h2>
+                    </div>
+                    <div class="status-card-icon">
+                        <i class="fas fa-spinner fa-pulse"></i>
                     </div>
                 </div>
             </div>
@@ -81,16 +80,14 @@
         
         <!-- Fulfilled Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background-color: #28a745; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('FULFILLED')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Fulfilled</h6>
-                            <h3 class="fw-bold mb-0">{{ completed_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-check-circle text-success"></i>
-                        </div>
+            <div class="status-card card-fulfilled" onclick="filterBookings('FULFILLED')">
+                <div class="status-card-body">
+                    <div class="status-card-info">
+                        <p>Fulfilled</p>
+                        <h2>{{ completed_count }}</h2>
+                    </div>
+                    <div class="status-card-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
                 </div>
             </div>
