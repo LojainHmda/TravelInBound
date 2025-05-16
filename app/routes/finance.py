@@ -700,8 +700,7 @@ def supplier_details(supplier_id):
     prepayment_lines = SupplierPrepaymentLine.query.filter(
         SupplierPrepaymentLine.supplier_name == supplier.name
     ).options(
-        db.joinedload('service_item'),
-        db.joinedload('booking')
+        db.joinedload(SupplierPrepaymentLine.service_item)
     ).order_by(
         SupplierPrepaymentLine.created_at.desc()
     ).all()
