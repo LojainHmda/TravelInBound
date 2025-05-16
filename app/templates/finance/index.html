@@ -387,12 +387,14 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if payment.service_type %}
-                                        <span class="badge bg-primary">{{ payment.service_type }}</span>
+                                    {% if payment.prepayment_lines and payment.prepayment_lines|length > 0 and payment.prepayment_lines[0].service_item %}
+                                        <span class="badge bg-primary">{{ payment.prepayment_lines[0].service_item.service_type }}</span>
                                     {% elif payment.service_confirmation and payment.service_confirmation.service_item %}
                                         <span class="badge bg-primary">{{ payment.service_confirmation.service_item.service_type }}</span>
+                                    {% elif payment.service_type %}
+                                        <span class="badge bg-primary">{{ payment.service_type }}</span>
                                     {% else %}
-                                        <span class="badge bg-secondary">General</span>
+                                        <span class="badge bg-secondary">Vendor Payment</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -402,18 +404,18 @@
                                                 {{ line.booking.reference_number }}
                                             </a>
                                         {% endfor %}
-                                    {% elif payment.booking %}
-                                        <a href="{{ url_for('booking.details', booking_id=payment.booking.id) }}">
-                                            {{ payment.booking_reference }}
-                                        </a>
                                     {% elif payment.service_confirmation and payment.service_confirmation.service_item and payment.service_confirmation.service_item.booking %}
-                                        <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}">
+                                        <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}" class="badge bg-primary me-1">
                                             {{ payment.service_confirmation.service_item.booking.reference_number }}
                                         </a>
-                                    {% else %}
-                                        <a href="#" class="badge bg-info text-white" data-bs-toggle="tooltip" title="This is a general supplier payment not tied to a specific booking">
-                                            <i class="fas fa-info-circle me-1"></i> General Payment
+                                    {% elif payment.booking %}
+                                        <a href="{{ url_for('booking.details', booking_id=payment.booking.id) }}" class="badge bg-primary me-1">
+                                            {{ payment.booking_reference }}
                                         </a>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-building me-1"></i> Supplier Payment
+                                        </span>
                                     {% endif %}
                                 </td>
                                 <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
