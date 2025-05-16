@@ -119,7 +119,7 @@
                             <td>
                                 {% if line.booking_id %}
                                     <a href="{{ url_for('booking.details', booking_id=line.booking_id) }}" class="badge bg-primary me-1">
-                                        {{ line.booking.reference_number if line.booking else 'Booking #' + line.booking_id|string }}
+                                        Booking #{{ line.booking_id }}
                                     </a>
                                 {% else %}
                                     <span class="badge bg-secondary">General</span>

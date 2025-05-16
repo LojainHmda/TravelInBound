@@ -697,10 +697,11 @@ def supplier_details(supplier_id):
     
     # Get prepayment lines for this supplier
     # This is our new approach - show costs directly from prepayment lines
-    prepayment_lines = SupplierPrepaymentLine.query.filter_by(
-        supplier_name=supplier.name
+    prepayment_lines = SupplierPrepaymentLine.query.filter(
+        SupplierPrepaymentLine.supplier_name == supplier.name
     ).options(
-        db.joinedload('service_item')
+        db.joinedload('service_item'),
+        db.joinedload('booking')
     ).order_by(
         SupplierPrepaymentLine.created_at.desc()
     ).all()

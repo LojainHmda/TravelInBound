@@ -4,8 +4,10 @@ from sqlalchemy import func, desc, or_
 
 class SupplierPrepaymentLine(db.Model):
     """Links supplier payments to specific bookings and services"""
+    __tablename__ = 'supplier_prepayment_line'
+    
     id = db.Column(db.Integer, primary_key=True)
-    supplier_payment_id = db.Column(db.Integer, db.ForeignKey('supplier_payment.id'), nullable=False)
+    supplier_payment_id = db.Column(db.Integer, db.ForeignKey('supplier_payment.id'), nullable=True)
     booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=False)
     service_item_id = db.Column(db.Integer, db.ForeignKey('service_item.id'), nullable=True)
     amount = db.Column(db.Float, nullable=False)
@@ -13,7 +15,14 @@ class SupplierPrepaymentLine(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships - only keep service_item relationship to avoid circular references
+    # New fields added for direct cost tracking
+    confirmation_reference = db.Column(db.String(100), nullable=True)
+    supplier_name = db.Column(db.String(100), nullable=True)
+    service_type = db.Column(db.String(50), nullable=True)
+    payment_status = db.Column(db.String(20), default='PENDING')
+    invoice_reference = db.Column(db.String(100), nullable=True)
+    
+    # Only one relationship to avoid circular dependencies
     service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='joined')
     
     def __repr__(self):
