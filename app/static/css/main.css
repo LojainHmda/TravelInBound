@@ -8,8 +8,8 @@
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
-    --dashboard-bg-color: #444444; /* Dark gray for dashboard */
-    --dashboard-text-color: #000000; /* Black text for dashboard */
+    --dashboard-bg-color: #222222; /* Very dark gray for dashboard - updated */
+    --dashboard-text-color: #ffffff; /* White text for dashboard - updated */
     --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
     
     /* Status Colors */
