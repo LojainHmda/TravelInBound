@@ -67,13 +67,13 @@
                 {% endif %}
                 
                 {% if booking %}
-                <a href="#" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
-                    <i class="fas fa-file-export" style="color: #FF8C00;"></i> Export Details
+                <a href="#" class="btn action-button btn-tbp">
+                    <i class="fas fa-file-export icon-orange"></i> Export Details
                 </a>
                 
                 <hr>
                 
-                <a href="#" class="btn action-button" style="background-color: white; color: #dc3545; border: 1px solid #dc3545;">
+                <a href="#" class="btn action-button btn-tbp-danger">
                     <i class="fas fa-trash-alt" style="color: #dc3545;"></i> Cancel Booking
                 </a>
                 {% endif %}
@@ -156,8 +156,8 @@
                         <i class="fas fa-user-plus fa-2x text-muted"></i>
                     </p>
                     <p class="text-center text-muted">No customer selected</p>
-                    <button type="button" class="btn btn-yellow w-100" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                        <i class="fas fa-user-plus me-2"></i>Select Customer
+                    <button type="button" class="btn btn-tbp w-100" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                        <i class="fas fa-user-plus me-2 icon-orange"></i>Select Customer
                     </button>
                 {% elif booking.customer %}
                     <p><strong>Name:</strong> {{ booking.customer.name }}</p>
@@ -179,9 +179,9 @@
     <!-- Payment & Invoice Card with Dark Blue Header -->
     <div class="col-md-6">
         <div class="card h-100">
-            <div class="card-header" style="background-color: #000080; color: white;">
+            <div class="card-header card-header-dark-blue">
                 <div class="d-flex align-items-center">
-                    <i class="fas fa-money-bill-wave me-2" style="color: #FF8C00;"></i>
+                    <i class="fas fa-money-bill-wave me-2 icon-orange"></i>
                     <h5 class="mb-0">Payment & Invoice</h5>
                 </div>
             </div>
@@ -240,18 +240,16 @@
         <!-- Service Items List -->
         <div class="card mb-4">
             <!-- Light Grey Header Bar with Service Items and Orange Gradient Icons -->
-            <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #000080; color: white;">
+            <div class="card-header d-flex justify-content-between align-items-center py-2 card-header-dark-blue">
                 <div class="d-flex align-items-center">
-                    <h5 class="mb-0 me-4"><i class="fas fa-list me-2" style="color: #FF8C00;"></i>Service Items</h5>
+                    <h5 class="mb-0 me-4"><i class="fas fa-list me-2 icon-orange"></i>Service Items</h5>
                     <div class="d-flex align-items-center">
                         <strong class="me-2">Quick Add:</strong>
-                        <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal" 
-                               style="background-color: white; border: none; color: #000080;">
-                            <i class="fas fa-plane" style="color: #FF8C00;"></i>
+                        <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="FLIGHT" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-plane icon-orange"></i>
                         </button>
-                        <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal"
-                               style="background-color: white; border: none; color: #000080;">
-                            <i class="fas fa-hotel" style="color: #FF8C00;"></i>
+                        <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="HOTEL" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                            <i class="fas fa-hotel icon-orange"></i>
                         </button>
                         <button type="button" class="btn btn-sm mx-1 icon-popup-trigger" data-service-type="TRANSPORT" data-bs-toggle="modal" data-bs-target="#addServiceModal"
                                style="background-color: white; border: none; color: #000080;">
