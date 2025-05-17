@@ -112,6 +112,29 @@ def dashboard():
         }
     )
 
+@app.route('/operations')
+def operations_dashboard():
+    """View for the travel operations dashboard"""
+    # Get counts for each service type
+    flight_count = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).count()
+    hotel_count = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).count()
+    transport_count = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).count()
+    visa_count = ServiceItem.query.filter_by(service_type=SERVICE_VISA).count()
+    insurance_count = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).count()
+    
+    # Get recent bookings
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    
+    return render_template(
+        'operations_dashboard.html',
+        flight_count=flight_count,
+        hotel_count=hotel_count,
+        transport_count=transport_count,
+        visa_count=visa_count,
+        insurance_count=insurance_count,
+        recent_bookings=recent_bookings
+    )
+
 @app.route('/logout')
 def logout():
     logout_user()
