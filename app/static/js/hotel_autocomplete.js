@@ -24,16 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
         suggestionsContainer.style.zIndex = '1000';
         suggestionsContainer.style.backgroundColor = '#fff';
         suggestionsContainer.style.border = 'none';
-        suggestionsContainer.style.borderRadius = '12px';
-        suggestionsContainer.style.maxHeight = '400px';
+        suggestionsContainer.style.borderRadius = '8px';
+        suggestionsContainer.style.maxHeight = '350px';
         suggestionsContainer.style.overflowY = 'auto';
         suggestionsContainer.style.width = inputElement.offsetWidth + 'px';
-        suggestionsContainer.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15)';
-        suggestionsContainer.style.padding = '8px';
-        suggestionsContainer.style.background = 'linear-gradient(to bottom, #fffbf2, #fff)';
-        // Add custom scrollbar styling
-        suggestionsContainer.style.scrollbarWidth = 'thin';
-        suggestionsContainer.style.scrollbarColor = '#FFA500 #f5f5f5';
+        suggestionsContainer.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
         
         // Add container after the input
         inputElement.parentNode.insertBefore(suggestionsContainer, inputElement.nextSibling);
@@ -102,37 +97,37 @@ document.addEventListener('DOMContentLoaded', function() {
                         hasAddedHotelHeading = true;
                         const hotelHeading = document.createElement('div');
                         hotelHeading.className = 'autocomplete-heading';
-                        hotelHeading.innerHTML = '<i class="fas fa-hotel me-2"></i> Specific Hotels';
+                        hotelHeading.textContent = 'Specific Hotels';
                         hotelHeading.style.padding = '10px 15px';
                         hotelHeading.style.fontWeight = 'bold';
-                        hotelHeading.style.margin = '8px 0 2px 0';
+                        hotelHeading.style.backgroundColor = '#fffaf0';
                         hotelHeading.style.fontSize = '0.9em';
-                        hotelHeading.style.color = '#FFA500';
-                        hotelHeading.style.borderBottom = '2px solid #FFD700';
+                        hotelHeading.style.color = '#664d03';
+                        hotelHeading.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
                         suggestionsContainer.appendChild(hotelHeading);
                     } else if (suggestion.type === 'chain' && !hasAddedChainHeading) {
                         hasAddedChainHeading = true;
                         const chainHeading = document.createElement('div');
                         chainHeading.className = 'autocomplete-heading';
-                        chainHeading.innerHTML = '<i class="fas fa-building me-2"></i> Hotel Chains';
+                        chainHeading.textContent = 'Hotel Chains';
                         chainHeading.style.padding = '10px 15px';
                         chainHeading.style.fontWeight = 'bold';
-                        chainHeading.style.margin = '8px 0 2px 0';
+                        chainHeading.style.backgroundColor = '#fff8e1';
                         chainHeading.style.fontSize = '0.9em';
-                        chainHeading.style.color = '#FF9500';
-                        chainHeading.style.borderBottom = '2px solid #FFCC00';
+                        chainHeading.style.color = '#664d03';
+                        chainHeading.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
                         suggestionsContainer.appendChild(chainHeading);
                     } else if (suggestion.type === 'city' && !hasAddedCityHeading) {
                         hasAddedCityHeading = true;
                         const cityHeading = document.createElement('div');
                         cityHeading.className = 'autocomplete-heading';
-                        cityHeading.innerHTML = '<i class="fas fa-map-marker-alt me-2"></i> Cities';
+                        cityHeading.textContent = 'Cities';
                         cityHeading.style.padding = '10px 15px';
                         cityHeading.style.fontWeight = 'bold';
-                        cityHeading.style.margin = '8px 0 2px 0';
+                        cityHeading.style.backgroundColor = '#fff3cd';
                         cityHeading.style.fontSize = '0.9em';
-                        cityHeading.style.color = '#FF8C00';
-                        cityHeading.style.borderBottom = '2px solid #FFB347';
+                        cityHeading.style.color = '#664d03';
+                        cityHeading.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
                         suggestionsContainer.appendChild(cityHeading);
                     }
                     
@@ -159,50 +154,31 @@ document.addEventListener('DOMContentLoaded', function() {
                         gradientBg = 'linear-gradient(to right, #ffe9c2, #ffffff)';
                     }
                     
-                    // Create card-styled suggestions with gradient backgrounds
-                    let gradientColors, iconBgColor, borderColor;
-                    
-                    if (suggestion.type === 'hotel') {
-                        gradientColors = 'linear-gradient(135deg, #FFD700, #FFA500)';  // Gold to Orange
-                        iconBgColor = '#FFD700';
-                        borderColor = '#FFA500';
-                    } else if (suggestion.type === 'chain') {
-                        gradientColors = 'linear-gradient(135deg, #FFCC00, #FF9500)';  // Yellow to Amber
-                        iconBgColor = '#FFCC00';
-                        borderColor = '#FF9500';
-                    } else {
-                        gradientColors = 'linear-gradient(135deg, #FFB347, #FF8C00)';  // Pastel Orange to Dark Orange
-                        iconBgColor = '#FFB347';
-                        borderColor = '#FF8C00';
-                    }
-                    
-                    // Create card-styled suggestion with gradient background
+                    // Create enhanced suggestion content with styled icon
                     suggestionElement.innerHTML = 
-                        `<div style="display: flex; align-items: center; background: ${gradientColors}; 
-                                    border-radius: 8px; padding: 8px 12px; margin: 5px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                            <div style="width: 32px; height: 32px; border-radius: 50%; 
-                                      background-color: rgba(255,255,255,0.85); 
+                        `<div style="display: flex; align-items: center;">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; 
+                                      background-color: ${iconColor}20; 
                                       display: flex; align-items: center; justify-content: center; 
-                                      margin-right: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                      margin-right: 10px;">
                                 <i class="fas ${iconClass}" style="color: ${iconColor};"></i>
                             </div>
-                            <span style="color: #fff; font-weight: 500; text-shadow: 0 1px 1px rgba(0,0,0,0.1);">${suggestion.text}</span>
+                            <span>${suggestion.text}</span>
                         </div>`;
                     
-                    // Enhance on hover with scaling and shadow
+                    // Highlight on hover with gradient effect
                     suggestionElement.addEventListener('mouseover', function() {
-                        const card = this.querySelector('div');
-                        card.style.transform = 'scale(1.02)';
-                        card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
-                        card.style.transition = 'all 0.2s ease';
+                        this.style.borderLeft = `3px solid ${iconColor}`;
+                        this.style.backgroundColor = '#fffbea';
+                        this.style.backgroundImage = gradientBg;
                         selectedIndex = index;
                         highlightSuggestion();
                     });
                     
                     suggestionElement.addEventListener('mouseout', function() {
-                        const card = this.querySelector('div');
-                        card.style.transform = 'scale(1)';
-                        card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        this.style.borderLeft = '3px solid transparent';
+                        this.style.backgroundColor = '';
+                        this.style.backgroundImage = '';
                     });
                     
                     // Select on click

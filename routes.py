@@ -125,166 +125,6 @@ def index():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
     return render_template('index.html', bookings=recent_bookings)
 
-# Yellow Menu with Gradient Cards
-@app.route('/menu')
-def yellow_menu():
-    """Display the main menu with yellow gradient cards"""
-    return render_template('yellow_menu.html')
-
-@app.route('/yellow')
-def yellow_cards():
-    """Direct route to view the yellow gradient cards"""
-    return """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yellow Gradient Cards</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-        }
-        
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Cards container */
-        .cards-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
-        
-        /* Card styling */
-        .card {
-            width: 220px;
-            height: 200px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        /* Yellow gradient variations */
-        .yellow-gradient-1 {
-            background: linear-gradient(to bottom, #fff9e6, #ffe082);
-        }
-        
-        .yellow-gradient-2 {
-            background: linear-gradient(to bottom, #fff8dd, #ffd761);
-        }
-        
-        .yellow-gradient-3 {
-            background: linear-gradient(to bottom, #fff8d1, #ffcf3d);
-        }
-        
-        .yellow-gradient-4 {
-            background: linear-gradient(to bottom, #f0f7d3, #cde58f);
-        }
-        
-        /* Card elements */
-        .card-title {
-            font-size: 18px;
-            font-weight: 500;
-            color: #333;
-            margin-top: 0;
-        }
-        
-        .card-value {
-            font-size: 48px;
-            font-weight: 700;
-            color: #333;
-            margin: 10px 0;
-        }
-        
-        .card-icon {
-            font-size: 24px;
-            color: #555;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Yellow Gradient Cards</h1>
-        
-        <div class="cards-container">
-            <!-- Card 1 -->
-            <div class="card yellow-gradient-1">
-                <h3 class="card-title">Requests</h3>
-                <div class="card-value">12</div>
-                <div class="card-icon">📋</div>
-            </div>
-            
-            <!-- Card 2 -->
-            <div class="card yellow-gradient-2">
-                <h3 class="card-title">Booked</h3>
-                <div class="card-value">8</div>
-                <div class="card-icon">🏷️</div>
-            </div>
-            
-            <!-- Card 3 -->
-            <div class="card yellow-gradient-3">
-                <h3 class="card-title">In Progress</h3>
-                <div class="card-value">5</div>
-                <div class="card-icon">⏳</div>
-            </div>
-            
-            <!-- Card 4 -->
-            <div class="card yellow-gradient-4">
-                <h3 class="card-title">Completed</h3>
-                <div class="card-value">23</div>
-                <div class="card-icon">✅</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-    """
-
-# Yellow Cards Dashboard 
-@app.route('/yellow-cards')
-def yellow_cards_dashboard():
-    # Get counts for each status
-    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
-    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
-    
-    return render_template(
-        'yellow_dashboard.html',
-        status_counts={
-            'request': request_count,
-            'booked': booked_count,
-            'in_progress': in_progress_count,
-            'completed': completed_count
-        },
-        recent_bookings=Booking.query.order_by(Booking.created_at.desc()).limit(10).all(),
-        service_items={
-            'flight': ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).order_by(ServiceItem.created_at.desc()).limit(5).all(),
-            'hotel': ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).order_by(ServiceItem.created_at.desc()).limit(5).all(),
-            'transport': ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all(),
-            'visa': ServiceItem.query.filter_by(service_type=SERVICE_VISA).all(),
-            'insurance': ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
-        }
-    )
-
 # Dashboard
 @app.route('/dashboard')
 def dashboard():
@@ -295,24 +135,20 @@ def dashboard():
     completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
     
     # Get service items for each service type
-    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).order_by(ServiceItem.created_at.desc()).limit(5).all()
-    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).order_by(ServiceItem.created_at.desc()).limit(5).all()
+    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
+    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
     transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
     visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
-    # Get recent bookings
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
-    
     return render_template(
-        'yellow_dashboard.html',
+        'booking/dashboard.html',
         status_counts={
             'request': request_count,
             'booked': booked_count,
             'in_progress': in_progress_count,
             'completed': completed_count
         },
-        recent_bookings=recent_bookings,
         service_items={
             'flight': flight_items,
             'hotel': hotel_items,

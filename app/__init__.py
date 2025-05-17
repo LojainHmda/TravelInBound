@@ -89,6 +89,13 @@ def create_app():
         from app.routes.auth import auth_bp
         app.register_blueprint(auth_bp)
         
+        # Register yellow dashboard blueprint
+        try:
+            from app.routes.yellow import yellow_bp
+            app.register_blueprint(yellow_bp, url_prefix='/yellow')
+        except Exception as e:
+            app.logger.error(f"Could not register yellow dashboard blueprint: {str(e)}")
+        
         # Set up login manager
         from app.models import User
         @login_manager.user_loader
