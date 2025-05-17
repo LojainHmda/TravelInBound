@@ -1033,15 +1033,58 @@ document.addEventListener('DOMContentLoaded', function() {
           bookingHeader.innerHTML = `<i class="fas fa-bookmark me-2" style="color: #FF8C00;"></i>Booking for ${customerName}`;
         }
         
-        // Update customer info section
+        // Update customer info section in the DOM
         try {
-          const customerNameField = document.querySelector('.info-section p:nth-child(1) strong').nextSibling;
-          const customerEmailField = document.querySelector('.info-section p:nth-child(2) strong').nextSibling;
-          const customerIdField = document.querySelector('.info-section p:nth-child(3) strong').nextSibling;
+          // Find the customer info section
+          const customerNameEl = document.getElementById('customerName') || document.querySelector('.info-section p:nth-child(1)');
+          const customerEmailEl = document.getElementById('customerEmail') || document.querySelector('.info-section p:nth-child(2)');
+          const customerIdEl = document.getElementById('customerId') || document.querySelector('.info-section p:nth-child(3)');
           
-          if (customerNameField) customerNameField.nodeValue = ` ${customerName}`;
-          if (customerEmailField) customerEmailField.nodeValue = ` ${customerEmail}`;
-          if (customerIdField) customerIdField.nodeValue = ` ${customerId}`;
+          // Update the customer information
+          if (customerNameEl) {
+            if (customerNameEl.tagName === 'SPAN') {
+              customerNameEl.textContent = customerName;
+            } else {
+              const strong = customerNameEl.querySelector('strong');
+              if (strong && strong.nextSibling) {
+                strong.nextSibling.nodeValue = ` ${customerName}`;
+              } else {
+                customerNameEl.innerHTML = `<strong>Customer:</strong> ${customerName}`;
+              }
+            }
+          }
+          
+          if (customerEmailEl) {
+            if (customerEmailEl.tagName === 'SPAN') {
+              customerEmailEl.textContent = customerEmail;
+            } else {
+              const strong = customerEmailEl.querySelector('strong');
+              if (strong && strong.nextSibling) {
+                strong.nextSibling.nodeValue = ` ${customerEmail}`;
+              } else {
+                customerEmailEl.innerHTML = `<strong>Email:</strong> ${customerEmail}`;
+              }
+            }
+          }
+          
+          if (customerIdEl) {
+            if (customerIdEl.tagName === 'SPAN') {
+              customerIdEl.textContent = customerId;
+            } else {
+              const strong = customerIdEl.querySelector('strong');
+              if (strong && strong.nextSibling) {
+                strong.nextSibling.nodeValue = ` ${customerId}`;
+              } else {
+                customerIdEl.innerHTML = `<strong>ID:</strong> ${customerId}`;
+              }
+            }
+          }
+          
+          // Add the customer ID to a hidden input if it exists
+          const customerIdInput = document.getElementById('customer_id_input');
+          if (customerIdInput) {
+            customerIdInput.value = customerId;
+          }
         } catch (e) {
           console.log('Error updating customer info fields:', e);
         }
