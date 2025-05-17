@@ -103,7 +103,7 @@
     }
     .service-icon-table {
         font-size: 1.2rem;
-        color: #FF8C00;
+        color: #000080;
     }
 </style>
 
@@ -111,7 +111,7 @@
     <!-- Header Bar -->
     <div class="header-bar">
         <div class="d-flex align-items-center">
-            <i class="fas fa-bookmark me-2" style="color: #FF8C00;"></i>
+            <i class="fas fa-bookmark me-2" style="color: #000080;"></i>
             <h4 class="mb-0">Booking #{{ booking.reference_number }}</h4>
         </div>
         <div>
@@ -121,12 +121,12 @@
             </span>
             {% else %}
             <span class="status-badge me-2" style="background-color: #f8f9fa; color: #000080; border: 1px solid #000080;">
-                <i class="fas fa-file-invoice me-1" style="color: #FF8C00;"></i> Not Invoiced
+                <i class="fas fa-file-invoice me-1" style="color: #000080;"></i> Not Invoiced
             </span>
             {% endif %}
             
             <span class="status-badge" style="background-color: #000080; color: white;">
-                <i class="fas fa-check-circle me-1" style="color: #FF8C00;"></i> {{ booking.status }}
+                <i class="fas fa-check-circle me-1" style="color: #000080;"></i> {{ booking.status }}
             </span>
         </div>
     </div>
@@ -140,7 +140,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-user me-2" style="color: #FF8C00;"></i>
+                            <i class="fas fa-user me-2" style="color: #000080;"></i>
                             <h5 class="mb-0" style="color: #000080; font-weight: bold;">Customer Information</h5>
                         </div>
                         <div class="ms-4" id="customer-info-section">
@@ -263,9 +263,9 @@
 
             <!-- Service Items List -->
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #000080; color: white;">
+                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background-color: #FFC107; color: black;">
                     <div class="d-flex align-items-center">
-                        <h5 class="mb-0 me-4"><i class="fas fa-list me-2" style="color: #FF8C00;"></i>Service Items</h5>
+                        <h5 class="mb-0 me-4"><i class="fas fa-list me-2" style="color: #000080;"></i>Service Items</h5>
                         {% if booking %}
                         <div class="d-flex align-items-center">
                             <strong class="me-2">Quick Add:</strong>
@@ -466,8 +466,8 @@
             {% if booking %}
             <!-- Payment & Invoice Combined Section -->
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #000080; color: white;">
-                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2" style="color: #FF8C00;"></i>Invoice & Payment Information</h5>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #FFC107; color: black;">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2" style="color: #000080;"></i>Invoice & Payment Information</h5>
                     <div>
                         {% if not booking.invoice_number %}
                             <button type="button" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#invoiceModal">
@@ -529,8 +529,8 @@
             {% else %}
             <!-- Payment & Invoice Placeholder for New Booking -->
             <div class="card mb-4">
-                <div class="card-header" style="background-color: #000080; color: white;">
-                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2" style="color: #FF8C00;"></i>Invoice & Payment Information</h5>
+                <div class="card-header" style="background-color: #FFC107; color: black;">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2" style="color: #000080;"></i>Invoice & Payment Information</h5>
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
@@ -542,8 +542,8 @@
             
             <!-- Documents Section -->
             <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #000080; color: white;">
-                    <h5 class="mb-0"><i class="fas fa-folder-open me-2" style="color: #FF8C00;"></i>Documents</h5>
+                <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #FFC107; color: black;">
+                    <h5 class="mb-0"><i class="fas fa-folder-open me-2" style="color: #000080;"></i>Documents</h5>
                     {% if booking %}
                     <button type="button" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                         <i class="fas fa-file-upload me-1"></i> Upload Document
