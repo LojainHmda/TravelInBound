@@ -135,20 +135,24 @@ def dashboard():
     completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
     
     # Get service items for each service type
-    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
-    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
+    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).order_by(ServiceItem.created_at.desc()).limit(5).all()
+    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).order_by(ServiceItem.created_at.desc()).limit(5).all()
     transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
     visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
+    # Get recent bookings
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    
     return render_template(
-        'booking/dashboard.html',
+        'booking/dashboard_yellow.html',
         status_counts={
             'request': request_count,
             'booked': booked_count,
             'in_progress': in_progress_count,
             'completed': completed_count
         },
+        recent_bookings=recent_bookings,
         service_items={
             'flight': flight_items,
             'hotel': hotel_items,
