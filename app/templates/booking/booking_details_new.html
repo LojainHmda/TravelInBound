@@ -74,51 +74,57 @@
     
     <!-- Action Buttons Toolbar -->
     <div class="action-toolbar">
-        <div class="d-flex flex-wrap">
-            <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-warning btn-sm action-button">
-                <i class="fas fa-plus me-1"></i> New Booking
-            </a>
+        <div class="d-flex flex-wrap justify-content-between">
+            <div class="d-flex flex-wrap">
+                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-warning btn-sm action-button">
+                    <i class="fas fa-plus me-1"></i> New Booking
+                </a>
+                
+                <a href="#" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
+                    <i class="fas fa-plus me-1"></i> Add Service
+                </a>
+                
+                {% if booking and not booking.invoice_number %}
+                <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-warning btn-sm action-button">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                </a>
+                {% endif %}
+                
+                {% if booking %}
+                <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-warning btn-sm action-button">
+                    <i class="fas fa-money-bill-wave me-1"></i> Add Payment
+                </a>
+                
+                <button type="button" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">
+                    <i class="fas fa-ban me-1"></i> Cancel Booking
+                </button>
+                
+                <button type="button" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
+                    <i class="fas fa-edit me-1"></i> Update Status
+                </button>
+                {% endif %}
+            </div>
             
-            <a href="#" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                <i class="fas fa-plus me-1"></i> Add Service
-            </a>
-            
-            {% if booking and not booking.invoice_number %}
-            <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-warning btn-sm action-button">
-                <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
-            </a>
-            {% endif %}
-            
-            {% if booking %}
-            <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-warning btn-sm action-button">
-                <i class="fas fa-money-bill-wave me-1"></i> Add Payment
-            </a>
-            
-            <button type="button" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#cancelBookingModal">
-                <i class="fas fa-ban me-1"></i> Cancel Booking
-            </button>
-            
-            <button type="button" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                <i class="fas fa-edit me-1"></i> Update Status
-            </button>
+            <!-- Start Operations Button -->
+            {% if booking and booking.status != 'COMPLETED' %}
+            <div>
+                {% if booking.payment_status == 'FULL' or booking.payment_status == 'PARTIAL' %}
+                <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="new_status" value="IN_PROGRESS">
+                    <button type="submit" class="btn btn-sm" style="background-color: #6c757d; color: white;">
+                        <i class="fas fa-play-circle me-1"></i> Start Operations
+                    </button>
+                </form>
+                {% else %}
+                <button type="button" class="btn btn-sm" style="background-color: #6c757d; color: white;" disabled title="Payment required before starting operations">
+                    <i class="fas fa-play-circle me-1"></i> Start Operations
+                </button>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
     </div>
-    
-    <!-- Start Operations Button (Separate) -->
-    {% if booking and booking.payment_status != 'NONE' %}
-    <div class="mb-4">
-        <form method="POST" action="{{ url_for('booking.update_booking_status', booking_id=booking.id) }}">
-            {% if status_form %}
-            {{ status_form.hidden_tag() }}
-            {% endif %}
-            <input type="hidden" name="new_status" value="IN_PROGRESS">
-            <button type="submit" class="btn btn-secondary btn-sm">
-                <i class="fas fa-play-circle me-1"></i> Start Operations
-            </button>
-        </form>
-    </div>
-    {% endif %}
     
     <!-- Customer and Booking Information -->
     <div class="row info-section mb-4">
@@ -212,62 +218,7 @@
                     </div>
                 </div>
                 
-                <!-- Horizontal Action Buttons Bar -->
-                <div class="card-body bg-light py-2 border-bottom">
-                    <div class="d-flex flex-wrap justify-content-start align-items-center gap-2">
-                        <!-- New Booking Button (always visible) -->
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow">
-                            <i class="fas fa-plus me-1"></i> New Booking
-                        </a>
-                        
-                        {% if not booking %}
-                        <!-- Customer Selection Button (only for new booking) -->
-                        <button class="btn btn-outline-warning text-warning" 
-                               style="border-color: #FFBF00;" 
-                               id="showCustomerSelectionBtn" 
-                               data-bs-toggle="modal" 
-                               data-bs-target="#customerSelectionModal">
-                            <i class="fas fa-user me-1"></i> Select Customer
-                        </button>
-                        {% endif %}
-                        
-                        {% if booking %}
-                        <!-- Add Service -->
-                        <a href="#" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#addServiceModal">
-                            <i class="fas fa-plus me-1"></i> Add Service
-                        </a>
-                        
-                        <!-- View/Generate Invoice -->
-                        {% if booking.invoice_number %}
-                        <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
-                           class="btn btn-yellow">
-                            <i class="fas fa-file-invoice me-1"></i> View Invoice
-                        </a>
-                        {% else %}
-                        <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" 
-                           class="btn btn-yellow">
-                            <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
-                        </a>
-                        {% endif %}
-                        
-                        <!-- Add Payment -->
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#addPaymentModal"
-                           class="btn btn-yellow">
-                            <i class="fas fa-credit-card me-1"></i> Add Payment
-                        </a>
-                        
-                        <!-- Cancel Booking -->
-                        <a href="#" class="btn btn-yellow">
-                            <i class="fas fa-times-circle me-1"></i> Cancel Booking
-                        </a>
-                        
-                        <!-- Update Status button -->
-                        <button type="button" class="btn btn-yellow" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
-                            <i class="fas fa-edit me-1"></i> Update Status
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
+
                 
                 <!-- Start Operations (on its own row with grey background) -->
                 {% if booking and booking.status != 'COMPLETED' %}
@@ -293,22 +244,7 @@
                 
                 <div class="card-body">
                     {% if booking %}
-                    <!-- Customer Info for existing booking -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-user me-2"></i>Customer Information</h6>
-                            <p class="mb-1"><strong>Name:</strong> {{ booking.requester.username }}</p>
-                            <p class="mb-1"><strong>Email:</strong> {{ booking.requester.email }}</p>
-                            <p class="mb-0"><strong>User ID:</strong> {{ booking.user_id }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6><i class="fas fa-info-circle me-2"></i>Booking Details</h6>
-                            <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number }}</p>
-                            <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') }}</p>
-                            <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') }}</p>
-                        </div>
-                    </div>
-            
+              
                     
                     <!-- Invoice Status -->
                     {% if booking.invoice_number %}
