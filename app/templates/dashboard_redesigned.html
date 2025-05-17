@@ -30,15 +30,15 @@
     <div class="row mb-4 px-2">
         <!-- Requests Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background: linear-gradient(to right, #FFD700, #FFA500); cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('REQUEST')">
+            <div class="card shadow-sm" style="background-color: #FFD700; color: #000; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('REQUEST')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Requests</h6>
+                            <h6 class="card-title small fw-bold mb-1">Requests</h6>
                             <h3 class="fw-bold mb-0">{{ request_count }}</h3>
                         </div>
                         <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-clipboard-list text-warning"></i>
+                            <i class="fas fa-clipboard-list text-dark"></i>
                         </div>
                     </div>
                 </div>
@@ -47,15 +47,15 @@
         
         <!-- Booked Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background: linear-gradient(to right, #FFD700, #FFA500); cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('BOOKED')">
+            <div class="card shadow-sm" style="background-color: #FFD700; color: #000; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('BOOKED')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Booked</h6>
+                            <h6 class="card-title small fw-bold mb-1">Booked</h6>
                             <h3 class="fw-bold mb-0">{{ booked_count }}</h3>
                         </div>
                         <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-file-invoice-dollar text-warning"></i>
+                            <i class="fas fa-file-invoice-dollar text-dark"></i>
                         </div>
                     </div>
                 </div>
@@ -64,15 +64,15 @@
         
         <!-- In Progress Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background: linear-gradient(to right, #FFD700, #FFA500); cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('IN_PROGRESS')">
+            <div class="card shadow-sm" style="background-color: #FFD700; color: #000; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('IN_PROGRESS')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">In Progress</h6>
+                            <h6 class="card-title small fw-bold mb-1">In Progress</h6>
                             <h3 class="fw-bold mb-0">{{ in_progress_count }}</h3>
                         </div>
                         <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-cogs text-warning"></i>
+                            <i class="fas fa-cogs text-dark"></i>
                         </div>
                     </div>
                 </div>
@@ -81,15 +81,15 @@
         
         <!-- Fulfilled Widget -->
         <div class="col-md-3 px-2">
-            <div class="card text-white shadow-sm" style="background: linear-gradient(to right, #FFD700, #FFA500); cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('FULFILLED')">
+            <div class="card shadow-sm" style="background-color: #FFD700; color: #000; cursor: pointer; border-radius: 10px; overflow: hidden;" onclick="filterBookings('FULFILLED')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title small text-white fw-bold mb-1">Fulfilled</h6>
+                            <h6 class="card-title small fw-bold mb-1">Fulfilled</h6>
                             <h3 class="fw-bold mb-0">{{ completed_count }}</h3>
                         </div>
                         <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-check-circle text-warning"></i>
+                            <i class="fas fa-check-circle text-dark"></i>
                         </div>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                         <tr>
                             <td>{{ booking.reference_number }}</td>
                             <td>
-                                <span class="badge {% if booking.status == 'FULFILLED' %}bg-success{% else %}bg-orange{% endif %}" style="display: inline-block; min-width: 80px; text-align: center;">
+                                <span class="badge {% if booking.status == 'FULFILLED' %}bg-success{% else %}{% endif %}" style="{% if booking.status != 'FULFILLED' %}background-color: #FFD700; color: #000;{% endif %}display: inline-block; min-width: 80px; text-align: center;">
                                     {{ booking.status }}
                                 </span>
                             </td>
