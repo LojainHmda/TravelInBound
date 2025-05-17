@@ -136,9 +136,9 @@
                         <h5 class="mb-0" style="color: #000080;">Customer Information</h5>
                     </div>
                     <div class="ms-4">
-                        <p class="mb-1"><strong>Name:</strong> {{ booking.requester.username }}</p>
-                        <p class="mb-1"><strong>Email:</strong> {{ booking.requester.email }}</p>
-                        <p class="mb-0"><strong>User ID:</strong> {{ booking.requester.id }}</p>
+                        <p class="mb-1"><strong>Name:</strong> {{ booking.requester.username if booking and booking.requester else 'N/A' }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ booking.requester.email if booking and booking.requester else 'N/A' }}</p>
+                        <p class="mb-0"><strong>User ID:</strong> {{ booking.requester.id if booking and booking.requester else 'N/A' }}</p>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -147,9 +147,9 @@
                         <h5 class="mb-0" style="color: #000080;">Booking Details</h5>
                     </div>
                     <div class="ms-4">
-                        <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number }}</p>
-                        <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') }}</p>
-                        <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') }}</p>
+                        <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number if booking else 'N/A' }}</p>
+                        <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') if booking and booking.created_at else 'N/A' }}</p>
+                        <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') if booking and booking.updated_at else 'N/A' }}</p>
                     </div>
                 </div>
             </div>
