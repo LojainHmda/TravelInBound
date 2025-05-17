@@ -1002,27 +1002,10 @@ document.addEventListener('DOMContentLoaded', function() {
         customerInput.value = customerId;
         form.appendChild(customerInput);
         
-        // Add the request ID if available
-        const requestIdElement = document.querySelector('.header-bar h4');
-        let requestId = '';
-        if (requestIdElement) {
-          const text = requestIdElement.textContent;
-          const match = text.match(/#([A-Z0-9-]+)/);
-          if (match && match[1]) {
-            requestId = match[1];
-          }
-        }
-        
-        if (!requestId) {
-          // Try to get it from the URL
-          const urlParams = new URLSearchParams(window.location.search);
-          requestId = urlParams.get('request_id') || '';
-        }
-        
-        if (!requestId) {
-          // Generate a default request ID
-          requestId = 'IR-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-        }
+        // Generate a unique request ID with timestamp to avoid duplication
+        const timestamp = new Date().getTime().toString(36).substring(4, 10);
+        const randomPart = Math.random().toString(36).substring(2, 5).toUpperCase();
+        const requestId = 'IR-' + timestamp + randomPart;
         
         const requestIdInput = document.createElement('input');
         requestIdInput.type = 'hidden';
