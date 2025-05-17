@@ -1,6 +1,65 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Customer Selection Modal -->
+<div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #000080; color: white;">
+        <h5 class="modal-title" id="customerSelectionModalLabel">Select Customer</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Search Bar -->
+        <div class="mb-3">
+          <div class="input-group">
+            <input type="text" id="customerSearchInput" class="form-control" placeholder="Search by name, email or ID...">
+            <button class="btn" style="background-color: #000080; color: white;" type="button" id="searchCustomerBtn">
+              <i class="fas fa-search"></i> Search
+            </button>
+          </div>
+        </div>
+        
+        <!-- Customer Table -->
+        <div class="table-responsive">
+          <table class="table table-hover" id="customerTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>ID</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.id }}</td>
+                <td>
+                  <button type="button" class="btn btn-sm customer-select-btn" style="background-color: #FF8C00; color: white;"
+                          data-id="{{ user.id }}" data-name="{{ user.username }}" data-email="{{ user.email }}">
+                    <i class="fas fa-check me-1"></i> Select
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- No Results Message -->
+        <div id="noCustomersFound" class="alert alert-info {% if users %}d-none{% endif %}">
+          <i class="fas fa-info-circle me-2"></i> No customers found matching your search.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 <style>
     .action-box {
         border-radius: 10px;
@@ -79,6 +138,10 @@
                 <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-warning btn-sm action-button">
                     <i class="fas fa-plus me-1"></i> New Booking
                 </a>
+                
+                <button type="button" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                    <i class="fas fa-user me-1"></i> Select Customer
+                </button>
                 
                 <a href="#" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                     <i class="fas fa-plus me-1"></i> Add Service
@@ -901,6 +964,83 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 <script>
+// Customer Selection Modal Functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Customer search functionality
+  const searchBtn = document.getElementById('searchCustomerBtn');
+  const searchInput = document.getElementById('customerSearchInput');
+  
+  if (searchBtn && searchInput) {
+    searchBtn.addEventListener('click', searchCustomers);
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchCustomers();
+        e.preventDefault();
+      }
+    });
+  }
+  
+  // Select customer buttons
+  const selectButtons = document.querySelectorAll('.customer-select-btn');
+  if (selectButtons) {
+    selectButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const customerId = this.getAttribute('data-id');
+        const customerName = this.getAttribute('data-name');
+        const customerEmail = this.getAttribute('data-email');
+        
+        // Update booking header with customer information
+        const bookingHeader = document.querySelector('.header-bar h4');
+        if (bookingHeader) {
+          bookingHeader.innerHTML = `<i class="fas fa-bookmark me-2" style="color: #FF8C00;"></i>Booking for ${customerName}`;
+        }
+        
+        // Update customer info section
+        const customerNameField = document.querySelector('.info-section p:nth-child(1) strong').nextSibling;
+        const customerEmailField = document.querySelector('.info-section p:nth-child(2) strong').nextSibling;
+        const customerIdField = document.querySelector('.info-section p:nth-child(3) strong').nextSibling;
+        
+        if (customerNameField) customerNameField.nodeValue = ` ${customerName}`;
+        if (customerEmailField) customerEmailField.nodeValue = ` ${customerEmail}`;
+        if (customerIdField) customerIdField.nodeValue = ` ${customerId}`;
+        
+        // Close the modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+        if (modal) modal.hide();
+        
+        // Show success notification
+        alert(`Customer ${customerName} selected successfully!`);
+      });
+    });
+  }
+  
+  function searchCustomers() {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const tableRows = document.querySelectorAll('#customerTable tbody tr');
+    let resultsFound = false;
+    
+    tableRows.forEach(row => {
+      const name = row.cells[0].textContent.toLowerCase();
+      const email = row.cells[1].textContent.toLowerCase();
+      const id = row.cells[2].textContent.toLowerCase();
+      
+      if (name.includes(searchTerm) || email.includes(searchTerm) || id.includes(searchTerm)) {
+        row.style.display = '';
+        resultsFound = true;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    
+    // Show/hide no results message
+    const noResultsMessage = document.getElementById('noCustomersFound');
+    if (noResultsMessage) {
+      noResultsMessage.classList.toggle('d-none', resultsFound);
+    }
+  }
+});
+
+// Original Payment Script
 // Initialize existing payment data if available
 {% if booking and booking.payments %}
 let paymentData = [
