@@ -32,12 +32,12 @@
     <!-- Left Sidebar with Action Buttons -->
     <div class="col-md-3 mb-4">
         <div class="card action-box">
-            <div class="card-header" style="background-color: #000080; color: white;">
-                <h5 class="mb-0"><i class="fas fa-bolt me-2" style="color: #FF8C00;"></i>Actions</h5>
+            <div class="card-header card-header-dark-blue">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2 icon-orange"></i>Actions</h5>
             </div>
             <div class="card-body">
-                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
-                    <i class="fas fa-plus-circle" style="color: #FF8C00;"></i> New Booking
+                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn action-button btn-tbp">
+                    <i class="fas fa-plus-circle icon-orange"></i> New Booking
                 </a>
                 
                 {% if booking %}
@@ -147,8 +147,8 @@
     <!-- Customer Information with Dark Blue Header -->
     <div class="col-md-6">
         <div class="card h-100">
-            <div class="card-header" style="background-color: #000080; color: white;">
-                <h5 class="mb-0"><i class="fas fa-user me-2" style="color: #FF8C00;"></i>Customer Information</h5>
+            <div class="card-header card-header-dark-blue">
+                <h5 class="mb-0"><i class="fas fa-user me-2 icon-orange"></i>Customer Information</h5>
             </div>
             <div class="card-body">
                 {% if not booking %}
