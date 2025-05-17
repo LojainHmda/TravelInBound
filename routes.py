@@ -145,7 +145,7 @@ def dashboard():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
     
     return render_template(
-        'dashboard_yellow_cards.html',
+        'yellow_dashboard.html',
         status_counts={
             'request': request_count,
             'booked': booked_count,
