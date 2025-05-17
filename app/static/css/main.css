@@ -1,7 +1,7 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #123E7A; /* Dark Blue */
-    --secondary-color: #FF7F00; /* Orange */
+    --primary-color: #000080; /* Dark Blue - updated */
+    --secondary-color: #FF8C00; /* Orange - updated */
     --button-color: #FFBF00; /* Yellow - main button color */
     --light-color: #ffffff; /* White */
     --text-dark: #333333;
@@ -10,7 +10,7 @@
     --background-color: #ffffff; /* White Background */
     
     /* Status Colors */
-    --status-request: #FF7F00; /* Orange */
+    --status-request: #FF8C00; /* Orange - updated */
     --status-invoice: #9c27b0; /* Purple */
     --status-in-progress: #0288d1; /* Blue */
     --status-completed: #43a047; /* Green */
@@ -417,6 +417,50 @@ body {
 .dashboard-icon:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* New Design System - Orange Icons/Dark Blue Text */
+.btn-tbp {
+    background-color: white;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+.btn-tbp:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-tbp-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.btn-tbp-primary:hover {
+    background-color: #000066;
+}
+
+.btn-tbp-danger {
+    background-color: white;
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.btn-tbp-danger:hover {
+    background-color: #f8f9fa;
+}
+
+.icon-orange {
+    color: var(--secondary-color);
+}
+
+.text-dark-blue {
+    color: var(--primary-color);
+}
+
+.card-header-dark-blue {
+    background-color: var(--primary-color);
+    color: white;
 }
 
 /* Media Queries */
