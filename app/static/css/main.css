@@ -1,22 +1,22 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #000080; /* Dark Blue - updated */
-    --secondary-color: #FF8C00; /* Orange - updated */
+    --primary-color: #f5f5f5; /* Light Gray */
+    --secondary-color: #FFBF00; /* Yellow */
     --button-color: #FFBF00; /* Yellow - main button color */
     --light-color: #ffffff; /* White */
     --text-dark: #333333;
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
-    --dashboard-bg-color: #222222; /* Very dark gray for dashboard - updated */
-    --dashboard-text-color: #ffffff; /* White text for dashboard - updated */
+    --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
+    --dashboard-text-color: #333333; /* Dark gray text for dashboard */
     --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
     
     /* Status Colors */
-    --status-request: #FF8C00; /* Orange - updated */
-    --status-invoice: #9c27b0; /* Purple */
-    --status-in-progress: #0288d1; /* Blue */
-    --status-completed: #43a047; /* Green */
+    --status-request: #FFBF00; /* Yellow */
+    --status-invoice: #FFBF00; /* Yellow */
+    --status-in-progress: #FFBF00; /* Yellow */
+    --status-completed: #FFBF00; /* Yellow */
 }
 
 /* General Styles */

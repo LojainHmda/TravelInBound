@@ -18,7 +18,7 @@
     <div class="row mb-4 px-2">
         <!-- Requests Widget -->
         <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #444444; color: #ffffff; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('REQUEST')">
+            <div class="card shadow-sm dashboard-card" style="background-color: #f0f0f0; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('REQUEST')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -35,7 +35,7 @@
         
         <!-- Booked Widget -->
         <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #444444; color: #ffffff; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('BOOKED')">
+            <div class="card shadow-sm dashboard-card" style="background-color: #f0f0f0; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('BOOKED')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -52,7 +52,7 @@
         
         <!-- In Progress Widget -->
         <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #444444; color: #ffffff; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('IN_PROGRESS')">
+            <div class="card shadow-sm dashboard-card" style="background-color: #f0f0f0; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('IN_PROGRESS')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -69,7 +69,7 @@
         
         <!-- Fulfilled Widget -->
         <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #444444; color: #ffffff; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('FULFILLED')">
+            <div class="card shadow-sm dashboard-card" style="background-color: #f0f0f0; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('FULFILLED')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -86,8 +86,8 @@
     </div>
     
     <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #000080; color: #ffffff;">
-            <h5 class="mb-0" id="bookingTableTitle"><i class="fas fa-list-alt me-2" style="color: #FFBF00;"></i>Recent Bookings</h5>
+        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #FFBF00; color: #333333;">
+            <h5 class="mb-0" id="bookingTableTitle"><i class="fas fa-list-alt me-2" style="color: #333333;"></i>Recent Bookings</h5>
             <button id="resetFilterBtn" class="btn btn-sm" onclick="filterBookings('')" style="display: none; background-color: white; color: #000080; border: none;">
                 <i class="fas fa-times me-1"></i>Clear Filter
             </button>
@@ -135,8 +135,8 @@
     <!-- Booking Detail Panel -->
     <div id="booking-detail-panel" class="mb-4" style="display: none;">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #222222; color: #ffffff;">
-                <h5 class="mb-0"><i class="fas fa-info-circle me-2" style="color: #FFBF00;"></i>Booking Reference: <span id="detail-reference"></span></h5>
+            <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #FFBF00; color: #333333;">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2" style="color: #333333;"></i>Booking Reference: <span id="detail-reference"></span></h5>
                 <span id="detail-status" class="badge ms-2" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;"></span>
             </div>
             <div class="card-body p-0">
@@ -186,8 +186,8 @@
     </div>
     
     <div class="card">
-        <div class="card-header" style="background-color: #222222; color: #ffffff;">
-            <h5 class="mb-0"><i class="fas fa-briefcase me-2" style="color: #FFBF00;"></i>Service Items</h5>
+        <div class="card-header" style="background-color: #FFBF00; color: #333333;">
+            <h5 class="mb-0"><i class="fas fa-briefcase me-2" style="color: #333333;"></i>Service Items</h5>
         </div>
         
         <div class="card-body p-0">
