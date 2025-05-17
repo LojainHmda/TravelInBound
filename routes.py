@@ -113,6 +113,7 @@ def dashboard():
     )
 
 @app.route('/operations')
+@login_required
 def operations_dashboard():
     """View for the travel operations dashboard"""
     # Get counts for each service type
