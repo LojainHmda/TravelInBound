@@ -31,9 +31,9 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--button-color);
-    border-color: var(--button-color);
-    color: #000000;
+    background-color: #FFBF00; /* Yellow */
+    border-color: #FFBF00;
+    color: #000000; /* Black text */
 }
 
 .text-orange {
