@@ -16,14 +16,13 @@
     <div class="row mb-4">
         <!-- Flight Bookings Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('FLIGHT')">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('FLIGHT')">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-plane fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Flight Bookings</h5>
-                    <p class="mb-0">Arrange domestic and international flights with comprehensive itinerary tracking</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <h5 class="card-title fw-bold mb-2">Flight Bookings</h5>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ flight_count }} Active
                     </div>
                 </div>
@@ -32,14 +31,13 @@
 
         <!-- Hotel Accommodations Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('HOTEL')">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('HOTEL')">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-hotel fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Hotel Accommodations</h5>
-                    <p class="mb-0">Book rooms at partner hotels worldwide with special corporate rates</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <h5 class="card-title fw-bold mb-2">Hotel Accommodations</h5>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ hotel_count }} Active
                     </div>
                 </div>
@@ -48,14 +46,13 @@
 
         <!-- Transport Services Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('TRANSPORT')">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('TRANSPORT')">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-taxi fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Transport Services</h5>
-                    <p class="mb-0">Arrange airport transfers, car rentals, and other ground transportation options</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <h5 class="card-title fw-bold mb-2">Transport Services</h5>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ transport_count }} Active
                     </div>
                 </div>
@@ -64,14 +61,13 @@
 
         <!-- Visa Processing Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('VISA')">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('VISA')">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-passport fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Visa Processing</h5>
-                    <p class="mb-0">Handle visa applications and documentation for international travel</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <h5 class="card-title fw-bold mb-2">Visa Processing</h5>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ visa_count }} Active
                     </div>
                 </div>
@@ -80,14 +76,13 @@
 
         <!-- Travel Insurance Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('INSURANCE')">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('INSURANCE')">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-shield-alt fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">Travel Insurance</h5>
-                    <p class="mb-0">Provide comprehensive travel insurance coverage for all trips</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                    <h5 class="card-title fw-bold mb-2">Travel Insurance</h5>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ insurance_count }} Active
                     </div>
                 </div>
@@ -96,18 +91,15 @@
 
         <!-- Add Service Button Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%;">
-                <div class="card-body text-center py-4 d-flex flex-column justify-content-center">
-                    <div class="mb-3">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px;">
+                <div class="card-body text-center py-3">
+                    <div class="mb-2">
                         <i class="fas fa-plus-circle fa-3x"></i>
                     </div>
-                    <h5 class="card-title fw-bold">New Booking</h5>
-                    <p class="mb-0">Create a new booking request for any service</p>
-                    <div class="mt-4">
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-lg" style="background-color: #00008B; color: #FFEB99;">
-                            Create
-                        </a>
-                    </div>
+                    <h5 class="card-title fw-bold mb-3">New Booking</h5>
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn" style="background-color: #00008B; color: #FFEB99; padding: 0.5rem 1.5rem;">
+                        Create
+                    </a>
                 </div>
             </div>
         </div>
