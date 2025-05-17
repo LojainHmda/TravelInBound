@@ -125,6 +125,12 @@ def index():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
     return render_template('index.html', bookings=recent_bookings)
 
+# Yellow Menu with Gradient Cards
+@app.route('/menu')
+def yellow_menu():
+    """Display the main menu with yellow gradient cards"""
+    return render_template('yellow_menu.html')
+
 @app.route('/yellow')
 def yellow_cards():
     """Direct route to view the yellow gradient cards"""
