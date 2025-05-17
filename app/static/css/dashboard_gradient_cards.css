@@ -1,0 +1,92 @@
+/* Dashboard Gradient Cards */
+
+.dashboard-count-card {
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 24px;
+    position: relative;
+    height: 100%;
+    min-height: 120px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.dashboard-count-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-count-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-count-card .card-count {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-count-card .card-icon {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 3rem;
+    opacity: 0.15;
+    color: #000;
+    z-index: 1;
+}
+
+/* Card Variations with Yellow Gradients */
+
+.card-requests {
+    background: linear-gradient(45deg, #F5F5F5, #E5E5E5);
+    color: #333;
+}
+
+.card-requests .card-icon {
+    color: #555;
+}
+
+.card-booked {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #fff;
+}
+
+.card-booked .card-title,
+.card-booked .card-count {
+    color: #333;
+}
+
+.card-in-progress {
+    background: linear-gradient(45deg, #FFA500, #FF8C00);
+    color: #fff;
+}
+
+.card-in-progress .card-title,
+.card-in-progress .card-count {
+    color: #fff;
+}
+
+.card-fulfilled {
+    background: linear-gradient(45deg, #32CD32, #228B22);
+    color: #fff;
+}
+
+.card-fulfilled .card-title,
+.card-fulfilled .card-count {
+    color: #fff;
+}
