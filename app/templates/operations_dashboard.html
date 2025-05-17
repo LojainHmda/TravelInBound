@@ -22,7 +22,7 @@
                         <i class="fas fa-plane" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Flight Bookings</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         {{ flight_count }} Active
                     </div>
                 </div>
@@ -37,7 +37,7 @@
                         <i class="fas fa-hotel" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Hotel Accommodations</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         {{ hotel_count }} Active
                     </div>
                 </div>
@@ -52,7 +52,7 @@
                         <i class="fas fa-taxi" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Transport Services</h6>
-                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         {{ transport_count }} Active
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                         <i class="fas fa-passport" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Visa Processing</h6>
-                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         {{ visa_count }} Active
                     </div>
                 </div>
@@ -82,7 +82,7 @@
                         <i class="fas fa-shield-alt" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Travel Insurance</h6>
-                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         {{ insurance_count }} Active
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                         <i class="fas fa-plus-circle" style="color: #FFC107; font-size: 1.5rem;"></i>
                     </div>
                     <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">New Booking</h6>
-                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-sm" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-sm" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border: 1px solid #FFC107;">
                         Create
                     </a>
                 </div>
@@ -143,20 +143,20 @@
                                         <td>{{ booking.reference_number }}</td>
                                         <td>{{ booking.requester.username }}</td>
                                         <td>
-                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
+                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #FFC107;">
                                                 {{ item.service_type }}
                                             </span>
                                         </td>
                                         <td>{{ item.description }}</td>
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>
-                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
+                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #FFC107;">
                                                 {{ item.status }}
                                             </span>
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #000080; border: 1px solid #000080; margin-right: 5px;">
+                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #000080; border: 1px solid #FFC107; margin-right: 5px;">
                                                     <i class="fas fa-eye" style="color: #FFC107;"></i> View
                                                 </a>
                                                 {% if item.status == 'REQUEST' %}
