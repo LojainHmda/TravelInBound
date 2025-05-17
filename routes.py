@@ -125,6 +125,33 @@ def index():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
     return render_template('index.html', bookings=recent_bookings)
 
+# Yellow Cards Dashboard 
+@app.route('/yellow-cards')
+def yellow_cards_dashboard():
+    # Get counts for each status
+    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
+    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
+    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
+    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
+    
+    return render_template(
+        'yellow_dashboard.html',
+        status_counts={
+            'request': request_count,
+            'booked': booked_count,
+            'in_progress': in_progress_count,
+            'completed': completed_count
+        },
+        recent_bookings=Booking.query.order_by(Booking.created_at.desc()).limit(10).all(),
+        service_items={
+            'flight': ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).order_by(ServiceItem.created_at.desc()).limit(5).all(),
+            'hotel': ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).order_by(ServiceItem.created_at.desc()).limit(5).all(),
+            'transport': ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all(),
+            'visa': ServiceItem.query.filter_by(service_type=SERVICE_VISA).all(),
+            'insurance': ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
+        }
+    )
+
 # Dashboard
 @app.route('/dashboard')
 def dashboard():
