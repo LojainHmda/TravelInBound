@@ -18,57 +18,97 @@
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stat-card bg-request text-white">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.request }}</h3>
-                    <p>Requests</p>
-                </div>
-            </div>
+<style>
+/* Yellow dashboard cards styling */
+.status-cards-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+.status-card {
+    flex: 1;
+    text-align: center;
+    padding: 20px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.status-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: #444;
+}
+
+.status-count {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 10px 0;
+    color: #333;
+}
+
+.status-icon {
+    font-size: 20px;
+    margin-top: 8px;
+    color: #555;
+    opacity: 0.7;
+}
+
+/* Yellow Card gradients */
+.card-requests {
+    background: linear-gradient(to bottom, #fff9e6, #ffe082);
+}
+
+.card-booked {
+    background: linear-gradient(to bottom, #fff8dd, #ffd761);
+}
+
+.card-in-progress {
+    background: linear-gradient(to bottom, #fff8d1, #ffcf3d);
+}
+
+.card-completed {
+    background: linear-gradient(to bottom, #f0f7d3, #cde58f);
+}
+</style>
+
+<!-- Yellow Status Cards Row -->
+<div class="status-cards-row">
+    <!-- Requests Card -->
+    <div class="status-card card-requests">
+        <div class="status-title">Requests</div>
+        <div class="status-count">{{ status_counts.request }}</div>
+        <div class="status-icon">
+            <i class="fas fa-clipboard-list"></i>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card bg-invoice text-white">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.invoice }}</h3>
-                    <p>Invoices</p>
-                </div>
-            </div>
+    
+    <!-- Booked Card -->
+    <div class="status-card card-booked">
+        <div class="status-title">Booked</div>
+        <div class="status-count">{{ status_counts.booked }}</div>
+        <div class="status-icon">
+            <i class="fas fa-bookmark"></i>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card bg-in-progress text-white">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-spinner"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.in_progress }}</h3>
-                    <p>In Progress</p>
-                </div>
-            </div>
+    
+    <!-- In Progress Card -->
+    <div class="status-card card-in-progress">
+        <div class="status-title">In Progress</div>
+        <div class="status-count">{{ status_counts.in_progress }}</div>
+        <div class="status-icon">
+            <i class="fas fa-spinner"></i>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card bg-completed text-white">
-            <div class="stat-card-body">
-                <div class="stat-card-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="stat-card-info">
-                    <h3>{{ status_counts.completed }}</h3>
-                    <p>Completed</p>
-                </div>
-            </div>
+    
+    <!-- Completed Card -->
+    <div class="status-card card-completed">
+        <div class="status-title">Fulfilled</div>
+        <div class="status-count">{{ status_counts.completed }}</div>
+        <div class="status-icon">
+            <i class="fas fa-check-circle"></i>
         </div>
     </div>
 </div>
