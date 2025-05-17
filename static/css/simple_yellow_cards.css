@@ -1,0 +1,94 @@
+/* Simple Yellow Gradient Dashboard Cards */
+
+.dashboard-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.status-card {
+    flex: 1;
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.status-count {
+    font-size: 42px;
+    font-weight: 700;
+    margin: 10px 0;
+    color: #333;
+}
+
+.status-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    color: #555;
+}
+
+.status-icon {
+    font-size: 22px;
+    color: #555;
+    opacity: 0.7;
+}
+
+/* Card Background Colors */
+.card-yellow {
+    background: linear-gradient(135deg, #fff9e6 0%, #ffe082 100%);
+}
+
+.card-yellow .status-count {
+    color: #b17e00;
+}
+
+.card-yellow .status-title {
+    color: #705000;
+}
+
+.card-yellow .status-icon {
+    color: #705000;
+}
+
+/* Card Background Colors - Custom shades for each status */
+.card-requests {
+    background: linear-gradient(135deg, #fff9e6 0%, #ffe082 100%);
+}
+
+.card-booked {
+    background: linear-gradient(135deg, #fff8dd 0%, #ffd761 100%);
+}
+
+.card-in-progress {
+    background: linear-gradient(135deg, #fff8d1 0%, #ffcf3d 100%);
+}
+
+.card-fulfilled {
+    background: linear-gradient(135deg, #f0f7d3 0%, #cde58f 100%);
+}
+
+/* Icon styles */
+.icon-requests {
+    color: #705000;
+}
+
+.icon-booked {
+    color: #6c5000;
+}
+
+.icon-in-progress {
+    color: #664b00;
+}
+
+.icon-fulfilled {
+    color: #4a5c24;
+}
