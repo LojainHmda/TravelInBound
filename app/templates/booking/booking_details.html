@@ -325,12 +325,12 @@
                                 <td>${{ "%.2f"|format(item.amount) }}</td>
                                 <td>
                                     {% if item.is_cancelled %}
-                                    <span class="badge bg-danger" style="display: inline-block; min-width: 80px; text-align: center;">CANCELLED</span>
+                                    <span class="badge btn-tbp-danger" style="display: inline-block; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.3rem 0.6rem;">CANCELLED</span>
                                     {% if item.credit_memo_number %}
-                                    <span class="badge bg-secondary mt-1" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.credit_memo_number }}</span>
+                                    <span class="badge text-dark-blue mt-1" style="background-color: #F2F2F2; display: inline-block; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid var(--primary-color);">{{ item.credit_memo_number }}</span>
                                     {% endif %}
                                     {% else %}
-                                    <span class="badge" style="background-color: #F2F2F2; color: #000080; display: inline-block; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">{{ item.status }}</span>
+                                    <span class="badge text-dark-blue" style="background-color: #F2F2F2; display: inline-block; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid var(--primary-color);">{{ item.status }}</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -344,19 +344,19 @@
                                             </button>
                                         {% elif conf_doc %}
                                             <!-- For confirmed items with documentation -->
-                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: white; color: #000080; border: 1px solid #000080;">
-                                                <i class="fas fa-eye me-1" style="color: #FF8C00;"></i>View
+                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1 btn-tbp">
+                                                <i class="fas fa-eye me-1 icon-orange"></i>View
                                             </a>
                                         {% else %}
                                             <!-- For items needing confirmation -->
-                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #000080; color: white; border: none;">
-                                                <i class="fas fa-cogs me-1" style="color: #FF8C00;"></i>Confirm
+                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1 btn-tbp-primary">
+                                                <i class="fas fa-cogs me-1 icon-orange"></i>Confirm
                                             </a>
                                         {% endif %}
                                         
                                         <div class="dropdown">
-                                            <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" style="background-color: white; color: #000080; border: 1px solid #000080;">
-                                                <i class="fas fa-ellipsis-h" style="color: #FF8C00;"></i> More
+                                            <button class="btn btn-sm dropdown-toggle btn-tbp" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-h icon-orange"></i> More
                                             </button>
                                             <ul class="dropdown-menu">
 
