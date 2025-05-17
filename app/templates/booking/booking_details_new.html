@@ -32,14 +32,14 @@
               </tr>
             </thead>
             <tbody>
-              {% for user in users %}
+              {% for customer in customers %}
               <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.id }}</td>
+                <td>{{ customer.name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.id }}</td>
                 <td>
                   <button type="button" class="btn btn-sm customer-select-btn" style="background-color: #FF8C00; color: white;"
-                          data-id="{{ user.id }}" data-name="{{ user.username }}" data-email="{{ user.email }}">
+                          data-id="{{ customer.id }}" data-name="{{ customer.name }}" data-email="{{ customer.email }}">
                     <i class="fas fa-check me-1"></i> Select
                   </button>
                 </td>
@@ -989,6 +989,61 @@ document.addEventListener('DOMContentLoaded', function() {
         const customerName = this.getAttribute('data-name');
         const customerEmail = this.getAttribute('data-email');
         
+        // Create a hidden form to submit customer selection
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/booking/create-from-detail';
+        form.style.display = 'none';
+        
+        // Add the customer ID
+        const customerInput = document.createElement('input');
+        customerInput.type = 'hidden';
+        customerInput.name = 'customer';
+        customerInput.value = customerId;
+        form.appendChild(customerInput);
+        
+        // Add the request ID if available
+        const requestIdElement = document.querySelector('.header-bar h4');
+        let requestId = '';
+        if (requestIdElement) {
+          const text = requestIdElement.textContent;
+          const match = text.match(/#([A-Z0-9-]+)/);
+          if (match && match[1]) {
+            requestId = match[1];
+          }
+        }
+        
+        if (!requestId) {
+          // Try to get it from the URL
+          const urlParams = new URLSearchParams(window.location.search);
+          requestId = urlParams.get('request_id') || '';
+        }
+        
+        if (!requestId) {
+          // Generate a default request ID
+          requestId = 'IR-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+        }
+        
+        const requestIdInput = document.createElement('input');
+        requestIdInput.type = 'hidden';
+        requestIdInput.name = 'request_id';
+        requestIdInput.value = requestId;
+        form.appendChild(requestIdInput);
+        
+        // Add CSRF token if needed
+        const csrfToken = document.querySelector('meta[name="csrf-token"]');
+        if (csrfToken) {
+          const csrfInput = document.createElement('input');
+          csrfInput.type = 'hidden';
+          csrfInput.name = 'csrf_token';
+          csrfInput.value = csrfToken.getAttribute('content');
+          form.appendChild(csrfInput);
+        }
+        
+        // Add the form to the document and submit it
+        document.body.appendChild(form);
+        
+        // Update UI before submitting
         // Update booking header with customer information
         const bookingHeader = document.querySelector('.header-bar h4');
         if (bookingHeader) {
@@ -996,20 +1051,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Update customer info section
-        const customerNameField = document.querySelector('.info-section p:nth-child(1) strong').nextSibling;
-        const customerEmailField = document.querySelector('.info-section p:nth-child(2) strong').nextSibling;
-        const customerIdField = document.querySelector('.info-section p:nth-child(3) strong').nextSibling;
-        
-        if (customerNameField) customerNameField.nodeValue = ` ${customerName}`;
-        if (customerEmailField) customerEmailField.nodeValue = ` ${customerEmail}`;
-        if (customerIdField) customerIdField.nodeValue = ` ${customerId}`;
+        try {
+          const customerNameField = document.querySelector('.info-section p:nth-child(1) strong').nextSibling;
+          const customerEmailField = document.querySelector('.info-section p:nth-child(2) strong').nextSibling;
+          const customerIdField = document.querySelector('.info-section p:nth-child(3) strong').nextSibling;
+          
+          if (customerNameField) customerNameField.nodeValue = ` ${customerName}`;
+          if (customerEmailField) customerEmailField.nodeValue = ` ${customerEmail}`;
+          if (customerIdField) customerIdField.nodeValue = ` ${customerId}`;
+        } catch (e) {
+          console.log('Error updating customer info fields:', e);
+        }
         
         // Close the modal
         const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
         if (modal) modal.hide();
         
         // Show success notification
-        alert(`Customer ${customerName} selected successfully!`);
+        alert(`Customer ${customerName} selected successfully! Creating booking...`);
+        
+        // Submit the form to create the booking
+        form.submit();
       });
     });
   }
