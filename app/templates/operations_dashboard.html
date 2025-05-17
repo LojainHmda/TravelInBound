@@ -109,14 +109,14 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header" style="background-color: #FFEB99; color: #00008B;">
+                <div class="card-header" style="background-color: #000080; color: white;">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Service Items</h5>
                         <div>
-                            <button id="showAllItems" class="btn btn-sm" style="background-color: #00008B; color: #FFEB99;">
+                            <button id="showAllItems" class="btn btn-sm" style="background-color: white; color: #000080; border: none;">
                                 Show All
                             </button>
-                            <span id="currentFilter" class="ms-2 badge rounded-pill" style="background-color: #FFEB99; color: #00008B; display: none;">
+                            <span id="currentFilter" class="ms-2 badge rounded-pill" style="background-color: white; color: #000080; display: none;">
                                 Showing: <span id="filterType"></span>
                             </span>
                         </div>
@@ -143,24 +143,24 @@
                                         <td>{{ booking.reference_number }}</td>
                                         <td>{{ booking.requester.username }}</td>
                                         <td>
-                                            <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
                                                 {{ item.service_type }}
                                             </span>
                                         </td>
                                         <td>{{ item.description }}</td>
                                         <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
                                         <td>
-                                            <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                                            <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
                                                 {{ item.status }}
                                             </span>
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: #FFEB99; color: #00008B; margin-right: 5px;">
+                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #000080; border: 1px solid #000080; margin-right: 5px;">
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
                                                 {% if item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="btn btn-sm" style="background-color: #00008B; color: #FFEB99;">
+                                                <a href="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="btn btn-sm" style="background-color: #000080; color: white;">
                                                     <i class="fas fa-check"></i> Confirm
                                                 </a>
                                                 {% endif %}
@@ -181,7 +181,7 @@
     <div class="row mt-4">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header" style="background-color: #FFEB99; color: #00008B;">
+                <div class="card-header" style="background-color: #000080; color: white;">
                     <h5 class="mb-0">Recent Booking Requests</h5>
                 </div>
                 <div class="card-body">
@@ -204,18 +204,18 @@
                                     <td>{{ booking.requester.username }}</td>
                                     <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
-                                        <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                                        <span class="badge" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
                                             {{ booking.status }}
                                         </span>
                                     </td>
                                     <td>
                                         {% for item in booking.service_items %}
-                                        <span class="badge me-1" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.25rem 0.5rem;">{{ item.service_type }}</span>
+                                        <span class="badge me-1" style="background-color: #F2F2F2; color: #000080; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">{{ item.service_type }}</span>
                                         {% endfor %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: #FFEB99; color: #00008B;">
-                                            <i class="fas fa-eye"></i> View
+                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #000080; border: 1px solid #000080;">
+                                            <i class="fas fa-eye" style="color: #FF8C00;"></i> View
                                         </a>
                                     </td>
                                 </tr>
