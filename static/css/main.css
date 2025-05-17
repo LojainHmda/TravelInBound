@@ -1,12 +1,12 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #b4b7bb; /* Dark Blue */
-    --secondary-color: #cbc9c3; /* Yellow */
+    --primary-color: #444444; /* Dark Gray */
+    --secondary-color: #FFBF00; /* Yellow */
     --light-color: #ffffff; /* White */
-    --text-dark: #333333;
+    --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;
-    --border-color: #dee2e6;
-    --background-color: #ffffff; /* White Background */
+    --border-color: #555555;
+    --background-color: #333333; /* Dark Gray Background */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */

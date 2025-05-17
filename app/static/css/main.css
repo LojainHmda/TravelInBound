@@ -8,6 +8,9 @@
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
+    --dashboard-bg-color: #444444; /* Dark gray for dashboard */
+    --dashboard-text-color: #000000; /* Black text for dashboard */
+    --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
     
     /* Status Colors */
     --status-request: #FF8C00; /* Orange - updated */
@@ -297,6 +300,8 @@ body {
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     margin-bottom: 1rem;
+    background-color: var(--dashboard-bg-color);
+    color: var(--dashboard-text-color);
 }
 
 .stat-card-body {
@@ -315,17 +320,20 @@ body {
     height: 60px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.2);
+    color: var(--dashboard-icon-color);
 }
 
 .stat-card-info h3 {
     font-size: 2rem;
     font-weight: bold;
     margin-bottom: 0;
+    color: var(--dashboard-text-color);
 }
 
 .stat-card-info p {
     margin-bottom: 0;
     opacity: 0.8;
+    color: var(--dashboard-text-color);
 }
 
 .bg-request {
@@ -412,11 +420,46 @@ body {
     justify-content: center;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     transition: all 0.3s ease;
+    color: var(--dashboard-icon-color) !important;
 }
 
 .dashboard-icon:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* Dashboard styles */
+.dashboard-container {
+    background-color: var(--dashboard-bg-color);
+    color: var(--dashboard-text-color);
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.dashboard-card {
+    background-color: #555555;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.dashboard-card .card-body {
+    color: var(--dashboard-text-color);
+}
+
+.dashboard-title {
+    color: var(--dashboard-text-color);
+    border-bottom: 2px solid var(--dashboard-icon-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.dashboard-text {
+    color: var(--dashboard-text-color);
+}
+
+.dashboard-icon-color {
+    color: var(--dashboard-icon-color) !important;
 }
 
 /* New Design System - Orange Icons/Dark Blue Text */
