@@ -16,13 +16,13 @@
     <div class="row mb-4">
         <!-- Flight Bookings Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 8px; cursor: pointer;" onclick="filterServiceItems('FLIGHT')">
+            <div class="card shadow-sm" style="background-color: white; color: #00008B; border-radius: 8px; cursor: pointer;" onclick="filterServiceItems('FLIGHT')">
                 <div class="card-body text-center p-2">
-                    <div class="mb-1">
-                        <i class="fas fa-plane fa-lg"></i>
+                    <div class="mb-2">
+                        <i class="fas fa-plane" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-1" style="font-size: 0.9rem;">Flight Bookings</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Flight Bookings</h6>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         {{ flight_count }} Active
                     </div>
                 </div>
@@ -31,13 +31,13 @@
 
         <!-- Hotel Accommodations Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 8px; cursor: pointer;" onclick="filterServiceItems('HOTEL')">
+            <div class="card shadow-sm" style="background-color: white; color: #00008B; border-radius: 8px; cursor: pointer;" onclick="filterServiceItems('HOTEL')">
                 <div class="card-body text-center p-2">
-                    <div class="mb-1">
-                        <i class="fas fa-hotel fa-lg"></i>
+                    <div class="mb-2">
+                        <i class="fas fa-hotel" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-1" style="font-size: 0.9rem;">Hotel Accommodations</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Hotel Accommodations</h6>
+                    <div class="badge rounded-pill" style="background-color: #00008B; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         {{ hotel_count }} Active
                     </div>
                 </div>
@@ -46,13 +46,13 @@
 
         <!-- Transport Services Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('TRANSPORT')">
-                <div class="card-body text-center py-2">
-                    <div class="mb-1">
-                        <i class="fas fa-taxi fa-2x"></i>
+            <div class="card shadow-sm" style="background-color: white; color: #000080; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('TRANSPORT')">
+                <div class="card-body text-center p-2">
+                    <div class="mb-2">
+                        <i class="fas fa-taxi" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-1">Transport Services</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.75rem; padding: 0.3rem 0.8rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Transport Services</h6>
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         {{ transport_count }} Active
                     </div>
                 </div>
@@ -61,13 +61,13 @@
 
         <!-- Visa Processing Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('VISA')">
-                <div class="card-body text-center py-2">
-                    <div class="mb-1">
-                        <i class="fas fa-passport fa-2x"></i>
+            <div class="card shadow-sm" style="background-color: white; color: #000080; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('VISA')">
+                <div class="card-body text-center p-2">
+                    <div class="mb-2">
+                        <i class="fas fa-passport" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-1">Visa Processing</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.75rem; padding: 0.3rem 0.8rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Visa Processing</h6>
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         {{ visa_count }} Active
                     </div>
                 </div>
@@ -76,13 +76,13 @@
 
         <!-- Travel Insurance Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('INSURANCE')">
-                <div class="card-body text-center py-2">
-                    <div class="mb-1">
-                        <i class="fas fa-shield-alt fa-2x"></i>
+            <div class="card shadow-sm" style="background-color: white; color: #000080; border-radius: 10px; cursor: pointer;" onclick="filterServiceItems('INSURANCE')">
+                <div class="card-body text-center p-2">
+                    <div class="mb-2">
+                        <i class="fas fa-shield-alt" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-1">Travel Insurance</h6>
-                    <div class="badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.75rem; padding: 0.3rem 0.8rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">Travel Insurance</h6>
+                    <div class="badge rounded-pill" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         {{ insurance_count }} Active
                     </div>
                 </div>
@@ -91,13 +91,13 @@
 
         <!-- Add Service Button Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px;">
-                <div class="card-body text-center py-2">
-                    <div class="mb-1">
-                        <i class="fas fa-plus-circle fa-2x"></i>
+            <div class="card shadow-sm" style="background-color: white; color: #000080; border-radius: 10px;">
+                <div class="card-body text-center p-2">
+                    <div class="mb-2">
+                        <i class="fas fa-plus-circle" style="color: #FF8C00; font-size: 1.5rem;"></i>
                     </div>
-                    <h6 class="card-title fw-bold mb-2">New Booking</h6>
-                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-sm" style="background-color: #00008B; color: #FFEB99; padding: 0.25rem 1rem;">
+                    <h6 class="card-title fw-bold mb-2" style="font-size: 0.9rem;">New Booking</h6>
+                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-sm" style="background-color: #000080; color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem;">
                         Create
                     </a>
                 </div>

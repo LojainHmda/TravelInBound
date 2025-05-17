@@ -1,0 +1,115 @@
+:root {
+    --primary-color: #000080; /* Dark blue for text */
+    --icon-color: #FF8C00; /* Orange for icons */
+    --background-color: #F2F2F2; /* Light grey for cards */
+    --text-color: #000080; /* Blue text */
+    --card-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #3A7BFF; /* Lighter blue for text in dark mode */
+        --icon-color: #FF9F45; /* Brighter orange for icons in dark mode */
+        --background-color: #3A3A3A; /* Darker grey for cards in dark mode */
+        --text-color: #ffffff;
+        --card-shadow: rgba(0, 0, 0, 0.3);
+    }
+    body {
+        background-color: #181818;
+    }
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card {
+    background-color: var(--background-color);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    box-shadow: 0 2px 4px var(--card-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px var(--card-shadow);
+}
+
+.icon {
+    font-size: 30px;
+    margin-bottom: 10px;
+    color: var(--icon-color);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.status {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.create-button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.create-button:hover {
+    background-color: #0000b3;
+}
+
+/* Icons */
+.icon svg {
+    width: 100%;
+    height: 100%;
+    fill: var(--icon-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+}
