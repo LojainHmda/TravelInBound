@@ -16,14 +16,14 @@
     <div class="row mb-4">
         <!-- Flight Bookings Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('FLIGHT')">
                 <div class="card-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-plane fa-3x"></i>
                     </div>
                     <h5 class="card-title fw-bold">Flight Bookings</h5>
                     <p class="mb-0">Arrange domestic and international flights with comprehensive itinerary tracking</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 1rem;">
+                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ flight_count }} Active
                     </div>
                 </div>
@@ -32,14 +32,14 @@
 
         <!-- Hotel Accommodations Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('HOTEL')">
                 <div class="card-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-hotel fa-3x"></i>
                     </div>
                     <h5 class="card-title fw-bold">Hotel Accommodations</h5>
                     <p class="mb-0">Book rooms at partner hotels worldwide with special corporate rates</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 1rem;">
+                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ hotel_count }} Active
                     </div>
                 </div>
@@ -48,14 +48,14 @@
 
         <!-- Transport Services Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('TRANSPORT')">
                 <div class="card-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-taxi fa-3x"></i>
                     </div>
                     <h5 class="card-title fw-bold">Transport Services</h5>
                     <p class="mb-0">Arrange airport transfers, car rentals, and other ground transportation options</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 1rem;">
+                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ transport_count }} Active
                     </div>
                 </div>
@@ -64,14 +64,14 @@
 
         <!-- Visa Processing Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('VISA')">
                 <div class="card-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-passport fa-3x"></i>
                     </div>
                     <h5 class="card-title fw-bold">Visa Processing</h5>
                     <p class="mb-0">Handle visa applications and documentation for international travel</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 1rem;">
+                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ visa_count }} Active
                     </div>
                 </div>
@@ -80,14 +80,14 @@
 
         <!-- Travel Insurance Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%; cursor: pointer;" onclick="filterServiceItems('INSURANCE')">
                 <div class="card-body text-center py-4">
                     <div class="mb-3">
                         <i class="fas fa-shield-alt fa-3x"></i>
                     </div>
                     <h5 class="card-title fw-bold">Travel Insurance</h5>
                     <p class="mb-0">Provide comprehensive travel insurance coverage for all trips</p>
-                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFD700; font-size: 1rem;">
+                    <div class="mt-3 badge rounded-pill" style="background-color: #00008B; color: #FFEB99; font-size: 0.85rem; padding: 0.5rem 1rem;">
                         {{ insurance_count }} Active
                     </div>
                 </div>
@@ -96,7 +96,7 @@
 
         <!-- Add Service Button Card -->
         <div class="col-md-4 mb-4">
-            <div class="card shadow-sm" style="background-color: #FFD700; color: #00008B; border-radius: 10px; height: 100%;">
+            <div class="card shadow-sm" style="background-color: #FFEB99; color: #00008B; border-radius: 10px; height: 100%;">
                 <div class="card-body text-center py-4 d-flex flex-column justify-content-center">
                     <div class="mb-3">
                         <i class="fas fa-plus-circle fa-3x"></i>
@@ -104,7 +104,7 @@
                     <h5 class="card-title fw-bold">New Booking</h5>
                     <p class="mb-0">Create a new booking request for any service</p>
                     <div class="mt-4">
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-lg" style="background-color: #00008B; color: #FFD700;">
+                        <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-lg" style="background-color: #00008B; color: #FFEB99;">
                             Create
                         </a>
                     </div>
@@ -113,11 +113,83 @@
         </div>
     </div>
 
-    <!-- Recent Booking Requests Table -->
+    <!-- Service Items Table -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header" style="background-color: #FFD700; color: #00008B;">
+                <div class="card-header" style="background-color: #FFEB99; color: #00008B;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Service Items</h5>
+                        <div>
+                            <button id="showAllItems" class="btn btn-sm" style="background-color: #00008B; color: #FFEB99;">
+                                Show All
+                            </button>
+                            <span id="currentFilter" class="ms-2 badge rounded-pill" style="background-color: #FFEB99; color: #00008B; display: none;">
+                                Showing: <span id="filterType"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="serviceItemsTable">
+                            <thead>
+                                <tr>
+                                    <th>Reference</th>
+                                    <th>Customer</th>
+                                    <th>Service Type</th>
+                                    <th>Description</th>
+                                    <th>Date Range</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in recent_bookings %}
+                                    {% for item in booking.service_items %}
+                                    <tr class="service-item" data-service-type="{{ item.service_type }}">
+                                        <td>{{ booking.reference_number }}</td>
+                                        <td>{{ booking.requester.username }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                                                {{ item.service_type }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ item.start_date.strftime('%Y-%m-%d') }} to {{ item.end_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
+                                                {{ item.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: #FFEB99; color: #00008B; margin-right: 5px;">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                                {% if item.status == 'REQUEST' %}
+                                                <a href="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="btn btn-sm" style="background-color: #00008B; color: #FFEB99;">
+                                                    <i class="fas fa-check"></i> Confirm
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Booking Requests Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header" style="background-color: #FFEB99; color: #00008B;">
                     <h5 class="mb-0">Recent Booking Requests</h5>
                 </div>
                 <div class="card-body">
@@ -140,17 +212,17 @@
                                     <td>{{ booking.requester.username }}</td>
                                     <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
                                     <td>
-                                        <span class="badge" style="background-color: #FFD700; color: #00008B;">
+                                        <span class="badge" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.35rem 0.65rem;">
                                             {{ booking.status }}
                                         </span>
                                     </td>
                                     <td>
                                         {% for item in booking.service_items %}
-                                        <span class="badge me-1" style="background-color: #FFD700; color: #00008B;">{{ item.service_type }}</span>
+                                        <span class="badge me-1" style="background-color: #FFEB99; color: #00008B; font-size: 0.85rem; padding: 0.25rem 0.5rem;">{{ item.service_type }}</span>
                                         {% endfor %}
                                     </td>
                                     <td>
-                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: #FFD700; color: #00008B;">
+                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: #FFEB99; color: #00008B;">
                                             <i class="fas fa-eye"></i> View
                                         </a>
                                     </td>
@@ -169,7 +241,24 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
-        // Add any specific JavaScript for this page here
+        // Function to filter service items based on service type
+        window.filterServiceItems = function(serviceType) {
+            // Show the filter indicator
+            $('#currentFilter').show();
+            $('#filterType').text(serviceType);
+            
+            // Hide all rows first
+            $('.service-item').hide();
+            
+            // Show only rows with matching service type
+            $('.service-item[data-service-type="' + serviceType + '"]').show();
+        };
+        
+        // Reset filter - show all items
+        $('#showAllItems').click(function() {
+            $('.service-item').show();
+            $('#currentFilter').hide();
+        });
     });
 </script>
 {% endblock %}
