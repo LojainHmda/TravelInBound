@@ -32,12 +32,12 @@
     <!-- Left Sidebar with Action Buttons -->
     <div class="col-md-3 mb-4">
         <div class="card action-box">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Actions</h5>
+            <div class="card-header" style="background-color: #000080; color: white;">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2" style="color: #FF8C00;"></i>Actions</h5>
             </div>
             <div class="card-body">
-                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-yellow action-button">
-                    <i class="fas fa-plus-circle"></i> New Booking
+                <a href="{{ url_for('booking.new_booking_detail') }}" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
+                    <i class="fas fa-plus-circle" style="color: #FF8C00;"></i> New Booking
                 </a>
                 
                 {% if booking %}
@@ -46,8 +46,8 @@
                     {{ status_form.hidden_tag() }}
                     {% endif %}
                     <input type="hidden" name="new_status" value="IN_PROGRESS">
-                    <button type="submit" class="btn btn-yellow action-button" {% if booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' %}disabled title="Payment required before starting operations"{% endif %}>
-                        <i class="fas fa-play-circle"></i> Start Operations
+                    <button type="submit" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;" {% if booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' %}disabled title="Payment required before starting operations"{% endif %}>
+                        <i class="fas fa-play-circle" style="color: #FF8C00;"></i> Start Operations
                     </button>
                 </form>
                 {% if booking and booking.payment_status != 'FULL' and booking.payment_status != 'PARTIAL' %}
@@ -55,25 +55,25 @@
                 {% endif %}
                 
                 {% if booking and booking.status == 'REQUEST' %}
-                <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-yellow action-button">
-                    <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
+                <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
+                    <i class="fas fa-file-invoice-dollar" style="color: #FF8C00;"></i> Generate Invoice
                 </a>
                 {% endif %}
                 
                 {% if booking %}
-                <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-yellow action-button">
-                    <i class="fas fa-plus-circle"></i> Add Payment
+                <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
+                    <i class="fas fa-plus-circle" style="color: #FF8C00;"></i> Add Payment
                 </a>
                 {% endif %}
                 
                 {% if booking %}
-                <a href="#" class="btn btn-yellow action-button">
-                    <i class="fas fa-file-export"></i> Export Details
+                <a href="#" class="btn action-button" style="background-color: white; color: #000080; border: 1px solid #000080;">
+                    <i class="fas fa-file-export" style="color: #FF8C00;"></i> Export Details
                 </a>
                 
                 <hr>
                 
-                <a href="#" class="btn btn-outline-yellow action-button">
+                <a href="#" class="btn action-button" style="background-color: white; color: #dc3545; border: 1px solid #dc3545;">
                     <i class="fas fa-trash-alt"></i> Cancel Booking
                 </a>
                 {% endif %}
@@ -147,8 +147,8 @@
     <!-- Customer Information with Dark Blue Header -->
     <div class="col-md-6">
         <div class="card h-100">
-            <div class="card-header bg-dark-blue text-white">
-                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+            <div class="card-header" style="background-color: #000080; color: white;">
+                <h5 class="mb-0"><i class="fas fa-user me-2" style="color: #FF8C00;"></i>Customer Information</h5>
             </div>
             <div class="card-body">
                 {% if not booking %}
