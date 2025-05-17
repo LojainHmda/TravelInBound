@@ -677,7 +677,16 @@
 {{ super() }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle booking detail modal
+        // Handle direct redirection for any remaining view buttons
+        document.querySelectorAll('.view-booking-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const bookingId = this.getAttribute('data-booking-id');
+                window.location.href = `/booking/${bookingId}`;
+            });
+        });
+        
+        // Original modal handling
         const bookingDetailModal = document.getElementById('bookingDetailModal');
         const bookingDetailContent = document.getElementById('bookingDetailContent');
         const viewFullBookingBtn = document.getElementById('viewFullBookingBtn');
