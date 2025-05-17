@@ -1,0 +1,87 @@
+/* Yellow Gradient Dashboard Cards CSS */
+
+.stat-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-body {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.stat-card-icon {
+    font-size: 2.5rem;
+    margin-right: 20px;
+    opacity: 0.8;
+}
+
+.stat-card-info h3 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    line-height: 1;
+}
+
+.stat-card-info p {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 5px 0 0;
+}
+
+/* Yellow Gradient Cards */
+.bg-request {
+    background: linear-gradient(45deg, #fcf8e3, #faf2cc);
+    color: #8a6d3b;
+}
+
+.bg-booked {
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #333;
+}
+
+.bg-invoice {
+    background: linear-gradient(45deg, #fcf8e3, #F5DEB3);
+    color: #8a6d3b;
+}
+
+.bg-in-progress {
+    background: linear-gradient(45deg, #FFA500, #FF8C00);
+    color: #fff;
+}
+
+.bg-completed {
+    background: linear-gradient(45deg, #32CD32, #228B22);
+    color: #fff;
+}
+
+/* Custom colors for the table status badges */
+.badge-request {
+    background-color: #fcf8e3;
+    color: #8a6d3b;
+}
+
+.badge-booked {
+    background-color: #FFD700;
+    color: #333;
+}
+
+.badge-in-progress {
+    background-color: #FFA500;
+    color: #fff;
+}
+
+.badge-completed {
+    background-color: #32CD32;
+    color: #fff;
+}
