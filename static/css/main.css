@@ -1,7 +1,7 @@
 /* Main Color Variables */
 :root {
     --primary-color: #123E7A; /* Dark Blue */
-    --secondary-color: #FFBF00; /* Yellow */
+    --secondary-color: #cbc9c3; /* Yellow */
     --light-color: #ffffff; /* White */
     --text-dark: #333333;
     --text-light: #f8f9fa;
@@ -97,7 +97,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: rgba(255, 127, 0, 0.1);
+    background-color: #FFBF00;;
     display: flex;
     align-items: center;
     justify-content: center;
