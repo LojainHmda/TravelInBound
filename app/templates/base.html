@@ -261,10 +261,10 @@
     </style>
 </head>
 <body>
-    <!-- Header with TravelPro logo -->
+    <!-- Header with logo only -->
     <div class="main-header">
         <div class="d-flex align-items-center">
-            <h1 class="logo-text">TravelPro</h1>
+            <img src="{{ url_for('static', filename='img/logo-icon.svg') }}" alt="Logo" height="30">
         </div>
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
@@ -285,7 +285,6 @@
             <div class="sidebar-header">
                 <a href="{{ url_for('main.index') }}" class="sidebar-brand">
                     <i class="fas fa-plane-departure me-2"></i>
-                    TravelBookPro
                 </a>
                 <button id="toggle-sidebar" aria-label="Close Menu">
                     <i class="fas fa-times"></i>
