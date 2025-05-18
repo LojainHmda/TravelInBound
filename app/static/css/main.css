@@ -11,6 +11,7 @@
     --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
     --dashboard-text-color: #333333; /* Dark gray text for dashboard */
     --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
+    --navy-blue: #00305A; /* Navy Blue color */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */
