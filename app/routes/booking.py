@@ -1114,12 +1114,18 @@ def confirm_service(item_id):
                                 booking_id=service_item.booking_id,
                                 service_item_id=service_item.id,
                                 amount=cost_amount,
-                                service_type=service_item.service_type,
-                                supplier_name=confirmation_data.get('supplier_name', 'Unknown Supplier'),
-                                confirmation_reference=confirmation_data.get('confirmation_reference', document.document_number),
-                                payment_status='PENDING',
                                 notes=f"Auto-created for {service_item.service_type} confirmation"
                             )
+                            
+                            # Add additional fields if they exist in the model
+                            if hasattr(SupplierPrepaymentLine, 'service_type'):
+                                prepayment_line.service_type = service_item.service_type
+                            if hasattr(SupplierPrepaymentLine, 'supplier_name'):
+                                prepayment_line.supplier_name = confirmation_data.get('supplier_name', 'Unknown Supplier')
+                            if hasattr(SupplierPrepaymentLine, 'confirmation_reference'):
+                                prepayment_line.confirmation_reference = confirmation_data.get('confirmation_reference', document.document_number)
+                            if hasattr(SupplierPrepaymentLine, 'payment_status'):
+                                prepayment_line.payment_status = 'PENDING'
                             
                             db.session.add(prepayment_line)
                             db.session.commit()

@@ -743,7 +743,12 @@ def supplier_costs():
     
     # Apply filters
     if supplier_id:
-        query = query.filter(SupplierPrepaymentLine.supplier_id == int(supplier_id))
+        # Find prepayment lines for supplier payments from this supplier
+        from app.models.supplier import SupplierPayment
+        supplier_payments = SupplierPayment.query.filter_by(supplier_id=int(supplier_id)).all()
+        payment_ids = [payment.id for payment in supplier_payments]
+        if payment_ids:
+            query = query.filter(SupplierPrepaymentLine.supplier_payment_id.in_(payment_ids))
     if service_type:
         query = query.filter(SupplierPrepaymentLine.service_type == service_type)
     if payment_status:

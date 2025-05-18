@@ -124,12 +124,14 @@
                         <tr>
                             <td>{{ line.created_at.strftime('%b %d, %Y') }}</td>
                             <td>
-                                {% if line.supplier_id %}
-                                    <a href="{{ url_for('finance.supplier_details', supplier_id=line.supplier_id) }}">
-                                        {{ line.supplier_name }}
+                                {% if line.payment and line.payment.supplier %}
+                                    <a href="{{ url_for('finance.supplier_details', supplier_id=line.payment.supplier.id) }}">
+                                        {{ line.payment.supplier.name }}
                                     </a>
+                                {% elif line.supplier_name %}
+                                    {{ line.supplier_name }}
                                 {% else %}
-                                    {{ line.supplier_name or 'Unknown Supplier' }}
+                                    Unknown Supplier
                                 {% endif %}
                             </td>
                             <td>
@@ -138,7 +140,11 @@
                             <td>
                                 {% if line.booking_id %}
                                     <a href="{{ url_for('booking.details', booking_id=line.booking_id) }}" class="badge bg-primary me-1">
-                                        {{ line.booking_reference or ('Booking #' + line.booking_id|string) }}
+                                        {% if line.service_item and line.service_item.booking %}
+                                            {{ line.service_item.booking.reference_number }}
+                                        {% else %}
+                                            Booking #{{ line.booking_id }}
+                                        {% endif %}
                                     </a>
                                 {% else %}
                                     -
