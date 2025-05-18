@@ -323,12 +323,14 @@
                         <i class="fas fa-building"></i>
                         Suppliers
                     </a>
-                </li>
-                <li>
-                    <a href="{{ url_for('supplier.supplier_statements') }}" class="{% if request.path == url_for('supplier.supplier_statements') %}active{% endif %}">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        Supplier Statements
-                    </a>
+                    <ul class="submenu" style="list-style: none; padding-left: 35px; margin-top: 5px;">
+                        <li style="margin-bottom: 5px;">
+                            <a href="{{ url_for('supplier.supplier_statements') }}" class="{% if request.path == url_for('supplier.supplier_statements') %}active{% endif %}" style="padding: 8px 15px;">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                                Statements
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li>
                     <a href="{{ url_for('finance.index') }}" class="{% if '/finance/' in request.path %}active{% endif %}">
@@ -350,12 +352,7 @@
                 </li>
             </ul>
             
-            <div class="sidebar-footer">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-user-circle me-2"></i>
-                    <span>Test User</span>
-                </div>
-            </div>
+            <!-- Removed Test User from sidebar footer -->
         </nav>
         
         <!-- Main Content Area -->
