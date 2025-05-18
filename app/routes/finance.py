@@ -130,7 +130,8 @@ def index():
     # Get monthly data for last 12 months for trend chart
     
     # Get revenue bookings for the selected period
-    revenue_bookings = db.session.query(Booking).filter(
+    from app.models import Booking
+    revenue_bookings = Booking.query.filter(
         Booking.created_at >= first_day,
         Booking.created_at <= last_day,
         Booking.total_amount > 0
@@ -247,7 +248,8 @@ def index():
         recent_expenses=recent_expenses,
         upcoming_payments=upcoming_payments,
         supplier_payments=supplier_payments,
-        selected_month=selected_month
+        selected_month=selected_month,
+        revenue_bookings=revenue_bookings
     )
 
 @finance.route('/expenses')
