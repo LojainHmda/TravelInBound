@@ -26,10 +26,36 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row mb-4">
     <div class="col-md-12">
-        <div class="card mb-4">
-            <div class="card-body p-4">
+        <!-- Tabs for Invoice, Credit Memo, and Payments -->
+        <ul class="nav nav-tabs" id="financeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="invoice-tab" data-bs-toggle="tab" data-bs-target="#invoice" type="button" role="tab" aria-controls="invoice" aria-selected="true">
+                    <i class="fas fa-file-invoice me-2"></i>Invoice
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="credit-memos-tab" data-bs-toggle="tab" data-bs-target="#credit-memos" type="button" role="tab" aria-controls="credit-memos" aria-selected="false">
+                    <i class="fas fa-file-invoice-dollar me-2"></i>Credit Memos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">
+                    <i class="fas fa-money-bill-wave me-2"></i>Payments
+                </button>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="tab-content" id="financeTabContent">
+    <!-- Invoice Tab -->
+    <div class="tab-pane fade show active" id="invoice" role="tabpanel" aria-labelledby="invoice-tab">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body p-4">
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <div class="mb-3">
@@ -175,6 +201,145 @@
                                 <i class="fas fa-arrow-left me-2"></i>Back to Booking
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Credit Memos Tab -->
+    <div class="tab-pane fade" id="credit-memos" role="tabpanel" aria-labelledby="credit-memos-tab">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3"><i class="fas fa-file-invoice-dollar text-danger me-2"></i>Credit Memos</h5>
+                        
+                        {% set credit_items = booking.service_items|selectattr('is_cancelled', 'equalto', true)|selectattr('credit_memo_number', 'defined')|list %}
+                        
+                        {% if credit_items %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Credit Memo #</th>
+                                            <th>Service</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in credit_items %}
+                                            <tr>
+                                                <td><span class="badge bg-danger">{{ item.credit_memo_number }}</span></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if item.service_type == 'FLIGHT' %}
+                                                            <i class="fas fa-plane service-icon-table text-danger me-2"></i>
+                                                        {% elif item.service_type == 'HOTEL' %}
+                                                            <i class="fas fa-hotel service-icon-table text-danger me-2"></i>
+                                                        {% elif item.service_type == 'TRANSPORT' %}
+                                                            <i class="fas fa-taxi service-icon-table text-danger me-2"></i>
+                                                        {% elif item.service_type == 'VISA' %}
+                                                            <i class="fas fa-passport service-icon-table text-danger me-2"></i>
+                                                        {% elif item.service_type == 'INSURANCE' %}
+                                                            <i class="fas fa-shield-alt service-icon-table text-danger me-2"></i>
+                                                        {% endif %}
+                                                        {{ item.service_type }}
+                                                    </div>
+                                                </td>
+                                                <td>{{ item.description }}</td>
+                                                <td>{{ item.updated_at.strftime('%d %b %Y') }}</td>
+                                                <td class="text-end text-danger">-${{ "%.2f"|format(item.amount) }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-active">
+                                            <td colspan="4" class="text-end"><strong>Total Credited:</strong></td>
+                                            <td class="text-end text-danger"><strong>-${{ "%.2f"|format(credit_items|sum(attribute='amount')) }}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>No credit memos have been issued for this booking.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payments Tab -->
+    <div class="tab-pane fade" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-money-bill-wave text-success me-2"></i>Payment Records</h5>
+                            <a href="{{ url_for('booking.add_payment', booking_id=booking.id) }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus me-1"></i>Add Payment
+                            </a>
+                        </div>
+                        
+                        {% if booking.payments %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Payment ID</th>
+                                            <th>Date</th>
+                                            <th>Method</th>
+                                            <th>Transaction ID</th>
+                                            <th>Notes</th>
+                                            <th class="text-end">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in booking.payments %}
+                                            <tr {% if payment.payment_method == 'CREDIT_MEMO' %}class="table-warning"{% endif %}>
+                                                <td>{{ payment.id }}</td>
+                                                <td>{{ payment.payment_date.strftime('%d %b %Y') }}</td>
+                                                <td>
+                                                    {% if payment.payment_method == 'CREDIT_MEMO' %}
+                                                        <span class="badge bg-warning text-dark">Credit Memo</span>
+                                                    {% else %}
+                                                        {{ payment.payment_method }}
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ payment.transaction_id or 'N/A' }}</td>
+                                                <td>{{ payment.notes or 'N/A' }}</td>
+                                                <td class="text-end {% if payment.amount < 0 %}text-danger{% else %}text-success{% endif %}">
+                                                    {% if payment.amount < 0 %}-{% endif %}${{ "%.2f"|format(payment.amount|abs) }}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-active">
+                                            <td colspan="5" class="text-end"><strong>Total Paid:</strong></td>
+                                            <td class="text-end text-success"><strong>${{ "%.2f"|format(booking.payments|sum(attribute='amount')) }}</strong></td>
+                                        </tr>
+                                        <tr class="table-active">
+                                            <td colspan="5" class="text-end"><strong>Balance Due:</strong></td>
+                                            <td class="text-end">
+                                                {% set balance = booking.total_amount - booking.payments|sum(attribute='amount') %}
+                                                <strong>${{ "%.2f"|format(balance) }}</strong>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>No payments have been recorded for this booking.
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
