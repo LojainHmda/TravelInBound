@@ -128,6 +128,13 @@ def index():
     ).all()
     
     # Get monthly data for last 12 months for trend chart
+    
+    # Get revenue bookings for the selected period
+    revenue_bookings = db.session.query(Booking).filter(
+        Booking.created_at >= first_day,
+        Booking.created_at <= last_day,
+        Booking.total_amount > 0
+    ).order_by(Booking.total_amount.desc()).all()
     last_12_months = []
     for i in range(11, -1, -1):
         month_date = date.today() - relativedelta(months=i)
