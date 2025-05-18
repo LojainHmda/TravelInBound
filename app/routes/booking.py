@@ -1103,6 +1103,29 @@ def confirm_service(item_id):
                         db.session.add(payment)
                         db.session.commit()
                         print(f"Created supplier payment of ${cost_amount} for confirmation document #{document.id}", file=sys.stderr)
+                        
+                        # Now create a supplier prepayment line to link the payment with the booking and service item
+                        try:
+                            from app.models.supplier import SupplierPrepaymentLine
+                            
+                            # Create the prepayment line
+                            prepayment_line = SupplierPrepaymentLine(
+                                supplier_payment_id=payment.id,
+                                booking_id=service_item.booking_id,
+                                service_item_id=service_item.id,
+                                amount=cost_amount,
+                                service_type=service_item.service_type,
+                                supplier_name=confirmation_data.get('supplier_name', 'Unknown Supplier'),
+                                confirmation_reference=confirmation_data.get('confirmation_reference', document.document_number),
+                                payment_status='PENDING',
+                                notes=f"Auto-created for {service_item.service_type} confirmation"
+                            )
+                            
+                            db.session.add(prepayment_line)
+                            db.session.commit()
+                            print(f"Created supplier prepayment line linking payment {payment.id} to booking {service_item.booking_id} and service {service_item.id}", file=sys.stderr)
+                        except Exception as e:
+                            print(f"Error creating supplier prepayment line: {str(e)}", file=sys.stderr)
         except Exception as e:
             # Log the error but don't fail the response
             print(f"Error creating supplier payment: {str(e)}", file=sys.stderr)
