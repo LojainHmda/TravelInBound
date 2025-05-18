@@ -7,11 +7,11 @@
 window.existingPayments = [
     {% for payment in booking.payments %}
     {
-        date: "{{ payment.payment_date.strftime('%Y-%m-%d') }}",
+        date: "{{ payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '' }}",
         method: "{{ payment.payment_method }}",
         amount: "{{ "%.2f"|format(payment.amount) }}",
-        notes: "{{ payment.notes }}",
-        transaction_id: "{{ payment.transaction_id }}"
+        notes: "{{ payment.notes or '' }}",
+        transaction_id: "{{ payment.transaction_id or '' }}"
     }{% if not loop.last %},{% endif %}
     {% endfor %}
 ];
@@ -112,8 +112,8 @@ window.existingPayments = [
                 <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Invoice Summary</h5>
             </div>
             <div class="card-body">
-                <p class="mb-2"><strong>Invoice Number:</strong> {{ booking.invoice_number }}</p>
-                <p class="mb-2"><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') }}</p>
+                <p class="mb-2"><strong>Invoice Number:</strong> {{ booking.invoice_number or 'N/A' }}</p>
+                <p class="mb-2"><strong>Invoice Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'N/A' }}</p>
                 <p class="mb-2"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
                 
                 {% if booking.payments %}
@@ -154,7 +154,7 @@ window.existingPayments = [
                             <tbody>
                                 {% for payment in booking.payments %}
                                 <tr>
-                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y') if payment.payment_date else 'N/A' }}</td>
                                     <td>{{ payment.payment_method }}</td>
                                     <td>${{ "%.2f"|format(payment.amount) }}</td>
                                 </tr>
