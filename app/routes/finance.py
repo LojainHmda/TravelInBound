@@ -129,13 +129,41 @@ def index():
     
     # Get monthly data for last 12 months for trend chart
     
-    # Get revenue bookings for the selected period
+    # Get revenue bookings for the selected period with additional filters
     from app.models import Booking
-    revenue_bookings = Booking.query.filter(
+    from datetime import datetime
+    
+    # Base query
+    booking_query = Booking.query.filter(Booking.total_amount > 0)
+    
+    # Apply date range filters from the main date selector
+    booking_query = booking_query.filter(
         Booking.created_at >= first_day,
-        Booking.created_at <= last_day,
-        Booking.total_amount > 0
-    ).order_by(Booking.total_amount.desc()).all()
+        Booking.created_at <= last_day
+    )
+    
+    # Apply reference number filter if provided
+    if request.args.get('booking_reference'):
+        ref_filter = request.args.get('booking_reference')
+        booking_query = booking_query.filter(Booking.reference_number.ilike(f'%{ref_filter}%'))
+    
+    # Apply custom date range filters if provided
+    if request.args.get('date_from'):
+        try:
+            date_from = datetime.strptime(request.args.get('date_from'), '%Y-%m-%d').date()
+            booking_query = booking_query.filter(Booking.created_at >= date_from)
+        except (ValueError, TypeError):
+            pass  # Invalid date format, ignore filter
+    
+    if request.args.get('date_to'):
+        try:
+            date_to = datetime.strptime(request.args.get('date_to'), '%Y-%m-%d').date()
+            booking_query = booking_query.filter(Booking.created_at <= date_to)
+        except (ValueError, TypeError):
+            pass  # Invalid date format, ignore filter
+    
+    # Get the filtered results
+    revenue_bookings = booking_query.order_by(Booking.total_amount.desc()).all()
     last_12_months = []
     for i in range(11, -1, -1):
         month_date = date.today() - relativedelta(months=i)
