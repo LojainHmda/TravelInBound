@@ -60,84 +60,7 @@
     </div>
 
     <!-- Revenue Breakdown by Booking -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-warning-subtle">
-                    <h6 class="m-0 font-weight-bold text-dark">Revenue Breakdown - {{ current_month }}</h6>
-                    <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#revenueFilterCollapse" aria-expanded="false" aria-controls="revenueFilterCollapse">
-                        <i class="fas fa-filter me-1"></i> Filters
-                    </button>
-                </div>
-                <div class="collapse" id="revenueFilterCollapse">
-                    <div class="card-body bg-light border-bottom">
-                        <form method="GET" class="row g-3">
-                            <div class="col-md-3">
-                                <label for="booking_reference" class="form-label">Booking Reference</label>
-                                <input type="text" class="form-control form-control-sm" id="booking_reference" name="booking_reference" value="{{ request.args.get('booking_reference', '') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="date_from" class="form-label">From Date</label>
-                                <input type="date" class="form-control form-control-sm" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="date_to" class="form-label">To Date</label>
-                                <input type="date" class="form-control form-control-sm" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
-                            </div>
-                            <div class="col-md-3 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary btn-sm me-2">Apply Filters</button>
-                                <a href="{{ url_for('finance.index') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="revenueTable" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Booking Reference</th>
-                                    <th>Customer</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                    <th>Services</th>
-                                    <th>Revenue</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if revenue_bookings %}
-                                    {% for booking in revenue_bookings %}
-                                        <tr>
-                                            <td>{{ booking.reference_number }}</td>
-                                            <td>{{ booking.requester.username }}</td>
-                                            <td>{{ booking.created_at.strftime('%d %b, %Y') }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ 'success' if booking.status == 'COMPLETED' else 'warning' if booking.status == 'BOOKED' else 'info' }}">
-                                                    {{ booking.status }}
-                                                </span>
-                                            </td>
-                                            <td>{{ booking.service_items|length }}</td>
-                                            <td>${{ "%.2f"|format(booking.total_amount) }}</td>
-                                            <td>
-                                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="7" class="text-center">No revenue data available for this period</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <div class="row">
         <div class="col-xl-12">
@@ -156,7 +79,11 @@
                                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                                 Revenue
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_revenue) }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <a href="#revenueBreakdown" class="text-gray-800 text-decoration-none">
+                                                    ${{ "%.2f"|format(current_month_revenue) }}
+                                                </a>
+                                            </div>
                                             <div class="small mt-2">
                                                 {% if revenue_change_pct > 0 %}
                                                 <span class="trend-up">
@@ -286,21 +213,84 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Financial Trends Chart -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm" id="revenueBreakdown">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-warning-subtle">
+                    <h6 class="m-0 font-weight-bold text-dark">Revenue Breakdown - {{ current_month }}</h6>
+                    <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="collapse" data-bs-target="#revenueFilterCollapse" aria-expanded="false" aria-controls="revenueFilterCollapse">
+                        <i class="fas fa-filter me-1"></i> Filters
+                    </button>
                 </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="financialTrendsChart"></canvas>
+                    <div class="collapse" id="revenueFilterCollapse">
+                        <div class="card-body bg-light border-bottom">
+                            <form method="GET" class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="booking_reference" class="form-label">Booking Reference</label>
+                                    <input type="text" class="form-control form-control-sm" id="booking_reference" name="booking_reference" value="{{ request.args.get('booking_reference', '') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="date_from" class="form-label">From Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="date_to" class="form-label">To Date</label>
+                                    <input type="date" class="form-control form-control-sm" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-sm me-2">Apply Filters</button>
+                                    <a href="{{ url_for('finance.index') }}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="revenueTable" width="100%" cellspacing="0">
+                                <thead>
+                                    <tr>
+                                        <th>Booking Reference</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Services</th>
+                                        <th>Revenue</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if revenue_bookings %}
+                                        {% for booking in revenue_bookings %}
+                                            <tr>
+                                                <td>{{ booking.reference_number }}</td>
+                                                <td>{{ booking.requester.username }}</td>
+                                                <td>{{ booking.created_at.strftime('%d %b, %Y') }}</td>
+                                                <td>
+                                                    <span class="badge bg-{{ 'success' if booking.status == 'COMPLETED' else 'warning' if booking.status == 'BOOKED' else 'info' }}">
+                                                        {{ booking.status }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ booking.service_items|length }}</td>
+                                                <td>${{ "%.2f"|format(booking.total_amount) }}</td>
+                                                <td>
+                                                    <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="7" class="text-center">No revenue data available for this period</td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
         <!-- Expense Breakdown Chart -->
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow-sm mb-4">
@@ -323,7 +313,21 @@
         </div>
     </div>
 
-
+    <!-- Financial Trends Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="financialTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <!-- Recent Expenses -->
@@ -374,8 +378,8 @@
         <!-- Upcoming Payments -->
         <div class="col-lg-6">
             <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Upcoming Supplier Payments</h6>
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-warning-subtle">
+                    <h6 class="m-0 font-weight-bold text-dark">Upcoming Supplier Payments</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
