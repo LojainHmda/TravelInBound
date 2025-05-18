@@ -395,7 +395,7 @@
                                                     </a>
                                                 </li>
                                                 
-                                                {% if not item.is_cancelled and item.status != 'CONFIRMED' %}
+                                                {% if not item.is_cancelled %}
                                                 <li>
                                                     <a href="#" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}">
                                                         <i class="fas fa-times-circle me-2"></i>Cancel Service
@@ -405,12 +405,6 @@
                                                 <li>
                                                     <span class="dropdown-item text-muted">
                                                         <i class="fas fa-ban me-2" style="color: #d3d3d3;"></i>Already Cancelled
-                                                    </span>
-                                                </li>
-                                                {% elif item.status == 'CONFIRMED' %}
-                                                <li>
-                                                    <span class="dropdown-item text-muted">
-                                                        <i class="fas fa-lock me-2" style="color: #d3d3d3;"></i>Cannot Cancel Confirmed Service
                                                     </span>
                                                 </li>
                                                 {% endif %}

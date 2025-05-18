@@ -714,10 +714,8 @@ def cancel_service_item(item_id):
         flash('This service item has already been cancelled', 'warning')
         return redirect(url_for('booking.details', booking_id=booking.id))
     
-    # Only allow cancellation of items that are not confirmed
-    if service_item.status == STATUS_CONFIRMED:
-        flash('Cannot cancel a service item that has already been confirmed', 'danger')
-        return redirect(url_for('booking.details', booking_id=booking.id))
+    # Allow cancellation of all items, including confirmed ones
+    # We removed the restriction here to enable cancellation of confirmed services
     
     # Process cancellation
     reason = request.form.get('cancel_reason', '')

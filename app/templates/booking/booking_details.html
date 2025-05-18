@@ -410,7 +410,7 @@
                                                     </a>
                                                 </li>
                                                 <li><hr class="dropdown-divider"></li>
-                                                {% if not item.is_cancelled and item.status != 'CONFIRMED' %}
+                                                {% if not item.is_cancelled %}
                                                 <li>
                                                     <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}">
                                                         <i class="fas fa-ban me-2" style="color: #dc3545;"></i><span style="color: #dc3545;">Cancel Service</span>
