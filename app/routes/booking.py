@@ -702,6 +702,32 @@ def update_service_status(item_id):
     
     return redirect(url_for('booking.details', booking_id=service_item.booking_id))
 
+@booking_bp.route('/service_item/<int:item_id>/delete', methods=['POST'])
+def delete_service_item(item_id):
+    """Permanently delete a service item that is not confirmed"""
+    service_item = ServiceItem.query.get_or_404(item_id)
+    booking = service_item.booking
+    booking_id = booking.id
+    
+    # Only allow deletion if the service is not confirmed
+    if service_item.status == STATUS_CONFIRMED:
+        flash('Cannot delete a confirmed service item. Please cancel it instead.', 'danger')
+        return redirect(url_for('booking.details', booking_id=booking_id))
+    
+    # First delete any documents related to this service item
+    Document.query.filter_by(service_item_id=service_item.id).delete()
+    
+    # Delete the service item
+    db.session.delete(service_item)
+    db.session.commit()
+    
+    # Recalculate booking total
+    booking.calculate_total()
+    db.session.commit()
+    
+    flash('Service item successfully deleted', 'success')
+    return redirect(url_for('booking.details', booking_id=booking_id))
+
 @booking_bp.route('/service_item/<int:item_id>/cancel', methods=['POST'])
 def cancel_service_item(item_id):
     """Cancel a service item and generate a credit memo if it was already invoiced"""

@@ -480,6 +480,14 @@
                                                     </span>
                                                 </li>
                                                 {% endif %}
+                                                
+                                                {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+                                                <li>
+                                                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
+                                                        <i class="fas fa-trash-alt me-2" style="color: #dc3545;"></i><span style="color: #dc3545;">Delete Service</span>
+                                                    </a>
+                                                </li>
+                                                {% endif %}
                                             </ul>
                                         </div>
                                     </div>
