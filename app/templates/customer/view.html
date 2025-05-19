@@ -94,7 +94,7 @@
               <h6 class="fw-bold mt-3">Notes</h6>
               <div class="card">
                 <div class="card-body bg-light">
-                  {{ customer.notes|nl2br }}
+                  {{ customer.notes|replace('\n', '<br>')|safe }}
                 </div>
               </div>
               {% endif %}
