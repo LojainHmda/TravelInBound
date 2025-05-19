@@ -1305,6 +1305,63 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Include the customer selection modal -->
 {% include 'modals/customer_selection_modal.html' %}
 
+<!-- Delete Service Modals -->
+{% for item in booking.service_items %}
+{% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+<div class="modal fade" id="deleteServiceModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trash-alt me-2"></i>Delete Service
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action will permanently delete this service and cannot be undone.
+                    </div>
+                    
+                    <p>You are about to delete the following service:</p>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6>
+                                {% if item.service_type == 'FLIGHT' %}
+                                    <i class="fas fa-plane text-orange me-2"></i>
+                                {% elif item.service_type == 'HOTEL' %}
+                                    <i class="fas fa-hotel text-orange me-2"></i>
+                                {% elif item.service_type == 'TRANSPORT' %}
+                                    <i class="fas fa-car text-orange me-2"></i>
+                                {% elif item.service_type == 'VISA' %}
+                                    <i class="fas fa-passport text-orange me-2"></i>
+                                {% elif item.service_type == 'INSURANCE' %}
+                                    <i class="fas fa-shield-alt text-orange me-2"></i>
+                                {% endif %}
+                                {{ item.service_type }}
+                            </h6>
+                            <p><strong>Description:</strong> {{ item.description }}</p>
+                            <p><strong>Amount:</strong> ${{ "%.2f"|format(item.amount) }}</p>
+                            <p><strong>Dates:</strong> {{ item.start_date.strftime('%d %b %Y') }} - {{ item.end_date.strftime('%d %b %Y') }}</p>
+                            <p><strong>Status:</strong> <span class="badge bg-{{ item.status|lower }}">{{ item.status }}</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Delete Permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Booking form validation
