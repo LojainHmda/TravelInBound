@@ -194,12 +194,12 @@ body {
 
 .bg-dark-blue {
     background-color: var(--primary-color);
-    color: white;
+    color: #000000; /* Changed from white to black */
 }
 
 .table-dark {
     background-color: var(--primary-color);
-    color: white;
+    color: #000000; /* Changed from white to black */
 }
 
 /* Service Option Selection */
