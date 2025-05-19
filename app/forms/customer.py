@@ -17,11 +17,14 @@ class CustomerForm(FlaskForm):
     passport_number = StringField('Passport Number', validators=[Optional(), Length(max=50)])
     passport_expiry = DateField('Passport Expiry', format='%Y-%m-%d', validators=[Optional()])
     date_of_birth = DateField('Date of Birth', format='%Y-%m-%d', validators=[Optional()])
-    nationality = SelectField('Nationality', choices=[('', 'Select Nationality')] + [('Palestinian', 'Palestinian')] + [
+    nationality = SelectField('Nationality', choices=[
+        ('', 'Select Nationality'),
         ('Afghan', 'Afghan'),
         ('Albanian', 'Albanian'),
         ('Algerian', 'Algerian'),
         ('American', 'American'),
+        ('Andorran', 'Andorran'),
+        ('Angolan', 'Angolan'),
         ('British', 'British'),
         ('Canadian', 'Canadian'),
         ('Chinese', 'Chinese'),
@@ -31,9 +34,15 @@ class CustomerForm(FlaskForm):
         ('Indian', 'Indian'),
         ('Italian', 'Italian'),
         ('Japanese', 'Japanese'),
+        ('Jordanian', 'Jordanian'),
+        ('Palestinian', 'Palestinian'),
         ('Russian', 'Russian'),
         ('Saudi', 'Saudi'),
-        ('Spanish', 'Spanish')
+        ('Spanish', 'Spanish'),
+        ('Syrian', 'Syrian'),
+        ('Turkish', 'Turkish'),
+        ('Emirati', 'Emirati'),
+        ('Other', 'Other')
     ], validators=[Optional()])
     customer_type = SelectField('Customer Type', choices=[
         ('Individual', 'Individual'),
