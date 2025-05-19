@@ -238,13 +238,70 @@
                     {% endif %}
                 </p>
                 
-                <p class="mb-1"><strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}</p>
-                
-                {% if booking.payments %}
-                    {% set total_paid = booking.payments|sum(attribute='amount') %}
-                    <p class="mb-1"><strong>Amount Paid:</strong> ${{ "%.2f"|format(total_paid) }}</p>
-                    <p class="mb-0"><strong>Balance Due:</strong> ${{ "%.2f"|format(booking.total_amount - total_paid) }}</p>
-                {% endif %}
+                <!-- Financial Summary -->
+                <div class="mt-3 mb-3 p-3 border rounded" style="background-color: #f8f9fa;">
+                    <h6 class="mb-2"><i class="fas fa-calculator me-2" style="color: #FF8C00;"></i>Financial Summary</h6>
+                    
+                    <!-- Regular invoices -->
+                    {% set invoices = booking.invoices|selectattr('is_credit_memo', 'equalto', false)|list %}
+                    {% if invoices %}
+                        <div class="mb-2">
+                            <div><strong>Invoices:</strong></div>
+                            {% for invoice in invoices %}
+                                <div class="d-flex justify-content-between">
+                                    <span>{{ invoice.invoice_number }}</span>
+                                    <span>${{ "%.2f"|format(invoice.total_amount) }}</span>
+                                </div>
+                            {% endfor %}
+                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1">
+                                <span>Total Invoiced:</span>
+                                <span>${{ "%.2f"|format(invoices|sum(attribute='total_amount')) }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Credit memos -->
+                    {% set credit_memos = booking.invoices|selectattr('is_credit_memo', 'equalto', true)|list %}
+                    {% if credit_memos %}
+                        <div class="mb-2">
+                            <div><strong>Credit Memos:</strong></div>
+                            {% for credit_memo in credit_memos %}
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-danger">{{ credit_memo.invoice_number }}</span>
+                                    <span class="text-danger">${{ "%.2f"|format(credit_memo.total_amount) }}</span>
+                                </div>
+                            {% endfor %}
+                            <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1 text-danger">
+                                <span>Total Credited:</span>
+                                <span>${{ "%.2f"|format(credit_memos|sum(attribute='total_amount')) }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Net amount -->
+                    {% set invoice_total = invoices|sum(attribute='total_amount') %}
+                    {% set credit_total = credit_memos|sum(attribute='total_amount') %}
+                    {% set net_total = invoice_total + credit_total %}
+                    
+                    <div class="border-top border-bottom py-1 mt-2 mb-2">
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Net Total:</span>
+                            <span>${{ "%.2f"|format(net_total) }}</span>
+                        </div>
+                    </div>
+
+                    {% if booking.payments %}
+                        {% set total_paid = booking.payments|sum(attribute='amount') %}
+                        <div class="d-flex justify-content-between">
+                            <span>Amount Paid:</span>
+                            <span>${{ "%.2f"|format(total_paid) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold {% if net_total - total_paid > 0 %}text-danger{% else %}text-success{% endif %}">
+                            <span>Balance Due:</span>
+                            <span>${{ "%.2f"|format(net_total - total_paid) }}</span>
+                        </div>
+                    {% endif %}
+                </div>
                 
                 <!-- Invoice Status -->
                 {% if booking.invoice_number %}

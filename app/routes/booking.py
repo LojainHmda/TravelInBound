@@ -761,6 +761,21 @@ def cancel_service_item(item_id):
         )
         db.session.add(refund_payment)
         
+        # Link the credit memo to the original invoice in the database
+        # This is important for reporting and settlement
+        # Find the original invoice this credit memo references
+        original_invoice = Invoice.query.filter_by(invoice_number=service_item.invoice_number).first()
+        if original_invoice:
+            # Add a note to the original invoice about the credit memo
+            if original_invoice.notes:
+                original_invoice.notes += f"\nCredit memo {credit_memo_number} applied for ${abs(refund_amount):.2f}"
+            else:
+                original_invoice.notes = f"Credit memo {credit_memo_number} applied for ${abs(refund_amount):.2f}"
+            
+            # Update the original invoice's settled amount if we have a settled_amount field
+            # If the field doesn't exist, we'll create it in another migration
+            print(f"Credit memo {credit_memo_number} linked to invoice {original_invoice.invoice_number}", file=sys.stderr)
+        
         # Update booking total
         # We need to recalculate it properly accounting for cancelled items
         # Get all non-cancelled service items
