@@ -49,12 +49,12 @@ def dashboard():
 @main_bp.route('/operations')
 def operations_dashboard():
     """View for the travel operations dashboard"""
-    # Get counts for each service type
-    flight_count = ServiceItem.query.filter_by(service_type='FLIGHT').count()
-    hotel_count = ServiceItem.query.filter_by(service_type='HOTEL').count()
-    transport_count = ServiceItem.query.filter_by(service_type='TRANSPORT').count()
-    visa_count = ServiceItem.query.filter_by(service_type='VISA').count()
-    insurance_count = ServiceItem.query.filter_by(service_type='INSURANCE').count()
+    # Get counts for each service type - only count IN_PROGRESS items
+    flight_count = ServiceItem.query.filter_by(service_type='FLIGHT', status=STATUS_IN_PROGRESS).count()
+    hotel_count = ServiceItem.query.filter_by(service_type='HOTEL', status=STATUS_IN_PROGRESS).count()
+    transport_count = ServiceItem.query.filter_by(service_type='TRANSPORT', status=STATUS_IN_PROGRESS).count()
+    visa_count = ServiceItem.query.filter_by(service_type='VISA', status=STATUS_IN_PROGRESS).count()
+    insurance_count = ServiceItem.query.filter_by(service_type='INSURANCE', status=STATUS_IN_PROGRESS).count()
     
     # Get IN_PROGRESS bookings only for operations dashboard
     in_progress_bookings = Booking.query.filter_by(status=STATUS_IN_PROGRESS).order_by(Booking.created_at.desc()).all()
