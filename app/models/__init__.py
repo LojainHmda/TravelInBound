@@ -7,7 +7,7 @@ SERVICE_INSURANCE = 'INSURANCE'
 
 # Define constants for status
 STATUS_REQUEST = 'REQUEST'
-STATUS_BOOKED = 'BOOKED'  # Keep for backward compatibility
+STATUS_BOOKED = 'BOOKED'  # Keep for backward compatibility but no longer used in new workflow
 STATUS_IN_PROGRESS = 'IN_PROGRESS'
 STATUS_CONFIRMED = 'CONFIRMED'
 STATUS_COMPLETED = 'COMPLETED'  # Keep for backward compatibility

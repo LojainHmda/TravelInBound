@@ -699,9 +699,8 @@
                         <label for="booking_status" class="form-label">Status</label>
                         <select class="form-select" id="booking_status" name="status">
                             <option value="REQUEST" {% if booking.status == 'REQUEST' %}selected{% endif %}>Request</option>
-                            <option value="BOOKED" {% if booking.status == 'BOOKED' %}selected{% endif %}>Booked</option>
                             <option value="IN_PROGRESS" {% if booking.status == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
-                            <option value="COMPLETED" {% if booking.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                            <option value="CONFIRMED" {% if booking.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
                         </select>
                     </div>
                     <div class="mb-3">

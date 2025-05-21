@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm

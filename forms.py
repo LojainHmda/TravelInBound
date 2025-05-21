@@ -59,7 +59,6 @@ class ServiceItemForm(FlaskForm):
 class UpdateServiceStatusForm(FlaskForm):
     status = SelectField('Status', choices=[
         (STATUS_REQUEST, 'Request'),
-        (STATUS_BOOKED, 'Booked'),
         (STATUS_IN_PROGRESS, 'In Progress'),
         (STATUS_COMPLETED, 'Confirmed')  # Changed 'Completed' to 'Confirmed' to match terminology
     ], validators=[DataRequired()])

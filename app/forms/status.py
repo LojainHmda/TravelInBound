@@ -3,7 +3,7 @@ from wtforms import StringField, TextAreaField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Optional
 
 from app.models import (
-    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+    STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 )
 
 class UpdateServiceStatusForm(FlaskForm):
