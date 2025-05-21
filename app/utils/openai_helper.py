@@ -1,13 +1,15 @@
 import os
 import json
 import base64
+import logging
 from openai import OpenAI
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 # do not change this unless explicitly requested by the user
 MODEL_NAME = "gpt-4o"
 
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Initialize logging
+logger = logging.getLogger(__name__)
 
 def analyze_flight_ticket(image_data):
     """
@@ -19,6 +21,29 @@ def analyze_flight_ticket(image_data):
     Returns:
         Dictionary containing extracted flight information
     """
+    # Create OpenAI client with current API key
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        logger.error("OpenAI API key not found in environment variables")
+        return {
+            "error": "OpenAI API key not configured",
+            "flight_number": "",
+            "airline": "",
+            "departure_airport": "",
+            "departure_code": "",
+            "arrival_airport": "",
+            "arrival_code": "",
+            "departure_date": "",
+            "departure_time": "",
+            "arrival_date": "",
+            "arrival_time": "",
+            "booking_reference": "",
+            "passenger_names": [],
+            "ticket_numbers": []
+        }
+    
+    client = OpenAI(api_key=api_key)
+    
     try:
         # Create a system prompt to guide the analysis
         system_prompt = """
@@ -51,6 +76,8 @@ def analyze_flight_ticket(image_data):
         }
         """
         
+        logger.info(f"Sending request to OpenAI API with image of size {len(image_data)}")
+        
         # Call the OpenAI API with the image
         response = client.chat.completions.create(
             model=MODEL_NAME,
@@ -66,11 +93,32 @@ def analyze_flight_ticket(image_data):
         )
         
         # Parse the response
-        result = json.loads(response.choices[0].message.content)
+        content = response.choices[0].message.content
+        if not content:
+            logger.error("Empty response from OpenAI API")
+            return {
+                "error": "Empty response from OpenAI API",
+                "flight_number": "",
+                "airline": "",
+                "departure_airport": "",
+                "departure_code": "",
+                "arrival_airport": "",
+                "arrival_code": "",
+                "departure_date": "",
+                "departure_time": "",
+                "arrival_date": "",
+                "arrival_time": "",
+                "booking_reference": "",
+                "passenger_names": [],
+                "ticket_numbers": []
+            }
+            
+        result = json.loads(content)
+        logger.info("Successfully parsed OpenAI response")
         return result
     
     except Exception as e:
-        print(f"Error in OpenAI analysis: {str(e)}")
+        logger.error(f"Error in OpenAI analysis: {str(e)}")
         return {
             "error": str(e),
             "flight_number": "",
