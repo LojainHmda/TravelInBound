@@ -359,12 +359,12 @@
                     <table class="table mb-0" style="border-collapse: separate; border-spacing: 0;">
                         <thead>
                             <tr style="background-color: #000080; color: white;">
-                                <th style="width: 15%">Service</th>
-                                <th style="width: 20%">Dates</th>
-                                <th style="width: 30%">Description</th>
+                                <th style="width: 10%">Service</th>
+                                <th style="width: 15%">Dates</th>
+                                <th style="width: 25%">Description</th>
                                 <th style="width: 10%">Amount</th>
-                                <th style="width: 15%">Status</th>
-                                <th style="width: 10%">Actions</th>
+                                <th style="width: 10%">Status</th>
+                                <th style="width: 30%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -440,10 +440,12 @@
                                             <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1 btn-tbp-primary">
                                                 <i class="fas fa-cogs me-1 icon-orange"></i>Confirm
                                             </a>
-                                            
-                                            <!-- Show large delete button for unconfirmed items -->
-                                            <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
-                                                <i class="fas fa-trash-alt me-1"></i>Delete
+                                        {% endif %}
+                                        
+                                        <!-- Add a prominently visible DELETE button for any item that's not confirmed or cancelled -->
+                                        {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+                                            <a href="#" class="btn btn-danger btn-sm" style="background-color: #FF3300; border-color: #FF3300; font-weight: bold;" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
+                                                <i class="fas fa-trash-alt me-1"></i>DELETE
                                             </a>
                                         {% endif %}
                                         
