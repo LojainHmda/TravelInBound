@@ -89,6 +89,10 @@ def create_app():
         from app.routes.auth import auth_bp
         app.register_blueprint(auth_bp)
         
+        # Register tools blueprint
+        from app.routes.tools import tools_bp
+        app.register_blueprint(tools_bp)
+        
         # Set up login manager
         from app.models import User
         @login_manager.user_loader
