@@ -7,10 +7,10 @@ SERVICE_INSURANCE = 'INSURANCE'
 
 # Define constants for status
 STATUS_REQUEST = 'REQUEST'
-STATUS_BOOKED = 'BOOKED'
+STATUS_BOOKED = 'BOOKED'  # Keep for backward compatibility
 STATUS_IN_PROGRESS = 'IN_PROGRESS'
-STATUS_CONFIRMED = 'CONFIRMED'  # New standard term
-STATUS_COMPLETED = 'COMPLETED'  # Consider deprecating in favor of STATUS_CONFIRMED
+STATUS_CONFIRMED = 'CONFIRMED'
+STATUS_COMPLETED = 'COMPLETED'  # Keep for backward compatibility
 
 # Import models
 from app.models.user import User, Agent, create_test_data
