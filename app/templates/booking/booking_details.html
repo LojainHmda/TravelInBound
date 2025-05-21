@@ -440,13 +440,11 @@
                                             <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1 btn-tbp-primary">
                                                 <i class="fas fa-cogs me-1 icon-orange"></i>Confirm
                                             </a>
-                                        {% endif %}
-                                        
-                                        {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
-                                            <!-- Show delete button outside dropdown for unconfirmed items -->
-                                            <button class="btn btn-sm me-1 btn-danger" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
+                                            
+                                            <!-- Show large delete button for unconfirmed items -->
+                                            <a href="#" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
                                                 <i class="fas fa-trash-alt me-1"></i>Delete
-                                            </button>
+                                            </a>
                                         {% endif %}
                                         
                                         <div class="dropdown">
