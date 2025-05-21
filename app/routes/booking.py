@@ -1444,8 +1444,8 @@ def generate_invoice(booking_id):
             if not booking.invoice_number:
                 booking.generate_invoice_number()
             
-            # Update status to INVOICE
-            booking.status = STATUS_BOOKED
+            # Update status to IN_PROGRESS
+            booking.status = STATUS_IN_PROGRESS
             
             # Add invoice notes if provided
             notes = form.notes.data or request.form.get('invoice_notes', '')
