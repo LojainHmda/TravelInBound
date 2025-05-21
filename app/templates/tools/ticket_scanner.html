@@ -165,36 +165,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const scanAnotherButton = document.getElementById('scanAnotherButton');
     const tryAgainButton = document.getElementById('tryAgainButton');
     const copyToClipboardButton = document.getElementById('copyToClipboardButton');
-    
+
     // Add debug logging
     console.log('Ticket scanner page loaded');
-    
+
     // Handle form submission
     ticketUploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const fileInput = document.getElementById('ticketImage');
         const file = fileInput.files[0];
-        
+
         if (!file) {
             alert('Please select a file to upload');
             return;
         }
-        
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please select a valid image file (JPG, JPEG, or PNG)');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            return;
+        }
+
         console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-        
+
         // Show loading screen
         uploadSection.style.display = 'none';
         loadingSection.style.display = 'block';
         resultsSection.style.display = 'none';
         errorSection.style.display = 'none';
-        
+
         // Create form data for upload
         const formData = new FormData();
         formData.append('file', file);
-        
+
         console.log('Sending file to server for analysis...');
-        
+
         // Send to server for analysis
         fetch('/tools/analyze-ticket', {
             method: 'POST',
@@ -212,10 +225,10 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             console.log('Analysis complete:', data);
-            
+
             // Hide loading
             loadingSection.style.display = 'none';
-            
+
             if (data.error) {
                 // Show error
                 errorSection.style.display = 'block';
@@ -223,12 +236,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Analysis error:', data.error);
                 return;
             }
-            
+
             // Show results
             resultsSection.style.display = 'block';
-            
+
             const results = data.results;
-            
+
             // Populate the results
             document.getElementById('flight_number').textContent = results.flight_number || 'Not detected';
             document.getElementById('airline').textContent = results.airline || 'Not detected';
@@ -239,13 +252,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('date').textContent = results.departure_date || 'Not detected';
             document.getElementById('time').textContent = results.departure_time || 'Not detected';
             document.getElementById('booking_reference').textContent = results.booking_reference || 'Not detected';
-            
+
             // Handle arrays
             document.getElementById('ticket_numbers').textContent = 
                 results.ticket_numbers && results.ticket_numbers.length ? results.ticket_numbers.join(', ') : 'Not detected';
             document.getElementById('passenger_names').textContent = 
                 results.passenger_names && results.passenger_names.length ? results.passenger_names.join(', ') : 'Not detected';
-                
+
             // Add JSON data to a hidden field for debugging
             const dataField = document.createElement('div');
             dataField.id = 'rawJsonData';
@@ -260,21 +273,21 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('errorMessage').textContent = 'An error occurred during analysis: ' + error.message;
         });
     });
-    
+
     // Handle scan another button
     scanAnotherButton.addEventListener('click', function() {
         uploadSection.style.display = 'block';
         resultsSection.style.display = 'none';
         document.getElementById('ticketImage').value = ''; // Clear the file input
     });
-    
+
     // Handle try again button
     tryAgainButton.addEventListener('click', function() {
         uploadSection.style.display = 'block';
         errorSection.style.display = 'none';
         document.getElementById('ticketImage').value = ''; // Clear the file input
     });
-    
+
     // Handle copy to clipboard button
     copyToClipboardButton.addEventListener('click', function() {
         const flightInfo = `Flight: ${document.getElementById('flight_number').textContent}
@@ -286,7 +299,7 @@ Time: ${document.getElementById('time').textContent}
 Booking Ref: ${document.getElementById('booking_reference').textContent}
 Ticket #: ${document.getElementById('ticket_numbers').textContent}
 Passenger(s): ${document.getElementById('passenger_names').textContent}`;
-        
+
         navigator.clipboard.writeText(flightInfo)
             .then(() => {
                 alert('Flight information copied to clipboard!');
@@ -296,7 +309,7 @@ Passenger(s): ${document.getElementById('passenger_names').textContent}`;
                 alert('Could not copy to clipboard. Please try again.');
             });
     });
-    
+
     // Add debug button at bottom for developer use
     const debugRow = document.createElement('div');
     debugRow.className = 'row mt-4';
@@ -307,7 +320,7 @@ Passenger(s): ${document.getElementById('passenger_names').textContent}`;
         </div>
     `;
     document.querySelector('.card-body').appendChild(debugRow);
-    
+
     // Add debug button functionality
     document.getElementById('debugButton').addEventListener('click', function() {
         const debugInfo = document.getElementById('debugInfo');
@@ -315,7 +328,7 @@ Passenger(s): ${document.getElementById('passenger_names').textContent}`;
             // Collect debug information
             let debugText = 'Browser: ' + navigator.userAgent + '\n';
             debugText += 'Screen: ' + window.innerWidth + 'x' + window.innerHeight + '\n';
-            
+
             // Add raw JSON data if available
             const rawData = document.getElementById('rawJsonData');
             if (rawData) {
@@ -323,7 +336,7 @@ Passenger(s): ${document.getElementById('passenger_names').textContent}`;
             } else {
                 debugText += '\nNo analysis data available';
             }
-            
+
             debugInfo.textContent = debugText;
             debugInfo.style.display = 'block';
             this.textContent = 'Hide Debug Info';
