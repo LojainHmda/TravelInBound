@@ -442,6 +442,13 @@
                                             </a>
                                         {% endif %}
                                         
+                                        {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+                                            <!-- Show delete button outside dropdown for unconfirmed items -->
+                                            <button class="btn btn-sm me-1 btn-danger" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
+                                                <i class="fas fa-trash-alt me-1"></i>Delete
+                                            </button>
+                                        {% endif %}
+                                        
                                         <div class="dropdown">
                                             <button class="btn btn-sm dropdown-toggle btn-tbp" type="button" data-bs-toggle="dropdown">
                                                 <i class="fas fa-ellipsis-h icon-orange"></i> More
