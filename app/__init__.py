@@ -1,9 +1,10 @@
 import os
-from flask import Flask
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from app.api_exemptions import is_csrf_exempt
 
 # Create the db instance with a model class inheriting from DeclarativeBase
 class Base(DeclarativeBase):
@@ -32,6 +33,8 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in to access this page'
     login_manager.login_message_category = 'warning'
+    
+    # Initialize CSRF protection
     csrf.init_app(app)
     
     # Register custom Jinja2 filters

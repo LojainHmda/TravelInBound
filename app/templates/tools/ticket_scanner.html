@@ -210,12 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Sending file to server for analysis...');
 
         // Send to server for analysis
+        // Add CSRF token from meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        formData.append('csrf_token', csrfToken);
+        
         fetch('/tools/analyze-ticket', {
             method: 'POST',
             body: formData,
-            headers: {
-                // Don't set Content-Type header - the browser will set it properly with the boundary parameter for multipart/form-data
-            }
+            credentials: 'same-origin'
         })
         .then(response => {
             console.log('Response status:', response.status);
