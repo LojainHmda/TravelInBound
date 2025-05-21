@@ -11,10 +11,17 @@
                     <h4 class="mb-0"><i class="fas fa-plane me-2"></i>Flight Ticket Scanner</h4>
                 </div>
                 <div class="card-body">
+                    {% if has_api_key %}
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
                         Upload a flight ticket image to automatically extract flight details using AI.
                     </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>API Key Missing:</strong> The OpenAI API key is not configured. Please contact your administrator to enable the ticket scanning feature.
+                    </div>
+                    {% endif %}
 
                     <div id="uploadSection">
                         <form id="ticketUploadForm" class="mb-4">
@@ -159,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tryAgainButton = document.getElementById('tryAgainButton');
     const copyToClipboardButton = document.getElementById('copyToClipboardButton');
     
+    // Add debug logging
+    console.log('Ticket scanner page loaded');
+    
     // Handle form submission
     ticketUploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -171,6 +181,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+        
         // Show loading screen
         uploadSection.style.display = 'none';
         loadingSection.style.display = 'block';
@@ -181,13 +193,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('file', file);
         
+        console.log('Sending file to server for analysis...');
+        
         // Send to server for analysis
         fetch('/tools/analyze-ticket', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Analysis complete:', data);
+            
             // Hide loading
             loadingSection.style.display = 'none';
             
@@ -195,6 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Show error
                 errorSection.style.display = 'block';
                 document.getElementById('errorMessage').textContent = data.error;
+                console.error('Analysis error:', data.error);
                 return;
             }
             
@@ -219,12 +242,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 results.ticket_numbers && results.ticket_numbers.length ? results.ticket_numbers.join(', ') : 'Not detected';
             document.getElementById('passenger_names').textContent = 
                 results.passenger_names && results.passenger_names.length ? results.passenger_names.join(', ') : 'Not detected';
+                
+            // Add JSON data to a hidden field for debugging
+            const dataField = document.createElement('div');
+            dataField.id = 'rawJsonData';
+            dataField.style.display = 'none';
+            dataField.textContent = JSON.stringify(results, null, 2);
+            resultsSection.appendChild(dataField);
         })
         .catch(error => {
             console.error('Error during ticket analysis:', error);
             loadingSection.style.display = 'none';
             errorSection.style.display = 'block';
-            document.getElementById('errorMessage').textContent = 'An error occurred during analysis. Please try again.';
+            document.getElementById('errorMessage').textContent = 'An error occurred during analysis: ' + error.message;
         });
     });
     
@@ -262,6 +292,42 @@ Passenger(s): ${document.getElementById('passenger_names').textContent}`;
                 console.error('Error copying text: ', err);
                 alert('Could not copy to clipboard. Please try again.');
             });
+    });
+    
+    // Add debug button at bottom for developer use
+    const debugRow = document.createElement('div');
+    debugRow.className = 'row mt-4';
+    debugRow.innerHTML = `
+        <div class="col-12">
+            <button id="debugButton" class="btn btn-sm btn-outline-secondary">Show Debug Info</button>
+            <div id="debugInfo" class="mt-2 p-2 border rounded" style="display: none; font-family: monospace; font-size: 12px; white-space: pre; overflow: auto;"></div>
+        </div>
+    `;
+    document.querySelector('.card-body').appendChild(debugRow);
+    
+    // Add debug button functionality
+    document.getElementById('debugButton').addEventListener('click', function() {
+        const debugInfo = document.getElementById('debugInfo');
+        if (debugInfo.style.display === 'none') {
+            // Collect debug information
+            let debugText = 'Browser: ' + navigator.userAgent + '\n';
+            debugText += 'Screen: ' + window.innerWidth + 'x' + window.innerHeight + '\n';
+            
+            // Add raw JSON data if available
+            const rawData = document.getElementById('rawJsonData');
+            if (rawData) {
+                debugText += '\nRAW JSON RESPONSE:\n' + rawData.textContent;
+            } else {
+                debugText += '\nNo analysis data available';
+            }
+            
+            debugInfo.textContent = debugText;
+            debugInfo.style.display = 'block';
+            this.textContent = 'Hide Debug Info';
+        } else {
+            debugInfo.style.display = 'none';
+            this.textContent = 'Show Debug Info';
+        }
     });
 });
 </script>
