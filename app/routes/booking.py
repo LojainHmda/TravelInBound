@@ -3,6 +3,9 @@ import json
 import sys
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+import os
+import base64
+from werkzeug.utils import secure_filename
 from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
@@ -10,6 +13,7 @@ from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from flask_login import current_user, login_required
+from app.utils.openai_helper import analyze_flight_ticket
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -1771,3 +1775,116 @@ def service_item_details_api(item_id):
         'confirmation_reference': confirmation_doc.document_number if confirmation_doc else None,
         'form_html': form_html
     })
+
+@booking_bp.route('/<int:booking_id>/upload_document', methods=['POST'])
+def upload_document(booking_id):
+    """Upload a document for a service item"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if request.method == 'POST':
+        service_item_id = request.form.get('service_item_id')
+        document_type = request.form.get('document_type')
+        document_number = request.form.get('document_number')
+        notes = request.form.get('notes', '')
+        extracted_data = request.form.get('extracted_data', '')
+        
+        # Validate the service item exists and belongs to this booking
+        service_item = ServiceItem.query.get_or_404(service_item_id)
+        if service_item.booking_id != booking.id:
+            flash('Invalid service item', 'danger')
+            return redirect(url_for('booking.details', booking_id=booking.id))
+        
+        # Handle file upload if provided
+        file = request.files.get('document_file')
+        file_path = None
+        
+        if file and file.filename:
+            # Create uploads directory if it doesn't exist
+            upload_dir = os.path.join('static', 'uploads', 'documents', str(booking.id))
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            # Secure the filename and save the file
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(upload_dir, filename)
+            file.save(file_path)
+            
+            # If it's a ticket, check if we should analyze it
+            if document_type == 'TICKET' and not extracted_data:
+                try:
+                    # Process image for AI analysis if it's a supported format
+                    if filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+                        # Read file and convert to base64
+                        with open(file_path, 'rb') as img_file:
+                            img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                        
+                        # Analyze the image with OpenAI
+                        analysis_results = analyze_flight_ticket(img_data)
+                        
+                        # Add the analysis results to the notes field as JSON
+                        if notes:
+                            notes += "\n\n"
+                        
+                        notes += f"AI Analysis Results:\n"
+                        notes += f"Flight: {analysis_results.get('flight_number', 'Unknown')}\n"
+                        notes += f"Airline: {analysis_results.get('airline', 'Unknown')}\n"
+                        notes += f"From: {analysis_results.get('departure_airport', 'Unknown')} ({analysis_results.get('departure_code', '')})\n"
+                        notes += f"To: {analysis_results.get('arrival_airport', 'Unknown')} ({analysis_results.get('arrival_code', '')})\n"
+                        notes += f"Date: {analysis_results.get('departure_date', 'Unknown')}\n"
+                        notes += f"Time: {analysis_results.get('departure_time', 'Unknown')}\n"
+                        
+                        # Use the analyzed ticket number if available and not manually provided
+                        if not document_number and analysis_results.get('ticket_numbers'):
+                            document_number = analysis_results.get('ticket_numbers')[0]
+                        
+                        # Use the analyzed booking reference if available and not in notes
+                        if analysis_results.get('booking_reference') and 'booking reference' not in notes.lower():
+                            notes += f"Booking Reference: {analysis_results.get('booking_reference')}\n"
+                except Exception as e:
+                    flash(f'Error analyzing ticket: {str(e)}', 'warning')
+                    print(f"Error in ticket analysis: {str(e)}")
+        
+        # Create a new document
+        document = Document(
+            service_item_id=service_item.id,
+            document_type=document_type,
+            file_path=file_path,
+            document_number=document_number,
+            notes=notes
+        )
+        
+        db.session.add(document)
+        db.session.commit()
+        
+        flash('Document uploaded successfully', 'success')
+    
+    return redirect(url_for('booking.details', booking_id=booking.id))
+
+@booking_bp.route('/api/analyze_ticket', methods=['POST'])
+def analyze_ticket_api():
+    """API endpoint for analyzing ticket images with AI"""
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    if not file or not file.filename:
+        return jsonify({'error': 'Invalid file'}), 400
+    
+    # Check if the file is an image
+    if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+        return jsonify({'error': 'File must be an image (JPG, JPEG, PNG)'}), 400
+    
+    try:
+        # Read file and convert to base64
+        file_data = file.read()
+        img_data = base64.b64encode(file_data).decode('utf-8')
+        
+        # Analyze the image with OpenAI
+        analysis_results = analyze_flight_ticket(img_data)
+        
+        return jsonify({
+            'success': True,
+            'results': analysis_results
+        })
+    except Exception as e:
+        print(f"Error in API ticket analysis: {str(e)}")
+        return jsonify({'error': str(e)}), 500

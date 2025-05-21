@@ -948,11 +948,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{{ url_for('booking.upload_document', booking_id=booking.id) }}">
+                <form id="documentUploadForm" method="POST" action="{{ url_for('booking.upload_document', booking_id=booking.id) }}" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label class="form-label">Service Item</label>
-                        <select class="form-select">
+                        <select class="form-select" name="service_item_id" id="service_item_id" required>
                             {% for item in booking.service_items %}
                             <option value="{{ item.id }}">{{ item.service_type }} - {{ item.description[:30] }}...</option>
                             {% endfor %}
@@ -960,7 +960,7 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Document Type</label>
-                        <select class="form-select">
+                        <select class="form-select" name="document_type" id="document_type" required>
                             <option value="TICKET">Ticket</option>
                             <option value="CONFIRMATION">Booking Confirmation</option>
                             <option value="VISA">Visa Document</option>
@@ -968,25 +968,107 @@
                             <option value="OTHER">Other Document</option>
                         </select>
                     </div>
+                    
+                    <!-- AI Assistance Badge for Ticket Analysis -->
+                    <div id="ticketAnalysisHelper" class="mb-3 p-2 bg-light border rounded" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-info me-2">
+                                <i class="fas fa-robot"></i> AI Assistance
+                            </span>
+                            <small>Upload a flight ticket image to automatically extract details</small>
+                        </div>
+                    </div>
+                    
                     <div class="mb-3">
                         <label class="form-label">Document Number</label>
-                        <input type="text" class="form-control" placeholder="e.g., Ticket number, confirmation code">
+                        <input type="text" class="form-control" name="document_number" id="document_number" placeholder="e.g., Ticket number, confirmation code" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">File</label>
-                        <input type="file" class="form-control">
+                        <input type="file" class="form-control" name="document_file" id="document_file">
+                        <small class="form-text text-muted">Supported formats: PDF, JPG, PNG</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Notes</label>
-                        <textarea class="form-control" rows="3"></textarea>
+                        <textarea class="form-control" name="notes" id="document_notes" rows="3"></textarea>
                     </div>
+                    
+                    <!-- Hidden fields for ticket extraction data -->
+                    <input type="hidden" name="extracted_data" id="extracted_data">
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-yellow">Upload Document</button>
+                <button type="submit" form="documentUploadForm" class="btn btn-yellow">Upload Document</button>
             </div>
-                </form>
+        </div>
+    </div>
+</div>
+
+<!-- Ticket Analysis Results Modal -->
+<div class="modal fade" id="ticketAnalysisModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-plane me-2" style="color: #FF8C00;"></i>Flight Ticket Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="ticketAnalysisLoader" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Analyzing ticket with AI... Please wait.</p>
+                </div>
+                <div id="ticketAnalysisResults" style="display: none;">
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> Ticket details have been extracted.
+                    </div>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%">Flight Number</th>
+                                <td id="result_flight_number"></td>
+                            </tr>
+                            <tr>
+                                <th>Airline</th>
+                                <td id="result_airline"></td>
+                            </tr>
+                            <tr>
+                                <th>Departure</th>
+                                <td id="result_departure"></td>
+                            </tr>
+                            <tr>
+                                <th>Arrival</th>
+                                <td id="result_arrival"></td>
+                            </tr>
+                            <tr>
+                                <th>Date & Time</th>
+                                <td id="result_datetime"></td>
+                            </tr>
+                            <tr>
+                                <th>Booking Reference</th>
+                                <td id="result_pnr"></td>
+                            </tr>
+                            <tr>
+                                <th>Ticket Number(s)</th>
+                                <td id="result_ticket_numbers"></td>
+                            </tr>
+                            <tr>
+                                <th>Passenger Name(s)</th>
+                                <td id="result_passenger_names"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="ticketAnalysisError" class="alert alert-danger" style="display: none;">
+                    <strong>Error!</strong> <span id="error_message">Could not analyze the ticket. Please enter details manually.</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="useExtractedDataBtn" class="btn btn-primary" style="display: none;">Use These Details</button>
+            </div>
         </div>
     </div>
 </div>
@@ -994,6 +1076,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/document_upload.js') }}"></script>
 <script>
 // Initialize existing payment data if available
 window.existingPayments = [
