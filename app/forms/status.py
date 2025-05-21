@@ -10,7 +10,6 @@ class UpdateServiceStatusForm(FlaskForm):
     """Form for updating the status of a service item"""
     status = SelectField('Status', choices=[
         (STATUS_REQUEST, 'Request'),
-        (STATUS_BOOKED, 'Booked'),
         (STATUS_IN_PROGRESS, 'In Progress'),
         (STATUS_CONFIRMED, 'Confirmed')
     ], validators=[DataRequired()])

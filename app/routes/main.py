@@ -16,11 +16,12 @@ def index():
 @main_bp.route('/dashboard')
 def dashboard():
     """Dashboard showing booking statistics and status"""
-    # Get counts for various statuses
+    # Get counts for various statuses - no longer using BOOKED status
     request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
     in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
+    confirmed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
+    # Still pass a value of 0 for booked_count to avoid template errors
+    booked_count = 0
     
     # Get all recent bookings
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
@@ -37,7 +38,7 @@ def dashboard():
         request_count=request_count,
         booked_count=booked_count,
         in_progress_count=in_progress_count,
-        completed_count=completed_count,
+        confirmed_count=confirmed_count,  # Changed from completed_count to confirmed_count
         recent_bookings=recent_bookings,
         flight_items=flight_items,
         hotel_items=hotel_items,

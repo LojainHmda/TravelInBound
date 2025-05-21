@@ -33,35 +33,18 @@
             </div>
         </div>
         
-        <!-- Booked Widget -->
+        <!-- In Progress Widget (Replaces Booked) -->
         <div class="col-md-3 px-2">
             <div class="card shadow-sm dashboard-card"
                  style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;"
-                 onclick="filterBookings('BOOKED')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small fw-bold mb-1">Booked</h6>
-                            <h3 class="fw-bold mb-0">{{ booked_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-white p-2 shadow-sm">
-                            <i class="fas fa-file-invoice-dollar" style="color: #FF8C00;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- In Progress Widget -->
-        <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('IN_PROGRESS')">
+                 onclick="filterBookings('IN_PROGRESS')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title small fw-bold mb-1">In Progress</h6>
                             <h3 class="fw-bold mb-0">{{ in_progress_count }}</h3>
                         </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
+                        <div class="dashboard-icon rounded-circle bg-white p-2 shadow-sm">
                             <i class="fas fa-cogs" style="color: #FF8C00;"></i>
                         </div>
                     </div>
@@ -69,14 +52,16 @@
             </div>
         </div>
         
-        <!-- Fulfilled Widget -->
+        <!-- This is now a duplicate - removing it -->
+        
+        <!-- Confirmed Widget (replaces Fulfilled) -->
         <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('FULFILLED')">
+            <div class="card shadow-sm dashboard-card" style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('CONFIRMED')">
                 <div class="card-body py-3 px-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="card-title small fw-bold mb-1">Fulfilled</h6>
-                            <h3 class="fw-bold mb-0">{{ completed_count }}</h3>
+                            <h6 class="card-title small fw-bold mb-1">Confirmed</h6>
+                            <h3 class="fw-bold mb-0">{{ confirmed_count }}</h3>
                         </div>
                         <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
                             <i class="fas fa-check-circle" style="color: #FF8C00;"></i>
