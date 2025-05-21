@@ -22,6 +22,14 @@ def analyze_ticket():
         if not os.environ.get("OPENAI_API_KEY"):
             return jsonify({'error': 'OpenAI API key is not configured. Please contact the administrator.'}), 500
 
+        # Check for CSRF token in form data
+        if 'csrf_token' not in request.form:
+            current_app.logger.error("CSRF token missing in ticket analysis request")
+            return jsonify({'error': 'CSRF token missing. Please refresh the page and try again.'}), 400
+            
+        # Note: Flask-WTF will automatically validate the token when handling form submissions
+        # through a form class, but for API endpoints we need to handle it manually if needed
+
         if 'file' not in request.files:
             return jsonify({'error': 'No file provided'}), 400
 
