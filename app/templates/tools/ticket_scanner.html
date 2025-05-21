@@ -198,7 +198,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Send to server for analysis
         fetch('/tools/analyze-ticket', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                // Don't set Content-Type header - the browser will set it properly with the boundary parameter for multipart/form-data
+            }
         })
         .then(response => {
             console.log('Response status:', response.status);

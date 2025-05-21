@@ -43,21 +43,31 @@ def analyze_ticket():
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         
         # Read file and convert to base64
-        file_data = file.read()
-        file_size = len(file_data)
-        
-        if file_size > 5 * 1024 * 1024:  # 5MB
-            return jsonify({
-                'error': 'File too large. Please upload an image smaller than 5MB'
-            }), 400
+        try:
+            file_data = file.read()
+            file_size = len(file_data)
             
-        if file_size < 1000:  # 1KB
-            return jsonify({
-                'error': 'File too small. The image may be corrupt or empty'
-            }), 400
+            if file_size > 5 * 1024 * 1024:  # 5MB
+                return jsonify({
+                    'error': 'File too large. Please upload an image smaller than 5MB'
+                }), 400
+                
+            if file_size < 100:  # Too small to be a valid image
+                return jsonify({
+                    'error': 'File too small. The image may be corrupt or empty'
+                }), 400
+                
+            # Convert to base64
+            img_data = base64.b64encode(file_data).decode('utf-8')
             
-        # Convert to base64
-        img_data = base64.b64encode(file_data).decode('utf-8')
+            # Log image info for debugging
+            current_app.logger.info(
+                f"Image processed: {file.filename}, size: {file_size} bytes, "
+                f"base64 length: {len(img_data)}"
+            )
+        except Exception as e:
+            current_app.logger.error(f"Error reading image file: {str(e)}")
+            return jsonify({'error': f"Could not process image: {str(e)}"}), 400
         
         # Log that we're calling the OpenAI API (only log the first 100 chars of base64)
         current_app.logger.info(
