@@ -18,6 +18,8 @@ def ticket_scanner():
 @tools_bp.route('/analyze-ticket', methods=['POST'])
 def analyze_ticket():
     """API endpoint for analyzing ticket images with AI"""
+    # This route is exempted from CSRF protection since it's an API endpoint
+    # called from JavaScript
     try:
         if not os.environ.get("OPENAI_API_KEY"):
             return jsonify({'error': 'OpenAI API key is not configured. Please contact the administrator.'}), 500
