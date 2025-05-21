@@ -9,6 +9,7 @@ from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from flask_login import current_user, login_required
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
 from app.forms.status import UpdateServiceStatusForm
@@ -16,6 +17,8 @@ from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
+
+
 
 @booking_bp.route('/api/<int:booking_id>/details', methods=['GET'])
 def booking_api_details(booking_id):

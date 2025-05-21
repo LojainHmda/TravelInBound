@@ -1362,6 +1362,43 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endif %}
 {% endfor %}
 
+<!-- Delete Service Item Modal - Generated for each service item that can be deleted -->
+{% for item in booking.service_items %}
+{% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+<div class="modal fade" id="deleteServiceModal{{ item.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Service Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('booking.delete_service_item', item_id=item.id, _external=False) }}" method="POST">
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> You are about to permanently delete this service item. This action cannot be undone.
+                    </div>
+                    <p>Are you sure you want to delete the following service?</p>
+                    <div class="service-summary p-3 mb-3 border rounded bg-light">
+                        <div><strong>Type:</strong> {{ item.service_type }}</div>
+                        <div><strong>Dates:</strong> {{ item.start_date.strftime('%d %b %Y') }} - {{ item.end_date.strftime('%d %b %Y') }}</div>
+                        <div><strong>Description:</strong> {{ item.description }}</div>
+                        <div><strong>Amount:</strong> ${{ "%.2f"|format(item.amount) }}</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Delete Permanently
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Booking form validation
