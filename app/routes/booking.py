@@ -683,17 +683,22 @@ def update_service_status(item_id):
     form = UpdateServiceStatusForm()
     
     if form.validate_on_submit():
-        service_item.status = form.status.data
-        db.session.commit()
-        
-        # If the status is changed to CONFIRMED, check if all items are now confirmed
-        if service_item.status == STATUS_CONFIRMED:
-            if booking.can_complete():
-                booking.status = STATUS_CONFIRMED
-                db.session.commit()
-                flash('All services are confirmed. Booking marked as confirmed!', 'success')
+        # Check if the booking is in the correct status for service confirmation
+        if form.status.data == STATUS_CONFIRMED and booking.status != STATUS_IN_PROGRESS:
+            flash('Error: Booking must be IN_PROGRESS before services can be confirmed', 'danger')
+        else:
+            # Update the service item status
+            service_item.status = form.status.data
+            db.session.commit()
             
-        flash(f'Service item status updated to {service_item.status}', 'success')
+            # If the status is changed to CONFIRMED, check if all items are now confirmed
+            if service_item.status == STATUS_CONFIRMED:
+                if booking.can_complete():
+                    booking.status = STATUS_CONFIRMED
+                    db.session.commit()
+                    flash('All services are confirmed. Booking marked as confirmed!', 'success')
+                
+            flash(f'Service item status updated to {service_item.status}', 'success')
     
     # Check for referrer to return to the correct page
     referrer = request.referrer
@@ -871,8 +876,13 @@ def confirm_service(item_id):
             else:
                 print(f"No supplier found with code: {supplier_code}", file=sys.stderr)
         
-        # Set item status to IN_PROGRESS
-        service_item.status = STATUS_IN_PROGRESS
+        # Set item status to CONFIRMED when saving confirmation details
+        if service_item.status == STATUS_IN_PROGRESS:
+            service_item.status = STATUS_CONFIRMED
+        else:
+            # If the booking isn't in IN_PROGRESS status, check and alert
+            if service_item.booking.status != STATUS_IN_PROGRESS:
+                flash('Warning: This booking is not in IN_PROGRESS status. Start operations first.', 'warning')
         
         # Check if a confirmation document already exists
         document = Document.query.filter_by(

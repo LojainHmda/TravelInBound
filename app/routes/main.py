@@ -56,8 +56,8 @@ def operations_dashboard():
     visa_count = ServiceItem.query.filter_by(service_type='VISA').count()
     insurance_count = ServiceItem.query.filter_by(service_type='INSURANCE').count()
     
-    # Get recent bookings
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    # Get IN_PROGRESS bookings only for operations dashboard
+    in_progress_bookings = Booking.query.filter_by(status=STATUS_IN_PROGRESS).order_by(Booking.created_at.desc()).all()
     
     return render_template(
         'operations_dashboard.html',
@@ -66,5 +66,5 @@ def operations_dashboard():
         transport_count=transport_count,
         visa_count=visa_count,
         insurance_count=insurance_count,
-        recent_bookings=recent_bookings
+        recent_bookings=in_progress_bookings
     )
