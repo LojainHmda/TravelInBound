@@ -148,10 +148,11 @@
 </div>
 {% endblock %}
 
-{% block additional_content %}
-<!-- Include the Ticket Scanner Modal -->
-{% include 'modals/ticket_scanner_modal.html' %}
-{% endblock %}
+<!-- We need to include the modal directly in the body of the page -->
+<div id="ticketScannerModalContainer">
+    <!-- Include the Ticket Scanner Modal -->
+    {% include 'modals/ticket_scanner_modal.html' %}
+</div>
 
 {% block service_script %}
 <script src="{{ url_for('static', filename='js/confirm_flight.js') }}"></script>
