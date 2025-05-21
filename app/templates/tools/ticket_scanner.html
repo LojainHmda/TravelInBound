@@ -25,6 +25,7 @@
 
                     <div id="uploadSection">
                         <form id="ticketUploadForm" class="mb-4">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="mb-3">
                                 <label for="ticketImage" class="form-label">Upload Ticket Image</label>
                                 <input type="file" class="form-control" id="ticketImage" accept="image/*" required>
