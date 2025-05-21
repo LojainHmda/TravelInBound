@@ -250,8 +250,8 @@ def new_booking():
                     booking.generate_invoice_number()
                     print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                 
-                # Update the booking status to BOOKED
-                booking.status = STATUS_BOOKED
+                # Update the booking status to IN_PROGRESS
+                booking.status = STATUS_IN_PROGRESS
                 
                 # Save changes
                 db.session.commit()
@@ -429,14 +429,14 @@ def new_booking():
                         booking.generate_invoice_number()
                         print(f"Generated invoice number: {booking.invoice_number}", file=sys.stderr)
                     
-                    # Update the booking status to BOOKED
-                    booking.status = STATUS_BOOKED
+                    # Update the booking status to IN_PROGRESS
+                    booking.status = STATUS_IN_PROGRESS
                     
-                    # Update all service items to BOOKED status too
+                    # Update all service items to IN_PROGRESS status too
                     for item in booking.service_items:
                         if item.status == STATUS_REQUEST:
-                            item.status = STATUS_BOOKED
-                            print(f"Updated service item {item.id} status to BOOKED", file=sys.stderr)
+                            item.status = STATUS_IN_PROGRESS
+                            print(f"Updated service item {item.id} status to IN_PROGRESS", file=sys.stderr)
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
@@ -569,10 +569,10 @@ def add_service_item(booking_id):
         print(f"Booking has invoice: {has_invoice} - Invoice #: {booking.invoice_number}", file=sys.stderr)
         
         # Generate a new invoice for the service item, separate from the booking's main invoice
-        if booking.status == STATUS_BOOKED:
-            # Set the new service item to BOOKED as well
-            service_item.status = STATUS_BOOKED
-            print(f"Set new service item to BOOKED status", file=sys.stderr)
+        if booking.status == STATUS_IN_PROGRESS:
+            # Set the new service item to IN_PROGRESS as well
+            service_item.status = STATUS_IN_PROGRESS
+            print(f"Set new service item to IN_PROGRESS status", file=sys.stderr)
             
             # Use existing invoice for now - we'll recalculate the total
             if booking.invoice_number:
@@ -650,18 +650,18 @@ def update_booking_status(booking_id):
             flash('Cannot mark as CONFIRMED until all service items are confirmed', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
-        # If moving to BOOKED status, generate invoice number and update service items
-        if new_status == STATUS_BOOKED and old_status != STATUS_BOOKED:
+        # If moving to IN_PROGRESS status, generate invoice number and update service items
+        if new_status == STATUS_IN_PROGRESS and old_status != STATUS_IN_PROGRESS:
             booking.generate_invoice_number()
             
-            # Update all service items to BOOKED status and mark as invoiced
+            # Update all service items to IN_PROGRESS status and mark as invoiced
             for item in booking.service_items:
                 if item.status == STATUS_REQUEST:
-                    item.status = STATUS_BOOKED
+                    item.status = STATUS_IN_PROGRESS
                     item.invoice_number = booking.invoice_number
                     item.invoice_date = booking.invoice_date
                     item.is_invoiced = True
-                    print(f"Updated service item {item.id} status to BOOKED and marked as invoiced", file=sys.stderr)
+                    print(f"Updated service item {item.id} status to IN_PROGRESS and marked as invoiced", file=sys.stderr)
             
             flash(f'Invoice {booking.invoice_number} generated', 'success')
         
