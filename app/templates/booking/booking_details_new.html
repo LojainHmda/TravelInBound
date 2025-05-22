@@ -1140,6 +1140,40 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Delete Service Item functionality
+    const deleteButtons = document.querySelectorAll('.delete-service-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const serviceId = this.getAttribute('data-service-id');
+            const serviceType = this.getAttribute('data-service-type');
+            const serviceDescription = this.getAttribute('data-service-description');
+            const serviceAmount = this.getAttribute('data-service-amount');
+            
+            // Update modal content
+            const detailsDiv = document.getElementById('deleteServiceItemDetails');
+            if (detailsDiv) {
+                detailsDiv.innerHTML = `
+                    <div class="service-details">
+                        <p><strong>Service Type:</strong> ${serviceType}</p>
+                        <p><strong>Description:</strong> ${serviceDescription}</p>
+                        <p><strong>Amount:</strong> $${serviceAmount}</p>
+                    </div>
+                `;
+            }
+            
+            // Update form action
+            const deleteForm = document.getElementById('deleteServiceForm');
+            if (deleteForm) {
+                deleteForm.action = `/booking/delete-service-item/${serviceId}`;
+            }
+            
+            // Show modal
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));
+            deleteModal.show();
+        });
+    });
 });
 </script>
 {% endblock %}
