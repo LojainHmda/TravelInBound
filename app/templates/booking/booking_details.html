@@ -442,8 +442,8 @@
                                             </a>
                                         {% endif %}
                                         
-                                        <!-- Add a prominently visible DELETE button for any item that's not confirmed or cancelled -->
-                                        {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+                                        <!-- Add a prominently visible DELETE button only for items with REQUEST status -->
+                                        {% if item.status == 'REQUEST' and not item.is_cancelled %}
                                             <a href="#" class="btn btn-danger btn-sm" style="background-color: #FF3300; border-color: #FF3300; font-weight: bold;" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
                                                 <i class="fas fa-trash-alt me-1"></i>DELETE
                                             </a>
@@ -488,7 +488,7 @@
                                                 </li>
                                                 {% endif %}
                                                 
-                                                {% if item.status != 'CONFIRMED' and not item.is_cancelled %}
+                                                {% if item.status == 'REQUEST' and not item.is_cancelled %}
                                                 <li>
                                                     <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
                                                         <i class="fas fa-trash-alt me-2" style="color: #dc3545;"></i><span style="color: #dc3545;">Delete Service</span>
