@@ -1166,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update form action
             const deleteForm = document.getElementById('deleteServiceForm');
             if (deleteForm) {
-                deleteForm.action = `/booking/delete-service-item/${serviceId}`;
+                deleteForm.action = `/booking/service_item/${serviceId}/delete`;
             }
             
             // Show modal
