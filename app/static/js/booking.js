@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Check if we're on a booking form page
     const isBookingForm = document.getElementById('start_date') !== null;
-    
+
     if (isBookingForm) {
         // Service selection enhancement
         const serviceOptions = document.querySelectorAll('.service-option');
@@ -15,34 +15,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
-        
+
         // Date range validation
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
-        
+
         if (startDateInput && endDateInput) {
             startDateInput.addEventListener('change', validateDateRange);
             endDateInput.addEventListener('change', validateDateRange);
-            
+
             // Set min date to today for start_date
             const today = new Date().toISOString().split('T')[0];
             if (startDateInput) {
                 startDateInput.setAttribute('min', today);
             }
         }
-        
+
         // Service type change handler
         const serviceTypeSelect = document.getElementById('service_type');
         if (serviceTypeSelect) {
             serviceTypeSelect.addEventListener('change', function() {
                 updateDescriptionPlaceholder(this.value);
             });
-            
+
             // Initialize with the current value
             updateDescriptionPlaceholder(serviceTypeSelect.value);
         }
     }
-    
+
     // Tab functionality (applies to all pages)
     // Initialize tab functionality from URL hash if present
     if (window.location.hash) {
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    
+
     // Update URL hash when tab is shown
     const tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
     if (tabEls.length > 0) {
@@ -72,22 +72,34 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    document.querySelectorAll('.delete-service-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const serviceId = this.getAttribute('data-service-id');
+            const deleteForm = document.getElementById('deleteServiceForm');
+            const deleteInput = document.getElementById('deleteServiceId');
+            deleteInput.value = serviceId;
+            const modal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));
+            modal.show();
+        });
+    });
 });
 
 // Validate that end date is after start date
 function validateDateRange() {
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
-    
+
     if (startDateInput && endDateInput && startDateInput.value && endDateInput.value) {
         const startDate = new Date(startDateInput.value);
         const endDate = new Date(endDateInput.value);
-        
+
         if (endDate < startDate) {
             alert('End date must be after start date');
             endDateInput.value = '';
         }
-        
+
         // Set min date for end_date based on start_date
         if (startDateInput.value) {
             endDateInput.setAttribute('min', startDateInput.value);
@@ -99,9 +111,9 @@ function validateDateRange() {
 function updateDescriptionPlaceholder(serviceType) {
     const descriptionField = document.getElementById('description');
     if (!descriptionField) return;
-    
+
     let placeholder = '';
-    
+
     switch (serviceType) {
         case 'FLIGHT':
             placeholder = 'E.g., One-way flight from New York to London, Economy class';
@@ -121,7 +133,7 @@ function updateDescriptionPlaceholder(serviceType) {
         default:
             placeholder = 'Enter service description';
     }
-    
+
     // Only set attribute if the element exists
     if (descriptionField) {
         descriptionField.setAttribute('placeholder', placeholder);
