@@ -615,10 +615,21 @@
                                 <tr class="table-light">
                                     <td><strong>Total Paid:</strong></td>
                                     <td colspan="4">
-                                        <strong>${{ "%.2f"|format(booking.payments|sum(attribute='amount')) }}</strong>
-                                        {% if booking.payment_status != 'FULL' and booking.total_amount > 0 %}
-                                            <span class="badge bg-warning text-dark ms-2">
-                                                Balance Due: ${{ "%.2f"|format(booking.total_amount - booking.payments|sum(attribute='amount')) }}
+                                        {% set actual_payments = booking.payments|rejectattr('payment_method', 'in', ['CREDIT_MEMO', 'MANUAL_CREDIT'])|sum(attribute='amount') %}
+                                        {% set total_credits = booking.payments|selectattr('payment_method', 'in', ['CREDIT_MEMO', 'MANUAL_CREDIT'])|sum(attribute='amount')|abs %}
+                                        <strong>${{ "%.2f"|format(actual_payments) }}</strong>
+                                        {% set balance_due = booking.total_amount - actual_payments - total_credits %}
+                                        {% if balance_due > 0 %}
+                                            <span class="badge" style="background-color: #FF8C00; color: black;" class="ms-2">
+                                                Balance Due: ${{ "%.2f"|format(balance_due) }}
+                                            </span>
+                                        {% elif balance_due < 0 %}
+                                            <span class="badge" style="background-color: #FFBF00; color: black;" class="ms-2">
+                                                Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge" style="background-color: #FFBF00; color: black;" class="ms-2">
+                                                Fully Paid
                                             </span>
                                         {% endif %}
                                     </td>
