@@ -417,7 +417,7 @@
                                                     </a>
                                                 </li>
                                                 
-                                                {% if not item.is_cancelled and item.is_invoiced %}
+                                                {% if not item.is_cancelled and booking.invoice_number %}
                                                 <li>
                                                     <a href="#" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}">
                                                         <i class="fas fa-times-circle me-2"></i>Cancel Service
@@ -1203,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Cancel Service Modals -->
 {% for item in booking.service_items %}
-{% if not item.is_cancelled and item.is_invoiced %}
+{% if not item.is_cancelled and booking.invoice_number %}
 <div class="modal fade" id="cancelServiceModal{{ item.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
