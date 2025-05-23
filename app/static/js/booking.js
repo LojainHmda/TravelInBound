@@ -80,8 +80,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const deleteForm = document.getElementById('deleteServiceForm');
             const deleteInput = document.getElementById('deleteServiceId');
             deleteInput.value = serviceId;
-            const modal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));
-            modal.show();
+            const modalElement = document.getElementById('deleteServiceModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                modal.show();
+            }
         });
     });
 });

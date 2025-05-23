@@ -215,9 +215,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof populateFlightDetailsFromTicket === 'function') {
             populateFlightDetailsFromTicket(extractedFlightData);
             
-            // Close the modal
-            const ticketScannerModal = bootstrap.Modal.getInstance(document.getElementById('ticketScannerModal'));
-            if (ticketScannerModal) {
+            // Close the modal safely
+            const modalElement = document.getElementById('ticketScannerModal');
+            if (modalElement) {
+                const ticketScannerModal = bootstrap.Modal.getOrCreateInstance(modalElement);
                 ticketScannerModal.hide();
             }
         } else {
