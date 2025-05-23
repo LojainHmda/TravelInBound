@@ -416,9 +416,12 @@
                                                 
                                                 {% if not item.is_cancelled %}
                                                 <li>
-                                                    <a href="#" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}">
-                                                        <i class="fas fa-times-circle me-2"></i>Cancel Service
-                                                    </a>
+                                                    <form method="POST" action="{{ url_for('booking.cancel_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this service item?\n\nService: {{ item.service_type }}\nDescription: {{ item.description }}\nAmount: ${{ '%.2f'|format(item.amount) }}\n\nThis action cannot be undone.')">
+                                                        {{ csrf_token() }}
+                                                        <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left;">
+                                                            <i class="fas fa-times-circle me-2"></i>Cancel Service
+                                                        </button>
+                                                    </form>
                                                 </li>
                                                 {% elif item.is_cancelled %}
                                                 <li>
