@@ -73,20 +73,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.querySelectorAll('.delete-service-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const serviceId = this.getAttribute('data-service-id');
-            const deleteForm = document.getElementById('deleteServiceForm');
-            const deleteInput = document.getElementById('deleteServiceId');
-            deleteInput.value = serviceId;
-            const modalElement = document.getElementById('deleteServiceModal');
-            if (modalElement) {
-                const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-                modal.show();
-            }
-        });
-    });
+    // Delete functionality is handled natively by Bootstrap data-bs-toggle and data-bs-target
+    console.log('Delete service buttons will work automatically via Bootstrap modal attributes');
+    
+    // Log available delete buttons for debugging
+    const deleteButtons = document.querySelectorAll('.delete-service-btn');
+    console.log('Found delete service buttons:', deleteButtons.length);
+    
+    // Log available delete modals for debugging
+    const deleteModals = document.querySelectorAll('[id^="deleteServiceModal"]');
+    console.log('Found delete service modals:', deleteModals.length);
 });
 
 // Validate that end date is after start date
