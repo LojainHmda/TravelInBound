@@ -1916,3 +1916,57 @@ def analyze_ticket_api():
     except Exception as e:
         print(f"Error in API ticket analysis: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@booking_bp.route('/booking/<int:booking_id>/add_credit_line', methods=['POST'])
+def add_credit_line(booking_id):
+    """Add a manual credit line to a booking"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    try:
+        credit_amount = float(request.form.get('credit_amount', 0))
+        credit_reason = request.form.get('credit_reason', '')
+        notes = request.form.get('notes', '')
+        
+        if credit_amount <= 0:
+            flash('Credit amount must be greater than zero', 'danger')
+            return redirect(url_for('booking.details', booking_id=booking_id))
+        
+        # Generate a credit memo number
+        credit_memo_number = booking.generate_credit_memo_number()
+        
+        # Create a negative payment entry for the credit
+        from datetime import datetime
+        credit_payment = Payment(
+            booking_id=booking.id,
+            amount=-credit_amount,  # Negative amount for credit
+            payment_date=datetime.utcnow(),
+            payment_method="MANUAL_CREDIT",
+            transaction_id=credit_memo_number,
+            notes=f"Manual Credit - {credit_reason}: {notes}"
+        )
+        db.session.add(credit_payment)
+        
+        # Create invoice record for the credit memo if booking is invoiced
+        if booking.invoice_number:
+            from app.models.invoice import Invoice
+            credit_memo = Invoice(
+                booking_id=booking.id,
+                invoice_number=credit_memo_number,
+                invoice_date=datetime.utcnow(),
+                total_amount=-credit_amount,
+                notes=f"Manual Credit Line - {credit_reason}: {notes}",
+                is_credit_memo=True,
+                referenced_invoice=booking.invoice_number
+            )
+            db.session.add(credit_memo)
+        
+        db.session.commit()
+        flash(f'Credit line of ${credit_amount:.2f} successfully added', 'success')
+        
+    except ValueError:
+        flash('Invalid credit amount entered', 'danger')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding credit line: {str(e)}', 'danger')
+    
+    return redirect(url_for('booking.details', booking_id=booking_id))
