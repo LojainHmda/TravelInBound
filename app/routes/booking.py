@@ -757,8 +757,8 @@ def cancel_service_item(item_id):
     
     # Process cancellation
     reason = request.form.get('cancel_reason', '')
-    credit_amount = request.form.get('credit_amount')
-    cancellation_fee = request.form.get('cancellation_fee', 0)
+    credit_amount = float(request.form.get('credit_amount', service_item.amount))
+    cancellation_fee = float(request.form.get('cancellation_fee', 0))
     
     # Mark item as cancelled
     service_item.is_cancelled = True
