@@ -1476,6 +1476,12 @@ def generate_invoice(booking_id):
             # Update status to IN_PROGRESS
             booking.status = STATUS_IN_PROGRESS
             
+            # Mark ALL service items as invoiced with the invoice details
+            for item in booking.service_items:
+                item.is_invoiced = True
+                item.invoice_number = booking.invoice_number
+                item.invoice_date = booking.invoice_date
+            
             # Add invoice notes if provided
             notes = form.notes.data or request.form.get('invoice_notes', '')
             # You could save notes to the booking or create a separate model for invoice notes
