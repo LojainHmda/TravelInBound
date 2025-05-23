@@ -757,6 +757,8 @@ def cancel_service_item(item_id):
     
     # Process cancellation
     reason = request.form.get('cancel_reason', '')
+    credit_amount = request.form.get('credit_amount')
+    cancellation_fee = request.form.get('cancellation_fee', 0)
     
     # Mark item as cancelled
     service_item.is_cancelled = True
@@ -775,20 +777,40 @@ def cancel_service_item(item_id):
         # This will be shown as a negative invoice amount
         from app.models.invoice import Invoice
         
+        # Calculate the actual credit amount considering cancellation fees
+        try:
+            final_credit_amount = float(credit_amount) if credit_amount else service_item.amount
+            cancellation_fee_amount = float(cancellation_fee) if cancellation_fee else 0
+            
+            # The net credit is the credit amount minus cancellation fee
+            net_credit_amount = final_credit_amount - cancellation_fee_amount
+        except (ValueError, TypeError):
+            # Fallback to original amount if parsing fails
+            final_credit_amount = service_item.amount
+            cancellation_fee_amount = 0
+            net_credit_amount = service_item.amount
+        
+        # Build notes for the credit memo
+        credit_notes = f"Credit memo for cancelled service: {service_item.service_type} - {service_item.description}"
+        if cancellation_fee_amount > 0:
+            credit_notes += f"\nCancellation fee applied: ${cancellation_fee_amount:.2f}"
+        if reason:
+            credit_notes += f"\nReason: {reason}"
+        
         # Create a new invoice record for the credit memo
         credit_memo = Invoice(
             booking_id=booking.id,
             invoice_number=credit_memo_number,
             invoice_date=credit_memo_date,
-            total_amount=-service_item.amount,  # Negative amount for credit
-            notes=f"Credit memo for cancelled service: {service_item.service_type} - {service_item.description}",
+            total_amount=-net_credit_amount,  # Negative amount for net credit after fees
+            notes=credit_notes,
             is_credit_memo=True,
             referenced_invoice=service_item.invoice_number
         )
         db.session.add(credit_memo)
         
         # Create a new payment record with negative amount (refund)
-        refund_amount = -service_item.amount  # Negative amount for refund
+        refund_amount = -net_credit_amount  # Negative amount for refund after fees
         refund_payment = Payment(
             booking_id=booking.id,
             amount=refund_amount,
