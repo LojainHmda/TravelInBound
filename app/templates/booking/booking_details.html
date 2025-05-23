@@ -444,9 +444,12 @@
 
                                         <!-- Add a prominently visible DELETE button only for items with REQUEST status -->
                                         {% if item.status == 'REQUEST' and not item.is_cancelled %}
-                                            <a href="#" class="btn btn-danger btn-sm" style="background-color: #FF3300; border-color: #FF3300; font-weight: bold;" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
-                                                <i class="fas fa-trash-alt me-1"></i>DELETE
-                                            </a>
+                                            <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this service item? This action cannot be undone.');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: #FF3300; border-color: #FF3300; font-weight: bold;">
+                                                    <i class="fas fa-trash-alt me-1"></i>DELETE
+                                                </button>
+                                            </form>
                                         {% endif %}
 
                                         <div class="dropdown">
@@ -490,9 +493,12 @@
 
                                                 {% if item.status == 'REQUEST' and not item.is_cancelled %}
                                                 <li>
-                                                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
-                                                        <i class="fas fa-trash-alt me-2" style="color: #dc3545;"></i><span style="color: #dc3545;">Delete Service</span>
-                                                    </a>
+                                                    <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this service item? This action cannot be undone.');">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                                            <i class="fas fa-trash-alt me-2" style="color: #dc3545;"></i><span style="color: #dc3545;">Delete Service</span>
+                                                        </button>
+                                                    </form>
                                                 </li>
                                                 {% endif %}
                                             </ul>
