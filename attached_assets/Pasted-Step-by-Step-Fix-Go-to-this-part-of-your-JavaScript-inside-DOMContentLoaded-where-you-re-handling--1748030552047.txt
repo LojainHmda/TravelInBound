@@ -1,0 +1,259 @@
+Step-by-Step Fix
+Go to this part of your JavaScript (inside DOMContentLoaded, where you're handling customer selection):
+
+js
+Copy
+Edit
+// Close the modal
+const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+if (modal) modal.hide();
+Replace that block with the safe version below:
+
+js
+Copy
+Edit
+// Close the modal safely (avoids error if not initialized)
+const modalElement = document.getElementById('customerSelectionModal');
+if (modalElement) {
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+  modal.hide();
+}
+✅ Location in Your Code
+Search for this comment in your script:
+
+js
+Copy
+Edit
+// Close the modal
+It should be inside this block:
+
+js
+Copy
+Edit
+selectButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    ...
+  });
+});
+Just replace those two lines under // Close the modal with the new safe code.
+
+Let me know if you'd like me to clean up the whole JS block and repost it for you — I can do that in one go.
+
+
+
+
+
+
+
+You said:
+which java script inside hte html?
+
+
+ChatGPT said:
+Perfect — you're referring to this JavaScript block located at the end of your template inside:
+
+html
+Copy
+Edit
+{% block scripts %}
+<script>
+  // Customer Selection Modal Functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    ...
+  });
+</script>
+{% endblock %}
+🔍 Locate the Block to Replace
+Inside that script, look for this section (it’s around line ~100–110 in your script):
+
+js
+Copy
+Edit
+// Close the modal
+const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+if (modal) modal.hide();
+It’s part of the event handler for when a customer is selected:
+
+js
+Copy
+Edit
+selectButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    ...
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+    if (modal) modal.hide();
+    ...
+  });
+});
+✅ Replace That Section With This:
+js
+Copy
+Edit
+// Close the modal safely (avoids error if not initialized)
+const modalElement = document.getElementById('customerSelectionModal');
+if (modalElement) {
+  const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+  modal.hide();
+}
+✅ Final Result Should Look Like:
+js
+Copy
+Edit
+selectButtons.forEach(button => {
+  button.addEventListener('click', function() {
+    const customerId = this.getAttribute('data-id');
+    const customerName = this.getAttribute('data-name');
+    const customerEmail = this.getAttribute('data-email');
+    
+    // (form setup logic)
+
+    // Close the modal safely
+    const modalElement = document.getElementById('customerSelectionModal');
+    if (modalElement) {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+      modal.hide();
+    }
+
+    alert(`Customer ${customerName} selected successfully! Creating booking...`);
+    form.submit();
+  });
+});
+Let me know if you want a cleaned-up version of the whole script block — I can send you that too.
+
+
+
+
+
+
+
+You said:
+try rerwiting form scratch from me
+
+
+ChatGPT said:
+Certainly! Here's a clean and safe rewrite of your entire customer selection JavaScript block, including modal handling, form submission, and UI update — fully aligned with your Bootstrap modal usage:
+
+✅ Full JavaScript Block (Cleaned & Safe)
+html
+Copy
+Edit
+{% block scripts %}
+<script>
+// Customer Selection Modal Logic
+document.addEventListener('DOMContentLoaded', function () {
+    const searchBtn = document.getElementById('searchCustomerBtn');
+    const searchInput = document.getElementById('customerSearchInput');
+    const customerRows = document.querySelectorAll('#customerTable tbody tr');
+    const noResultsMessage = document.getElementById('noCustomersFound');
+
+    // Search Function
+    function searchCustomers() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let resultsFound = false;
+
+        customerRows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            const email = row.cells[1].textContent.toLowerCase();
+            const id = row.cells[2].textContent.toLowerCase();
+
+            const isMatch = name.includes(searchTerm) || email.includes(searchTerm) || id.includes(searchTerm);
+            row.style.display = isMatch ? '' : 'none';
+            if (isMatch) resultsFound = true;
+        });
+
+        if (noResultsMessage) {
+            noResultsMessage.classList.toggle('d-none', resultsFound);
+        }
+    }
+
+    if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', searchCustomers);
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchCustomers();
+                e.preventDefault();
+            }
+        });
+    }
+
+    // Handle Customer Selection
+    const selectButtons = document.querySelectorAll('.customer-select-btn');
+    selectButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const customerId = button.getAttribute('data-id');
+            const customerName = button.getAttribute('data-name');
+            const customerEmail = button.getAttribute('data-email');
+
+            // Create form to submit customer selection
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/booking/create-from-detail';
+            form.style.display = 'none';
+
+            const inputs = [
+                { name: 'customer', value: customerId },
+                { name: 'request_id', value: generateRequestId() }
+            ];
+
+            const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfTokenMeta) {
+                inputs.push({ name: 'csrf_token', value: csrfTokenMeta.getAttribute('content') });
+            }
+
+            inputs.forEach(({ name, value }) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+
+            // Update UI fields immediately (optional)
+            updateCustomerUI(customerName, customerEmail, customerId);
+
+            // Close modal safely
+            const modalEl = document.getElementById('customerSelectionModal');
+            if (modalEl) {
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.hide();
+            }
+
+            // Feedback & submit
+            alert(`Customer ${customerName} selected successfully! Creating booking...`);
+            form.submit();
+        });
+    });
+
+    // Helper: Request ID generator
+    function generateRequestId() {
+        const timestamp = Date.now().toString(36).slice(-6);
+        const randomPart = Math.random().toString(36).substring(2, 5).toUpperCase();
+        return `IR-${timestamp}${randomPart}`;
+    }
+
+    // Helper: Update UI with selected customer
+    function updateCustomerUI(name, email, id) {
+        const nameEl = document.getElementById('customerName');
+        const emailEl = document.getElementById('customerEmail');
+        const idEl = document.getElementById('customerId');
+
+        if (nameEl) nameEl.textContent = name;
+        if (emailEl) emailEl.textContent = email;
+        if (idEl) idEl.textContent = id;
+    }
+});
+</script>
+{% endblock %}
+✅ Improvements
+Uses getOrCreateInstance() to safely close modals.
+
+Fully encapsulated search and selection logic.
+
+Immediate UI updates before form submission.
+
+Robust request ID generation.
+
+Let me know if you'd like me to rework any other modal blocks (like service o

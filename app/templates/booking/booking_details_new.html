@@ -1065,9 +1065,12 @@ document.addEventListener('DOMContentLoaded', function() {
           console.log('Error updating customer info fields:', e);
         }
         
-        // Close the modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
-        if (modal) modal.hide();
+        // Close the modal safely (avoids error if not initialized)
+        const modalElement = document.getElementById('customerSelectionModal');
+        if (modalElement) {
+          const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+          modal.hide();
+        }
         
         // Show success notification
         alert(`Customer ${customerName} selected successfully! Creating booking...`);
@@ -1144,7 +1147,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
+    // Delete Service Item functionality with simple confirmation
+    const deleteButtons = document.querySelectorAll('.delete-service-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const serviceId = this.getAttribute('data-service-id');
+            const serviceType = this.getAttribute('data-service-type');
+            const serviceDescription = this.getAttribute('data-service-description');
+            const serviceAmount = this.getAttribute('data-service-amount');
+            
+            // Simple confirmation dialog
+            const confirmed = confirm(`Are you sure you want to delete this service item?\n\nService: ${serviceType}\nDescription: ${serviceDescription}\nAmount: $${serviceAmount}\n\nThis action cannot be undone.`);
+            
+            if (confirmed) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/booking/service_item/${serviceId}/delete`;
+                form.style.display = 'none';
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="csrf_token"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken.getAttribute ? csrfToken.getAttribute('content') : csrfToken.value;
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
 });
 </script>
 {% endblock %}
