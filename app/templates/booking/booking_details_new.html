@@ -370,9 +370,12 @@
                                             
                                             <!-- Add DELETE button only for items with REQUEST status -->
                                             {% if item.status == 'REQUEST' %}
-                                                <a href="#" class="btn btn-danger btn-sm me-1" data-bs-toggle="modal" data-bs-target="#deleteServiceModal{{ item.id }}">
-                                                    <i class="fas fa-trash-alt me-1"></i>DELETE
-                                                </a>
+                                                <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this service item? This action cannot be undone.');">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-danger btn-sm me-1">
+                                                        <i class="fas fa-trash-alt me-1"></i>DELETE
+                                                    </button>
+                                                </form>
                                             {% endif %}
                                         {% endif %}
                                         
@@ -392,7 +395,7 @@
                                                 {% if item.status == 'REQUEST' %}
                                                 <li>
                                                     <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this service item?\n\nService: {{ item.service_type }}\nDescription: {{ item.description }}\nAmount: ${{ '%.2f'|format(item.amount) }}\n\nThis action cannot be undone.')">
-                                                        {{ csrf_token() }}
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left;">
                                                             <i class="fas fa-trash-alt me-2"></i>Delete Service
                                                         </button>
