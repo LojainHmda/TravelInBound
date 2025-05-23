@@ -391,13 +391,12 @@
                                                 <!-- Add Delete option to dropdown for REQUEST status items -->
                                                 {% if item.status == 'REQUEST' %}
                                                 <li>
-                                                    <a href="#" class="dropdown-item text-danger delete-service-btn" 
-                                                       data-service-id="{{ item.id }}"
-                                                       data-service-type="{{ item.service_type }}"
-                                                       data-service-description="{{ item.description }}"
-                                                       data-service-amount="{{ '%.2f'|format(item.amount) }}">
-                                                        <i class="fas fa-trash-alt me-2"></i>Delete Service
-                                                    </a>
+                                                    <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this service item?\n\nService: {{ item.service_type }}\nDescription: {{ item.description }}\nAmount: ${{ '%.2f'|format(item.amount) }}\n\nThis action cannot be undone.')">
+                                                        {{ csrf_token() }}
+                                                        <button type="submit" class="dropdown-item text-danger" style="border: none; background: none; width: 100%; text-align: left;">
+                                                            <i class="fas fa-trash-alt me-2"></i>Delete Service
+                                                        </button>
+                                                    </form>
                                                 </li>
                                                 {% endif %}
                                                 {% else %}
