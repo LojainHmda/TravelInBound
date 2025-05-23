@@ -170,9 +170,11 @@
             <div class="d-flex flex-wrap">
       
 
+                {% if booking %}
                 <a href="#" class="btn btn-warning btn-sm action-button" data-bs-toggle="modal" data-bs-target="#addServiceModal">
                     <i class="fas fa-plus me-1"></i> Add Service
                 </a>
+                {% endif %}
 
                 {% if booking and not booking.invoice_number %}
                 <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-warning btn-sm action-button">
@@ -233,7 +235,7 @@
                         <div class="card-body text-center py-4">
                             <p class="mb-3">Please select a customer to create a new booking</p>
                             <button type="button" class="btn btn-lg" style="background-color: #FFBF00; color: black;" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                                <i class="fas fa-users me-2"></i> Select Customer
+                                <i class="fas fa-plus me-2"></i> Create Request
                             </button>
                         </div>
                     </div>
