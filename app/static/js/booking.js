@@ -73,16 +73,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Delete functionality is handled natively by Bootstrap data-bs-toggle and data-bs-target
-    console.log('Delete service buttons will work automatically via Bootstrap modal attributes');
+    // Delete functionality works through inline forms with JavaScript confirmation
+    console.log('Delete forms initialized - using inline confirmation');
     
-    // Log available delete buttons for debugging
-    const deleteButtons = document.querySelectorAll('.delete-service-btn');
-    console.log('Found delete service buttons:', deleteButtons.length);
-    
-    // Log available delete modals for debugging
-    const deleteModals = document.querySelectorAll('[id^="deleteServiceModal"]');
-    console.log('Found delete service modals:', deleteModals.length);
+    // Log available delete forms for debugging
+    const deleteForms = document.querySelectorAll('form[action*="delete_service_item"]');
+    console.log('Found delete service forms:', deleteForms.length);
 });
 
 // Validate that end date is after start date
