@@ -1231,10 +1231,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         {% endif %}
                     </div>
 
-                    {% if item.is_invoiced %}
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        This service is invoiced. Canceling will create a credit memo.
+                        This booking is invoiced. Canceling will create a credit memo.
                     </div>
                     
                     <div class="mb-3">
@@ -1261,7 +1260,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             Fee will be deducted from the credit amount.
                         </div>
                     </div>
-                    {% endif %}
                     
                     <div class="mb-3">
                         <label for="cancelReason{{ item.id }}" class="form-label">Cancellation Reason</label>
