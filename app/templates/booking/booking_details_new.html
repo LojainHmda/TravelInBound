@@ -1145,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Delete Service Item functionality
+    // Delete Service Item functionality with simple confirmation
     const deleteButtons = document.querySelectorAll('.delete-service-btn');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -1155,29 +1155,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const serviceDescription = this.getAttribute('data-service-description');
             const serviceAmount = this.getAttribute('data-service-amount');
             
-            // Update modal content
-            const detailsDiv = document.getElementById('deleteServiceItemDetails');
-            if (detailsDiv) {
-                detailsDiv.innerHTML = `
-                    <div class="service-details">
-                        <p><strong>Service Type:</strong> ${serviceType}</p>
-                        <p><strong>Description:</strong> ${serviceDescription}</p>
-                        <p><strong>Amount:</strong> $${serviceAmount}</p>
-                    </div>
-                `;
-            }
+            // Simple confirmation dialog
+            const confirmed = confirm(`Are you sure you want to delete this service item?\n\nService: ${serviceType}\nDescription: ${serviceDescription}\nAmount: $${serviceAmount}\n\nThis action cannot be undone.`);
             
-            // Update form action
-            const deleteForm = document.getElementById('deleteServiceForm');
-            if (deleteForm) {
-                deleteForm.action = `/booking/service_item/${serviceId}/delete`;
-            }
-            
-            // Show modal
-            const deleteModalElement = document.getElementById('deleteServiceModal');
-            if (deleteModalElement) {
-                const deleteModal = new bootstrap.Modal(deleteModalElement);
-                deleteModal.show();
+            if (confirmed) {
+                // Create a form and submit it
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/booking/service_item/${serviceId}/delete`;
+                form.style.display = 'none';
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]') || document.querySelector('input[name="csrf_token"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken.getAttribute ? csrfToken.getAttribute('content') : csrfToken.value;
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
             }
         });
     });
