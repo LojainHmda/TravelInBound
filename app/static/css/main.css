@@ -59,8 +59,9 @@ body {
     color: #000000;
 }
 
-.text-primary {
-    color: var(--primary-color) !important;
+.text-primary,
+.text-gray-800 {
+    color: #333333 !important;
 }
 
 .border-primary {
