@@ -417,7 +417,7 @@
                                                     </a>
                                                 </li>
                                                 
-                                                {% if not item.is_cancelled %}
+                                                {% if not item.is_cancelled and item.is_invoiced %}
                                                 <li>
                                                     <a href="#" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}">
                                                         <i class="fas fa-times-circle me-2"></i>Cancel Service
@@ -528,10 +528,23 @@
                             </thead>
                             <tbody>
                                 {% for payment in booking.payments %}
-                                <tr>
+                                <tr{% if payment.payment_method == 'CREDIT_MEMO' %} class="table-warning"{% endif %}>
                                     <td>{{ payment.payment_date.strftime('%d %b %Y') }}</td>
-                                    <td>${{ "%.2f"|format(payment.amount) }}</td>
-                                    <td>{{ payment.payment_method }}</td>
+                                    <td>
+                                        {% if payment.payment_method == 'CREDIT_MEMO' %}
+                                            <span class="text-danger">-${{ "%.2f"|format(payment.amount|abs) }}</span>
+                                            <small class="text-muted d-block">Credit Memo</small>
+                                        {% else %}
+                                            ${{ "%.2f"|format(payment.amount) }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if payment.payment_method == 'CREDIT_MEMO' %}
+                                            <span class="badge bg-warning text-dark">Credit Memo</span>
+                                        {% else %}
+                                            {{ payment.payment_method }}
+                                        {% endif %}
+                                    </td>
                                     <td>{{ payment.transaction_id or '-' }}</td>
                                     <td>{{ payment.notes or '-' }}</td>
                                 </tr>
@@ -1190,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Cancel Service Modals -->
 {% for item in booking.service_items %}
-{% if not item.is_cancelled %}
+{% if not item.is_cancelled and item.is_invoiced %}
 <div class="modal fade" id="cancelServiceModal{{ item.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
