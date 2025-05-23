@@ -344,7 +344,7 @@
                                     <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td>
                                         {% if item.is_cancelled %}
-                                            <span class="badge bg-danger">Cancelled</span>
+                                            <span class="badge" style="background-color: #FF8C00; color: black;">Cancelled</span>
                                             {% if item.credit_memo_number %}
                                                 <div class="small mt-1">
                                                     <i class="fas fa-file-invoice text-danger me-1"></i>
@@ -367,10 +367,10 @@
                                     </td>
                                     <td>
                                         {% if item.is_invoiced %}
-                                            <span class="badge bg-success">Invoiced</span>
+                                            <span class="badge" style="background-color: #FFBF00; color: black;">Invoiced</span>
                                             <div class="small mt-1 text-muted">{{ item.invoice_number }}</div>
                                         {% else %}
-                                            <span class="badge bg-secondary">Not Invoiced</span>
+                                            <span class="badge" style="background-color: #FFBF00; color: black;">Not Invoiced</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -535,6 +535,47 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    {% if booking.invoice_number %}
+                    <h6 class="mb-3 border-bottom pb-2">Invoice Information</h6>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-body">
+                                    <h6 class="card-title text-warning">
+                                        <i class="fas fa-file-invoice me-2"></i>Invoice {{ booking.invoice_number }}
+                                    </h6>
+                                    <p class="card-text mb-1">
+                                        <strong>Total Amount:</strong> ${{ "%.2f"|format(booking.total_amount) }}
+                                    </p>
+                                    <p class="card-text mb-0">
+                                        <strong>Date:</strong> {{ booking.invoice_date.strftime('%d %b %Y') if booking.invoice_date else 'N/A' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% set credit_memos = booking.payments|selectattr('payment_method', 'equalto', 'CREDIT_MEMO')|list %}
+                        {% if credit_memos %}
+                        <div class="col-md-6">
+                            <div class="card border-danger">
+                                <div class="card-body">
+                                    <h6 class="card-title text-danger">
+                                        <i class="fas fa-file-invoice me-2"></i>Credit Memos
+                                    </h6>
+                                    {% for credit in credit_memos %}
+                                    <p class="card-text mb-1">
+                                        <strong>{{ credit.transaction_id }}:</strong> -${{ "%.2f"|format(credit.amount|abs) }}
+                                    </p>
+                                    {% endfor %}
+                                    <p class="card-text mb-0">
+                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(credit_memos|sum(attribute='amount')|abs) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
                     {% if booking.payments %}
                     <h6 class="mb-3 border-bottom pb-2">Payment History</h6>
                     <div class="table-responsive">
@@ -562,7 +603,7 @@
                                     </td>
                                     <td>
                                         {% if payment.payment_method == 'CREDIT_MEMO' %}
-                                            <span class="badge bg-warning text-dark">Credit Memo</span>
+                                            <span class="badge" style="background-color: #FFBF00; color: black;">Credit Memo</span>
                                         {% else %}
                                             {{ payment.payment_method }}
                                         {% endif %}
