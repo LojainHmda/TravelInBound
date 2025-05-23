@@ -1170,8 +1170,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Show modal
-            const deleteModal = new bootstrap.Modal(document.getElementById('deleteServiceModal'));
-            deleteModal.show();
+            const deleteModalElement = document.getElementById('deleteServiceModal');
+            if (deleteModalElement) {
+                const deleteModal = new bootstrap.Modal(deleteModalElement);
+                deleteModal.show();
+            }
         });
     });
 });
