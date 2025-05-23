@@ -836,14 +836,9 @@ def cancel_service_item(item_id):
             # If the field doesn't exist, we'll create it in another migration
             print(f"Credit memo {credit_memo_number} linked to invoice {original_invoice.invoice_number}", file=sys.stderr)
         
-        # Update booking total
-        # We need to recalculate it properly accounting for cancelled items
-        # Get all non-cancelled service items
-        active_items = [item for item in booking.service_items if not item.is_cancelled]
-        
-        # Calculate the new total from active items only
-        new_total = sum(item.amount for item in active_items)
-        booking.total_amount = new_total
+        # DO NOT change the booking total amount when cancelling services
+        # The original invoice amount should remain the same
+        # Credits and refunds are handled separately through payment records
         
         # Update payment status
         booking.update_payment_status()
