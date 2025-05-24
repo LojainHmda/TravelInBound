@@ -399,36 +399,40 @@
                                     </td>
                                     <td>{{ item.description }}</td>
                                     <td>${{ "%.2f"|format(item.amount) }}</td>
-                                    <td>
-                                        {% if item.is_cancelled %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Cancelled</span>
-                                            {% if item.credit_memo_number %}
-                                                <div class="small mt-1">
-                                                    <i class="fas fa-file-invoice text-danger me-1"></i>
-                                                    <span class="text-danger">{{ item.credit_memo_number }}</span>
-                                                </div>
-                                            {% endif %}
-                                        {% else %}
-                                            {% if item.status == 'REQUEST' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Request</span>
-                                            {% elif item.status == 'BOOKED' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Booked</span>
-                                            {% elif item.status == 'IN_PROGRESS' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">In Progress</span>
-                                            {% elif item.status == 'CONFIRMED' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Confirmed</span>
+                                    <td class="align-middle">
+                                        <div class="d-flex flex-column align-items-start">
+                                            {% if item.is_cancelled %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">Cancelled</span>
+                                                {% if item.credit_memo_number %}
+                                                    <div class="small mt-1">
+                                                        <i class="fas fa-file-invoice text-danger me-1"></i>
+                                                        <span class="text-danger">{{ item.credit_memo_number }}</span>
+                                                    </div>
+                                                {% endif %}
                                             {% else %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">{{ item.status }}</span>
+                                                {% if item.status == 'REQUEST' %}
+                                                    <span class="badge" style="background-color: #FFBF00; color: black;">Request</span>
+                                                {% elif item.status == 'BOOKED' %}
+                                                    <span class="badge" style="background-color: #FFBF00; color: black;">Booked</span>
+                                                {% elif item.status == 'IN_PROGRESS' %}
+                                                    <span class="badge" style="background-color: #FFBF00; color: black;">In Progress</span>
+                                                {% elif item.status == 'CONFIRMED' %}
+                                                    <span class="badge" style="background-color: #FFBF00; color: black;">Confirmed</span>
+                                                {% else %}
+                                                    <span class="badge" style="background-color: #FFBF00; color: black;">{{ item.status }}</span>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
+                                        </div>
                                     </td>
-                                    <td>
-                                        {% if item.is_invoiced %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Invoiced</span>
-                                            <div class="small mt-1 text-muted">{{ item.invoice_number }}</div>
-                                        {% else %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Not Invoiced</span>
-                                        {% endif %}
+                                    <td class="align-middle">
+                                        <div class="d-flex flex-column align-items-start">
+                                            {% if item.is_invoiced %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">Invoiced</span>
+                                                <div class="small mt-1 text-muted">{{ item.invoice_number }}</div>
+                                            {% else %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">Not Invoiced</span>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                     <td>
                                         {% if not item.is_cancelled %}
