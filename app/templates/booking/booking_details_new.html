@@ -1,6 +1,33 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Booking Header with Status Flow -->
+{% if booking %}
+<div style="background-color: #000080; color: white; padding: 12px 20px; margin: -20px -20px 20px -20px;">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>
+            <h5 class="mb-0 fw-bold">Booking #{{ booking.reference_number }}</h5>
+        </div>
+        <div class="d-flex align-items-center">
+            <!-- Status Flow -->
+            {% set current_status = booking.status %}
+            <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
+                <i class="fas fa-file-alt me-1"></i>Request
+            </span>
+            <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
+            <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#6c757d{% else %}#28a745{% endif %}; color: {% if current_status == 'IN_PROGRESS' %}black{% else %}white{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
+                <i class="fas fa-cog me-1"></i>In Progress
+            </span>
+            <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
+            <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
+                <i class="fas fa-check me-1"></i>Confirmed
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- Customer Selection at Top -->
 <div class="container-fluid mb-4">
     <div class="row">
@@ -134,29 +161,7 @@
 <div class="container-fluid">
     <!-- Header Bar - Only show for existing bookings -->
     {% if booking %}
-    <div class="header-bar py-3" style="background-color: #000080; color: white; margin-bottom: 10px; border-radius: 5px;">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>
-                <h5 class="mb-0 fw-bold">Booking #{{ booking.reference_number }}</h5>
-            </div>
-            <div class="d-flex align-items-center">
-                <!-- Status Flow in Header -->
-                {% set current_status = booking.status %}
-                <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
-                    <i class="fas fa-file-alt me-1"></i>Request
-                </span>
-                <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
-                <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#6c757d{% else %}#28a745{% endif %}; color: {% if current_status == 'IN_PROGRESS' %}black{% else %}white{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
-                    <i class="fas fa-cog me-1"></i>In Progress
-                </span>
-                <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
-                <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
-                    <i class="fas fa-check me-1"></i>Confirmed
-                </span>
-            </div>
-        </div>
-    </div>
+
     {% endif %}
     
 
