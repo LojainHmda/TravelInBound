@@ -41,17 +41,15 @@
             
             <!-- Customer Selection Section - Only show for new requests -->
             {% if not booking %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-header" style="background-color: #FFBF00; color: black;">
-                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Select Customer</h5>
-                </div>
-                <div class="card-body">
-                    <div class="text-center">
-                        <button type="button" class="btn btn-lg" style="background-color: #FFBF00; color: black; border-radius: 10px; padding: 15px 30px;" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                            <i class="fas fa-search me-2"></i>Choose Customer
-                        </button>
-                        <p class="text-muted mt-2 mb-0">Select a customer to create a new booking request</p>
+            <div class="p-3 mb-4" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1" style="color: #495057;"><i class="fas fa-user me-2"></i>Customer Selection</h6>
+                        <small class="text-muted">Choose a customer to start the booking</small>
                     </div>
+                    <button type="button" class="btn btn-sm" style="background-color: #6c757d; color: white; border-radius: 6px; padding: 8px 16px;" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                        <i class="fas fa-search me-1"></i>Choose Customer
+                    </button>
                 </div>
             </div>
             {% endif %}
@@ -166,7 +164,8 @@
 </style>
 
 <div class="container-fluid">
-    <!-- Header Bar - Light Gray Background -->
+    <!-- Header Bar - Only show for existing bookings -->
+    {% if booking %}
     <div class="header-bar py-2" style="background-color: #f2f2f2; border-bottom: 1px solid #dee2e6; margin-bottom: 10px; border-radius: 5px;">
         <div class="d-flex align-items-center">
             <i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>
@@ -188,6 +187,7 @@
             </span>
         </div>
     </div>
+    {% endif %}
     
 
 
