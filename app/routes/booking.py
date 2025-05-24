@@ -809,17 +809,8 @@ def cancel_service_item(item_id):
         )
         db.session.add(credit_memo)
         
-        # Create a new payment record with negative amount (refund)
-        refund_amount = -net_credit_amount  # Negative amount for refund after fees
-        refund_payment = Payment(
-            booking_id=booking.id,
-            amount=refund_amount,
-            payment_date=credit_memo_date,
-            payment_method="CREDIT_MEMO",
-            transaction_id=credit_memo_number,
-            notes=f"Credit memo for cancelled service: {service_item.service_type} - {service_item.description}"
-        )
-        db.session.add(refund_payment)
+        # Credit memo is an invoice document, not a payment
+        # Payments are actual money received - credit memos are invoice adjustments
         
         # Link the credit memo to the original invoice in the database
         # This is important for reporting and settlement
@@ -828,9 +819,9 @@ def cancel_service_item(item_id):
         if original_invoice:
             # Add a note to the original invoice about the credit memo
             if original_invoice.notes:
-                original_invoice.notes += f"\nCredit memo {credit_memo_number} applied for ${abs(refund_amount):.2f}"
+                original_invoice.notes += f"\nCredit memo {credit_memo_number} applied for ${abs(net_credit_amount):.2f}"
             else:
-                original_invoice.notes = f"Credit memo {credit_memo_number} applied for ${abs(refund_amount):.2f}"
+                original_invoice.notes = f"Credit memo {credit_memo_number} applied for ${abs(net_credit_amount):.2f}"
             
             # Update the original invoice's settled amount if we have a settled_amount field
             # If the field doesn't exist, we'll create it in another migration
@@ -844,8 +835,8 @@ def cancel_service_item(item_id):
         booking.update_payment_status()
         
         print(f"Generated credit memo {credit_memo_number} for cancelled item {item_id}", file=sys.stderr)
-        print(f"Credit memo amount: ${refund_amount}", file=sys.stderr)
-        flash(f'Credit memo {credit_memo_number} generated for cancelled service item with amount ${abs(refund_amount):.2f}', 'success')
+        print(f"Credit memo amount: ${net_credit_amount}", file=sys.stderr)
+        flash(f'Credit memo {credit_memo_number} generated for cancelled service item with amount ${abs(net_credit_amount):.2f}', 'success')
     else:
         # Just mark the item as cancelled without credit memo
         print(f"Item {item_id} cancelled but no credit memo generated (not invoiced)", file=sys.stderr)
@@ -1925,17 +1916,9 @@ def add_credit_line(booking_id):
         # Generate a credit memo number
         credit_memo_number = booking.generate_credit_memo_number()
         
-        # Create a negative payment entry for the credit
+        # Credit memo is an invoice document, not a payment
+        # Payments represent actual money received - credits are invoice adjustments
         from datetime import datetime
-        credit_payment = Payment(
-            booking_id=booking.id,
-            amount=-credit_amount,  # Negative amount for credit
-            payment_date=datetime.utcnow(),
-            payment_method="MANUAL_CREDIT",
-            transaction_id=credit_memo_number,
-            notes=f"Manual Credit - {credit_reason}: {notes}"
-        )
-        db.session.add(credit_payment)
         
         # Create invoice record for the credit memo if booking is invoiced
         if booking.invoice_number:
