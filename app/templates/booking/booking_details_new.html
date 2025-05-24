@@ -36,8 +36,9 @@
                         <h6 class="mb-1" style="color: #495057;"><i class="fas fa-user me-2"></i>Customer Selection</h6>
                         <small class="text-muted">Choose a customer to start the booking</small>
                     </div>
-                    <button type="button" class="btn btn-sm" style="background-color: #6c757d; color: white; border-radius: 6px; padding: 8px 16px;" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                        <i class="fas fa-search me-1"></i>Choose Customer
+                    <button type="button" class="btn custom-arrow-button" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                        <i class="fas fa-search me-2"></i>Choose Customer
+                        <i class="fas fa-chevron-right ms-2"></i>
                     </button>
                 </div>
             </div>
@@ -149,6 +150,66 @@
     .service-icon-table {
         font-size: 1.2rem;
         color: #FFBF00;
+    }
+    .custom-arrow-button {
+        background: linear-gradient(145deg, #FFD700, #FFBF00);
+        color: #000000;
+        border: none;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: 
+            inset 0 2px 4px rgba(255, 255, 255, 0.3),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.2),
+            0 4px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+        min-width: 180px;
+        border: 2px solid #DAA520;
+    }
+    .custom-arrow-button:hover {
+        background: linear-gradient(145deg, #FFE135, #FFD700);
+        transform: translateY(-2px);
+        box-shadow: 
+            inset 0 2px 4px rgba(255, 255, 255, 0.4),
+            inset 0 -2px 4px rgba(0, 0, 0, 0.15),
+            0 6px 12px rgba(0, 0, 0, 0.2);
+        color: #000000;
+    }
+    .custom-arrow-button:active {
+        transform: translateY(0);
+        box-shadow: 
+            inset 0 1px 2px rgba(0, 0, 0, 0.3),
+            inset 0 -1px 2px rgba(255, 255, 255, 0.2),
+            0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .custom-arrow-button::before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 12px solid transparent;
+        border-bottom: 12px solid transparent;
+        border-right: 10px solid #FFBF00;
+        filter: drop-shadow(-2px 0 2px rgba(0, 0, 0, 0.1));
+    }
+    .custom-arrow-button::after {
+        content: '';
+        position: absolute;
+        right: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 12px solid transparent;
+        border-bottom: 12px solid transparent;
+        border-left: 10px solid #FFBF00;
+        filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.1));
     }
 </style>
 
