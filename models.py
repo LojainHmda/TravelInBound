@@ -85,13 +85,13 @@ class Booking(db.Model):
         
     def get_credit_memos(self):
         """Get all credit memos for this booking"""
-        # Simple fallback to avoid Jinja2 errors
-        return []
+        from app.models.invoice import Invoice
+        return Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
     
     def get_total_credits(self):
         """Calculate total credit memo amount"""
-        # Simple fallback to avoid Jinja2 errors
-        return 0.0
+        credit_memos = self.get_credit_memos()
+        return sum(abs(memo.total_amount) for memo in credit_memos)
     
     def get_balance_due(self):
         """Calculate balance due considering payments and credit memos"""

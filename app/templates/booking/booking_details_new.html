@@ -809,8 +809,8 @@
                                     <td><strong>Payment Summary:</strong></td>
                                     <td colspan="4">
                                         {% set actual_payments = booking.payments|sum(attribute='amount') %}
-                                        {% set total_credits = 0.0 %}
-                                        {% set balance_due = booking.total_amount - actual_payments %}
+                                        {% set total_credits = booking.get_total_credits() %}
+                                        {% set balance_due = booking.total_amount - actual_payments - total_credits %}
                                         <div class="d-flex flex-wrap gap-2">
                                             <span class="badge bg-success">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
                                             {% if total_credits > 0 %}
