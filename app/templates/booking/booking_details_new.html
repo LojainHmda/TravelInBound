@@ -5,7 +5,7 @@
 <div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header" style="background-color: #00305A; color: white;">
+      <div class="modal-header" style="background-color: #FFBF00; color: black;">
         <h5 class="modal-title" id="customerSelectionModalLabel">Select Customer</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -14,7 +14,7 @@
         <div class="mb-3">
           <div class="input-group">
             <input type="text" id="customerSearchInput" class="form-control" placeholder="Search by name, email or ID...">
-            <button class="btn" style="background-color: #00305A; color: white;" type="button" id="searchCustomerBtn">
+            <button class="btn" style="background-color: #FFBF00; color: black;" type="button" id="searchCustomerBtn">
               <i class="fas fa-search"></i> Search
             </button>
           </div>
@@ -38,7 +38,7 @@
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.id }}</td>
                 <td>
-                  <button type="button" class="btn btn-sm customer-select-btn" style="background-color: #FF8C00; color: white;"
+                  <button type="button" class="btn btn-sm customer-select-btn" style="background-color: #FFBF00; color: black;"
                           data-id="{{ customer.id }}" data-name="{{ customer.name }}" data-email="{{ customer.email }}">
                     <i class="fas fa-check me-1"></i> Select
                   </button>
@@ -321,17 +321,31 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             {% if item.service_type == 'FLIGHT' %}
-                                                <i class="fas fa-plane service-icon-table me-2"></i>
+                                                <div class="service-icon-badge me-2" style="background-color: #FFBF00; color: black;">
+                                                    <i class="fas fa-plane"></i>
+                                                </div>
+                                                <span class="fw-semibold">Flight</span>
                                             {% elif item.service_type == 'HOTEL' %}
-                                                <i class="fas fa-hotel service-icon-table me-2"></i>
+                                                <div class="service-icon-badge me-2" style="background-color: #FFBF00; color: black;">
+                                                    <i class="fas fa-bed"></i>
+                                                </div>
+                                                <span class="fw-semibold">Hotel</span>
                                             {% elif item.service_type == 'TRANSPORT' %}
-                                                <i class="fas fa-taxi service-icon-table me-2"></i>
+                                                <div class="service-icon-badge me-2" style="background-color: #FFBF00; color: black;">
+                                                    <i class="fas fa-car"></i>
+                                                </div>
+                                                <span class="fw-semibold">Transport</span>
                                             {% elif item.service_type == 'VISA' %}
-                                                <i class="fas fa-passport service-icon-table me-2"></i>
+                                                <div class="service-icon-badge me-2" style="background-color: #FFBF00; color: black;">
+                                                    <i class="fas fa-passport"></i>
+                                                </div>
+                                                <span class="fw-semibold">Visa</span>
                                             {% elif item.service_type == 'INSURANCE' %}
-                                                <i class="fas fa-shield-alt service-icon-table me-2"></i>
+                                                <div class="service-icon-badge me-2" style="background-color: #FFBF00; color: black;">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                </div>
+                                                <span class="fw-semibold">Insurance</span>
                                             {% endif %}
-                                            <span>{{ item.service_type|title }}</span>
                                         </div>
                                     </td>
                                     <td>
