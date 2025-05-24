@@ -1,6 +1,45 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<!-- Customer Selection at Top -->
+<div class="container-fluid mb-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Status Flow -->
+            <div class="d-flex justify-content-center mb-4">
+                <div class="d-flex align-items-center">
+                    <span class="badge me-2" style="background-color: #FFBF00; color: black; padding: 8px 16px; border-radius: 20px;">
+                        <i class="fas fa-file-alt me-1"></i>Request
+                    </span>
+                    <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                    <span class="badge me-2" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
+                        <i class="fas fa-cog me-1"></i>In Progress
+                    </span>
+                    <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                    <span class="badge" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
+                        <i class="fas fa-check me-1"></i>Confirmed
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Customer Selection Section -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header" style="background-color: #FFBF00; color: black;">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Select Customer</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <button type="button" class="btn btn-lg" style="background-color: #FFBF00; color: black; border-radius: 10px; padding: 15px 30px;" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
+                            <i class="fas fa-search me-2"></i>Choose Customer
+                        </button>
+                        <p class="text-muted mt-2 mb-0">Select a customer to create a new booking request</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Customer Selection Modal -->
 <div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
