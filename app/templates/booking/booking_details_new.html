@@ -8,21 +8,39 @@
             <!-- Status Flow -->
             <div class="d-flex justify-content-center mb-4">
                 <div class="d-flex align-items-center">
-                    <span class="badge me-2" style="background-color: #FFBF00; color: black; padding: 8px 16px; border-radius: 20px;">
-                        <i class="fas fa-file-alt me-1"></i>Request
-                    </span>
-                    <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                    <span class="badge me-2" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
-                        <i class="fas fa-cog me-1"></i>In Progress
-                    </span>
-                    <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                    <span class="badge" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
-                        <i class="fas fa-check me-1"></i>Confirmed
-                    </span>
+                    {% if not booking %}
+                        <!-- New Request Status Flow -->
+                        <span class="badge me-2" style="background-color: #FFBF00; color: black; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-file-alt me-1"></i>Request
+                        </span>
+                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                        <span class="badge me-2" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-cog me-1"></i>In Progress
+                        </span>
+                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                        <span class="badge" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-check me-1"></i>Confirmed
+                        </span>
+                    {% else %}
+                        <!-- Existing Booking Status Flow -->
+                        {% set current_status = booking.status %}
+                        <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#FFBF00{% else %}#28a745{% endif %}; color: {% if current_status == 'REQUEST' %}black{% else %}white{% endif %}; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-file-alt me-1"></i>Request
+                        </span>
+                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                        <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#f5f5f5{% else %}#28a745{% endif %}; color: {% if current_status == 'IN_PROGRESS' %}black{% elif current_status in ['REQUEST'] %}#999{% else %}white{% endif %}; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-cog me-1"></i>In Progress
+                        </span>
+                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
+                        <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#FFBF00{% else %}#f5f5f5{% endif %}; color: {% if current_status == 'COMPLETED' %}black{% else %}#999{% endif %}; padding: 8px 16px; border-radius: 20px;">
+                            <i class="fas fa-check me-1"></i>Confirmed
+                        </span>
+                    {% endif %}
                 </div>
             </div>
             
-            <!-- Customer Selection Section -->
+            <!-- Customer Selection Section - Only show for new requests -->
+            {% if not booking %}
             <div class="card shadow-sm mb-4">
                 <div class="card-header" style="background-color: #FFBF00; color: black;">
                     <h5 class="mb-0"><i class="fas fa-user me-2"></i>Select Customer</h5>
@@ -36,6 +54,7 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
