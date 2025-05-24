@@ -217,16 +217,29 @@ function createDetailsHTML(booking) {
         booking.service_items.forEach(item => {
             let actionsHtml = '';
             
-            // Display different actions based on status
+            // Display different actions based on status AND booking status
             if (item.status === 'REQUEST') {
-                actionsHtml = `
-                    <a href="/booking/confirm_service/${item.id}" class="btn btn-sm btn-success me-1">
-                        <i class="fas fa-check me-1"></i>Confirm
-                    </a>`;
+                // CRITICAL: Only allow confirmation if booking is IN_PROGRESS
+                if (booking.status === 'IN_PROGRESS') {
+                    actionsHtml = `
+                        <a href="/booking/confirm_service/${item.id}" class="btn btn-sm btn-success me-1">
+                            <i class="fas fa-check me-1"></i>Confirm
+                        </a>`;
+                } else {
+                    actionsHtml = `
+                        <button class="btn btn-sm btn-secondary me-1" disabled title="Start operations first">
+                            <i class="fas fa-lock me-1"></i>Locked
+                        </button>`;
+                }
             } else if (item.status === 'IN_PROGRESS') {
                 actionsHtml = `
                     <a href="/booking/confirm_service/${item.id}" class="btn btn-sm btn-primary me-1">
                         <i class="fas fa-edit me-1"></i>Edit
+                    </a>`;
+            } else if (item.status === 'CONFIRMED') {
+                actionsHtml = `
+                    <a href="/booking/confirm_service/${item.id}" class="btn btn-sm btn-outline-primary me-1">
+                        <i class="fas fa-eye me-1"></i>View
                     </a>`;
             }
             
