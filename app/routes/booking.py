@@ -538,6 +538,10 @@ def details(booking_id):
     credit_memos = Invoice.query.filter_by(booking_id=booking.id, is_credit_memo=True).all()
     credit_memo_amount = sum(abs(memo.total_amount) for memo in credit_memos)
     
+    print(f"DEBUG: Found {len(credit_memos)} credit memos for booking {booking.id}")
+    for memo in credit_memos:
+        print(f"DEBUG: Credit memo {memo.invoice_number}: ${memo.total_amount}")
+    
     return render_template(
         'booking/booking_details_new.html',
         booking=booking,
