@@ -261,10 +261,14 @@
     </style>
 </head>
 <body>
-    <!-- Header with user info only -->
+    <!-- Header with logo and title -->
     <div class="main-header">
         <div class="d-flex align-items-center" style="margin-left: 50px;">
-            <h4 class="mb-0" style="color: #FFBF00; font-weight: bold;">Travel Booking Pro</h4>
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Travel Booking Pro Logo" style="height: 40px; width: auto; margin-right: 15px;">
+            <div>
+                <h4 class="mb-0" style="color: #FFBF00; font-weight: bold;">Travel Booking Pro</h4>
+                <small style="color: #FFBF00; font-size: 0.7rem; opacity: 0.8;">Arab Office for Travel</small>
+            </div>
         </div>
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
@@ -336,13 +340,7 @@
                 </li>
             </ul>
             
-            <!-- Logo at bottom of sidebar -->
-            <div class="sidebar-footer">
-                <div class="text-center">
-                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Travel Booking Pro Logo" style="height: 60px; width: auto; margin-bottom: 10px;">
-                    <div style="color: #FFBF00; font-size: 0.8rem; font-weight: bold;">Travel Booking Pro</div>
-                </div>
-            </div>
+
         </nav>
         
         <!-- Main Content Area -->
