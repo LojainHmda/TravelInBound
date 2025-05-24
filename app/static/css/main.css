@@ -1,17 +1,18 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #f5f5f5; /* Light Gray */
+    --primary-color: #1e3a8a; /* Dark Blue */
     --secondary-color: #FFBF00; /* Yellow */
     --button-color: #FFBF00; /* Yellow - main button color */
     --light-color: #ffffff; /* White */
-    --text-dark: #333333;
+    --text-dark: #1e3a8a; /* Dark Blue for main text */
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
     --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
-    --dashboard-text-color: #333333; /* Dark gray text for dashboard */
+    --dashboard-text-color: #1e3a8a; /* Dark blue text for dashboard */
     --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
-    --navy-blue: #00305A; /* Navy Blue color */
+    --navy-blue: #1e3a8a; /* Dark Blue color */
+    --sidebar-bg: #1e3a8a; /* Dark Blue sidebar background */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */
@@ -44,6 +45,25 @@ body {
     font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
     color: var(--text-dark);
     background-color: var(--background-color);
+}
+
+/* Main fonts and headers styling */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-dark) !important;
+    font-weight: 600;
+}
+
+.card-title, .card-header {
+    color: var(--text-dark) !important;
+}
+
+.text-primary {
+    color: var(--text-dark) !important;
+}
+
+/* Main content text */
+p, span, div, label, td, th {
+    color: var(--text-dark);
 }
 
 .bg-primary {
