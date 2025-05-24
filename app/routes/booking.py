@@ -777,10 +777,10 @@ def cancel_service_item(item_id):
         # This will be shown as a negative invoice amount
         from app.models.invoice import Invoice
         
-        # Calculate the actual credit amount considering cancellation fees
+        # Use the credit amount entered by user (not the original service amount)
         try:
-            final_credit_amount = float(credit_amount) if credit_amount else service_item.amount
-            cancellation_fee_amount = float(cancellation_fee) if cancellation_fee else 0
+            final_credit_amount = credit_amount  # Use the user-entered credit amount
+            cancellation_fee_amount = cancellation_fee
             
             # The net credit is the credit amount minus cancellation fee
             net_credit_amount = final_credit_amount - cancellation_fee_amount

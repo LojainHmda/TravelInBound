@@ -83,27 +83,47 @@ class Booking(db.Model):
         """Check if all service items are confirmed"""
         return all(item.status == STATUS_CONFIRMED for item in self.service_items)
         
+    def get_credit_memos(self):
+        """Get all credit memos for this booking"""
+        try:
+            from app.models.invoice import Invoice
+            return Invoice.query.filter_by(
+                booking_id=self.id,
+                is_credit_memo=True
+            ).all()
+        except:
+            return []
+    
+    def get_total_credits(self):
+        """Calculate total credit memo amount"""
+        credit_memos = self.get_credit_memos()
+        return sum(abs(memo.total_amount) for memo in credit_memos)
+    
+    def get_balance_due(self):
+        """Calculate balance due considering payments and credit memos"""
+        total_paid = sum(payment.amount for payment in self.payments)
+        total_credits = self.get_total_credits()
+        return self.total_amount - total_paid - total_credits
+    
     def update_payment_status(self):
-        """Update payment status based on payments received"""
+        """Update payment status based on payments received and credit memos"""
         import sys
         print(f"Updating payment status for booking #{self.id} - {self.reference_number}", file=sys.stderr)
         
-        if not self.payments:
-            print(f"  No payments found - setting status to NONE", file=sys.stderr)
-            self.payment_status = 'NONE'
-            return
-        
         total_paid = sum(payment.amount for payment in self.payments)
-        print(f"  Total paid: ${total_paid}, Total amount: ${self.total_amount}", file=sys.stderr)
+        total_credits = self.get_total_credits()
+        balance_due = self.get_balance_due()
         
-        if total_paid >= self.total_amount:
-            print(f"  Payment is FULL (${total_paid} >= ${self.total_amount})", file=sys.stderr)
+        print(f"  Total amount: ${self.total_amount}, Paid: ${total_paid}, Credits: ${total_credits}, Balance due: ${balance_due}", file=sys.stderr)
+        
+        if balance_due <= 0:
+            print(f"  Payment is FULL (balance due: ${balance_due})", file=sys.stderr)
             self.payment_status = 'FULL'
-        elif total_paid > 0:
-            print(f"  Payment is PARTIAL (${total_paid} < ${self.total_amount})", file=sys.stderr)
+        elif total_paid > 0 or total_credits > 0:
+            print(f"  Payment is PARTIAL (balance due: ${balance_due})", file=sys.stderr)
             self.payment_status = 'PARTIAL'
         else:
-            print(f"  Payment is NONE (${total_paid})", file=sys.stderr)
+            print(f"  Payment is NONE", file=sys.stderr)
             self.payment_status = 'NONE'
         
         print(f"  Updated payment_status to: {self.payment_status}", file=sys.stderr)

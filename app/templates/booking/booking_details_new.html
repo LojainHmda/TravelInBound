@@ -740,7 +740,7 @@
                                 </div>
                             </div>
                         </div>
-                        {% set credit_memos = booking.payments|selectattr('payment_method', 'equalto', 'CREDIT_MEMO')|list %}
+                        {% set credit_memos = booking.get_credit_memos() %}
                         {% if credit_memos %}
                         <div class="col-md-6">
                             <div class="card border-danger">
@@ -750,11 +750,11 @@
                                     </h6>
                                     {% for credit in credit_memos %}
                                     <p class="card-text mb-1">
-                                        <strong>{{ credit.transaction_id }}:</strong> -${{ "%.2f"|format(credit.amount|abs) }}
+                                        <strong>{{ credit.invoice_number }}:</strong> -${{ "%.2f"|format(credit.total_amount|abs) }}
                                     </p>
                                     {% endfor %}
                                     <p class="card-text mb-0">
-                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(credit_memos|sum(attribute='amount')|abs) }}
+                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(booking.get_total_credits()) }}
                                     </p>
                                 </div>
                             </div>
@@ -800,25 +800,30 @@
                                 </tr>
                                 {% endfor %}
                                 <tr class="table-light">
-                                    <td><strong>Total Paid:</strong></td>
+                                    <td><strong>Payment Summary:</strong></td>
                                     <td colspan="4">
-                                        {% set actual_payments = booking.payments|rejectattr('payment_method', 'in', ['CREDIT_MEMO', 'MANUAL_CREDIT'])|sum(attribute='amount') %}
-                                        {% set total_credits = booking.payments|selectattr('payment_method', 'in', ['CREDIT_MEMO', 'MANUAL_CREDIT'])|sum(attribute='amount')|abs %}
-                                        <strong>${{ "%.2f"|format(actual_payments) }}</strong>
-                                        {% set balance_due = booking.total_amount - actual_payments - total_credits %}
-                                        {% if balance_due > 0 %}
-                                            <span class="badge" style="background-color: #FF8C00; color: black;" class="ms-2">
-                                                Balance Due: ${{ "%.2f"|format(balance_due) }}
-                                            </span>
-                                        {% elif balance_due < 0 %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;" class="ms-2">
-                                                Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
-                                            </span>
-                                        {% else %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;" class="ms-2">
-                                                Fully Paid
-                                            </span>
-                                        {% endif %}
+                                        {% set actual_payments = booking.payments|sum(attribute='amount') %}
+                                        {% set total_credits = booking.get_total_credits() %}
+                                        {% set balance_due = booking.get_balance_due() %}
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="badge bg-success">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
+                                            {% if total_credits > 0 %}
+                                            <span class="badge bg-danger">Credits: ${{ "%.2f"|format(total_credits) }}</span>
+                                            {% endif %}
+                                            {% if balance_due > 0 %}
+                                                <span class="badge" style="background-color: #FF8C00; color: black;">
+                                                    Balance Due: ${{ "%.2f"|format(balance_due) }}
+                                                </span>
+                                            {% elif balance_due < 0 %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                    Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                    Fully Settled
+                                                </span>
+                                            {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
