@@ -887,13 +887,17 @@ def confirm_service(item_id):
             else:
                 print(f"No supplier found with code: {supplier_code}", file=sys.stderr)
         
+        # CRITICAL BUSINESS RULE: Service items can only be confirmed if booking is IN_PROGRESS
+        if service_item.booking.status != STATUS_IN_PROGRESS:
+            flash('Cannot confirm service items until booking operations are started. The booking must be in IN_PROGRESS status first.', 'danger')
+            return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+        
         # Set item status to CONFIRMED when saving confirmation details
         if service_item.status == STATUS_IN_PROGRESS:
             service_item.status = STATUS_CONFIRMED
         else:
-            # If the booking isn't in IN_PROGRESS status, check and alert
-            if service_item.booking.status != STATUS_IN_PROGRESS:
-                flash('Warning: This booking is not in IN_PROGRESS status. Start operations first.', 'warning')
+            flash('Service item must be in IN_PROGRESS status before it can be confirmed.', 'danger')
+            return redirect(url_for('booking.details', booking_id=service_item.booking_id))
         
         # Check if a confirmation document already exists
         document = Document.query.filter_by(
