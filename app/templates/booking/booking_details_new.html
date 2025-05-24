@@ -164,28 +164,28 @@
     {% if booking %}
     <div class="row mb-4">
         <div class="col-12">
-            <div class="p-3" style="background-color: #FFFAF0; border-radius: 5px;">
+            <div class="p-3" style="background-color: #f8f9fa; border-radius: 5px; border: 1px solid #dee2e6;">
                 <div class="row">
                     <div class="col-md-6">
                         <div class="d-flex align-items-center mb-2">
-                            <i class="fas fa-user me-2" style="color: #FFC107;"></i>
-                            <h5 class="mb-0" style="color: #000080; font-weight: bold;">Customer Information</h5>
+                            <i class="fas fa-user me-2" style="color: #FFBF00;"></i>
+                            <h5 class="mb-0" style="color: #000000; font-weight: bold;">Customer Information</h5>
                         </div>
                         <div class="ms-4" id="customer-info-section">
-                            <p class="mb-1"><strong>Name:</strong> <span id="customerName">{{ booking.customer.name if booking.customer else 'Not selected' }}</span></p>
-                            <p class="mb-1"><strong>Email:</strong> <span id="customerEmail">{{ booking.customer.email if booking.customer else 'N/A' }}</span></p>
-                            <p class="mb-0"><strong>ID:</strong> <span id="customerId">{{ booking.customer.id if booking.customer else 'N/A' }}</span></p>
+                            <p class="mb-1" style="color: #000000;"><strong>Name:</strong> <span id="customerName">{{ booking.customer.name if booking.customer else 'Not selected' }}</span></p>
+                            <p class="mb-1" style="color: #000000;"><strong>Email:</strong> <span id="customerEmail">{{ booking.customer.email if booking.customer else 'N/A' }}</span></p>
+                            <p class="mb-0" style="color: #000000;"><strong>ID:</strong> <span id="customerId">{{ booking.customer.id if booking.customer else 'N/A' }}</span></p>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="d-flex align-items-center mb-2">
                             <i class="fas fa-info-circle me-2" style="color: #FFBF00;"></i>
-                            <h5 class="mb-0" style="color: #000080; font-weight: bold;">Booking Details</h5>
+                            <h5 class="mb-0" style="color: #000000; font-weight: bold;">Booking Details</h5>
                         </div>
                         <div class="ms-4">
-                            <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number }}</p>
-                            <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') if booking.created_at else 'N/A' }}</p>
-                            <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') if booking.updated_at else 'N/A' }}</p>
+                            <p class="mb-1" style="color: #000000;"><strong>Reference:</strong> {{ booking.reference_number }}</p>
+                            <p class="mb-1" style="color: #000000;"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') if booking.created_at else 'N/A' }}</p>
+                            <p class="mb-0" style="color: #000000;"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') if booking.updated_at else 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
