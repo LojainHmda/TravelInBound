@@ -835,6 +835,41 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <!-- Credit Memo Section -->
+                    {% if credit_memos %}
+                    <div class="mt-4">
+                        <h6 class="mb-3"><i class="fas fa-file-invoice me-2 text-danger"></i>Credit Memos</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Credit Memo #</th>
+                                        <th>Amount</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for memo in credit_memos %}
+                                    <tr>
+                                        <td>{{ memo.invoice_date.strftime('%d %b %Y') if memo.invoice_date else 'N/A' }}</td>
+                                        <td><span class="badge bg-danger">{{ memo.invoice_number }}</span></td>
+                                        <td class="text-danger"><strong>-${{ "%.2f"|format(memo.total_amount|abs) }}</strong></td>
+                                        <td>{{ memo.notes or '-' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    <tr class="table-light">
+                                        <td colspan="2"><strong>Total Credits:</strong></td>
+                                        <td class="text-danger"><strong>-${{ "%.2f"|format(credit_memo_amount) }}</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
                     {% else %}
                     <p class="text-muted mb-0">No payments have been recorded for this booking yet.</p>
                     {% endif %}
