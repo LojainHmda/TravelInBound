@@ -7,15 +7,15 @@
     <div class="d-flex align-items-center justify-content-center">
         <!-- Status Flow -->
         {% set current_status = booking.status %}
-        <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#FFBF00{% else %}#e9ecef{% endif %}; color: {% if current_status == 'REQUEST' %}black{% else %}#6c757d{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
+        <span class="status-badge {% if current_status == 'REQUEST' %}status-active{% else %}status-inactive{% endif %}">
             <i class="fas fa-file-alt me-1"></i>Request
         </span>
-        <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
-        <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#e9ecef{% else %}#FFBF00{% endif %}; color: {% if current_status == 'IN_PROGRESS' or (current_status not in ['REQUEST']) %}black{% else %}#6c757d{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
+        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
+        <span class="status-badge {% if current_status == 'IN_PROGRESS' %}status-active{% elif current_status not in ['REQUEST'] %}status-active{% else %}status-inactive{% endif %}">
             <i class="fas fa-cog me-1"></i>In Progress
         </span>
-        <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
-        <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#FFBF00{% else %}#e9ecef{% endif %}; color: {% if current_status == 'COMPLETED' %}black{% else %}#6c757d{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
+        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
+        <span class="status-badge {% if current_status == 'COMPLETED' %}status-active{% else %}status-inactive{% endif %}">
             <i class="fas fa-check me-1"></i>Confirmed
         </span>
     </div>
@@ -155,10 +155,10 @@
         background: linear-gradient(145deg, #FFD700, #FFBF00);
         color: #000000;
         border: none;
-        padding: 12px 24px;
-        font-size: 1rem;
+        padding: 8px 16px;
+        font-size: 0.9rem;
         font-weight: 600;
-        border-radius: 8px;
+        border-radius: 6px;
         position: relative;
         box-shadow: 
             inset 0 2px 4px rgba(255, 255, 255, 0.3),
@@ -166,7 +166,7 @@
             0 4px 8px rgba(0, 0, 0, 0.15);
         transition: all 0.3s ease;
         text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
-        min-width: 180px;
+        min-width: 150px;
         border: 2px solid #DAA520;
     }
     .custom-arrow-button:hover {
@@ -210,6 +210,70 @@
         border-bottom: 12px solid transparent;
         border-left: 10px solid #FFBF00;
         filter: drop-shadow(2px 0 2px rgba(0, 0, 0, 0.1));
+    }
+    .status-badge {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        border-radius: 5px;
+        position: relative;
+        transition: all 0.3s ease;
+        display: inline-block;
+        margin: 0 2px;
+        border: 1px solid transparent;
+    }
+    .status-badge.status-active {
+        background: linear-gradient(145deg, #FFD700, #FFBF00);
+        color: #000000;
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.3),
+            inset 0 -1px 2px rgba(0, 0, 0, 0.15),
+            0 2px 4px rgba(0, 0, 0, 0.1);
+        border-color: #DAA520;
+    }
+    .status-badge.status-inactive {
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        color: #6c757d;
+        box-shadow: 
+            inset 0 1px 2px rgba(255, 255, 255, 0.8),
+            inset 0 -1px 2px rgba(0, 0, 0, 0.05),
+            0 1px 2px rgba(0, 0, 0, 0.05);
+        border-color: #dee2e6;
+    }
+    .status-badge::before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+    }
+    .status-badge::after {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+    }
+    .status-badge.status-active::before {
+        border-right: 6px solid #FFBF00;
+    }
+    .status-badge.status-active::after {
+        border-left: 6px solid #FFBF00;
+    }
+    .status-badge.status-inactive::before {
+        border-right: 6px solid #e9ecef;
+    }
+    .status-badge.status-inactive::after {
+        border-left: 6px solid #e9ecef;
     }
 </style>
 
