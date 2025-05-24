@@ -79,6 +79,12 @@ class Booking(db.Model):
         timestamp = datetime.utcnow().strftime("%H%M%S")
         credit_memo_number = f"{prefix}-{year}-{self.id:04d}-{timestamp}"
         return credit_memo_number
+    
+    def get_total_credits(self):
+        """Get total credit memo amount for this booking"""
+        from app.models.invoice import Invoice
+        credit_memos = Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
+        return sum(abs(memo.total_amount) for memo in credit_memos)
 
 
 class Payment(db.Model):
