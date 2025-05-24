@@ -836,39 +836,178 @@
                         </table>
                     </div>
                     
-                    <!-- Credit Memo Section -->
-                    {% if credit_memos %}
+                    <!-- Payment & Credit Memo Tabs -->
                     <div class="mt-4">
-                        <h6 class="mb-3"><i class="fas fa-file-invoice me-2 text-danger"></i>Credit Memos</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Credit Memo #</th>
-                                        <th>Amount</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for memo in credit_memos %}
-                                    <tr>
-                                        <td>{{ memo.invoice_date.strftime('%d %b %Y') if memo.invoice_date else 'N/A' }}</td>
-                                        <td><span class="badge bg-danger">{{ memo.invoice_number }}</span></td>
-                                        <td class="text-danger"><strong>-${{ "%.2f"|format(memo.total_amount|abs) }}</strong></td>
-                                        <td>{{ memo.notes or '-' }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                    <tr class="table-light">
-                                        <td colspan="2"><strong>Total Credits:</strong></td>
-                                        <td class="text-danger"><strong>-${{ "%.2f"|format(credit_memo_amount) }}</strong></td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <ul class="nav nav-tabs" id="paymentTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-content" type="button" role="tab">
+                                    <i class="fas fa-money-bill-wave me-2"></i>Payments
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="credit-memos-tab" data-bs-toggle="tab" data-bs-target="#credit-memos-content" type="button" role="tab">
+                                    <i class="fas fa-file-invoice me-2"></i>Credit Memos
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="paymentTabContent">
+                            <!-- Payments Tab Content -->
+                            <div class="tab-pane fade show active" id="payments-content" role="tabpanel">
+                                <div class="card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="mb-0">Payment History</h6>
+                                            <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+                                                <i class="fas fa-plus me-1"></i>Add Payment
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Original payment table content goes here -->
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Amount</th>
+                                                        <th>Method</th>
+                                                        <th>Transaction ID</th>
+                                                        <th>Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for payment in booking.payments %}
+                                                    <tr{% if payment.payment_method == 'CREDIT_MEMO' %} class="table-warning"{% endif %}>
+                                                        <td>{{ payment.payment_date.strftime('%d %b %Y') }}</td>
+                                                        <td>
+                                                            {% if payment.payment_method == 'CREDIT_MEMO' %}
+                                                                <span class="text-warning"><strong>-${{ "%.2f"|format(payment.amount|abs) }}</strong></span>
+                                                            {% else %}
+                                                                <span class="text-success"><strong>${{ "%.2f"|format(payment.amount) }}</strong></span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if payment.payment_method == 'CREDIT_MEMO' %}
+                                                                <span class="badge" style="background-color: #FFBF00; color: black;">Credit Memo</span>
+                                                            {% else %}
+                                                                {{ payment.payment_method }}
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>{{ payment.transaction_id or '-' }}</td>
+                                                        <td>{{ payment.notes or '-' }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Credit Memos Tab Content -->
+                            <div class="tab-pane fade" id="credit-memos-content" role="tabpanel">
+                                <div class="card border-0">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="mb-0">Credit Memo Lines</h6>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="toggleCreditForm()">
+                                                <i class="fas fa-plus me-1"></i>Add Credit Line
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Add Credit Line Form (Initially Hidden) -->
+                                        <div id="addCreditForm" class="mb-4" style="display: none;">
+                                            <div class="card border-danger">
+                                                <div class="card-header bg-danger text-white">
+                                                    <h6 class="mb-0"><i class="fas fa-plus me-2"></i>Add Manual Credit Line</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <form action="{{ url_for('booking.add_credit_line', booking_id=booking.id) }}" method="POST">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <div class="alert alert-info">
+                                                            <i class="fas fa-info-circle me-2"></i>
+                                                            This will create a credit memo line that reduces the customer's balance due.
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label for="credit_amount" class="form-label">Credit Amount</label>
+                                                                    <div class="input-group">
+                                                                        <span class="input-group-text">$</span>
+                                                                        <input type="number" step="0.01" min="0.01" class="form-control" id="credit_amount" name="credit_amount" required>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="mb-3">
+                                                                    <label for="credit_reason" class="form-label">Reason for Credit</label>
+                                                                    <select class="form-select" id="credit_reason" name="credit_reason" required>
+                                                                        <option value="">Select reason...</option>
+                                                                        <option value="REFUND">Customer Refund</option>
+                                                                        <option value="ADJUSTMENT">Price Adjustment</option>
+                                                                        <option value="CORRECTION">Billing Correction</option>
+                                                                        <option value="COMPENSATION">Service Compensation</option>
+                                                                        <option value="DISCOUNT">Discount Applied</option>
+                                                                        <option value="OTHER">Other</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label for="credit_notes" class="form-label">Notes</label>
+                                                            <textarea class="form-control" id="credit_notes" name="notes" rows="3" placeholder="Provide details about this credit line..." required></textarea>
+                                                        </div>
+                                                        <div class="d-flex justify-content-end">
+                                                            <button type="button" class="btn btn-secondary me-2" onclick="toggleCreditForm()">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Create Credit Line</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Credit Memo Lines Table -->
+                                        {% set credit_memos = booking.get_credit_memos() %}
+                                        {% if credit_memos %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Date</th>
+                                                        <th>Credit Memo #</th>
+                                                        <th>Amount</th>
+                                                        <th>Referenced Invoice</th>
+                                                        <th>Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for memo in credit_memos %}
+                                                    <tr>
+                                                        <td>{{ memo.invoice_date.strftime('%d %b %Y') if memo.invoice_date else 'N/A' }}</td>
+                                                        <td><span class="badge bg-danger">{{ memo.invoice_number }}</span></td>
+                                                        <td class="text-danger"><strong>-${{ "%.2f"|format(memo.total_amount|abs) }}</strong></td>
+                                                        <td>{{ memo.referenced_invoice or '-' }}</td>
+                                                        <td>{{ memo.notes or '-' }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr class="table-light">
+                                                        <td colspan="3"><strong>Total Credit Amount:</strong></td>
+                                                        <td class="text-danger"><strong>-${{ "%.2f"|format(booking.get_total_credits()) }}</strong></td>
+                                                        <td></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>No credit memo lines have been created for this booking.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    {% endif %}
                     
                     {% else %}
                     <p class="text-muted mb-0">No payments have been recorded for this booking yet.</p>
@@ -1581,6 +1720,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Credit Form Toggle Function
+function toggleCreditForm() {
+    const form = document.getElementById('addCreditForm');
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        // Scroll to the form
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        form.style.display = 'none';
+        // Clear form fields
+        form.querySelector('form').reset();
+    }
+}
 </script>
 
 <!-- Cancel Service Modals -->
