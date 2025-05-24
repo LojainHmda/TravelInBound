@@ -845,16 +845,12 @@ def cancel_service_item(item_id):
         
         print(f"Generated credit memo {credit_memo_number} for cancelled item {item_id}", file=sys.stderr)
         print(f"Credit memo amount: ${refund_amount}", file=sys.stderr)
-        print(f"Updated booking total to: ${new_total}", file=sys.stderr)
         flash(f'Credit memo {credit_memo_number} generated for cancelled service item with amount ${abs(refund_amount):.2f}', 'success')
     else:
         # Just mark the item as cancelled without credit memo
         print(f"Item {item_id} cancelled but no credit memo generated (not invoiced)", file=sys.stderr)
         
-        # Still need to recalculate the booking total
-        active_items = [item for item in booking.service_items if not item.is_cancelled]
-        new_total = sum(item.amount for item in active_items)
-        booking.total_amount = new_total
+        # DO NOT change the booking total - it should remain as the original invoice amount
         
     # Update item status and save
     db.session.commit()
