@@ -261,10 +261,10 @@
     </style>
 </head>
 <body>
-    <!-- Header with logo only -->
+    <!-- Header with user info only -->
     <div class="main-header">
         <div class="d-flex align-items-center" style="margin-left: 50px;">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Travel Booking Pro Logo" height="35">
+            <h4 class="mb-0" style="color: #FFBF00; font-weight: bold;">Travel Booking Pro</h4>
         </div>
         <div class="user-info">
             <i class="fas fa-user-circle"></i>
@@ -336,7 +336,13 @@
                 </li>
             </ul>
             
-            <!-- Removed Test User from sidebar footer -->
+            <!-- Logo at bottom of sidebar -->
+            <div class="sidebar-footer">
+                <div class="text-center">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Travel Booking Pro Logo" style="height: 60px; width: auto; margin-bottom: 10px;">
+                    <div style="color: #FFBF00; font-size: 0.8rem; font-weight: bold;">Travel Booking Pro</div>
+                </div>
+            </div>
         </nav>
         
         <!-- Main Content Area -->
