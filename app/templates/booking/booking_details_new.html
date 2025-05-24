@@ -847,6 +847,10 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" id="credit-memos-tab" data-bs-toggle="tab" data-bs-target="#credit-memos-content" type="button" role="tab">
                                     <i class="fas fa-file-invoice me-2"></i>Credit Memos
+                                    {% set credit_count = booking.get_credit_memos()|length %}
+                                    {% if credit_count > 0 %}
+                                    <span class="badge bg-danger ms-1">{{ credit_count }}</span>
+                                    {% endif %}
                                 </button>
                             </li>
                         </ul>
