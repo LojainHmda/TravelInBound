@@ -759,7 +759,7 @@
                                     </p>
                                     {% endfor %}
                                     <p class="card-text mb-0">
-                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(total_credits) }}
+                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(booking.get_total_credits()) }}
                                     </p>
                                 </div>
                             </div>
