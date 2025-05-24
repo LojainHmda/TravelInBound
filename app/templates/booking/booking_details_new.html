@@ -5,39 +5,7 @@
 <div class="container-fluid mb-4">
     <div class="row">
         <div class="col-12">
-            <!-- Status Flow -->
-            <div class="d-flex justify-content-center mb-4">
-                <div class="d-flex align-items-center">
-                    {% if not booking %}
-                        <!-- New Request Status Flow -->
-                        <span class="badge me-2" style="background-color: #FFBF00; color: black; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-file-alt me-1"></i>Request
-                        </span>
-                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                        <span class="badge me-2" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-cog me-1"></i>In Progress
-                        </span>
-                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                        <span class="badge" style="background-color: #f5f5f5; color: #999; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-check me-1"></i>Confirmed
-                        </span>
-                    {% else %}
-                        <!-- Existing Booking Status Flow -->
-                        {% set current_status = booking.status %}
-                        <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#FFBF00{% else %}#28a745{% endif %}; color: {% if current_status == 'REQUEST' %}black{% else %}white{% endif %}; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-file-alt me-1"></i>Request
-                        </span>
-                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                        <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#f5f5f5{% else %}#28a745{% endif %}; color: {% if current_status == 'IN_PROGRESS' %}black{% elif current_status in ['REQUEST'] %}#999{% else %}white{% endif %}; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-cog me-1"></i>In Progress
-                        </span>
-                        <i class="fas fa-arrow-right mx-2" style="color: #ccc;"></i>
-                        <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#FFBF00{% else %}#f5f5f5{% endif %}; color: {% if current_status == 'COMPLETED' %}black{% else %}#999{% endif %}; padding: 8px 16px; border-radius: 20px;">
-                            <i class="fas fa-check me-1"></i>Confirmed
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
+
             
             <!-- Customer Selection Section - Only show for new requests -->
             {% if not booking %}
@@ -166,25 +134,27 @@
 <div class="container-fluid">
     <!-- Header Bar - Only show for existing bookings -->
     {% if booking %}
-    <div class="header-bar py-2" style="background-color: #f2f2f2; border-bottom: 1px solid #dee2e6; margin-bottom: 10px; border-radius: 5px;">
-        <div class="d-flex align-items-center">
-            <i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>
-            <h5 class="mb-0 fw-bold" style="color: #00305A;">Booking #{{ booking.reference_number }}</h5>
-        </div>
-        <div class="d-flex align-items-center">
-            {% if booking.invoice_number %}
-            <span class="status-badge bg-secondary text-white me-2">
-                <i class="fas fa-file-invoice me-1"></i> Invoiced
-            </span>
-            {% else %}
-            <span class="status-badge me-2" style="background-color: #f8f9fa; color: #00305A; border: 1px solid #00305A;">
-                <i class="fas fa-file-invoice me-1" style="color: #FFBF00;"></i> Not Invoiced
-            </span>
-            {% endif %}
-            
-            <span class="status-badge" style="background-color: #00305A; color: white;">
-                <i class="fas fa-check-circle me-1" style="color: #FFBF00;"></i> {{ booking.status }}
-            </span>
+    <div class="header-bar py-3" style="background-color: #000080; color: white; margin-bottom: 10px; border-radius: 5px;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>
+                <h5 class="mb-0 fw-bold">Booking #{{ booking.reference_number }}</h5>
+            </div>
+            <div class="d-flex align-items-center">
+                <!-- Status Flow in Header -->
+                {% set current_status = booking.status %}
+                <span class="badge me-2" style="background-color: {% if current_status == 'REQUEST' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
+                    <i class="fas fa-file-alt me-1"></i>Request
+                </span>
+                <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
+                <span class="badge me-2" style="background-color: {% if current_status == 'IN_PROGRESS' %}#FFBF00{% elif current_status in ['REQUEST'] %}#6c757d{% else %}#28a745{% endif %}; color: {% if current_status == 'IN_PROGRESS' %}black{% else %}white{% endif %}; padding: 4px 8px; font-size: 0.75rem;">
+                    <i class="fas fa-cog me-1"></i>In Progress
+                </span>
+                <i class="fas fa-arrow-right mx-1" style="color: #ccc; font-size: 0.8rem;"></i>
+                <span class="badge" style="background-color: {% if current_status == 'COMPLETED' %}#28a745{% else %}#6c757d{% endif %}; color: white; padding: 4px 8px; font-size: 0.75rem;">
+                    <i class="fas fa-check me-1"></i>Confirmed
+                </span>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -407,7 +377,7 @@
                                     </td>
                                     <td>
                                         {% if not item.is_cancelled %}
-                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #FFBF00; color: black; border: 1px solid #FFBF00;">
+                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;">
                                                 <i class="fas fa-cogs me-1"></i>Confirm
                                             </a>
                                             
@@ -415,22 +385,22 @@
                                             {% if item.status != 'CONFIRMED' and not item.is_invoiced %}
                                                 <form method="POST" action="{{ url_for('booking.delete_service_item', item_id=item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this service item? This action cannot be undone.');">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn btn-sm me-1" style="background-color: #FFBF00; color: black; border: 1px solid #FFBF00;" data-bs-toggle="tooltip" title="Delete this service item">
-                                                        <i class="fas fa-trash-alt" style="font-size: 12px;"></i>
+                                                    <button type="submit" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" data-bs-toggle="tooltip" title="Delete this service item">
+                                                        <i class="fas fa-trash-alt" style="font-size: 10px;"></i>
                                                     </button>
                                                 </form>
                                             {% endif %}
                                             
                                             <!-- CANCEL button: Only for invoiced items -->
                                             {% if item.is_invoiced and not item.is_cancelled %}
-                                                <button type="button" class="btn btn-sm me-1" style="background-color: #FFBF00; color: black; border: 1px solid #FFBF00;" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}" data-bs-toggle2="tooltip" title="Cancel this invoiced service">
-                                                    <i class="fas fa-times-circle" style="font-size: 12px;"></i>
+                                                <button type="button" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" data-bs-toggle="modal" data-bs-target="#cancelServiceModal{{ item.id }}" data-bs-toggle2="tooltip" title="Cancel this invoiced service">
+                                                    <i class="fas fa-times-circle" style="font-size: 10px;"></i>
                                                 </button>
                                             {% endif %}
                                         {% endif %}
                                         
                                         <div class="dropdown">
-                                            <button class="btn btn-sm dropdown-toggle" style="background-color: #FFBF00; color: black; border: 1px solid #FFBF00;" type="button" data-bs-toggle="dropdown">
+                                            <button class="btn btn-sm dropdown-toggle" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" type="button" data-bs-toggle="dropdown">
                                                 More
                                             </button>
                                             <ul class="dropdown-menu">
