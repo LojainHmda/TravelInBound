@@ -562,9 +562,15 @@
                                     </td>
                                     <td>
                                         {% if not item.is_cancelled %}
-                                            <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;">
-                                                <i class="fas fa-cogs me-1"></i>Confirm
-                                            </a>
+                                            {% if booking.status == 'REQUEST' %}
+                                                <button class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" disabled title="Start operations first to enable confirmations">
+                                                    <i class="fas fa-lock me-1"></i>Locked
+                                                </button>
+                                            {% else %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;">
+                                                    <i class="fas fa-cogs me-1"></i>Confirm
+                                                </a>
+                                            {% endif %}
                                             
                                             <!-- DELETE button: Only for items that are NOT confirmed AND NOT invoiced -->
                                             {% if item.status != 'CONFIRMED' and not item.is_invoiced %}
@@ -754,7 +760,7 @@
                                     </p>
                                     {% endfor %}
                                     <p class="card-text mb-0">
-                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(booking.get_total_credits()) }}
+                                        <strong>Total Credits:</strong> -${{ "%.2f"|format(total_credits) }}
                                     </p>
                                 </div>
                             </div>
@@ -803,8 +809,8 @@
                                     <td><strong>Payment Summary:</strong></td>
                                     <td colspan="4">
                                         {% set actual_payments = booking.payments|sum(attribute='amount') %}
-                                        {% set total_credits = booking.get_total_credits() %}
-                                        {% set balance_due = booking.get_balance_due() %}
+                                        {% set total_credits = 0.0 %}
+                                        {% set balance_due = booking.total_amount - actual_payments %}
                                         <div class="d-flex flex-wrap gap-2">
                                             <span class="badge bg-success">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
                                             {% if total_credits > 0 %}
