@@ -191,7 +191,8 @@
     
 
 
-    <!-- Customer and Booking Information with light beige background -->
+    <!-- Customer and Booking Information - Only show for existing bookings -->
+    {% if booking %}
     <div class="row mb-4">
         <div class="col-12">
             <div class="p-3" style="background-color: #FFFAF0; border-radius: 5px;">
@@ -202,9 +203,9 @@
                             <h5 class="mb-0" style="color: #000080; font-weight: bold;">Customer Information</h5>
                         </div>
                         <div class="ms-4" id="customer-info-section">
-                            <p class="mb-1"><strong>Name:</strong> <span id="customerName">{% if booking and booking.customer %}{{ booking.customer.name }}{% else %}Not selected{% endif %}</span></p>
-                            <p class="mb-1"><strong>Email:</strong> <span id="customerEmail">{% if booking and booking.customer %}{{ booking.customer.email }}{% else %}N/A{% endif %}</span></p>
-                            <p class="mb-0"><strong>ID:</strong> <span id="customerId">{% if booking and booking.customer %}{{ booking.customer.id }}{% else %}N/A{% endif %}</span></p>
+                            <p class="mb-1"><strong>Name:</strong> <span id="customerName">{{ booking.customer.name if booking.customer else 'Not selected' }}</span></p>
+                            <p class="mb-1"><strong>Email:</strong> <span id="customerEmail">{{ booking.customer.email if booking.customer else 'N/A' }}</span></p>
+                            <p class="mb-0"><strong>ID:</strong> <span id="customerId">{{ booking.customer.id if booking.customer else 'N/A' }}</span></p>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -213,15 +214,16 @@
                             <h5 class="mb-0" style="color: #000080; font-weight: bold;">Booking Details</h5>
                         </div>
                         <div class="ms-4">
-                            <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number if booking else 'N/A' }}</p>
-                            <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') if booking and booking.created_at else 'N/A' }}</p>
-                            <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') if booking and booking.updated_at else 'N/A' }}</p>
+                            <p class="mb-1"><strong>Reference:</strong> {{ booking.reference_number }}</p>
+                            <p class="mb-1"><strong>Created:</strong> {{ booking.created_at.strftime('%d %b %Y, %H:%M') if booking.created_at else 'N/A' }}</p>
+                            <p class="mb-0"><strong>Updated:</strong> {{ booking.updated_at.strftime('%d %b %Y, %H:%M') if booking.updated_at else 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    {% endif %}
     <!-- Action Buttons Toolbar -->
     <div class="action-toolbar">
         <div class="d-flex flex-wrap justify-content-between">
