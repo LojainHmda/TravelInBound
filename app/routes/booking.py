@@ -533,13 +533,20 @@ def details(booking_id):
     # Optionally add a booking form for new bookings
     booking_form = BookingRequestForm()
     
+    # Get credit memos for this booking
+    from app.models.invoice import Invoice
+    credit_memos = Invoice.query.filter_by(booking_id=booking.id, is_credit_memo=True).all()
+    credit_memo_amount = sum(abs(memo.total_amount) for memo in credit_memos)
+    
     return render_template(
         'booking/booking_details_new.html',
         booking=booking,
         service_form=service_form,
         status_form=status_form,
         customers=customers,
-        booking_form=booking_form
+        booking_form=booking_form,
+        credit_memos=credit_memos,
+        credit_memo_amount=credit_memo_amount
     )
 
 @booking_bp.route('/<int:booking_id>/add_service', methods=['POST'])
