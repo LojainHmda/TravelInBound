@@ -15,9 +15,10 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import (
     ExpenseCategory, Expense, ExpenseAttachment, FinancialMetric, 
-    Booking, ServiceItem, Payment, User, Document,
+    ServiceItem, Payment, User, Document,
     EXPENSE_CATEGORY_RENT, EXPENSE_CATEGORY_UTILITIES
 )
+from app.models.booking import Booking
 from app.models.supplier import SupplierPayment, Supplier, SupplierPrepaymentLine
 from app.forms.expense import (
     ExpenseCategoryForm, ExpenseForm, ExpenseFilterForm,
@@ -169,7 +170,7 @@ def index():
     # Get monthly data for last 12 months for trend chart
     
     # Get revenue bookings for the selected period with additional filters
-    from app.models import Booking
+    # Booking already imported at top of file
     from datetime import datetime
     
     # Base query
@@ -244,7 +245,7 @@ def index():
     # Get supplier payments for the selected period for the breakdown modal
     from app.models.service import ServiceConfirmation
     from app.models.supplier import Supplier, SupplierPrepaymentLine
-    from app.models import Booking
+    # Booking already imported at top of file
     
     # Use joinedload to preload all related data in a single query
     # We need to use class-bound attributes instead of strings for SQLAlchemy relationships
