@@ -271,7 +271,7 @@ def index():
         if payment.prepayment_lines:
             for line in payment.prepayment_lines:
                 # Get booking reference using the booking_id directly
-                from app.models import Booking
+                # Booking already imported at top of file
                 booking = Booking.query.get(line.booking_id)
                 if booking:
                     print(f"  → Booking reference: {booking.reference_number}", file=sys.stderr)
@@ -857,7 +857,7 @@ def supplier_details(supplier_id):
         booking_ref = "Unknown"
         try:
             # Get booking reference from the booking relationship
-            from app.models import Booking
+            # Booking already imported at top of file
             booking = Booking.query.get(line.booking_id)
             if booking:
                 booking_ref = booking.reference_number
