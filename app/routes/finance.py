@@ -61,17 +61,17 @@ def index():
     prev_last = date(prev_month.year, prev_month.month, monthrange(prev_month.year, prev_month.month)[1])
     
     # Calculate KPIs
-    # 1. Revenue - based on invoiced bookings minus credit memos
-    from app.models.invoice import Invoice
+    # 1. Revenue - based on invoiced bookings (single source of truth: booking table)
     
-    # Current month invoiced revenue
-    current_month_invoices = db.session.query(func.sum(Invoice.total_amount)).filter(
-        Invoice.invoice_date >= first_day,
-        Invoice.invoice_date <= last_day,
-        Invoice.is_credit_memo == False
+    # Current month invoiced revenue from booking table
+    current_month_invoices = db.session.query(func.sum(Booking.total_amount)).filter(
+        Booking.invoice_date >= first_day,
+        Booking.invoice_date <= last_day,
+        Booking.invoice_number.isnot(None)  # Only invoiced bookings
     ).scalar() or 0
     
-    # Current month credit memos
+    # Credit memos are stored separately in the invoice table
+    from app.models.invoice import Invoice
     current_month_credits = db.session.query(func.sum(Invoice.total_amount)).filter(
         Invoice.invoice_date >= first_day,
         Invoice.invoice_date <= last_day,
