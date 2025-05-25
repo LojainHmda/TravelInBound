@@ -832,6 +832,36 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     # Placeholder - implement actual CSV export for supplier payments report
     pass
 
+@finance.route('/suppliers')
+@login_required
+def list_suppliers():
+    """List all suppliers with basic information"""
+    suppliers = Supplier.query.order_by(Supplier.name).all()
+    
+    # Calculate summary stats for each supplier
+    supplier_stats = []
+    for supplier in suppliers:
+        # Get total payments for this supplier
+        total_payments = db.session.query(func.sum(SupplierPrepaymentLine.amount)).filter(
+            SupplierPrepaymentLine.supplier_payment_id.in_(
+                db.session.query(SupplierPayment.id).filter(SupplierPayment.supplier_id == supplier.id)
+            )
+        ).scalar() or 0
+        
+        # Get number of active services
+        active_services = ServiceItem.query.join(Document).join(SupplierPayment).filter(
+            SupplierPayment.supplier_id == supplier.id,
+            ServiceItem.status != 'CANCELLED'
+        ).count()
+        
+        supplier_stats.append({
+            'supplier': supplier,
+            'total_payments': total_payments,
+            'active_services': active_services
+        })
+    
+    return render_template('finance/suppliers.html', supplier_stats=supplier_stats)
+
 @finance.route('/supplier-costs')
 @login_required
 def supplier_costs():

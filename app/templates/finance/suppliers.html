@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block content %}
+<div class="container pt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">Suppliers</h1>
+        <div>
+            <a href="{{ url_for('finance.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Finance
+            </a>
+        </div>
+    </div>
+
+    {% if supplier_stats %}
+    <div class="row">
+        {% for stat in supplier_stats %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title mb-0">{{ stat.supplier.name }}</h5>
+                        <span class="badge bg-primary">{{ stat.supplier.code or 'N/A' }}</span>
+                    </div>
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <div class="h4 mb-0 text-success">${{ "%.0f"|format(stat.total_payments) }}</div>
+                                <small class="text-muted">Total Payments</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="h4 mb-0 text-info">{{ stat.active_services }}</div>
+                            <small class="text-muted">Active Services</small>
+                        </div>
+                    </div>
+                    
+                    {% if stat.supplier.email %}
+                    <p class="text-muted small mb-1"><i class="fas fa-envelope me-1"></i> {{ stat.supplier.email }}</p>
+                    {% endif %}
+                    {% if stat.supplier.phone %}
+                    <p class="text-muted small mb-3"><i class="fas fa-phone me-1"></i> {{ stat.supplier.phone }}</p>
+                    {% endif %}
+                    
+                    <div class="d-grid">
+                        <a href="/supplier/{{ stat.supplier.id }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-building fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No suppliers found</h4>
+        <p class="text-muted">Start by adding suppliers to manage your business relationships.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -311,7 +311,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="/finance/" class="{% if '/finance/' in request.path %}active{% endif %}">
+                    <a href="{{ url_for('finance.list_suppliers') }}" class="{% if request.path == url_for('finance.list_suppliers') %}active{% endif %}">
                         <i class="fas fa-building"></i>
                         Suppliers
                     </a>
