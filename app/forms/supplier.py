@@ -1,5 +1,6 @@
 from datetime import date
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, SubmitField
 from wtforms.validators import DataRequired, Email, Optional, Length, NumberRange
 
@@ -68,3 +69,23 @@ class SupplierStatementForm(FlaskForm):
         ('UNPAID', 'Unpaid')
     ], default='ALL')
     submit = SubmitField('Generate Statement')
+
+
+class SupplierDocumentForm(FlaskForm):
+    """Form for uploading supplier documents"""
+    document_type = SelectField('Document Type', choices=[
+        ('CONTRACT', 'Contract'),
+        ('INVOICE', 'Invoice'),
+        ('AGREEMENT', 'Agreement'),
+        ('CERTIFICATE', 'Certificate'),
+        ('OTHER', 'Other')
+    ], validators=[DataRequired()])
+    
+    document_number = StringField('Document Number', validators=[DataRequired(), Length(max=100)])
+    issue_date = DateField('Issue Date', format='%Y-%m-%d', validators=[Optional()])
+    expiry_date = DateField('Expiry Date', format='%Y-%m-%d', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional()])
+    file = FileField('Document File', validators=[
+        FileAllowed(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'], 'Only PDF, Word, and image files allowed!')
+    ])
+    submit = SubmitField('Upload Document')

@@ -250,9 +250,9 @@ def view_supplier(supplier_id):
     # Add general payment option
     payment_form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
     
-    # Import document form
-    from app.forms.booking import DocumentUploadForm
-    document_form = DocumentUploadForm()
+    # Initialize document form for supplier
+    from app.forms.supplier import SupplierDocumentForm
+    document_form = SupplierDocumentForm()
     
     return render_template(
         'supplier/view.html',
