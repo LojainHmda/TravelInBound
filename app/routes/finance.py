@@ -61,16 +61,40 @@ def index():
     prev_last = date(prev_month.year, prev_month.month, monthrange(prev_month.year, prev_month.month)[1])
     
     # Calculate KPIs
-    # 1. Revenue
-    current_month_revenue = db.session.query(func.sum(Payment.amount)).filter(
-        Payment.payment_date >= first_day,
-        Payment.payment_date <= last_day
+    # 1. Revenue - based on invoiced bookings minus credit memos
+    from app.models.invoice import Invoice
+    
+    # Current month invoiced revenue
+    current_month_invoices = db.session.query(func.sum(Invoice.total_amount)).filter(
+        Invoice.invoice_date >= first_day,
+        Invoice.invoice_date <= last_day,
+        Invoice.is_credit_memo == False
     ).scalar() or 0
     
-    prev_month_revenue = db.session.query(func.sum(Payment.amount)).filter(
-        Payment.payment_date >= prev_first,
-        Payment.payment_date <= prev_last
+    # Current month credit memos
+    current_month_credits = db.session.query(func.sum(Invoice.total_amount)).filter(
+        Invoice.invoice_date >= first_day,
+        Invoice.invoice_date <= last_day,
+        Invoice.is_credit_memo == True
     ).scalar() or 0
+    
+    current_month_revenue = current_month_invoices - abs(current_month_credits)
+    
+    # Previous month invoiced revenue
+    prev_month_invoices = db.session.query(func.sum(Invoice.total_amount)).filter(
+        Invoice.invoice_date >= prev_first,
+        Invoice.invoice_date <= prev_last,
+        Invoice.is_credit_memo == False
+    ).scalar() or 0
+    
+    # Previous month credit memos
+    prev_month_credits = db.session.query(func.sum(Invoice.total_amount)).filter(
+        Invoice.invoice_date >= prev_first,
+        Invoice.invoice_date <= prev_last,
+        Invoice.is_credit_memo == True
+    ).scalar() or 0
+    
+    prev_month_revenue = prev_month_invoices - abs(prev_month_credits)
     
     # 2. Expenses - with error handling to prevent SSL connection issues
     try:
@@ -105,13 +129,28 @@ def index():
         SupplierPayment.payment_date <= prev_last
     ).scalar() or 0
     
-    # 4. Profit calculation
+    # 4. Cash Flow - Customer payments received minus supplier payments processed
+    current_month_customer_payments = db.session.query(func.sum(Payment.amount)).filter(
+        Payment.payment_date >= first_day,
+        Payment.payment_date <= last_day
+    ).scalar() or 0
+    
+    prev_month_customer_payments = db.session.query(func.sum(Payment.amount)).filter(
+        Payment.payment_date >= prev_first,
+        Payment.payment_date <= prev_last
+    ).scalar() or 0
+    
+    current_month_cash_flow = current_month_customer_payments - current_month_supplier_costs
+    prev_month_cash_flow = prev_month_customer_payments - prev_month_supplier_costs
+    
+    # 5. Profit calculation
     current_month_profit = current_month_revenue - current_month_expenses - current_month_supplier_costs
     prev_month_profit = prev_month_revenue - prev_month_expenses - prev_month_supplier_costs
     
     # Calculate percentage changes
     revenue_change_pct = ((current_month_revenue / prev_month_revenue) - 1) * 100 if prev_month_revenue > 0 else 0
     expenses_change_pct = ((current_month_expenses / prev_month_expenses) - 1) * 100 if prev_month_expenses > 0 else 0
+    cash_flow_change_pct = ((current_month_cash_flow / prev_month_cash_flow) - 1) * 100 if prev_month_cash_flow != 0 else 0
     profit_change_pct = ((current_month_profit / prev_month_profit) - 1) * 100 if prev_month_profit > 0 else 0
     
     # Get expense breakdown by category for current month
@@ -268,6 +307,9 @@ def index():
         expenses_change_pct=expenses_change_pct,
         current_month_supplier_costs=current_month_supplier_costs,
         prev_month_supplier_costs=prev_month_supplier_costs,
+        current_month_cash_flow=current_month_cash_flow,
+        prev_month_cash_flow=prev_month_cash_flow,
+        cash_flow_change_pct=cash_flow_change_pct,
         current_month_profit=current_month_profit,
         prev_month_profit=prev_month_profit,
         profit_change_pct=profit_change_pct,

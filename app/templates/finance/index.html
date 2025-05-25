@@ -144,29 +144,37 @@
                             </div>
                         </div>
 
-                        <!-- Supplier Costs Metric -->
+                        <!-- Cash Flow Metric -->
                         <div class="col-md-3 mb-4">
-                            <div class="card border-left-warning shadow-sm h-100 py-2 metric-card">
+                            <div class="card border-left-info shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                                Supplier Costs
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Cash Flow
                                             </div>
                                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                                <a href="{{ url_for('finance.supplier_costs') }}" 
-                                                   class="text-gray-800 text-decoration-none">
-                                                    ${{ "%.2f"|format(current_month_supplier_costs) }}
-                                                </a>
+                                                ${{ "%.2f"|format(current_month_cash_flow) }}
                                             </div>
                                             <div class="small mt-2">
-                                                <span class="text-muted">{{ "%.1f"|format((current_month_supplier_costs / current_month_revenue * 100) if current_month_revenue > 0 else 0) }}% of revenue</span>
-                                                <br>
-                                                <a href="{{ url_for('finance.supplier_costs') }}" class="small">View breakdown</a>
+                                                {% if cash_flow_change_pct > 0 %}
+                                                <span class="trend-up">
+                                                    <i class="fas fa-arrow-up trend-icon"></i> {{ "%.1f"|format(cash_flow_change_pct) }}%
+                                                </span>
+                                                {% elif cash_flow_change_pct < 0 %}
+                                                <span class="trend-down">
+                                                    <i class="fas fa-arrow-down trend-icon"></i> {{ "%.1f"|format(cash_flow_change_pct|abs) }}%
+                                                </span>
+                                                {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-equals trend-icon"></i> 0%
+                                                </span>
+                                                {% endif %}
+                                                <span class="text-muted ml-1">vs {{ prev_month }}</span>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-handshake fa-2x text-gray-300"></i>
+                                            <i class="fas fa-exchange-alt fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
@@ -313,10 +321,10 @@
         </div>
     </div>
 
-    <!-- Financial Trends Chart -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
+    <div class="row">
+        <!-- Financial Trends Chart - Moved to top left -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
                 </div>
@@ -327,9 +335,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row">
+        
         <!-- Recent Expenses -->
         <div class="col-lg-6">
             <div class="card shadow-sm mb-4">
@@ -375,62 +381,7 @@
             </div>
         </div>
 
-        <!-- Upcoming Payments -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-warning-subtle">
-                    <h6 class="m-0 font-weight-bold text-dark">Upcoming Supplier Payments</h6>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Due Date</th>
-                                    <th>Supplier</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for payment in upcoming_payments %}
-                                <tr class="{% if payment.due_date and payment.due_date < today %}table-danger{% endif %}">
-                                    <td>{{ payment.due_date.strftime('%b %d, %Y') if payment.due_date else 'N/A' }}</td>
-                                    <td>
-                                        {% if payment.supplier %}
-                                            <a href="{{ url_for('finance.supplier_details', supplier_id=payment.supplier_id) }}">
-                                                {{ payment.supplier.name }}
-                                            </a>
-                                        {% elif payment.supplier_id %}
-                                            <a href="{{ url_for('finance.supplier_details', supplier_id=payment.supplier_id) }}">
-                                                Supplier #{{ payment.supplier_id }}
-                                            </a>
-                                        {% else %}
-                                            <span class="text-muted">Unknown</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {{ payment.notes or payment.description or 'No description' }}
-                                        {% if payment.service_confirmation_id %}
-                                            <br>
-                                            <a href="{{ url_for('booking.details', booking_id=payment.service_confirmation.service_item.booking_id) }}" class="small">
-                                                View booking
-                                            </a>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-right">${{ "%.2f"|format(payment.amount) }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">No upcoming payments due</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 </div>
 <!-- Supplier costs now available at dedicated page: /finance/supplier-costs -->
