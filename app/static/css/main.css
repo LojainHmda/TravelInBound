@@ -1,18 +1,18 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #0f1729; /* Very Dark Blue */
+    --primary-color: #1e3a8a; /* Dark Blue */
     --secondary-color: #FFBF00; /* Yellow */
     --button-color: #FFBF00; /* Yellow - main button color */
     --light-color: #ffffff; /* White */
-    --text-dark: #0f1729; /* Very Dark Blue for main text */
+    --text-dark: #1e3a8a; /* Dark Blue for main text */
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
     --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
-    --dashboard-text-color: #0f1729; /* Very dark blue text for dashboard */
+    --dashboard-text-color: #1e3a8a; /* Dark blue text for dashboard */
     --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
-    --navy-blue: #0f1729; /* Very Dark Blue color */
-    --sidebar-bg: #0f1729; /* Very Dark Blue sidebar background */
+    --navy-blue: #1e3a8a; /* Dark Blue color */
+    --sidebar-bg: #1e3a8a; /* Dark Blue sidebar background */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */
