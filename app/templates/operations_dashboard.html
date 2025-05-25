@@ -139,6 +139,7 @@
                             <tbody>
                                 {% for booking in recent_bookings %}
                                     {% for item in booking.service_items %}
+                                    {% if item.status == 'IN_PROGRESS' %}
                                     <tr class="service-item" data-service-type="{{ item.service_type }}">
                                         <td>{{ booking.reference_number }}</td>
                                         <td>{{ booking.requester.username }}</td>
@@ -159,14 +160,15 @@
                                                 <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #333333; border: 1px solid #FFC107; margin-right: 5px;">
                                                     <i class="fas fa-eye" style="color: #FFC107;"></i> View
                                                 </a>
-                                                {% if item.status == 'REQUEST' %}
-                                                <a href="{{ url_for('booking.update_service_status', item_id=item.id) }}" class="btn btn-sm" style="background-color: #000080; color: white; border: 1px solid #FFC107;">
+                                                {% if item.status == 'IN_PROGRESS' %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm" style="background-color: #000080; color: white; border: 1px solid #FFC107;">
                                                     <i class="fas fa-check" style="color: #FFC107;"></i> Confirm
                                                 </a>
                                                 {% endif %}
                                             </div>
                                         </td>
                                     </tr>
+                                    {% endif %}
                                     {% endfor %}
                                 {% endfor %}
                             </tbody>
