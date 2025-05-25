@@ -11,6 +11,7 @@ from app.forms.supplier import SupplierForm, SupplierStatementForm
 from app.forms.supplier_payment import SupplierPaymentForm, SupplierInvoiceFilterForm
 from app.models.supplier import Supplier, SupplierService, SupplierPayment, SupplierPrepaymentLine
 from app.models.service import ServiceConfirmation, ServiceItem
+from app.models.booking import Booking
 from sqlalchemy import func, desc
 
 # Create blueprint
@@ -528,3 +529,161 @@ def upload_document(supplier_id):
     
     # For now, redirect back to supplier detail
     return redirect(url_for('supplier.detail', supplier_id=supplier_id))
+
+@supplier_bp.route('/<int:supplier_id>/update-prepayment-status', methods=['POST'])
+def update_prepayment_status(supplier_id):
+    """Update the status of a supplier prepayment"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    prepayment_id = request.form.get('prepayment_id')
+    new_status = request.form.get('status')
+    notes = request.form.get('notes', '')
+    
+    if not prepayment_id or not new_status:
+        flash('Missing required data for status update.', 'danger')
+        return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    
+    # Get the prepayment line and its supplier payment
+    prepayment_line = SupplierPrepaymentLine.query.get_or_404(prepayment_id)
+    supplier_payment = prepayment_line.supplier_payment
+    
+    # Update the status
+    old_status = supplier_payment.status
+    supplier_payment.status = new_status
+    supplier_payment.updated_at = datetime.utcnow()
+    
+    # Add notes if provided
+    if notes:
+        if supplier_payment.notes:
+            supplier_payment.notes += f"\n[{datetime.utcnow().strftime('%Y-%m-%d %H:%M')}] Status updated from {old_status} to {new_status}: {notes}"
+        else:
+            supplier_payment.notes = f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M')}] Status updated from {old_status} to {new_status}: {notes}"
+    
+    try:
+        db.session.commit()
+        flash(f'Payment status updated from {old_status} to {new_status} successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating payment status: {str(e)}', 'danger')
+    
+    return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+
+@supplier_bp.route('/<int:supplier_id>/cancel-prepayment', methods=['POST'])
+def cancel_prepayment(supplier_id):
+    """Cancel a prepayment and create a credit memo with cancellation fees"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    prepayment_id = request.form.get('prepayment_id')
+    cancellation_fee = request.form.get('cancellation_fee', type=float)
+    cancellation_reason = request.form.get('cancellation_reason', '')
+    
+    if not prepayment_id or cancellation_fee is None:
+        flash('Missing required data for cancellation.', 'danger')
+        return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    
+    # Get the prepayment line
+    prepayment_line = SupplierPrepaymentLine.query.get_or_404(prepayment_id)
+    booking = prepayment_line.booking
+    service_item = prepayment_line.service_item
+    original_amount = prepayment_line.amount
+    
+    try:
+        # Update supplier payment status to CANCELLED
+        supplier_payment = prepayment_line.supplier_payment
+        supplier_payment.status = 'CANCELLED'
+        supplier_payment.updated_at = datetime.utcnow()
+        supplier_payment.notes = f"[{datetime.utcnow().strftime('%Y-%m-%d %H:%M')}] Cancelled - {cancellation_reason}"
+        
+        # Cancel the service item if it's not already cancelled
+        if not service_item.is_cancelled:
+            service_item.is_cancelled = True
+            service_item.updated_at = datetime.utcnow()
+            
+            # Create a credit memo for the customer
+            from app.models.invoice import Invoice
+            credit_amount = max(0, original_amount - cancellation_fee)
+            
+            if credit_amount > 0:
+                # Generate credit memo
+                credit_memo_number = booking.generate_credit_memo_number()
+                
+                credit_memo = Invoice(
+                    booking_id=booking.id,
+                    invoice_number=credit_memo_number,
+                    invoice_date=datetime.utcnow(),
+                    amount=-credit_amount,  # Negative amount for credit
+                    is_credit_memo=True,
+                    notes=f"Credit memo for cancelled {service_item.service_type} - Original: ${original_amount:.2f}, Cancellation fee: ${cancellation_fee:.2f}, Credit: ${credit_amount:.2f}. Reason: {cancellation_reason}"
+                )
+                
+                db.session.add(credit_memo)
+                
+                # Update service item with credit memo reference
+                service_item.credit_memo_number = credit_memo_number
+                
+                # Update booking payment status
+                booking.update_payment_status()
+                
+                flash(f'Prepayment cancelled successfully. Credit memo {credit_memo_number} created for ${credit_amount:.2f}.', 'success')
+            else:
+                flash(f'Prepayment cancelled. No credit issued due to cancellation fee of ${cancellation_fee:.2f}.', 'warning')
+        
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error cancelling prepayment: {str(e)}', 'danger')
+    
+    return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+
+@supplier_bp.route('/<int:supplier_id>/generate-invoice', methods=['POST'])
+def generate_invoice(supplier_id):
+    """Generate an invoice for all unpaid supplier costs"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    invoice_date = request.form.get('invoice_date')
+    due_date = request.form.get('due_date')
+    notes = request.form.get('notes', '')
+    
+    if not invoice_date or not due_date:
+        flash('Invoice date and due date are required.', 'danger')
+        return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+    
+    try:
+        # Get all unpaid prepayment lines for this supplier
+        unpaid_prepayments = SupplierPrepaymentLine.query.join(
+            SupplierPayment, SupplierPrepaymentLine.supplier_payment_id == SupplierPayment.id
+        ).join(
+            ServiceItem, SupplierPrepaymentLine.service_item_id == ServiceItem.id
+        ).outerjoin(
+            ServiceConfirmation, ServiceConfirmation.service_item_id == ServiceItem.id
+        ).filter(
+            ServiceConfirmation.supplier_id == supplier_id,
+            SupplierPayment.status == 'PENDING',
+            ServiceItem.is_cancelled == False
+        ).all()
+        
+        if not unpaid_prepayments:
+            flash('No unpaid supplier costs found to invoice.', 'warning')
+            return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
+        
+        total_amount = sum(pp.amount for pp in unpaid_prepayments)
+        
+        # Generate invoice number
+        invoice_number = f"SUP-{supplier.code or supplier_id}-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        
+        # Update all supplier payments to include invoice reference
+        for prepayment in unpaid_prepayments:
+            supplier_payment = prepayment.supplier_payment
+            supplier_payment.invoice_reference = invoice_number
+            supplier_payment.updated_at = datetime.utcnow()
+        
+        flash(f'Invoice {invoice_number} generated for ${total_amount:.2f} covering {len(unpaid_prepayments)} items.', 'success')
+        
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error generating invoice: {str(e)}', 'danger')
+    
+    return redirect(url_for('supplier.view_supplier', supplier_id=supplier_id))
