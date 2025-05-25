@@ -746,7 +746,33 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Credit Memos box removed - detailed information shown in Credit Memos tab below -->
+                        <div class="col-md-6">
+                            {% set actual_payments = booking.payments|sum(attribute='amount') %}
+                            {% set total_credits = booking.get_total_credits() %}
+                            {% set balance_due = booking.total_amount - actual_payments - total_credits %}
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h6 class="card-title text-info">
+                                        <i class="fas fa-calculator me-2"></i>Payment Summary
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                        <span class="badge" style="background-color: #FFBF00; color: black;">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
+                                        {% if total_credits > 0 %}
+                                        <span class="badge" style="background-color: #FFBF00; color: black;">Credits: ${{ "%.2f"|format(total_credits) }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="card-text mb-0">
+                                        {% if balance_due > 0 %}
+                                            <strong>Balance Due:</strong> <span class="text-danger">${{ "%.2f"|format(balance_due) }}</span>
+                                        {% elif balance_due < 0 %}
+                                            <strong>Overpaid:</strong> <span class="text-success">${{ "%.2f"|format(balance_due|abs) }}</span>
+                                        {% else %}
+                                            <strong>Status:</strong> <span class="text-success">Fully Paid</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                     
@@ -932,7 +958,6 @@
                                         
                                         <!-- Credit Memo Lines Table -->
                                         {% set credit_memos = booking.get_credit_memos() %}
-                                        <!-- Debug: Credit memos count = {{ credit_memos|length }} -->
                                         {% if credit_memos %}
                                         <div class="table-responsive">
                                             <table class="table table-striped">
