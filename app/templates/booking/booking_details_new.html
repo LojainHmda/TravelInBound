@@ -750,7 +750,7 @@
                             {% set actual_payments = booking.payments|sum(attribute='amount') %}
                             {% set total_credits = booking.get_total_credits() %}
                             {% set balance_due = booking.total_amount - actual_payments - total_credits %}
-                            <div class="card border-info">
+                            <div class="card border-secondary bg-light">
                                 <div class="card-body">
                                     <h6 class="card-title text-secondary">
                                         <i class="fas fa-calculator me-2"></i>Payment Summary
