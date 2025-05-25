@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 class SupplierPaymentForm(FlaskForm):
     """Form for creating and updating supplier payments"""
     supplier_id = HiddenField('Supplier ID')
-    service_confirmation_id = SelectField('Service Confirmation', validators=[Optional()], coerce=int)
+    service_confirmation_id = SelectField('Service Confirmation', validators=[Optional()], coerce=lambda x: int(x) if x else None)
     amount = FloatField('Payment Amount', validators=[DataRequired(), NumberRange(min=0.01)], default=0.0)
     
     # Payment details

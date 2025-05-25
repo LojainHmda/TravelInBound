@@ -183,7 +183,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% if not confirmation.is_paid %}
-                                <a href="{{ url_for('supplier.record_payment', supplier_id=supplier.id) }}?document_id={{ confirmation.id }}" 
+                                <a href="{{ url_for('supplier.add_payment', supplier_id=supplier.id) }}?document_id={{ confirmation.id }}" 
                                    class="btn btn-sm btn-outline-success">
                                     <i class="fas fa-money-bill-wave"></i>
                                 </a>

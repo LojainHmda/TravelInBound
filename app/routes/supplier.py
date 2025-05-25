@@ -251,8 +251,11 @@ def view_supplier(supplier_id):
     payment_form.service_confirmation_id.choices = [('', 'General Payment')] + unpaid_confirmations
     
     # Initialize document form for supplier
-    from app.forms.supplier import SupplierDocumentForm
+    from app.forms.supplier import SupplierDocumentForm, SupplierStatementForm
     document_form = SupplierDocumentForm()
+    statement_form = SupplierStatementForm()
+    statement_form.supplier_id.choices = [(supplier.id, supplier.name)]
+    statement_form.supplier_id.data = supplier.id
     
     return render_template(
         'supplier/view.html',
@@ -261,6 +264,7 @@ def view_supplier(supplier_id):
         payments=payments,
         payment_form=payment_form,
         document_form=document_form,
+        statement_form=statement_form,
         unpaid_balance=supplier.get_unpaid_balance()
     )
 
