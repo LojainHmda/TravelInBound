@@ -841,18 +841,21 @@ def list_suppliers():
     # Calculate summary stats for each supplier
     supplier_stats = []
     for supplier in suppliers:
-        # Get total payments for this supplier
-        total_payments = db.session.query(func.sum(SupplierPrepaymentLine.amount)).filter(
-            SupplierPrepaymentLine.supplier_payment_id.in_(
-                db.session.query(SupplierPayment.id).filter(SupplierPayment.supplier_id == supplier.id)
-            )
-        ).scalar() or 0
+        # Get total payments for this supplier using a simpler approach
+        supplier_payments = SupplierPayment.query.filter_by(supplier_id=supplier.id).all()
+        total_payments = 0
+        for payment in supplier_payments:
+            # Sum up prepayment lines for this payment
+            lines = SupplierPrepaymentLine.query.filter_by(supplier_payment_id=payment.id).all()
+            total_payments += sum(line.amount for line in lines)
         
-        # Get number of active services
-        active_services = ServiceItem.query.join(Document).join(SupplierPayment).filter(
-            SupplierPayment.supplier_id == supplier.id,
-            ServiceItem.status != 'CANCELLED'
-        ).count()
+        # Get number of active services - simplified approach
+        active_services = 0
+        for payment in supplier_payments:
+            if payment.service_confirmation:
+                service_item = payment.service_confirmation.service_item
+                if service_item and service_item.status != 'CANCELLED':
+                    active_services += 1
         
         supplier_stats.append({
             'supplier': supplier,
