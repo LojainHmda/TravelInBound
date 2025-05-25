@@ -125,6 +125,12 @@ def index():
         SupplierPayment.payment_date <= last_day
     ).scalar() or 0
     
+    # Count of supplier payments for the current month
+    supplier_payments_count = db.session.query(func.count(SupplierPayment.id)).filter(
+        SupplierPayment.payment_date >= first_day,
+        SupplierPayment.payment_date <= last_day
+    ).scalar() or 0
+    
     prev_month_supplier_costs = db.session.query(func.sum(SupplierPayment.amount)).filter(
         SupplierPayment.payment_date >= prev_first,
         SupplierPayment.payment_date <= prev_last
@@ -308,6 +314,7 @@ def index():
         expenses_change_pct=expenses_change_pct,
         current_month_supplier_costs=current_month_supplier_costs,
         prev_month_supplier_costs=prev_month_supplier_costs,
+        supplier_payments_count=supplier_payments_count,
         current_month_cash_flow=current_month_cash_flow,
         prev_month_cash_flow=prev_month_cash_flow,
         cash_flow_change_pct=cash_flow_change_pct,
