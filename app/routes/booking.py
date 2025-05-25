@@ -260,6 +260,32 @@ def new_booking():
                 # Update the booking status to IN_PROGRESS
                 booking.status = STATUS_IN_PROGRESS
                 
+                # Create a record in the invoice table for finance tracking
+                from app.models.invoice import Invoice
+                
+                # Check if an invoice record already exists for this booking
+                existing_invoice = Invoice.query.filter_by(
+                    booking_id=booking.id, 
+                    invoice_number=booking.invoice_number
+                ).first()
+                
+                if not existing_invoice:
+                    # Create new invoice record
+                    invoice_record = Invoice(
+                        booking_id=booking.id,
+                        invoice_number=booking.invoice_number,
+                        invoice_date=booking.invoice_date,
+                        total_amount=booking.total_amount,
+                        notes='Generated from booking form',
+                        is_credit_memo=False
+                    )
+                    db.session.add(invoice_record)
+                    print(f"Created invoice record in invoice table: {booking.invoice_number}", file=sys.stderr)
+                else:
+                    # Update existing invoice record
+                    existing_invoice.total_amount = booking.total_amount
+                    print(f"Updated existing invoice record: {booking.invoice_number}", file=sys.stderr)
+                
                 # Save changes
                 db.session.commit()
                 flash(f'Invoice {booking.invoice_number} updated successfully with new amount: {booking.total_amount}', 'success')
@@ -1481,7 +1507,33 @@ def generate_invoice(booking_id):
             
             # Add invoice notes if provided
             notes = form.notes.data or request.form.get('invoice_notes', '')
-            # You could save notes to the booking or create a separate model for invoice notes
+            
+            # Create a record in the invoice table for finance tracking
+            from app.models.invoice import Invoice
+            
+            # Check if an invoice record already exists for this booking
+            existing_invoice = Invoice.query.filter_by(
+                booking_id=booking.id, 
+                invoice_number=booking.invoice_number
+            ).first()
+            
+            if not existing_invoice:
+                # Create new invoice record
+                invoice_record = Invoice(
+                    booking_id=booking.id,
+                    invoice_number=booking.invoice_number,
+                    invoice_date=booking.invoice_date,
+                    total_amount=booking.total_amount,
+                    notes=notes or 'Generated from booking',
+                    is_credit_memo=False
+                )
+                db.session.add(invoice_record)
+                print(f"Created invoice record in invoice table: {booking.invoice_number}", file=sys.stderr)
+            else:
+                # Update existing invoice record
+                existing_invoice.total_amount = booking.total_amount
+                existing_invoice.notes = notes or existing_invoice.notes
+                print(f"Updated existing invoice record: {booking.invoice_number}", file=sys.stderr)
             
             db.session.commit()
             flash(f'Invoice {booking.invoice_number} generated successfully', 'success')
