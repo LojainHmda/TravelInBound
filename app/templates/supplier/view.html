@@ -35,6 +35,53 @@
         </div>
     </div>
 
+    <!-- Supplier Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-3">
+                                    <h6 class="text-muted mb-1">Outstanding Balance</h6>
+                                    <h3 class="mb-0 {% if unpaid_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        ${{ "%.2f"|format(unpaid_balance) }}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="row h-100">
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary mb-2 w-100" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+                                        <i class="fas fa-money-bill-wave me-1"></i> Record Payment
+                                    </button>
+                                    <button type="button" class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#generateStatementModal">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> Generate Statement
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-3">
+                                    <h6 class="text-muted mb-1">Total Confirmations</h6>
+                                    <h3 class="mb-0 text-primary">{{ confirmations|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Supplier Information Card -->
         <div class="col-lg-4 mb-4">
@@ -164,53 +211,7 @@
             </div>
         </div>
     </div>
-    
-    <!-- Supplier Financial Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Financial Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center p-3">
-                                    <h6 class="text-muted mb-1">Outstanding Balance</h6>
-                                    <h3 class="mb-0 {% if unpaid_balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                        ${{ "%.2f"|format(unpaid_balance) }}
-                                    </h3>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <div class="row h-100">
-                                <div class="col-12">
-                                    <button type="button" class="btn btn-primary mb-2 w-100" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
-                                        <i class="fas fa-money-bill-wave me-1"></i> Record Payment
-                                    </button>
-                                    <button type="button" class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#generateStatementModal">
-                                        <i class="fas fa-file-invoice-dollar me-1"></i> Generate Statement
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-3 mb-3">
-                            <div class="card bg-light">
-                                <div class="card-body text-center p-3">
-                                    <h6 class="text-muted mb-1">Total Confirmations</h6>
-                                    <h3 class="mb-0 text-primary">{{ confirmations|length }}</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Service Confirmations -->
     <div class="row">
