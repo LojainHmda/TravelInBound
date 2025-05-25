@@ -3,7 +3,7 @@
 {% block content %}
 <!-- Status Flow Header -->
 {% if booking %}
-<div style="background-color: #f8f9fa; color: #6c757d; padding: 12px 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #dee2e6;">
+<div style="background-color: #e9ecef; color: #495057; padding: 12px 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #ced4da;">
     <div class="d-flex align-items-center justify-content-center">
         <!-- Status Flow -->
         {% set current_status = booking.status %}
@@ -124,7 +124,12 @@
         padding: 15px;
         border-radius: 5px;
     }
-    
+    .action-toolbar {
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
     .header-bar {
         background-color: #000080;
         color: white;
