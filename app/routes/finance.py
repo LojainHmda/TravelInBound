@@ -402,6 +402,58 @@ def expenses():
         unpaid_amount=unpaid_amount
     )
 
+@finance.route('/cash-flow')
+@login_required
+def cash_flow():
+    """Cash flow dashboard showing payments in and out"""
+    try:
+        # Get payments received from customers
+        payments_in = db.session.query(
+            Payment.payment_date,
+            Payment.amount,
+            Payment.payment_method,
+            Booking.reference_number,
+            Payment.notes
+        ).join(Booking).order_by(Payment.payment_date.desc()).limit(50).all()
+        
+        # Get payments made to suppliers
+        payments_out = db.session.query(
+            SupplierPayment.payment_date,
+            SupplierPayment.amount,
+            SupplierPayment.payment_method,
+            Supplier.name.label('supplier_name'),
+            SupplierPayment.notes
+        ).join(Supplier).order_by(SupplierPayment.payment_date.desc()).limit(50).all()
+        
+        # Calculate totals for current month
+        current_month_start = date.today().replace(day=1)
+        next_month = current_month_start + relativedelta(months=1)
+        
+        total_in = db.session.query(func.sum(Payment.amount)).filter(
+            Payment.payment_date >= current_month_start,
+            Payment.payment_date < next_month
+        ).scalar() or 0
+        
+        total_out = db.session.query(func.sum(SupplierPayment.amount)).filter(
+            SupplierPayment.payment_date >= current_month_start,
+            SupplierPayment.payment_date < next_month
+        ).scalar() or 0
+        
+        net_cash_flow = total_in - total_out
+        
+        return render_template('finance/cash_flow.html',
+            payments_in=payments_in,
+            payments_out=payments_out,
+            total_in=total_in,
+            total_out=total_out,
+            net_cash_flow=net_cash_flow,
+            current_month=current_month_start.strftime('%B %Y')
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error loading cash flow: {str(e)}")
+        flash('Error loading cash flow data.', 'error')
+        return redirect(url_for('finance.index'))
+
 @finance.route('/expenses/new', methods=['GET', 'POST'])
 @login_required
 def new_expense():

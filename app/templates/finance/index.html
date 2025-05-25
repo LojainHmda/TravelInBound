@@ -198,35 +198,30 @@
                             </div>
                         </div>
 
-                        <!-- Net Profit Metric -->
+                        <!-- Cash Flow Metric -->
                         <div class="col-md-3 mb-4">
-                            <div class="card border-left-success shadow-sm h-100 py-2 metric-card">
+                            <div class="card border-left-info shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
                                         <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                                Net Profit
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Cash Flow
                                             </div>
-                                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(current_month_profit) }}</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                <a href="{{ url_for('finance.cash_flow') }}" class="text-gray-800 text-decoration-none">
+                                                    ${{ "%.2f"|format(current_month_cash_flow|default(0)) }}
+                                                </a>
+                                            </div>
                                             <div class="small mt-2">
-                                                {% if profit_change_pct > 0 %}
-                                                <span class="trend-up">
-                                                    <i class="fas fa-arrow-up trend-icon"></i> {{ "%.1f"|format(profit_change_pct) }}%
+                                                <span class="text-info">
+                                                    <i class="fas fa-exchange-alt trend-icon"></i> Payments In/Out
                                                 </span>
-                                                {% elif profit_change_pct < 0 %}
-                                                <span class="trend-down">
-                                                    <i class="fas fa-arrow-down trend-icon"></i> {{ "%.1f"|format(profit_change_pct|abs) }}%
-                                                </span>
-                                                {% else %}
-                                                <span class="text-muted">
-                                                    <i class="fas fa-equals trend-icon"></i> 0%
-                                                </span>
-                                                {% endif %}
-                                                <span class="text-muted ml-1">vs {{ prev_month }}</span>
+                                                <br>
+                                                <small class="text-muted">Click to view details</small>
                                             </div>
                                         </div>
                                         <div class="col-auto">
-                                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
                                         </div>
                                     </div>
                                 </div>
