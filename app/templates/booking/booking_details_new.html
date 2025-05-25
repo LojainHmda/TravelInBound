@@ -746,52 +746,49 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Credit Memos box removed - detailed information shown in Credit Memos tab below -->
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-body">
+                                    <h6 class="card-title text-success">
+                                        <i class="fas fa-money-check-alt me-2"></i>Payment Summary
+                                    </h6>
+                                    {% set actual_payments = booking.payments|sum(attribute='amount') %}
+                                    {% set total_credits = booking.get_total_credits() %}
+                                    {% set balance_due = booking.total_amount - actual_payments - total_credits %}
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge" style="background-color: #FFBF00; color: black;">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
+                                        {% if total_credits > 0 %}
+                                        <span class="badge" style="background-color: #FFBF00; color: black;">Credits: ${{ "%.2f"|format(total_credits) }}</span>
+                                        {% endif %}
+                                        {% if balance_due > 0 %}
+                                            <span class="badge" style="background-color: #FF8C00; color: black;">
+                                                Balance Due: ${{ "%.2f"|format(balance_due) }}
+                                            </span>
+                                        {% elif balance_due < 0 %}
+                                            <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                Fully Settled
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                     
                     {% if booking.payments %}
-                    <h6 class="mb-3 border-bottom pb-2">Payment History</h6>
+                    <h6 class="mb-3 border-bottom pb-2">Summary</h6>
                     <div class="table-responsive">
                         <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Amount</th>
-                                    <th>Method</th>
-                                    <th>Transaction ID</th>
-                                    <th>Notes</th>
-                                </tr>
+                     
                             </thead>
                             <tbody>
                                 <!-- Payment lines removed - summary shown below -->
-                                <tr class="table-light">
-                                    <td><strong>Payment Summary:</strong></td>
-                                    <td colspan="4">
-                                        {% set actual_payments = booking.payments|sum(attribute='amount') %}
-                                        {% set total_credits = booking.get_total_credits() %}
-                                        {% set balance_due = booking.total_amount - actual_payments - total_credits %}
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
-                                            {% if total_credits > 0 %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Credits: ${{ "%.2f"|format(total_credits) }}</span>
-                                            {% endif %}
-                                            {% if balance_due > 0 %}
-                                                <span class="badge" style="background-color: #FF8C00; color: black;">
-                                                    Balance Due: ${{ "%.2f"|format(balance_due) }}
-                                                </span>
-                                            {% elif balance_due < 0 %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">
-                                                    Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
-                                                </span>
-                                            {% else %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">
-                                                    Fully Settled
-                                                </span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                </tr>
+                                <!-- Payment Summary moved to card box next to invoice -->
                             </tbody>
                         </table>
                     </div>
