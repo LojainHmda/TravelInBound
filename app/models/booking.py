@@ -85,6 +85,11 @@ class Booking(db.Model):
         from app.models.invoice import Invoice
         credit_memos = Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
         return sum(abs(memo.total_amount) for memo in credit_memos)
+    
+    def get_credit_memos(self):
+        """Get all credit memos for this booking"""
+        from app.models.invoice import Invoice
+        return Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
 
 
 class Payment(db.Model):
