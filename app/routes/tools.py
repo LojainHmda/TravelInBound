@@ -4,7 +4,7 @@ import logging
 import traceback
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, current_app
-from app.utils.openai_helper import analyze_flight_ticket
+from app.utils.openai_helper import analyze_flight_ticket, analyze_document
 
 # Create a blueprint for tool-related routes
 tools_bp = Blueprint('tools', __name__, url_prefix='/tools')
@@ -37,8 +37,8 @@ def analyze_ticket():
         if not file or not file.filename:
             return jsonify({'error': 'Invalid file'}), 400
 
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            return jsonify({'error': 'File must be an image (JPG, JPEG, PNG)'}), 400
+        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.pdf')):
+            return jsonify({'error': 'File must be an image (JPG, JPEG, PNG) or PDF'}), 400
 
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -52,19 +52,17 @@ def analyze_ticket():
             if file_size < 100:
                 return jsonify({'error': 'File too small. The image may be corrupt or empty'}), 400
 
-            img_data = base64.b64encode(file_data).decode('utf-8')
-
             current_app.logger.info(
-                f"[{timestamp}] Received image: {file.filename}, size: {file_size} bytes"
+                f"[{timestamp}] Received file: {file.filename}, size: {file_size} bytes"
             )
 
         except Exception as e:
-            current_app.logger.error(f"[{timestamp}] Error reading image file: {str(e)}")
-            return jsonify({'error': f"Could not process image: {str(e)}"}), 400
+            current_app.logger.error(f"[{timestamp}] Error reading file: {str(e)}")
+            return jsonify({'error': f"Could not process file: {str(e)}"}), 400
 
-        current_app.logger.info(f"[{timestamp}] Sending image to OpenAI for analysis.")
+        current_app.logger.info(f"[{timestamp}] Sending document to OpenAI for analysis.")
 
-        analysis_results = analyze_flight_ticket(img_data)
+        analysis_results = analyze_document(file_data, file.filename)
 
         if 'error' in analysis_results and analysis_results['error']:
             error_msg = analysis_results['error']

@@ -3,6 +3,9 @@ import json
 import base64
 import logging
 from openai import OpenAI
+from pdf2image import convert_from_bytes
+from PIL import Image
+import io
 
 # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
 MODEL_NAME = "gpt-4o"
@@ -33,6 +36,36 @@ def get_empty_result_template(error_message=None):
         result["error"] = error_message
 
     return result
+
+def convert_pdf_to_image(pdf_data):
+    """
+    Convert PDF to image for analysis.
+    
+    Args:
+        pdf_data: Raw PDF file data (bytes)
+        
+    Returns:
+        Base64 encoded image data of the first page
+    """
+    try:
+        # Convert PDF to images (only first page)
+        images = convert_from_bytes(pdf_data, first_page=1, last_page=1, dpi=200)
+        
+        if not images:
+            logger.error("No pages found in PDF")
+            return None
+            
+        # Convert PIL Image to base64
+        img_buffer = io.BytesIO()
+        images[0].save(img_buffer, format='PNG')
+        img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        
+        logger.info(f"Successfully converted PDF to image, size: {len(img_data)}")
+        return img_data
+        
+    except Exception as e:
+        logger.error(f"Error converting PDF to image: {str(e)}")
+        return None
 
 def analyze_flight_ticket(image_data):
     """
@@ -145,3 +178,33 @@ def analyze_flight_ticket(image_data):
     except Exception as e:
         logger.error(f"Error in OpenAI analysis: {str(e)}")
         return get_empty_result_template(f"Error analyzing ticket: {str(e)}")
+
+def analyze_document(file_data, filename):
+    """
+    Analyze a document (PDF or image) for travel information.
+    
+    Args:
+        file_data: Raw file data (bytes)
+        filename: Original filename to determine file type
+        
+    Returns:
+        Dictionary containing extracted travel information
+    """
+    try:
+        # Check if it's a PDF
+        if filename.lower().endswith('.pdf'):
+            logger.info(f"Processing PDF file: {filename}")
+            image_data = convert_pdf_to_image(file_data)
+            if not image_data:
+                return get_empty_result_template("Failed to convert PDF to image")
+        else:
+            # It's an image file
+            logger.info(f"Processing image file: {filename}")
+            image_data = base64.b64encode(file_data).decode('utf-8')
+            
+        # Analyze with OpenAI
+        return analyze_flight_ticket(image_data)
+        
+    except Exception as e:
+        logger.error(f"Error analyzing document {filename}: {str(e)}")
+        return get_empty_result_template(f"Error analyzing document: {str(e)}")
