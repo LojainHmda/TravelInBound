@@ -885,7 +885,49 @@ def list_suppliers():
                 'prepayment_lines': []
             })
     
-    return render_template('finance/suppliers.html', supplier_stats=final_stats)
+    return render_template('finance/suppliers_simple.html', supplier_stats=final_stats)
+
+@finance.route('/new-supplier', methods=['GET', 'POST'])
+@login_required
+def new_supplier():
+    """Create a new supplier"""
+    from app.forms.supplier import SupplierForm
+    from app.models.supplier import Supplier
+    
+    form = SupplierForm()
+    
+    if form.validate_on_submit():
+        try:
+            supplier = Supplier(
+                name=form.name.data,
+                code=form.code.data,
+                supplier_type=form.supplier_type.data,
+                contact_person=form.contact_person.data,
+                email=form.email.data,
+                phone=form.phone.data,
+                website=form.website.data,
+                address=form.address.data,
+                city=form.city.data,
+                country=form.country.data,
+                payment_terms=form.payment_terms.data,
+                default_currency=form.default_currency.data,
+                bank_name=form.bank_name.data,
+                bank_account=form.bank_account.data,
+                tax_number=form.tax_number.data,
+                notes=form.notes.data
+            )
+            
+            db.session.add(supplier)
+            db.session.commit()
+            
+            flash('Supplier created successfully!', 'success')
+            return redirect(url_for('finance.list_suppliers'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating supplier: {str(e)}', 'error')
+    
+    return render_template('finance/new_supplier.html', form=form, is_new=True)
 
 @finance.route('/supplier-costs')
 @login_required
