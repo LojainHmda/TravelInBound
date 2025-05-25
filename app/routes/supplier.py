@@ -10,7 +10,7 @@ from app import db
 from app.forms.supplier import SupplierForm, SupplierStatementForm
 from app.forms.supplier_payment import SupplierPaymentForm, SupplierInvoiceFilterForm
 from app.models.supplier import Supplier, SupplierService, SupplierPayment
-from app.models.service import ServiceConfirmation
+from app.models.service import ServiceConfirmation, ServiceItem
 from sqlalchemy import func, desc
 
 # Create blueprint
@@ -226,9 +226,10 @@ def view_supplier(supplier_id):
     """View supplier details"""
     supplier = Supplier.query.get_or_404(supplier_id)
     
-    # Get active service confirmations for this supplier
-    confirmations = ServiceConfirmation.query.filter_by(
-        supplier_id=supplier.id
+    # Get active service confirmations for this supplier (excluding cancelled services)
+    confirmations = ServiceConfirmation.query.join(ServiceItem).filter(
+        ServiceConfirmation.supplier_id == supplier.id,
+        ServiceItem.is_cancelled == False
     ).order_by(ServiceConfirmation.created_at.desc()).limit(5).all()
     
     # Get recent payments
