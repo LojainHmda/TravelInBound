@@ -62,9 +62,7 @@ def create_app():
         from app.routes.booking import booking_bp
         app.register_blueprint(booking_bp, url_prefix='/booking')
         
-        # Register supplier and customer blueprints
-        from app.routes.supplier import supplier_bp
-        app.register_blueprint(supplier_bp)
+        # Register supplier and customer blueprints - removed conflicting supplier routes
         
         # Register aviation API blueprint for flight autocomplete
         try:
