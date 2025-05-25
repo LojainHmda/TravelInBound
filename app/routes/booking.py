@@ -647,8 +647,10 @@ def update_booking_status(booking_id):
         
         # Update all service items to IN_PROGRESS too
         for item in booking.service_items:
-            if item.status == STATUS_REQUEST:
+            if item.status != STATUS_CONFIRMED:  # Don't change already confirmed items
+                old_item_status = item.status
                 item.status = STATUS_IN_PROGRESS
+                print(f"Updated service item {item.id} from {old_item_status} to IN_PROGRESS", file=sys.stderr)
         
         db.session.commit()
         flash(f'Operations started: Booking status updated to {booking.status}', 'success')
@@ -675,14 +677,15 @@ def update_booking_status(booking_id):
         if new_status == STATUS_IN_PROGRESS and old_status != STATUS_IN_PROGRESS:
             booking.generate_invoice_number()
             
-            # Update all service items to IN_PROGRESS status and mark as invoiced
+            # Update ALL service items to IN_PROGRESS status and mark as invoiced
             for item in booking.service_items:
-                if item.status == STATUS_REQUEST:
+                if item.status != STATUS_CONFIRMED:  # Don't change already confirmed items
+                    old_item_status = item.status
                     item.status = STATUS_IN_PROGRESS
                     item.invoice_number = booking.invoice_number
                     item.invoice_date = booking.invoice_date
                     item.is_invoiced = True
-                    print(f"Updated service item {item.id} status to IN_PROGRESS and marked as invoiced", file=sys.stderr)
+                    print(f"Updated service item {item.id} from {old_item_status} to IN_PROGRESS and marked as invoiced", file=sys.stderr)
             
             flash(f'Invoice {booking.invoice_number} generated', 'success')
         
