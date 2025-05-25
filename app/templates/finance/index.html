@@ -70,7 +70,7 @@
                 <div class="card-body">
                     <div class="row">
                         <!-- Revenue Metric -->
-                        <div class="col-md-3 mb-4">
+                        <div class="col-6 col-lg-3 mb-4">
                             <div class="card border-left-primary shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -109,7 +109,7 @@
                         </div>
 
                         <!-- Expenses Metric -->
-                        <div class="col-md-3 mb-4">
+                        <div class="col-6 col-lg-3 mb-4">
                             <div class="card border-left-danger shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -144,7 +144,7 @@
                         </div>
 
                         <!-- Supplier Costs Metric -->
-                        <div class="col-md-3 mb-4">
+                        <div class="col-6 col-lg-3 mb-4">
                             <div class="card border-left-warning shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -174,7 +174,7 @@
                         </div>
 
                         <!-- Profit Metric -->
-                        <div class="col-md-3 mb-4">
+                        <div class="col-6 col-lg-3 mb-4">
                             <div class="card border-left-success shadow-sm h-100 py-2 metric-card">
                                 <div class="card-body">
                                     <div class="row no-gutters align-items-center">
@@ -384,68 +384,7 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Financial Trends Chart - Moved to top left -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="financialTrendsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Recent Expenses -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Recent Expenses</h6>
-                    <a href="{{ url_for('finance.expenses') }}" class="btn btn-sm btn-primary">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Title</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for expense in recent_expenses %}
-                                <tr>
-                                    <td>{{ expense.date_incurred.strftime('%b %d, %Y') }}</td>
-                                    <td>{{ expense.title }}</td>
-                                    <td>
-                                        {% set category = expense.category %}
-                                        {% if category %}
-                                            {{ category.name }}
-                                        {% else %}
-                                            <span class="text-muted">Uncategorized</span>
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-right">${{ "%.2f"|format(expense.amount) }}</td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted">No recent expenses found</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-
-    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
