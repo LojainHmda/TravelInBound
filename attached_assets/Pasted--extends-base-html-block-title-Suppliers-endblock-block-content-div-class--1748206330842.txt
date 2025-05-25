@@ -10,7 +10,9 @@
             <p class="lead">Manage your suppliers and view their statement of accounts</p>
         </div>
         <div class="col-lg-4 text-end">
-            <span class="text-muted">{{ supplier_stats|length }} suppliers found</span>
+            <a href="{{ url_for('supplier.new_supplier') }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-1"></i> Add New Supplier
+            </a>
         </div>
     </div>
 
@@ -20,29 +22,25 @@
             <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search Suppliers</h5>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ url_for('finance.list_suppliers') }}" class="row g-3">
+            <form method="GET" action="{{ url_for('supplier.list_suppliers') }}" class="row g-3">
                 <div class="col-md-4">
                     <label for="query" class="form-label">Search</label>
-                    <input type="text" id="query" name="query" class="form-control" value="{{ query or '' }}" placeholder="Name, code, email...">
+                    <input type="text" id="query" name="query" class="form-control" value="{{ query }}" placeholder="Name, code, email...">
                 </div>
                 <div class="col-md-3">
                     <label for="country" class="form-label">Country</label>
                     <select id="country" name="country" class="form-select">
-                        <option value="">All Countries</option>
-                        <option value="UAE">UAE</option>
-                        <option value="Egypt">Egypt</option>
-                        <option value="Saudi Arabia">Saudi Arabia</option>
+                        {% for choice in form.country.choices %}
+                        <option value="{{ choice[0] }}" {% if country == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label for="supplier_type" class="form-label">Supplier Type</label>
                     <select id="supplier_type" name="supplier_type" class="form-select">
-                        <option value="">All Types</option>
-                        <option value="AIRLINE">Airline</option>
-                        <option value="HOTEL">Hotel</option>
-                        <option value="TRANSPORT">Transport</option>
-                        <option value="VISA">Visa Service</option>
-                        <option value="OTHER">Other</option>
+                        {% for choice in form.supplier_type.choices %}
+                        <option value="{{ choice[0] }}" {% if supplier_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -68,37 +66,45 @@
                             <th>Code</th>
                             <th>Contact</th>
                             <th>Country</th>
-                            <th>Total Payments</th>
+                            <th>Outstanding Balance</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for stat in supplier_stats %}
+                        {% for supplier in suppliers %}
                         <tr>
                             <td>
-                                <a href="/supplier/{{ stat.supplier.id }}" class="text-decoration-none">
-                                    {{ stat.supplier.name }}
+                                <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="text-decoration-none">
+                                    {{ supplier.name }}
                                 </a>
                             </td>
-                            <td><span class="badge bg-secondary">{{ stat.supplier.code or 'N/A' }}</span></td>
+                            <td><span class="badge bg-secondary">{{ supplier.code }}</span></td>
                             <td>
-                                {% if stat.supplier.email %}
-                                <small><i class="fas fa-envelope me-1"></i>{{ stat.supplier.email }}</small><br>
+                                {% if supplier.email %}
+                                <small><i class="fas fa-envelope me-1"></i>{{ supplier.email }}</small><br>
                                 {% endif %}
-                                {% if stat.supplier.phone %}
-                                <small><i class="fas fa-phone me-1"></i>{{ stat.supplier.phone }}</small>
+                                {% if supplier.phone %}
+                                <small><i class="fas fa-phone me-1"></i>{{ supplier.phone }}</small>
                                 {% endif %}
                             </td>
-                            <td>{{ stat.supplier.country or 'N/A' }}</td>
+                            <td>{{ supplier.country }}</td>
                             <td>
-                                <span class="text-success fw-bold">${{ "%.2f"|format(stat.total_payments) }}</span>
+                                {% set balance = supplier.unpaid_balance %}
+                                {% if balance > 0 %}
+                                <span class="text-danger fw-bold">${{ "%.2f"|format(balance) }}</span>
+                                {% else %}
+                                <span class="text-success">Paid</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <a href="/supplier/{{ stat.supplier.id }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ url_for('finance.supplier_costs') }}?supplier_id={{ stat.supplier.id }}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-dollar-sign"></i>
+                                <a href="{{ url_for('supplier.edit_supplier', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('supplier.supplier_statements') }}" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-file-invoice-dollar"></i>
                                 </a>
                             </td>
                         </tr>
@@ -106,6 +112,9 @@
                         <tr>
                             <td colspan="6" class="text-center py-4">
                                 <p class="text-muted mb-0">No suppliers found.</p>
+                                <a href="{{ url_for('supplier.new_supplier') }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="fas fa-plus-circle me-1"></i> Add New Supplier
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}
