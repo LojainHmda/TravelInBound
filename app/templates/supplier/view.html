@@ -359,7 +359,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="{{ url_for('supplier.record_payment', supplier_id=supplier.id) }}">
+                <form method="POST" action="{{ url_for('supplier.add_payment', supplier_id=supplier.id) }}">
                     {{ payment_form.csrf_token }}
                     {{ payment_form.supplier_id() }}
                     
