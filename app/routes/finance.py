@@ -835,35 +835,57 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
 @finance.route('/suppliers')
 @login_required
 def list_suppliers():
-    """List all suppliers with basic information"""
-    suppliers = Supplier.query.order_by(Supplier.name).all()
+    """List all suppliers with prepayment data - same as supplier costs"""
+    # Get all prepayment lines with supplier info
+    prepayment_query = db.session.query(
+        SupplierPrepaymentLine,
+        SupplierPayment,
+        Supplier
+    ).join(
+        SupplierPayment, SupplierPrepaymentLine.supplier_payment_id == SupplierPayment.id
+    ).join(
+        Supplier, SupplierPayment.supplier_id == Supplier.id
+    ).order_by(Supplier.name)
     
-    # Calculate summary stats for each supplier
-    supplier_stats = []
-    for supplier in suppliers:
-        # Get total payments for this supplier using a simpler approach
-        supplier_payments = SupplierPayment.query.filter_by(supplier_id=supplier.id).all()
-        total_payments = 0
-        for payment in supplier_payments:
-            # Sum up prepayment lines for this payment
-            lines = SupplierPrepaymentLine.query.filter_by(supplier_payment_id=payment.id).all()
-            total_payments += sum(line.amount for line in lines)
+    prepayment_data = prepayment_query.all()
+    
+    # Group by supplier and calculate totals
+    supplier_stats = {}
+    for line, payment, supplier in prepayment_data:
+        if supplier.id not in supplier_stats:
+            supplier_stats[supplier.id] = {
+                'supplier': supplier,
+                'total_payments': 0,
+                'active_services': 0,
+                'prepayment_lines': []
+            }
         
-        # Get number of active services - simplified approach
-        active_services = 0
-        for payment in supplier_payments:
-            if payment.service_confirmation:
-                service_item = payment.service_confirmation.service_item
-                if service_item and service_item.status != 'CANCELLED':
-                    active_services += 1
-        
-        supplier_stats.append({
-            'supplier': supplier,
-            'total_payments': total_payments,
-            'active_services': active_services
+        supplier_stats[supplier.id]['total_payments'] += line.amount
+        supplier_stats[supplier.id]['prepayment_lines'].append({
+            'line': line,
+            'payment': payment
         })
+        
+        # Count as active service if not cancelled
+        if line.service_item and line.service_item.status != 'CANCELLED':
+            supplier_stats[supplier.id]['active_services'] += 1
     
-    return render_template('finance/suppliers.html', supplier_stats=supplier_stats)
+    # Convert to list and include suppliers with no prepayments
+    all_suppliers = Supplier.query.order_by(Supplier.name).all()
+    final_stats = []
+    
+    for supplier in all_suppliers:
+        if supplier.id in supplier_stats:
+            final_stats.append(supplier_stats[supplier.id])
+        else:
+            final_stats.append({
+                'supplier': supplier,
+                'total_payments': 0,
+                'active_services': 0,
+                'prepayment_lines': []
+            })
+    
+    return render_template('finance/suppliers.html', supplier_stats=final_stats)
 
 @finance.route('/supplier-costs')
 @login_required
