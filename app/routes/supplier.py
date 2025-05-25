@@ -228,15 +228,32 @@ def view_supplier(supplier_id):
     
     # Get prepayment lines for this supplier to match finance dashboard logic
     prepayment_lines = SupplierPrepaymentLine.query.join(
+        SupplierPayment, SupplierPrepaymentLine.supplier_payment_id == SupplierPayment.id
+    ).join(
         ServiceItem, SupplierPrepaymentLine.service_item_id == ServiceItem.id
+    ).join(
+        Booking, SupplierPrepaymentLine.booking_id == Booking.id
     ).outerjoin(
         ServiceConfirmation, ServiceConfirmation.service_item_id == ServiceItem.id
     ).filter(
         ServiceConfirmation.supplier_id == supplier.id,
         ServiceItem.is_cancelled == False
-    ).order_by(SupplierPrepaymentLine.created_at.desc()).limit(5).all()
+    ).order_by(SupplierPrepaymentLine.created_at.desc()).all()
     
-    # Create confirmation-like objects from prepayment lines for template compatibility
+    # Calculate total supplier costs
+    total_supplier_costs = sum(pl.amount for pl in prepayment_lines)
+    
+    # Add confirmation reference to prepayment lines
+    for prepayment_line in prepayment_lines:
+        confirmation = ServiceConfirmation.query.filter_by(
+            service_item_id=prepayment_line.service_item_id
+        ).first()
+        if confirmation:
+            prepayment_line.confirmation_reference = confirmation.confirmation_reference
+        else:
+            prepayment_line.confirmation_reference = None
+    
+    # Keep original confirmations for legacy functionality
     confirmations = []
     for prepayment_line in prepayment_lines:
         confirmation = ServiceConfirmation.query.filter_by(
@@ -277,6 +294,8 @@ def view_supplier(supplier_id):
         'supplier/view.html',
         supplier=supplier,
         confirmations=confirmations,
+        prepayment_lines=prepayment_lines,
+        total_supplier_costs=total_supplier_costs,
         payments=payments,
         payment_form=payment_form,
         document_form=document_form,
