@@ -471,3 +471,16 @@ def api_list_suppliers():
     } for s in suppliers]
     
     return jsonify(suppliers_list)
+
+@supplier_bp.route('/<int:supplier_id>/upload-document', methods=['GET', 'POST'])
+def upload_document(supplier_id):
+    """Upload document for supplier"""
+    supplier = Supplier.query.get_or_404(supplier_id)
+    
+    if request.method == 'POST':
+        # Handle document upload logic here
+        flash('Document upload functionality coming soon.', 'info')
+        return redirect(url_for('supplier.detail', supplier_id=supplier_id))
+    
+    # For now, redirect back to supplier detail
+    return redirect(url_for('supplier.detail', supplier_id=supplier_id))
