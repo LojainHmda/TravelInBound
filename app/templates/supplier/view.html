@@ -252,7 +252,7 @@
                                         </span>
                                     </td>
                                     <td>{{ confirmation.confirmation_date.strftime('%d %b %Y') }}</td>
-                                    <td>${{ "%.2f"|format(confirmation.cost_amount) }}</td>
+                                    <td>${{ "%.2f"|format(confirmation.actual_amount if confirmation.actual_amount else confirmation.cost_amount) }}</td>
                                     <td>${{ "%.2f"|format(confirmation.selling_amount) }}</td>
                                     <td>
                                         <span class="badge bg-{{ 'success' if confirmation.margin > 0 else 'danger' }}">

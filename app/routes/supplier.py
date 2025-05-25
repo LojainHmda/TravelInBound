@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.forms.supplier import SupplierForm, SupplierStatementForm
 from app.forms.supplier_payment import SupplierPaymentForm, SupplierInvoiceFilterForm
-from app.models.supplier import Supplier, SupplierService, SupplierPayment
+from app.models.supplier import Supplier, SupplierService, SupplierPayment, SupplierPrepaymentLine
 from app.models.service import ServiceConfirmation, ServiceItem
 from sqlalchemy import func, desc
 
@@ -227,10 +227,18 @@ def view_supplier(supplier_id):
     supplier = Supplier.query.get_or_404(supplier_id)
     
     # Get active service confirmations for this supplier (excluding cancelled services)
+    # For now, get confirmations and we'll enhance with prepayment data later
     confirmations = ServiceConfirmation.query.join(ServiceItem).filter(
         ServiceConfirmation.supplier_id == supplier.id,
         ServiceItem.is_cancelled == False
     ).order_by(ServiceConfirmation.created_at.desc()).limit(5).all()
+    
+    # Add prepayment amounts to each confirmation
+    for confirmation in confirmations:
+        prepayment_line = SupplierPrepaymentLine.query.filter_by(
+            service_item_id=confirmation.service_item_id
+        ).first()
+        confirmation.actual_amount = prepayment_line.amount if prepayment_line else None
     
     # Get recent payments
     payments = SupplierPayment.query.filter_by(
