@@ -786,7 +786,33 @@
                                     <td>{{ payment.notes or '-' }}</td>
                                 </tr>
                                 {% endfor %}
-                                <!-- Payment Summary removed - information already shown in Payment History table above -->
+                                <tr class="table-light">
+                                    <td><strong>Payment Summary:</strong></td>
+                                    <td colspan="4">
+                                        {% set actual_payments = booking.payments|sum(attribute='amount') %}
+                                        {% set total_credits = booking.get_total_credits() %}
+                                        {% set balance_due = booking.total_amount - actual_payments - total_credits %}
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <span class="badge bg-success">Payments: ${{ "%.2f"|format(actual_payments) }}</span>
+                                            {% if total_credits > 0 %}
+                                            <span class="badge bg-danger">Credits: ${{ "%.2f"|format(total_credits) }}</span>
+                                            {% endif %}
+                                            {% if balance_due > 0 %}
+                                                <span class="badge" style="background-color: #FF8C00; color: black;">
+                                                    Balance Due: ${{ "%.2f"|format(balance_due) }}
+                                                </span>
+                                            {% elif balance_due < 0 %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                    Overpaid: ${{ "%.2f"|format(balance_due|abs) }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge" style="background-color: #FFBF00; color: black;">
+                                                    Fully Settled
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
