@@ -932,6 +932,7 @@
                                         
                                         <!-- Credit Memo Lines Table -->
                                         {% set credit_memos = booking.get_credit_memos() %}
+                                        <!-- Debug: Credit memos count = {{ credit_memos|length }} -->
                                         {% if credit_memos %}
                                         <div class="table-responsive">
                                             <table class="table table-striped">
