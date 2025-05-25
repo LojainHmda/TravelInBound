@@ -25,16 +25,6 @@
     .trend-icon {
         font-size: 0.9rem;
     }
-    
-    /* Fix footer positioning for finance page */
-    body {
-        position: relative;
-        min-height: 100vh;
-    }
-    
-    .container-fluid {
-        padding-bottom: 200px; /* Add space for footer */
-    }
 </style>
 {% endblock %}
 
@@ -322,26 +312,7 @@
             </div>
         </div>
 
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold">Expense Breakdown - {{ current_month }}</h6>
-                </div>
-                <div class="card-body">
-                    <div class="chart-pie pt-4 pb-2">
-                        <canvas id="expensePieChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-center small">
-                        {% for category in expense_by_category %}
-                        <span class="mr-2">
-                            <i class="fas fa-circle" style="color: {{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}"></i> {{ category.name }}
-                        </span>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+ 
 
 
 </div>

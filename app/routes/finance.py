@@ -416,14 +416,16 @@ def cash_flow():
             Payment.notes
         ).join(Booking).order_by(Payment.payment_date.desc()).limit(50).all()
         
-        # Get payments made to suppliers
+        # Get payments made to suppliers (only actually paid ones)
         payments_out = db.session.query(
             SupplierPayment.payment_date,
             SupplierPayment.amount,
             SupplierPayment.payment_method,
             Supplier.name.label('supplier_name'),
             SupplierPayment.notes
-        ).join(Supplier).order_by(SupplierPayment.payment_date.desc()).limit(50).all()
+        ).join(Supplier).filter(
+            SupplierPayment.status == 'PAID'
+        ).order_by(SupplierPayment.payment_date.desc()).limit(50).all()
         
         # Calculate totals for current month
         current_month_start = date.today().replace(day=1)
@@ -436,7 +438,8 @@ def cash_flow():
         
         total_out = db.session.query(func.sum(SupplierPayment.amount)).filter(
             SupplierPayment.payment_date >= current_month_start,
-            SupplierPayment.payment_date < next_month
+            SupplierPayment.payment_date < next_month,
+            SupplierPayment.status == 'PAID'
         ).scalar() or 0
         
         net_cash_flow = total_in - total_out
