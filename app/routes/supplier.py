@@ -226,19 +226,26 @@ def view_supplier(supplier_id):
     """View supplier details"""
     supplier = Supplier.query.get_or_404(supplier_id)
     
-    # Get active service confirmations for this supplier (excluding cancelled services)
-    # For now, get confirmations and we'll enhance with prepayment data later
-    confirmations = ServiceConfirmation.query.join(ServiceItem).filter(
+    # Get prepayment lines for this supplier to match finance dashboard logic
+    prepayment_lines = SupplierPrepaymentLine.query.join(
+        ServiceItem, SupplierPrepaymentLine.service_item_id == ServiceItem.id
+    ).outerjoin(
+        ServiceConfirmation, ServiceConfirmation.service_item_id == ServiceItem.id
+    ).filter(
         ServiceConfirmation.supplier_id == supplier.id,
         ServiceItem.is_cancelled == False
-    ).order_by(ServiceConfirmation.created_at.desc()).limit(5).all()
+    ).order_by(SupplierPrepaymentLine.created_at.desc()).limit(5).all()
     
-    # Add prepayment amounts to each confirmation
-    for confirmation in confirmations:
-        prepayment_line = SupplierPrepaymentLine.query.filter_by(
-            service_item_id=confirmation.service_item_id
+    # Create confirmation-like objects from prepayment lines for template compatibility
+    confirmations = []
+    for prepayment_line in prepayment_lines:
+        confirmation = ServiceConfirmation.query.filter_by(
+            service_item_id=prepayment_line.service_item_id
         ).first()
-        confirmation.actual_amount = prepayment_line.amount if prepayment_line else None
+        if confirmation:
+            # Use the actual prepayment amount instead of original estimate
+            confirmation.actual_amount = prepayment_line.amount
+            confirmations.append(confirmation)
     
     # Get recent payments
     payments = SupplierPayment.query.filter_by(
