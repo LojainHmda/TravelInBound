@@ -83,6 +83,14 @@ class Booking(db.Model):
         """Get all credit memos for this booking"""
         from app.models.invoice import Invoice
         return Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
+    
+    def generate_credit_memo_number(self):
+        """Generate a unique credit memo number"""
+        from datetime import datetime
+        year = datetime.now().year % 100  # Last two digits of year
+        booking_id = str(self.id).zfill(4)  # Pad booking ID to 4 digits
+        random_suffix = str(hash(f"{self.id}-{datetime.now().isoformat()}"))[-6:]
+        return f"CM-{year}-{booking_id}-{random_suffix}"
 
 
 class Payment(db.Model):
