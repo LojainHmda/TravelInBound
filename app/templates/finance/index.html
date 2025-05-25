@@ -59,11 +59,10 @@
         </div>
     </div>
 
-    <!-- Revenue Breakdown by Booking -->
-
-
+    <!-- Main Content Row -->
     <div class="row">
-        <div class="col-xl-12">
+        <!-- Left Side - Financial Metrics -->
+        <div class="col-xl-8">
             <div class="card shadow-sm mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold">Financial Overview - {{ current_month }}</h6>
@@ -225,6 +224,58 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Chart -->
+        <div class="col-xl-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">Financial Trends - Last 12 Months</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="financialTrendsChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cash Flow Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header py-3 bg-info-subtle">
+                    <h6 class="m-0 font-weight-bold text-dark">
+                        <i class="fas fa-exchange-alt me-2"></i>Cash Flow Summary - {{ current_month }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h4 class="text-success">${{ "%.2f"|format(current_month_cash_flow|default(0)) }}</h4>
+                                <p class="text-muted mb-0">Net Cash Flow</p>
+                                <small class="text-muted">Payments In - Payments Out</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <a href="{{ url_for('finance.cash_flow') }}" class="btn btn-outline-info">
+                                    <i class="fas fa-arrow-down me-1"></i>View Payments In
+                                </a>
+                                <p class="text-muted mt-2 mb-0">Customer Payments</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div>
+                                <a href="{{ url_for('finance.supplier_costs') }}" class="btn btn-outline-warning">
+                                    <i class="fas fa-arrow-up me-1"></i>View Payments Out
+                                </a>
+                                <p class="text-muted mt-2 mb-0">Supplier Payments</p>
                             </div>
                         </div>
                     </div>
@@ -396,7 +447,75 @@
 
     </div>
 </div>
-<!-- Supplier costs now available at dedicated page: /finance/supplier-costs -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Financial Trends Chart
+const ctx = document.getElementById('financialTrendsChart').getContext('2d');
+const financialTrendsChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: [
+            {% for month in monthly_data %}
+            '{{ month.month }}'{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'Revenue',
+            data: [
+                {% for month in monthly_data %}
+                {{ month.revenue|default(0) }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+        }, {
+            label: 'Expenses',
+            data: [
+                {% for month in monthly_data %}
+                {{ month.expenses|default(0) }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1
+        }, {
+            label: 'Profit',
+            data: [
+                {% for month in monthly_data %}
+                {{ (month.revenue|default(0)) - (month.expenses|default(0)) }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            borderColor: 'rgb(54, 162, 235)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            tension: 0.1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value, index, values) {
+                        return '$' + value.toLocaleString();
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: false
+            }
+        }
+    }
+});
+</script>
 {% endblock %}
 
 {% block scripts %}
