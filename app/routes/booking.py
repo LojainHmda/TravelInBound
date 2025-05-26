@@ -461,11 +461,8 @@ def new_booking():
                     # Update the booking status to IN_PROGRESS
                     booking.status = STATUS_IN_PROGRESS
                     
-                    # Update all service items to IN_PROGRESS status too
-                    for item in booking.service_items:
-                        if item.status == STATUS_REQUEST:
-                            item.status = STATUS_IN_PROGRESS
-                            print(f"Updated service item {item.id} status to IN_PROGRESS", file=sys.stderr)
+                    # Use helper function to cascade status to all service items
+                    cascade_booking_status_to_service_items(booking, STATUS_IN_PROGRESS)
                     
                     # Save invoice notes
                     invoice_notes = request.form.get('invoice_notes', '')
@@ -664,12 +661,8 @@ def update_booking_status(booking_id):
             
         booking.status = new_status
         
-        # Update all service items to IN_PROGRESS too
-        for item in booking.service_items:
-            if item.status != STATUS_CONFIRMED:  # Don't change already confirmed items
-                old_item_status = item.status
-                item.status = STATUS_IN_PROGRESS
-                print(f"Updated service item {item.id} from {old_item_status} to IN_PROGRESS", file=sys.stderr)
+        # Use helper function to cascade status to all service items
+        cascade_booking_status_to_service_items(booking, new_status)
         
         db.session.commit()
         flash(f'Operations started: Booking status updated to {booking.status}', 'success')
@@ -695,18 +688,10 @@ def update_booking_status(booking_id):
         # If moving to IN_PROGRESS status, generate invoice number and update service items
         if new_status == STATUS_IN_PROGRESS and old_status != STATUS_IN_PROGRESS:
             booking.generate_invoice_number()
-            
-            # Update ALL service items to IN_PROGRESS status and mark as invoiced
-            for item in booking.service_items:
-                if item.status != STATUS_CONFIRMED:  # Don't change already confirmed items
-                    old_item_status = item.status
-                    item.status = STATUS_IN_PROGRESS
-                    item.invoice_number = booking.invoice_number
-                    item.invoice_date = booking.invoice_date
-                    item.is_invoiced = True
-                    print(f"Updated service item {item.id} from {old_item_status} to IN_PROGRESS and marked as invoiced", file=sys.stderr)
-            
             flash(f'Invoice {booking.invoice_number} generated', 'success')
+            
+            # Use helper function to cascade status to all service items
+            cascade_booking_status_to_service_items(booking, new_status)
         
         # Check payment status when moving to IN_PROGRESS
         if new_status == STATUS_IN_PROGRESS and booking.payment_status != 'FULL':

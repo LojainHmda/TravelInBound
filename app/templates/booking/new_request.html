@@ -1,8 +1,141 @@
 {% extends 'base.html' %}
 
+{% block styles %}
+{{ super() }}
+<style>
+/* Progress Flow Bar Styling */
+.progress-flow {
+    position: relative;
+}
+
+.step {
+    text-align: center;
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+    border: 3px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    color: #6c757d;
+    font-size: 18px;
+    transition: all 0.3s ease;
+}
+
+.step.active .step-circle {
+    background-color: #FFBF00;
+    border-color: #FFBF00;
+    color: #000;
+    box-shadow: 0 0 10px rgba(255, 191, 0, 0.5);
+}
+
+.step-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.step.active .step-label {
+    color: #223A5E;
+    font-weight: bold;
+}
+
+.step-line {
+    height: 3px;
+    background-color: #e9ecef;
+    flex: 1;
+    margin: 0 10px;
+    align-self: center;
+    margin-top: -25px;
+}
+
+.step.active + .step-line {
+    background-color: #FFBF00;
+}
+
+/* Enhanced Service Icons */
+.direct-add-service {
+    transition: all 0.3s ease;
+    border: 2px solid #FFBF00 !important;
+    color: #FFBF00 !important;
+    background: linear-gradient(135deg, #fff, #fefefe);
+    box-shadow: 0 2px 8px rgba(255, 191, 0, 0.1);
+}
+
+.direct-add-service:hover {
+    background: linear-gradient(135deg, #FFBF00, #FFD700) !important;
+    color: #000 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 191, 0, 0.3);
+}
+
+.direct-add-service i {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+/* Service badges in table */
+.badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 20px;
+}
+
+.badge i {
+    margin-right: 4px;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row">
     <div class="col-md-12">
+        <!-- Progress Flow Bar -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-3">
+                <div class="progress-flow d-flex justify-content-between align-items-center">
+                    <div class="step active">
+                        <div class="step-circle">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <span class="step-label">Request Details</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step">
+                        <div class="step-circle">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <span class="step-label">Add Services</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step">
+                        <div class="step-circle">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <span class="step-label">Review & Submit</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step">
+                        <div class="step-circle">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <span class="step-label">Processing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Compact Header with Action -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
