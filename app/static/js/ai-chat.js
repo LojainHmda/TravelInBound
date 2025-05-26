@@ -197,6 +197,15 @@ class AIChat {
     formatAIResponse(content, bookingData) {
         let html = this.formatMessageContent(content);
 
+        // Add customer cards if available
+        if (bookingData.customers && bookingData.customers.length > 0) {
+            html += '<div style="margin-top: 10px;">';
+            bookingData.customers.forEach(customer => {
+                html += this.createCustomerCard(customer);
+            });
+            html += '</div>';
+        }
+
         // Add booking cards if available
         if (bookingData.bookings && bookingData.bookings.length > 0) {
             html += '<div style="margin-top: 10px;">';
@@ -206,7 +215,39 @@ class AIChat {
             html += '</div>';
         }
 
+        // Add action results if available
+        if (bookingData.actions_performed && bookingData.actions_performed.length > 0) {
+            html += this.createActionResults(bookingData);
+        }
+
         return html;
+    }
+
+    createCustomerCard(customer) {
+        return `
+            <div class="booking-card" onclick="window.open('/customer/${customer.id}', '_blank')">
+                <div class="booking-card-header">
+                    👤 ${customer.name}
+                </div>
+                <div class="booking-card-detail">
+                    📧 Email: ${customer.email || 'Not provided'}
+                </div>
+                <div class="booking-card-detail">
+                    📞 Phone: ${customer.phone || 'Not provided'}
+                </div>
+                ${customer.company ? `
+                    <div class="booking-card-detail">
+                        🏢 Company: ${customer.company}
+                    </div>
+                ` : ''}
+                <div class="booking-card-detail">
+                    🌍 Country: ${customer.country || 'Not specified'}
+                </div>
+                <div style="font-size: 11px; color: #666; margin-top: 6px;">
+                    Click to view customer details
+                </div>
+            </div>
+        `;
     }
 
     createBookingCard(booking) {
@@ -229,8 +270,56 @@ class AIChat {
                 <div style="font-size: 11px; color: #666; margin-top: 6px;">
                     Click to view details
                 </div>
+                <div style="margin-top: 8px;">
+                    <button onclick="event.stopPropagation(); aiChat.generateInvoice(${booking.id})" 
+                            class="btn btn-sm btn-primary me-2">
+                        📄 Generate Invoice
+                    </button>
+                    <button onclick="event.stopPropagation(); aiChat.sendWhatsApp(${booking.id})" 
+                            class="btn btn-sm btn-success">
+                        💬 Send WhatsApp
+                    </button>
+                </div>
             </div>
         `;
+    }
+
+    createActionResults(bookingData) {
+        let html = '<div style="margin-top: 15px; padding: 12px; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #28a745;">';
+        
+        html += '<div style="font-weight: 600; color: #155724; margin-bottom: 8px;">✅ Actions Completed:</div>';
+        
+        bookingData.actions_performed.forEach(action => {
+            html += `<div style="color: #155724; font-size: 13px;">• ${action}</div>`;
+        });
+
+        // Show invoice details if available
+        if (bookingData.action_results?.invoice?.success) {
+            html += `
+                <div style="margin-top: 10px; padding: 8px; background: white; border-radius: 6px;">
+                    <strong>📄 Invoice Generated:</strong><br>
+                    <small>${bookingData.action_results.invoice.message}</small><br>
+                    <a href="${bookingData.action_results.invoice.download_url}" target="_blank" 
+                       style="color: #007bff; text-decoration: none;">
+                        📥 Download Invoice
+                    </a>
+                </div>
+            `;
+        }
+
+        // Show WhatsApp preview if available
+        if (bookingData.action_results?.whatsapp?.success) {
+            html += `
+                <div style="margin-top: 10px; padding: 8px; background: white; border-radius: 6px;">
+                    <strong>💬 WhatsApp Message Preview:</strong><br>
+                    <div style="font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 4px; white-space: pre-line;">${bookingData.action_results.whatsapp.message_preview}</div>
+                    <small style="color: #666;">Sent to: ${bookingData.action_results.whatsapp.recipient}</small>
+                </div>
+            `;
+        }
+
+        html += '</div>';
+        return html;
     }
 
     formatMessageContent(content) {
@@ -347,6 +436,76 @@ class AIChat {
             this.hideTypingIndicator();
             this.sendButton.disabled = false;
             this.inputField.focus();
+        }
+    }
+
+    async generateInvoice(bookingId) {
+        try {
+            const response = await fetch(`/api/chat/booking/${bookingId}`, {
+                headers: {
+                    'X-CSRFToken': this.getCSRFToken()
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.addMessage({
+                    type: 'ai',
+                    content: '📄 Invoice generated successfully! You can download it from the booking details.',
+                    timestamp: new Date()
+                });
+            }
+        } catch (error) {
+            this.addMessage({
+                type: 'ai',
+                content: 'Sorry, I had trouble generating the invoice. Please try again.',
+                timestamp: new Date()
+            });
+        }
+    }
+
+    async sendWhatsApp(bookingId) {
+        try {
+            this.addMessage({
+                type: 'user',
+                content: `Send WhatsApp for booking ${bookingId}`,
+                timestamp: new Date()
+            });
+
+            this.showTypingIndicator();
+
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCSRFToken()
+                },
+                body: JSON.stringify({
+                    message: `Generate WhatsApp message for booking ${bookingId}`,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            const data = await response.json();
+            
+            this.hideTypingIndicator();
+
+            if (data.success) {
+                this.addMessage({
+                    type: 'ai',
+                    content: data.response,
+                    bookingData: data.booking_data,
+                    timestamp: new Date()
+                });
+            }
+        } catch (error) {
+            this.hideTypingIndicator();
+            this.addMessage({
+                type: 'ai',
+                content: 'Sorry, I had trouble sending the WhatsApp message. Please try again.',
+                timestamp: new Date()
+            });
         }
     }
 

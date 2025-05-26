@@ -25,4 +25,5 @@ dependencies = [
     "pillow>=11.2.1",
     "pypdf2>=3.0.1",
     "psutil>=7.0.0",
+    "twilio>=9.6.1",
 ]

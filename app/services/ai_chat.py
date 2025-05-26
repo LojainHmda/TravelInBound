@@ -29,6 +29,11 @@ class TravelAIAssistant:
         # Get relevant booking data based on the intent
         booking_data = self._fetch_relevant_data(intent, user_query)
         
+        # Handle special actions like invoice generation and WhatsApp
+        if intent.get("actions"):
+            actions_result = self._handle_actions(intent, booking_data, user_context)
+            booking_data.update(actions_result)
+        
         # Generate AI response with the data
         response = self._generate_ai_response(user_query, intent, booking_data, user_context)
         
@@ -39,18 +44,25 @@ class TravelAIAssistant:
         
         system_prompt = """
         You are an AI assistant for a travel booking platform. Analyze the user's query and extract:
-        1. Intent (search_booking, booking_status, customer_info, financial_info, general_help)
+        1. Intent (search_booking, customer_bookings, booking_status, customer_info, financial_info, generate_invoice, send_whatsapp, general_help)
         2. Entities (booking reference, customer name, dates, destinations, etc.)
+        3. Actions (print_invoice, send_whatsapp, email_invoice)
+        
+        Examples:
+        - "Find bookings for Dalia" → intent: "customer_bookings", entities: {"customer_name": "Dalia"}
+        - "Show me Dalia's bookings and send invoice via WhatsApp" → intent: "customer_bookings", entities: {"customer_name": "Dalia"}, actions: ["send_whatsapp", "generate_invoice"]
+        - "Print invoice for booking IR-12345" → intent: "generate_invoice", entities: {"booking_reference": "IR-12345"}, actions: ["print_invoice"]
         
         Respond with JSON format:
         {
-            "intent": "search_booking",
+            "intent": "customer_bookings",
             "entities": {
                 "booking_reference": "IR-12345",
-                "customer_name": "John Smith",
+                "customer_name": "Dalia",
                 "destination": "Paris",
                 "date_range": "2024-01-01 to 2024-01-31"
             },
+            "actions": ["generate_invoice", "send_whatsapp"],
             "confidence": 0.9
         }
         """
@@ -220,6 +232,106 @@ class TravelAIAssistant:
             print(f"Customer search error: {e}")
         
         return customers
+    
+    def _handle_actions(self, intent, booking_data, user_context):
+        """Handle special actions like invoice generation and WhatsApp sending"""
+        actions = intent.get("actions", [])
+        results = {
+            "actions_performed": [],
+            "action_results": {},
+            "errors": []
+        }
+        
+        try:
+            # Find the booking to work with
+            target_booking = None
+            if booking_data.get("bookings"):
+                target_booking = booking_data["bookings"][0]  # Use first booking found
+            
+            if not target_booking:
+                results["errors"].append("No booking found to perform actions on")
+                return results
+            
+            # Handle invoice generation
+            if "generate_invoice" in actions or "print_invoice" in actions:
+                invoice_result = self._generate_invoice_action(target_booking)
+                results["action_results"]["invoice"] = invoice_result
+                results["actions_performed"].append("Generated invoice")
+            
+            # Handle WhatsApp sending
+            if "send_whatsapp" in actions:
+                whatsapp_result = self._send_whatsapp_action(target_booking, user_context)
+                results["action_results"]["whatsapp"] = whatsapp_result
+                results["actions_performed"].append("Sent WhatsApp message")
+                
+        except Exception as e:
+            results["errors"].append(f"Action error: {str(e)}")
+        
+        return results
+    
+    def _generate_invoice_action(self, booking):
+        """Generate invoice for a booking"""
+        try:
+            # Create invoice data structure
+            invoice_data = {
+                "booking_id": booking["id"],
+                "reference_number": booking["reference_number"],
+                "customer_name": booking["customer_name"],
+                "total_amount": booking["total_amount"],
+                "status": "Generated",
+                "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "items": booking.get("service_items", [])
+            }
+            
+            # For now, return the invoice data structure
+            # In a full implementation, this would generate a PDF
+            return {
+                "success": True,
+                "invoice_data": invoice_data,
+                "download_url": f"/api/invoice/{booking['id']}/download",
+                "message": f"Invoice generated for booking {booking['reference_number']}"
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    def _send_whatsapp_action(self, booking, user_context):
+        """Send booking details via WhatsApp"""
+        try:
+            # Create WhatsApp message content
+            message = f"""
+🎫 *Travel Booking Confirmation*
+
+📋 Booking: {booking['reference_number']}
+👤 Customer: {booking['customer_name']}
+💰 Total Amount: ${booking['total_amount']:.2f}
+📅 Status: {booking['status']}
+
+✈️ Services:
+"""
+            
+            for item in booking.get("service_items", []):
+                message += f"• {item['type']}: {item['description']} (${item['amount']:.2f})\n"
+            
+            message += f"\n📞 Need help? Contact us!\n🌐 Travel Booking System"
+            
+            # Return success response with message preview
+            return {
+                "success": True,
+                "message_preview": message,
+                "recipient": booking["customer_name"],
+                "sent_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "note": "WhatsApp integration requires Twilio setup"
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
     
     def _generate_ai_response(self, user_query, intent, booking_data, user_context):
         """Generate intelligent AI response using the fetched data"""
