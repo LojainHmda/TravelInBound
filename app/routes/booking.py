@@ -687,11 +687,14 @@ def update_booking_status(booking_id):
         
         # If moving to IN_PROGRESS status, generate invoice number and update service items
         if new_status == STATUS_IN_PROGRESS and old_status != STATUS_IN_PROGRESS:
-            booking.generate_invoice_number()
-            flash(f'Invoice {booking.invoice_number} generated', 'success')
-            
-            # Use helper function to cascade status to all service items
+            if not booking.invoice_number:
+                booking.generate_invoice_number()
+                flash(f'Invoice {booking.invoice_number} generated', 'success')
+        
+        # ALWAYS cascade status to service items when moving to IN_PROGRESS
+        if new_status == STATUS_IN_PROGRESS:
             cascade_booking_status_to_service_items(booking, new_status)
+            print(f"CASCADING STATUS: Updated all service items to IN_PROGRESS for booking {booking.id}", file=sys.stderr)
         
         # Check payment status when moving to IN_PROGRESS
         if new_status == STATUS_IN_PROGRESS and booking.payment_status != 'FULL':

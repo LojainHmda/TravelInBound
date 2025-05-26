@@ -1,134 +1,23 @@
 {% extends 'base.html' %}
 
-{% block styles %}
-{{ super() }}
-<style>
-/* Enhanced Status Flow Styling */
-.status-flow-container {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-bottom: 3px solid #FFBF00;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.status-flow {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.status-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    flex: 1;
-}
-
-.status-circle {
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    border: 3px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    color: #6c757d;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 2;
-}
-
-.status-step.active .status-circle {
-    background-color: #FFBF00;
-    border-color: #FFBF00;
-    color: #000;
-    box-shadow: 0 0 15px rgba(255, 191, 0, 0.6);
-    transform: scale(1.1);
-}
-
-.status-step.completed .status-circle {
-    background-color: #28a745;
-    border-color: #28a745;
-    color: #fff;
-}
-
-.status-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6c757d;
-    text-align: center;
-    margin-top: 5px;
-}
-
-.status-step.active .status-label {
-    color: #223A5E;
-    font-weight: bold;
-}
-
-.status-step.completed .status-label {
-    color: #28a745;
-    font-weight: bold;
-}
-
-.status-connector {
-    height: 3px;
-    background-color: #e9ecef;
-    flex: 1;
-    margin: 0 15px;
-    align-self: center;
-    margin-top: -22px;
-    position: relative;
-    z-index: 1;
-}
-
-.status-step.completed + .status-connector,
-.status-step.active + .status-connector {
-    background-color: #FFBF00;
-}
-</style>
-{% endblock %}
-
 {% block content %}
-<!-- Enhanced Status Flow Header -->
+<!-- Status Flow Header -->
 {% if booking %}
-<div class="status-flow-container">
-    <div class="status-flow">
+<div style="background-color: #e9ecef; color: #495057; padding: 12px 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #ced4da;">
+    <div class="d-flex align-items-center justify-content-center">
+        <!-- Status Flow -->
         {% set current_status = booking.status %}
-        
-        <!-- Request Step -->
-        <div class="status-step {% if current_status == 'REQUEST' %}active{% elif current_status in ['IN_PROGRESS', 'COMPLETED'] %}completed{% endif %}">
-            <div class="status-circle">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <span class="status-label">Request</span>
-        </div>
-        
-        <div class="status-connector"></div>
-        
-        <!-- In Progress Step -->
-        <div class="status-step {% if current_status == 'IN_PROGRESS' %}active{% elif current_status == 'COMPLETED' %}completed{% endif %}">
-            <div class="status-circle">
-                <i class="fas fa-cog"></i>
-            </div>
-            <span class="status-label">In Progress</span>
-        </div>
-        
-        <div class="status-connector"></div>
-        
-        <!-- Confirmed Step -->
-        <div class="status-step {% if current_status == 'COMPLETED' %}active{% endif %}">
-            <div class="status-circle">
-                <i class="fas fa-check"></i>
-            </div>
-            <span class="status-label">Confirmed</span>
-        </div>
+        <span class="status-badge {% if current_status == 'REQUEST' %}status-active{% else %}status-inactive{% endif %}">
+            <i class="fas fa-file-alt me-1"></i>Request
+        </span>
+        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
+        <span class="status-badge {% if current_status == 'IN_PROGRESS' %}status-active{% elif current_status not in ['REQUEST'] %}status-active{% else %}status-inactive{% endif %}">
+            <i class="fas fa-cog me-1"></i>In Progress
+        </span>
+        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
+        <span class="status-badge {% if current_status == 'COMPLETED' %}status-active{% else %}status-inactive{% endif %}">
+            <i class="fas fa-check me-1"></i>Confirmed
+        </span>
     </div>
 </div>
 {% endif %}
