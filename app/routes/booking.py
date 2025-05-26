@@ -22,6 +22,25 @@ from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
 
+def cascade_booking_status_to_service_items(booking, new_status):
+    """Helper function to ensure service items follow booking status changes"""
+    if new_status == STATUS_IN_PROGRESS:
+        # Update ALL service items to IN_PROGRESS status when booking moves to IN_PROGRESS
+        for item in booking.service_items:
+            if item.status != STATUS_CONFIRMED:  # Don't change already confirmed items
+                old_item_status = item.status
+                item.status = STATUS_IN_PROGRESS
+                
+                # Apply invoice details if booking has them
+                if booking.invoice_number:
+                    item.invoice_number = booking.invoice_number
+                    item.invoice_date = booking.invoice_date
+                    item.is_invoiced = True
+                
+                print(f"CASCADED: Service item {item.id} from {old_item_status} to IN_PROGRESS", file=sys.stderr)
+        
+        print(f"CASCADE COMPLETE: All eligible service items updated to IN_PROGRESS for booking {booking.id}", file=sys.stderr)
+
 
 
 @booking_bp.route('/api/<int:booking_id>/details', methods=['GET'])
