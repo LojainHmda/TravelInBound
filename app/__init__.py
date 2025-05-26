@@ -90,6 +90,10 @@ def create_app():
         from app.routes.api.chat import chat_api
         app.register_blueprint(chat_api)
         
+        # Register invoice API
+        from app.routes.api.invoice import invoice_api
+        app.register_blueprint(invoice_api)
+        
         # Register finance blueprint
         from app.routes.finance import finance
         app.register_blueprint(finance)

@@ -120,7 +120,8 @@ class TravelAIAssistant:
                 matching_customers = self._search_customers(entities["customer_name"], query)
                 if matching_customers:
                     customer_ids = [c["id"] for c in matching_customers]
-                    booking_query = booking_query.filter(Booking.user_id.in_(customer_ids))
+                    # Fix: Use customer_id instead of user_id for proper customer linking
+                    booking_query = booking_query.filter(Booking.customer_id.in_(customer_ids))
             
             # Filter by destination (search in service items)
             if entities.get("destination"):
