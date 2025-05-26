@@ -24,4 +24,5 @@ dependencies = [
     "pdf2image>=1.17.0",
     "pillow>=11.2.1",
     "pypdf2>=3.0.1",
+    "psutil>=7.0.0",
 ]
