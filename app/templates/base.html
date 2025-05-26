@@ -293,6 +293,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url_for('booking.search') }}" class="{% if request.path == url_for('booking.search') %}active{% endif %}">
+                        <i class="fas fa-search"></i>
+                        Search & History
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url_for('main.dashboard') }}" class="{% if request.path == url_for('main.dashboard') %}active{% endif %}">
                         <i class="fas fa-chart-line"></i>
                         Dashboard

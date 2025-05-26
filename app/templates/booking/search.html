@@ -581,5 +581,38 @@ function exportResults() {
     params.set('export', 'csv');
     window.location.href = '{{ url_for("booking.search") }}?' + params.toString();
 }
+
+function clearFilters() {
+    const form = document.getElementById('searchForm');
+    form.reset();
+    updateFilterCount();
+    window.location.href = '{{ url_for("booking.search") }}';
+}
+
+function updateFilterCount() {
+    const form = document.getElementById('searchForm');
+    const inputs = form.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], select');
+    let activeCount = 0;
+    
+    inputs.forEach(input => {
+        if (input.value && input.value.trim() !== '') {
+            activeCount++;
+        }
+    });
+    
+    const counterElement = document.getElementById('activeFiltersCount');
+    if (activeCount === 0) {
+        counterElement.textContent = '0 Active Filters';
+        counterElement.className = 'badge bg-light text-dark me-2';
+    } else {
+        counterElement.textContent = `${activeCount} Active Filter${activeCount > 1 ? 's' : ''}`;
+        counterElement.className = 'badge bg-warning text-dark me-2';
+    }
+}
+
+// Initialize filter count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateFilterCount();
+});
 </script>
 {% endblock %}
