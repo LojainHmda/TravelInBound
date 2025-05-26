@@ -82,6 +82,10 @@ def create_app():
         from app.routes.api import api_bp
         app.register_blueprint(api_bp)
         
+        # Register search API
+        from app.routes.api.search import search_api
+        app.register_blueprint(search_api)
+        
         # Register finance blueprint
         from app.routes.finance import finance
         app.register_blueprint(finance)
