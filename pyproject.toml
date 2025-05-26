@@ -26,4 +26,5 @@ dependencies = [
     "pypdf2>=3.0.1",
     "psutil>=7.0.0",
     "twilio>=9.6.1",
+    "reportlab>=4.4.1",
 ]
