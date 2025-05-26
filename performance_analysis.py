@@ -7,17 +7,23 @@ Analyzes database queries, code efficiency, and identifies bottlenecks
 import os
 import time
 import sqlite3
-from sqlalchemy import create_engine, text
-from app import db, app
-from app.models import *
+from sqlalchemy import create_engine, text, func
 import psutil
 from datetime import datetime
+
+# Import from the correct location
+import sys
+sys.path.append('.')
+from app import create_app
+from models import *
 
 def analyze_database_performance():
     """Analyze database performance issues"""
     print("🔍 Analyzing Database Performance...")
     
+    app = create_app()
     with app.app_context():
+        from app import db
         try:
             # Check for missing indexes
             print("\n📊 Database Schema Analysis:")
@@ -36,34 +42,35 @@ def analyze_database_performance():
             print("\n⚡ Potential Performance Issues:")
             
             # Large bookings without proper indexing
-            booking_count = db.session.query(Booking).count()
-            if booking_count > 1000:
-                print(f"  ⚠️  Large booking table ({booking_count} records) - consider indexing")
-            
-            # Check for N+1 query patterns
-            print("\n🔍 N+1 Query Analysis:")
-            bookings = db.session.query(Booking).limit(5).all()
-            for booking in bookings:
-                # This could cause N+1 if not properly loaded
-                service_count = len(booking.service_items)
-                payment_count = len(booking.payments)
-                print(f"  • Booking {booking.reference_number}: {service_count} services, {payment_count} payments")
+            try:
+                booking_count = db.session.execute(text("SELECT COUNT(*) FROM booking")).scalar()
+                if booking_count > 1000:
+                    print(f"  ⚠️  Large booking table ({booking_count} records) - consider indexing")
+                else:
+                    print(f"  ✅ Booking table size: {booking_count} records (manageable)")
+            except Exception as e:
+                print(f"  • Booking count error: {e}")
             
             # Check for complex financial calculations
             print("\n💰 Financial Query Performance:")
             start_time = time.time()
             
-            # This is a complex query from your finance module
-            total_revenue = db.session.query(func.sum(Payment.amount)).scalar() or 0
-            total_expenses = db.session.query(func.sum(SupplierPayment.amount)).scalar() or 0
-            
-            query_time = (time.time() - start_time) * 1000
-            print(f"  • Financial summary query: {query_time:.2f}ms")
-            print(f"  • Total Revenue: ${total_revenue:,.2f}")
-            print(f"  • Total Expenses: ${total_expenses:,.2f}")
-            
-            if query_time > 100:
-                print("  ⚠️  Slow financial queries detected!")
+            try:
+                # Test financial queries
+                total_revenue = db.session.execute(text("SELECT COALESCE(SUM(amount), 0) FROM payment")).scalar() or 0
+                total_expenses = db.session.execute(text("SELECT COALESCE(SUM(amount), 0) FROM supplier_payment")).scalar() or 0
+                
+                query_time = (time.time() - start_time) * 1000
+                print(f"  • Financial summary query: {query_time:.2f}ms")
+                print(f"  • Total Revenue: ${total_revenue:,.2f}")
+                print(f"  • Total Expenses: ${total_expenses:,.2f}")
+                
+                if query_time > 100:
+                    print("  ⚠️  Slow financial queries detected!")
+                else:
+                    print("  ✅ Financial queries performing well")
+            except Exception as e:
+                print(f"  • Financial query error: {e}")
             
         except Exception as e:
             print(f"Database analysis error: {e}")

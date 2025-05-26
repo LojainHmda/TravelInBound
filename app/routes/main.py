@@ -15,30 +15,48 @@ def index():
 
 @main_bp.route('/dashboard')
 def dashboard():
-    """Dashboard showing booking statistics and status"""
-    # Get counts for various statuses - no longer using BOOKED status
-    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    confirmed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
-    # Still pass a value of 0 for booked_count to avoid template errors
-    booked_count = 0
+    """Dashboard showing booking statistics and status - OPTIMIZED"""
+    # PERFORMANCE FIX: Use efficient single queries with proper limits
+    from sqlalchemy import func
     
-    # Get all recent bookings
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    # Get counts for various statuses in a single query
+    status_counts = db.session.query(
+        Booking.status,
+        func.count(Booking.id)
+    ).group_by(Booking.status).all()
     
-    # Get recent service items by type
-    flight_items = ServiceItem.query.filter_by(service_type='FLIGHT').order_by(ServiceItem.created_at.desc()).limit(5).all()
-    hotel_items = ServiceItem.query.filter_by(service_type='HOTEL').order_by(ServiceItem.created_at.desc()).limit(5).all()
-    transport_items = ServiceItem.query.filter_by(service_type='TRANSPORT').order_by(ServiceItem.created_at.desc()).limit(5).all()
-    visa_items = ServiceItem.query.filter_by(service_type='VISA').order_by(ServiceItem.created_at.desc()).limit(5).all()
-    insurance_items = ServiceItem.query.filter_by(service_type='INSURANCE').order_by(ServiceItem.created_at.desc()).limit(5).all()
+    # Convert to dictionary for easy access
+    counts = {status: count for status, count in status_counts}
+    request_count = counts.get(STATUS_REQUEST, 0)
+    in_progress_count = counts.get(STATUS_IN_PROGRESS, 0)
+    confirmed_count = counts.get(STATUS_CONFIRMED, 0)
+    booked_count = 0  # Still pass 0 for template compatibility
+    
+    # PERFORMANCE FIX: Limit recent bookings to reasonable number
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    
+    # PERFORMANCE FIX: Get service items efficiently with single query
+    service_items = db.session.query(
+        ServiceItem.service_type,
+        ServiceItem.id,
+        ServiceItem.description,
+        ServiceItem.created_at,
+        ServiceItem.status
+    ).order_by(ServiceItem.created_at.desc()).limit(25).all()
+    
+    # Group service items by type (more efficient than 5 separate queries)
+    flight_items = [item for item in service_items if item.service_type == 'FLIGHT'][:5]
+    hotel_items = [item for item in service_items if item.service_type == 'HOTEL'][:5]
+    transport_items = [item for item in service_items if item.service_type == 'TRANSPORT'][:5]
+    visa_items = [item for item in service_items if item.service_type == 'VISA'][:5]
+    insurance_items = [item for item in service_items if item.service_type == 'INSURANCE'][:5]
     
     return render_template(
         'dashboard_redesigned.html',
         request_count=request_count,
         booked_count=booked_count,
         in_progress_count=in_progress_count,
-        confirmed_count=confirmed_count,  # Changed from completed_count to confirmed_count
+        confirmed_count=confirmed_count,
         recent_bookings=recent_bookings,
         flight_items=flight_items,
         hotel_items=hotel_items,
@@ -49,16 +67,25 @@ def dashboard():
 
 @main_bp.route('/operations')
 def operations_dashboard():
-    """View for the travel operations dashboard"""
-    # Get counts for each service type - only count IN_PROGRESS items
-    flight_count = ServiceItem.query.filter_by(service_type='FLIGHT', status=STATUS_IN_PROGRESS).count()
-    hotel_count = ServiceItem.query.filter_by(service_type='HOTEL', status=STATUS_IN_PROGRESS).count()
-    transport_count = ServiceItem.query.filter_by(service_type='TRANSPORT', status=STATUS_IN_PROGRESS).count()
-    visa_count = ServiceItem.query.filter_by(service_type='VISA', status=STATUS_IN_PROGRESS).count()
-    insurance_count = ServiceItem.query.filter_by(service_type='INSURANCE', status=STATUS_IN_PROGRESS).count()
+    """View for the travel operations dashboard - OPTIMIZED"""
+    from sqlalchemy import func
     
-    # Get IN_PROGRESS bookings only for operations dashboard
-    in_progress_bookings = Booking.query.filter_by(status=STATUS_IN_PROGRESS).order_by(Booking.created_at.desc()).all()
+    # PERFORMANCE FIX: Get all service type counts in single query
+    service_counts = db.session.query(
+        ServiceItem.service_type,
+        func.count(ServiceItem.id)
+    ).filter_by(status=STATUS_IN_PROGRESS).group_by(ServiceItem.service_type).all()
+    
+    # Convert to dictionary for easy access
+    counts = {service_type: count for service_type, count in service_counts}
+    flight_count = counts.get('FLIGHT', 0)
+    hotel_count = counts.get('HOTEL', 0)
+    transport_count = counts.get('TRANSPORT', 0)
+    visa_count = counts.get('VISA', 0)
+    insurance_count = counts.get('INSURANCE', 0)
+    
+    # PERFORMANCE FIX: Limit in-progress bookings to reasonable number
+    in_progress_bookings = Booking.query.filter_by(status=STATUS_IN_PROGRESS).order_by(Booking.created_at.desc()).limit(20).all()
     
     return render_template(
         'operations_dashboard.html',
