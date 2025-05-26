@@ -10,7 +10,12 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """Home page showing recent bookings"""
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+    try:
+        recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+    except Exception as e:
+        # Handle database connection issues gracefully
+        print(f"Database query error: {e}")
+        recent_bookings = []
     return render_template('index.html', bookings=recent_bookings)
 
 @main_bp.route('/dashboard')

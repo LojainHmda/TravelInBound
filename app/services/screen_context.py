@@ -249,11 +249,24 @@ Respond as if you can see exactly what the user sees on their screen right now."
     def _get_ai_response(self, system_prompt: str, user_query: str, screen_context: Dict[str, Any]) -> Dict[str, Any]:
         """Get AI response with screen context awareness"""
         try:
+            # Update system prompt to include JSON instruction
+            enhanced_system_prompt = system_prompt + """
+
+IMPORTANT: Always respond with valid JSON in this exact format:
+{
+    "response": "Your detailed response here",
+    "action_needed": "navigate_to_booking|update_booking_status|highlight_field|suggest_values|null",
+    "booking_id": "booking_id_if_relevant",
+    "new_status": "new_status_if_updating",
+    "field_name": "field_name_if_highlighting",
+    "suggestions": ["suggestion1", "suggestion2"]
+}"""
+
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"User asks: {user_query}\n\nScreen context: {json.dumps(screen_context, indent=2)}"}
+                    {"role": "system", "content": enhanced_system_prompt},
+                    {"role": "user", "content": f"User asks: {user_query}\n\nPlease provide a JSON response about the current screen context."}
                 ],
                 response_format={"type": "json_object"},
                 max_tokens=1000
