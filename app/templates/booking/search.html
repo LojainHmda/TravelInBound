@@ -1,0 +1,517 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+{{ super() }}
+<style>
+/* Search Page Styling - Consistent Dark Blue Theme */
+.search-header {
+    background: linear-gradient(135deg, #223A5E, #2c4a6b);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.smart-filters-section {
+    background: linear-gradient(135deg, #223A5E, #2c4a6b);
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+}
+
+.filter-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    background: white;
+}
+
+.filter-card .card-header {
+    background: linear-gradient(135deg, #223A5E, #2c4a6b);
+    border-bottom: 2px solid #FFBF00;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 15px 20px;
+    color: white;
+}
+
+.smart-filter-row {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.smart-filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.search-results-table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.search-results-table thead {
+    background: linear-gradient(135deg, #223A5E, #2c4a6b);
+    color: white;
+}
+
+.search-results-table thead th {
+    border: none;
+    padding: 15px 12px;
+    font-weight: 600;
+}
+
+.search-results-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-request {
+    background-color: #6c757d;
+    color: white;
+}
+
+.status-in-progress {
+    background-color: #FFBF00;
+    color: #000;
+}
+
+.status-confirmed {
+    background-color: #28a745;
+    color: white;
+}
+
+.payment-status {
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.payment-none {
+    background-color: #dc3545;
+    color: white;
+}
+
+.payment-partial {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.payment-full {
+    background-color: #28a745;
+    color: white;
+}
+
+.search-stats {
+    background: linear-gradient(135deg, #fff, #f8f9fa);
+    border-left: 4px solid #FFBF00;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.filter-btn {
+    background: linear-gradient(135deg, #FFBF00, #FFD700);
+    border: none;
+    color: #000;
+    font-weight: 600;
+    padding: 10px 25px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 191, 0, 0.4);
+    color: #000;
+}
+
+.clear-btn {
+    background: linear-gradient(135deg, #6c757d, #8a9396);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 25px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.clear-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+    color: white;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #28a745, #34ce57);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.no-results i {
+    font-size: 4rem;
+    color: #FFBF00;
+    margin-bottom: 20px;
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Search Header -->
+    <div class="search-header p-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <div>
+                <h2 class="mb-1"><i class="fas fa-search me-3" style="color: #FFBF00;"></i>Booking Search & History</h2>
+                <p class="mb-0 opacity-75">Search and filter all bookings, invoices, and payment history</p>
+            </div>
+            <div>
+                <button type="button" class="btn export-btn" onclick="exportResults()">
+                    <i class="fas fa-download me-2"></i>Export Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Filters Section -->
+    <div class="smart-filters-section">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h4 class="mb-0"><i class="fas fa-filter me-3" style="color: #FFBF00;"></i>Smart Search Filters</h4>
+            <div>
+                <span class="badge bg-light text-dark me-2" id="activeFiltersCount">0 Active Filters</span>
+                <button type="button" class="btn btn-outline-light btn-sm" onclick="clearFilters()">
+                    <i class="fas fa-times me-1"></i>Clear All
+                </button>
+            </div>
+        </div>
+
+        <form id="searchForm" method="GET">
+            <!-- Row 1: Quick Search & Date Range -->
+            <div class="smart-filter-row">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-search me-2" style="color: #FFBF00;"></i>Quick Search
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" class="form-control" name="search" value="{{ request.args.get('search', '') }}" 
+                                   placeholder="Reference, customer, invoice..." onchange="updateFilterCount()">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-calendar me-2" style="color: #FFBF00;"></i>Date Range
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="date" class="form-control" name="date_from" value="{{ request.args.get('date_from', '') }}" 
+                                       placeholder="From" onchange="updateFilterCount()">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" name="date_to" value="{{ request.args.get('date_to', '') }}" 
+                                       placeholder="To" onchange="updateFilterCount()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Status Filters -->
+            <div class="smart-filter-row">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-tasks me-2" style="color: #FFBF00;"></i>Booking Status
+                        </label>
+                        <select class="form-select" name="status" onchange="updateFilterCount()">
+                            <option value="">All Statuses</option>
+                            <option value="REQUEST" {% if request.args.get('status') == 'REQUEST' %}selected{% endif %}>Request</option>
+                            <option value="IN_PROGRESS" {% if request.args.get('status') == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                            <option value="CONFIRMED" {% if request.args.get('status') == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-credit-card me-2" style="color: #FFBF00;"></i>Payment Status
+                        </label>
+                        <select class="form-select" name="payment_status" onchange="updateFilterCount()">
+                            <option value="">All Payment Status</option>
+                            <option value="NONE" {% if request.args.get('payment_status') == 'NONE' %}selected{% endif %}>Not Paid</option>
+                            <option value="PARTIAL" {% if request.args.get('payment_status') == 'PARTIAL' %}selected{% endif %}>Partially Paid</option>
+                            <option value="FULL" {% if request.args.get('payment_status') == 'FULL' %}selected{% endif %}>Fully Paid</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-file-invoice me-2" style="color: #FFBF00;"></i>Invoice Status
+                        </label>
+                        <select class="form-select" name="has_invoice" onchange="updateFilterCount()">
+                            <option value="">All</option>
+                            <option value="yes" {% if request.args.get('has_invoice') == 'yes' %}selected{% endif %}>Has Invoice</option>
+                            <option value="no" {% if request.args.get('has_invoice') == 'no' %}selected{% endif %}>No Invoice</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Service & Amount -->
+            <div class="smart-filter-row">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-concierge-bell me-2" style="color: #FFBF00;"></i>Service Type
+                        </label>
+                        <select class="form-select" name="service_type" onchange="updateFilterCount()">
+                            <option value="">All Services</option>
+                            <option value="FLIGHT" {% if request.args.get('service_type') == 'FLIGHT' %}selected{% endif %}>
+                                <i class="fas fa-plane"></i> Flight
+                            </option>
+                            <option value="HOTEL" {% if request.args.get('service_type') == 'HOTEL' %}selected{% endif %}>
+                                <i class="fas fa-hotel"></i> Hotel
+                            </option>
+                            <option value="TRANSPORT" {% if request.args.get('service_type') == 'TRANSPORT' %}selected{% endif %}>
+                                <i class="fas fa-car"></i> Transport
+                            </option>
+                            <option value="VISA" {% if request.args.get('service_type') == 'VISA' %}selected{% endif %}>
+                                <i class="fas fa-passport"></i> Visa
+                            </option>
+                            <option value="INSURANCE" {% if request.args.get('service_type') == 'INSURANCE' %}selected{% endif %}>
+                                <i class="fas fa-shield-alt"></i> Insurance
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-white">
+                            <i class="fas fa-dollar-sign me-2" style="color: #FFBF00;"></i>Amount Range
+                        </label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" name="amount_from" 
+                                           value="{{ request.args.get('amount_from', '') }}" placeholder="Min" onchange="updateFilterCount()">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" name="amount_to" 
+                                           value="{{ request.args.get('amount_to', '') }}" placeholder="Max" onchange="updateFilterCount()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="d-grid gap-2 w-100">
+                            <button type="submit" class="btn filter-btn">
+                                <i class="fas fa-search me-2"></i>Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search Results Section -->
+    <div class="row">
+        <div class="col-12">
+            <!-- Search Statistics -->
+            {% if bookings %}
+            <div class="search-stats">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1" style="color: #223A5E;">{{ bookings|length }}</h4>
+                            <small class="text-muted">Total Results</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1" style="color: #223A5E;">${{ total_amount }}</h4>
+                            <small class="text-muted">Total Value</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1" style="color: #223A5E;">{{ paid_bookings }}</h4>
+                            <small class="text-muted">Paid Bookings</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="mb-1" style="color: #223A5E;">{{ pending_bookings }}</h4>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Results Table -->
+            <div class="card filter-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list me-2" style="color: #FFBF00;"></i>Search Results</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if bookings %}
+                    <div class="table-responsive">
+                        <table class="table search-results-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-hashtag me-2"></i>Reference</th>
+                                    <th><i class="fas fa-user me-2"></i>Customer</th>
+                                    <th><i class="fas fa-calendar me-2"></i>Date</th>
+                                    <th><i class="fas fa-cog me-2"></i>Status</th>
+                                    <th><i class="fas fa-dollar-sign me-2"></i>Amount</th>
+                                    <th><i class="fas fa-credit-card me-2"></i>Payment</th>
+                                    <th><i class="fas fa-file-invoice me-2"></i>Invoice</th>
+                                    <th><i class="fas fa-concierge-bell me-2"></i>Services</th>
+                                    <th><i class="fas fa-tools me-2"></i>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in bookings %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ booking.reference_number }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if booking.customer %}
+                                            {{ booking.customer.name }}
+                                        {% else %}
+                                            <span class="text-muted">No Customer</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <span class="status-badge status-{{ booking.status.lower().replace('_', '-') }}">
+                                            {% if booking.status == 'REQUEST' %}
+                                                <i class="fas fa-file-alt me-1"></i>Request
+                                            {% elif booking.status == 'IN_PROGRESS' %}
+                                                <i class="fas fa-cog me-1"></i>In Progress
+                                            {% elif booking.status == 'CONFIRMED' %}
+                                                <i class="fas fa-check me-1"></i>Confirmed
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>${{ "%.2f"|format(booking.total_amount) }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="payment-status payment-{{ booking.payment_status.lower() }}">
+                                            {% if booking.payment_status == 'NONE' %}
+                                                Not Paid
+                                            {% elif booking.payment_status == 'PARTIAL' %}
+                                                Partial
+                                            {% elif booking.payment_status == 'FULL' %}
+                                                Paid
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if booking.invoice_number %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-file-invoice me-1"></i>{{ booking.invoice_number }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No Invoice</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1 flex-wrap">
+                                            {% for item in booking.service_items[:3] %}
+                                                {% if item.service_type == 'FLIGHT' %}
+                                                    <span class="badge bg-primary"><i class="fas fa-plane"></i></span>
+                                                {% elif item.service_type == 'HOTEL' %}
+                                                    <span class="badge bg-success"><i class="fas fa-hotel"></i></span>
+                                                {% elif item.service_type == 'TRANSPORT' %}
+                                                    <span class="badge bg-warning"><i class="fas fa-car"></i></span>
+                                                {% elif item.service_type == 'VISA' %}
+                                                    <span class="badge bg-danger"><i class="fas fa-passport"></i></span>
+                                                {% elif item.service_type == 'INSURANCE' %}
+                                                    <span class="badge bg-info"><i class="fas fa-shield-alt"></i></span>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if booking.service_items|length > 3 %}
+                                                <span class="badge bg-secondary">+{{ booking.service_items|length - 3 }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('booking.details', booking_id=booking.id) }}" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if booking.invoice_number %}
+                                            <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" 
+                                               class="btn btn-outline-success btn-sm">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="no-results">
+                        <i class="fas fa-search"></i>
+                        <h4>No Results Found</h4>
+                        <p>Try adjusting your search filters or search terms.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearFilters() {
+    document.getElementById('searchForm').reset();
+    window.location.href = '{{ url_for("booking.search") }}';
+}
+
+function exportResults() {
+    // Add current search parameters to export URL
+    const params = new URLSearchParams(window.location.search);
+    params.set('export', 'csv');
+    window.location.href = '{{ url_for("booking.search") }}?' + params.toString();
+}
+</script>
+{% endblock %}

@@ -706,6 +706,162 @@ def update_booking_status(booking_id):
     
     return redirect(url_for('booking.details', booking_id=booking.id))
 
+@booking_bp.route('/search', methods=['GET'])
+def search():
+    """Comprehensive booking search with filters"""
+    from sqlalchemy import and_, or_
+    from datetime import datetime
+    import csv
+    import io
+    from flask import make_response
+    
+    # Build base query
+    query = Booking.query
+    
+    # Get filter parameters
+    search_term = request.args.get('search', '').strip()
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    status = request.args.get('status')
+    payment_status = request.args.get('payment_status')
+    service_type = request.args.get('service_type')
+    amount_from = request.args.get('amount_from')
+    amount_to = request.args.get('amount_to')
+    has_invoice = request.args.get('has_invoice')
+    
+    # Apply filters
+    conditions = []
+    
+    # Search term filter (reference, customer name, invoice number)
+    if search_term:
+        search_conditions = [
+            Booking.reference_number.ilike(f'%{search_term}%'),
+            Booking.invoice_number.ilike(f'%{search_term}%')
+        ]
+        # Add customer name search if Customer model is available
+        try:
+            from app.models.customer import Customer
+            query = query.join(Customer, Booking.customer_id == Customer.id, isouter=True)
+            search_conditions.append(Customer.name.ilike(f'%{search_term}%'))
+        except:
+            pass
+        conditions.append(or_(*search_conditions))
+    
+    # Date range filter
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            conditions.append(Booking.created_at >= date_from_obj)
+        except:
+            pass
+    
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            conditions.append(Booking.created_at <= date_to_obj)
+        except:
+            pass
+    
+    # Status filter
+    if status:
+        conditions.append(Booking.status == status)
+    
+    # Payment status filter
+    if payment_status:
+        conditions.append(Booking.payment_status == payment_status)
+    
+    # Amount range filter
+    if amount_from:
+        try:
+            amount_from_val = float(amount_from)
+            conditions.append(Booking.total_amount >= amount_from_val)
+        except:
+            pass
+    
+    if amount_to:
+        try:
+            amount_to_val = float(amount_to)
+            conditions.append(Booking.total_amount <= amount_to_val)
+        except:
+            pass
+    
+    # Invoice filter
+    if has_invoice == 'yes':
+        conditions.append(Booking.invoice_number.isnot(None))
+    elif has_invoice == 'no':
+        conditions.append(Booking.invoice_number.is_(None))
+    
+    # Service type filter
+    if service_type:
+        query = query.join(ServiceItem, Booking.id == ServiceItem.booking_id, isouter=True)
+        conditions.append(ServiceItem.service_type == service_type)
+    
+    # Apply all conditions
+    if conditions:
+        query = query.filter(and_(*conditions))
+    
+    # Order by creation date (newest first)
+    query = query.order_by(Booking.created_at.desc())
+    
+    # Execute query
+    bookings = query.all()
+    
+    # Handle CSV export
+    if request.args.get('export') == 'csv':
+        return export_bookings_csv(bookings)
+    
+    # Calculate statistics
+    total_amount = sum(booking.total_amount for booking in bookings)
+    paid_bookings = len([b for b in bookings if b.payment_status == 'FULL'])
+    pending_bookings = len([b for b in bookings if b.payment_status in ['NONE', 'PARTIAL']])
+    
+    return render_template('booking/search.html',
+                         bookings=bookings,
+                         total_amount=f"{total_amount:.2f}",
+                         paid_bookings=paid_bookings,
+                         pending_bookings=pending_bookings)
+
+def export_bookings_csv(bookings):
+    """Export search results to CSV"""
+    import csv
+    import io
+    from flask import make_response
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow([
+        'Reference Number', 'Customer', 'Created Date', 'Status', 
+        'Total Amount', 'Payment Status', 'Invoice Number', 
+        'Service Types', 'Service Count'
+    ])
+    
+    # Write data
+    for booking in bookings:
+        customer_name = booking.customer.name if hasattr(booking, 'customer') and booking.customer else 'No Customer'
+        service_types = ', '.join(set(item.service_type for item in booking.service_items))
+        service_count = len(booking.service_items)
+        
+        writer.writerow([
+            booking.reference_number,
+            customer_name,
+            booking.created_at.strftime('%Y-%m-%d'),
+            booking.status,
+            f"{booking.total_amount:.2f}",
+            booking.payment_status,
+            booking.invoice_number or 'No Invoice',
+            service_types,
+            service_count
+        ])
+    
+    # Create response
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = f'attachment; filename=booking_search_results.csv'
+    
+    return response
+
 @booking_bp.route('/service_item/<int:item_id>/update_status', methods=['POST'])
 def update_service_status(item_id):
     """Update the status of a specific service item"""
