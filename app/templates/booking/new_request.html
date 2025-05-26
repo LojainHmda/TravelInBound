@@ -95,6 +95,48 @@
 .badge i {
     margin-right: 4px;
 }
+
+/* Enhanced Service Grid Table */
+.service-grid-table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.service-grid-table thead th {
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+    border: none;
+    padding: 15px 10px;
+}
+
+.service-grid-table tbody td {
+    vertical-align: middle;
+    padding: 12px 10px;
+    border-color: #e9ecef;
+}
+
+.service-grid-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+/* Empty state styling */
+.service-grid-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.service-grid-empty i {
+    font-size: 3rem;
+    color: #FFBF00;
+    margin-bottom: 15px;
+    display: block;
+}
 </style>
 {% endblock %}
 
@@ -247,16 +289,16 @@
                             
                             <div class="table-responsive mb-3">
                         
-                        <table class="table table-bordered">
-                            <thead class="table-light">
+                        <table class="table table-bordered service-grid-table">
+                            <thead style="background: linear-gradient(135deg, #223A5E, #2c4a6b); color: white;">
                                 <tr>
-                                    <th>From Date</th>
-                                    <th>To Date</th>
-                                    <th>Service Type</th>
-                                    <th>Description</th>
-                                    <th>Amount</th>
-                                    <th>Currency</th>
-                                    <th>Actions</th>
+                                    <th><i class="fas fa-calendar-alt me-2" style="color: #FFBF00;"></i>From Date</th>
+                                    <th><i class="fas fa-calendar-check me-2" style="color: #FFBF00;"></i>To Date</th>
+                                    <th><i class="fas fa-concierge-bell me-2" style="color: #FFBF00;"></i>Service Type</th>
+                                    <th><i class="fas fa-file-alt me-2" style="color: #FFBF00;"></i>Description</th>
+                                    <th><i class="fas fa-dollar-sign me-2" style="color: #FFBF00;"></i>Amount</th>
+                                    <th><i class="fas fa-coins me-2" style="color: #FFBF00;"></i>Currency</th>
+                                    <th><i class="fas fa-cogs me-2" style="color: #FFBF00;"></i>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -313,8 +355,31 @@
                                     {% endfor %}
                                 {% else %}
                                     <tr>
-                                        <td colspan="7" class="text-center text-muted py-3">
-                                            <i class="fas fa-info-circle me-2"></i> No items added yet. Use the form above or quick-add buttons to add services.
+                                        <td colspan="7" class="service-grid-empty">
+                                            <i class="fas fa-concierge-bell"></i>
+                                            <div style="font-size: 1.1rem; font-weight: 600; color: #223A5E; margin-bottom: 10px;">
+                                                Ready to Add Services
+                                            </div>
+                                            <div style="margin-bottom: 15px;">
+                                                Use the quick-add buttons above to get started with:
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                                                <span class="badge bg-primary" style="font-size: 0.8rem; padding: 5px 10px;">
+                                                    <i class="fas fa-plane me-1"></i> Flights
+                                                </span>
+                                                <span class="badge bg-success" style="font-size: 0.8rem; padding: 5px 10px;">
+                                                    <i class="fas fa-hotel me-1"></i> Hotels
+                                                </span>
+                                                <span class="badge bg-warning text-dark" style="font-size: 0.8rem; padding: 5px 10px;">
+                                                    <i class="fas fa-car me-1"></i> Transport
+                                                </span>
+                                                <span class="badge bg-danger" style="font-size: 0.8rem; padding: 5px 10px;">
+                                                    <i class="fas fa-passport me-1"></i> Visa
+                                                </span>
+                                                <span class="badge bg-info" style="font-size: 0.8rem; padding: 5px 10px;">
+                                                    <i class="fas fa-shield-alt me-1"></i> Insurance
+                                                </span>
+                                            </div>
                                         </td>
                                     </tr>
                                 {% endif %}
