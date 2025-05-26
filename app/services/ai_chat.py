@@ -87,7 +87,12 @@ class TravelAIAssistant:
         try:
             entities = intent.get("entities", {})
             
-            # Build query based on extracted entities
+            # Enhanced customer search with fuzzy matching
+            if entities.get("customer_name") or "customer" in query.lower() or "list customer" in query.lower():
+                customers = self._search_customers(entities.get("customer_name", ""), query)
+                data["customers"] = customers
+            
+            # Build booking query based on extracted entities
             booking_query = Booking.query
             
             # Filter by booking reference
@@ -97,20 +102,13 @@ class TravelAIAssistant:
                     Booking.reference_number.ilike(f"%{ref}%")
                 )
             
-            # Filter by customer name
+            # Enhanced customer name search for bookings
             if entities.get("customer_name"):
-                name_parts = entities["customer_name"].split()
-                if len(name_parts) >= 1:
-                    first_name = name_parts[0]
-                    last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
-                    
-                    # Join with User table to search by name
-                    booking_query = booking_query.join(Booking.requester).filter(
-                        or_(
-                            func.lower(Booking.requester.has(first_name__ilike=f"%{first_name}%")),
-                            func.lower(Booking.requester.has(last_name__ilike=f"%{last_name}%"))
-                        )
-                    )
+                # Get matching customers first
+                matching_customers = self._search_customers(entities["customer_name"], query)
+                if matching_customers:
+                    customer_ids = [c["id"] for c in matching_customers]
+                    booking_query = booking_query.filter(Booking.user_id.in_(customer_ids))
             
             # Filter by destination (search in service items)
             if entities.get("destination"):
@@ -119,18 +117,32 @@ class TravelAIAssistant:
                     ServiceItem.description.ilike(f"%{destination}%")
                 )
             
+            # Get recent bookings if no specific filter
+            if not any([entities.get("booking_reference"), entities.get("customer_name"), entities.get("destination")]):
+                booking_query = booking_query.order_by(Booking.created_at.desc())
+            
             # Get bookings
             bookings = booking_query.limit(10).all()
             
             # Format booking data
             for booking in bookings:
+                customer_name = "Unknown Customer"
+                if hasattr(booking, 'requester') and booking.requester:
+                    customer_name = f"{booking.requester.first_name} {booking.requester.last_name}"
+                elif booking.user_id:
+                    # Try to get customer from Customer table
+                    from app.models.customer import Customer
+                    customer = Customer.query.get(booking.user_id)
+                    if customer:
+                        customer_name = f"{customer.first_name} {customer.last_name}"
+                
                 booking_info = {
                     "id": booking.id,
                     "reference_number": booking.reference_number,
                     "status": booking.status,
                     "total_amount": float(booking.total_amount or 0),
                     "created_at": booking.created_at.strftime("%Y-%m-%d") if booking.created_at else None,
-                    "customer_name": f"{booking.requester.first_name} {booking.requester.last_name}" if booking.requester else "Unknown",
+                    "customer_name": customer_name,
                     "service_items": []
                 }
                 
@@ -150,6 +162,7 @@ class TravelAIAssistant:
             # Get basic stats
             data["stats"] = {
                 "total_bookings": Booking.query.count(),
+                "total_customers": Customer.query.count(),
                 "recent_bookings": Booking.query.filter(
                     Booking.created_at >= datetime.now() - timedelta(days=30)
                 ).count()
@@ -159,6 +172,54 @@ class TravelAIAssistant:
             data["error"] = str(e)
         
         return data
+    
+    def _search_customers(self, name_query, full_query):
+        """Enhanced customer search with fuzzy matching"""
+        from app.models.customer import Customer
+        
+        customers = []
+        try:
+            # If no specific name, check if user wants to list all customers
+            if not name_query and ("list customer" in full_query.lower() or "all customer" in full_query.lower()):
+                customer_results = Customer.query.order_by(Customer.first_name).limit(20).all()
+            else:
+                # Build fuzzy search query
+                search_conditions = []
+                
+                if name_query:
+                    # Split the name and search each part
+                    name_parts = name_query.strip().split()
+                    for part in name_parts:
+                        if len(part) >= 2:  # Only search parts with 2+ characters
+                            search_conditions.extend([
+                                Customer.first_name.ilike(f"%{part}%"),
+                                Customer.last_name.ilike(f"%{part}%"),
+                                Customer.company_name.ilike(f"%{part}%")
+                            ])
+                
+                # Execute search
+                if search_conditions:
+                    customer_results = Customer.query.filter(or_(*search_conditions)).limit(15).all()
+                else:
+                    customer_results = Customer.query.order_by(Customer.created_at.desc()).limit(10).all()
+            
+            # Format customer data
+            for customer in customer_results:
+                customer_info = {
+                    "id": customer.id,
+                    "name": f"{customer.first_name} {customer.last_name}".strip(),
+                    "email": customer.email,
+                    "phone": customer.phone,
+                    "company": customer.company_name,
+                    "customer_type": customer.customer_type,
+                    "country": customer.country
+                }
+                customers.append(customer_info)
+                
+        except Exception as e:
+            print(f"Customer search error: {e}")
+        
+        return customers
     
     def _generate_ai_response(self, user_query, intent, booking_data, user_context):
         """Generate intelligent AI response using the fetched data"""
