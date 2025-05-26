@@ -398,17 +398,30 @@ class AIChat {
         this.showTypingIndicator();
 
         try {
+            // Capture current screen context
+            const screenContext = window.screenContext ? window.screenContext.getContextForAI() : {};
+            
+            // Decide whether to use contextual or regular chat
+            const useContextual = this.shouldUseContextualChat(message, screenContext);
+            
+            const endpoint = useContextual ? '/api/chat/contextual' : '/api/chat';
+            const requestBody = {
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (useContextual) {
+                requestBody.screen_context = screenContext;
+            }
+
             // Send to AI chat API
-            const response = await fetch('/api/chat', {
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': this.getCSRFToken()
                 },
-                body: JSON.stringify({
-                    message: message,
-                    timestamp: new Date().toISOString()
-                })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
@@ -419,8 +432,15 @@ class AIChat {
                     type: 'ai',
                     content: data.response,
                     bookingData: data.booking_data,
+                    screenUpdates: data.screen_updates,
+                    nextSteps: data.next_steps,
                     timestamp: new Date()
                 });
+
+                // Handle screen updates if any
+                if (data.screen_updates) {
+                    this.handleScreenUpdates(data.screen_updates);
+                }
             } else {
                 throw new Error(data.error || 'AI chat service error');
             }
@@ -436,6 +456,90 @@ class AIChat {
             this.hideTypingIndicator();
             this.sendButton.disabled = false;
             this.inputField.focus();
+        }
+    }
+
+    shouldUseContextualChat(message, screenContext) {
+        // Use contextual chat for screen-aware queries
+        const contextualKeywords = [
+            'this', 'current', 'update', 'change', 'edit', 'modify', 
+            'here', 'show me', 'what is', 'explain this',
+            'on this page', 'in this table', 'selected',
+            'first', 'last', 'top', 'bottom'
+        ];
+        
+        const hasContextKeywords = contextualKeywords.some(keyword => 
+            message.toLowerCase().includes(keyword)
+        );
+        
+        const hasScreenData = screenContext && (
+            screenContext.visible_data || 
+            screenContext.table_data || 
+            screenContext.current_data
+        );
+        
+        return hasContextKeywords && hasScreenData;
+    }
+
+    handleScreenUpdates(screenUpdates) {
+        // Handle different types of screen updates
+        if (screenUpdates.redirect_url) {
+            setTimeout(() => {
+                window.location.href = screenUpdates.redirect_url;
+            }, 1500);
+        }
+        
+        if (screenUpdates.highlight_element) {
+            this.highlightElement(screenUpdates.highlight_element);
+        }
+        
+        if (screenUpdates.suggested_values && screenUpdates.field) {
+            this.showFieldSuggestions(screenUpdates.field, screenUpdates.suggested_values);
+        }
+    }
+
+    highlightElement(selector) {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.style.transition = 'all 0.3s ease';
+            element.style.boxShadow = '0 0 10px #007bff';
+            element.style.border = '2px solid #007bff';
+            
+            setTimeout(() => {
+                element.style.boxShadow = '';
+                element.style.border = '';
+            }, 3000);
+        }
+    }
+
+    showFieldSuggestions(field, suggestions) {
+        // Create suggestion popup near the field
+        const fieldElement = document.querySelector(`[name="${field}"], #${field}`);
+        if (fieldElement && suggestions.length > 0) {
+            const popup = document.createElement('div');
+            popup.className = 'ai-suggestions-popup';
+            popup.innerHTML = `
+                <div style="background: white; border: 1px solid #ddd; border-radius: 6px; padding: 10px; position: absolute; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                    <div style="font-weight: bold; margin-bottom: 8px;">AI Suggestions:</div>
+                    ${suggestions.map(suggestion => `
+                        <div style="padding: 4px 8px; cursor: pointer; border-radius: 3px;" 
+                             onmouseover="this.style.background='#f0f8ff'" 
+                             onmouseout="this.style.background=''"
+                             onclick="document.querySelector('[name=\\'${field}\\']').value='${suggestion}'; this.parentElement.parentElement.remove();">
+                            ${suggestion}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            fieldElement.parentNode.appendChild(popup);
+            
+            // Remove popup after 10 seconds
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, 10000);
         }
     }
 
