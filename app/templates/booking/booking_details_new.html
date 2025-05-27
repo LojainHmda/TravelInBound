@@ -1428,6 +1428,111 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 <script>
+// Generate Voucher Function
+async function generateVoucher(bookingId) {
+    try {
+        // Show loading state
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
+        button.disabled = true;
+
+        // Call the voucher generation endpoint
+        const response = await fetch(`/booking/${bookingId}/voucher`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+
+        if (response.ok) {
+            // Create download blob
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Get booking reference for filename
+            const bookingRef = document.querySelector('[data-booking-ref]')?.textContent || `booking_${bookingId}`;
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Voucher_${bookingRef}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Show success notification
+            showNotification('✅ Voucher Generated Successfully!', 'Professional voucher has been downloaded', 'success');
+        } else {
+            throw new Error('Failed to generate voucher');
+        }
+    } catch (error) {
+        console.error('Voucher generation error:', error);
+        showNotification('❌ Voucher Generation Failed', 'Please try again or contact support', 'error');
+    } finally {
+        // Restore button state
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }
+}
+
+// Show notification function
+function showNotification(title, message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} notification-popup`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-left: 4px solid ${type === 'success' ? '#28a745' : '#dc3545'};
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    notification.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <strong>${title}</strong><br>
+                <small>${message}</small>
+            </div>
+            <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+        </div>
+    `;
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Add CSS animations
+if (!document.querySelector('#voucher-animations')) {
+    const style = document.createElement('style');
+    style.id = 'voucher-animations';
+    style.textContent = `
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 // Customer Selection Modal Functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Customer search functionality
