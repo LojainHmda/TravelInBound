@@ -56,6 +56,13 @@ class QuickActionsFAB {
                     </svg>
                     <span class="fab-text">Search</span>
                 </button>
+                
+                <button class="fab-action" onclick="quickActions.hideFAB()" data-tooltip="Hide Quick Actions">
+                    <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+                    </svg>
+                    <span class="fab-text">Hide</span>
+                </button>
             </div>
             
             <button class="fab-main" id="fabMain">
@@ -262,9 +269,68 @@ class QuickActionsFAB {
         
         container.innerHTML = html;
     }
+
+    hideFAB() {
+        // Hide the entire FAB container
+        const fabContainer = document.querySelector('.quick-actions-fab');
+        if (fabContainer) {
+            fabContainer.style.display = 'none';
+            
+            // Save state to localStorage
+            localStorage.setItem('quickActionsFabHidden', 'true');
+            
+            // Create a small show button
+            this.createShowButton();
+        }
+    }
+
+    showFAB() {
+        // Show the FAB container
+        const fabContainer = document.querySelector('.quick-actions-fab');
+        if (fabContainer) {
+            fabContainer.style.display = 'block';
+            
+            // Remove state from localStorage
+            localStorage.setItem('quickActionsFabHidden', 'false');
+            
+            // Remove show button
+            const showButton = document.getElementById('showFabButton');
+            if (showButton) {
+                showButton.remove();
+            }
+        }
+    }
+
+    createShowButton() {
+        // Don't create if already exists
+        if (document.getElementById('showFabButton')) return;
+        
+        const showButton = document.createElement('button');
+        showButton.id = 'showFabButton';
+        showButton.className = 'show-fab-button';
+        showButton.innerHTML = `
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+        `;
+        showButton.title = 'Show Quick Actions';
+        showButton.onclick = () => this.showFAB();
+        
+        document.body.appendChild(showButton);
+    }
+
+    // Check if FAB should be hidden on initialization
+    checkInitialState() {
+        if (localStorage.getItem('quickActionsFabHidden') === 'true') {
+            setTimeout(() => this.hideFAB(), 100);
+        }
+    }
 }
 
 // Initialize Quick Actions FAB when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.quickActions = new QuickActionsFAB();
+    // Check if it should be hidden initially
+    window.quickActions.checkInitialState();
 });
