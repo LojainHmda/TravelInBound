@@ -11,6 +11,13 @@ import os
 
 voucher_bp = Blueprint('voucher', __name__)
 
+@voucher_bp.route('/booking/<int:booking_id>/voucher/preview')
+@login_required
+def voucher_preview(booking_id):
+    """Show voucher preview page"""
+    booking = Booking.query.get_or_404(booking_id)
+    return render_template('booking/voucher_preview.html', booking=booking)
+
 @voucher_bp.route('/booking/<int:booking_id>/voucher', methods=['POST'])
 @login_required
 def generate_voucher(booking_id):
@@ -40,7 +47,13 @@ def generate_voucher(booking_id):
         
     except Exception as e:
         flash(f'Error generating voucher: {str(e)}', 'error')
-        return redirect(url_for('main.booking_details', booking_id=booking_id))
+        return redirect(url_for('voucher.voucher_preview', booking_id=booking_id))
+
+@voucher_bp.route('/booking/<int:booking_id>/voucher')
+@login_required  
+def download_voucher(booking_id):
+    """Download voucher PDF directly"""
+    return generate_voucher(booking_id)
 
 @voucher_bp.route('/api/booking/<int:booking_id>/voucher', methods=['POST'])
 @login_required

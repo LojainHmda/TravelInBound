@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-9">
+        <h2 class="fw-bold">
+            <i class="fas fa-file-contract me-2"></i>Travel Voucher #{{ booking.reference_number }}
+        </h2>
+        <p class="text-muted">
+            Generated on {{ booking.created_at.strftime('%d %b %Y') }} for Booking #{{ booking.reference_number }}
+        </p>
+    </div>
+    <div class="col-md-3 text-end">
+        <div class="btn-group">
+            <a href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}" class="btn btn-primary">
+                <i class="fas fa-download me-2"></i>Download PDF
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}"><i class="fas fa-file-pdf me-2"></i>Download PDF</a></li>
+                <li><a class="dropdown-item" href="#" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp me-2"></i>Share via WhatsApp</a></li>
+                <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fas fa-print me-2"></i>Print Voucher</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Voucher Preview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card voucher-preview" id="voucherContent">
+            <!-- Header with Logo -->
+            <div class="voucher-header" style="background: linear-gradient(135deg, #000080 0%, #000060 100%); color: #FFC107; padding: 20px;">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="mb-0" style="color: #FFC107; font-weight: bold;">INVOICE: #{{ booking.reference_number }}</h3>
+                        <p class="mb-1">Booking ID: {{ booking.reference_number }}</p>
+                        <p class="mb-1">Booking Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
+                        <p class="mb-1">Due Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
+                        <p class="mb-0">GDS PNR: {{ booking.reference_number[:6] }} {{ booking.reference_number[6:] if booking.reference_number|length > 6 else '' }}</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="logo-section">
+                            <h2 style="color: #FFC107; font-weight: bold; margin-bottom: 5px;">ARABI TRAVEL</h2>
+                            <p class="mb-1" style="color: white;">+97022956640</p>
+                            <p class="mb-1" style="color: white;">info@arabtravel.ps</p>
+                            <p class="mb-0" style="color: white;">www.arabtravel.ps</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- Customer Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h4 class="fw-bold">{{ booking.requester.username if booking.requester else 'N/A' }}</h4>
+                        <p class="mb-1">{{ booking.requester.email if booking.requester else 'N/A' }}</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p><strong>Total Pax:</strong> {{ '%02d'|format(booking.service_items|length if booking.service_items else 1) }}</p>
+                        <p><strong>Start Date:</strong> {{ booking.service_items[0].start_date.strftime('%d/%m/%Y') if booking.service_items else 'N/A' }}</p>
+                        <p><strong>Booked By:</strong> {{ booking.requester.username if booking.requester else 'N/A' }}</p>
+                    </div>
+                </div>
+
+                {% if booking.service_items %}
+                <!-- Flight Services -->
+                {% set flight_services = booking.service_items|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
+                {% if flight_services %}
+                <div class="voucher-section mb-4">
+                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Flight 1 Details</h5>
+                    
+                    <h6 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Passenger Details</h6>
+                    
+                    <h6><strong>Travellers ({{ flight_services|length }})</strong></h6>
+                    
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>E-Ticket No</th>
+                                    <th>Age</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for service in flight_services %}
+                                <tr>
+                                    <td>{{ service.description or 'Passenger ' + loop.index|string }}</td>
+                                    <td>Adult</td>
+                                    <td>157-308666{{ (8941 + loop.index0)|string }}</td>
+                                    <td>📱 25</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Flight Details</h6>
+                    
+                    {% for service in flight_services %}
+                    <div class="flight-segment mb-3">
+                        <h6><strong>Trip {{ loop.index }}</strong> ({{ service.description or 'Flight Details' }})</h6>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Departure</th>
+                                        <th style="text-align: center;"></th>
+                                        <th>Arrival</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-center">
+                                            <strong>{{ service.start_date.strftime('%a, %d %b %Y') }}</strong><br>
+                                            <strong>Non Stop</strong>
+                                        </td>
+                                        <td class="text-center">
+                                            📱 25
+                                        </td>
+                                        <td class="text-center">
+                                            <strong>{{ service.end_date.strftime('%a, %d %b %Y') }}</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Hotel Services -->
+                {% set hotel_services = booking.service_items|selectattr('service_type', 'equalto', 'HOTEL')|list %}
+                {% if hotel_services %}
+                <div class="voucher-section mb-4">
+                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Hotel Details</h5>
+                    
+                    {% for service in hotel_services %}
+                    <div class="hotel-details mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>{{ service.description or 'Hotel ' + loop.index|string }}</strong></td>
+                                        <td>Booking Ref. - {{ loop.index }}</td>
+                                        <td>Check in: {{ service.start_date.strftime('%d-%m-%Y,%a, 14:00') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Address Details</td>
+                                        <td>Location Information</td>
+                                        <td>Check out: {{ service.end_date.strftime('%d-%m-%Y,%a, 12:00') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>( Rating - )</td>
+                                        <td>Phone: +1-555-HOTEL</td>
+                                        <td>No of Nights: {{ (service.end_date - service.start_date).days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td>No of Rooms: 1</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Room Type</th>
+                                        <th>Board Basis</th>
+                                        <th>Adult</th>
+                                        <th>Child</th>
+                                        <th>Lead Pax Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Deluxe Room</td>
+                                        <td>Bed & Breakfast (BB)</td>
+                                        <td>2</td>
+                                        <td>0</td>
+                                        <td>{{ service.description or 'Guest Name' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Other Services -->
+                {% set other_services = booking.service_items|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
+                {% if other_services %}
+                <div class="voucher-section mb-4">
+                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Additional Services</h5>
+                    
+                    {% for service in other_services %}
+                    <div class="service-item mb-3">
+                        <p><strong>{{ service.service_type.replace('_', ' ').title() }}:</strong> {{ service.description or 'N/A' }}</p>
+                        <p>Date: {{ service.start_date.strftime('%d/%m/%Y') }} - {{ service.end_date.strftime('%d/%m/%Y') }}</p>
+                        <p>Amount: ${{ "%.2f"|format(service.amount) if service.amount else "0.00" }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <!-- Payment Summary -->
+                <div class="voucher-section mb-4">
+                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Fare Details</h5>
+                    
+                    {% set total_amount = booking.total_amount or 0 %}
+                    {% set paid_amount = booking.payments|sum(attribute='amount') if booking.payments else 0 %}
+                    {% set balance = total_amount - paid_amount %}
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <tbody>
+                                <tr>
+                                    <td class="text-end"><strong>Total Amount</strong></td>
+                                    <td class="text-end"><strong>$ {{ "%.2f"|format(total_amount) }}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>Amount Paid</strong></td>
+                                    <td class="text-end"><strong>$ {{ "%.2f"|format(paid_amount) }}</strong></td>
+                                </tr>
+                                <tr style="background-color: #F0F8FF;">
+                                    <td class="text-end"><strong>Balance Outstanding</strong></td>
+                                    <td class="text-end"><strong>$ {{ "%.2f"|format(balance) }}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="voucher-footer text-center mt-4">
+                    <div class="mb-3">
+                        <h6><strong>Arabi Travel Bank</strong></h6>
+                        <p>Account USD= 9070-142464-510<br>
+                        ------------------</p>
+                        
+                        <h6><strong>Bank Of Palestine</strong></h6>
+                        <p>Branch Name: Ramallah Branch<br>
+                        0458/2220908/001/3000/000</p>
+                        
+                        <h6><strong>Thank You</strong></h6>
+                    </div>
+                    
+                    <hr>
+                    
+                    <p><strong>Bank Details:</strong> Bank Name: Arab Bank, Acct. No.: 142464</p>
+                    <p>www.arabtravel.ps • sales@arabtravel.ps • +97022956640</p>
+                    <h6><strong>Arabi Travel</strong></h6>
+                    <p>Alersal St, zakat Bld, Ramallah, P.OBOX:27</p>
+                    <p><strong>Thank you for booking with Arabi Travel</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function shareToWhatsApp() {
+    const bookingRef = '{{ booking.reference_number }}';
+    const customerName = '{{ booking.requester.username if booking.requester else "Customer" }}';
+    const amount = '{{ "%.2f"|format(booking.total_amount or 0) }}';
+    
+    const message = `🎫 *Travel Voucher Generated*\n\n` +
+                   `📋 Booking: ${bookingRef}\n` +
+                   `👤 Customer: ${customerName}\n` +
+                   `💰 Total: $${amount}\n\n` +
+                   `✅ Your travel voucher is ready! Download it from: ${window.location.origin}/booking/${{{ booking.id }}}/voucher\n\n` +
+                   `🌟 *Arabi Travel* - Your trusted travel partner\n` +
+                   `📞 +97022956640\n` +
+                   `🌐 www.arabtravel.ps`;
+    
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+// Print specific voucher content
+window.print = function() {
+    const voucherContent = document.getElementById('voucherContent').outerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Travel Voucher - {{ booking.reference_number }}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                @media print {
+                    body { font-size: 12px; }
+                    .btn, .dropdown { display: none !important; }
+                }
+                .voucher-header { background: linear-gradient(135deg, #000080 0%, #000060 100%) !important; color: #FFC107 !important; }
+            </style>
+        </head>
+        <body>
+            ${voucherContent}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+};
+</script>
+{% endblock %}
