@@ -109,9 +109,9 @@ class VoucherGenerator:
         # Invoice header with logo section
         invoice_header_data = [
             [
-                f"<b><font size=16>INVOICE: #{booking.reference_number}</font></b>",
+                f"INVOICE: #{booking.reference_number}",
                 "",
-                "TravelBookPro Logo"  # Placeholder for logo
+                "ARABI TRAVEL"
             ],
             [
                 "",
@@ -145,11 +145,17 @@ class VoucherGenerator:
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 16),
+            ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (2, 0), (2, 0), 14),
+            ('TEXTCOLOR', (2, 0), (2, 0), colors.HexColor('#000080')),  # Dark blue for Arabi Travel
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#000080')),  # Dark blue header
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.HexColor('#FFC107')),  # Yellow text
         ]))
         
         story.append(invoice_header_table)
@@ -164,19 +170,19 @@ class VoucherGenerator:
         
         customer_header_data = [
             [
-                f"<b><font size=12>{customer_name}</font></b>",
+                f"{customer_name}",
                 "",
-                f"<b>Total Pax: {total_pax:02d}</b>"
+                f"Total Pax: {total_pax:02d}"
             ],
             [
                 f"{customer_location}",
                 "",
-                f"<b>Start Date: {start_date}</b>"
+                f"Start Date: {start_date}"
             ],
             [
                 "",
                 "",
-                f"<b>Booked By: {booked_by}</b>"
+                f"Booked By: {booked_by}"
             ]
         ]
         
@@ -184,6 +190,9 @@ class VoucherGenerator:
         customer_header_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 11),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
