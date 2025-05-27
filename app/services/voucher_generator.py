@@ -51,12 +51,13 @@ class VoucherGenerator:
             parent=self.styles['Heading2'],
             fontSize=14,
             textColor=colors.HexColor('#000080'),
-            backgroundColor=colors.HexColor('#F0F8FF'),
+            fontName='Helvetica-Bold',
             alignment=TA_LEFT,
             spaceAfter=10,
-            leftIndent=10,
-            topPadding=5,
-            bottomPadding=5
+            spaceBefore=5,
+            borderWidth=0,
+            borderColor=colors.HexColor('#000080'),
+            borderPadding=0
         ))
 
     def generate_voucher(self, booking_id: int) -> BytesIO:
@@ -106,7 +107,7 @@ class VoucherGenerator:
         """Build the header section matching the voucher format with logo"""
         story = []
         
-        # Invoice header with logo section
+        # Clean header with dark blue background and yellow text
         invoice_header_data = [
             [
                 f"INVOICE: #{booking.reference_number}",
@@ -114,27 +115,22 @@ class VoucherGenerator:
                 "ARABI TRAVEL"
             ],
             [
-                "",
-                "",
-                "+1-555-TRAVEL"
-            ],
-            [
                 f"Booking ID: {booking.reference_number}",
                 "",
-                "info@travelbookpro.com"
+                "+97022956640"
             ],
             [
                 f"Booking Date: {booking.created_at.strftime('%d/%m/%Y')}",
                 "",
-                "www.travelbookpro.com"
+                "info@arabtravel.ps"
             ],
             [
                 f"Due Date: {booking.created_at.strftime('%d/%m/%Y')}",
                 "",
-                ""
+                "www.arabtravel.ps"
             ],
             [
-                f"GDS PNR : {booking.reference_number[:6]} {booking.reference_number[6:] if len(booking.reference_number) > 6 else ''}",
+                f"GDS PNR: {booking.reference_number[:6]} {booking.reference_number[6:] if len(booking.reference_number) > 6 else ''}",
                 "",
                 ""
             ]
@@ -148,14 +144,13 @@ class VoucherGenerator:
             ('FONTSIZE', (0, 0), (0, 0), 16),
             ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (2, 0), (2, 0), 14),
-            ('TEXTCOLOR', (2, 0), (2, 0), colors.HexColor('#000080')),  # Dark blue for Arabi Travel
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#000080')),  # Dark blue header
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.HexColor('#FFC107')),  # Yellow text
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#000080')),  # Dark blue background
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#FFC107')),  # Yellow text
         ]))
         
         story.append(invoice_header_table)
@@ -488,27 +483,27 @@ class VoucherGenerator:
         # Bank details section
         bank_info = """
         <para align=center>
-        <b>TravelBookPro Bank</b><br/>
-        Account USD= 1234-567890-001<br/>
-        ------------------<br/><br/>
-        <b>Bank Of America</b><br/>
-        Branch Name : Main Branch<br/>
-        1234/5678901/001/2000/000<br/><br/>
-        <b>Thank You</b>
+        <b><font color="#FF8C00">Arabi Travel Bank</font></b><br/>
+        <font color="#000080">Account USD= 9070-142464-510</font><br/>
+        <font color="#000080">------------------</font><br/><br/>
+        <b><font color="#FF8C00">Bank Of Palestine</font></b><br/>
+        <font color="#000080">Branch Name: Ramallah Branch</font><br/>
+        <font color="#000080">0458/2220908/001/3000/000</font><br/><br/>
+        <b><font color="#000080">Bank Details:</font></b><br/>
+        <font color="#000080">Bank Name: Arab Bank, Acct. No.: 142464</font><br/><br/>
         </para>
         """
         
         story.append(Paragraph(bank_info, self.styles['Normal']))
-        story.append(Spacer(1, 20))
+        story.append(Spacer(1, 10))
         
         # Company footer
         company_footer = """
         <para align=center>
-        <b>Bank Details:</b> Bank Name: TravelBookPro Bank, Acct. No.: 567890<br/>
-        www.travelbookpro.com • info@travelbookpro.com • +1-555-TRAVEL<br/>
-        <b>TravelBookPro</b><br/>
-        123 Travel Street, Business District, City, State 12345<br/>
-        <b>Thank you for booking with TravelBookPro</b>
+        <font color="#000080">📧 sales@arabtravel.ps • 🌐 www.arabtravel.ps • 📞 +97022956640</font><br/>
+        <b><font color="#000080">ARABI TRAVEL</font></b><br/>
+        <font color="#000080">📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27</font><br/>
+        <b><font color="#FF8C00">Thank you for booking with Arabi Travel</font></b>
         </para>
         """
         
