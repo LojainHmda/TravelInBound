@@ -32,21 +32,26 @@
     <div class="col-12">
         <div class="card voucher-preview" id="voucherContent">
             <!-- Header with Logo -->
-            <div class="voucher-header" style="background: linear-gradient(135deg, #000080 0%, #000060 100%); color: #FFC107; padding: 20px;">
+            <div class="voucher-header" style="background: #000080; color: #FFC107; padding: 20px;">
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <h3 class="mb-0" style="color: #FFC107; font-weight: bold;">INVOICE: #{{ booking.reference_number }}</h3>
-                        <p class="mb-1">Booking ID: {{ booking.reference_number }}</p>
-                        <p class="mb-1">Booking Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
-                        <p class="mb-1">Due Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
-                        <p class="mb-0">GDS PNR: {{ booking.reference_number[:6] }} {{ booking.reference_number[6:] if booking.reference_number|length > 6 else '' }}</p>
+                        <p class="mb-1" style="color: #FFC107;">Booking ID: {{ booking.reference_number }}</p>
+                        <p class="mb-1" style="color: #FFC107;">Booking Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
+                        <p class="mb-1" style="color: #FFC107;">Due Date: {{ booking.created_at.strftime('%d/%m/%Y') }}</p>
+                        <p class="mb-0" style="color: #FFC107;">GDS PNR: {{ booking.reference_number[:6] }} {{ booking.reference_number[6:] if booking.reference_number|length > 6 else '' }}</p>
                     </div>
                     <div class="col-md-6 text-end">
-                        <div class="logo-section">
-                            <h2 style="color: #FFC107; font-weight: bold; margin-bottom: 5px;">ARABI TRAVEL</h2>
-                            <p class="mb-1" style="color: white;">+97022956640</p>
-                            <p class="mb-1" style="color: white;">info@arabtravel.ps</p>
-                            <p class="mb-0" style="color: white;">www.arabtravel.ps</p>
+                        <div class="logo-section d-flex align-items-center justify-content-end">
+                            <div class="me-3">
+                                <img src="data:image/svg+xml;base64,{{ 'PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjgwIiB2aWV3Qm94PSIwIDAgMTAwIDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8IS0tIEFyYWJpIFRyYXZlbCBMb2dvIC0tPgo8IS0tIEJpZyBBIGxldHRlciAtLT4KPHA+CiAgPHBhdGggZD0iTTEwIDY1IEwzMCAxNSBMNTAgNjUgTTIwIDQ1IEw0MCA0NSIgc3Ryb2tlPSIjMDAwMDgwIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiLz4KICA8IS0tIEFpcnBsYW5lIC0tPgogIDxwYXRoIGQ9Ik02MCAzNSBMODUgMzAgTDg1IDI1IEw3MCAyNSBMNzAgMjAgTDg1IDIwIEw5MCAyNSBMOTAgNDAiIGZpbGw9IiNGRkMxMDciLz4KICA8IS0tIEFSQUJJIFRSQVZFTCB0ZXh0IC0tPgogIDx0ZXh0IHg9IjUiIHk9Ijc1IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjMDAwMDgwIj5BUkFCSSBUUkFWRUw8L3RleHQ+CjwvcD4KPC9zdmc+Cg==' | base64 }}" alt="Arabi Travel Logo" style="height: 60px;">
+                            </div>
+                            <div>
+                                <h2 style="color: #FFC107; font-weight: bold; margin-bottom: 5px;">ARABI TRAVEL</h2>
+                                <p class="mb-1" style="color: #FFC107; font-size: 12px;">+97022956640</p>
+                                <p class="mb-1" style="color: #FFC107; font-size: 12px;">info@arabtravel.ps</p>
+                                <p class="mb-0" style="color: #FFC107; font-size: 12px;">www.arabtravel.ps</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -71,9 +76,9 @@
                 {% set flight_services = booking.service_items|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
                 {% if flight_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Flight 1 Details</h5>
+                    <h5 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Flight 1 Details</h5>
                     
-                    <h6 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Passenger Details</h6>
+                    <h6 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Passenger Details</h6>
                     
                     <h6><strong>Travellers ({{ flight_services|length }})</strong></h6>
                     
@@ -100,7 +105,7 @@
                         </table>
                     </div>
 
-                    <h6 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Flight Details</h6>
+                    <h6 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Flight Details</h6>
                     
                     {% for service in flight_services %}
                     <div class="flight-segment mb-3">
@@ -140,7 +145,7 @@
                 {% set hotel_services = booking.service_items|selectattr('service_type', 'equalto', 'HOTEL')|list %}
                 {% if hotel_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Hotel Details</h5>
+                    <h5 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Hotel Details</h5>
                     
                     {% for service in hotel_services %}
                     <div class="hotel-details mb-4">
@@ -202,7 +207,7 @@
                 {% set other_services = booking.service_items|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
                 {% if other_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Additional Services</h5>
+                    <h5 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Additional Services</h5>
                     
                     {% for service in other_services %}
                     <div class="service-item mb-3">
@@ -217,7 +222,7 @@
 
                 <!-- Payment Summary -->
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="background-color: #E6E6E6; padding: 10px; margin-bottom: 15px;">Fare Details</h5>
+                    <h5 class="section-header" style="background-color: #000080; color: #FFC107; padding: 10px; margin-bottom: 15px; font-weight: bold;">Fare Details</h5>
                     
                     {% set total_amount = booking.total_amount or 0 %}
                     {% set paid_amount = booking.payments|sum(attribute='amount') if booking.payments else 0 %}
@@ -244,26 +249,46 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="voucher-footer text-center mt-4">
-                    <div class="mb-3">
-                        <h6><strong>Arabi Travel Bank</strong></h6>
-                        <p>Account USD= 9070-142464-510<br>
-                        ------------------</p>
+                <div class="voucher-footer mt-4" style="background-color: #f8f9fa; padding: 20px; border-top: 3px solid #000080;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="bank-details mb-3">
+                                <h6 style="color: #000080; font-weight: bold; margin-bottom: 10px;">Banking Information</h6>
+                                <div class="mb-2">
+                                    <strong style="color: #FF8C00;">Arabi Travel Bank</strong><br>
+                                    <span style="color: #000080;">Account USD= 9070-142464-510</span>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <strong style="color: #FF8C00;">Bank Of Palestine</strong><br>
+                                    <span style="color: #000080;">Branch Name: Ramallah Branch</span><br>
+                                    <span style="color: #000080;">0458/2220908/001/3000/000</span>
+                                </div>
+                                
+                                <div class="mb-2">
+                                    <strong style="color: #000080;">Bank Details:</strong><br>
+                                    <span style="color: #000080;">Bank Name: Arab Bank, Acct. No.: 142464</span>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <h6><strong>Bank Of Palestine</strong></h6>
-                        <p>Branch Name: Ramallah Branch<br>
-                        0458/2220908/001/3000/000</p>
-                        
-                        <h6><strong>Thank You</strong></h6>
+                        <div class="col-md-6 text-end">
+                            <div class="company-details">
+                                <h6 style="color: #000080; font-weight: bold; margin-bottom: 10px;">Contact Information</h6>
+                                <div style="color: #000080; line-height: 1.6;">
+                                    <div class="mb-1">📧 sales@arabtravel.ps</div>
+                                    <div class="mb-1">🌐 www.arabtravel.ps</div>
+                                    <div class="mb-1">📞 +97022956640</div>
+                                    <div class="mb-3">📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <hr>
-                    
-                    <p><strong>Bank Details:</strong> Bank Name: Arab Bank, Acct. No.: 142464</p>
-                    <p>www.arabtravel.ps • sales@arabtravel.ps • +97022956640</p>
-                    <h6><strong>Arabi Travel</strong></h6>
-                    <p>Alersal St, zakat Bld, Ramallah, P.OBOX:27</p>
-                    <p><strong>Thank you for booking with Arabi Travel</strong></p>
+                    <div class="text-center mt-3 pt-3" style="border-top: 2px solid #000080;">
+                        <h5 style="color: #000080; font-weight: bold; margin-bottom: 5px;">ARABI TRAVEL</h5>
+                        <p style="color: #FF8C00; font-weight: bold; margin-bottom: 0;">Thank you for booking with Arabi Travel</p>
+                    </div>
                 </div>
             </div>
         </div>
