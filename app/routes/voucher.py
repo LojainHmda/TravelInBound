@@ -4,7 +4,7 @@ Voucher generation routes
 
 from flask import Blueprint, render_template, request, jsonify, send_file, flash, redirect, url_for
 from flask_login import login_required, current_user
-from app.services.voucher_generator import voucher_generator
+from app.services.clean_voucher_generator import clean_voucher_generator
 from app.models import Booking
 import tempfile
 import os
