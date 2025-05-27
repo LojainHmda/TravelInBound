@@ -101,47 +101,36 @@ class VoucherGenerator:
         return buffer
 
     def _build_header(self, booking):
-        """Build clean header with logo at top"""
+        """Build header section matching the preview exactly"""
         story = []
         
-        # Logo and company name at top with dark blue font
-        logo_header = Paragraph(
-            '<b><font size="18" color="#000080">ARABI TRAVEL</font></b><br/>'
-            '<font size="10" color="#000080">SINCE 1964</font>',
-            ParagraphStyle(
-                'LogoHeader',
-                alignment=TA_CENTER,
-                spaceAfter=20,
-                spaceBefore=10
-            )
-        )
-        story.append(logo_header)
-        
-        # Simple invoice details
-        invoice_data = [
-            [f"INVOICE: #{booking.reference_number}", "", "Contact Information"],
-            [f"Booking ID: {booking.reference_number}", "", "+97022956640"],
-            [f"Booking Date: {booking.created_at.strftime('%d/%m/%Y')}", "", "info@arabtravel.ps"],
-            [f"Due Date: {booking.created_at.strftime('%d/%m/%Y')}", "", "www.arabtravel.ps"],
-            [f"GDS PNR: {booking.reference_number[:6]} {booking.reference_number[6:] if len(booking.reference_number) > 6 else ''}", "", ""]
+        # Header Section (same as preview)
+        header_data = [
+            ["Customer:", "Voucher Details:"],
+            [f"{booking.requester.username if booking.requester else 'N/A'}", f"Voucher Number: {booking.reference_number}"],
+            [f"{booking.requester.email if booking.requester else 'N/A'}", f"Booking Date: {booking.created_at.strftime('%d %b %Y')}"],
+            ["", f"Total Pax: {len(booking.service_items) if booking.service_items else 1:02d}"],
+            ["", "Status: Confirmed"]
         ]
         
-        invoice_table = Table(invoice_data, colWidths=[3*inch, 1*inch, 2.5*inch])
-        invoice_table.setStyle(TableStyle([
+        header_table = Table(header_data, colWidths=[3.25*inch, 3.25*inch])
+        header_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 14),
-            ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),  # "Customer:" header
+            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),  # "Voucher Details:" header
+            ('FONTSIZE', (0, 0), (1, 0), 11),
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.grey),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),  # Customer name
+            ('FONTSIZE', (0, 1), (0, 1), 14),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.lightgrey),
         ]))
         
-        story.append(invoice_table)
+        story.append(header_table)
         story.append(Spacer(1, 20))
         
         # Customer info and booking summary section
@@ -234,28 +223,74 @@ class VoucherGenerator:
         return story
 
     def _build_service_details(self, booking):
-        """Build detailed service information matching voucher format"""
+        """Build service details table matching preview exactly"""
         story = []
         
         if not booking.service_items:
             return story
         
-        # Group services by type for better organization
-        flight_services = [s for s in booking.service_items if s.service_type == 'FLIGHT']
-        hotel_services = [s for s in booking.service_items if s.service_type == 'HOTEL']
-        other_services = [s for s in booking.service_items if s.service_type not in ['FLIGHT', 'HOTEL']]
+        # Service Details Table (exactly like preview)
+        service_data = [
+            ['Service', 'Description', 'Dates', 'Status', 'Amount']
+        ]
         
-        # Build Flight Details Section
-        if flight_services:
-            story.extend(self._build_flight_details(flight_services))
-        
-        # Build Hotel Details Section  
-        if hotel_services:
-            story.extend(self._build_hotel_details(hotel_services))
+        for item in booking.service_items:
+            # Service type with icon
+            service_icon = {
+                'FLIGHT': '✈',
+                'HOTEL': '🏨',
+                'TRANSPORT': '🚗',
+                'VISA': '📋',
+                'INSURANCE': '🛡'
+            }.get(item.service_type, '📋')
             
-        # Build Other Services Section
-        if other_services:
-            story.extend(self._build_other_services(other_services))
+            service_name = f"{service_icon} {item.service_type}"
+            dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
+            amount = f"${item.amount:.2f}" if item.amount else "$0.00"
+            
+            # Status matching preview
+            if item.status == 'COMPLETED':
+                status = "Confirmed"
+            elif item.status == 'IN_PROGRESS':
+                status = "Processing"
+            else:
+                status = "Pending"
+            
+            service_data.append([
+                service_name,
+                item.description or "N/A",
+                dates,
+                status,
+                amount
+            ])
+        
+        service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
+        service_table.setStyle(TableStyle([
+            # Header row (light grey background like preview)
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            
+            # Data rows
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            
+            # Grid and alignment
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (4, 0), (4, -1), 'RIGHT'),  # Amount column right-aligned
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        
+        story.append(service_table)
+        story.append(Spacer(1, 20))
         
         return story
 
@@ -431,36 +466,74 @@ class VoucherGenerator:
         return story
 
     def _build_payment_details(self, booking):
-        """Build payment summary section"""
+        """Build payment summary section matching preview"""
         story = []
         
-        story.append(Paragraph("Fare Details", self.styles['SectionHeader']))
+        # Travel Information section (matching preview)
+        travel_info = Paragraph(
+            '<b>Travel Information</b><br/><br/>'
+            'Please keep this voucher with you during travel. Present it at check-in and to service providers as confirmation of your booking.',
+            ParagraphStyle(
+                'TravelInfo',
+                alignment=TA_LEFT,
+                spaceAfter=15,
+                spaceBefore=15,
+                backColor=colors.lightgrey,
+                borderWidth=0.5,
+                borderColor=colors.lightgrey,
+                borderPadding=12,
+                fontSize=10
+            )
+        )
+        story.append(travel_info)
         
-        # Calculate totals
+        # Payment Summary (matching preview layout)
         total_amount = booking.total_amount or 0
-        paid_amount = sum(payment.amount for payment in booking.payments) if booking.payments else 0
+        paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
         balance = total_amount - paid_amount
         
+        # Payment summary as a small table matching the preview card
         payment_data = [
-            ["Total Amount", f"$ {total_amount:.2f}"],
-            ["Amount Paid", f"$ {paid_amount:.2f}"],
-            ["Balance Outstanding", f"$ {balance:.2f}"]
+            ["Payment Summary", ""],
+            ["Total Amount:", f"${total_amount:.2f}"],
+            ["Amount Paid:", f"${paid_amount:.2f}"],
+            ["", ""],
+            ["Balance Due:", f"${balance:.2f}"]
         ]
         
-        payment_table = Table(payment_data, colWidths=[4*inch, 2*inch])
+        payment_table = Table(payment_data, colWidths=[2*inch, 1.5*inch])
         payment_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 20),
-            ('LEFTPADDING', (1, 0), (1, -1), 20),
-            ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8F8F8')),
+            # Header
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (1, 0), 11),
+            ('BACKGROUND', (0, 0), (1, 0), colors.blue),  # Primary blue
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
+            ('SPAN', (0, 0), (1, 0)),  # Span across both columns
+            
+            # Data rows
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+            
+            # Balance Due row
+            ('FONTNAME', (0, 4), (1, 4), 'Helvetica-Bold'),
+            ('TEXTCOLOR', (0, 4), (1, 4), colors.blue),
+            
+            # Borders
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('LINEAFTER', (0, 1), (0, 3), 0.5, colors.lightgrey),
+            ('LINEABOVE', (0, 4), (1, 4), 1, colors.lightgrey),
+            
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         ]))
         
         story.append(payment_table)
-        story.append(Spacer(1, 30))
+        story.append(Spacer(1, 20))
         
         return story
 
