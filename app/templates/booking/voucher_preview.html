@@ -79,9 +79,9 @@
                 {% set flight_services = booking.service_items|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
                 {% if flight_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Flight 1 Details</h5>
+                    <h5 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Flight 1 Details</h5>
                     
-                    <h6 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Passenger Details</h6>
+                    <h6 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Passenger Details</h6>
                     
                     <h6><strong>Travellers ({{ flight_services|length }})</strong></h6>
                     
@@ -108,7 +108,7 @@
                         </table>
                     </div>
 
-                    <h6 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Flight Details</h6>
+                    <h6 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Flight Details</h6>
                     
                     {% for service in flight_services %}
                     <div class="flight-segment mb-3">
@@ -148,7 +148,7 @@
                 {% set hotel_services = booking.service_items|selectattr('service_type', 'equalto', 'HOTEL')|list %}
                 {% if hotel_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Hotel Details</h5>
+                    <h5 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Hotel Details</h5>
                     
                     {% for service in hotel_services %}
                     <div class="hotel-details mb-4">
@@ -210,7 +210,7 @@
                 {% set other_services = booking.service_items|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
                 {% if other_services %}
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Additional Services</h5>
+                    <h5 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Additional Services</h5>
                     
                     {% for service in other_services %}
                     <div class="service-item mb-3">
@@ -225,7 +225,7 @@
 
                 <!-- Payment Summary -->
                 <div class="voucher-section mb-4">
-                    <h5 class="section-header" style="color: #000080; padding: 10px 0; margin-bottom: 15px; font-weight: bold; border-bottom: 2px solid #000080;">Fare Details</h5>
+                    <h5 class="section-header" style="color: #666666; padding: 10px; margin-bottom: 15px; font-weight: bold; background-color: #F8F8F8; border: 1px solid #E0E0E0;">Fare Details</h5>
                     
                     {% set total_amount = booking.total_amount or 0 %}
                     {% set paid_amount = booking.payments|sum(attribute='amount') if booking.payments else 0 %}

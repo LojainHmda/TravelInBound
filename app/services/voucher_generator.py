@@ -104,10 +104,10 @@ class VoucherGenerator:
         """Build clean header with logo at top"""
         story = []
         
-        # Logo and company name at top
+        # Logo and company name at top with dark blue font
         logo_header = Paragraph(
             '<b><font size="18" color="#000080">ARABI TRAVEL</font></b><br/>'
-            '<font size="10" color="#FF8C00">SINCE 1964</font>',
+            '<font size="10" color="#000080">SINCE 1964</font>',
             ParagraphStyle(
                 'LogoHeader',
                 alignment=TA_CENTER,
@@ -465,37 +465,51 @@ class VoucherGenerator:
         return story
 
     def _build_footer(self):
-        """Build footer with bank details matching voucher format"""
+        """Build clean and neat footer"""
         story = []
         
-        # Bank details section
-        bank_info = """
-        <para align=center>
-        <b><font color="#FF8C00">Arabi Travel Bank</font></b><br/>
-        <font color="#000080">Account USD= 9070-142464-510</font><br/>
-        <font color="#000080">------------------</font><br/><br/>
-        <b><font color="#FF8C00">Bank Of Palestine</font></b><br/>
-        <font color="#000080">Branch Name: Ramallah Branch</font><br/>
-        <font color="#000080">0458/2220908/001/3000/000</font><br/><br/>
-        <b><font color="#000080">Bank Details:</font></b><br/>
-        <font color="#000080">Bank Name: Arab Bank, Acct. No.: 142464</font><br/><br/>
-        </para>
-        """
+        # Clean footer with two columns - banking and contact info
+        footer_data = [
+            ["Banking Information", "Contact Information"],
+            ["Arabi Travel Bank", "sales@arabtravel.ps"],
+            ["Account USD= 9070-142464-510", "www.arabtravel.ps"],
+            ["", "+97022956640"],
+            ["Bank Of Palestine", ""],
+            ["Branch Name: Ramallah Branch", "Alersal St, zakat Bld"],
+            ["0458/2220908/001/3000/000", "Ramallah, P.OBOX:27"],
+            ["", ""],
+            ["Bank Details:", ""],
+            ["Bank Name: Arab Bank, Acct. No.: 142464", ""]
+        ]
         
-        story.append(Paragraph(bank_info, self.styles['Normal']))
-        story.append(Spacer(1, 10))
+        footer_table = Table(footer_data, colWidths=[3.25*inch, 3.25*inch])
+        footer_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # Headers
+            ('FONTSIZE', (0, 0), (1, 0), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LINEBELOW', (0, 0), (1, 0), 1, colors.lightgrey),  # Underline headers
+        ]))
         
-        # Company footer
-        company_footer = """
-        <para align=center>
-        <font color="#000080">📧 sales@arabtravel.ps • 🌐 www.arabtravel.ps • 📞 +97022956640</font><br/>
-        <b><font color="#000080">ARABI TRAVEL</font></b><br/>
-        <font color="#000080">📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27</font><br/>
-        <b><font color="#FF8C00">Thank you for booking with Arabi Travel</font></b>
-        </para>
-        """
+        story.append(footer_table)
+        story.append(Spacer(1, 15))
         
-        story.append(Paragraph(company_footer, self.styles['Normal']))
+        # Thank you message
+        thank_you = Paragraph(
+            '<b><font color="#000080">ARABI TRAVEL</font></b><br/>'
+            '<font color="#000080">Thank you for booking with Arabi Travel</font>',
+            ParagraphStyle(
+                'ThankYou',
+                alignment=TA_CENTER,
+                fontSize=10,
+                spaceAfter=10
+            )
+        )
+        story.append(thank_you)
         
         return story
 
