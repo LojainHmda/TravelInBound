@@ -506,7 +506,7 @@ class VoucherGenerator:
             # Header
             ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (1, 0), 11),
-            ('BACKGROUND', (0, 0), (1, 0), colors.blue),  # Primary blue
+            ('BACKGROUND', (0, 0), (1, 0), colors.darkblue),  # Primary blue
             ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
             ('SPAN', (0, 0), (1, 0)),  # Span across both columns
             
@@ -518,7 +518,7 @@ class VoucherGenerator:
             
             # Balance Due row
             ('FONTNAME', (0, 4), (1, 4), 'Helvetica-Bold'),
-            ('TEXTCOLOR', (0, 4), (1, 4), colors.blue),
+            ('TEXTCOLOR', (0, 4), (1, 4), colors.darkblue),
             
             # Borders
             ('BOX', (0, 0), (-1, -1), 0.5, colors.lightgrey),
