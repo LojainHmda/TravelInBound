@@ -45,19 +45,16 @@ class VoucherGenerator:
             spaceAfter=8
         ))
         
-        # Section header style
+        # Clean grey section header style
         self.styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=self.styles['Heading2'],
-            fontSize=14,
-            textColor=colors.HexColor('#000080'),
+            fontSize=12,
+            textColor=colors.HexColor('#666666'),
             fontName='Helvetica-Bold',
             alignment=TA_LEFT,
-            spaceAfter=10,
-            spaceBefore=5,
-            borderWidth=0,
-            borderColor=colors.HexColor('#000080'),
-            borderPadding=0
+            spaceAfter=8,
+            spaceBefore=5
         ))
 
     def generate_voucher(self, booking_id: int) -> BytesIO:
@@ -104,56 +101,47 @@ class VoucherGenerator:
         return buffer
 
     def _build_header(self, booking):
-        """Build the header section matching the voucher format with logo"""
+        """Build clean header with logo at top"""
         story = []
         
-        # Clean header with dark blue background and yellow text
-        invoice_header_data = [
-            [
-                f"INVOICE: #{booking.reference_number}",
-                "",
-                "ARABI TRAVEL"
-            ],
-            [
-                f"Booking ID: {booking.reference_number}",
-                "",
-                "+97022956640"
-            ],
-            [
-                f"Booking Date: {booking.created_at.strftime('%d/%m/%Y')}",
-                "",
-                "info@arabtravel.ps"
-            ],
-            [
-                f"Due Date: {booking.created_at.strftime('%d/%m/%Y')}",
-                "",
-                "www.arabtravel.ps"
-            ],
-            [
-                f"GDS PNR: {booking.reference_number[:6]} {booking.reference_number[6:] if len(booking.reference_number) > 6 else ''}",
-                "",
-                ""
-            ]
+        # Logo and company name at top
+        logo_header = Paragraph(
+            '<b><font size="18" color="#000080">ARABI TRAVEL</font></b><br/>'
+            '<font size="10" color="#FF8C00">SINCE 1964</font>',
+            ParagraphStyle(
+                'LogoHeader',
+                alignment=TA_CENTER,
+                spaceAfter=20,
+                spaceBefore=10
+            )
+        )
+        story.append(logo_header)
+        
+        # Simple invoice details
+        invoice_data = [
+            [f"INVOICE: #{booking.reference_number}", "", "Contact Information"],
+            [f"Booking ID: {booking.reference_number}", "", "+97022956640"],
+            [f"Booking Date: {booking.created_at.strftime('%d/%m/%Y')}", "", "info@arabtravel.ps"],
+            [f"Due Date: {booking.created_at.strftime('%d/%m/%Y')}", "", "www.arabtravel.ps"],
+            [f"GDS PNR: {booking.reference_number[:6]} {booking.reference_number[6:] if len(booking.reference_number) > 6 else ''}", "", ""]
         ]
         
-        invoice_header_table = Table(invoice_header_data, colWidths=[3*inch, 1*inch, 2.5*inch])
-        invoice_header_table.setStyle(TableStyle([
+        invoice_table = Table(invoice_data, colWidths=[3*inch, 1*inch, 2.5*inch])
+        invoice_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 16),
+            ('FONTSIZE', (0, 0), (0, 0), 14),
             ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (2, 0), (2, 0), 14),
             ('ALIGN', (0, 0), (0, -1), 'LEFT'),
             ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#000080')),  # Dark blue background
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#FFC107')),  # Yellow text
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.grey),
         ]))
         
-        story.append(invoice_header_table)
+        story.append(invoice_table)
         story.append(Spacer(1, 20))
         
         # Customer info and booking summary section
@@ -467,8 +455,8 @@ class VoucherGenerator:
             ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('RIGHTPADDING', (0, 0), (-1, -1), 20),
             ('LEFTPADDING', (1, 0), (1, -1), 20),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F0F8FF')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8F8F8')),
         ]))
         
         story.append(payment_table)
