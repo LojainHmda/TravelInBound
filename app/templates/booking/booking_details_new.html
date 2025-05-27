@@ -409,6 +409,10 @@
                 <button type="button" class="btn action-arrow-button" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
                     <i class="fas fa-edit me-1"></i> Update Status
                 </button>
+
+                <button type="button" class="btn action-arrow-button" onclick="generateVoucher({{ booking.id }})">
+                    <i class="fas fa-file-contract me-1"></i> Issue Voucher
+                </button>
                 {% endif %}
             </div>
 

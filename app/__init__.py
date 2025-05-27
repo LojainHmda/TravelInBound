@@ -78,6 +78,10 @@ def create_app():
         from app.routes.confirmation import confirmation_bp
         app.register_blueprint(confirmation_bp)
         
+        # Register voucher blueprint
+        from app.routes.voucher import voucher_bp
+        app.register_blueprint(voucher_bp)
+        
         # Register API blueprint
         from app.routes.api import api_bp
         app.register_blueprint(api_bp)
