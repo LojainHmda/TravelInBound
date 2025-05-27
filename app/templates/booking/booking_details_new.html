@@ -1437,11 +1437,16 @@ async function generateVoucher(bookingId) {
         button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating...';
         button.disabled = true;
 
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value || '';
+
         // Call the voucher generation endpoint
         const response = await fetch(`/booking/${bookingId}/voucher`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCsrfToken()
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
             }
         });
 
