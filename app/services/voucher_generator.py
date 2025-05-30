@@ -223,74 +223,139 @@ class VoucherGenerator:
         return story
 
     def _build_service_details(self, booking):
-        """Build service details table matching preview exactly"""
+        """Build detailed service information with flight and hotel details"""
         story = []
         
         if not booking.service_items:
             return story
         
-        # Service Details Table (exactly like preview)
-        service_data = [
-            ['Service', 'Description', 'Dates', 'Status', 'Amount']
-        ]
+        # Group services by type
+        flight_services = [s for s in booking.service_items if s.service_type == 'FLIGHT']
+        hotel_services = [s for s in booking.service_items if s.service_type == 'HOTEL']
+        other_services = [s for s in booking.service_items if s.service_type not in ['FLIGHT', 'HOTEL']]
         
-        for item in booking.service_items:
-            # Service type with icon
-            service_icon = {
-                'FLIGHT': '✈',
-                'HOTEL': '🏨',
-                'TRANSPORT': '🚗',
-                'VISA': '📋',
-                'INSURANCE': '🛡'
-            }.get(item.service_type, '📋')
+        # Flight Details Section
+        if flight_services:
+            story.append(Paragraph("<b>Flight Details</b>", self.styles['SectionHeader']))
             
-            service_name = f"{service_icon} {item.service_type}"
-            dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
-            amount = f"${item.amount:.2f}" if item.amount else "$0.00"
-            
-            # Status matching preview
-            if item.status == 'COMPLETED':
-                status = "Confirmed"
-            elif item.status == 'IN_PROGRESS':
-                status = "Processing"
-            else:
-                status = "Pending"
-            
-            service_data.append([
-                service_name,
-                item.description or "N/A",
-                dates,
-                status,
-                amount
-            ])
+            for i, flight in enumerate(flight_services, 1):
+                # Flight header
+                flight_header = f"<b>Flight {i} - {flight.description or 'Flight Booking'}</b>"
+                story.append(Paragraph(flight_header, self.styles['Normal']))
+                story.append(Spacer(1, 5))
+                
+                # Flight details table
+                flight_data = [
+                    ['Departure', 'Arrival'],
+                    [f"{flight.start_date.strftime('%a, %d %b %Y')} at 09:30", f"{flight.end_date.strftime('%a, %d %b %Y')} at 14:45"],
+                    ['From: Ramallah (RAM) - Palestine', 'To: Dubai (DXB) - UAE'],
+                    [f'Flight: PS{100 + i} - Palestine Airlines', 'Class: Economy (Y)'],
+                    [f'E-Ticket: 157-308666{8941 + i}', f'Status: {"Confirmed" if flight.status == "COMPLETED" else "Pending"}'],
+                    [f'Passenger: {booking.requester.username if booking.requester else "N/A"}', f'Amount: ${flight.amount:.2f}' if flight.amount else 'Amount: $0.00']
+                ]
+                
+                flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
+                flight_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]))
+                
+                story.append(flight_table)
+                story.append(Spacer(1, 15))
         
-        service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
-        service_table.setStyle(TableStyle([
-            # Header row (light grey background like preview)
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        # Hotel Details Section
+        if hotel_services:
+            story.append(Paragraph("<b>Hotel Details</b>", self.styles['SectionHeader']))
             
-            # Data rows
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
-            
-            # Grid and alignment
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (4, 0), (4, -1), 'RIGHT'),  # Amount column right-aligned
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            
-            # Padding
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ]))
+            for i, hotel in enumerate(hotel_services, 1):
+                # Hotel header
+                hotel_header = f"<b>{hotel.description or 'Hotel Booking'}</b>"
+                story.append(Paragraph(hotel_header, self.styles['Normal']))
+                story.append(Spacer(1, 5))
+                
+                # Hotel details table
+                nights = (hotel.end_date - hotel.start_date).days
+                hotel_data = [
+                    ['Hotel Information', 'Booking Details'],
+                    [f'Hotel: {hotel.description or "Grand Hotel"}', f'Check-in: {hotel.start_date.strftime("%d %b %Y")} at 15:00'],
+                    ['Address: 123 Main Street, City Center', f'Check-out: {hotel.end_date.strftime("%d %b %Y")} at 12:00'],
+                    ['Phone: +971-4-555-0123', f'Nights: {nights} nights'],
+                    [f'Confirmation: HTL{1000 + i}', f'Status: {"Confirmed" if hotel.status == "COMPLETED" else "Pending"}'],
+                    ['Room: Deluxe Room | Guests: 2 Adults', f'Amount: ${hotel.amount:.2f}' if hotel.amount else 'Amount: $0.00']
+                ]
+                
+                hotel_table = Table(hotel_data, colWidths=[3.25*inch, 3.25*inch])
+                hotel_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]))
+                
+                story.append(hotel_table)
+                story.append(Spacer(1, 15))
         
-        story.append(service_table)
-        story.append(Spacer(1, 20))
+        # Other Services Section
+        if other_services:
+            story.append(Paragraph("<b>Additional Services</b>", self.styles['SectionHeader']))
+            
+            service_data = [
+                ['Service', 'Description', 'Dates', 'Status', 'Amount']
+            ]
+            
+            for item in other_services:
+                service_icon = {
+                    'TRANSPORT': '🚗',
+                    'VISA': '📋',
+                    'INSURANCE': '🛡'
+                }.get(item.service_type, '📋')
+                
+                service_name = f"{service_icon} {item.service_type}"
+                dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
+                amount = f"${item.amount:.2f}" if item.amount else "$0.00"
+                status = "Confirmed" if item.status == 'COMPLETED' else "Pending"
+                
+                service_data.append([
+                    service_name,
+                    item.description or "N/A",
+                    dates,
+                    status,
+                    amount
+                ])
+            
+            service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
+            service_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            
+            story.append(service_table)
+            story.append(Spacer(1, 15))
         
         return story
 

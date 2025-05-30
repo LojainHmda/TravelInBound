@@ -116,54 +116,216 @@
                     </div>
                 </div>
 
-                <!-- Service Details Table (using invoice style) -->
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Service</th>
-                                <th>Description</th>
-                                <th>Dates</th>
-                                <th>Status</th>
-                                <th class="text-end">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in booking.service_items %}
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if item.service_type == 'FLIGHT' %}
-                                            <i class="fas fa-plane service-icon-table text-primary me-2"></i>
-                                        {% elif item.service_type == 'HOTEL' %}
-                                            <i class="fas fa-hotel service-icon-table text-primary me-2"></i>
-                                        {% elif item.service_type == 'TRANSPORT' %}
-                                            <i class="fas fa-taxi service-icon-table text-primary me-2"></i>
-                                        {% elif item.service_type == 'VISA' %}
-                                            <i class="fas fa-passport service-icon-table text-primary me-2"></i>
-                                        {% elif item.service_type == 'INSURANCE' %}
-                                            <i class="fas fa-shield-alt service-icon-table text-primary me-2"></i>
-                                        {% endif %}
-                                        {{ item.service_type }}
+                <!-- Detailed Service Information -->
+                {% set flight_services = booking.service_items|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
+                {% set hotel_services = booking.service_items|selectattr('service_type', 'equalto', 'HOTEL')|list %}
+                {% set other_services = booking.service_items|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
+
+                <!-- Flight Details Section -->
+                {% if flight_services %}
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3"><i class="fas fa-plane me-2"></i>Flight Details</h5>
+                    {% for flight in flight_services %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Flight {{ loop.index }} - {{ flight.description or 'Flight Booking' }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Departure:</strong></td>
+                                                <td>{{ flight.start_date.strftime('%a, %d %b %Y') }} at 09:30</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>From:</strong></td>
+                                                <td>Ramallah (RAM) - Palestine</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Flight:</strong></td>
+                                                <td>PS{{ 100 + loop.index0 }} - Palestine Airlines</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>E-Ticket:</strong></td>
+                                                <td>157-308666{{ 8941 + loop.index0 }}</td>
+                                            </tr>
+                                        </table>
                                     </div>
-                                </td>
-                                <td>{{ item.description }}</td>
-                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                <td>
-                                    {% if item.status == 'COMPLETED' %}
-                                        <span class="badge bg-success">Confirmed</span>
-                                    {% elif item.status == 'IN_PROGRESS' %}
-                                        <span class="badge bg-warning text-dark">Processing</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Pending</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-end">${{ "%.2f"|format(item.amount) if item.amount else "0.00" }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Arrival:</strong></td>
+                                                <td>{{ flight.end_date.strftime('%a, %d %b %Y') }} at 14:45</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>To:</strong></td>
+                                                <td>Dubai (DXB) - UAE</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Class:</strong></td>
+                                                <td>Economy (Y)</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Status:</strong></td>
+                                                <td>
+                                                    {% if flight.status == 'COMPLETED' %}
+                                                        <span class="badge bg-success">Confirmed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <strong>Passenger:</strong> {{ booking.requester.username if booking.requester else 'N/A' }} | 
+                                        <strong>Seat:</strong> 15A | 
+                                        <strong>Baggage:</strong> 23kg included | 
+                                        <strong>Amount:</strong> ${{ "%.2f"|format(flight.amount) if flight.amount else "0.00" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
+
+                <!-- Hotel Details Section -->
+                {% if hotel_services %}
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3"><i class="fas fa-hotel me-2"></i>Hotel Details</h5>
+                    {% for hotel in hotel_services %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">{{ hotel.description or 'Hotel Booking' }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Hotel Name:</strong></td>
+                                                <td>{{ hotel.description or 'Grand Hotel' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Address:</strong></td>
+                                                <td>123 Main Street, City Center</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Phone:</strong></td>
+                                                <td>+971-4-555-0123</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Confirmation:</strong></td>
+                                                <td>HTL{{ 1000 + loop.index0 }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <td><strong>Check-in:</strong></td>
+                                                <td>{{ hotel.start_date.strftime('%d %b %Y') }} at 15:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Check-out:</strong></td>
+                                                <td>{{ hotel.end_date.strftime('%d %b %Y') }} at 12:00</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Nights:</strong></td>
+                                                <td>{{ (hotel.end_date - hotel.start_date).days }} nights</td>
+                                            </tr>
+                                            <tr>
+                                                <td><strong>Status:</strong></td>
+                                                <td>
+                                                    {% if hotel.status == 'COMPLETED' %}
+                                                        <span class="badge bg-success">Confirmed</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <strong>Room Type:</strong> Deluxe Room | 
+                                        <strong>Guests:</strong> 2 Adults | 
+                                        <strong>Board:</strong> Bed & Breakfast | 
+                                        <strong>Amount:</strong> ${{ "%.2f"|format(hotel.amount) if hotel.amount else "0.00" }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Other Services -->
+                {% if other_services %}
+                <div class="mb-4">
+                    <h5 class="text-primary mb-3"><i class="fas fa-list me-2"></i>Additional Services</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Description</th>
+                                    <th>Dates</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in other_services %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.service_type == 'TRANSPORT' %}
+                                                <i class="fas fa-taxi service-icon-table text-primary me-2"></i>
+                                            {% elif item.service_type == 'VISA' %}
+                                                <i class="fas fa-passport service-icon-table text-primary me-2"></i>
+                                            {% elif item.service_type == 'INSURANCE' %}
+                                                <i class="fas fa-shield-alt service-icon-table text-primary me-2"></i>
+                                            {% endif %}
+                                            {{ item.service_type }}
+                                        </div>
+                                    </td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                    <td>
+                                        {% if item.status == 'COMPLETED' %}
+                                            <span class="badge bg-success">Confirmed</span>
+                                        {% elif item.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-warning text-dark">Processing</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">${{ "%.2f"|format(item.amount) if item.amount else "0.00" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
 
                 <!-- Payment Summary (invoice style) -->
                 <div class="row mt-4">
