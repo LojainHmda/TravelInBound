@@ -143,26 +143,24 @@
                                     </div>
                                     <div class="col-md-4">
                                         <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Booking Summary</h5>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-borderless mb-0">
-                                                <tr>
-                                                    <td class="fw-bold ps-0">Services:</td>
-                                                    <td class="text-end">{{ booking.service_items|length if booking.service_items else 0 }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-bold ps-0">Travel Date:</td>
-                                                    <td class="text-end">{{ booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A' }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-bold ps-0">Total Amount:</td>
-                                                    <td class="text-end text-primary fw-bold">${{ "%.2f"|format(booking.total_amount or 0) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="fw-bold ps-0">Status:</td>
-                                                    <td class="text-end"><span class="badge bg-success">Confirmed</span></td>
-                                                </tr>
-                                            </table>
-                                        </div>
+                                        <table class="table table-sm table-borderless mb-0">
+                                            <tr>
+                                                <td class="fw-bold">Services:</td>
+                                                <td>{{ booking.service_items|length if booking.service_items else 0 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Travel Date:</td>
+                                                <td>{{ booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Total Amount:</td>
+                                                <td class="text-primary fw-bold">${{ "%.2f"|format(booking.total_amount or 0) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Status:</td>
+                                                <td><span class="badge bg-success">Confirmed</span></td>
+                                            </tr>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
