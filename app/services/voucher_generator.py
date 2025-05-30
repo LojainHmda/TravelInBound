@@ -170,19 +170,22 @@ class VoucherGenerator:
         story.append(header_table)
         story.append(Spacer(1, 20))
         
-        # Clean customer and booking information table like invoice design
-        # Get correct customer data from booking.customer relationship
+        # Get actual customer data - prioritize booking.customer over booking.requester
         customer_name = "N/A"
         customer_email = "N/A" 
         customer_phone = "N/A"
         
+        # Check if booking has a customer relationship first
         if hasattr(booking, 'customer') and booking.customer:
             customer_name = booking.customer.name
             customer_email = booking.customer.email
-            customer_phone = getattr(booking.customer, 'phone', 'N/A')
-        elif booking.requester:
-            customer_name = booking.requester.username
-            customer_email = booking.requester.email
+            customer_phone = getattr(booking.customer, 'phone', 'N/A') if hasattr(booking.customer, 'phone') else 'N/A'
+        else:
+            # Fallback to requester data only if no customer is linked
+            if booking.requester:
+                customer_name = booking.requester.username
+                customer_email = booking.requester.email
+                customer_phone = 'N/A'
         
         # Clean invoice-style table
         customer_data = [
