@@ -88,7 +88,7 @@
                         <div class="d-flex align-items-center">
                             <div class="logo-container me-4" style="width: 80px; height: 80px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
                                 <!-- Arabi Travel Logo -->
-                                <img src="{{ url_for('static', filename='images/logo-placeholder.svg') }}" alt="Arabi Travel" style="width: 70px; height: 70px; object-fit: contain;">
+                                <img src="{{ url_for('static', filename='images/arabi-travel-logo.png') }}" alt="Arabi Travel" style="width: 70px; height: 70px; object-fit: contain;">
                             </div>
                             <div>
                                 <h2 class="mb-1" style="color: white; font-weight: bold; font-size: 24px;">ARABI TRAVEL</h2>
@@ -107,36 +107,65 @@
                 </div>
             </div>
             <div class="card-body p-4">
-                <!-- Header Section with customer details -->
+                <!-- Customer Information Section -->
                 <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <h5 class="text-muted mb-1">Customer:</h5>
-                            <h4>{{ booking.requester.username if booking.requester else 'N/A' }}</h4>
-                            <p class="mb-0">{{ booking.requester.email if booking.requester else 'N/A' }}</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 text-md-end">
-                        <div class="mb-3">
-                            <h5 class="text-muted mb-1">Voucher Details:</h5>
-                            <table class="ms-md-auto">
-                                <tr>
-                                    <td class="pe-3"><strong>Voucher Number:</strong></td>
-                                    <td>{{ booking.reference_number }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-3"><strong>Booking Date:</strong></td>
-                                    <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-3"><strong>Total Pax:</strong></td>
-                                    <td>{{ '%02d'|format(booking.service_items|length if booking.service_items else 1) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-3"><strong>Status:</strong></td>
-                                    <td><span class="badge bg-success">Confirmed</span></td>
-                                </tr>
-                            </table>
+                    <div class="col-md-12">
+                        <div class="card bg-light border-0">
+                            <div class="card-body p-3">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Passenger Information</h5>
+                                        {% if booking.customer %}
+                                            <h4 class="mb-2 text-dark">{{ booking.customer.name }}</h4>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p class="mb-1"><strong>Email:</strong> {{ booking.customer.email }}</p>
+                                                    {% if booking.customer.phone %}
+                                                        <p class="mb-1"><strong>Phone:</strong> {{ booking.customer.phone }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    {% if booking.customer.customer_type == 'Corporate' and booking.customer.company_name %}
+                                                        <p class="mb-1"><strong>Company:</strong> {{ booking.customer.company_name }}</p>
+                                                        {% if booking.customer.tax_number %}
+                                                            <p class="mb-1"><strong>Tax ID:</strong> {{ booking.customer.tax_number }}</p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                    {% if booking.customer.address %}
+                                                        <p class="mb-1"><strong>Address:</strong> {{ booking.customer.get_full_address() }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <h4 class="mb-2 text-dark">{{ booking.requester.username }}</h4>
+                                            <p class="mb-1"><strong>Email:</strong> {{ booking.requester.email }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Booking Summary</h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-borderless mb-0">
+                                                <tr>
+                                                    <td class="fw-bold ps-0">Services:</td>
+                                                    <td class="text-end">{{ booking.service_items|length if booking.service_items else 0 }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold ps-0">Travel Date:</td>
+                                                    <td class="text-end">{{ booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A' }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold ps-0">Total Amount:</td>
+                                                    <td class="text-end text-primary fw-bold">${{ "%.2f"|format(booking.total_amount or 0) }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold ps-0">Status:</td>
+                                                    <td class="text-end"><span class="badge bg-success">Confirmed</span></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

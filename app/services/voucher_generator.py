@@ -153,75 +153,52 @@ class VoucherGenerator:
         story.append(header_table)
         story.append(Spacer(1, 20))
         
-        # Customer and voucher details section
-        details_data = [
-            ["Customer:", "Voucher Details:"],
-            [f"{booking.requester.username if booking.requester else 'N/A'}", f"Voucher Number: {booking.reference_number}"],
-            [f"{booking.requester.email if booking.requester else 'N/A'}", f"Booking Date: {booking.created_at.strftime('%d %b %Y')}"],
-            ["", f"Total Pax: {len(booking.service_items) if booking.service_items else 1:02d}"],
+        # Customer information section
+        customer_header = Paragraph("<b>Passenger Information</b>", self.styles['SectionHeader'])
+        story.append(customer_header)
+        
+        # Get correct customer data
+        if hasattr(booking, 'customer') and booking.customer:
+            customer_name = booking.customer.name
+            customer_email = booking.customer.email
+            customer_phone = getattr(booking.customer, 'phone', None)
+        else:
+            customer_name = booking.requester.username if booking.requester else 'N/A'
+            customer_email = booking.requester.email if booking.requester else 'N/A'
+            customer_phone = None
+        
+        # Customer and booking details in clean format
+        customer_data = [
+            ["Passenger Information", "Booking Summary"],
+            [f"Name: {customer_name}", f"Services: {len(booking.service_items) if booking.service_items else 0}"],
+            [f"Email: {customer_email}", f"Travel Date: {booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A'}"],
+            [f"Phone: {customer_phone or 'N/A'}", f"Total Amount: ${booking.total_amount:.2f}" if booking.total_amount else "Total Amount: $0.00"],
             ["", "Status: Confirmed"]
         ]
         
-        details_table = Table(details_data, colWidths=[3.25*inch, 3.25*inch])
-        details_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+        customer_table = Table(customer_data, colWidths=[3.25*inch, 3.25*inch])
+        customer_table.setStyle(TableStyle([
+            # Headers
             ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (1, 0), 11),
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.grey),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (0, 1), 12),
+            ('TEXTCOLOR', (0, 0), (1, 0), colors.darkblue),
+            ('BACKGROUND', (0, 0), (1, 0), colors.lightgrey),
+            
+            # Content
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.lightgrey),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
         ]))
         
-        story.append(details_table)
+        story.append(customer_table)
         story.append(Spacer(1, 20))
-        
-        # Customer info and booking summary section
-        customer_name = booking.requester.username if booking.requester else "N/A"
-        customer_location = booking.requester.email if booking.requester else "N/A"
-        total_pax = len(booking.service_items) if booking.service_items else 1
-        start_date = booking.service_items[0].start_date.strftime('%d/%m/%Y') if booking.service_items else "N/A"
-        booked_by = booking.requester.username if booking.requester else "N/A"
-        
-        customer_header_data = [
-            [
-                f"{customer_name}",
-                "",
-                f"Total Pax: {total_pax:02d}"
-            ],
-            [
-                f"{customer_location}",
-                "",
-                f"Start Date: {start_date}"
-            ],
-            [
-                "",
-                "",
-                f"Booked By: {booked_by}"
-            ]
-        ]
-        
-        customer_header_table = Table(customer_header_data, colWidths=[3*inch, 1*inch, 2.5*inch])
-        customer_header_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 11),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 12),
-            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        
-        story.append(customer_header_table)
-        story.append(Spacer(1, 25))
+
         
         return story
 
