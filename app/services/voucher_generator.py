@@ -101,99 +101,110 @@ class VoucherGenerator:
         return buffer
 
     def _build_header(self, booking):
-        """Build professional header with Arabi Travel branding"""
+        """Build professional header with Arabi Travel branding and logo"""
+        from reportlab.lib.utils import ImageReader
+        import os
         story = []
         
-        # Professional Header with Company Branding
-        header_data = [
-            ["ARABI TRAVEL", "TRAVEL VOUCHER"],
-            ["SINCE 1964", f"#{booking.reference_number}"],
-            ["Professional Travel Services", f"Generated: {booking.created_at.strftime('%d %b %Y')}"]
-        ]
+        # Try to add logo if it exists
+        logo_path = "app/static/images/arabi-travel-logo.png"
         
-        header_table = Table(header_data, colWidths=[4*inch, 2.5*inch])
+        if os.path.exists(logo_path):
+            # Header with logo
+            logo = Image(logo_path, width=50, height=50)
+            
+            header_data = [
+                [logo, "ARABI TRAVEL", "TRAVEL VOUCHER"],
+                ["", "SINCE 1964", f"#{booking.reference_number}"],
+                ["", "Professional Travel Services", f"Generated: {booking.created_at.strftime('%d %b %Y')}"]
+            ]
+            
+            header_table = Table(header_data, colWidths=[0.8*inch, 3.2*inch, 2.5*inch])
+        else:
+            # Fallback header without logo
+            header_data = [
+                ["ARABI TRAVEL", "TRAVEL VOUCHER"],
+                ["SINCE 1964", f"#{booking.reference_number}"],
+                ["Professional Travel Services", f"Generated: {booking.created_at.strftime('%d %b %Y')}"]
+            ]
+            header_table = Table(header_data, colWidths=[4*inch, 2.5*inch])
+        
         header_table.setStyle(TableStyle([
             # Company branding
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 18),
-            ('TEXTCOLOR', (0, 0), (0, 0), colors.darkblue),
-            
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (0, 1), 10),
-            ('TEXTCOLOR', (0, 1), (0, 1), colors.orange),
-            
-            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
-            ('FONTSIZE', (0, 2), (0, 2), 9),
-            ('TEXTCOLOR', (0, 2), (0, 2), colors.grey),
-            
-            # Voucher details
             ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (1, 0), (1, 0), 14),
+            ('FONTSIZE', (1, 0), (1, 0), 18),
             ('TEXTCOLOR', (1, 0), (1, 0), colors.darkblue),
-            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
             
             ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (1, 1), (1, 1), 16),
+            ('FONTSIZE', (1, 1), (1, 1), 10),
             ('TEXTCOLOR', (1, 1), (1, 1), colors.orange),
-            ('ALIGN', (1, 1), (1, 1), 'RIGHT'),
             
             ('FONTNAME', (1, 2), (1, 2), 'Helvetica'),
             ('FONTSIZE', (1, 2), (1, 2), 9),
             ('TEXTCOLOR', (1, 2), (1, 2), colors.grey),
-            ('ALIGN', (1, 2), (1, 2), 'RIGHT'),
+            
+            # Voucher details
+            ('FONTNAME', (2, 0), (2, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (2, 0), (2, 0), 14),
+            ('TEXTCOLOR', (2, 0), (2, 0), colors.darkblue),
+            ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+            
+            ('FONTNAME', (2, 1), (2, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (2, 1), (2, 1), 16),
+            ('TEXTCOLOR', (2, 1), (2, 1), colors.orange),
+            ('ALIGN', (2, 1), (2, 1), 'RIGHT'),
+            
+            ('FONTNAME', (2, 2), (2, 2), 'Helvetica'),
+            ('FONTSIZE', (2, 2), (2, 2), 9),
+            ('TEXTCOLOR', (2, 2), (2, 2), colors.grey),
+            ('ALIGN', (2, 2), (2, 2), 'RIGHT'),
             
             # Layout
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             ('LINEBELOW', (0, 2), (-1, 2), 2, colors.darkblue),
         ]))
         
         story.append(header_table)
         story.append(Spacer(1, 20))
         
-        # Customer information section
-        customer_header = Paragraph("<b>Passenger Information</b>", self.styles['SectionHeader'])
-        story.append(customer_header)
+        # Clean customer and booking information table like invoice design
+        # Get correct customer data from booking.customer relationship
+        customer_name = "N/A"
+        customer_email = "N/A" 
+        customer_phone = "N/A"
         
-        # Get correct customer data
         if hasattr(booking, 'customer') and booking.customer:
             customer_name = booking.customer.name
             customer_email = booking.customer.email
-            customer_phone = getattr(booking.customer, 'phone', None)
-        else:
-            customer_name = booking.requester.username if booking.requester else 'N/A'
-            customer_email = booking.requester.email if booking.requester else 'N/A'
-            customer_phone = None
+            customer_phone = getattr(booking.customer, 'phone', 'N/A')
+        elif booking.requester:
+            customer_name = booking.requester.username
+            customer_email = booking.requester.email
         
-        # Customer and booking details in clean format
+        # Clean invoice-style table
         customer_data = [
-            ["Passenger Information", "Booking Summary"],
-            [f"Name: {customer_name}", f"Services: {len(booking.service_items) if booking.service_items else 0}"],
-            [f"Email: {customer_email}", f"Travel Date: {booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A'}"],
-            [f"Phone: {customer_phone or 'N/A'}", f"Total Amount: ${booking.total_amount:.2f}" if booking.total_amount else "Total Amount: $0.00"],
-            ["", "Status: Confirmed"]
+            [f"Customer: {customer_name}", f"Voucher Number: {booking.reference_number}"],
+            [f"Email: {customer_email}", f"Booking Date: {booking.created_at.strftime('%d %b %Y')}"],
+            [f"Phone: {customer_phone}", f"Total Services: {len(booking.service_items) if booking.service_items else 0}"],
+            ["", f"Status: Confirmed"]
         ]
         
         customer_table = Table(customer_data, colWidths=[3.25*inch, 3.25*inch])
         customer_table.setStyle(TableStyle([
-            # Headers
-            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (1, 0), 11),
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.darkblue),
-            ('BACKGROUND', (0, 0), (1, 0), colors.lightgrey),
-            
-            # Content
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('FONTNAME', (1, 0), (1, 3), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.lightgrey),
         ]))
         
         story.append(customer_table)
