@@ -101,11 +101,60 @@ class VoucherGenerator:
         return buffer
 
     def _build_header(self, booking):
-        """Build header section matching the preview exactly"""
+        """Build professional header with Arabi Travel branding"""
         story = []
         
-        # Header Section (same as preview)
+        # Professional Header with Company Branding
         header_data = [
+            ["ARABI TRAVEL", "TRAVEL VOUCHER"],
+            ["SINCE 1964", f"#{booking.reference_number}"],
+            ["Professional Travel Services", f"Generated: {booking.created_at.strftime('%d %b %Y')}"]
+        ]
+        
+        header_table = Table(header_data, colWidths=[4*inch, 2.5*inch])
+        header_table.setStyle(TableStyle([
+            # Company branding
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 18),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.darkblue),
+            
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 10),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.orange),
+            
+            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+            ('FONTSIZE', (0, 2), (0, 2), 9),
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.grey),
+            
+            # Voucher details
+            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (1, 0), (1, 0), 14),
+            ('TEXTCOLOR', (1, 0), (1, 0), colors.darkblue),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            
+            ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (1, 1), (1, 1), 16),
+            ('TEXTCOLOR', (1, 1), (1, 1), colors.orange),
+            ('ALIGN', (1, 1), (1, 1), 'RIGHT'),
+            
+            ('FONTNAME', (1, 2), (1, 2), 'Helvetica'),
+            ('FONTSIZE', (1, 2), (1, 2), 9),
+            ('TEXTCOLOR', (1, 2), (1, 2), colors.grey),
+            ('ALIGN', (1, 2), (1, 2), 'RIGHT'),
+            
+            # Layout
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LINEBELOW', (0, 2), (-1, 2), 2, colors.darkblue),
+        ]))
+        
+        story.append(header_table)
+        story.append(Spacer(1, 20))
+        
+        # Customer and voucher details section
+        details_data = [
             ["Customer:", "Voucher Details:"],
             [f"{booking.requester.username if booking.requester else 'N/A'}", f"Voucher Number: {booking.reference_number}"],
             [f"{booking.requester.email if booking.requester else 'N/A'}", f"Booking Date: {booking.created_at.strftime('%d %b %Y')}"],
@@ -113,16 +162,15 @@ class VoucherGenerator:
             ["", "Status: Confirmed"]
         ]
         
-        header_table = Table(header_data, colWidths=[3.25*inch, 3.25*inch])
-        header_table.setStyle(TableStyle([
+        details_table = Table(details_data, colWidths=[3.25*inch, 3.25*inch])
+        details_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),  # "Customer:" header
-            ('FONTNAME', (1, 0), (1, 0), 'Helvetica-Bold'),  # "Voucher Details:" header
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (1, 0), 11),
             ('TEXTCOLOR', (0, 0), (1, 0), colors.grey),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),  # Customer name
-            ('FONTSIZE', (0, 1), (0, 1), 14),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 12),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
@@ -130,7 +178,7 @@ class VoucherGenerator:
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.lightgrey),
         ]))
         
-        story.append(header_table)
+        story.append(details_table)
         story.append(Spacer(1, 20))
         
         # Customer info and booking summary section

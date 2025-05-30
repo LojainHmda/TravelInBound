@@ -77,12 +77,37 @@
     </div>
 </div>
 
-<!-- Voucher Preview using Invoice Style -->
+<!-- Voucher Preview with Professional Header -->
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-4" id="voucherContent">
+            <!-- Professional Header with Arabi Travel Branding -->
+            <div class="card-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 25px 20px;">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center">
+                            <div class="logo-container me-4" style="width: 80px; height: 80px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                                <!-- Arabi Travel Logo -->
+                                <img src="{{ url_for('static', filename='images/logo-placeholder.svg') }}" alt="Arabi Travel" style="width: 70px; height: 70px; object-fit: contain;">
+                            </div>
+                            <div>
+                                <h2 class="mb-1" style="color: white; font-weight: bold; font-size: 24px;">ARABI TRAVEL</h2>
+                                <p class="mb-1" style="color: #fb923c; font-weight: 600; font-size: 14px; letter-spacing: 1px;">SINCE 1964</p>
+                                <p class="mb-0" style="color: rgba(255,255,255,0.9); font-size: 12px;">Professional Travel Services • Your Journey Starts Here</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #fb923c;">
+                            <h3 class="mb-1" style="color: white; font-weight: bold; font-size: 18px;">TRAVEL VOUCHER</h3>
+                            <p class="mb-1" style="color: #fb923c; font-size: 20px; font-weight: bold;">#{{ booking.reference_number }}</p>
+                            <p class="mb-0" style="color: rgba(255,255,255,0.9); font-size: 12px;">Generated: {{ booking.created_at.strftime('%d %b %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card-body p-4">
-                <!-- Header Section (same as invoice) -->
+                <!-- Header Section with customer details -->
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <div class="mb-3">
