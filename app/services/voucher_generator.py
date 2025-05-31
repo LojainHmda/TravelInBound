@@ -410,16 +410,24 @@ class VoucherGenerator:
                 
                 hotel_table = Table(hotel_data, colWidths=[3.25*inch, 3.25*inch])
                 hotel_table.setStyle(TableStyle([
+                    # Header row styling - matching your clean invoice style
                     ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('FONTSIZE', (0, 0), (-1, 0), 11),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4A5568')),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F7FAFC')),
+                    
+                    # Data rows styling
                     ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 4),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                    ('FONTSIZE', (0, 1), (-1, -1), 10),
+                    ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
+                    
+                    # Borders and spacing - clean look
+                    ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#E2E8F0')),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 8),
                 ]))
                 
                 story.append(hotel_table)
@@ -625,42 +633,45 @@ class VoucherGenerator:
         paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
         balance = total_amount - paid_amount
         
-        # Clean payment summary table
+        # Clean payment summary table - matching your invoice style
         payment_data = [
-            ["Payment Summary"],
-            [f"Total Amount: ${total_amount:.2f}"],
-            [f"Amount Paid: ${paid_amount:.2f}"],
-            [f"Balance Due: ${balance:.2f}"]
+            ["Payment Summary", "Amount"],  # Header row matching your image style
+            ["Total Amount", f"${total_amount:.2f}"],
+            ["Amount Paid", f"${paid_amount:.2f}"],
+            ["Balance Due", f"${balance:.2f}"]
         ]
         
-        payment_table = Table(payment_data, colWidths=[3*inch])
+        payment_table = Table(payment_data, colWidths=[2*inch, 1.5*inch])
         payment_table.setStyle(TableStyle([
-            # Header
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 12),
-            ('BACKGROUND', (0, 0), (0, 0), colors.darkblue),
-            ('TEXTCOLOR', (0, 0), (0, 0), colors.white),
-            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
+            # Header row styling - matching your clean invoice style
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4A5568')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F7FAFC')),
             
-            # Data rows
-            ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (0, -1), 10),
-            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+            # Data rows styling
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),  # Left column bold
+            
+            # Amount column alignment
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (1, 1), (1, -1), 'Helvetica-Bold'),
             
             # Balance Due row emphasis
-            ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 3), (0, 3), 11),
-            ('TEXTCOLOR', (0, 3), (0, 3), colors.darkblue),
+            ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 3), (-1, 3), 11),
+            ('TEXTCOLOR', (0, 3), (-1, 3), colors.HexColor('#1A365D')),
             
-            # Clean borders
-            ('BOX', (0, 0), (0, -1), 1, colors.darkblue),
-            ('LINEABOVE', (0, 3), (0, 3), 1, colors.lightgrey),
-            
-            # Consistent padding
-            ('TOPPADDING', (0, 0), (0, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (0, -1), 8),
-            ('LEFTPADDING', (0, 0), (0, -1), 12),
-            ('RIGHTPADDING', (0, 0), (0, -1), 12),
+            # Borders and spacing - clean look
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#E2E8F0')),
+            ('LINEABOVE', (0, 3), (-1, 3), 1, colors.HexColor('#E2E8F0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         ]))
         
         story.append(payment_table)
