@@ -54,20 +54,36 @@ class Agent(db.Model):
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)  # Combined name for simplicity
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(20))
     address = db.Column(db.Text)
+    city = db.Column(db.String(100))
+    country = db.Column(db.String(100))
+    passport_number = db.Column(db.String(50))
+    passport_expiry = db.Column(db.Date)
+    date_of_birth = db.Column(db.Date)
+    nationality = db.Column(db.String(100))
     customer_type = db.Column(db.String(20), default='Individual')
     company_name = db.Column(db.String(100))
     tax_number = db.Column(db.String(50))
+    notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     bookings = db.relationship('Booking', backref='customer', lazy=True)
     
+    @property
+    def name(self):
+        """Get full name by combining first and last name"""
+        return f"{self.first_name} {self.last_name}".strip()
+    
     def get_full_address(self):
-        return self.address if self.address else "No address provided"
+        """Get complete address"""
+        parts = [self.address, self.city, self.country]
+        return ", ".join([part for part in parts if part]) or "No address provided"
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
