@@ -187,27 +187,57 @@ class VoucherGenerator:
                 customer_email = booking.requester.email
                 customer_phone = 'N/A'
         
-        # Clean invoice-style table
-        customer_data = [
-            [f"Customer: {customer_name}", f"Voucher Number: {booking.reference_number}"],
-            [f"Email: {customer_email}", f"Booking Date: {booking.created_at.strftime('%d %b %Y')}"],
-            [f"Phone: {customer_phone}", f"Total Services: {len(booking.service_items) if booking.service_items else 0}"],
-            ["", f"Status: Confirmed"]
+        # Clean customer section matching the invoice style
+        billed_to_style = ParagraphStyle(
+            'BilledTo',
+            fontSize=14,
+            fontName='Helvetica-Bold',
+            textColor=colors.HexColor('#4A5568'),
+            spaceAfter=8
+        )
+        
+        detail_style = ParagraphStyle(
+            'Detail',
+            fontSize=10,
+            fontName='Helvetica',
+            textColor=colors.HexColor('#718096'),
+            spaceAfter=4
+        )
+        
+        # Get customer address if available
+        customer_address = "N/A"
+        if hasattr(booking, 'customer') and booking.customer:
+            customer_address = getattr(booking.customer, 'address', 'N/A') or 'N/A'
+        
+        # Create two-column layout matching the invoice
+        customer_section = [
+            [
+                # Left column - Billed To
+                [
+                    Paragraph("Billed To:", billed_to_style),
+                    Paragraph(f"<b>{customer_name}</b>", ParagraphStyle('CustomerName', fontSize=16, fontName='Helvetica-Bold', textColor=colors.HexColor('#2D3748'), spaceAfter=6)),
+                    Paragraph(customer_email, detail_style),
+                    Paragraph(customer_phone, detail_style),
+                    Paragraph(customer_address, detail_style)
+                ],
+                # Right column - Voucher Details
+                [
+                    Paragraph("Voucher Details:", billed_to_style),
+                    Paragraph(f"<b>Voucher Number:</b> {booking.reference_number}", detail_style),
+                    Paragraph(f"<b>Voucher Date:</b> {booking.created_at.strftime('%d %b %Y')}", detail_style),
+                    Paragraph(f"<b>Booking Reference:</b> {booking.reference_number}", detail_style),
+                    Paragraph('<b>Payment Status:</b> <font color="green">Confirmed</font>', detail_style)
+                ]
+            ]
         ]
         
-        customer_table = Table(customer_data, colWidths=[3.25*inch, 3.25*inch])
+        customer_table = Table(customer_section, colWidths=[3.5*inch, 3*inch])
         customer_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 12),
-            ('FONTNAME', (1, 0), (1, 3), 'Helvetica-Bold'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.lightgrey),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
         ]))
         
         story.append(customer_table)
@@ -256,133 +286,58 @@ class VoucherGenerator:
         if not booking.service_items:
             return story
         
-        # Group services by type
-        flight_services = [s for s in booking.service_items if s.service_type == 'FLIGHT']
-        hotel_services = [s for s in booking.service_items if s.service_type == 'HOTEL']
-        other_services = [s for s in booking.service_items if s.service_type not in ['FLIGHT', 'HOTEL']]
+        # Clean services table matching invoice style
+        services_data = [
+            ['Service', 'Description', 'Dates', 'Amount']
+        ]
         
-        # Flight Details Section
-        if flight_services:
-            story.append(Paragraph("<b>Flight Details</b>", self.styles['SectionHeader']))
+        # Add each service as a row
+        for service in booking.service_items:
+            # Service icon and type
+            service_icon = {
+                'FLIGHT': '✈',
+                'HOTEL': '🏨',
+                'TRANSPORT': '🚗',
+                'VISA': '📋',
+                'INSURANCE': '🛡'
+            }.get(service.service_type, '📋')
             
-            for i, flight in enumerate(flight_services, 1):
-                # Flight header
-                flight_header = f"<b>Flight {i} - {flight.description or 'Flight Booking'}</b>"
-                story.append(Paragraph(flight_header, self.styles['Normal']))
-                story.append(Spacer(1, 5))
-                
-                # Flight details table
-                flight_data = [
-                    ['Departure', 'Arrival'],
-                    [f"{flight.start_date.strftime('%a, %d %b %Y')} at 09:30", f"{flight.end_date.strftime('%a, %d %b %Y')} at 14:45"],
-                    ['From: Ramallah (RAM) - Palestine', 'To: Dubai (DXB) - UAE'],
-                    [f'Flight: PS{100 + i} - Palestine Airlines', 'Class: Economy (Y)'],
-                    [f'E-Ticket: 157-308666{8941 + i}', f'Status: {"Confirmed" if flight.status == "COMPLETED" else "Pending"}'],
-                    [f'Passenger: {booking.requester.username if booking.requester else "N/A"}', f'Amount: ${flight.amount:.2f}' if flight.amount else 'Amount: $0.00']
-                ]
-                
-                flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
-                flight_table.setStyle(TableStyle([
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 4),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ]))
-                
-                story.append(flight_table)
-                story.append(Spacer(1, 15))
+            service_type = f"{service_icon} {service.service_type}"
+            description = service.description or f"{service.service_type.title()} Service"
+            dates = f"{service.start_date.strftime('%d %b')} - {service.end_date.strftime('%d %b %Y')}"
+            amount = f"${service.amount:.2f}" if service.amount else "$0.00"
+            
+            services_data.append([service_type, description, dates, amount])
         
-        # Hotel Details Section
-        if hotel_services:
-            story.append(Paragraph("<b>Hotel Details</b>", self.styles['SectionHeader']))
+        # Create the services table
+        services_table = Table(services_data, colWidths=[1.2*inch, 2.8*inch, 1.5*inch, 1*inch])
+        services_table.setStyle(TableStyle([
+            # Header row styling
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4A5568')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F7FAFC')),
             
-            for i, hotel in enumerate(hotel_services, 1):
-                # Hotel header
-                hotel_header = f"<b>{hotel.description or 'Hotel Booking'}</b>"
-                story.append(Paragraph(hotel_header, self.styles['Normal']))
-                story.append(Spacer(1, 5))
-                
-                # Hotel details table
-                nights = (hotel.end_date - hotel.start_date).days
-                hotel_data = [
-                    ['Hotel Information', 'Booking Details'],
-                    [f'Hotel: {hotel.description or "Grand Hotel"}', f'Check-in: {hotel.start_date.strftime("%d %b %Y")} at 15:00'],
-                    ['Address: 123 Main Street, City Center', f'Check-out: {hotel.end_date.strftime("%d %b %Y")} at 12:00'],
-                    ['Phone: +971-4-555-0123', f'Nights: {nights} nights'],
-                    [f'Confirmation: HTL{1000 + i}', f'Status: {"Confirmed" if hotel.status == "COMPLETED" else "Pending"}'],
-                    ['Room: Deluxe Room | Guests: 2 Adults', f'Amount: ${hotel.amount:.2f}' if hotel.amount else 'Amount: $0.00']
-                ]
-                
-                hotel_table = Table(hotel_data, colWidths=[3.25*inch, 3.25*inch])
-                hotel_table.setStyle(TableStyle([
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 10),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 9),
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('TOPPADDING', (0, 0), (-1, -1), 4),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ]))
-                
-                story.append(hotel_table)
-                story.append(Spacer(1, 15))
+            # Data rows styling
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
+            
+            # Amount column alignment
+            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+            ('FONTNAME', (3, 1), (3, -1), 'Helvetica-Bold'),
+            
+            # Borders and spacing
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#E2E8F0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ]))
         
-        # Other Services Section
-        if other_services:
-            story.append(Paragraph("<b>Additional Services</b>", self.styles['SectionHeader']))
-            
-            service_data = [
-                ['Service', 'Description', 'Dates', 'Status', 'Amount']
-            ]
-            
-            for item in other_services:
-                service_icon = {
-                    'TRANSPORT': '🚗',
-                    'VISA': '📋',
-                    'INSURANCE': '🛡'
-                }.get(item.service_type, '📋')
-                
-                service_name = f"{service_icon} {item.service_type}"
-                dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
-                amount = f"${item.amount:.2f}" if item.amount else "$0.00"
-                status = "Confirmed" if item.status == 'COMPLETED' else "Pending"
-                
-                service_data.append([
-                    service_name,
-                    item.description or "N/A",
-                    dates,
-                    status,
-                    amount
-                ])
-            
-            service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
-            service_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ]))
-            
-            story.append(service_table)
-            story.append(Spacer(1, 15))
+        story.append(services_table)
+        story.append(Spacer(1, 20))
         
         return story
 
