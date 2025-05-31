@@ -397,15 +397,58 @@ class VoucherGenerator:
                 story.append(Paragraph(hotel_header, self.styles['Normal']))
                 story.append(Spacer(1, 5))
                 
-                # Hotel details table
-                nights = (hotel.end_date - hotel.start_date).days
+                # Get actual hotel details from document notes
+                hotel_details = {}
+                confirmation_doc = None
+                
+                # Find the confirmation document for this service
+                for doc in hotel.documents:
+                    if doc.document_type == 'CONFIRMATION' and doc.notes:
+                        try:
+                            import json
+                            hotel_details = json.loads(doc.notes)
+                            confirmation_doc = doc
+                            break
+                        except:
+                            pass
+                
+                # Use real hotel data from document or fallback to service data
+                hotel_name = hotel_details.get('hotel_name', hotel.description or 'Hotel Service')
+                from_date = hotel_details.get('from_date', hotel.start_date.strftime('%Y-%m-%d'))
+                to_date = hotel_details.get('to_date', hotel.end_date.strftime('%Y-%m-%d'))
+                confirmation_ref = confirmation_doc.document_number if confirmation_doc else f'SRV-{hotel.id}'
+                supplier_name = hotel_details.get('supplier_name', 'Hotel Provider')
+                meal_plan = hotel_details.get('meal_plan', 'Not specified')
+                
+                # Calculate nights from actual dates
+                from datetime import datetime
+                try:
+                    check_in = datetime.strptime(from_date, '%Y-%m-%d')
+                    check_out = datetime.strptime(to_date, '%Y-%m-%d')
+                    nights = (check_out - check_in).days
+                except:
+                    nights = (hotel.end_date - hotel.start_date).days
+                
+                # Room configuration
+                rooms_info = hotel_details.get('rooms', {})
+                room_config = []
+                if rooms_info.get('single', 0) > 0:
+                    room_config.append(f"{rooms_info['single']} Single")
+                if rooms_info.get('double', 0) > 0:
+                    room_config.append(f"{rooms_info['double']} Double")
+                if rooms_info.get('twin', 0) > 0:
+                    room_config.append(f"{rooms_info['twin']} Twin")
+                if rooms_info.get('triple', 0) > 0:
+                    room_config.append(f"{rooms_info['triple']} Triple")
+                room_text = ', '.join(room_config) if room_config else 'Standard Room'
+                
                 hotel_data = [
                     ['Hotel Information', 'Booking Details'],
-                    [f'Hotel: {hotel.description or "Grand Hotel"}', f'Check-in: {hotel.start_date.strftime("%d %b %Y")} at 15:00'],
-                    ['Address: 123 Main Street, City Center', f'Check-out: {hotel.end_date.strftime("%d %b %Y")} at 12:00'],
-                    ['Phone: +971-4-555-0123', f'Nights: {nights} nights'],
-                    [f'Confirmation: HTL{1000 + i}', f'Status: Confirmed'],
-                    ['Room: Deluxe Room | Guests: 2 Adults', f'Amount: ${hotel.amount:.2f}' if hotel.amount else 'Amount: $0.00']
+                    [f'Hotel: {hotel_name}', f'Check-in: {datetime.strptime(from_date, "%Y-%m-%d").strftime("%d/%m/%Y")}'],
+                    [f'Supplier: {supplier_name}', f'Check-out: {datetime.strptime(to_date, "%Y-%m-%d").strftime("%d/%m/%Y")}'],
+                    [f'Confirmation: {confirmation_ref}', f'Nights: {nights} nights'],
+                    [f'Meal Plan: {meal_plan}', f'Status: {hotel.status}'],
+                    [f'Room: {room_text}', f'Amount: ${hotel.amount:.2f}' if hotel.amount else 'Amount: $0.00']
                 ]
                 
                 hotel_table = Table(hotel_data, colWidths=[3.25*inch, 3.25*inch])
