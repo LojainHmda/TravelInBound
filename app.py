@@ -40,3 +40,10 @@ with app.app_context():
     
     # Create all tables
     db.create_all()
+
+# Register blueprints
+from app.routes.voucher import voucher_bp
+app.register_blueprint(voucher_bp)
+
+# Import main routes after app is configured
+from routes import *
