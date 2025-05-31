@@ -245,21 +245,10 @@ class VoucherGenerator:
         return story
 
     def _build_customer_details(self, booking):
-        """Build customer information section"""
-        story = []
-        
-        story.append(Paragraph("Customer Details", self.styles['SectionHeader']))
-        
-        customer_info = f"""
-        <b>{booking.requester.username if booking.requester else 'N/A'}</b><br/>
-        Email: {booking.requester.email if booking.requester else 'N/A'}<br/>
-        Booking Reference: {booking.reference_number}
-        """
-        
-        story.append(Paragraph(customer_info, self.styles['BookingInfo']))
-        story.append(Spacer(1, 15))
-        
-        return story
+        """Build customer information section - REMOVED to avoid duplication"""
+        # This section is now handled in _build_customer_section
+        # Returning empty story to avoid duplicate customer information
+        return []
 
     def _build_service_details(self, booking):
         """Build detailed service information with flight and hotel details"""
