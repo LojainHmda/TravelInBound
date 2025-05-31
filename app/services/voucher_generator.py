@@ -287,7 +287,7 @@ class VoucherGenerator:
             return story
         
         # Filter only confirmed services
-        confirmed_services = [s for s in booking.service_items if s.status == 'COMPLETED']
+        confirmed_services = [s for s in booking.service_items if s.status == 'CONFIRMED']
         
         if not confirmed_services:
             return story
@@ -314,7 +314,7 @@ class VoucherGenerator:
                     ['From: Ramallah (RAM) - Palestine', 'To: Dubai (DXB) - UAE'],
                     [f'Flight: PS{100 + i} - Palestine Airlines', 'Class: Economy (Y)'],
                     [f'E-Ticket: 157-308666{8941 + i}', f'Status: Confirmed'],
-                    [f'Passenger: {customer_name}', f'Amount: ${flight.amount:.2f}' if flight.amount else 'Amount: $0.00']
+                    [f'Passenger: {booking.customer.name if booking.customer else booking.requester.username}', f'Amount: ${flight.amount:.2f}' if flight.amount else 'Amount: $0.00']
                 ]
                 
                 flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
