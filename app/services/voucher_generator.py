@@ -220,9 +220,8 @@ class VoucherGenerator:
         """Build booking summary section"""
         story = []
         
-        # Booking summary
+        # Booking summary - removed Total Services to avoid duplication
         summary_data = [
-            ["Total Services:", str(len(booking.service_items))],
             ["Start Date:", booking.service_items[0].start_date.strftime('%d/%m/%Y') if booking.service_items else "N/A"],
             ["Status:", booking.status.replace('_', ' ').title()],
             ["Booked By:", booking.requester.username if booking.requester else "N/A"]
@@ -585,44 +584,42 @@ class VoucherGenerator:
         paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
         balance = total_amount - paid_amount
         
-        # Payment summary as a small table matching the preview card
+        # Clean payment summary table
         payment_data = [
-            ["Payment Summary", ""],
-            ["Total Amount:", f"${total_amount:.2f}"],
-            ["Amount Paid:", f"${paid_amount:.2f}"],
-            ["", ""],
-            ["Balance Due:", f"${balance:.2f}"]
+            ["Payment Summary"],
+            [f"Total Amount: ${total_amount:.2f}"],
+            [f"Amount Paid: ${paid_amount:.2f}"],
+            [f"Balance Due: ${balance:.2f}"]
         ]
         
-        payment_table = Table(payment_data, colWidths=[2*inch, 1.5*inch])
+        payment_table = Table(payment_data, colWidths=[3*inch])
         payment_table.setStyle(TableStyle([
             # Header
-            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (1, 0), 11),
-            ('BACKGROUND', (0, 0), (1, 0), colors.darkblue),  # Primary blue
-            ('TEXTCOLOR', (0, 0), (1, 0), colors.white),
-            ('SPAN', (0, 0), (1, 0)),  # Span across both columns
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 12),
+            ('BACKGROUND', (0, 0), (0, 0), colors.darkblue),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.white),
+            ('ALIGN', (0, 0), (0, 0), 'CENTER'),
             
             # Data rows
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (0, -1), 10),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
             
-            # Balance Due row
-            ('FONTNAME', (0, 4), (1, 4), 'Helvetica-Bold'),
-            ('TEXTCOLOR', (0, 4), (1, 4), colors.darkblue),
+            # Balance Due row emphasis
+            ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 3), (0, 3), 11),
+            ('TEXTCOLOR', (0, 3), (0, 3), colors.darkblue),
             
-            # Borders
-            ('BOX', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-            ('LINEAFTER', (0, 1), (0, 3), 0.5, colors.lightgrey),
-            ('LINEABOVE', (0, 4), (1, 4), 1, colors.lightgrey),
+            # Clean borders
+            ('BOX', (0, 0), (0, -1), 1, colors.darkblue),
+            ('LINEABOVE', (0, 3), (0, 3), 1, colors.lightgrey),
             
-            # Padding
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            # Consistent padding
+            ('TOPPADDING', (0, 0), (0, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (0, -1), 8),
+            ('LEFTPADDING', (0, 0), (0, -1), 12),
+            ('RIGHTPADDING', (0, 0), (0, -1), 12),
         ]))
         
         story.append(payment_table)
