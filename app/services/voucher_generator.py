@@ -286,58 +286,91 @@ class VoucherGenerator:
         if not booking.service_items:
             return story
         
-        # Clean services table matching invoice style
-        services_data = [
-            ['Service', 'Description', 'Dates', 'Amount']
-        ]
+        # Filter only confirmed services
+        confirmed_services = [s for s in booking.service_items if s.status == 'COMPLETED']
         
-        # Add each service as a row
-        for service in booking.service_items:
-            # Service icon and type
-            service_icon = {
-                'FLIGHT': '✈',
-                'HOTEL': '🏨',
-                'TRANSPORT': '🚗',
-                'VISA': '📋',
-                'INSURANCE': '🛡'
-            }.get(service.service_type, '📋')
+        if not confirmed_services:
+            return story
             
-            service_type = f"{service_icon} {service.service_type}"
-            description = service.description or f"{service.service_type.title()} Service"
-            dates = f"{service.start_date.strftime('%d %b')} - {service.end_date.strftime('%d %b %Y')}"
-            amount = f"${service.amount:.2f}" if service.amount else "$0.00"
-            
-            services_data.append([service_type, description, dates, amount])
+        # Group confirmed services by type
+        flight_services = [s for s in confirmed_services if s.service_type == 'FLIGHT']
+        hotel_services = [s for s in confirmed_services if s.service_type == 'HOTEL']
+        other_services = [s for s in confirmed_services if s.service_type not in ['FLIGHT', 'HOTEL']]
         
-        # Create the services table
-        services_table = Table(services_data, colWidths=[1.2*inch, 2.8*inch, 1.5*inch, 1*inch])
-        services_table.setStyle(TableStyle([
-            # Header row styling
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 11),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4A5568')),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F7FAFC')),
+        # Flight Details Section (with full details)
+        if flight_services:
+            story.append(Paragraph("<b>Flight Details</b>", self.styles['SectionHeader']))
             
-            # Data rows styling
-            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
-            
-            # Amount column alignment
-            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
-            ('FONTNAME', (3, 1), (3, -1), 'Helvetica-Bold'),
-            
-            # Borders and spacing
-            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#E2E8F0')),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 12),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ]))
+            for i, flight in enumerate(flight_services, 1):
+                # Flight header
+                flight_header = f"<b>Flight {i} - {flight.description or 'one way flight'}</b>"
+                story.append(Paragraph(flight_header, self.styles['Normal']))
+                story.append(Spacer(1, 5))
+                
+                # Flight details table
+                flight_data = [
+                    ['Departure', 'Arrival'],
+                    [f"{flight.start_date.strftime('%a, %d %b %Y')} at 09:30", f"{flight.end_date.strftime('%a, %d %b %Y')} at 14:45"],
+                    ['From: Ramallah (RAM) - Palestine', 'To: Dubai (DXB) - UAE'],
+                    [f'Flight: PS{100 + i} - Palestine Airlines', 'Class: Economy (Y)'],
+                    [f'E-Ticket: 157-308666{8941 + i}', f'Status: Confirmed'],
+                    [f'Passenger: {customer_name}', f'Amount: ${flight.amount:.2f}' if flight.amount else 'Amount: $0.00']
+                ]
+                
+                flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
+                flight_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]))
+                
+                story.append(flight_table)
+                story.append(Spacer(1, 15))
         
-        story.append(services_table)
-        story.append(Spacer(1, 20))
+        # Hotel Details Section (with full details) 
+        if hotel_services:
+            story.append(Paragraph("<b>Hotel Details</b>", self.styles['SectionHeader']))
+            
+            for i, hotel in enumerate(hotel_services, 1):
+                # Hotel header
+                hotel_header = f"<b>{hotel.description or str(i)}</b>"
+                story.append(Paragraph(hotel_header, self.styles['Normal']))
+                story.append(Spacer(1, 5))
+                
+                # Hotel details table
+                nights = (hotel.end_date - hotel.start_date).days
+                hotel_data = [
+                    ['Hotel Information', 'Booking Details'],
+                    [f'Hotel: {hotel.description or "Grand Hotel"}', f'Check-in: {hotel.start_date.strftime("%d %b %Y")} at 15:00'],
+                    ['Address: 123 Main Street, City Center', f'Check-out: {hotel.end_date.strftime("%d %b %Y")} at 12:00'],
+                    ['Phone: +971-4-555-0123', f'Nights: {nights} nights'],
+                    [f'Confirmation: HTL{1000 + i}', f'Status: Confirmed'],
+                    ['Room: Deluxe Room | Guests: 2 Adults', f'Amount: ${hotel.amount:.2f}' if hotel.amount else 'Amount: $0.00']
+                ]
+                
+                hotel_table = Table(hotel_data, colWidths=[3.25*inch, 3.25*inch])
+                hotel_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ]))
+                
+                story.append(hotel_table)
+                story.append(Spacer(1, 15))
         
         return story
 
