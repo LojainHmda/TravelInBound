@@ -292,6 +292,59 @@ class VoucherGenerator:
         if not confirmed_services:
             return story
             
+        # Clean services summary table matching invoice style
+        services_data = [
+            ['Service', 'Description', 'Dates', 'Amount']
+        ]
+        
+        # Add each confirmed service as a row
+        for service in confirmed_services:
+            # Service icon and type
+            service_icon = {
+                'FLIGHT': '✈',
+                'HOTEL': '🏨',
+                'TRANSPORT': '🚗',
+                'VISA': '📋',
+                'INSURANCE': '🛡'
+            }.get(service.service_type, '📋')
+            
+            service_type = f"{service_icon} {service.service_type}"
+            description = service.description or f"{service.service_type.title()} Service"
+            dates = f"{service.start_date.strftime('%d %b')} - {service.end_date.strftime('%d %b %Y')}"
+            amount = f"${service.amount:.2f}" if service.amount else "$0.00"
+            
+            services_data.append([service_type, description, dates, amount])
+        
+        # Create the services table
+        services_table = Table(services_data, colWidths=[1.2*inch, 2.8*inch, 1.5*inch, 1*inch])
+        services_table.setStyle(TableStyle([
+            # Header row styling
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#4A5568')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#F7FAFC')),
+            
+            # Data rows styling
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
+            
+            # Amount column alignment
+            ('ALIGN', (3, 0), (3, -1), 'RIGHT'),
+            ('FONTNAME', (3, 1), (3, -1), 'Helvetica-Bold'),
+            
+            # Borders and spacing
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#E2E8F0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        
+        story.append(services_table)
+        story.append(Spacer(1, 20))
+            
         # Group confirmed services by type
         flight_services = [s for s in confirmed_services if s.service_type == 'FLIGHT']
         hotel_services = [s for s in confirmed_services if s.service_type == 'HOTEL']
