@@ -57,7 +57,7 @@ class VoucherGenerator:
             spaceBefore=5
         ))
 
-    def generate_voucher(self, booking_id: int) -> BytesIO:
+    def generate_voucher(self, booking_id: int, general_instructions=None) -> BytesIO:
         """Generate a voucher PDF for the given booking"""
         booking = Booking.query.get(booking_id)
         if not booking:
@@ -91,6 +91,10 @@ class VoucherGenerator:
         
         # Payment details
         story.extend(self._build_payment_details(booking))
+        
+        # General instructions if provided
+        if general_instructions:
+            story.extend(self._build_general_instructions(general_instructions))
         
         # Footer
         story.extend(self._build_footer())
@@ -698,8 +702,8 @@ class VoucherGenerator:
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
             ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),  # Left column bold
             
-            # Amount column alignment
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            # Amount column alignment - left aligned as requested
+            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
             ('FONTNAME', (1, 1), (1, -1), 'Helvetica-Bold'),
             
             # Balance Due row emphasis
@@ -719,6 +723,37 @@ class VoucherGenerator:
         
         story.append(payment_table)
         story.append(Spacer(1, 20))
+        
+        return story
+
+    def _build_general_instructions(self, instructions):
+        """Build general instructions section"""
+        story = []
+        
+        if instructions and instructions.strip():
+            # Instructions header
+            story.append(Paragraph('<b>General Instructions</b>', self.styles['SectionHeader']))
+            story.append(Spacer(1, 10))
+            
+            # Instructions content with clean styling
+            instructions_style = ParagraphStyle(
+                'Instructions',
+                fontSize=10,
+                fontName='Helvetica',
+                textColor=colors.HexColor('#2D3748'),
+                alignment=TA_LEFT,
+                spaceAfter=15,
+                spaceBefore=5,
+                backColor=colors.HexColor('#F8F9FA'),
+                borderWidth=0.5,
+                borderColor=colors.HexColor('#E2E8F0'),
+                borderPadding=12,
+                leftIndent=0,
+                rightIndent=0
+            )
+            
+            story.append(Paragraph(instructions, instructions_style))
+            story.append(Spacer(1, 20))
         
         return story
 
