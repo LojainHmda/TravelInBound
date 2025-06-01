@@ -138,3 +138,97 @@ def search_and_history():
     bookings = query.order_by(Booking.created_at.desc()).all()
     
     return render_template('booking/search_and_history.html', bookings=bookings)
+
+@main_bp.route('/find_bookings')
+def find_bookings():
+    """Find bookings page with smart filters"""
+    from app.models.customer import Customer
+    from datetime import datetime, timedelta
+    
+    # Get filter parameters
+    search_term = request.args.get('search', '')
+    status_filter = request.args.get('status', '')
+    service_type_filter = request.args.get('service_type', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    customer_filter = request.args.get('customer', '')
+    amount_min = request.args.get('amount_min', '')
+    amount_max = request.args.get('amount_max', '')
+    
+    # Build base query with joins
+    query = Booking.query.join(Customer, Booking.customer_id == Customer.id, isouter=True)
+    
+    # Apply search filter (reference number, customer name, description)
+    if search_term:
+        query = query.filter(
+            (Booking.reference_number.ilike(f'%{search_term}%')) |
+            (Customer.first_name.ilike(f'%{search_term}%')) |
+            (Customer.last_name.ilike(f'%{search_term}%')) |
+            (Customer.email.ilike(f'%{search_term}%'))
+        )
+    
+    # Apply status filter
+    if status_filter:
+        query = query.filter(Booking.status == status_filter)
+    
+    # Apply service type filter
+    if service_type_filter:
+        query = query.join(ServiceItem).filter(ServiceItem.service_type == service_type_filter)
+    
+    # Apply date range filter
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, '%Y-%m-%d')
+            query = query.filter(Booking.created_at >= from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, '%Y-%m-%d')
+            # Add one day to include the entire day
+            to_date = to_date + timedelta(days=1)
+            query = query.filter(Booking.created_at < to_date)
+        except ValueError:
+            pass
+    
+    # Apply customer filter
+    if customer_filter:
+        try:
+            customer_id = int(customer_filter)
+            query = query.filter(Booking.customer_id == customer_id)
+        except ValueError:
+            pass
+    
+    # Apply amount range filter
+    if amount_min:
+        try:
+            min_amount = float(amount_min)
+            query = query.filter(Booking.total_amount >= min_amount)
+        except ValueError:
+            pass
+    
+    if amount_max:
+        try:
+            max_amount = float(amount_max)
+            query = query.filter(Booking.total_amount <= max_amount)
+        except ValueError:
+            pass
+    
+    # Execute query and get results
+    bookings = query.order_by(Booking.created_at.desc()).all()
+    
+    # Get all customers for dropdown
+    customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
+    
+    return render_template('booking/find_bookings.html', 
+                         bookings=bookings, 
+                         customers=customers,
+                         search_term=search_term,
+                         status_filter=status_filter,
+                         service_type_filter=service_type_filter,
+                         date_from=date_from,
+                         date_to=date_to,
+                         customer_filter=customer_filter,
+                         amount_min=amount_min,
+                         amount_max=amount_max)

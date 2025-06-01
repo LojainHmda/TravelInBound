@@ -2,6 +2,8 @@
 :root {
     --primary-color: #444444; /* Dark Gray */
     --secondary-color: #FFBF00; /* Yellow */
+    --dark-blue: #1e3a8a; /* Dark Blue for headers */
+    --orange-yellow: #f59e0b; /* Orange-Yellow for buttons */
     --light-color: #ffffff; /* White */
     --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;

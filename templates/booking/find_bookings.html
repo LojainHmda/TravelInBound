@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Find Bookings Specific Styles */
+    .find-bookings-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 2rem 0;
+        margin: -1.5rem -15px 2rem -15px;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-search {
+        background-color: #f59e0b;
+        border-color: #f59e0b;
+        color: white;
+        font-weight: 600;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-search:hover {
+        background-color: #d97706;
+        border-color: #d97706;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+    }
+    
+    .btn-clear {
+        background-color: #6b7280;
+        border-color: #6b7280;
+        color: white;
+        font-weight: 600;
+        padding: 0.6rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-clear:hover {
+        background-color: #4b5563;
+        border-color: #4b5563;
+        color: white;
+        transform: translateY(-1px);
+    }
+    
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .filter-header {
+        background-color: #f8fafc;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        color: #1e40af;
+        font-weight: 600;
+    }
+    
+    .results-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .results-header {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+    }
+    
+    .booking-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    
+    .booking-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .status-request {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-booked {
+        background-color: #ddd6fe;
+        color: #5b21b6;
+    }
+    
+    .status-in-progress {
+        background-color: #bfdbfe;
+        color: #1d4ed8;
+    }
+    
+    .status-completed {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+    
+    .service-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        margin-right: 0.75rem;
+    }
+    
+    .service-flight { background-color: #3b82f6; }
+    .service-hotel { background-color: #10b981; }
+    .service-transport { background-color: #f59e0b; }
+    .service-visa { background-color: #8b5cf6; }
+    .service-insurance { background-color: #ef4444; }
+    
+    .form-control:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    }
+    
+    .form-select:focus {
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
+    }
+</style>
+
+<div class="find-bookings-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="fas fa-search me-3"></i>Find Bookings
+                </h1>
+                <p class="mb-0 opacity-75">Search and filter through all your bookings with advanced criteria</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex align-items-center justify-content-end">
+                    <i class="fas fa-filter me-2" style="font-size: 2rem;"></i>
+                    <span class="h5 mb-0">Smart Filters</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- Search Filters -->
+    <div class="filter-card">
+        <div class="filter-header">
+            <i class="fas fa-sliders-h me-2"></i>Search Filters
+        </div>
+        <div class="card-body p-4">
+            <form method="GET" action="{{ url_for('find_bookings') }}" id="searchForm">
+                <div class="row g-3">
+                    <!-- Search Term -->
+                    <div class="col-md-4">
+                        <label for="search" class="form-label fw-bold">
+                            <i class="fas fa-search me-1"></i>Search Term
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="search" 
+                               name="search" 
+                               value="{{ search_term }}"
+                               placeholder="Reference, customer name, email...">
+                    </div>
+                    
+                    <!-- Status Filter -->
+                    <div class="col-md-3">
+                        <label for="status" class="form-label fw-bold">
+                            <i class="fas fa-flag me-1"></i>Status
+                        </label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="REQUEST" {% if status_filter == 'REQUEST' %}selected{% endif %}>Request</option>
+                            <option value="BOOKED" {% if status_filter == 'BOOKED' %}selected{% endif %}>Booked</option>
+                            <option value="IN_PROGRESS" {% if status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                            <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Service Type Filter -->
+                    <div class="col-md-3">
+                        <label for="service_type" class="form-label fw-bold">
+                            <i class="fas fa-cogs me-1"></i>Service Type
+                        </label>
+                        <select class="form-select" id="service_type" name="service_type">
+                            <option value="">All Services</option>
+                            <option value="FLIGHT" {% if service_type_filter == 'FLIGHT' %}selected{% endif %}>Flight</option>
+                            <option value="HOTEL" {% if service_type_filter == 'HOTEL' %}selected{% endif %}>Hotel</option>
+                            <option value="TRANSPORT" {% if service_type_filter == 'TRANSPORT' %}selected{% endif %}>Transport</option>
+                            <option value="VISA" {% if service_type_filter == 'VISA' %}selected{% endif %}>Visa</option>
+                            <option value="INSURANCE" {% if service_type_filter == 'INSURANCE' %}selected{% endif %}>Insurance</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Customer Filter -->
+                    <div class="col-md-2">
+                        <label for="customer" class="form-label fw-bold">
+                            <i class="fas fa-user me-1"></i>Customer
+                        </label>
+                        <select class="form-select" id="customer" name="customer">
+                            <option value="">All Customers</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}" {% if customer_filter == customer.id|string %}selected{% endif %}>
+                                {{ customer.first_name }} {{ customer.last_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row g-3 mt-2">
+                    <!-- Date Range -->
+                    <div class="col-md-3">
+                        <label for="date_from" class="form-label fw-bold">
+                            <i class="fas fa-calendar-alt me-1"></i>From Date
+                        </label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="date_from" 
+                               name="date_from" 
+                               value="{{ date_from }}">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="date_to" class="form-label fw-bold">
+                            <i class="fas fa-calendar-alt me-1"></i>To Date
+                        </label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="date_to" 
+                               name="date_to" 
+                               value="{{ date_to }}">
+                    </div>
+                    
+                    <!-- Amount Range -->
+                    <div class="col-md-2">
+                        <label for="amount_min" class="form-label fw-bold">
+                            <i class="fas fa-dollar-sign me-1"></i>Min Amount
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="amount_min" 
+                               name="amount_min" 
+                               value="{{ amount_min }}"
+                               step="0.01"
+                               placeholder="0.00">
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label for="amount_max" class="form-label fw-bold">
+                            <i class="fas fa-dollar-sign me-1"></i>Max Amount
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="amount_max" 
+                               name="amount_max" 
+                               value="{{ amount_max }}"
+                               step="0.01"
+                               placeholder="999999.99">
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <div class="d-grid gap-2 w-100">
+                            <button type="submit" class="btn btn-search">
+                                <i class="fas fa-search me-2"></i>Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('find_bookings') }}" class="btn btn-clear">
+                                <i class="fas fa-times me-2"></i>Clear All
+                            </a>
+                            <button type="button" class="btn btn-search" onclick="exportResults()">
+                                <i class="fas fa-download me-2"></i>Export Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div class="results-card">
+        <div class="results-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-list me-2"></i>Search Results
+                    <span class="badge bg-light text-dark ms-2">{{ bookings|length }} found</span>
+                </div>
+                <div>
+                    <small>Last updated: {{ moment().format('HH:mm') }}</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if bookings %}
+                <div class="p-4">
+                    {% for booking in bookings %}
+                    <div class="booking-card">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="service-icon service-flight">
+                                            <i class="fas fa-ticket-alt"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">{{ booking.reference_number }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ booking.created_at.strftime('%d %b %Y') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    {% if booking.customer %}
+                                    <div>
+                                        <h6 class="mb-1">{{ booking.customer.first_name }} {{ booking.customer.last_name }}</h6>
+                                        <small class="text-muted">
+                                            <i class="fas fa-envelope me-1"></i>{{ booking.customer.email }}
+                                        </small>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">
+                                        <i class="fas fa-user-slash me-1"></i>No customer assigned
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <span class="status-badge status-{{ booking.status.lower().replace('_', '-') }}">
+                                        {{ booking.status.replace('_', ' ').title() }}
+                                    </span>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <div class="text-end">
+                                        <h6 class="mb-1 text-success fw-bold">
+                                            ${{ "%.2f"|format(booking.total_amount or 0) }}
+                                        </h6>
+                                        <small class="text-muted">
+                                            {{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-2">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
+                                           class="btn btn-search btn-sm">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <button class="btn btn-search btn-sm" 
+                                                onclick="showBookingServices({{ booking.id }})">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Service Items Preview -->
+                            {% if booking.service_items %}
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for item in booking.service_items[:3] %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="fas fa-{{ 'plane' if item.service_type == 'FLIGHT' else 'bed' if item.service_type == 'HOTEL' else 'car' if item.service_type == 'TRANSPORT' else 'passport' if item.service_type == 'VISA' else 'shield-alt' }} me-1"></i>
+                                            {{ item.service_type.title() }}
+                                        </span>
+                                        {% endfor %}
+                                        {% if booking.service_items|length > 3 %}
+                                        <span class="badge bg-secondary">+{{ booking.service_items|length - 3 }} more</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-search text-muted" style="font-size: 4rem;"></i>
+                    </div>
+                    <h4 class="text-muted">No bookings found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or create a new booking.</p>
+                    <a href="{{ url_for('new_booking') }}" class="btn btn-search">
+                        <i class="fas fa-plus me-2"></i>Create New Booking
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-submit form on filter change for better UX
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('searchForm');
+    const inputs = form.querySelectorAll('select, input[type="date"]');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            // Small delay to allow multiple rapid changes
+            setTimeout(() => form.submit(), 100);
+        });
+    });
+});
+
+// Export functionality
+function exportResults() {
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('export', 'csv');
+    window.location.href = '{{ url_for("find_bookings") }}?' + searchParams.toString();
+}
+
+// Show booking services modal
+function showBookingServices(bookingId) {
+    // This would open a modal with service details
+    alert('Service details for booking ID: ' + bookingId + '\n\nThis feature will show detailed service information in a modal.');
+}
+
+// Real-time search for better UX
+let searchTimeout;
+document.getElementById('search').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        document.getElementById('searchForm').submit();
+    }, 500);
+});
+</script>
+{% endblock %}
