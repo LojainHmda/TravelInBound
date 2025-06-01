@@ -68,19 +68,19 @@
 }
 
 .btn-search {
-    background: #ffc107;
+    background: #6c757d;
     border: none;
-    color: #000;
+    color: white;
     padding: 0.5rem 1.5rem;
     border-radius: 4px;
-    font-weight: 600;
+    font-weight: 400;
     font-size: 0.9rem;
     transition: all 0.2s;
 }
 
 .btn-search:hover {
-    background: #ffcd39;
-    color: #000;
+    background: #5a6268;
+    color: white;
 }
 
 .btn-search i {
@@ -344,39 +344,7 @@
             </div>
         </div>
 
-        <!-- Statistics -->
-        {% if bookings %}
-        <div class="stats-row">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ bookings|length }}</div>
-                            <div class="stat-label">Total Results</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number">${{ total_amount }}</div>
-                            <div class="stat-label">Total Value</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ paid_bookings }}</div>
-                            <div class="stat-label">Paid Bookings</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="stat-card">
-                            <div class="stat-number">{{ pending_bookings }}</div>
-                            <div class="stat-label">Pending Payment</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
+
 
         <!-- Results -->
         <div class="results-section">
@@ -403,7 +371,7 @@
                         <tbody>
                             {% for booking in bookings %}
                             <tr>
-                                <td><strong>{{ booking.reference_number }}</strong></td>
+                                <td>{{ booking.reference_number }}</td>
                                 <td>
                                     {% if booking.customer %}
                                         {{ booking.customer.name }}
@@ -421,7 +389,7 @@
                                         <span class="status-badge badge-completed">Completed</span>
                                     {% endif %}
                                 </td>
-                                <td><strong>${{ "%.2f"|format(booking.total_amount or 0) }}</strong></td>
+                                <td>${{ "%.2f"|format(booking.total_amount or 0) }}</td>
                                 <td>
                                     {% if booking.payment_status == 'NONE' %}
                                         <span class="payment-badge payment-none">Unpaid</span>
