@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, url_for, flash
+from flask import Blueprint, render_template, redirect, url_for, flash, request
 from app import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models import ServiceItem
+from app.models.user import User
 
 # Create a blueprint for main routes
 main_bp = Blueprint('main', __name__)
@@ -101,3 +102,39 @@ def operations_dashboard():
         insurance_count=insurance_count,
         recent_bookings=in_progress_bookings
     )
+
+@main_bp.route('/search-history')
+def search_and_history():
+    """Search and History page for bookings"""
+    # Get search parameters
+    search_query = request.args.get('search', '')
+    customer_query = request.args.get('customer', '')
+    status_filter = request.args.get('status', '')
+    date_from = request.args.get('date_from', '')
+    
+    # Base query
+    query = Booking.query
+    
+    # Apply filters
+    if search_query:
+        query = query.filter(Booking.reference_number.ilike(f'%{search_query}%'))
+    
+    if customer_query:
+        # Join with user table for customer search
+        query = query.join(User).filter(User.username.ilike(f'%{customer_query}%'))
+    
+    if status_filter:
+        query = query.filter(Booking.status == status_filter)
+    
+    if date_from:
+        from datetime import datetime
+        try:
+            date_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            query = query.filter(Booking.created_at >= date_obj)
+        except ValueError:
+            pass
+    
+    # Order by newest first
+    bookings = query.order_by(Booking.created_at.desc()).all()
+    
+    return render_template('booking/search_and_history.html', bookings=bookings)
