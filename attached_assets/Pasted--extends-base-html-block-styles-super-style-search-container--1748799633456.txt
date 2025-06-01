@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .search-container {
+        max-width: 960px;
+        margin: 3rem auto;
+        padding: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .search-panel {
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        padding: 1.25rem;
+    }
+
+    .search-panel .form-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: #ffffff;
+        transition: 0.2s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-search {
+        background: #facc15;
+        color: #1f2937;
+        font-size: 0.875rem;
+        padding: 0.5rem 1.25rem;
+        font-weight: 600;
+        border-radius: 6px;
+        border: 1px solid #eab308;
+        transition: 0.2s;
+    }
+
+    .btn-search:hover {
+        background: #fbbf24;
+    }
+
+    .btn-export {
+        background: #facc15;
+        color: #1f2937;
+        font-size: 0.8rem;
+        padding: 0.45rem 1rem;
+        border: 1px solid #eab308;
+        border-radius: 6px;
+        transition: 0.2s;
+    }
+
+    .btn-export:hover {
+        background: #fbbf24;
+    }
+
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    #activeFiltersCount {
+        background: #f59e0b;
+        color: white;
+        padding: 0.25rem 0.6rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <form method="GET" id="searchForm" class="search-panel">
+        <div class="filters-header">
+            <h6 class="mb-0 text-primary">
+                <i class="fas fa-filter me-2"></i>Search Bookings
+            </h6>
+            <span id="activeFiltersCount">0 Active Filters</span>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Keyword</label>
+                <input type="text" name="search" class="form-control" placeholder="Reference or customer"
+                       value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">From Date</label>
+                <input type="date" name="date_from" class="form-control"
+                       value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To Date</label>
+                <input type="date" name="date_to" class="form-control"
+                       value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn-search w-100">
+                    <i class="fas fa-search me-1"></i>Search
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+            <div class="col-md-4">
+                <label class="form-label">Booking Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                    <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                    <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Payment Status</label>
+                <select name="payment_status" class="form-select">
+                    <option value="">All</option>
+                    <option value="NONE" {{ 'selected' if request.args.get('payment_status') == 'NONE' }}>Unpaid</option>
+                    <option value="PARTIAL" {{ 'selected' if request.args.get('payment_status') == 'PARTIAL' }}>Partial</option>
+                    <option value="FULL" {{ 'selected' if request.args.get('payment_status') == 'FULL' }}>Paid</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end justify-content-end">
+                <button type="button" class="btn-export" onclick="exportResults()">
+                    <i class="fas fa-file-export me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    function updateFilterCount() {
+        const form = document.getElementById('searchForm');
+        const inputs = form.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], select');
+        let activeCount = 0;
+
+        inputs.forEach(input => {
+            if (input.value && input.value.trim() !== '') {
+                activeCount++;
+            }
+        });
+
+        const counter = document.getElementById('activeFiltersCount');
+        counter.textContent = activeCount === 0
+            ? '0 Active Filters'
+            : `${activeCount} Active Filter${activeCount > 1 ? 's' : ''}`;
+    }
+
+    function exportResults() {
+        const params = new URLSearchParams(window.location.search);
+        params.set('export', 'csv');
+        window.location.href = '{{ url_for("booking.search") }}?' + params.toString();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateFilterCount();
+        document.querySelectorAll('#searchForm input, #searchForm select').forEach(el => {
+            el.addEventListener('input', updateFilterCount);
+            el.addEventListener('change', updateFilterCount);
+        });
+    });
+</script>
+{% endblock %}
