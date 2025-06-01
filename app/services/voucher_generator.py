@@ -702,8 +702,8 @@ class VoucherGenerator:
             ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#2D3748')),
             ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),  # Left column bold
             
-            # Amount column alignment - left aligned as requested
-            ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+            # All columns left aligned
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (1, 1), (1, -1), 'Helvetica-Bold'),
             
             # Balance Due row emphasis

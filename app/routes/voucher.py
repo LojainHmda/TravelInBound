@@ -18,7 +18,7 @@ def voucher_preview(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     return render_template('booking/voucher_preview.html', booking=booking)
 
-@voucher_bp.route('/booking/<int:booking_id>/voucher', methods=['POST'])
+@voucher_bp.route('/booking/<int:booking_id>/voucher', methods=['POST', 'GET'])
 @login_required
 def generate_voucher(booking_id):
     """Generate and download voucher for booking"""
@@ -26,8 +26,11 @@ def generate_voucher(booking_id):
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher PDF
-        voucher_buffer = voucher_generator.generate_voucher(booking_id)
+        # Get instructions from query parameter
+        instructions = request.args.get('instructions', '')
+        
+        # Generate the voucher PDF with instructions
+        voucher_buffer = voucher_generator.generate_voucher(booking_id, instructions)
         
         # Create temporary file for download
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
