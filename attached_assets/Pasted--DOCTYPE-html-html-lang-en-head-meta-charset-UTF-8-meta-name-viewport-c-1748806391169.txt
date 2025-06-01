@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search & History - Travel Booking Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'travel-blue': '#2d4a7a',
+                        'travel-yellow': '#ffc107',
+                        'travel-yellow-hover': '#e0a800'
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .search-input:focus {
+            outline: none;
+            border-color: #ffc107;
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+        }
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar-item.active {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-right: 3px solid #ffc107;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200 flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-travel-blue text-white min-h-screen flex flex-col">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-blue-600">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-plane text-travel-yellow text-2xl mr-3"></i>
+                <div>
+                    <h1 class="text-lg font-bold">Travel Booking Pro</h1>
+                    <p class="text-sm text-blue-200">Arab Office for Travel</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4">
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-home w-5 mr-3"></i>
+                Home
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plus w-5 mr-3"></i>
+                New Booking
+            </a>
+            <a href="#" class="sidebar-item active flex items-center px-6 py-3 text-white">
+                <i class="fas fa-search w-5 mr-3"></i>
+                Search & History
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-chart-line w-5 mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plane w-5 mr-3"></i>
+                Travel Operations
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-users w-5 mr-3"></i>
+                Customers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-building w-5 mr-3"></i>
+                Suppliers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-dollar-sign w-5 mr-3"></i>
+                Finance
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 min-h-screen">
+        <!-- Status Bar -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Search Results
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-travel-yellow text-gray-900">
+                    <i class="fas fa-clock mr-2"></i>
+                    Live Data
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <i class="fas fa-check mr-2"></i>
+                    Ready
+                </span>
+            </div>
+        </div>
+
+    <div class="max-w-7xl mx-auto p-6">
+        <!-- Search Filters -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-search text-travel-yellow text-xl mr-3"></i>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Search Filters</h2>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Booking Reference</label>
+                    <input type="text" id="referenceSearch" placeholder="e.g., IR-pu0yPTJ" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer Name</label>
+                    <input type="text" id="customerSearch" placeholder="Search by name" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                    <select id="statusFilter" 
+                            class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        <option value="">All Statuses</option>
+                        <option value="request">Request</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range</label>
+                    <input type="date" id="dateFrom" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <button onclick="searchBookings()" 
+                        class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                    <i class="fas fa-search mr-2"></i>
+                    Search Bookings
+                </button>
+                <button onclick="clearFilters()" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Clear Filters
+                </button>
+                <button onclick="exportResults()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                    <i class="fas fa-download mr-2"></i>
+                    Export Results
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Summary -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="text-gray-900 dark:text-white">
+                    <span id="resultsCount">Showing 8 of 8 bookings</span>
+                </div>
+                <div class="flex gap-2">
+                    <select id="sortBy" onchange="sortResults()" 
+                            class="search-input px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="reference">Reference A-Z</option>
+                        <option value="customer">Customer A-Z</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Services</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Booking rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="text-sm text-gray-700 dark:text-gray-300">
+                    Showing 1 to 8 of 8 results
+                </div>
+                <div class="flex gap-2">
+                    <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button class="px-3 py-2 text-sm bg-primary text-white rounded-md">
+                        1
+                    </button>
+                    <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        // Sample booking data
+        const sampleBookings = [
+            {
+                reference: 'IR-pu0yPTJ',
+                customer: 'Eyad Marei',
+                email: 'admin@example.com',
+                userId: 1,
+                created: '2025-06-01',
+                status: 'in-progress',
+                services: 1,
+                totalAmount: '$500.00',
+                serviceIcon: 'plane'
+            },
+            {
+                reference: 'JK-LEKVM',
+                customer: 'testuser',
+                email: 'test@example.com',
+                userId: 2,
+                created: '2025-05-14',
+                status: 'request',
+                services: 0,
+                totalAmount: '$0.00',
+                serviceIcon: ''
+            },
+            {
+                reference: 'AB-12345',
+                customer: 'John Smith',
+                email: 'john@example.com',
+                userId: 3,
+                created: '2025-05-13',
+                status: 'confirmed',
+                services: 3,
+                totalAmount: '$450.00',
+                serviceIcon: 'plane'
+            },
+            {
+                reference: 'CD-67890',
+                customer: 'Sarah Johnson',
+                email: 'sarah@example.com',
+                userId: 4,
+                created: '2025-05-12',
+                status: 'confirmed',
+                services: 2,
+                totalAmount: '$320.00',
+                serviceIcon: 'hotel'
+            },
+            {
+                reference: 'EF-11111',
+                customer: 'Mike Wilson',
+                email: 'mike@example.com',
+                userId: 5,
+                created: '2025-05-11',
+                status: 'cancelled',
+                services: 1,
+                totalAmount: '$0.00',
+                serviceIcon: 'car'
+            },
+            {
+                reference: 'GH-22222',
+                customer: 'Emma Davis',
+                email: 'emma@example.com',
+                userId: 6,
+                created: '2025-05-10',
+                status: 'confirmed',
+                services: 4,
+                totalAmount: '$680.00',
+                serviceIcon: 'plane'
+            },
+            {
+                reference: 'IJ-33333',
+                customer: 'David Brown',
+                email: 'david@example.com',
+                userId: 7,
+                created: '2025-05-09',
+                status: 'in-progress',
+                services: 1,
+                totalAmount: '$150.00',
+                serviceIcon: 'train'
+            },
+            {
+                reference: 'KL-44444',
+                customer: 'Lisa Taylor',
+                email: 'lisa@example.com',
+                userId: 8,
+                created: '2025-05-08',
+                status: 'confirmed',
+                services: 5,
+                totalAmount: '$890.00',
+                serviceIcon: 'plane'
+            }
+        ];
+
+        let currentBookings = [...sampleBookings];
+
+        function getStatusBadge(status) {
+            const badges = {
+                'request': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                'in-progress': 'bg-travel-yellow text-gray-900',
+                'confirmed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+            };
+            const icons = {
+                'request': 'fas fa-file-alt',
+                'in-progress': 'fas fa-cog fa-spin',
+                'confirmed': 'fas fa-check',
+                'cancelled': 'fas fa-times'
+            };
+            return `<span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${badges[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}">
+                <i class="${icons[status] || 'fas fa-question'} mr-1"></i>
+                ${status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>`;
+        }
+
+        function renderBookings(bookings) {
+            const tbody = document.getElementById('bookingsTable');
+            tbody.innerHTML = bookings.map(booking => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">${booking.reference}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">${booking.customer}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">${booking.email}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ${new Date(booking.created).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        })}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${getStatusBadge(booking.status)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        ${booking.services} service${booking.services !== 1 ? 's' : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        ${booking.totalAmount}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="viewBooking('${booking.reference}')" 
+                                    class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-3 py-1 rounded text-xs font-medium transition-colors">
+                                <i class="fas fa-eye mr-1"></i>View
+                            </button>
+                            <button onclick="editBooking('${booking.reference}')" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                <i class="fas fa-edit mr-1"></i>Edit
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('resultsCount').textContent = `Showing ${bookings.length} of ${sampleBookings.length} bookings`;
+        }
+
+        function searchBookings() {
+            const reference = document.getElementById('referenceSearch').value.toLowerCase();
+            const customer = document.getElementById('customerSearch').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+
+            currentBookings = sampleBookings.filter(booking => {
+                const matchesReference = !reference || booking.reference.toLowerCase().includes(reference);
+                const matchesCustomer = !customer || booking.customer.toLowerCase().includes(customer);
+                const matchesStatus = !status || booking.status === status;
+                const matchesDate = !dateFrom || booking.created >= dateFrom;
+
+                return matchesReference && matchesCustomer && matchesStatus && matchesDate;
+            });
+
+            renderBookings(currentBookings);
+        }
+
+        function clearFilters() {
+            document.getElementById('referenceSearch').value = '';
+            document.getElementById('customerSearch').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            currentBookings = [...sampleBookings];
+            renderBookings(currentBookings);
+        }
+
+        function sortResults() {
+            const sortBy = document.getElementById('sortBy').value;
+            
+            currentBookings.sort((a, b) => {
+                switch(sortBy) {
+                    case 'date-desc':
+                        return new Date(b.created) - new Date(a.created);
+                    case 'date-asc':
+                        return new Date(a.created) - new Date(b.created);
+                    case 'reference':
+                        return a.reference.localeCompare(b.reference);
+                    case 'customer':
+                        return a.customer.localeCompare(b.customer);
+                    case 'status':
+                        return a.status.localeCompare(b.status);
+                    default:
+                        return 0;
+                }
+            });
+
+            renderBookings(currentBookings);
+        }
+
+        function viewBooking(reference) {
+            alert(`Viewing booking: ${reference}`);
+            // In a real app, this would navigate to the booking detail page
+        }
+
+        function editBooking(reference) {
+            alert(`Editing booking: ${reference}`);
+            // In a real app, this would open the booking edit interface
+        }
+
+        function deleteBooking(reference) {
+            if (confirm(`Are you sure you want to delete booking ${reference}?`)) {
+                currentBookings = currentBookings.filter(b => b.reference !== reference);
+                renderBookings(currentBookings);
+            }
+        }
+
+        function exportResults() {
+            alert('Exporting results... (Feature would generate CSV/Excel file)');
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            renderBookings(currentBookings);
+        });
+    </script>
+</body>
+
+</html>

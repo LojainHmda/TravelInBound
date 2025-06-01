@@ -1,0 +1,593 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+    
+    .search-section {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 1px solid #e1e8ed;
+    }
+    
+    .search-input {
+        border: 2px solid #e1e8ed;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #ffc107;
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+    }
+    
+    .btn-search {
+        background: #ffc107;
+        color: #333;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-search:hover {
+        background: #e0a800;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+    
+    .results-table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .table-header {
+        background: #f8f9fa;
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-request {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+    
+    .status-progress {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .status-confirmed {
+        background: #28a745;
+        color: white;
+    }
+    
+    .action-btn {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .action-view {
+        background: #ffc107;
+        color: #333;
+    }
+    
+    .action-view:hover {
+        background: #e0a800;
+        color: #333;
+        text-decoration: none;
+    }
+    
+    .action-edit {
+        background: #007bff;
+        color: white;
+    }
+    
+    .action-edit:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0 text-gray-800">
+                <i class="fas fa-search me-2 text-warning"></i>
+                Search & History
+            </h1>
+            <p class="text-muted mb-0">Find and manage your booking records</p>
+        </div>
+    </div>
+
+    <!-- Search Filters Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="search-section p-4">
+                <div class="d-flex align-items-center mb-4">
+                    <i class="fas fa-search text-warning fs-4 me-3"></i>
+                    <h3 class="mb-0">Search Filters</h3>
+                </div>
+                
+                <form method="GET" id="searchForm">
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-medium text-muted">Booking Reference</label>
+                            <input type="text" name="search" placeholder="e.g., IR-pu0yPTJ" 
+                                   value="{{ request.args.get('search', '') }}"
+                                   class="form-control search-input">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-medium text-muted">Customer Name</label>
+                            <input type="text" name="customer" placeholder="Search by name" 
+                                   value="{{ request.args.get('customer', '') }}"
+                                   class="form-control search-input">
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-medium text-muted">Status</label>
+                            <select name="status" class="form-select search-input">
+                                <option value="">All Statuses</option>
+                                <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                                <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                                <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Confirmed</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label fw-medium text-muted">Date Range</label>
+                            <input type="date" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}"
+                                   class="form-control search-input">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap gap-3">
+                        <button type="submit" class="btn btn-search d-flex align-items-center">
+                            <i class="fas fa-search me-2"></i>
+                            Search Bookings
+                        </button>
+                        <button type="button" onclick="clearFilters()" class="btn btn-secondary d-flex align-items-center">
+                            <i class="fas fa-times me-2"></i>
+                            Clear Filters
+                        </button>
+                        <button type="button" onclick="exportResults()" class="btn btn-success d-flex align-items-center">
+                            <i class="fas fa-download me-2"></i>
+                            Export Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                <div class="text-muted">
+                    <span>Showing {{ bookings|length if bookings else 0 }} of {{ bookings|length if bookings else 0 }} bookings</span>
+                </div>
+                <div>
+                    <select class="form-select form-select-sm" style="width: auto;">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="reference">Reference A-Z</option>
+                        <option value="customer">Customer A-Z</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    {% if bookings %}
+    <div class="row">
+        <div class="col-12">
+            <div class="results-table">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-header">
+                            <tr>
+                                <th class="px-4 py-3">Reference</th>
+                                <th class="px-4 py-3">Customer</th>
+                                <th class="px-4 py-3">Created Date</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3">Services</th>
+                                <th class="px-4 py-3">Total Amount</th>
+                                <th class="px-4 py-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <div class="fw-medium text-dark">{{ booking.reference_number }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-primary fw-medium">
+                                        {% if booking.requester %}
+                                            {{ booking.requester.username }}
+                                            <div class="small text-muted">{{ booking.requester.email }}</div>
+                                        {% else %}
+                                            <span class="text-muted">No Customer</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-muted">{{ booking.created_at.strftime('%b %d, %Y') }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if booking.status == 'REQUEST' %}
+                                        <span class="status-badge status-request">
+                                            <i class="fas fa-lock me-1"></i>
+                                            Request
+                                        </span>
+                                    {% elif booking.status == 'IN_PROGRESS' %}
+                                        <span class="status-badge status-progress">
+                                            <i class="fas fa-cog me-1"></i>
+                                            In Progress
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-confirmed">
+                                            <i class="fas fa-check me-1"></i>
+                                            Confirmed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="text-dark">{{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="fw-semibold text-dark">${{ "%.2f"|format(booking.total_amount or 0) }}</div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
+                                           class="action-btn action-view">
+                                            <i class="fas fa-eye me-1"></i>
+                                            View
+                                        </a>
+                                        <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
+                                           class="action-btn action-edit">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5 bg-white rounded">
+                <i class="fas fa-search text-muted" style="font-size: 3rem;"></i>
+                <h4 class="mt-3 text-muted">No bookings found</h4>
+                <p class="text-muted">Try adjusting your search criteria or create a new booking</p>
+                <a href="{{ url_for('new_booking') }}" 
+                   class="btn btn-search mt-3">
+                    <i class="fas fa-plus me-2"></i>
+                    Create New Booking
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function clearFilters() {
+        document.getElementById('searchForm').reset();
+        window.location.href = '{{ url_for("search_and_history") }}';
+    }
+
+    function exportResults() {
+        const params = new URLSearchParams(window.location.search);
+        params.set('export', 'csv');
+        window.location.href = '{{ url_for("search_and_history") }}?' + params.toString();
+    }
+</script>
+{% endblock %}
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-search text-travel-yellow text-xl mr-3"></i>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Search Filters</h2>
+                </div>
+                
+                <form method="GET" id="searchForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Booking Reference</label>
+                            <input type="text" name="search" placeholder="e.g., IR-pu0yPTJ" 
+                                   value="{{ request.args.get('search', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer Name</label>
+                            <input type="text" name="customer" placeholder="Search by name" 
+                                   value="{{ request.args.get('customer', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                            <select name="status" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Statuses</option>
+                                <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                                <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                                <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Confirmed</option>
+                                <option value="CANCELLED" {{ 'selected' if request.args.get('status') == 'CANCELLED' }}>Cancelled</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range</label>
+                            <input type="date" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" 
+                                class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-search mr-2"></i>
+                            Search Bookings
+                        </button>
+                        <button type="button" onclick="clearFilters()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-times mr-2"></i>
+                            Clear Filters
+                        </button>
+                        <button type="button" onclick="exportResults()" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-download mr-2"></i>
+                            Export Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-gray-900 dark:text-white">
+                        <span id="resultsCount">Showing {{ bookings|length if bookings else 0 }} of {{ bookings|length if bookings else 0 }} bookings</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="sortBy" onchange="sortResults()" 
+                                class="search-input px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="reference">Reference A-Z</option>
+                            <option value="customer">Customer A-Z</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Services</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for booking in bookings %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ booking.reference_number }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                        {% if booking.customer %}
+                                            {{ booking.customer.name }}
+                                            <div class="text-xs text-gray-500">{{ booking.customer.email }}</div>
+                                        {% else %}
+                                            <span class="text-gray-500">No Customer</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-300">{{ booking.created_at.strftime('%b %d, %Y') }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if booking.status == 'REQUEST' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                            <i class="fas fa-lock mr-1"></i>
+                                            Request
+                                        </span>
+                                    {% elif booking.status == 'IN_PROGRESS' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-travel-yellow text-gray-900">
+                                            <i class="fas fa-cog mr-1"></i>
+                                            In Progress
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Confirmed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 dark:text-white">{{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-white">${{ "%.2f"|format(booking.total_amount or 0) }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex gap-2">
+                                        <button onclick="viewBooking('{{ booking.id }}')" 
+                                               class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-travel-yellow text-gray-900 hover:bg-travel-yellow-hover transition-colors">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            View
+                                        </button>
+                                        <button onclick="editBooking('{{ booking.id }}')" 
+                                               class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                                            <i class="fas fa-edit mr-1"></i>
+                                            Edit
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <div class="text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-search text-4xl mb-4"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No bookings found</h3>
+                    <p>Try adjusting your search criteria or create a new booking</p>
+                    <a href="{{ url_for('booking.new_booking') }}" 
+                       class="inline-flex items-center mt-4 px-4 py-2 bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 rounded-md font-medium transition-colors">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create New Booking
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing 1 to {{ bookings|length }} of {{ bookings|length }} results
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            Previous
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-travel-yellow text-gray-900 rounded-md">
+                            1
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+
+        function clearFilters() {
+            document.getElementById('searchForm').reset();
+            window.location.href = '{{ url_for("booking.search_and_history") }}';
+        }
+
+        function exportResults() {
+            const params = new URLSearchParams(window.location.search);
+            params.set('export', 'csv');
+            window.location.href = '{{ url_for("booking.search_and_history") }}?' + params.toString();
+        }
+
+        function sortResults() {
+            // Implementation for sorting
+            console.log('Sorting results...');
+        }
+
+        function viewBooking(bookingId) {
+            window.location.href = `/booking/details/${bookingId}`;
+        }
+
+        function editBooking(bookingId) {
+            window.location.href = `/booking/details/${bookingId}`;
+        }
+    </script>
+</body>
+</html>
