@@ -1,360 +1,402 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block content %}
+{% block styles %}
+{{ super() }}
 <style>
-    body {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-    }
-    
-    .search-section {
+    .search-container {
         background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
     }
-    
-    .search-input {
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-    }
-    
-    .search-input:focus {
-        outline: none;
-        border-color: #ffc107;
-        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
-    }
-    
-    .btn-search {
-        background: #ffc107;
-        color: #333;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
+
+    .search-title {
+        color: #000080;
         font-weight: 600;
-        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
     }
-    
-    .btn-search:hover {
-        background: #e0a800;
-        transform: translateY(-1px);
-        color: #333;
-    }
-    
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-        border: none;
-        padding: 12px 24px;
+
+    .form-control, .form-select {
+        border: 2px solid #e9ecef;
         border-radius: 8px;
-        font-weight: 500;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
         transition: all 0.3s ease;
     }
-    
-    .btn-secondary:hover {
+
+    .form-control:focus, .form-select:focus {
+        border-color: #FFD700;
+        box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
+        outline: 0;
+    }
+
+    .btn-search {
+        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+        border: none;
+        color: #000080;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+    }
+
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
+        color: #000080;
+    }
+
+    .btn-clear {
+        background: #6c757d;
+        border: none;
+        color: white;
+        font-weight: 500;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover {
         background: #5a6268;
         transform: translateY(-1px);
         color: white;
     }
-    
-    .btn-success {
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.3s ease;
+
+    .results-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
     }
-    
-    .btn-success:hover {
+
+    .results-header {
+        background: linear-gradient(135deg, #000080 0%, #4169E1 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        margin: 0;
+    }
+
+    .results-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .results-count {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+
+    .table-container {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .booking-table {
+        margin: 0;
+        border: none;
+    }
+
+    .booking-table th {
+        background: #f8f9fa;
+        color: #000080;
+        font-weight: 600;
+        border: none;
+        padding: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .booking-table td {
+        border: none;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .booking-table tbody tr:hover {
+        background: #f8f9fa;
+        transition: background-color 0.2s ease;
+    }
+
+    .status-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-request {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-in-progress {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .action-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .action-view {
+        background: #e3f2fd;
+        color: #1976d2;
+    }
+
+    .action-view:hover {
+        background: #bbdefb;
+        color: #1565c0;
+        text-decoration: none;
+    }
+
+    .action-edit {
+        background: #fff3e0;
+        color: #f57c00;
+    }
+
+    .action-edit:hover {
+        background: #ffe0b2;
+        color: #ef6c00;
+        text-decoration: none;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: #6c757d;
+    }
+
+    .no-results i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+
+    .export-btn {
+        background: #28a745;
+        border: none;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .export-btn:hover {
         background: #218838;
         transform: translateY(-1px);
         color: white;
     }
-    
-    .results-table {
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .table-header {
-        background: #f8f9fa;
-        color: #6c757d;
-        font-weight: 600;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .status-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .status-request {
-        background: #f8f9fa;
-        color: #6c757d;
-    }
-    
-    .status-progress {
-        background: #ffc107;
-        color: #333;
-    }
-    
-    .status-confirmed {
-        background: #28a745;
-        color: white;
-    }
-    
-    .action-btn {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
+
+    .reference-link {
+        color: #000080;
         text-decoration: none;
-        display: inline-block;
-        transition: all 0.3s ease;
-        margin-right: 5px;
+        font-weight: 600;
     }
-    
-    .action-view {
-        background: #ffc107;
-        color: #333;
-    }
-    
-    .action-view:hover {
-        background: #e0a800;
-        color: #333;
-        text-decoration: none;
-    }
-    
-    .action-edit {
-        background: #007bff;
-        color: white;
-    }
-    
-    .action-edit:hover {
-        background: #0056b3;
-        color: white;
-        text-decoration: none;
+
+    .reference-link:hover {
+        color: #4169E1;
+        text-decoration: underline;
     }
 </style>
+{% endblock %}
 
-<div class="container-fluid px-4 py-4">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h2 mb-0 text-gray-800">
-                <i class="fas fa-search me-2 text-warning"></i>
-                Search & History
-            </h1>
-            <p class="text-muted mb-0">Find and manage your booking records</p>
-        </div>
-    </div>
-
-    <!-- Search Filters Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="search-section p-4">
-                <div class="d-flex align-items-center mb-4">
-                    <i class="fas fa-search text-warning fs-4 me-3"></i>
-                    <h3 class="mb-0">Search Filters</h3>
+{% block content %}
+<div class="container-fluid">
+    <!-- Search Section -->
+    <div class="search-container">
+        <h2 class="search-title">
+            <i class="fas fa-search me-2"></i>
+            Search & History
+        </h2>
+        
+        <form method="GET" id="searchForm">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="reference" class="form-label fw-semibold">Reference Number</label>
+                    <input type="text" class="form-control" id="reference" name="reference" 
+                           placeholder="Enter reference..." value="{{ request.args.get('reference', '') }}">
                 </div>
                 
-                <form method="GET" id="searchForm">
-                    <div class="row mb-3">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-medium text-muted">Booking Reference</label>
-                            <input type="text" name="search" placeholder="e.g., IR-pu0yPTJ" 
-                                   value="{{ request.args.get('search', '') }}"
-                                   class="form-control search-input">
-                        </div>
-                        
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-medium text-muted">Customer Name</label>
-                            <input type="text" name="customer" placeholder="Search by name" 
-                                   value="{{ request.args.get('customer', '') }}"
-                                   class="form-control search-input">
-                        </div>
-                        
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-medium text-muted">Status</label>
-                            <select name="status" class="form-select search-input">
-                                <option value="">All Statuses</option>
-                                <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
-                                <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
-                                <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Confirmed</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label fw-medium text-muted">Date Range</label>
-                            <input type="date" name="date_from" 
-                                   value="{{ request.args.get('date_from', '') }}"
-                                   class="form-control search-input">
-                        </div>
-                    </div>
-                    
-                    <div class="d-flex flex-wrap gap-3">
-                        <button type="submit" class="btn btn-search d-flex align-items-center">
+                <div class="col-md-3">
+                    <label for="customer" class="form-label fw-semibold">Customer Name</label>
+                    <input type="text" class="form-control" id="customer" name="customer" 
+                           placeholder="Enter customer name..." value="{{ request.args.get('customer', '') }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="status" class="form-label fw-semibold">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Status</option>
+                        <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' else '' }}>Request</option>
+                        <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' else '' }}>In Progress</option>
+                        <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' else '' }}>Completed</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="from_date" class="form-label fw-semibold">From Date</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date" 
+                           value="{{ request.args.get('from_date', '') }}">
+                </div>
+                
+                <div class="col-md-2">
+                    <label for="to_date" class="form-label fw-semibold">To Date</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date" 
+                           value="{{ request.args.get('to_date', '') }}">
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-search">
                             <i class="fas fa-search me-2"></i>
                             Search Bookings
                         </button>
-                        <button type="button" onclick="clearFilters()" class="btn btn-secondary d-flex align-items-center">
+                        <button type="button" class="btn btn-clear" onclick="clearFilters()">
                             <i class="fas fa-times me-2"></i>
                             Clear Filters
                         </button>
-                        <button type="button" onclick="exportResults()" class="btn btn-success d-flex align-items-center">
+                        <button type="button" class="btn export-btn ms-auto" onclick="exportResults()">
                             <i class="fas fa-download me-2"></i>
                             Export Results
                         </button>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Results Summary -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                <div class="text-muted">
-                    <span>Showing {{ bookings|length if bookings else 0 }} of {{ bookings|length if bookings else 0 }} bookings</span>
-                </div>
-                <div>
-                    <select class="form-select form-select-sm" style="width: auto;">
-                        <option value="date-desc">Newest First</option>
-                        <option value="date-asc">Oldest First</option>
-                        <option value="reference">Reference A-Z</option>
-                        <option value="customer">Customer A-Z</option>
-                        <option value="status">Status</option>
-                    </select>
-                </div>
+    <!-- Results Section -->
+    <div class="results-container">
+        <div class="results-header">
+            <h3 class="results-title">Search Results</h3>
+            <div class="results-count">
+                {% if bookings %}
+                    Found {{ bookings|length }} booking{{ 's' if bookings|length != 1 else '' }}
+                {% else %}
+                    No bookings found
+                {% endif %}
             </div>
         </div>
-    </div>
 
-    <!-- Results Table -->
-    {% if bookings %}
-    <div class="row">
-        <div class="col-12">
-            <div class="results-table">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-header">
-                            <tr>
-                                <th class="px-4 py-3">Reference</th>
-                                <th class="px-4 py-3">Customer</th>
-                                <th class="px-4 py-3">Created Date</th>
-                                <th class="px-4 py-3">Status</th>
-                                <th class="px-4 py-3">Services</th>
-                                <th class="px-4 py-3">Total Amount</th>
-                                <th class="px-4 py-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for booking in bookings %}
-                            <tr>
-                                <td class="px-4 py-3">
-                                    <div class="fw-medium text-dark">{{ booking.reference_number }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="text-primary fw-medium">
-                                        {% if booking.requester %}
-                                            {{ booking.requester.username }}
-                                            <div class="small text-muted">{{ booking.requester.email }}</div>
-                                        {% else %}
-                                            <span class="text-muted">No Customer</span>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="text-muted">{{ booking.created_at.strftime('%b %d, %Y') }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    {% if booking.status == 'REQUEST' %}
-                                        <span class="status-badge status-request">
-                                            <i class="fas fa-lock me-1"></i>
-                                            Request
-                                        </span>
-                                    {% elif booking.status == 'IN_PROGRESS' %}
-                                        <span class="status-badge status-progress">
-                                            <i class="fas fa-cog me-1"></i>
-                                            In Progress
-                                        </span>
-                                    {% else %}
-                                        <span class="status-badge status-confirmed">
-                                            <i class="fas fa-check me-1"></i>
-                                            Confirmed
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="text-dark">{{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="fw-semibold text-dark">${{ "%.2f"|format(booking.total_amount or 0) }}</div>
-                                </td>
-                                <td class="px-4 py-3">
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" 
-                                           class="action-btn action-view">
-                                            <i class="fas fa-eye me-1"></i>
-                                            View
-                                        </a>
-                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" 
-                                           class="action-btn action-edit">
-                                            <i class="fas fa-edit me-1"></i>
-                                            Edit
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        {% if bookings %}
+        <div class="table-container">
+            <table class="table booking-table">
+                <thead>
+                    <tr>
+                        <th>Reference</th>
+                        <th>Customer</th>
+                        <th>Created Date</th>
+                        <th>Status</th>
+                        <th>Services</th>
+                        <th>Total Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td class="px-4 py-3">
+                            <a href="/booking/{{ booking.id }}" class="reference-link">
+                                {{ booking.reference_number }}
+                            </a>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="fw-semibold text-dark">
+                                {% if booking.customer %}
+                                    {{ booking.customer.name }}
+                                {% else %}
+                                    {{ booking.requester.username if booking.requester else 'N/A' }}
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-muted">{{ booking.created_at.strftime('%d %b %Y') if booking.created_at else 'N/A' }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if booking.status == 'REQUEST' %}
+                                <span class="status-badge status-request">Request</span>
+                            {% elif booking.status == 'IN_PROGRESS' %}
+                                <span class="status-badge status-in-progress">In Progress</span>
+                            {% elif booking.status == 'COMPLETED' %}
+                                <span class="status-badge status-completed">Completed</span>
+                            {% else %}
+                                <span class="status-badge status-request">{{ booking.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="text-dark">{{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="fw-semibold text-dark">${{ "%.2f"|format(booking.total_amount or 0) }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="d-flex gap-2">
+                                <a href="/booking/{{ booking.id }}" 
+                                   class="action-btn action-view">
+                                    <i class="fas fa-eye me-1"></i>
+                                    View
+                                </a>
+                                <a href="/booking/{{ booking.id }}" 
+                                   class="action-btn action-edit">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Edit
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
-    {% else %}
-    <div class="row">
-        <div class="col-12">
-            <div class="text-center py-5 bg-white rounded">
-                <i class="fas fa-search text-muted" style="font-size: 3rem;"></i>
-                <h4 class="mt-3 text-muted">No bookings found</h4>
-                <p class="text-muted">Try adjusting your search criteria or create a new booking</p>
-                <a href="{{ url_for('booking.new') }}" 
-                   class="btn btn-search mt-3">
-                    <i class="fas fa-plus me-2"></i>
-                    Create New Booking
-                </a>
-            </div>
+        {% else %}
+        <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h4 class="mt-3 text-muted">No bookings found</h4>
+            <p class="text-muted">Try adjusting your search criteria or create a new booking</p>
+            <a href="/new-booking" 
+               class="btn btn-search mt-3">
+                <i class="fas fa-plus me-2"></i>
+                Create New Booking
+            </a>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <script>
     function clearFilters() {
         document.getElementById('searchForm').reset();
-        window.location.href = '{{ url_for("search_and_history") }}';
+        window.location.href = '/search-history';
     }
 
     function exportResults() {
         const params = new URLSearchParams(window.location.search);
         params.set('export', 'csv');
-        window.location.href = '{{ url_for("search_and_history") }}?' + params.toString();
+        window.location.href = '/search-history?' + params.toString();
     }
 </script>
 {% endblock %}
