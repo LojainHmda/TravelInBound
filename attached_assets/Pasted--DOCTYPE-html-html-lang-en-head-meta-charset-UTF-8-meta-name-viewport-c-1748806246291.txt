@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE', // Custom primary color
+                        'booking-blue': '#004085', // Custom blue for booking elements
+                        'booking-yellow': '#ffc107' // Custom yellow for booking elements
+                    }
+                }
+            },
+            darkMode: 'class' // Enable dark mode based on class
+        }
+    </script>
+    <style>
+        /* Custom focus style for search inputs */
+        .search-input:focus {
+            outline: none;
+            border-color: #5D5CDE; /* primary color */
+            box-shadow: 0 0 0 3px rgba(93, 92, 222, 0.1);
+        }
+
+        /* Inter font for the body */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Styles for the custom message box (notification) */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 1.5rem;
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+            z-index: 100; /* Ensure it's above other content */
+            display: none; /* Hidden by default */
+            font-size: 0.875rem; /* text-sm */
+            max-width: 90%;
+            text-align: center;
+        }
+        .message-box-success {
+            background-color: #d1fae5; /* Tailwind green-100 */
+            color: #065f46; /* Tailwind green-800 */
+            border: 1px solid #6ee7b7; /* Tailwind green-300 */
+        }
+        .message-box-info {
+            background-color: #e0f2fe; /* Tailwind lightBlue-100 */
+            color: #075985; /* Tailwind lightBlue-800 */
+            border: 1px solid #7dd3fc; /* Tailwind lightBlue-300 */
+        }
+        .message-box-error { /* Added error style */
+            background-color: #fee2e2; /* Tailwind red-100 */
+            color: #991b1b; /* Tailwind red-800 */
+            border: 1px solid #fca5a5; /* Tailwind red-300 */
+        }
+
+        /* Styles for the confirmation modal */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent backdrop */
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 150; /* Above message box */
+        }
+        .confirmation-modal-content {
+            background-color: white;
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-xl */
+            width: 90%;
+            max-width: 400px; /* md:max-w-md */
+        }
+        .dark .confirmation-modal-content { /* Dark mode styles for modal */
+            background-color: #1f2937; /* dark:bg-gray-800 */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div id="customMessageBox" class="message-box">
+        <span id="messageText"></span>
+        <button onclick="hideMessage()" class="ml-4 font-bold text-lg align-middle">&times;</button>
+    </div>
+
+    <div id="deleteConfirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-2" id="confirmModalTitle">Confirm Deletion</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" id="confirmModalText">Are you sure you want to delete this booking?</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDeleteButton" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteButton" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-booking-blue text-white py-4 px-6">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-2xl font-bold text-center">Booking Search</h1>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-6">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Search Filters</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label for="referenceSearch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Booking Reference</label>
+                    <input type="text" id="referenceSearch" placeholder="e.g., JK-LEKVM" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+                
+                <div>
+                    <label for="customerSearch" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Customer Name</label>
+                    <input type="text" id="customerSearch" placeholder="Search by name" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+                
+                <div>
+                    <label for="statusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                    <select id="statusFilter" 
+                            class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        <option value="">All Statuses</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="pending">Pending</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="dateFrom" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date From</label>
+                    <input type="date" id="dateFrom" 
+                           class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <button onclick="searchBookings()" 
+                        class="bg-primary hover:bg-purple-700 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                    Search Bookings
+                </button>
+                <button onclick="clearFilters()" 
+                        class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                    Clear Filters
+                </button>
+                <button onclick="exportResults()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                    Export Results
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="text-gray-900 dark:text-white">
+                    <span id="resultsCount"></span> </div>
+                <div class="flex gap-2">
+                    <select id="sortBy" onchange="sortResults()" 
+                            class="search-input px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                        <option value="reference">Reference A-Z</option>
+                        <option value="customer">Customer A-Z</option>
+                        <option value="status">Status</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Services</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTable" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div id="paginationSummary" class="text-sm text-gray-700 dark:text-gray-300">
+                    </div>
+                <div class="flex gap-2">
+                    <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button class="px-3 py-2 text-sm bg-primary text-white rounded-md">
+                        1
+                    </button>
+                    <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark mode detection and toggling
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        // Optional: Add a button to toggle dark mode and save preference
+        // function toggleDarkMode() {
+        //     if (document.documentElement.classList.contains('dark')) {
+        //         document.documentElement.classList.remove('dark');
+        //         localStorage.setItem('theme', 'light');
+        //     } else {
+        //         document.documentElement.classList.add('dark');
+        //         localStorage.setItem('theme', 'dark');
+        //     }
+        // }
+
+        // Sample booking data (as provided in the new HTML)
+        const sampleBookings = [
+            { reference: 'JK-LEKVM', customer: 'testuser', email: 'test@example.com', userId: 1, created: '2025-05-14', status: 'pending', services: 0, totalAmount: '$0.00' },
+            { reference: 'AB-12345', customer: 'John Smith', email: 'john@example.com', userId: 2, created: '2025-05-13', status: 'confirmed', services: 3, totalAmount: '$450.00' },
+            { reference: 'CD-67890', customer: 'Sarah Johnson', email: 'sarah@example.com', userId: 3, created: '2025-05-12', status: 'completed', services: 2, totalAmount: '$320.00' },
+            { reference: 'EF-11111', customer: 'Mike Wilson', email: 'mike@example.com', userId: 4, created: '2025-05-11', status: 'cancelled', services: 1, totalAmount: '$0.00' },
+            { reference: 'GH-22222', customer: 'Emma Davis', email: 'emma@example.com', userId: 5, created: '2025-05-10', status: 'confirmed', services: 4, totalAmount: '$680.00' },
+            { reference: 'IJ-33333', customer: 'David Brown', email: 'david@example.com', userId: 6, created: '2025-05-09', status: 'pending', services: 1, totalAmount: '$150.00' },
+            { reference: 'KL-44444', customer: 'Lisa Taylor', email: 'lisa@example.com', userId: 7, created: '2025-05-08', status: 'completed', services: 5, totalAmount: '$890.00' },
+            { reference: 'MN-55555', customer: 'Chris Anderson', email: 'chris@example.com', userId: 8, created: '2025-05-07', status: 'confirmed', services: 2, totalAmount: '$275.00' }
+        ];
+
+        let currentBookings = [...sampleBookings]; // Holds the currently displayed/filtered bookings
+        let bookingToDeleteReference = null; // To store reference for modal confirmation
+
+        // --- Custom Message/Notification Functions ---
+        function showMessage(text, type = 'info') {
+            const messageBox = document.getElementById('customMessageBox');
+            const messageText = document.getElementById('messageText');
+            
+            messageText.textContent = text;
+            messageBox.className = 'message-box'; // Reset classes
+            if (type === 'success') {
+                messageBox.classList.add('message-box-success');
+            } else if (type === 'error') {
+                messageBox.classList.add('message-box-error');
+            } else { // default to info
+                messageBox.classList.add('message-box-info');
+            }
+            messageBox.style.display = 'block';
+
+            // Automatically hide after 5 seconds
+            setTimeout(hideMessage, 5000);
+        }
+
+        function hideMessage() {
+            const messageBox = document.getElementById('customMessageBox');
+            messageBox.style.display = 'none';
+        }
+
+        // --- Confirmation Modal Functions ---
+        const deleteModal = document.getElementById('deleteConfirmationModal');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteButton');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteButton');
+
+        function showDeleteConfirmationModal(reference) {
+            bookingToDeleteReference = reference;
+            document.getElementById('confirmModalText').textContent = `Are you sure you want to delete booking ${reference}? This action cannot be undone.`;
+            deleteModal.style.display = 'flex';
+        }
+
+        function hideDeleteConfirmationModal() {
+            deleteModal.style.display = 'none';
+            bookingToDeleteReference = null;
+        }
+
+        confirmDeleteBtn.onclick = function() {
+            if (bookingToDeleteReference) {
+                // Actual deletion logic
+                currentBookings = currentBookings.filter(b => b.reference !== bookingToDeleteReference);
+                sampleBookings.splice(sampleBookings.findIndex(b => b.reference === bookingToDeleteReference), 1); // Also remove from original sample for persistence in this demo
+                renderBookings(currentBookings);
+                showMessage(`Booking ${bookingToDeleteReference} deleted successfully.`, 'success');
+                hideDeleteConfirmationModal();
+            }
+        }
+        cancelDeleteBtn.onclick = hideDeleteConfirmationModal;
+        // Close modal if backdrop is clicked (optional)
+        deleteModal.onclick = function(event) {
+            if (event.target === deleteModal) {
+                hideDeleteConfirmationModal();
+            }
+        }
+
+
+        // --- Booking Data Handling and Rendering ---
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                'confirmed': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                'completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                'cancelled': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+            };
+            // Capitalize first letter of status
+            const capitalizedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+            return `<span class="px-2 py-1 text-xs font-medium rounded-full ${badges[status.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}">${capitalizedStatus}</span>`;
+        }
+
+        function renderBookings(bookingsToRender) {
+            const tbody = document.getElementById('bookingsTable');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            if (bookingsToRender.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-10 px-6 text-gray-500 dark:text-gray-400">No bookings found.</td></tr>`;
+            } else {
+                bookingsToRender.forEach(booking => {
+                    const row = tbody.insertRow();
+                    row.className = "hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors";
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">${booking.reference}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">${booking.customer}</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">${booking.email}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${new Date(booking.created).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            ${getStatusBadge(booking.status)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${booking.services} service${booking.services !== 1 ? 's' : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            ${booking.totalAmount}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick="viewBooking('${booking.reference}')" class="text-primary hover:text-purple-700 mr-3 transition-colors">View</button>
+                            <button onclick="editBooking('${booking.reference}')" class="text-booking-yellow hover:text-yellow-600 mr-3 transition-colors">Edit</button>
+                            <button onclick="triggerDeleteBooking('${booking.reference}')" class="text-red-600 hover:text-red-700 transition-colors">Delete</button>
+                        </td>
+                    `;
+                });
+            }
+            // Update results count and pagination summary
+            const totalSampleBookings = sampleBookings.length; // Use the original full list for "of X bookings"
+            document.getElementById('resultsCount').textContent = `Showing ${bookingsToRender.length} of ${totalSampleBookings} bookings`;
+            document.getElementById('paginationSummary').textContent = `Showing 1 to ${bookingsToRender.length} of ${bookingsToRender.length} results`; // Simplified for non-paginated demo
+        }
+
+        // --- Search, Filter, Sort Functions ---
+        function searchBookings() {
+            // Get filter values
+            const reference = document.getElementById('referenceSearch').value.toLowerCase().trim();
+            const customer = document.getElementById('customerSearch').value.toLowerCase().trim();
+            const status = document.getElementById('statusFilter').value.toLowerCase(); // Ensure lowercase for comparison
+            const dateFrom = document.getElementById('dateFrom').value;
+
+            // Filter the original sampleBookings array
+            currentBookings = sampleBookings.filter(booking => {
+                const matchesReference = !reference || booking.reference.toLowerCase().includes(reference);
+                const matchesCustomer = !customer || booking.customer.toLowerCase().includes(customer);
+                const matchesStatus = !status || booking.status.toLowerCase() === status;
+                // Date comparison: only if dateFrom is set, and booking.created is on or after dateFrom
+                const matchesDate = !dateFrom || (booking.created && new Date(booking.created) >= new Date(dateFrom));
+                
+                return matchesReference && matchesCustomer && matchesStatus && matchesDate;
+            });
+            
+            sortResults(); // Apply current sort order to filtered results
+            // renderBookings(currentBookings); // renderBookings is called within sortResults
+            if (currentBookings.length > 0) {
+                showMessage(`${currentBookings.length} booking(s) found.`, 'success');
+            } else {
+                showMessage('No bookings match your criteria.', 'info');
+            }
+        }
+
+        function clearFilters() {
+            // Reset input fields
+            document.getElementById('referenceSearch').value = '';
+            document.getElementById('customerSearch').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            
+            // Reset currentBookings to the full list and re-render
+            currentBookings = [...sampleBookings];
+            sortResults(); // Apply default sort order
+            // renderBookings(currentBookings); // renderBookings is called within sortResults
+            showMessage('Filters cleared. Showing all bookings.', 'info');
+        }
+
+        function sortResults() {
+            const sortBy = document.getElementById('sortBy').value;
+            
+            currentBookings.sort((a, b) => {
+                switch(sortBy) {
+                    case 'date-desc':
+                        return new Date(b.created) - new Date(a.created);
+                    case 'date-asc':
+                        return new Date(a.created) - new Date(b.created);
+                    case 'reference':
+                        return a.reference.localeCompare(b.reference);
+                    case 'customer':
+                        return a.customer.localeCompare(b.customer);
+                    case 'status':
+                        return a.status.localeCompare(b.status);
+                    default:
+                        return 0;
+                }
+            });
+            renderBookings(currentBookings); // Re-render after sorting
+        }
+
+        // --- Action Button Functions (View, Edit, Delete, Export) ---
+        function viewBooking(reference) {
+            // In a real app, this would navigate to the booking detail page or show a detailed modal
+            const booking = sampleBookings.find(b => b.reference === reference);
+            if (booking) {
+                showMessage(`Viewing details for booking: ${reference}\nCustomer: ${booking.customer}\nStatus: ${booking.status}`, 'info');
+            } else {
+                showMessage(`Booking ${reference} not found.`, 'error');
+            }
+        }
+
+        function editBooking(reference) {
+            // In a real app, this would open the booking edit interface or navigate to an edit page
+            showMessage(`Editing booking: ${reference}. (This would open an edit form).`, 'info');
+        }
+        
+        function triggerDeleteBooking(reference) {
+            // This function now calls the confirmation modal
+            showDeleteConfirmationModal(reference);
+        }
+
+        function exportResults() {
+            // In a real app, this would generate and download a CSV/Excel file
+            if (currentBookings.length === 0) {
+                showMessage('No data to export.', 'info');
+                return;
+            }
+            // Basic CSV generation example (can be expanded)
+            let csvContent = "data:text/csv;charset=utf-8,";
+            // Headers
+            csvContent += "Reference,Customer,Email,Created Date,Status,Services,Total Amount\n";
+            // Rows
+            currentBookings.forEach(booking => {
+                let row = [
+                    booking.reference,
+                    booking.customer,
+                    booking.email,
+                    booking.created,
+                    booking.status,
+                    booking.services,
+                    `"${booking.totalAmount.replace('$', '')}"` // Handle potential commas in amount
+                ].join(",");
+                csvContent += row + "\r\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "booking_results.csv");
+            document.body.appendChild(link); // Required for Firefox
+            link.click();
+            document.body.removeChild(link);
+            showMessage('Results exported as CSV.', 'success');
+        }
+
+        // Initialize the page when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            renderBookings(currentBookings); // Display initial set of bookings
+            // Set initial results count and pagination summary
+            document.getElementById('resultsCount').textContent = `Showing ${currentBookings.length} of ${sampleBookings.length} bookings`;
+            document.getElementById('paginationSummary').textContent = `Showing 1 to ${currentBookings.length} of ${currentBookings.length} results`;
+        });
+    </script>
+</body>
+</html>
