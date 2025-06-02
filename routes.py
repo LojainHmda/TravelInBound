@@ -149,38 +149,7 @@ def index():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
     return render_template('index.html', bookings=recent_bookings)
 
-# Dashboard
-@app.route('/dashboard')
-def dashboard():
-    # Get counts for each status
-    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
-    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
-    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
-    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
-    
-    # Get service items for each service type
-    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
-    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
-    transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
-    visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
-    insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
-    
-    return render_template(
-        'booking/dashboard.html',
-        status_counts={
-            'request': request_count,
-            'booked': booked_count,
-            'in_progress': in_progress_count,
-            'completed': completed_count
-        },
-        service_items={
-            'flight': flight_items,
-            'hotel': hotel_items,
-            'transport': transport_items,
-            'visa': visa_items,
-            'insurance': insurance_items
-        }
-    )
+# Dashboard route removed - handled by the earlier dashboard function
 
 # New booking request (legacy - will be replaced by new_booking_detail)
 @app.route('/requests', methods=['GET', 'POST'])
