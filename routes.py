@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from werkzeug.security import check_password_hash
 
-from app import app, db
+from application import app, db
 from flask_login import login_user, logout_user, login_required, current_user
 from app.routes.auth import auth_bp
 
