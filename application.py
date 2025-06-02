@@ -43,12 +43,11 @@ with app.app_context():
 
 # Register blueprints if they exist
 try:
-    from app_modules.routes.voucher import voucher_bp
-    from app_modules.routes.booking import booking_bp
+    from app.routes.voucher import voucher_bp
+    from app.routes.booking import booking_bp
     app.register_blueprint(voucher_bp)
     app.register_blueprint(booking_bp, url_prefix='/booking')
 except ImportError:
     pass
 
-# Import main routes
-import routes
+# Routes will be imported by main.py to avoid circular imports
