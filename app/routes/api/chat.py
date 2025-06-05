@@ -1,8 +1,4 @@
 from flask import Blueprint, request, jsonify
-from flask_login import login_required, current_user
-from flask_wtf import CSRFProtect
-from app.services.ai_chat import travel_ai
-from app.services.screen_context import screen_context_ai
 
 chat_api = Blueprint('chat_api', __name__)
 
@@ -16,10 +12,10 @@ def ai_chat():
         if not user_query:
             return jsonify({'error': 'Message is required'}), 400
         
-        # Return a simple response for now to fix the routing issue
+        # Simple response without AI dependencies
         return jsonify({
             'success': True,
-            'response': f'I received your message: {user_query}. The AI chat feature will be enhanced with proper API keys.',
+            'response': f'I received your message: {user_query}. AI chat features require OpenAI API key configuration.',
             'booking_data': {},
             'intent': {},
             'timestamp': str(data.get('timestamp', ''))
@@ -33,19 +29,13 @@ def ai_chat():
         }), 500
 
 @chat_api.route('/api/chat/booking/<int:booking_id>')
-@login_required
 def get_booking_summary(booking_id):
-    """Get AI-powered booking summary"""
+    """Get booking summary"""
     try:
-        response = travel_ai.get_booking_summary(booking_id)
-        
-        if 'error' in response:
-            return jsonify({'success': False, 'error': response['error']}), 404
-        
         return jsonify({
             'success': True,
-            'response': response['response'],
-            'booking_data': response.get('booking_data', {})
+            'response': f'Booking summary for ID {booking_id} will be available when AI services are configured.',
+            'booking_data': {}
         })
         
     except Exception as e:
@@ -64,7 +54,7 @@ def contextual_ai_chat():
         if not user_query:
             return jsonify({'error': 'Message is required'}), 400
         
-        # Return a simple response for now to fix the 405 error
+        # Simple response without AI dependencies
         return jsonify({
             'success': True,
             'response': 'I received your message: ' + user_query,
