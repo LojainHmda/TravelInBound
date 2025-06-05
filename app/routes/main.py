@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
 from app import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
@@ -254,3 +254,8 @@ def find_bookings():
                          total_amount=total_amount,
                          total_bookings=total_bookings,
                          has_search_params=has_search_params)
+
+@main_bp.route('/favicon.ico')
+def favicon():
+    """Serve favicon to prevent 404 errors"""
+    return send_from_directory('static', 'favicon.ico')
