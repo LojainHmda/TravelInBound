@@ -104,18 +104,39 @@
                 </div>
             </div>
             
-            <!-- Results Summary -->
-            {% if bookings is defined %}
+            <!-- Results Summary or Performance Message -->
+            {% if not has_search_params %}
+            <div class="alert alert-primary d-flex align-items-start mb-3" style="border-left: 4px solid #007bff;">
+                <i class="fas fa-info-circle me-3 mt-1"></i>
+                <div>
+                    <h6 class="mb-2">Ready to Search Bookings</h6>
+                    <p class="mb-2">Enter search criteria above to find specific bookings. Use filters like reference number, date range, or status to narrow your results.</p>
+                    <small class="text-muted">
+                        <i class="fas fa-lightning-bolt me-1"></i>
+                        Performance optimized - results load only when you search
+                    </small>
+                </div>
+            </div>
+            {% elif bookings is defined and bookings|length > 0 %}
             <div class="alert alert-info d-flex align-items-center mb-3" style="border-left: 4px solid #FFBF00;">
                 <i class="fas fa-info-circle me-2"></i>
-                <strong>{{ total_bookings }}</strong>&nbsp;bookings found
+                <strong>{{ total_bookings }}</strong>&nbsp;bookings found (limited to 100 for performance)
                 {% if total_amount > 0 %}
                 &nbsp;|&nbsp;Total Amount: <strong>${{ "%.2f"|format(total_amount) }}</strong>
                 {% endif %}
             </div>
+            {% elif has_search_params %}
+            <div class="alert alert-warning d-flex align-items-center mb-3" style="border-left: 4px solid #ffc107;">
+                <i class="fas fa-search me-2"></i>
+                <div>
+                    <strong>No Results Found</strong><br>
+                    <small>No bookings match your search criteria. Try adjusting your filters or search terms.</small>
+                </div>
+            </div>
             {% endif %}
             
             <!-- Results Table -->
+            {% if has_search_params %}
             <div class="card shadow-sm">
                 <div class="card-body p-0">
                     {% if bookings and bookings|length > 0 %}
@@ -196,6 +217,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
