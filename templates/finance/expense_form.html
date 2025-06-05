@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if expense %}Edit Expense{% else %}New Expense{% endif %} - TravelBookPro
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if expense %}Edit Expense{% else %}New Expense{% endif %}
+        </h1>
+        <div>
+            <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Expenses
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Expense Form Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">
+                        {% if expense %}Edit Expense Details{% else %}Expense Details{% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% if expense %}{{ url_for('finance.edit_expense', expense_id=expense.id) }}{% else %}{{ url_for('finance.new_expense') }}{% endif %}">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="title" class="form-label">Expense Title *</label>
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Enter a descriptive title") }}
+                                {% for error in form.title.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="amount" class="form-label">Amount *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.amount(class="form-control" + (" is-invalid" if form.amount.errors else ""), placeholder="0.00", step="0.01", min="0.01") }}
+                                    {% for error in form.amount.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="category_id" class="form-label">Category *</label>
+                                {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+                                {% for error in form.category_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="vendor_name" class="form-label">Vendor/Supplier</label>
+                                {{ form.vendor_name(class="form-control" + (" is-invalid" if form.vendor_name.errors else ""), placeholder="Vendor or supplier name") }}
+                                {% for error in form.vendor_name.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_incurred" class="form-label">Date Incurred *</label>
+                                {{ form.date_incurred(class="form-control" + (" is-invalid" if form.date_incurred.errors else ""), type="date") }}
+                                {% for error in form.date_incurred.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="reference_number" class="form-label">Reference/Invoice Number</label>
+                                {{ form.reference_number(class="form-control" + (" is-invalid" if form.reference_number.errors else ""), placeholder="Invoice or receipt reference") }}
+                                {% for error in form.reference_number.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows="3", placeholder="Enter details about this expense") }}
+                            {% for error in form.description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check mb-2">
+                                    {{ form.is_paid(class="form-check-input") }}
+                                    <label class="form-check-label" for="is_paid">
+                                        Mark as Paid
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 payment-details" id="paymentDetailsSection">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="payment_method" class="form-label">Payment Method</label>
+                                        {{ form.payment_method(class="form-select" + (" is-invalid" if form.payment_method.errors else "")) }}
+                                        {% for error in form.payment_method.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="payment_date" class="form-label">Payment Date</label>
+                                        {{ form.payment_date(class="form-control" + (" is-invalid" if form.payment_date.errors else ""), type="date") }}
+                                        {% for error in form.payment_date.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_recurring(class="form-check-input") }}
+                                <label class="form-check-label" for="is_recurring">
+                                    This is a recurring expense
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="recurringSection" class="mb-3" style="display: none;">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="recurrence_type" class="form-label">Recurrence Type</label>
+                                    {{ form.recurrence_type(class="form-select" + (" is-invalid" if form.recurrence_type.errors else "")) }}
+                                    {% for error in form.recurrence_type.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="recurrence_ends" class="form-label">End Date</label>
+                                    {{ form.recurrence_ends(class="form-control" + (" is-invalid" if form.recurrence_ends.errors else ""), type="date") }}
+                                    {% for error in form.recurrence_ends.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                    <div class="form-text">Leave blank for indefinite recurrence</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-end mt-4">
+                            <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if expense %}
+        <div class="col-lg-4">
+            <!-- Attachments Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">Attachments</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('finance.upload_attachment', expense_id=expense.id) }}" method="POST" enctype="multipart/form-data">
+                        {{ form.csrf_token }}
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Upload Receipt/Invoice</label>
+                            <input type="file" class="form-control" id="file" name="file" required>
+                            <div class="form-text">Supported formats: PDF, JPG, PNG (max 5MB)</div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-sm">Upload</button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <h6 class="mb-3">Current Attachments</h6>
+                    <div class="attachment-list">
+                        {% if expense.attachments %}
+                            {% for attachment in expense.attachments %}
+                                <div class="attachment-item d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <i class="fas {% if 'image' in attachment.file_type %}fa-file-image{% elif 'pdf' in attachment.file_type %}fa-file-pdf{% else %}fa-file{% endif %} me-2"></i>
+                                        <a href="{{ url_for('static', filename=attachment.file_path) }}" target="_blank">
+                                            {{ attachment.file_name }}
+                                        </a>
+                                        <span class="text-muted small ms-2">
+                                            {{ (attachment.file_size / 1024)|round(1) }} KB
+                                        </span>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Attachment">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No attachments uploaded</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle payment details section based on paid status
+        const isPaidCheckbox = document.getElementById('is_paid');
+        const paymentDetailsSection = document.getElementById('paymentDetailsSection');
+        
+        function togglePaymentDetails() {
+            if (isPaidCheckbox.checked) {
+                paymentDetailsSection.style.display = 'block';
+            } else {
+                paymentDetailsSection.style.display = 'none';
+            }
+        }
+        
+        isPaidCheckbox.addEventListener('change', togglePaymentDetails);
+        togglePaymentDetails();
+        
+        // Toggle recurring section
+        const isRecurringCheckbox = document.getElementById('is_recurring');
+        const recurringSection = document.getElementById('recurringSection');
+        
+        function toggleRecurringSection() {
+            if (isRecurringCheckbox.checked) {
+                recurringSection.style.display = 'block';
+            } else {
+                recurringSection.style.display = 'none';
+            }
+        }
+        
+        isRecurringCheckbox.addEventListener('change', toggleRecurringSection);
+        toggleRecurringSection();
+    });
+</script>
+{% endblock %}

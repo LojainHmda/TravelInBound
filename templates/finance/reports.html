@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}Financial Reports - TravelBookPro{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .report-card {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .report-card.selected {
+        border-left: 4px solid #4e73df;
+        background-color: #f8f9fc;
+    }
+    
+    .report-icon {
+        font-size: 2.5rem;
+        color: #4e73df;
+    }
+    
+    .date-range-custom {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Financial Reports Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Financial Reports</h1>
+        <div>
+            <a href="{{ url_for('finance.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Generate Financial Report</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('finance.generate_report') }}" id="report-form">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-4">
+                            <!-- Report Type Selection -->
+                            <div class="col-lg-12 mb-4">
+                                <h5 class="text-dark">Select Report Type</h5>
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card report-card shadow-sm h-100 py-3 selected" data-report-type="profit_loss">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-chart-line report-icon mb-3"></i>
+                                                <h5 class="text-dark mb-1">Profit & Loss</h5>
+                                                <p class="text-muted mb-0 small">Income, expenses, and profit</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card report-card shadow-sm h-100 py-3" data-report-type="expense_summary">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-receipt report-icon mb-3"></i>
+                                                <h5 class="text-dark mb-1">Expense Summary</h5>
+                                                <p class="text-muted mb-0 small">Expense breakdown by category</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card report-card shadow-sm h-100 py-3" data-report-type="revenue_summary">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-dollar-sign report-icon mb-3"></i>
+                                                <h5 class="text-dark mb-1">Revenue Summary</h5>
+                                                <p class="text-muted mb-0 small">Revenue analysis by service type</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card report-card shadow-sm h-100 py-3" data-report-type="supplier_payments">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-handshake report-icon mb-3"></i>
+                                                <h5 class="text-dark mb-1">Supplier Payments</h5>
+                                                <p class="text-muted mb-0 small">Payments to suppliers</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ form.report_type(class="d-none") }}
+                            </div>
+                            
+                            <!-- Date Range Selection -->
+                            <div class="col-lg-12 mb-3">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="text-dark">Select Date Range</h5>
+                                        <div class="card shadow-sm">
+                                            <div class="card-body">
+                                                {{ form.date_range(class="form-select mb-3") }}
+                                                
+                                                <div class="date-range-custom">
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="date_from" class="form-label">From</label>
+                                                            {{ form.date_from(class="form-control", type="date") }}
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label for="date_to" class="form-label">To</label>
+                                                            {{ form.date_to(class="form-control", type="date") }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Report Options -->
+                                    <div class="col-md-6">
+                                        <h5 class="text-dark">Report Options</h5>
+                                        <div class="card shadow-sm">
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="group_by" class="form-label">Group Data By</label>
+                                                    {{ form.group_by(class="form-select") }}
+                                                </div>
+                                                
+                                                <div class="form-check">
+                                                    {{ form.include_details(class="form-check-input") }}
+                                                    <label class="form-check-label" for="include_details">
+                                                        Include detailed breakdown
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button type="submit" name="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-file-alt me-1"></i> Generate Report
+                            </button>
+                            <button type="submit" name="export" class="btn btn-success btn-lg">
+                                <i class="fas fa-file-export me-1"></i> Export Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Descriptions -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card border-left-info shadow-sm mb-4">
+                <div class="card-header py-3 bg-light">
+                    <h6 class="m-0 font-weight-bold text-info">
+                        <i class="fas fa-info-circle me-2"></i>About Financial Reports
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary"><i class="fas fa-chart-line me-2"></i>Profit & Loss Statement</h5>
+                            <p>The Profit & Loss Statement provides a comprehensive overview of your agency's financial performance by showing:</p>
+                            <ul>
+                                <li>Total revenue from client bookings</li>
+                                <li>Expenses categorized by type</li>
+                                <li>Supplier costs for travel services</li>
+                                <li>Gross profit (revenue minus supplier costs)</li>
+                                <li>Net profit (gross profit minus operational expenses)</li>
+                            </ul>
+                            <p class="text-muted">Use this report to assess your overall financial health and track profitability trends over time.</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="text-primary"><i class="fas fa-receipt me-2"></i>Expense Summary</h5>
+                            <p>The Expense Summary breaks down all operational expenses by category, helping you:</p>
+                            <ul>
+                                <li>Identify your highest cost areas</li>
+                                <li>Track expense trends over time</li>
+                                <li>Compare expenses across different periods</li>
+                                <li>Find potential areas for cost reduction</li>
+                            </ul>
+                            <p class="text-muted">This report is essential for budgeting and cost control measures.</p>
+                            
+                            <h5 class="text-primary mt-4"><i class="fas fa-dollar-sign me-2"></i>Revenue Summary</h5>
+                            <p>The Revenue Summary analyzes your income streams by service type, providing insights into:</p>
+                            <ul>
+                                <li>Which services generate the most revenue</li>
+                                <li>Revenue patterns across different periods</li>
+                                <li>Seasonal trends in bookings and income</li>
+                            </ul>
+                            <p class="text-muted">Use this report to focus your marketing efforts on the most profitable services.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle report type selection
+        const reportCards = document.querySelectorAll('.report-card');
+        const reportTypeInput = document.getElementById('report_type');
+        
+        reportCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards
+                reportCards.forEach(c => c.classList.remove('selected'));
+                
+                // Add selected class to clicked card
+                this.classList.add('selected');
+                
+                // Update hidden input value
+                reportTypeInput.value = this.dataset.reportType;
+            });
+        });
+        
+        // Handle date range selection
+        const dateRangeSelect = document.getElementById('date_range');
+        const customDateRange = document.querySelector('.date-range-custom');
+        
+        dateRangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateRange.style.display = 'block';
+            } else {
+                customDateRange.style.display = 'none';
+            }
+        });
+        
+        // Initialize date range visibility
+        if (dateRangeSelect.value === 'custom') {
+            customDateRange.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
