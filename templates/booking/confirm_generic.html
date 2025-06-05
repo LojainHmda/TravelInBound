@@ -1,0 +1,121 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-check-circle{% endblock %}
+{% block confirmation_title %}Service Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter confirmation details for {{ service_item.service_type }} service in booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Service Confirmation{% endblock %}
+{% block form_title %}{{ service_item.service_type|title }} Service Details{% endblock %}
+{% block service_type %}{{ service_item.service_type }}{% endblock %}
+
+{% block supplier_options %}
+<option value="Direct Provider">Direct Provider</option>
+<option value="Travel Agent">Travel Agent</option>
+<option value="Online Platform">Online Platform</option>
+<option value="Local Operator">Local Operator</option>
+<option value="Other">Other</option>
+{% endblock %}
+
+{% block form_content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Service Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Service Name</label>
+            <input type="text" name="service_name" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Start Date</label>
+                <input type="date" name="start_date" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">End Date</label>
+                <input type="date" name="end_date" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <div class="input-group">
+                <input type="number" name="price" step="0.01" class="form-control" value="{{ service_item.amount }}">
+                <select name="currency" class="form-select" style="max-width: 100px;">
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Booking Details</h5>
+        <div class="mb-3">
+            <label class="form-label">Provider Contact</label>
+            <input type="text" name="provider_contact" class="form-control">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Cancelation Policy</label>
+            <select name="cancellation_policy" class="form-select">
+                <option value="Flexible">Flexible</option>
+                <option value="Moderate">Moderate</option>
+                <option value="Strict">Strict</option>
+                <option value="Non-refundable">Non-refundable</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Number of People</label>
+            <input type="number" name="people_count" class="form-control" min="1" value="1">
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Additional Details</label>
+            <textarea name="service_details" class="form-control" rows="3"></textarea>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date validation
+    const startDateInput = document.querySelector('input[name="start_date"]');
+    const endDateInput = document.querySelector('input[name="end_date"]');
+    
+    if (startDateInput && endDateInput) {
+        const validateDates = () => {
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                
+                if (endDate < startDate) {
+                    endDateInput.setCustomValidity('End date must be after start date');
+                } else {
+                    endDateInput.setCustomValidity('');
+                }
+            }
+        };
+        
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+    }
+    
+    // Copy service description to the service name if it exists
+    const serviceNameInput = document.querySelector('input[name="service_name"]');
+    if (serviceNameInput && serviceNameInput.value === '') {
+        // Try to get the service description from the booking details
+        serviceNameInput.value = "{{ service_item.description }}";
+    }
+});
+</script>
+{% endblock %}

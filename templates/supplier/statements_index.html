@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier Statements{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('supplier.list_suppliers') }}">Suppliers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Statements</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="mb-3">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                Supplier Statements
+            </h1>
+            <p class="lead">Generate statements of account for your suppliers</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Generate Statement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('supplier.generate_statement') }}">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="supplier_id" class="form-label">Select Supplier</label>
+                                {{ form.supplier_id(class="form-select") }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="from_date" class="form-label">From Date</label>
+                                {{ form.from_date(class="form-control", type="date") }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="to_date" class="form-label">To Date</label>
+                                {{ form.to_date(class="form-control", type="date") }}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="status" class="form-label">Payment Status</label>
+                                {{ form.status(class="form-select") }}
+                            </div>
+                            
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i> Generate Statement
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>About Statements</h5>
+                </div>
+                <div class="card-body">
+                    <p>Supplier statements of account provide a summary of the financial transactions between your company and a supplier over a specific period.</p>
+                    <p>Use these statements to:</p>
+                    <ul>
+                        <li>Track outstanding balances</li>
+                        <li>Verify payment histories</li>
+                        <li>Reconcile accounts</li>
+                        <li>Plan future payments</li>
+                    </ul>
+                    <p class="mb-0">The statement includes all service confirmations and associated costs along with any payments made to the supplier.</p>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Use date filters to focus on specific periods</li>
+                        <li>Filter by payment status to identify unpaid items</li>
+                        <li>Print statements for your records</li>
+                        <li>Record payments directly from the statement view</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

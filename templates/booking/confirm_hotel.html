@@ -1,0 +1,123 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-hotel{% endblock %}
+{% block confirmation_title %}Hotel Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter hotel confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Hotel Confirmation{% endblock %}
+{% block form_title %}Hotel Reservation Details{% endblock %}
+{% block service_type %}HOTEL{% endblock %}
+
+{% block supplier_options %}
+<!-- Dynamic hotel suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
+<option value="Direct Booking" {% if confirmation_data.supplier == 'Direct Booking' %}selected{% endif %}>Direct Booking</option>
+{% endif %}
+{% endblock %}
+
+{% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="meal_plan_value" value="{{ confirmation_data.meal_plan }}">
+<input type="hidden" name="status_value" value="{{ confirmation_data.status }}">
+<input type="hidden" name="currency_value" value="{{ confirmation_data.currency }}">
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Hotel Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Hotel Name</label>
+            <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name|default('') }}" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Check-in Date</label>
+                <input type="date" name="from_date" class="form-control" required 
+                       value="{{ confirmation_data.from_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Check-out Date</label>
+                <input type="date" name="to_date" class="form-control" required 
+                       value="{{ confirmation_data.to_date|default(service_item.end_date.strftime('%Y-%m-%d')) }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Meal Plan</label>
+            <select name="meal_plan" class="form-select">
+                <option value="Room Only" {% if confirmation_data.meal_plan == 'Room Only' %}selected{% endif %}>Room Only</option>
+                <option value="Breakfast" {% if confirmation_data.meal_plan == 'Breakfast' %}selected{% endif %}>Breakfast</option>
+                <option value="Half Board" {% if confirmation_data.meal_plan == 'Half Board' %}selected{% endif %}>Half Board</option>
+                <option value="Full Board" {% if confirmation_data.meal_plan == 'Full Board' %}selected{% endif %}>Full Board</option>
+                <option value="All Inclusive" {% if confirmation_data.meal_plan == 'All Inclusive' %}selected{% endif %}>All Inclusive</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Special Notes</label>
+            <textarea name="special_notes" class="form-control" rows="2">{{ confirmation_data.special_notes|default('') }}</textarea>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Room Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="confirmed" {% if confirmation_data.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                <option value="pending" {% if confirmation_data.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="on_request" {% if confirmation_data.status == 'on_request' %}selected{% endif %}>On Request</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Cost</label>
+            <div class="input-group">
+                <input type="number" name="cost" step="0.01" class="form-control" value="{{ confirmation_data.cost|default(service_item.amount) }}">
+                <select name="currency" class="form-select" style="max-width: 100px;">
+                    <option value="USD" {% if confirmation_data.currency == 'USD' %}selected{% endif %}>USD</option>
+                    <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                    <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="roomDetails">
+            <h6 class="mt-3">Room Configuration</h6>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label">Single</label>
+                    <input type="number" name="single_rooms" class="form-control" value="{{ confirmation_data.rooms.single|default(0) }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Double</label>
+                    <input type="number" name="double_rooms" class="form-control" value="{{ confirmation_data.rooms.double|default(0) }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Twin</label>
+                    <input type="number" name="twin_rooms" class="form-control" value="{{ confirmation_data.rooms.twin|default(0) }}" min="0">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Triple</label>
+                    <input type="number" name="triple_rooms" class="form-control" value="{{ confirmation_data.rooms.triple|default(0) }}" min="0">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Other Room Types</label>
+                <input type="text" name="other_rooms" class="form-control" value="{{ confirmation_data.rooms.other|default('') }}" placeholder="E.g., Family, Suite, etc.">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_hotel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
+{% endblock %}

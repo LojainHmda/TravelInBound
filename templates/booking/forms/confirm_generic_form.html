@@ -1,0 +1,47 @@
+{% extends 'booking/forms/confirm_base_form.html' %}
+
+{% block supplier_options %}
+<option value="Direct Supplier">Direct Supplier</option>
+<option value="Agent">Agent</option>
+<option value="Other">Other</option>
+{% endblock %}
+
+{% block form_fields %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Description</label>
+        <input type="text" name="description" class="form-control" value="{{ confirmation_data.description or service_item.description }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">From Date</label>
+        <input type="date" name="from_date" class="form-control" value="{{ confirmation_data.from_date or service_item.start_date.strftime('%Y-%m-%d') }}" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">To Date</label>
+        <input type="date" name="to_date" class="form-control" value="{{ confirmation_data.to_date or service_item.end_date.strftime('%Y-%m-%d') }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Amount</label>
+        <input type="number" name="amount" class="form-control" value="{{ confirmation_data.amount or service_item.amount }}" step="0.01" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Currency</label>
+        <select name="currency" class="form-select">
+            <option value="USD" {% if confirmation_data.currency == 'USD' or not confirmation_data.currency %}selected{% endif %}>USD</option>
+            <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+            <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
+        </select>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Notes</label>
+    <textarea name="notes" class="form-control" rows="3">{{ confirmation_data.notes }}</textarea>
+</div>
+{% endblock %}

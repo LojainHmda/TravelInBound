@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier Confirmation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}">Booking #{{ service_item.booking.reference_number }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Supplier Confirmation</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="mb-3">
+                <i class="fas fa-handshake me-2"></i>
+                Supplier Confirmation Details
+            </h1>
+            <p class="lead">Record supplier details and costs for {{ service_item.service_type }} service</p>
+        </div>
+        <div class="col-lg-4 text-end">
+            <a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Booking
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Service Item Info Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Service Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Service Type:</strong>
+                        <p>
+                            <span class="badge bg-{{ 
+                                'primary' if service_item.service_type == 'FLIGHT' else 
+                                'success' if service_item.service_type == 'HOTEL' else 
+                                'warning' if service_item.service_type == 'TRANSPORT' else 
+                                'info' if service_item.service_type == 'VISA' else 
+                                'secondary' if service_item.service_type == 'INSURANCE' else 
+                                'dark' 
+                            }}">
+                                {{ service_item.service_type }}
+                            </span>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Description:</strong>
+                        <p>{{ service_item.description }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Date Range:</strong>
+                        <p>{{ service_item.start_date.strftime('%d %b %Y') }} to {{ service_item.end_date.strftime('%d %b %Y') }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Selling Amount:</strong>
+                        <p class="text-primary">${{ "%.2f"|format(service_item.amount) }}</p>
+                    </div>
+                    
+                    {% if confirmation_doc %}
+                    <div class="mb-3">
+                        <strong>Confirmation Reference:</strong>
+                        <p>{{ confirmation_doc.document_number }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Status:</strong>
+                        <p>
+                            <span class="badge bg-{{ 
+                                'secondary' if service_item.status == 'REQUEST' else 
+                                'info' if service_item.status == 'BOOKED' else 
+                                'warning' if service_item.status == 'IN_PROGRESS' else 
+                                'success' if service_item.status == 'FULFILLED' else 
+                                'primary' 
+                            }}">
+                                {{ service_item.status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Supplier Confirmation Form -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Supplier Details & Costs</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('confirmation.add_supplier_confirmation', item_id=service_item.id) }}">
+                        {{ form.csrf_token }}
+                        {{ form.selling_amount }}
+                        {{ form.selling_currency }}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="confirmation_reference" class="form-label">Confirmation Reference *</label>
+                                {{ form.confirmation_reference(class="form-control" + (" is-invalid" if form.confirmation_reference.errors else ""), placeholder="e.g., BTK12345") }}
+                                {% for error in form.confirmation_reference.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="supplier_id" class="form-label">Supplier *</label>
+                                {{ form.supplier_id(class="form-select" + (" is-invalid" if form.supplier_id.errors else "")) }}
+                                {% for error in form.supplier_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                                <div class="mt-1">
+                                    <a href="/finance/new-supplier" target="_blank" class="text-primary small">
+                                        <i class="fas fa-plus-circle me-1"></i>Add new supplier
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <hr>
+                                <h5 class="text-primary">Cost Information</h5>
+                                <p class="text-muted small">Enter the cost details for this service (amount paid to supplier)</p>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="cost_amount" class="form-label">Cost Amount *</label>
+                                {{ form.cost_amount(class="form-control" + (" is-invalid" if form.cost_amount.errors else ""), step="0.01", min="0") }}
+                                {% for error in form.cost_amount.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="cost_currency" class="form-label">Currency</label>
+                                {{ form.cost_currency(class="form-select") }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="payment_due_date" class="form-label">Payment Due Date</label>
+                                {{ form.payment_due_date(class="form-control", type="date") }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Margin</label>
+                                <div class="input-group">
+                                    <input type="text" id="margin-display" class="form-control" readonly>
+                                    <span class="input-group-text">
+                                        <span id="margin-percentage">0.0</span>%
+                                    </span>
+                                </div>
+                                <small class="text-muted">Calculated automatically</small>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="notes" class="form-label">Notes</label>
+                                {{ form.notes(class="form-control", rows=3, placeholder="Any additional notes about the supplier, payment terms, etc.") }}
+                            </div>
+                            
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i> Save Confirmation
+                                </button>
+                                <a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}" class="btn btn-outline-secondary ms-2">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculate margin when cost amount changes
+    const costAmountInput = document.getElementById('cost_amount');
+    const sellingAmountInput = document.getElementById('selling_amount');
+    const marginDisplay = document.getElementById('margin-display');
+    const marginPercentage = document.getElementById('margin-percentage');
+    
+    function calculateMargin() {
+        const sellingAmount = parseFloat(sellingAmountInput.value) || 0;
+        const costAmount = parseFloat(costAmountInput.value) || 0;
+        
+        if (costAmount > 0) {
+            const margin = sellingAmount - costAmount;
+            const percentage = (margin / costAmount) * 100;
+            
+            marginDisplay.value = margin.toFixed(2);
+            marginPercentage.textContent = percentage.toFixed(1);
+            
+            // Change color based on margin
+            if (margin > 0) {
+                marginDisplay.classList.remove('text-danger');
+                marginDisplay.classList.add('text-success');
+                marginPercentage.classList.remove('text-danger');
+                marginPercentage.classList.add('text-success');
+            } else {
+                marginDisplay.classList.remove('text-success');
+                marginDisplay.classList.add('text-danger');
+                marginPercentage.classList.remove('text-success');
+                marginPercentage.classList.add('text-danger');
+            }
+        } else {
+            marginDisplay.value = '0.00';
+            marginPercentage.textContent = '0.0';
+        }
+    }
+    
+    costAmountInput.addEventListener('input', calculateMargin);
+    
+    // Initial calculation
+    calculateMargin();
+    
+    // Refresh the supplier list to get new suppliers without page reload
+    const supplierSelect = document.getElementById('supplier_id');
+    const refreshSuppliers = async () => {
+        try {
+            const response = await fetch('/suppliers/api/list');
+            const suppliers = await response.json();
+            
+            // Remember the currently selected supplier
+            const currentSupplier = supplierSelect.value;
+            
+            // Clear the select
+            while (supplierSelect.options.length > 0) {
+                supplierSelect.remove(0);
+            }
+            
+            // Add the suppliers
+            suppliers.forEach(supplier => {
+                const option = new Option(`${supplier.name} (${supplier.code})`, supplier.id);
+                supplierSelect.add(option);
+            });
+            
+            // Try to restore the previously selected supplier
+            if (currentSupplier) {
+                supplierSelect.value = currentSupplier;
+            }
+        } catch (error) {
+            console.error('Error fetching suppliers:', error);
+        }
+    };
+    
+    // Refresh suppliers when the page loads
+    refreshSuppliers();
+    
+    // Allow refreshing the supplier list
+    const refreshLink = document.querySelector('a[href*="new_supplier"]');
+    refreshLink.insertAdjacentHTML('afterend', '&nbsp;|&nbsp;<a href="#" id="refresh-suppliers" class="text-primary small"><i class="fas fa-sync-alt me-1"></i>Refresh list</a>');
+    
+    document.getElementById('refresh-suppliers').addEventListener('click', function(e) {
+        e.preventDefault();
+        refreshSuppliers();
+    });
+});
+</script>
+{% endblock %}

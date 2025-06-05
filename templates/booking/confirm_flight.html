@@ -1,0 +1,290 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-plane{% endblock %}
+{% block confirmation_title %}Flight Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter flight confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Flight Confirmation{% endblock %}
+{% block form_title %}Outbound Flight Details{% endblock %}
+{% block service_type %}FLIGHT{% endblock %}
+
+{% block supplier_options %}
+<!-- Dynamic airline suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
+<option value="Airline Direct" {% if confirmation_data.supplier == 'Airline Direct' %}selected{% endif %}>Airline Direct</option>
+{% endif %}
+{% endblock %}
+
+{% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="travel_class_value" value="{{ confirmation_data.travel_class }}">
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <h5>Passenger Information</h5>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Adults (12+ years)</label>
+                <input type="number" name="adults" class="form-control" value="{{ confirmation_data.passenger_count.adults|default(1) }}" min="0">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Children (2-11 years)</label>
+                <input type="number" name="children" class="form-control" value="{{ confirmation_data.passenger_count.children|default(0) }}" min="0">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Infants (0-2 years)</label>
+                <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Passenger Names</label>
+            <div id="passengerNames">
+                {% if confirmation_data is defined and confirmation_data.passenger_names is defined %}
+                    {% for name in confirmation_data.passenger_names %}
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">Passenger {{ loop.index }}</span>
+                        <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
+                        {% if not loop.first %}
+                        <button type="button" class="btn btn-outline-danger remove-passenger">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="input-group mb-2">
+                    <span class="input-group-text">Adult 1</span>
+                    <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="addPassenger">
+                <i class="fas fa-plus-circle"></i> Add Passenger
+            </button>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <h5>Flight Information</h5>
+        
+        <!-- Ticket Scanner Button -->
+        <div class="mb-3">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ticketScannerModal">
+                <i class="fas fa-camera me-2"></i> Scan Flight Ticket
+            </button>
+            <small class="ms-2 text-muted">Upload a flight ticket to automatically extract details</small>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Departure Airport</label>
+                <input type="text" name="departure_airport" id="departure_airport" class="form-control" value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Arrival Airport</label>
+                <input type="text" name="arrival_airport" id="arrival_airport" class="form-control" value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Airline</label>
+                <input type="text" name="airline" id="airline" class="form-control" value="{{ confirmation_data.airline|default('') }}" placeholder="Type to search by airline code or name" required>
+                <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Flight Number</label>
+                <input type="text" name="flight_number" id="flight_number" class="form-control" value="{{ confirmation_data.flight_number|default('') }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Date</label>
+                <input type="date" name="flight_date" id="flight_date" class="form-control" required 
+                       value="{{ confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Time</label>
+                <input type="time" name="flight_time" id="flight_time" class="form-control" value="{{ confirmation_data.flight_time|default('') }}" required>
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Terminal</label>
+                <input type="text" name="terminal" id="terminal" class="form-control" value="{{ confirmation_data.terminal|default('') }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Class</label>
+                <select name="travel_class" id="travel_class" class="form-select" required>
+                    <option value="Economy" {% if confirmation_data.travel_class == 'Economy' %}selected{% endif %}>Economy</option>
+                    <option value="Premium Economy" {% if confirmation_data.travel_class == 'Premium Economy' %}selected{% endif %}>Premium Economy</option>
+                    <option value="Business" {% if confirmation_data.travel_class == 'Business' %}selected{% endif %}>Business</option>
+                    <option value="First" {% if confirmation_data.travel_class == 'First' %}selected{% endif %}>First</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Ticket Number</label>
+                <input type="text" name="ticket_number" id="ticket_number" class="form-control" value="{{ confirmation_data.ticket_number|default('') }}">
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label class="form-label">PNR (Booking Reference)</label>
+                <input type="text" name="pnr" id="booking_reference" class="form-control" value="{{ confirmation_data.pnr|default('') }}">
+                <small class="text-muted">Airline's 6-character reference code</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+<!-- We need to include the modal directly in the body of the page -->
+<div id="ticketScannerModalContainer">
+    <!-- Include the Ticket Scanner Modal -->
+    {% include 'modals/ticket_scanner_modal.html' %}
+</div>
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_flight.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flight_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flight_autocomplete.js') }}"></script>
+
+<script>
+// Function to populate flight form with extracted ticket data
+function populateFlightDetailsFromTicket(flightData) {
+    if (!flightData) return;
+    
+    console.log('Populating flight form with ticket data:', flightData);
+    
+    // Populate flight details
+    if (flightData.flight_number) {
+        document.getElementById('flight_number').value = flightData.flight_number;
+    }
+    
+    if (flightData.airline) {
+        document.getElementById('airline').value = flightData.airline;
+    }
+    
+    if (flightData.departure_airport) {
+        document.getElementById('departure_airport').value = flightData.departure_airport;
+    }
+    
+    if (flightData.arrival_airport) {
+        document.getElementById('arrival_airport').value = flightData.arrival_airport;
+    }
+    
+    // Format and set the departure date if available
+    if (flightData.departure_date) {
+        try {
+            // Try to convert date format if needed
+            const dateParts = flightData.departure_date.split(/[-\/]/);
+            if (dateParts.length === 3) {
+                // If the date is in DD-MM-YYYY or DD/MM/YYYY format, we need to reformat it
+                let day, month, year;
+                
+                // Check if first part has 4 digits (YYYY-MM-DD format)
+                if (dateParts[0].length === 4) {
+                    // Already in YYYY-MM-DD format
+                    document.getElementById('flight_date').value = flightData.departure_date;
+                } else {
+                    // Assuming DD-MM-YYYY or MM-DD-YYYY format
+                    // For simplicity, if first part is ≤12, assume MM-DD-YYYY, otherwise DD-MM-YYYY
+                    if (parseInt(dateParts[0]) <= 12 && parseInt(dateParts[1]) <= 31) {
+                        // MM-DD-YYYY format
+                        month = dateParts[0].padStart(2, '0');
+                        day = dateParts[1].padStart(2, '0');
+                        year = dateParts[2];
+                    } else {
+                        // DD-MM-YYYY format
+                        day = dateParts[0].padStart(2, '0');
+                        month = dateParts[1].padStart(2, '0');
+                        year = dateParts[2];
+                    }
+                    // Format as YYYY-MM-DD for input[type="date"]
+                    document.getElementById('flight_date').value = `${year}-${month}-${day}`;
+                }
+            } else {
+                // If we can't parse it properly, just set it as-is and let user correct if needed
+                document.getElementById('flight_date').value = flightData.departure_date;
+            }
+        } catch (e) {
+            console.error('Error formatting date:', e);
+        }
+    }
+    
+    // Set departure time if available
+    if (flightData.departure_time) {
+        document.getElementById('flight_time').value = flightData.departure_time;
+    }
+    
+    // Set booking reference/PNR if available
+    if (flightData.booking_reference) {
+        document.getElementById('booking_reference').value = flightData.booking_reference;
+    }
+    
+    // Set ticket number if available
+    if (flightData.ticket_numbers && flightData.ticket_numbers.length > 0) {
+        document.getElementById('ticket_number').value = flightData.ticket_numbers[0];
+    }
+    
+    // Set passenger names if available
+    if (flightData.passenger_names && flightData.passenger_names.length > 0) {
+        // Clear existing passenger inputs
+        const passengerContainer = document.getElementById('passengerNames');
+        if (passengerContainer) {
+            passengerContainer.innerHTML = '';
+            
+            // Add each passenger name from the ticket
+            flightData.passenger_names.forEach((name, index) => {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group mb-2';
+                inputGroup.innerHTML = `
+                    <span class="input-group-text">Passenger ${index + 1}</span>
+                    <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                    ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                `;
+                passengerContainer.appendChild(inputGroup);
+            });
+            
+            // Update passenger count to match
+            const adults = document.querySelector('input[name="adults"]');
+            if (adults) {
+                adults.value = flightData.passenger_names.length;
+            }
+        }
+    }
+    
+    // Show success notification
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Flight details successfully imported from ticket!
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert the alert at the top of the form
+    const form = document.querySelector('form');
+    if (form && form.firstChild) {
+        form.insertBefore(alert, form.firstChild);
+    }
+    
+    // Auto-dismiss the alert after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

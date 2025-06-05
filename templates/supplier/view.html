@@ -1,0 +1,677 @@
+{% extends 'base.html' %}
+
+{% block title %}Supplier: {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('supplier.list_suppliers') }}">Suppliers</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ supplier.name }}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <h1 class="mb-3">
+                <i class="fas fa-building me-2"></i>
+                {{ supplier.name }}
+                <span class="badge bg-secondary ms-2">{{ supplier.code }}</span>
+            </h1>
+            <p class="lead">Supplier details and service confirmations</p>
+        </div>
+        <div class="col-lg-4 text-end">
+            <a href="{{ url_for('supplier.edit_supplier', supplier_id=supplier.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit me-1"></i> Edit Supplier
+            </a>
+            <a href="{{ url_for('supplier.supplier_statement', supplier_id=supplier.id) }}" class="btn btn-outline-info ms-2">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Statement
+            </a>
+        </div>
+    </div>
+
+    <!-- Supplier Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Financial Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-3">
+                                    <h6 class="text-muted mb-1">Outstanding Balance</h6>
+                                    <h3 class="mb-0 {% if unpaid_balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        ${{ "%.2f"|format(unpaid_balance) }}
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="row h-100">
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary mb-2 w-100" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+                                        <i class="fas fa-money-bill-wave me-1"></i> Record Payment
+                                    </button>
+                                    <button type="button" class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#generateStatementModal">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> Generate Statement
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center p-3">
+                                    <h6 class="text-muted mb-1">Total Confirmations</h6>
+                                    <h3 class="mb-0 text-primary">{{ confirmations|length }}</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Supplier Information Card -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Supplier Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-user me-2"></i>Contact Person:</strong>
+                            <span class="text-muted">{{ supplier.contact_person or 'Not specified' }}</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-envelope me-2"></i>Email:</strong>
+                            <span class="text-muted">{% if supplier.email %}<a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>{% else %}Not specified{% endif %}</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-phone me-2"></i>Phone:</strong>
+                            <span class="text-muted">{{ supplier.phone or 'Not specified' }}</span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-globe me-2"></i>Website:</strong>
+                            <span class="text-muted">{% if supplier.website %}<a href="{{ supplier.website }}" target="_blank">{{ supplier.website }}</a>{% else %}Not specified{% endif %}</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-map-marker-alt me-2"></i>Address:</strong>
+                            <span class="text-muted">
+                                {{ supplier.address or 'Not specified' }}
+                                {% if supplier.city or supplier.country %}
+                                    <br>
+                                    {{ supplier.city or '' }}{% if supplier.city and supplier.country %}, {% endif %}{{ supplier.country or '' }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-file-invoice me-2"></i>Payment Terms:</strong>
+                            <span class="text-muted">{{ supplier.payment_terms or 'Not specified' }}</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-university me-2"></i>Account Number:</strong>
+                            <span class="text-muted">{{ supplier.account_number or 'Not specified' }}</span>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-receipt me-2"></i>Tax Number:</strong>
+                            <span class="text-muted">{{ supplier.tax_number or 'Not specified' }}</span>
+                        </div>
+                        
+                        {% if supplier.notes %}
+                        <div class="col-12">
+                            <strong><i class="fas fa-sticky-note me-2"></i>Notes:</strong>
+                            <span class="text-muted">{{ supplier.notes }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Supplier Documents Card -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documents</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                        <i class="fas fa-upload me-1"></i> Upload Document
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Document Type</th>
+                                    <th>Document Number</th>
+                                    <th>Issue Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for document in documents %}
+                                <tr>
+                                    <td><span class="badge bg-info">{{ document.document_type }}</span></td>
+                                    <td>{{ document.document_number }}</td>
+                                    <td>{{ document.issue_date.strftime('%d %b %Y') if document.issue_date else 'N/A' }}</td>
+                                    <td>
+                                        {% if document.expiry_date %}
+                                            {% if document.expiry_date < today %}
+                                                <span class="text-danger">{{ document.expiry_date.strftime('%d %b %Y') }} (Expired)</span>
+                                            {% else %}
+                                                {{ document.expiry_date.strftime('%d %b %Y') }}
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if document.file_path %}
+                                        <a href="{{ url_for('static', filename=document.file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="text-muted mb-0">No documents found.</p>
+                                        <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                                            <i class="fas fa-upload me-1"></i> Upload Document
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Supplier Costs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Supplier Costs</h5>
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-3">Total: ${{ "%.2f"|format(total_supplier_costs) }}</span>
+                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#generateInvoiceModal">
+                            <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Supplier</th>
+                                    <th>Service</th>
+                                    <th>Booking</th>
+                                    <th>Reference</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prepayment in prepayment_lines %}
+                                <tr>
+                                    <td>{{ prepayment.created_at.strftime('%b %d, %Y') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="text-decoration-none">
+                                            {{ supplier.name }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 
+                                            'primary' if prepayment.service_item.service_type == 'FLIGHT' else 
+                                            'success' if prepayment.service_item.service_type == 'HOTEL' else 
+                                            'warning' if prepayment.service_item.service_type == 'TRANSPORT' else 
+                                            'info' if prepayment.service_item.service_type == 'VISA' else 
+                                            'secondary' if prepayment.service_item.service_type == 'INSURANCE' else 
+                                            'dark' 
+                                        }}">
+                                            {{ prepayment.service_item.service_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('booking.details', booking_id=prepayment.booking_id) }}" class="text-decoration-none">
+                                            {{ prepayment.booking.reference_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ prepayment.confirmation_reference or '-' }}</td>
+                                    <td>${{ "%.2f"|format(prepayment.amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if prepayment.supplier_payment.status == 'PENDING' else 'success' if prepayment.supplier_payment.status == 'PAID' else 'warning' }}">
+                                            {{ prepayment.supplier_payment.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary update-status-btn" 
+                                                data-prepayment-id="{{ prepayment.id }}"
+                                                data-current-status="{{ prepayment.supplier_payment.status }}"
+                                                data-bs-toggle="modal" data-bs-target="#updateStatusModal"
+                                                title="Update Status">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-warning cancel-prepayment-btn" 
+                                                data-prepayment-id="{{ prepayment.id }}"
+                                                data-amount="{{ prepayment.amount }}"
+                                                data-reference="{{ prepayment.confirmation_reference }}"
+                                                data-bs-toggle="modal" data-bs-target="#cancelPrepaymentModal"
+                                                title="Cancel with Fees">
+                                                <i class="fas fa-times-circle"></i>
+                                            </button>
+                                            <a href="{{ url_for('booking.details', booking_id=prepayment.booking_id) }}" class="btn btn-outline-info" title="View Booking">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <p class="text-muted mb-0">No supplier costs found for this supplier.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Update Payment Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('supplier.update_prepayment_status', supplier_id=supplier.id) }}">
+                <div class="modal-body">
+                    <input type="hidden" id="status_prepayment_id" name="prepayment_id">
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Payment Status *</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="PENDING">Pending</option>
+                            <option value="PAID">Paid</option>
+                            <option value="OVERDUE">Overdue</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="status_notes" name="notes" rows="3" placeholder="Add any notes about this status change..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Prepayment Modal -->
+<div class="modal fade" id="cancelPrepaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Cancel Prepayment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('supplier.cancel_prepayment', supplier_id=supplier.id) }}">
+                <div class="modal-body">
+                    <input type="hidden" id="cancel_prepayment_id" name="prepayment_id">
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This will reverse the prepayment and create a credit memo with cancellation fees.
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="original_amount" class="form-label">Original Amount</label>
+                            <input type="text" class="form-control" id="original_amount" readonly>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="cancellation_fee" class="form-label">Cancellation Fee *</label>
+                            <input type="number" class="form-control" id="cancellation_fee" name="cancellation_fee" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="cancellation_reason" class="form-label">Cancellation Reason *</label>
+                            <textarea class="form-control" id="cancellation_reason" name="cancellation_reason" rows="3" placeholder="Explain why this prepayment is being cancelled..." required></textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Summary</label>
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col">Original Amount: <span id="summary_original">$0.00</span></div>
+                                        <div class="col">Cancellation Fee: <span id="summary_fee">$0.00</span></div>
+                                        <div class="col"><strong>Credit to Customer: <span id="summary_credit">$0.00</span></strong></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Process Cancellation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Invoice Modal -->
+<div class="modal fade" id="generateInvoiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-file-invoice me-2"></i>Generate Supplier Invoice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('supplier.generate_invoice', supplier_id=supplier.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="invoice_date" class="form-label">Invoice Date *</label>
+                        <input type="date" class="form-control" id="invoice_date" name="invoice_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="due_date" class="form-label">Due Date *</label>
+                        <input type="date" class="form-control" id="due_date" name="due_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="invoice_notes" class="form-label">Invoice Notes</label>
+                        <textarea class="form-control" id="invoice_notes" name="notes" rows="3" placeholder="Add any notes for this invoice..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This will generate an invoice for all unpaid supplier costs totaling <strong>${{ "%.2f"|format(total_supplier_costs) }}</strong>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning">Generate Invoice</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-upload me-2"></i>Upload Document</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('supplier.upload_document', supplier_id=supplier.id) }}" enctype="multipart/form-data">
+                    {{ document_form.csrf_token }}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="document_type" class="form-label">Document Type *</label>
+                            {{ document_form.document_type(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="document_number" class="form-label">Document Number *</label>
+                            {{ document_form.document_number(class="form-control", placeholder="e.g., Contract #1234") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="issue_date" class="form-label">Issue Date</label>
+                            {{ document_form.issue_date(class="form-control", type="date") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="expiry_date" class="form-label">Expiry Date</label>
+                            {{ document_form.expiry_date(class="form-control", type="date") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notes</label>
+                            {{ document_form.notes(class="form-control", rows=3) }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="file" class="form-label">Document File *</label>
+                            {{ document_form.file(class="form-control") }}
+                            <small class="text-muted">Upload PDF, Word, Excel, or image files.</small>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upload Document</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal fade" id="recordPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('supplier.add_payment', supplier_id=supplier.id) }}">
+                    {{ payment_form.csrf_token }}
+                    {{ payment_form.supplier_id() }}
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label for="service_confirmation_id" class="form-label">Service Confirmation</label>
+                            {{ payment_form.service_confirmation_id(class="form-select") }}
+                            <small class="text-muted">Select a specific confirmation or leave blank for general payment</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="amount" class="form-label">Payment Amount *</label>
+                            {{ payment_form.amount(class="form-control", step="0.01", min="0.01") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="payment_date" class="form-label">Payment Date *</label>
+                            {{ payment_form.payment_date(class="form-control", type="date") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="payment_reference" class="form-label">Payment Reference *</label>
+                            {{ payment_form.payment_reference(class="form-control", placeholder="e.g., Transaction #1234") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="payment_method" class="form-label">Payment Method *</label>
+                            {{ payment_form.payment_method(class="form-select") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notes</label>
+                            {{ payment_form.notes(class="form-control", rows=3) }}
+                        </div>
+                    </div>
+                    
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate Statement Modal -->
+<div class="modal fade" id="generateStatementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-file-invoice-dollar me-2"></i>Generate Statement</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="GET" action="{{ url_for('supplier.supplier_statement', supplier_id=supplier.id) }}">
+                    {{ statement_form.supplier_id() }}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="from_date" class="form-label">From Date</label>
+                            {{ statement_form.from_date(class="form-control", type="date") }}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label for="to_date" class="form-label">To Date</label>
+                            {{ statement_form.to_date(class="form-control", type="date") }}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label for="status" class="form-label">Payment Status</label>
+                            {{ statement_form.status(class="form-select") }}
+                        </div>
+                    </div>
+                    
+                    <div class="text-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">Generate Statement</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle clicking on the record payment button for a specific confirmation
+    const recordPaymentBtns = document.querySelectorAll('.record-payment-btn');
+    recordPaymentBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const confirmationId = this.getAttribute('data-confirmation-id');
+            const amount = this.getAttribute('data-amount');
+            const reference = this.getAttribute('data-reference');
+            
+            // Set the form fields
+            document.getElementById('service_confirmation_id').value = confirmationId;
+            document.getElementById('amount').value = amount;
+            document.getElementById('payment_reference').value = 'Payment for ' + reference;
+        });
+    });
+    
+    // Handle update status button clicks
+    document.querySelectorAll('.update-status-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const prepaymentId = this.dataset.prepaymentId;
+            const currentStatus = this.dataset.currentStatus;
+            
+            document.getElementById('status_prepayment_id').value = prepaymentId;
+            document.getElementById('status').value = currentStatus;
+        });
+    });
+    
+    // Handle cancel prepayment button clicks
+    document.querySelectorAll('.cancel-prepayment-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const prepaymentId = this.dataset.prepaymentId;
+            const amount = parseFloat(this.dataset.amount);
+            const reference = this.dataset.reference || 'N/A';
+            
+            document.getElementById('cancel_prepayment_id').value = prepaymentId;
+            document.getElementById('original_amount').value = '$' + amount.toFixed(2);
+            document.getElementById('summary_original').textContent = '$' + amount.toFixed(2);
+            
+            // Reset cancellation fee and summary
+            document.getElementById('cancellation_fee').value = '';
+            document.getElementById('summary_fee').textContent = '$0.00';
+            document.getElementById('summary_credit').textContent = '$' + amount.toFixed(2);
+            
+            // Update summary when cancellation fee changes
+            const feeInput = document.getElementById('cancellation_fee');
+            const updateSummary = function() {
+                const fee = parseFloat(feeInput.value) || 0;
+                const credit = amount - fee;
+                
+                document.getElementById('summary_fee').textContent = '$' + fee.toFixed(2);
+                document.getElementById('summary_credit').textContent = '$' + Math.max(0, credit).toFixed(2);
+            };
+            
+            // Remove existing event listeners and add new one
+            feeInput.removeEventListener('input', updateSummary);
+            feeInput.addEventListener('input', updateSummary);
+        });
+    });
+    
+    // Set default date for invoice generation
+    const today = new Date().toISOString().split('T')[0];
+    const invoiceDateInput = document.getElementById('invoice_date');
+    const dueDateInput = document.getElementById('due_date');
+    
+    if (invoiceDateInput) {
+        invoiceDateInput.value = today;
+    }
+    
+    if (dueDateInput) {
+        // Set due date to 30 days from today
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        dueDateInput.value = dueDate.toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

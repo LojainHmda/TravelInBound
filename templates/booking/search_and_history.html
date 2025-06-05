@@ -1,402 +1,1031 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block styles %}
 {{ super() }}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'travel-blue': '#2d4a7a',
+                    'travel-yellow': '#ffc107',
+                    'travel-yellow-hover': '#e0a800'
+                }
+            }
+        },
+        darkMode: 'class'
+    }
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    .search-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        padding: 2rem;
-        margin-bottom: 2rem;
+    .search-input:focus {
+        outline: none;
+        border-color: #ffc107;
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
     }
 
-    .search-title {
-        color: #000080;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        font-size: 1.5rem;
+    .sidebar-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
     }
 
-    .form-control, .form-select {
-        border: 2px solid #e9ecef;
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
+    .sidebar-item.active {
+        background-color: rgba(255, 193, 7, 0.2);
+        border-right: 3px solid #ffc107;
     }
 
-    .form-control:focus, .form-select:focus {
-        border-color: #FFD700;
-        box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
-        outline: 0;
+    body {
+        font-family: 'Inter', sans-serif;
     }
 
-    .btn-search {
-        background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-        border: none;
-        color: #000080;
-        font-weight: 600;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
-    }
-
-    .btn-search:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(255, 215, 0, 0.4);
-        color: #000080;
-    }
-
-    .btn-clear {
-        background: #6c757d;
-        border: none;
-        color: white;
-        font-weight: 500;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .btn-clear:hover {
-        background: #5a6268;
-        transform: translateY(-1px);
-        color: white;
-    }
-
-    .results-container {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .results-header {
-        background: linear-gradient(135deg, #000080 0%, #4169E1 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        margin: 0;
-    }
-
-    .results-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .results-count {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        margin-top: 0.25rem;
-    }
-
-    .table-container {
-        max-height: 600px;
-        overflow-y: auto;
-    }
-
-    .booking-table {
-        margin: 0;
-        border: none;
-    }
-
-    .booking-table th {
-        background: #f8f9fa;
-        color: #000080;
-        font-weight: 600;
-        border: none;
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-
-    .booking-table td {
-        border: none;
-        border-bottom: 1px solid #e9ecef;
-        vertical-align: middle;
-    }
-
-    .booking-table tbody tr:hover {
-        background: #f8f9fa;
-        transition: background-color 0.2s ease;
-    }
-
-    .status-badge {
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .status-request {
-        background: #fff3cd;
-        color: #856404;
-    }
-
-    .status-in-progress {
-        background: #d1ecf1;
-        color: #0c5460;
-    }
-
-    .status-completed {
-        background: #d4edda;
-        color: #155724;
-    }
-
-    .action-btn {
-        padding: 0.4rem 0.8rem;
-        border-radius: 6px;
-        text-decoration: none;
-        font-size: 0.85rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .action-view {
-        background: #e3f2fd;
-        color: #1976d2;
-    }
-
-    .action-view:hover {
-        background: #bbdefb;
-        color: #1565c0;
-        text-decoration: none;
-    }
-
-    .action-edit {
-        background: #fff3e0;
-        color: #f57c00;
-    }
-
-    .action-edit:hover {
-        background: #ffe0b2;
-        color: #ef6c00;
-        text-decoration: none;
-    }
-
-    .no-results {
+    .message-box {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 1rem 1.5rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        z-index: 100;
+        display: none;
+        font-size: 0.875rem;
+        max-width: 90%;
         text-align: center;
-        padding: 3rem 2rem;
-        color: #6c757d;
+    }
+    .message-box-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+    .message-box-info {
+        background-color: #e0f2fe;
+        color: #075985;
+        border: 1px solid #7dd3fc;
+    }
+    .message-box-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
     }
 
-    .no-results i {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: #dee2e6;
+    .confirmation-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 150;
     }
-
-    .export-btn {
-        background: #28a745;
-        border: none;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
+    .confirmation-modal-content {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        width: 90%;
+        max-width: 400px;
     }
-
-    .export-btn:hover {
-        background: #218838;
-        transform: translateY(-1px);
-        color: white;
-    }
-
-    .reference-link {
-        color: #000080;
-        text-decoration: none;
-        font-weight: 600;
-    }
-
-    .reference-link:hover {
-        color: #4169E1;
-        text-decoration: underline;
+    .dark .confirmation-modal-content {
+        background-color: #1f2937;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Search Section -->
-    <div class="search-container">
-        <h2 class="search-title">
-            <i class="fas fa-search me-2"></i>
-            Search & History
-        </h2>
-        
-        <form method="GET" id="searchForm">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <label for="reference" class="form-label fw-semibold">Reference Number</label>
-                    <input type="text" class="form-control" id="reference" name="reference" 
-                           placeholder="Enter reference..." value="{{ request.args.get('reference', '') }}">
-                </div>
-                
-                <div class="col-md-3">
-                    <label for="customer" class="form-label fw-semibold">Customer Name</label>
-                    <input type="text" class="form-control" id="customer" name="customer" 
-                           placeholder="Enter customer name..." value="{{ request.args.get('customer', '') }}">
-                </div>
-                
-                <div class="col-md-2">
-                    <label for="status" class="form-label fw-semibold">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="">All Status</option>
-                        <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' else '' }}>Request</option>
-                        <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' else '' }}>In Progress</option>
-                        <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' else '' }}>Completed</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-2">
-                    <label for="from_date" class="form-label fw-semibold">From Date</label>
-                    <input type="date" class="form-control" id="from_date" name="from_date" 
-                           value="{{ request.args.get('from_date', '') }}">
-                </div>
-                
-                <div class="col-md-2">
-                    <label for="to_date" class="form-label fw-semibold">To Date</label>
-                    <input type="date" class="form-control" id="to_date" name="to_date" 
-                           value="{{ request.args.get('to_date', '') }}">
+<div class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200 flex min-h-screen">
+    <div id="customMessageBox" class="message-box">
+        <span id="messageText"></span>
+        <button onclick="hideMessage()" class="ml-4 font-bold text-lg align-middle">&times;</button>
+    </div>
+
+    <div id="deleteConfirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-2" id="confirmModalTitle">Confirm Deletion</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" id="confirmModalText">Are you sure you want to delete this booking?</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDeleteButton" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteButton" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="w-64 bg-travel-blue text-white min-h-screen flex flex-col">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-blue-600">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-plane text-travel-yellow text-2xl mr-3"></i>
+                <div>
+                    <h1 class="text-lg font-bold">Travel Booking Pro</h1>
+                    <p class="text-sm text-blue-200">Arab Office for Travel</p>
                 </div>
             </div>
-            
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="d-flex gap-3">
-                        <button type="submit" class="btn btn-search">
-                            <i class="fas fa-search me-2"></i>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4">
+            <a href="{{ url_for('main.index') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-home w-5 mr-3"></i>
+                Home
+            </a>
+            <a href="{{ url_for('booking.create') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plus w-5 mr-3"></i>
+                New Booking
+            </a>
+            <a href="{{ url_for('booking.search') }}" class="sidebar-item active flex items-center px-6 py-3 text-white">
+                <i class="fas fa-search w-5 mr-3"></i>
+                Search & History 1
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-chart-line w-5 mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plane w-5 mr-3"></i>
+                Travel Operations
+            </a>
+            <a href="{{ url_for('customer.list') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-users w-5 mr-3"></i>
+                Customers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-building w-5 mr-3"></i>
+                Suppliers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-dollar-sign w-5 mr-3"></i>
+                Finance
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 min-h-screen">
+        <!-- Status Bar -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Search Results
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-travel-yellow text-gray-900">
+                    <i class="fas fa-clock mr-2"></i>
+                    Live Data
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <i class="fas fa-check mr-2"></i>
+                    Ready
+                </span>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <!-- Search Filters -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-search text-travel-yellow text-xl mr-3"></i>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Search Filters</h2>
+                </div>
+
+                <form method="GET" id="searchForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Booking Reference</label>
+                            <input type="text" name="search" placeholder="e.g., IR-pu0yPTJ" 
+                                   value="{{ request.args.get('search', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date From</label>
+                            <input type="date" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date To</label>
+                            <input type="date" name="date_to" 
+                                   value="{{ request.args.get('date_to', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                            <select name="status" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Statuses</option>
+                                <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                                <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                                <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Status</label>
+                            <select name="payment_status" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Payments</option>
+                                <option value="NONE" {{ 'selected' if request.args.get('payment_status') == 'NONE' }}>Unpaid</option>
+                                <option value="PARTIAL" {{ 'selected' if request.args.get('payment_status') == 'PARTIAL' }}>Partial</option>
+                                <option value="FULL" {{ 'selected' if request.args.get('payment_status') == 'FULL' }}>Paid</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Type</label>
+                            <select name="service_type" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Services</option>
+                                <option value="FLIGHT" {{ 'selected' if request.args.get('service_type') == 'FLIGHT' }}>Flight</option>
+                                <option value="HOTEL" {{ 'selected' if request.args.get('service_type') == 'HOTEL' }}>Hotel</option>
+                                <option value="TRANSPORT" {{ 'selected' if request.args.get('service_type') == 'TRANSPORT' }}>Transport</option>
+                                <option value="VISA" {{ 'selected' if request.args.get('service_type') == 'VISA' }}>Visa</option>
+                                <option value="INSURANCE" {{ 'selected' if request.args.get('service_type') == 'INSURANCE' }}>Insurance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" 
+                                class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-search mr-2"></i>
                             Search Bookings
                         </button>
-                        <button type="button" class="btn btn-clear" onclick="clearFilters()">
-                            <i class="fas fa-times me-2"></i>
+                        <button type="button" onclick="clearFilters()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-times mr-2"></i>
                             Clear Filters
                         </button>
-                        <button type="button" class="btn export-btn ms-auto" onclick="exportResults()">
-                            <i class="fas fa-download me-2"></i>
+                        <button type="button" onclick="exportResults()" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-download mr-2"></i>
                             Export Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Summary -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-gray-900 dark:text-white">
+                        <span>Showing {{ bookings|length }} of {{ bookings|length }} bookings</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="search-input px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="reference">Reference A-Z</option>
+                            <option value="customer">Customer A-Z</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Results Table -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for booking in bookings %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ booking.reference_number }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-travel-blue dark:text-blue-400 font-medium">
+                                        {% if booking.customer %}
+                                            <i class="fas fa-user mr-2"></i>{{ booking.customer.name }}
+                                        {% else %}
+                                            <span class="text-gray-500"><i class="fas fa-user-slash mr-2"></i>No Customer</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-300">
+                                        <i class="fas fa-calendar-alt mr-2"></i>{{ booking.created_at.strftime('%Y-%m-%d') }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if booking.status == 'REQUEST' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                            <i class="fas fa-file-alt mr-1"></i>Request
+                                        </span>
+                                    {% elif booking.status == 'IN_PROGRESS' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-travel-yellow text-gray-900">
+                                            <i class="fas fa-cog fa-spin mr-1"></i>In Progress
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check mr-1"></i>Completed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if booking.payment_status == 'NONE' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                            <i class="fas fa-times mr-1"></i>Unpaid
+                                        </span>
+                                    {% elif booking.payment_status == 'PARTIAL' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Partial
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check-circle mr-1"></i>Paid
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        <i class="fas fa-dollar-sign mr-1 text-green-600"></i>${{ "%.2f"|format(booking.total_amount or 0) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" 
+                                           class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-3 py-1 rounded text-xs font-medium transition-colors">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </a>
+                                        <a href="{{ url_for('voucher.voucher_preview', booking_id=booking.id) }}" 
+                                           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                            <i class="fas fa-file-alt mr-1"></i>Voucher
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <div class="text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-search text-6xl mb-4 text-travel-yellow"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No bookings found</h3>
+                    <p>Try adjusting your search criteria or create a new booking</p>
+                    <a href="{{ url_for('booking.create') }}" class="inline-flex items-center mt-4 bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Create New Booking
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing 1 to {{ bookings|length }} of {{ bookings|length }} results
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Previous
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-travel-yellow text-gray-900 rounded-md font-medium">
+                            1
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            Next<i class="fas fa-chevron-right ml-1"></i>
                         </button>
                     </div>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- Results Section -->
-    <div class="results-container">
-        <div class="results-header">
-            <h3 class="results-title">Search Results</h3>
-            <div class="results-count">
-                {% if bookings %}
-                    Found {{ bookings|length }} booking{{ 's' if bookings|length != 1 else '' }}
-                {% else %}
-                    No bookings found
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
-
-        {% if bookings %}
-        <div class="table-container">
-            <table class="table booking-table">
-                <thead>
-                    <tr>
-                        <th>Reference</th>
-                        <th>Customer</th>
-                        <th>Created Date</th>
-                        <th>Status</th>
-                        <th>Services</th>
-                        <th>Total Amount</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for booking in bookings %}
-                    <tr>
-                        <td class="px-4 py-3">
-                            <a href="/booking/{{ booking.id }}" class="reference-link">
-                                {{ booking.reference_number }}
-                            </a>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="fw-semibold text-dark">
-                                {% if booking.customer %}
-                                    {{ booking.customer.name }}
-                                {% else %}
-                                    {{ booking.requester.username if booking.requester else 'N/A' }}
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="text-muted">{{ booking.created_at.strftime('%d %b %Y') if booking.created_at else 'N/A' }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            {% if booking.status == 'REQUEST' %}
-                                <span class="status-badge status-request">Request</span>
-                            {% elif booking.status == 'IN_PROGRESS' %}
-                                <span class="status-badge status-in-progress">In Progress</span>
-                            {% elif booking.status == 'COMPLETED' %}
-                                <span class="status-badge status-completed">Completed</span>
-                            {% else %}
-                                <span class="status-badge status-request">{{ booking.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="text-dark">{{ booking.service_items|length }} service{{ 's' if booking.service_items|length != 1 else '' }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="fw-semibold text-dark">${{ "%.2f"|format(booking.total_amount or 0) }}</div>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="d-flex gap-2">
-                                <a href="/booking/{{ booking.id }}" 
-                                   class="action-btn action-view">
-                                    <i class="fas fa-eye me-1"></i>
-                                    View
-                                </a>
-                                <a href="/booking/{{ booking.id }}" 
-                                   class="action-btn action-edit">
-                                    <i class="fas fa-edit me-1"></i>
-                                    Edit
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <div class="no-results">
-            <i class="fas fa-search"></i>
-            <h4 class="mt-3 text-muted">No bookings found</h4>
-            <p class="text-muted">Try adjusting your search criteria or create a new booking</p>
-            <a href="/new-booking" 
-               class="btn btn-search mt-3">
-                <i class="fas fa-plus me-2"></i>
-                Create New Booking
-            </a>
-        </div>
-        {% endif %}
     </div>
 </div>
 
 <script>
+    // Dark mode detection and persistence
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+
+    // Message box functionality
+    function showMessage(message, type = 'info') {
+        const messageBox = document.getElementById('customMessageBox');
+        const messageText = document.getElementById('messageText');
+
+        messageText.textContent = message;
+        messageBox.className = `message-box message-box-${type}`;
+        messageBox.style.display = 'block';
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            hideMessage();
+        }, 5000);
+    }
+
+    function hideMessage() {
+        document.getElementById('customMessageBox').style.display = 'none';
+    }
+
+    // Confirmation modal functionality
+    function showConfirmationModal(title, text, onConfirm) {
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalText').textContent = text;
+        document.getElementById('deleteConfirmationModal').style.display = 'flex';
+
+        const confirmButton = document.getElementById('confirmDeleteButton');
+        const cancelButton = document.getElementById('cancelDeleteButton');
+
+        confirmButton.onclick = () => {
+            hideConfirmationModal();
+            onConfirm();
+        };
+
+        cancelButton.onclick = hideConfirmationModal;
+    }
+
+    function hideConfirmationModal() {
+        document.getElementById('deleteConfirmationModal').style.display = 'none';
+    }
+
     function clearFilters() {
         document.getElementById('searchForm').reset();
-        window.location.href = '/search-history';
+        showMessage('Filters cleared successfully', 'success');
+        setTimeout(() => {
+            window.location.href = '{{ url_for("booking.search") }}';
+        }, 1000);
     }
 
     function exportResults() {
         const params = new URLSearchParams(window.location.search);
         params.set('export', 'csv');
-        window.location.href = '/search-history?' + params.toString();
+        showMessage('Exporting results...', 'info');
+        setTimeout(() => {
+            window.location.href = '{{ url_for("booking.search") }}?' + params.toString();
+        }, 1000);
     }
+
+    function searchBookings() {
+        showMessage('Searching bookings...', 'info');
+        document.getElementById('searchForm').submit();
+    }
+
+    // Update results count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const resultsCount = {{ bookings|length if bookings else 0 }};
+        const resultsElement = document.querySelector('[class*="text-gray-900"]');
+        if (resultsElement && resultsCount > 0) {
+            resultsElement.innerHTML = `Showing ${resultsCount} of ${resultsCount} bookings`;
+        }
+    });
+
+    // Enhanced form interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('searchForm');
+        const inputs = form.querySelectorAll('input, select');
+
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Auto-submit on selection changes (optional)
+                // form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}{% extends 'base.html' %}
+
+{% block styles %}
+{{ super() }}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'travel-blue': '#2d4a7a',
+                    'travel-yellow': '#ffc107',
+                    'travel-yellow-hover': '#e0a800'
+                }
+            }
+        },
+        darkMode: 'class'
+    }
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .search-input:focus {
+        outline: none;
+        border-color: #ffc107;
+        box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+    }
+
+    .sidebar-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .sidebar-item.active {
+        background-color: rgba(255, 193, 7, 0.2);
+        border-right: 3px solid #ffc107;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+    }
+
+    .message-box {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 1rem 1.5rem;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        z-index: 100;
+        display: none;
+        font-size: 0.875rem;
+        max-width: 90%;
+        text-align: center;
+    }
+    .message-box-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+    .message-box-info {
+        background-color: #e0f2fe;
+        color: #075985;
+        border: 1px solid #7dd3fc;
+    }
+    .message-box-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+
+    .confirmation-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 150;
+    }
+    .confirmation-modal-content {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        width: 90%;
+        max-width: 400px;
+    }
+    .dark .confirmation-modal-content {
+        background-color: #1f2937;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200 flex min-h-screen">
+    <div id="customMessageBox" class="message-box">
+        <span id="messageText"></span>
+        <button onclick="hideMessage()" class="ml-4 font-bold text-lg align-middle">&times;</button>
+    </div>
+
+    <div id="deleteConfirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content">
+            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-2" id="confirmModalTitle">Confirm Deletion</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4" id="confirmModalText">Are you sure you want to delete this booking?</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDeleteButton" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-md transition-colors">
+                    Cancel
+                </button>
+                <button id="confirmDeleteButton" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="w-64 bg-travel-blue text-white min-h-screen flex flex-col">
+        <!-- Logo Section -->
+        <div class="p-6 border-b border-blue-600">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-plane text-travel-yellow text-2xl mr-3"></i>
+                <div>
+                    <h1 class="text-lg font-bold">Travel Booking Pro</h1>
+                    <p class="text-sm text-blue-200">Arab Office for Travel</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4">
+            <a href="{{ url_for('main.index') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-home w-5 mr-3"></i>
+                Home
+            </a>
+            <a href="{{ url_for('booking.create') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plus w-5 mr-3"></i>
+                New Booking
+            </a>
+            <a href="{{ url_for('booking.search') }}" class="sidebar-item active flex items-center px-6 py-3 text-white">
+                <i class="fas fa-search w-5 mr-3"></i>
+                Search & History
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-chart-line w-5 mr-3"></i>
+                Dashboard
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-plane w-5 mr-3"></i>
+                Travel Operations
+            </a>
+            <a href="{{ url_for('customer.list') }}" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-users w-5 mr-3"></i>
+                Customers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-building w-5 mr-3"></i>
+                Suppliers
+            </a>
+            <a href="#" class="sidebar-item flex items-center px-6 py-3 text-white hover:bg-blue-600 transition-colors">
+                <i class="fas fa-dollar-sign w-5 mr-3"></i>
+                Finance
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 min-h-screen">
+        <!-- Status Bar -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    <i class="fas fa-file-alt mr-2"></i>
+                    Search Results
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-travel-yellow text-gray-900">
+                    <i class="fas fa-clock mr-2"></i>
+                    Live Data
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <i class="fas fa-check mr-2"></i>
+                    Ready
+                </span>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+            <!-- Search Filters -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                <div class="flex items-center mb-6">
+                    <i class="fas fa-search text-travel-yellow text-xl mr-3"></i>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Search Filters</h2>
+                </div>
+                
+                <form method="GET" id="searchForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Booking Reference</label>
+                            <input type="text" name="search" placeholder="e.g., IR-pu0yPTJ" 
+                                   value="{{ request.args.get('search', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date From</label>
+                            <input type="date" name="date_from" 
+                                   value="{{ request.args.get('date_from', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date To</label>
+                            <input type="date" name="date_to" 
+                                   value="{{ request.args.get('date_to', '') }}"
+                                   class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                            <select name="status" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Statuses</option>
+                                <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                                <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                                <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Payment Status</label>
+                            <select name="payment_status" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Payments</option>
+                                <option value="NONE" {{ 'selected' if request.args.get('payment_status') == 'NONE' }}>Unpaid</option>
+                                <option value="PARTIAL" {{ 'selected' if request.args.get('payment_status') == 'PARTIAL' }}>Partial</option>
+                                <option value="FULL" {{ 'selected' if request.args.get('payment_status') == 'FULL' }}>Paid</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Type</label>
+                            <select name="service_type" 
+                                    class="search-input w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-base">
+                                <option value="">All Services</option>
+                                <option value="FLIGHT" {{ 'selected' if request.args.get('service_type') == 'FLIGHT' }}>Flight</option>
+                                <option value="HOTEL" {{ 'selected' if request.args.get('service_type') == 'HOTEL' }}>Hotel</option>
+                                <option value="TRANSPORT" {{ 'selected' if request.args.get('service_type') == 'TRANSPORT' }}>Transport</option>
+                                <option value="VISA" {{ 'selected' if request.args.get('service_type') == 'VISA' }}>Visa</option>
+                                <option value="INSURANCE" {{ 'selected' if request.args.get('service_type') == 'INSURANCE' }}>Insurance</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" 
+                                class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-search mr-2"></i>
+                            Search Bookings
+                        </button>
+                        <button type="button" onclick="clearFilters()" 
+                                class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-times mr-2"></i>
+                            Clear Filters
+                        </button>
+                        <button type="button" onclick="exportResults()" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors flex items-center">
+                            <i class="fas fa-download mr-2"></i>
+                            Export Results
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Summary -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-gray-900 dark:text-white">
+                        <span>Showing {{ bookings|length }} of {{ bookings|length }} bookings</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="search-input px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="reference">Reference A-Z</option>
+                            <option value="customer">Customer A-Z</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Results Table -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reference</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Amount</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            {% for booking in bookings %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ booking.reference_number }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-travel-blue dark:text-blue-400 font-medium">
+                                        {% if booking.customer %}
+                                            <i class="fas fa-user mr-2"></i>{{ booking.customer.name }}
+                                        {% else %}
+                                            <span class="text-gray-500"><i class="fas fa-user-slash mr-2"></i>No Customer</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-500 dark:text-gray-300">
+                                        <i class="fas fa-calendar-alt mr-2"></i>{{ booking.created_at.strftime('%Y-%m-%d') }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if booking.status == 'REQUEST' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                            <i class="fas fa-file-alt mr-1"></i>Request
+                                        </span>
+                                    {% elif booking.status == 'IN_PROGRESS' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-travel-yellow text-gray-900">
+                                            <i class="fas fa-cog fa-spin mr-1"></i>In Progress
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check mr-1"></i>Completed
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if booking.payment_status == 'NONE' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                            <i class="fas fa-times mr-1"></i>Unpaid
+                                        </span>
+                                    {% elif booking.payment_status == 'PARTIAL' %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Partial
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                            <i class="fas fa-check-circle mr-1"></i>Paid
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-white">
+                                        <i class="fas fa-dollar-sign mr-1 text-green-600"></i>${{ "%.2f"|format(booking.total_amount or 0) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" 
+                                           class="bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-3 py-1 rounded text-xs font-medium transition-colors">
+                                            <i class="fas fa-eye mr-1"></i>View
+                                        </a>
+                                        <a href="{{ url_for('voucher.voucher_preview', booking_id=booking.id) }}" 
+                                           class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-medium transition-colors">
+                                            <i class="fas fa-file-alt mr-1"></i>Voucher
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+                <div class="text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-search text-6xl mb-4 text-travel-yellow"></i>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No bookings found</h3>
+                    <p>Try adjusting your search criteria or create a new booking</p>
+                    <a href="{{ url_for('booking.create') }}" class="inline-flex items-center mt-4 bg-travel-yellow hover:bg-travel-yellow-hover text-gray-900 px-6 py-2 rounded-md font-medium transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Create New Booking
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if bookings %}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mt-6">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        Showing 1 to {{ bookings|length }} of {{ bookings|length }} results
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            <i class="fas fa-chevron-left mr-1"></i>Previous
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-travel-yellow text-gray-900 rounded-md font-medium">
+                            1
+                        </button>
+                        <button class="px-3 py-2 text-sm bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md opacity-50 cursor-not-allowed">
+                            Next<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Dark mode detection and persistence
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+
+    // Message box functionality
+    function showMessage(message, type = 'info') {
+        const messageBox = document.getElementById('customMessageBox');
+        const messageText = document.getElementById('messageText');
+        
+        messageText.textContent = message;
+        messageBox.className = `message-box message-box-${type}`;
+        messageBox.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            hideMessage();
+        }, 5000);
+    }
+
+    function hideMessage() {
+        document.getElementById('customMessageBox').style.display = 'none';
+    }
+
+    // Confirmation modal functionality
+    function showConfirmationModal(title, text, onConfirm) {
+        document.getElementById('confirmModalTitle').textContent = title;
+        document.getElementById('confirmModalText').textContent = text;
+        document.getElementById('deleteConfirmationModal').style.display = 'flex';
+        
+        const confirmButton = document.getElementById('confirmDeleteButton');
+        const cancelButton = document.getElementById('cancelDeleteButton');
+        
+        confirmButton.onclick = () => {
+            hideConfirmationModal();
+            onConfirm();
+        };
+        
+        cancelButton.onclick = hideConfirmationModal;
+    }
+
+    function hideConfirmationModal() {
+        document.getElementById('deleteConfirmationModal').style.display = 'none';
+    }
+
+    function clearFilters() {
+        document.getElementById('searchForm').reset();
+        showMessage('Filters cleared successfully', 'success');
+        setTimeout(() => {
+            window.location.href = '{{ url_for("booking.search") }}';
+        }, 1000);
+    }
+
+    function exportResults() {
+        const params = new URLSearchParams(window.location.search);
+        params.set('export', 'csv');
+        showMessage('Exporting results...', 'info');
+        setTimeout(() => {
+            window.location.href = '{{ url_for("booking.search") }}?' + params.toString();
+        }, 1000);
+    }
+
+    function searchBookings() {
+        showMessage('Searching bookings...', 'info');
+        document.getElementById('searchForm').submit();
+    }
+
+    // Update results count on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const resultsCount = {{ bookings|length if bookings else 0 }};
+        const resultsElement = document.querySelector('[class*="text-gray-900"]');
+        if (resultsElement && resultsCount > 0) {
+            resultsElement.innerHTML = `Showing ${resultsCount} of ${resultsCount} bookings`;
+        }
+    });
+
+    // Enhanced form interactions
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('searchForm');
+        const inputs = form.querySelectorAll('input, select');
+        
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // Auto-submit on selection changes (optional)
+                // form.submit();
+            });
+        });
+    });
 </script>
 {% endblock %}

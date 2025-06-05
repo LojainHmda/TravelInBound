@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-9">
+        <h2 class="fw-bold">
+            <i class="fas fa-file-contract me-2"></i>Travel Voucher #{{ booking.reference_number }}
+        </h2>
+        <p class="text-muted">
+            Generated on {{ booking.created_at.strftime('%d %b %Y') }} for Booking #{{ booking.reference_number }}
+        </p>
+    </div>
+    <div class="col-md-3 text-end">
+        <div class="btn-group">
+            <a href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}" class="btn btn-primary">
+                <i class="fas fa-download me-2"></i>Download PDF
+            </a>
+            <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}"><i class="fas fa-file-pdf me-2"></i>Download PDF</a></li>
+                <li><a class="dropdown-item" href="#" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp me-2"></i>Share via WhatsApp</a></li>
+                <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fas fa-print me-2"></i>Print Voucher</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Voucher Content using EXACT Invoice Layout -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card mb-4" id="voucherContent">
+            <div class="card-body p-4">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <h5 class="text-muted mb-1">Customer:</h5>
+                            {% if booking.customer %}
+                                <h4>{{ booking.customer.name }}</h4>
+                                <p class="mb-0">{{ booking.customer.email }}</p>
+                                {% if booking.customer.phone %}
+                                    <p class="mb-0">{{ booking.customer.phone }}</p>
+                                {% endif %}
+                                {% if booking.customer.customer_type == 'Corporate' and booking.customer.company_name %}
+                                    <p class="mb-0">{{ booking.customer.company_name }}</p>
+                                    {% if booking.customer.tax_number %}
+                                        <p class="mb-0">Tax ID: {{ booking.customer.tax_number }}</p>
+                                    {% endif %}
+                                {% endif %}
+                                {% if booking.customer.address %}
+                                    <p class="mb-0">{{ booking.customer.get_full_address() }}</p>
+                                {% endif %}
+                            {% else %}
+                                <h4>{{ booking.requester.username }}</h4>
+                                <p class="mb-0">{{ booking.requester.email }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="mb-3">
+                            <h5 class="text-muted mb-1">Voucher Details:</h5>
+                            <table class="ms-md-auto">
+                                <tr>
+                                    <td class="pe-3"><strong>Voucher Number:</strong></td>
+                                    <td>{{ booking.reference_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pe-3"><strong>Booking Date:</strong></td>
+                                    <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pe-3"><strong>Total Pax:</strong></td>
+                                    <td>{{ '%02d'|format(booking.service_items|length if booking.service_items else 1) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="pe-3"><strong>Status:</strong></td>
+                                    <td><span class="badge bg-success">Confirmed</span></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Service</th>
+                                <th>Description</th>
+                                <th>Dates</th>
+                                <th>Status</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in booking.service_items %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.service_type == 'FLIGHT' %}
+                                            <i class="fas fa-plane service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'HOTEL' %}
+                                            <i class="fas fa-hotel service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'TRANSPORT' %}
+                                            <i class="fas fa-taxi service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'VISA' %}
+                                            <i class="fas fa-passport service-icon-table text-primary me-2"></i>
+                                        {% elif item.service_type == 'INSURANCE' %}
+                                            <i class="fas fa-shield-alt service-icon-table text-primary me-2"></i>
+                                        {% endif %}
+                                        {{ item.service_type }}
+                                    </div>
+                                </td>
+                                <td>{{ item.description }}</td>
+                                <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    {% if item.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% elif item.status == 'IN_PROGRESS' %}
+                                        <span class="badge bg-warning text-dark">Processing</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">${{ "%.2f"|format(item.amount) if item.amount else "0.00" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-8">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5>Travel Information</h5>
+                                <p class="mb-0">Please keep this voucher with you during travel. Present it at check-in and to service providers as confirmation of your booking.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        {% set total_amount = booking.total_amount or 0 %}
+                        {% set paid_amount = booking.payments|sum(attribute='amount') if booking.payments else 0 %}
+                        {% set balance = total_amount - paid_amount %}
+                        
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">Payment Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Amount:</span>
+                                    <strong>${{ "%.2f"|format(total_amount) }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Amount Paid:</span>
+                                    <strong class="text-success">${{ "%.2f"|format(paid_amount) }}</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span><strong>Balance Due:</strong></span>
+                                    <strong class="text-primary">${{ "%.2f"|format(balance) }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Footer -->
+                <div class="row mt-4 pt-4" style="border-top: 1px solid #dee2e6;">
+                    <div class="col-md-12 text-center">
+                        <h5 class="text-primary mb-3">ARABI TRAVEL</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Banking Information</h6>
+                                <p class="small mb-1"><strong>Arabi Travel Bank:</strong> Account USD= 9070-142464-510</p>
+                                <p class="small mb-1"><strong>Bank Of Palestine:</strong> Ramallah Branch - 0458/2220908/001/3000/000</p>
+                                <p class="small mb-0"><strong>Arab Bank:</strong> Acct. No.: 142464</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted">Contact Information</h6>
+                                <p class="small mb-1">📧 sales@arabtravel.ps</p>
+                                <p class="small mb-1">🌐 www.arabtravel.ps</p>
+                                <p class="small mb-1">📞 +97022956640</p>
+                                <p class="small mb-0">📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27</p>
+                            </div>
+                        </div>
+                        <p class="text-muted mt-3 mb-0"><em>Thank you for choosing Arabi Travel for your journey</em></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function shareToWhatsApp() {
+    const bookingRef = '{{ booking.reference_number }}';
+    const customerName = '{{ booking.requester.username if booking.requester else "Customer" }}';
+    const amount = '{{ "%.2f"|format(booking.total_amount or 0) }}';
+    
+    const message = `🎫 *Travel Voucher Generated*\n\n` +
+                   `📋 Booking: ${bookingRef}\n` +
+                   `👤 Customer: ${customerName}\n` +
+                   `💰 Total: $${amount}\n\n` +
+                   `✅ Your travel voucher is ready! Download it from: ${window.location.origin}/booking/{{ booking.id }}/voucher\n\n` +
+                   `🌟 *Arabi Travel* - Your trusted travel partner\n` +
+                   `📞 +97022956640\n` +
+                   `🌐 www.arabtravel.ps`;
+    
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+}
+</script>
+{% endblock %}

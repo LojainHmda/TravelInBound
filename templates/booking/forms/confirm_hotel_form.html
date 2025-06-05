@@ -1,0 +1,102 @@
+{% extends 'booking/forms/confirm_base_form.html' %}
+
+{% block supplier_options %}
+<option value="Booking.com">Booking.com</option>
+<option value="Expedia">Expedia</option>
+<option value="Hotels.com">Hotels.com</option>
+<option value="Agoda">Agoda</option>
+<option value="Airbnb">Airbnb</option>
+<option value="Direct">Direct with Hotel</option>
+<option value="Other">Other</option>
+{% endblock %}
+
+{% block form_fields %}
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Hotel Name</label>
+        <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">From Date</label>
+        <input type="date" name="from_date" class="form-control" value="{{ confirmation_data.from_date }}" required>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">To Date</label>
+        <input type="date" name="to_date" class="form-control" value="{{ confirmation_data.to_date }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Meal Plan</label>
+        <select name="meal_plan" class="form-select">
+            <option value="Room Only" {% if confirmation_data.meal_plan == 'Room Only' %}selected{% endif %}>Room Only</option>
+            <option value="Breakfast" {% if confirmation_data.meal_plan == 'Breakfast' %}selected{% endif %}>Breakfast</option>
+            <option value="Half Board" {% if confirmation_data.meal_plan == 'Half Board' %}selected{% endif %}>Half Board</option>
+            <option value="Full Board" {% if confirmation_data.meal_plan == 'Full Board' %}selected{% endif %}>Full Board</option>
+            <option value="All Inclusive" {% if confirmation_data.meal_plan == 'All Inclusive' %}selected{% endif %}>All Inclusive</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Status</label>
+        <input type="text" name="status" class="form-control" value="{{ confirmation_data.status }}" placeholder="e.g., confirmed, guaranteed">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Cost</label>
+        <input type="number" name="cost" class="form-control" value="{{ confirmation_data.cost }}" step="0.01">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Currency</label>
+        <select name="currency" class="form-select">
+            <option value="USD" {% if confirmation_data.currency == 'USD' or not confirmation_data.currency %}selected{% endif %}>USD</option>
+            <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+            <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
+        </select>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0">Room Configuration</h6>
+    </div>
+    <div class="card-body" id="roomDetails">
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label">Single Rooms</label>
+                <input type="number" name="single_rooms" class="form-control" value="{{ confirmation_data.rooms.single|default(0) }}" min="0">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Double Rooms</label>
+                <input type="number" name="double_rooms" class="form-control" value="{{ confirmation_data.rooms.double|default(0) }}" min="0">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label class="form-label">Twin Rooms</label>
+                <input type="number" name="twin_rooms" class="form-control" value="{{ confirmation_data.rooms.twin|default(0) }}" min="0">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Triple Rooms</label>
+                <input type="number" name="triple_rooms" class="form-control" value="{{ confirmation_data.rooms.triple|default(0) }}" min="0">
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <label class="form-label">Other Rooms</label>
+                <input type="text" name="other_rooms" class="form-control" value="{{ confirmation_data.rooms.other|default('') }}" placeholder="e.g., 1 Family Room, 2 Adjoining Rooms">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Special Notes</label>
+    <textarea name="special_notes" class="form-control" rows="2">{{ confirmation_data.special_notes }}</textarea>
+</div>
+{% endblock %}
