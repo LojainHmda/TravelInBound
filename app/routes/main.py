@@ -138,3 +138,103 @@ def search_and_history():
     bookings = query.order_by(Booking.created_at.desc()).all()
     
     return render_template('booking/search_and_history.html', bookings=bookings)
+
+@main_bp.route('/find-bookings')
+def find_bookings():
+    """Find Bookings page with comprehensive filtering"""
+    from datetime import datetime, timedelta
+    from sqlalchemy import and_, or_
+    
+    # Get filter parameters
+    search_term = request.args.get('search', '').strip()
+    date_from = request.args.get('date_from')
+    date_to = request.args.get('date_to')
+    status = request.args.get('status')
+    service_type = request.args.get('service_type')
+    amount_from = request.args.get('amount_from')
+    amount_to = request.args.get('amount_to')
+    customer_search = request.args.get('customer', '').strip()
+    
+    # Build base query
+    query = Booking.query
+    
+    # Apply filters
+    conditions = []
+    
+    # Search term filter (reference number)
+    if search_term:
+        conditions.append(Booking.reference_number.ilike(f'%{search_term}%'))
+    
+    # Customer search filter
+    if customer_search:
+        try:
+            from app.models.customer import Customer
+            query = query.join(Customer, Booking.customer_id == Customer.id, isouter=True)
+            customer_conditions = [
+                Customer.first_name.ilike(f'%{customer_search}%'),
+                Customer.last_name.ilike(f'%{customer_search}%'),
+                Customer.email.ilike(f'%{customer_search}%')
+            ]
+            conditions.append(or_(*customer_conditions))
+        except:
+            # Fallback to user search if Customer model not available
+            query = query.join(User, Booking.user_id == User.id, isouter=True)
+            conditions.append(User.username.ilike(f'%{customer_search}%'))
+    
+    # Date range filters
+    if date_from:
+        try:
+            date_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            conditions.append(Booking.created_at >= date_obj)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            date_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            # Add one day to include the entire end date
+            end_date = datetime.combine(date_obj, datetime.max.time())
+            conditions.append(Booking.created_at <= end_date)
+        except ValueError:
+            pass
+    
+    # Status filter
+    if status:
+        conditions.append(Booking.status == status)
+    
+    # Service type filter
+    if service_type:
+        from app.models import ServiceItem
+        query = query.join(ServiceItem, Booking.id == ServiceItem.booking_id, isouter=True)
+        conditions.append(ServiceItem.service_type == service_type)
+    
+    # Amount range filters
+    if amount_from:
+        try:
+            amount = float(amount_from)
+            conditions.append(Booking.total_amount >= amount)
+        except ValueError:
+            pass
+    
+    if amount_to:
+        try:
+            amount = float(amount_to)
+            conditions.append(Booking.total_amount <= amount)
+        except ValueError:
+            pass
+    
+    # Apply all conditions
+    if conditions:
+        query = query.filter(and_(*conditions))
+    
+    # Order by newest first
+    bookings = query.order_by(Booking.created_at.desc()).limit(100).all()
+    
+    # Calculate summary statistics
+    total_amount = sum(booking.total_amount for booking in bookings)
+    total_bookings = len(bookings)
+    
+    return render_template('booking/find_bookings.html', 
+                         bookings=bookings,
+                         total_amount=total_amount,
+                         total_bookings=total_bookings)
