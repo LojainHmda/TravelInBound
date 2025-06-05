@@ -117,10 +117,12 @@ def create_app():
             return User.query.get(int(user_id))
         
         # Create database tables
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            app.logger.error(f"Database table creation error: {e}")
         
-        # Create test data if needed
-        from app.models.user import create_test_data
-        create_test_data()
+        # Test data creation moved to separate initialization script
+        # Run `python init_db.py` manually if needed
         
     return app
