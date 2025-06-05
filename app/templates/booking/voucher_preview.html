@@ -198,19 +198,48 @@
                                         <table class="table table-sm">
                                             <tr>
                                                 <td><strong>Departure:</strong></td>
-                                                <td>{{ flight.start_date.strftime('%a, %d %b %Y') }} at 09:30</td>
+                                                <td>{{ flight.start_date.strftime('%a, %d %b %Y') }}
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {% if confirmation_data.flight_time %}
+                                                        at {{ confirmation_data.flight_time }}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>From:</strong></td>
-                                                <td>Ramallah (RAM) - Palestine</td>
+                                                <td>
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.departure_airport or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Flight:</strong></td>
-                                                <td>PS{{ 100 + loop.index0 }} - Palestine Airlines</td>
+                                                <td>
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.flight_number or 'TBD' }}
+                                                    {% if confirmation_data.airline %} - {{ confirmation_data.airline }}{% endif %}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>E-Ticket:</strong></td>
-                                                <td>157-308666{{ 8941 + loop.index0 }}</td>
+                                                <td>
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.ticket_number or doc.document_number or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                         </table>
                                     </div>
@@ -220,15 +249,36 @@
                                         <table class="table table-sm">
                                             <tr>
                                                 <td><strong>Arrival:</strong></td>
-                                                <td>{{ flight.end_date.strftime('%a, %d %b %Y') }} at 14:45</td>
+                                                <td>{{ flight.end_date.strftime('%a, %d %b %Y') }}
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {% if confirmation_data.flight_time %}
+                                                        at {{ confirmation_data.flight_time }}
+                                                    {% endif %}
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>To:</strong></td>
-                                                <td>Dubai (DXB) - UAE</td>
+                                                <td>
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.arrival_airport or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Class:</strong></td>
-                                                <td>Economy (Y)</td>
+                                                <td>
+                                                {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.travel_class or 'Economy' }}
+                                                {% else %}
+                                                    Economy
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Status:</strong></td>
@@ -247,9 +297,24 @@
                             <div class="row mt-2">
                                 <div class="col-12">
                                     <div class="alert alert-info">
-                                        <strong>Passenger:</strong> {{ booking.requester.username if booking.requester else 'N/A' }} | 
-                                        <strong>Seat:</strong> 15A | 
-                                        <strong>Baggage:</strong> 23kg included | 
+                                        <strong>Passenger:</strong> 
+                                        {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                            {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                            {% if confirmation_data.passenger_names %}
+                                                {{ confirmation_data.passenger_names|join(', ') }}
+                                            {% else %}
+                                                {{ booking.customer.name if booking.customer else booking.requester.username if booking.requester else 'N/A' }}
+                                            {% endif %}
+                                        {% else %}
+                                            {{ booking.customer.name if booking.customer else booking.requester.username if booking.requester else 'N/A' }}
+                                        {% endfor %} | 
+                                        <strong>PNR:</strong> 
+                                        {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                            {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                            {{ confirmation_data.pnr or 'TBD' }}
+                                        {% else %}
+                                            TBD
+                                        {% endfor %} | 
                                         <strong>Amount:</strong> ${{ "%.2f"|format(flight.amount) if flight.amount else "0.00" }}
                                     </div>
                                 </div>
@@ -276,19 +341,46 @@
                                         <table class="table table-sm">
                                             <tr>
                                                 <td><strong>Hotel Name:</strong></td>
-                                                <td>{{ hotel.description or 'Grand Hotel' }}</td>
+                                                <td>
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.hotel_name or hotel.description or 'TBD' }}
+                                                {% else %}
+                                                    {{ hotel.description or 'TBD' }}
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Address:</strong></td>
-                                                <td>123 Main Street, City Center</td>
+                                                <td>
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.hotel_address or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Phone:</strong></td>
-                                                <td>+971-4-555-0123</td>
+                                                <td>
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {{ confirmation_data.hotel_phone or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Confirmation:</strong></td>
-                                                <td>HTL{{ 1000 + loop.index0 }}</td>
+                                                <td>
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {{ doc.document_number or 'TBD' }}
+                                                {% else %}
+                                                    TBD
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                         </table>
                                     </div>
@@ -298,11 +390,21 @@
                                         <table class="table table-sm">
                                             <tr>
                                                 <td><strong>Check-in:</strong></td>
-                                                <td>{{ hotel.start_date.strftime('%d %b %Y') }} at 15:00</td>
+                                                <td>{{ hotel.start_date.strftime('%d %b %Y') }}
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {% if confirmation_data.checkin_time %} at {{ confirmation_data.checkin_time }}{% endif %}
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Check-out:</strong></td>
-                                                <td>{{ hotel.end_date.strftime('%d %b %Y') }} at 12:00</td>
+                                                <td>{{ hotel.end_date.strftime('%d %b %Y') }}
+                                                {% for doc in hotel.documents if doc.document_type == 'CONFIRMATION' %}
+                                                    {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                                    {% if confirmation_data.checkout_time %} at {{ confirmation_data.checkout_time }}{% endif %}
+                                                {% endfor %}
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td><strong>Nights:</strong></td>
