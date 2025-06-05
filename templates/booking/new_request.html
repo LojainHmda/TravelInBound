@@ -1,549 +1,109 @@
 {% extends 'base.html' %}
 
-{% block styles %}
-{{ super() }}
-<style>
-/* Progress Flow Bar Styling */
-.progress-flow {
-    position: relative;
-}
-
-.step {
-    text-align: center;
-    position: relative;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.step-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #e9ecef;
-    border: 3px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 8px;
-    color: #6c757d;
-    font-size: 18px;
-    transition: all 0.3s ease;
-}
-
-.step.active .step-circle {
-    background-color: #FFBF00;
-    border-color: #FFBF00;
-    color: #000;
-    box-shadow: 0 0 10px rgba(255, 191, 0, 0.5);
-}
-
-.step-label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6c757d;
-    margin-top: 5px;
-}
-
-.step.active .step-label {
-    color: #223A5E;
-    font-weight: bold;
-}
-
-.step-line {
-    height: 3px;
-    background-color: #e9ecef;
-    flex: 1;
-    margin: 0 10px;
-    align-self: center;
-    margin-top: -25px;
-}
-
-.step.active + .step-line {
-    background-color: #FFBF00;
-}
-
-/* Enhanced Service Icons */
-.direct-add-service {
-    transition: all 0.3s ease;
-    border: 2px solid #FFBF00 !important;
-    color: #FFBF00 !important;
-    background: linear-gradient(135deg, #fff, #fefefe);
-    box-shadow: 0 2px 8px rgba(255, 191, 0, 0.1);
-}
-
-.direct-add-service:hover {
-    background: linear-gradient(135deg, #FFBF00, #FFD700) !important;
-    color: #000 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 191, 0, 0.3);
-}
-
-.direct-add-service i {
-    font-size: 20px;
-    margin-bottom: 5px;
-}
-
-/* Service badges in table */
-.badge {
-    font-size: 0.8rem;
-    padding: 6px 10px;
-    border-radius: 20px;
-}
-
-.badge i {
-    margin-right: 4px;
-}
-
-/* Enhanced Service Grid Table */
-.service-grid-table {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.service-grid-table thead th {
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-align: center;
-    border: none;
-    padding: 15px 10px;
-}
-
-.service-grid-table tbody td {
-    vertical-align: middle;
-    padding: 12px 10px;
-    border-color: #e9ecef;
-}
-
-.service-grid-table tbody tr:hover {
-    background-color: #f8f9fa;
-    transform: scale(1.02);
-    transition: all 0.2s ease;
-}
-
-/* Empty state styling */
-.service-grid-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.service-grid-empty i {
-    font-size: 3rem;
-    color: #FFBF00;
-    margin-bottom: 15px;
-    display: block;
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="row">
     <div class="col-md-12">
-        <!-- Progress Flow Bar -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body p-3">
-                <div class="progress-flow d-flex justify-content-between align-items-center">
-                    <div class="step active">
-                        <div class="step-circle">
-                            <i class="fas fa-edit"></i>
-                        </div>
-                        <span class="step-label">Request Details</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step">
-                        <div class="step-circle">
-                            <i class="fas fa-list"></i>
-                        </div>
-                        <span class="step-label">Add Services</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step">
-                        <div class="step-circle">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <span class="step-label">Review & Submit</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step">
-                        <div class="step-circle">
-                            <i class="fas fa-rocket"></i>
-                        </div>
-                        <span class="step-label">Processing</span>
-                    </div>
-                </div>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Booking Request</h3>
             </div>
-        </div>
-
-        <!-- Compact Header with Action -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="mb-1"><i class="fas fa-bookmark me-2" style="color: #FFBF00;"></i>New Customer Request</h2>
-                <p class="text-muted mb-0">Create a new booking request quickly and efficiently</p>
-            </div>
-            <div>
-                <a href="#" class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#customerSelectionModal">
-                    <i class="fas fa-rocket me-2"></i>Quick Start
-                </a>
-            </div>
-        </div>
-        
-        <!-- Smart Compact Form -->
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background: linear-gradient(45deg, #FFBF00, #FFD700); color: black;">
-                        <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Booking Details</h4>
-                    </div>
-                    <div class="card-body p-4">
-                        <form id="newBookingForm" method="POST" action="{{ url_for('booking.new_booking') }}">
-                            {{ form.hidden_tag() }}
-                            
-                            <!-- Compact Customer & Request ID Row -->
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-8">
-                                    <label class="form-label fw-bold">Customer</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text" style="background-color: #FFBF00; border-color: #FFBF00; color: black;">
-                                            <i class="fas fa-user"></i>
-                                        </span>
-                                        <select id="customer-select" name="customer" class="form-select">
-                                            <option value="">Choose a customer...</option>
-                                            {% for choice in form.customer.choices %}
-                                            <option value="{{ choice[0] }}">{{ choice[1] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <button type="button" class="btn" style="background-color: #FFBF00; border-color: #FFBF00; color: black;" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold">Request ID</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text" style="background-color: #FFBF00; border-color: #FFBF00; color: black;">
-                                            <i class="fas fa-hashtag"></i>
-                                        </span>
-                                        {{ form.request_id(class="form-control") }}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Smart Service Builder -->
-                            <div class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0"><i class="fas fa-list-ul me-2" style="color: #FFBF00;"></i>Services</h5>
-                                    <small class="text-muted">Click service icons to add quickly</small>
-                                </div>
-                                
-                                <!-- Hidden form fields for service item data -->
-                                <div style="display:none;">
-                                    {{ form.from_date(id="hidden_from_date") }}
-                                    {{ form.to_date(id="hidden_to_date") }}
-                                    {{ form.service_type(id="hidden_service_type") }}
-                                    {{ form.description(id="hidden_description") }}
-                                    {{ form.amount(id="hidden_amount") }}
-                                    {{ form.currency(id="hidden_currency") }}
-                                    {{ form.add_item(id="hidden_add_item") }}
-                                </div>
-                                
-                                <!-- Compact Service Type Buttons -->
-                                <div class="service-quick-add mb-3 p-3 rounded" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px dashed #FFBF00;">
-                                    <div class="row g-2 text-center">
-                                        <div class="col">
-                                            <button type="button" class="btn btn-outline-primary btn-sm w-100 direct-add-service" data-service-type="FLIGHT" style="border-color: #FFBF00; color: #FFBF00;">
-                                                <i class="fas fa-plane d-block mb-1"></i>
-                                                <small>Flight</small>
-                                            </button>
-                                        </div>
-                                        <div class="col">
-                                            <button type="button" class="btn btn-outline-success btn-sm w-100 direct-add-service" data-service-type="HOTEL" style="border-color: #FFBF00; color: #FFBF00;">
-                                                <i class="fas fa-hotel d-block mb-1"></i>
-                                                <small>Hotel</small>
-                                            </button>
-                                        </div>
-                                        <div class="col">
-                                            <button type="button" class="btn btn-outline-warning btn-sm w-100 direct-add-service" data-service-type="TRANSPORT" style="border-color: #FFBF00; color: #FFBF00;">
-                                                <i class="fas fa-car d-block mb-1"></i>
-                                                <small>Transport</small>
-                                            </button>
-                                        </div>
-                                        <div class="col">
-                                            <button type="button" class="btn btn-outline-danger btn-sm w-100 direct-add-service" data-service-type="VISA" style="border-color: #FFBF00; color: #FFBF00;">
-                                                <i class="fas fa-passport d-block mb-1"></i>
-                                                <small>Visa</small>
-                                            </button>
-                                        </div>
-                                        <div class="col">
-                                            <button type="button" class="btn btn-outline-info btn-sm w-100 direct-add-service" data-service-type="INSURANCE" style="border-color: #FFBF00; color: #FFBF00;">
-                                                <i class="fas fa-shield-alt d-block mb-1"></i>
-                                                <small>Insurance</small>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="table-responsive mb-3">
-                        
-                        <table class="table table-bordered service-grid-table">
-                            <thead style="background: linear-gradient(135deg, #223A5E, #2c4a6b); color: white;">
-                                <tr>
-                                    <th><i class="fas fa-calendar-alt me-2" style="color: #FFBF00;"></i>From Date</th>
-                                    <th><i class="fas fa-calendar-check me-2" style="color: #FFBF00;"></i>To Date</th>
-                                    <th><i class="fas fa-concierge-bell me-2" style="color: #FFBF00;"></i>Service Type</th>
-                                    <th><i class="fas fa-file-alt me-2" style="color: #FFBF00;"></i>Description</th>
-                                    <th><i class="fas fa-dollar-sign me-2" style="color: #FFBF00;"></i>Amount</th>
-                                    <th><i class="fas fa-coins me-2" style="color: #FFBF00;"></i>Currency</th>
-                                    <th><i class="fas fa-cogs me-2" style="color: #FFBF00;"></i>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Display previously added items, if any -->
-                                {% if items %}
-                                    {% for item in items %}
-                                    <tr>
-                                        <td>{{ item.from_date }}</td>
-                                        <td>{{ item.to_date }}</td>
-                                        <td>
-                                            {% if item.service_type == 'FLIGHT' %}
-                                                <span class="badge bg-primary"><i class="fas fa-plane me-1"></i> Flight</span>
-                                            {% elif item.service_type == 'HOTEL' %}
-                                                <span class="badge bg-success"><i class="fas fa-hotel me-1"></i> Hotel</span>
-                                            {% elif item.service_type == 'TRANSPORT' %}
-                                                <span class="badge bg-warning text-dark"><i class="fas fa-car me-1"></i> Transport</span>
-                                            {% elif item.service_type == 'VISA' %}
-                                                <span class="badge bg-danger"><i class="fas fa-passport me-1"></i> Visa</span>
-                                            {% elif item.service_type == 'INSURANCE' %}
-                                                <span class="badge bg-info"><i class="fas fa-shield-alt me-1"></i> Insurance</span>
-                                            {% else %}
-                                                {{ item.service_type }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="editable-field">
-                                                <span class="editable-text">{{ item.description }}</span>
-                                                <input type="text" class="form-control form-control-sm edit-input d-none" 
-                                                       value="{{ item.description }}" data-item-id="{{ item.item_id }}" data-field="description">
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="editable-field">
-                                                <span class="editable-text">{{ "%.2f"|format(item.amount) }}</span>
-                                                <input type="number" step="0.01" min="0" class="form-control form-control-sm edit-input d-none" 
-                                                       value="{{ "%.2f"|format(item.amount) }}" data-item-id="{{ item.item_id }}" data-field="amount">
-                                            </div>
-                                        </td>
-                                        <td>{{ item.currency }}</td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm edit-item" data-item-id="{{ item.item_id }}">
-                                                    <i class="fas fa-pencil-alt"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-success btn-sm save-item d-none" data-item-id="{{ item.item_id }}">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-outline-danger btn-sm remove-item" data-item-id="{{ item.item_id }}">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr>
-                                        <td colspan="7" class="service-grid-empty">
-                                            <i class="fas fa-concierge-bell"></i>
-                                            <div style="font-size: 1.1rem; font-weight: 600; color: #223A5E; margin-bottom: 10px;">
-                                                Ready to Add Services
-                                            </div>
-                                            <div style="margin-bottom: 15px;">
-                                                Use the quick-add buttons above to get started with:
-                                            </div>
-                                            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                                                <span class="badge bg-primary" style="font-size: 0.8rem; padding: 5px 10px;">
-                                                    <i class="fas fa-plane me-1"></i> Flights
-                                                </span>
-                                                <span class="badge bg-success" style="font-size: 0.8rem; padding: 5px 10px;">
-                                                    <i class="fas fa-hotel me-1"></i> Hotels
-                                                </span>
-                                                <span class="badge bg-warning text-dark" style="font-size: 0.8rem; padding: 5px 10px;">
-                                                    <i class="fas fa-car me-1"></i> Transport
-                                                </span>
-                                                <span class="badge bg-danger" style="font-size: 0.8rem; padding: 5px 10px;">
-                                                    <i class="fas fa-passport me-1"></i> Visa
-                                                </span>
-                                                <span class="badge bg-info" style="font-size: 0.8rem; padding: 5px 10px;">
-                                                    <i class="fas fa-shield-alt me-1"></i> Insurance
-                                                </span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="4" class="text-end"><strong>Total Amount:</strong></td>
-                                    <td>
-                                        {% set total = 0 %}
-                                        {% for item in items %}
-                                            {% set total = total + item.amount %}
-                                        {% endfor %}
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="itinerary_total" 
-                                                value="{{ "%.2f"|format(total) }}" data-calculated-total="{{ "%.2f"|format(total) }}">
-                                        </div>
-                                    </td>
-                                    <td colspan="2">
-                                        <button type="button" class="btn btn-sm btn-outline-primary" id="update-itinerary-total">
-                                            <i class="fas fa-sync-alt me-1"></i> Update
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+            <div class="card-body">
+                <p class="lead">Select the services you require for this booking:</p>
+                
+                <form id="newBookingForm" method="POST" action="{{ url_for('new_booking') }}">
+                    {{ form.hidden_tag() }}
                     
-                    <!-- Prepayment Section -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Prepayment Information</h5>
-                            <div>
-                                <button type="submit" name="save_action" value="generate_invoice" class="btn btn-sm btn-success me-1">
-                                    <i class="fas fa-file-invoice me-1"></i> Generate Prepayment
-                                </button>
-                                <a href="#" id="view-invoice-btn" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#invoiceModal">
-                                    <i class="fas fa-eye me-1"></i> View Prepayment
-                                </a>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label"><strong>Prepayment Status:</strong></label>
-                                        <div>
-                                            <span class="badge bg-primary">Draft</span>
+                    <div class="row mb-4">
+                        <div class="col">
+                            <div class="service-selection">
+                                <div class="row text-center">
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.flight_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.flight_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-plane"></i>
+                                                    </div>
+                                                    <span>Flights</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label"><strong>Prepayment #:</strong></label>
-                                        <div>
-                                            <span class="text-muted">Will be generated</span>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.hotel_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.hotel_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-hotel"></i>
+                                                    </div>
+                                                    <span>Hotels</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label"><strong>Prepayment Notes:</strong></label>
-                                <textarea id="invoice_notes" name="invoice_notes" class="form-control" rows="2" placeholder="Enter any special instructions for the prepayment"></textarea>
-                            </div>
-                            
-                            <!-- Total Amount Editable Field -->
-                            <div class="form-group mt-3">
-                                <label class="form-label"><strong>Total Prepayment Amount:</strong></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" min="0" class="form-control" id="total_amount" name="total_amount" 
-                                       value="{% set total = 0 %}{% for item in items %}{% set total = total + item.amount %}{% endfor %}{{ "%.2f"|format(total) }}">
-                                </div>
-                                <div class="form-text">You can adjust the total amount if needed</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Prepayment Modal -->
-                    <div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title" id="invoiceModalLabel">Create Prepayment</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="invoice_total" class="form-label">Total Prepayment Amount</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="invoice_total" step="0.01" min="0" placeholder="0.00">
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.transport_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.transport_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-car"></i>
+                                                    </div>
+                                                    <span>Transport</span>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="invoice_modal_notes" class="form-label">Prepayment Notes</label>
-                                        <textarea class="form-control" id="invoice_modal_notes" rows="3" placeholder="Enter any special instructions or notes for this prepayment"></textarea>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.visa_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.visa_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-passport"></i>
+                                                    </div>
+                                                    <span>Visa</span>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="createInvoiceBtn">Generate Prepayment</button>
+                                    
+                                    <div class="col-md-2 mb-3">
+                                        <div class="service-option">
+                                            <div class="form-check">
+                                                {{ form.insurance_service(class="form-check-input") }}
+                                                <label class="form-check-label" for="{{ form.insurance_service.id }}">
+                                                    <div class="service-icon">
+                                                        <i class="fas fa-shield-alt"></i>
+                                                    </div>
+                                                    <span>Insurance</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Payment Modal -->
-                    <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header bg-success text-white">
-                                    <h5 class="modal-title" id="paymentModalLabel">Add Payment</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="payment_amount" class="form-label">Payment Amount</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" class="form-control" id="payment_amount" step="0.01" min="0" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="payment_modal_method" class="form-label">Payment Method</label>
-                                        <select class="form-select" id="payment_modal_method">
-                                            <option value="CREDIT_CARD">Credit Card</option>
-                                            <option value="BANK_TRANSFER">Bank Transfer</option>
-                                            <option value="PAYPAL">PayPal</option>
-                                            <option value="CASH">Cash</option>
-                                            <option value="OTHER">Other</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="transaction_id" class="form-label">Transaction ID</label>
-                                        <input type="text" class="form-control" id="transaction_id" placeholder="Optional transaction reference">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="payment_date" class="form-label">Payment Date</label>
-                                        <input type="date" class="form-control" id="payment_date">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="payment_modal_notes" class="form-label">Payment Notes</label>
-                                        <textarea class="form-control" id="payment_modal_notes" rows="2" placeholder="Enter any notes for this payment"></textarea>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-success" id="processPaymentBtn">Process Payment</button>
-                                </div>
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> After creating the booking request, you'll be able to add specific details for each selected service.
                             </div>
                         </div>
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-md-2">
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary me-md-2">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
-                        <button type="submit" name="save_action" value="save" class="btn btn-primary me-md-2">
-                            <i class="fas fa-save me-2"></i>Save Request
-                        </button>
-                        <button type="submit" name="save_action" value="start_operations" class="btn btn-warning">
-                            <i class="fas fa-play-circle me-2"></i>Start Operations
-                        </button>
+                        {{ form.submit(class="btn btn-primary") }}
                     </div>
                 </form>
             </div>
@@ -551,749 +111,92 @@
     </div>
 </div>
 
-<!-- Add Customer Modal -->
-<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addCustomerModalLabel">Add New Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Booking Process</h4>
             </div>
-            <div class="modal-body">
-                <form id="quickAddCustomerForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">First Name *</label>
-                                <input type="text" id="quick_first_name" class="form-control" required>
-                            </div>
+            <div class="card-body">
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="process-icon bg-primary">
+                            <i class="fas fa-clipboard-list"></i>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Last Name</label>
-                                <input type="text" id="quick_last_name" class="form-control">
-                            </div>
+                        <div class="process-content">
+                            <h5>1. Request Stage</h5>
+                            <p>Select services and create a booking request</p>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Email *</label>
-                                <input type="email" id="quick_email" class="form-control" required>
-                            </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-info">
+                            <i class="fas fa-file-invoice-dollar"></i>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Phone</label>
-                                <input type="text" id="quick_phone" class="form-control">
-                            </div>
+                        <div class="process-content">
+                            <h5>2. Invoice Stage</h5>
+                            <p>Review and process payment for selected services</p>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Customer Type</label>
-                                <select id="quick_customer_type" class="form-select">
-                                    <option value="Individual">Individual</option>
-                                    <option value="Corporate">Corporate</option>
-                                    <option value="Group">Group</option>
-                                </select>
-                            </div>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-warning">
+                            <i class="fas fa-cogs"></i>
                         </div>
-                        <div class="col-md-6 corporate-field" style="display: none;">
-                            <div class="form-group mb-3">
-                                <label class="form-label">Company Name</label>
-                                <input type="text" id="quick_company_name" class="form-control">
-                            </div>
+                        <div class="process-content">
+                            <h5>3. In-Progress Stage</h5>
+                            <p>Services are assigned to agents for processing</p>
                         </div>
                     </div>
-                    <div class="alert alert-danger" id="quickAddCustomerError" style="display: none;"></div>
-                </form>
+                    
+                    <div class="process-step">
+                        <div class="process-icon bg-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="process-content">
+                            <h5>4. Completion Stage</h5>
+                            <p>All services confirmed and booking completed</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveQuickCustomerBtn">Save Customer</button>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0"><i class="fas fa-star me-2"></i>Features</h4>
+            </div>
+            <div class="card-body">
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Multi-service booking in one request</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Real-time tracking of service execution</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Detailed cost breakdown for each service</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Automated agent assignment based on service type</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Comprehensive dashboard for service monitoring</span>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle text-success"></i>
+                        <span>Document management for travel confirmations</span>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
-
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/payment.js') }}"></script>
-<script>
-// Initialize Select2 for customer search
-$(document).ready(function() {
-    // Initialize Select2 for customer search
-    $('#customer-select').select2({
-        theme: 'bootstrap-5',
-        width: '100%',
-        placeholder: 'Search for a customer...',
-        allowClear: true,
-        ajax: {
-            url: '{{ url_for("customer.api_search_customers") }}',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return {
-                    query: params.term || '',
-                    limit: 10
-                };
-            },
-            processResults: function(data) {
-                return data;
-            },
-            cache: true
-        },
-        minimumInputLength: 1
-    });
-    
-    // Handle customer type change to show/hide company field
-    $('#quick_customer_type').on('change', function() {
-        if ($(this).val() === 'Corporate') {
-            $('.corporate-field').show();
-        } else {
-            $('.corporate-field').hide();
-        }
-    });
-    
-    // Handle quick add customer form submission
-    $('#saveQuickCustomerBtn').on('click', function() {
-        // Get form data
-        var customerData = {
-            first_name: $('#quick_first_name').val(),
-            last_name: $('#quick_last_name').val(),
-            email: $('#quick_email').val(),
-            phone: $('#quick_phone').val(),
-            customer_type: $('#quick_customer_type').val(),
-            company_name: $('#quick_company_name').val()
-        };
-        
-        // Validate required fields
-        if (!customerData.first_name || !customerData.email) {
-            $('#quickAddCustomerError').text('First name and email are required.').show();
-            return;
-        }
-        
-        // Submit form via AJAX
-        $.ajax({
-            url: '{{ url_for("customer.api_create_customer") }}',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(customerData),
-            success: function(response) {
-                if (response.success) {
-                    // Create new option and select it
-                    var newOption = new Option(
-                        response.customer.text, 
-                        response.customer.id, 
-                        true, 
-                        true
-                    );
-                    $('#customer-select').append(newOption).trigger('change');
-                    
-                    // Close modal and reset form
-                    $('#addCustomerModal').modal('hide');
-                    $('#quickAddCustomerForm')[0].reset();
-                    $('#quickAddCustomerError').hide();
-                } else {
-                    $('#quickAddCustomerError').text(response.message).show();
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred. Please try again.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                $('#quickAddCustomerError').text(message).show();
-            }
-        });
-    });
-});
-
-// Initialize any existing payment data if available
-window.existingPayments = [];
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Set today as min date for from_date
-    const today = new Date().toISOString().split('T')[0];
-    const fromDateInput = document.getElementById('hidden_from_date');
-    const toDateInput = document.getElementById('hidden_to_date');
-    const serviceTypeSelect = document.getElementById('hidden_service_type');
-    const descriptionInput = document.getElementById('hidden_description');
-    const amountInput = document.getElementById('hidden_amount');
-    const currencySelect = document.getElementById('hidden_currency');
-    const addItemButton = document.getElementById('hidden_add_item');
-    const bookingForm = document.getElementById('newBookingForm');
-    
-    // Handle direct add service buttons
-    const directAddButtons = document.querySelectorAll('.direct-add-service');
-    directAddButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const serviceType = this.getAttribute('data-service-type');
-            addDirectServiceRow(serviceType);
-        });
-    });
-    
-    // Function to add service row directly
-    function addDirectServiceRow(serviceType) {
-        // Set default dates
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        const nextWeekString = nextWeek.toISOString().split('T')[0];
-        
-        // Set default values for the service type
-        fromDateInput.value = today;
-        toDateInput.value = nextWeekString;
-        
-        // Set the service type
-        for (let i = 0; i < serviceTypeSelect.options.length; i++) {
-            if (serviceTypeSelect.options[i].value === serviceType) {
-                serviceTypeSelect.selectedIndex = i;
-                break;
-            }
-        }
-        
-        // Set default description and amount based on service type
-        let description = '';
-        let amount = '';
-        
-        switch(serviceType) {
-            case 'FLIGHT':
-                description = 'Flight Ticket';
-                amount = '350.00';
-                break;
-            case 'HOTEL':
-                description = 'Hotel Accommodation';
-                amount = '200.00';
-                break;
-            case 'TRANSPORT':
-                description = 'Transport Service';
-                amount = '75.00';
-                break;
-            case 'VISA':
-                description = 'Visa Processing';
-                amount = '120.00';
-                break;
-            case 'INSURANCE':
-                description = 'Travel Insurance';
-                amount = '80.00';
-                break;
-        }
-        
-        descriptionInput.value = description;
-        amountInput.value = amount;
-        
-        // Set USD as default currency
-        for (let i = 0; i < currencySelect.options.length; i++) {
-            if (currencySelect.options[i].value === 'USD') {
-                currencySelect.selectedIndex = i;
-                break;
-            }
-        }
-        
-        // Trigger the form submission to add the item
-        addItemButton.click();
-    }
-    
-    // Set today as default date for payment date
-    const paymentDateInput = document.getElementById('payment_date');
-    if (paymentDateInput) {
-        paymentDateInput.value = today;
-    }
-    
-    // Calculate and update total amount in invoice modal
-    function updateTotalAmount() {
-        let total = 0;
-        const amountCells = document.querySelectorAll('.service-amount');
-        amountCells.forEach(cell => {
-            const amount = parseFloat(cell.textContent.replace(/[^0-9.-]+/g, '')) || 0;
-            total += amount;
-        });
-        
-        const invoiceTotalInput = document.getElementById('invoice_total');
-        if (invoiceTotalInput) {
-            invoiceTotalInput.value = total.toFixed(2);
-        }
-        
-        const paymentAmountInput = document.getElementById('payment_amount');
-        if (paymentAmountInput) {
-            paymentAmountInput.value = total.toFixed(2);
-        }
-    }
-    
-    // Initialize invoice and payment modals
-    const invoiceModal = document.getElementById('invoiceModal');
-    if (invoiceModal) {
-        invoiceModal.addEventListener('show.bs.modal', function() {
-            updateTotalAmount();
-            
-            // Copy notes from main form to modal
-            const invoiceNotes = document.getElementById('invoice_notes');
-            const invoiceModalNotes = document.getElementById('invoice_modal_notes');
-            if (invoiceNotes && invoiceModalNotes) {
-                invoiceModalNotes.value = invoiceNotes.value;
-            }
-        });
-    }
-    
-    // Handle invoice creation
-    const createInvoiceBtn = document.getElementById('createInvoiceBtn');
-    if (createInvoiceBtn) {
-        createInvoiceBtn.addEventListener('click', function() {
-            // Get the total amount from the invoice modal
-            const invoiceTotalInput = document.getElementById('invoice_total');
-            let totalAmount = 0;
-            if (invoiceTotalInput && invoiceTotalInput.value) {
-                totalAmount = parseFloat(invoiceTotalInput.value);
-            }
-            
-            // Copy notes data back to main form
-            const invoiceModalNotes = document.getElementById('invoice_modal_notes');
-            const invoiceNotes = document.getElementById('invoice_notes');
-            if (invoiceModalNotes && invoiceNotes) {
-                invoiceNotes.value = invoiceModalNotes.value;
-            }
-            
-            // Create a hidden input for the invoice total
-            const hiddenTotalInput = document.createElement('input');
-            hiddenTotalInput.type = 'hidden';
-            hiddenTotalInput.name = 'invoice_total';
-            hiddenTotalInput.value = totalAmount;
-            
-            // Ensure customer selection is preserved
-            const customerSelect = document.getElementById('customer-select');
-            const selectedCustomerId = customerSelect ? customerSelect.value : '';
-            const hiddenCustomerInput = document.createElement('input');
-            hiddenCustomerInput.type = 'hidden';
-            hiddenCustomerInput.name = 'customer';
-            hiddenCustomerInput.value = selectedCustomerId;
-            
-            // Add the hidden inputs to the form
-            const bookingForm = document.getElementById('newBookingForm');
-            if (bookingForm) {
-                bookingForm.appendChild(hiddenTotalInput);
-                bookingForm.appendChild(hiddenCustomerInput);
-                
-                // Set the save_action to generate_invoice
-                const hiddenActionInput = document.createElement('input');
-                hiddenActionInput.type = 'hidden';
-                hiddenActionInput.name = 'save_action';
-                hiddenActionInput.value = 'generate_invoice';
-                bookingForm.appendChild(hiddenActionInput);
-                
-                // Close the modal
-                const bsModal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
-                if (bsModal) {
-                    bsModal.hide();
-                }
-                
-                // Submit the form to generate the invoice
-                bookingForm.submit();
-            } else {
-                // Close the modal
-                const bsModal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
-                if (bsModal) {
-                    bsModal.hide();
-                }
-                
-                // Show confirmation message
-                alert('Error: Booking form not found. Please try again.');
-            }
-        });
-    }
-    
-    // Handle payment modal
-    const paymentModal = document.getElementById('paymentModal');
-    if (paymentModal) {
-        paymentModal.addEventListener('show.bs.modal', function() {
-            updateTotalAmount();
-            
-            // Copy payment method and notes from main form to modal
-            const paymentMethod = document.getElementById('payment_method');
-            const paymentModalMethod = document.getElementById('payment_modal_method');
-            if (paymentMethod && paymentModalMethod) {
-                paymentModalMethod.value = paymentMethod.value;
-            }
-            
-            const paymentNotes = document.getElementById('payment_notes');
-            const paymentModalNotes = document.getElementById('payment_modal_notes');
-            if (paymentNotes && paymentModalNotes) {
-                paymentModalNotes.value = paymentNotes.value;
-            }
-        });
-    }
-    
-    // Handle payment processing
-    const processPaymentBtn = document.getElementById('processPaymentBtn');
-    if (processPaymentBtn) {
-        processPaymentBtn.addEventListener('click', function() {
-            // Copy data back to main form
-            const paymentModalMethod = document.getElementById('payment_modal_method');
-            const paymentMethod = document.getElementById('payment_method');
-            if (paymentModalMethod && paymentMethod) {
-                paymentMethod.value = paymentModalMethod.value;
-            }
-            
-            const paymentModalNotes = document.getElementById('payment_modal_notes');
-            const paymentNotes = document.getElementById('payment_notes');
-            if (paymentModalNotes && paymentNotes) {
-                paymentNotes.value = paymentModalNotes.value;
-            }
-            
-            // Close the modal
-            const bsModal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
-            if (bsModal) {
-                bsModal.hide();
-            }
-            
-            // Show confirmation message
-            alert('Payment information saved. The payment will be processed after creating the booking.');
-        });
-    }
-    
-    if (fromDateInput) {
-        fromDateInput.setAttribute('min', today);
-        
-        // Set default values for dates if empty
-        if (!fromDateInput.value) {
-            fromDateInput.value = today;
-        }
-        
-        // Set default to_date to 7 days from now if empty
-        if (!toDateInput.value) {
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            toDateInput.value = nextWeek.toISOString().split('T')[0];
-        }
-    }
-    
-    // Validate date ranges
-    if (fromDateInput && toDateInput) {
-        fromDateInput.addEventListener('change', function() {
-            toDateInput.setAttribute('min', this.value);
-            if (toDateInput.value && new Date(toDateInput.value) < new Date(this.value)) {
-                toDateInput.value = this.value;
-            }
-        });
-    }
-    
-    // Update description placeholder based on service type
-    if (serviceTypeSelect && descriptionInput) {
-        serviceTypeSelect.addEventListener('change', function() {
-            switch(this.value) {
-                case 'FLIGHT':
-                    descriptionInput.placeholder = 'E.g., One-way flight from New York to London, Economy class';
-                    break;
-                case 'HOTEL':
-                    descriptionInput.placeholder = 'E.g., 5 nights at Grand Hotel, Double room with breakfast';
-                    break;
-                case 'TRANSPORT':
-                    descriptionInput.placeholder = 'E.g., Airport transfer from Heathrow to central London';
-                    break;
-                case 'VISA':
-                    descriptionInput.placeholder = 'E.g., Tourist visa application for United Kingdom';
-                    break;
-                case 'INSURANCE':
-                    descriptionInput.placeholder = 'E.g., Comprehensive travel insurance for 7 days';
-                    break;
-                default:
-                    descriptionInput.placeholder = 'Enter service description';
-            }
-        });
-        
-        // Trigger change to set initial placeholder
-        serviceTypeSelect.dispatchEvent(new Event('change'));
-    }
-    
-    // Note: Quick add service buttons are replaced by direct add service functionality
-    // The functionality is now handled by the direct-add-service buttons above
-    
-    // Option to auto-submit with Enter key in description field
-    if (descriptionInput && addItemButton) {
-        descriptionInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addItemButton.click();
-            }
-        });
-    }
-    
-    // Handle inline editing of service items
-    const editButtons = document.querySelectorAll('.edit-item');
-    const saveButtons = document.querySelectorAll('.save-item');
-    
-    if (editButtons.length > 0) {
-        editButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                const row = this.closest('tr');
-                
-                // Toggle visibility of text/input fields
-                row.querySelectorAll('.editable-text').forEach(el => el.classList.add('d-none'));
-                row.querySelectorAll('.edit-input').forEach(el => el.classList.remove('d-none'));
-                
-                // Toggle buttons
-                this.classList.add('d-none');
-                row.querySelector('.save-item').classList.remove('d-none');
-            });
-        });
-    }
-    
-    if (saveButtons.length > 0) {
-        saveButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                const row = this.closest('tr');
-                
-                // Get updated values
-                const descriptionInput = row.querySelector('.edit-input[data-field="description"]');
-                const amountInput = row.querySelector('.edit-input[data-field="amount"]');
-                
-                if (descriptionInput && amountInput) {
-                    const description = descriptionInput.value;
-                    const amount = amountInput.value;
-                    
-                    // Update the displayed text
-                    row.querySelector('.editable-text:first-child').textContent = description;
-                    row.querySelector('.editable-text:nth-child(2)').textContent = parseFloat(amount).toFixed(2);
-                    
-                    // Create hidden inputs to store updated values
-                    let descInput = document.querySelector(`input[name="updated_description_${itemId}"]`);
-                    let amountInput = document.querySelector(`input[name="updated_amount_${itemId}"]`);
-                    
-                    if (!descInput) {
-                        descInput = document.createElement('input');
-                        descInput.type = 'hidden';
-                        descInput.name = `updated_description_${itemId}`;
-                        bookingForm.appendChild(descInput);
-                    }
-                    
-                    if (!amountInput) {
-                        amountInput = document.createElement('input');
-                        amountInput.type = 'hidden';
-                        amountInput.name = `updated_amount_${itemId}`;
-                        bookingForm.appendChild(amountInput);
-                    }
-                    
-                    descInput.value = description;
-                    amountInput.value = amount;
-                }
-                
-                // Toggle visibility back
-                row.querySelectorAll('.editable-text').forEach(el => el.classList.remove('d-none'));
-                row.querySelectorAll('.edit-input').forEach(el => el.classList.add('d-none'));
-                
-                // Toggle buttons
-                this.classList.add('d-none');
-                row.querySelector('.edit-item').classList.remove('d-none');
-                
-                // Update total amount
-                updateTotalAmount();
-            });
-        });
-    }
-    
-    // Handle item removal
-    const removeButtons = document.querySelectorAll('.remove-item');
-    if (removeButtons.length > 0) {
-        removeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const itemId = this.getAttribute('data-item-id');
-                if (itemId) {
-                    // Navigate to the same page with the remove_item parameter
-                    window.location.href = `${window.location.pathname}?remove_item=${itemId}`;
-                }
-            });
-        });
-    }
-    
-    // Function to update the total amount
-    function updateTotalAmount() {
-        let total = 0;
-        document.querySelectorAll('.editable-field').forEach(field => {
-            if (field.closest('td').nextElementSibling && field.closest('td').nextElementSibling.textContent === 'USD') {
-                const amountText = field.querySelector('.editable-text').textContent;
-                const amount = parseFloat(amountText) || 0;
-                total += amount;
-            }
-        });
-        
-        // Update total in the table footer - now with editable input
-        const itineraryTotalInput = document.getElementById('itinerary_total');
-        if (itineraryTotalInput) {
-            itineraryTotalInput.value = total.toFixed(2);
-            itineraryTotalInput.dataset.calculatedTotal = total.toFixed(2);
-        }
-        
-        // Also update prepayment amount for convenience
-        const totalAmountInput = document.getElementById('total_amount');
-        if (totalAmountInput) {
-            totalAmountInput.value = total.toFixed(2);
-        }
-        
-        // Update modal amount if it exists
-        const invoiceTotalInput = document.getElementById('invoice_total');
-        if (invoiceTotalInput) {
-            invoiceTotalInput.value = total.toFixed(2);
-        }
-    }
-    
-    // Handle update itinerary total button
-    const updateItineraryTotalBtn = document.getElementById('update-itinerary-total');
-    if (updateItineraryTotalBtn) {
-        updateItineraryTotalBtn.addEventListener('click', function() {
-            const itineraryTotalInput = document.getElementById('itinerary_total');
-            const totalAmountInput = document.getElementById('total_amount');
-            const invoiceTotalInput = document.getElementById('invoice_total');
-            
-            if (itineraryTotalInput && totalAmountInput) {
-                const newTotal = parseFloat(itineraryTotalInput.value);
-                if (!isNaN(newTotal)) {
-                    // Update the prepayment amount to match the itinerary total
-                    totalAmountInput.value = newTotal.toFixed(2);
-                    
-                    // Also update the modal if it exists
-                    if (invoiceTotalInput) {
-                        invoiceTotalInput.value = newTotal.toFixed(2);
-                    }
-                    
-                    // Show a success message
-                    alert('Total amount updated successfully!');
-                }
-            }
-        });
-    }
-});
-</script>
-<style>
-    .quick-add-buttons .btn {
-        min-width: 140px;
-        margin-bottom: 10px;
-        border-radius: 8px;
-        border: 1px solid #e0e0e0;
-        padding: 12px 20px;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .quick-add-buttons .btn i {
-        font-size: 1.2rem;
-        margin-right: 8px;
-    }
-    
-    .quick-add-buttons .btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    
-    .quick-add-buttons .flight-btn {
-        border-left: 4px solid #0d6efd;
-    }
-    
-    .quick-add-buttons .hotel-btn {
-        border-left: 4px solid #198754;
-    }
-    
-    .quick-add-buttons .transport-btn {
-        border-left: 4px solid #ffc107;
-    }
-    
-    .quick-add-buttons .visa-btn {
-        border-left: 4px solid #dc3545;
-    }
-    
-    .quick-add-buttons .insurance-btn {
-        border-left: 4px solid #0dcaf0;
-    }
-    
-    .quick-add-buttons .flight-btn:hover {
-        background-color: #f8f9ff;
-        color: #0d6efd;
-    }
-    
-    .quick-add-buttons .hotel-btn:hover {
-        background-color: #f8fff9;
-        color: #198754;
-    }
-    
-    .quick-add-buttons .transport-btn:hover {
-        background-color: #fffdf8;
-        color: #ffc107;
-    }
-    
-    .quick-add-buttons .visa-btn:hover {
-        background-color: #fff8f8;
-        color: #dc3545;
-    }
-    
-    .quick-add-buttons .insurance-btn:hover {
-        background-color: #f8fbff;
-        color: #0dcaf0;
-    }
-    
-    .service-input-card .card-header {
-        background-color: #f7f9fc;
-        border-bottom: 2px solid #e9ecef;
-    }
-    
-    @keyframes highlight {
-        0% { background-color: rgba(255, 255, 200, 0); }
-        50% { background-color: rgba(255, 255, 200, 0.7); }
-        100% { background-color: rgba(255, 255, 200, 0); }
-    }
-    
-    .highlight-row {
-        animation: highlight 1s ease-in-out;
-    }
-    
-    .service-icons-bar {
-        background-color: #f8f9fa;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        padding: 8px 12px;
-        margin-bottom: 15px;
-    }
-    
-    .service-icons-bar button {
-        margin: 0 5px;
-        transition: all 0.2s ease;
-    }
-    
-    .service-icons-bar button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 3px 5px rgba(0,0,0,0.1);
-    }
-    
-    /* Editable fields styling */
-    .editable-field {
-        position: relative;
-    }
-    
-    .editable-text {
-        display: inline-block;
-        min-height: 24px;
-        padding: 4px 8px;
-        border-radius: 4px;
-        transition: all 0.2s;
-    }
-    
-    tr:hover .editable-text {
-        background-color: #f8f9fa;
-    }
-    
-    .edit-input {
-        width: 100%;
-    }
-    
-    .edit-item, .save-item, .remove-item {
-        padding: 3px 8px;
-        font-size: 12px;
-    }
-</style>
 {% endblock %}
