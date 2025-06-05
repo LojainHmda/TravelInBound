@@ -85,7 +85,7 @@ def create_app():
             app.register_blueprint(search_api)
             
             from app.routes.api.chat import chat_api
-            app.register_blueprint(chat_api)
+            app.register_blueprint(chat_api, url_prefix='')
             
             from app.routes.api.invoice import invoice_api
             app.register_blueprint(invoice_api)

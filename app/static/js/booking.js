@@ -74,11 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Delete functionality works through inline forms with JavaScript confirmation
-    console.log('Delete forms initialized - using inline confirmation');
-    
-    // Log available delete forms for debugging
     const deleteForms = document.querySelectorAll('form[action*="delete_service_item"]');
-    console.log('Found delete service forms:', deleteForms.length);
 });
 
 // Validate that end date is after start date
