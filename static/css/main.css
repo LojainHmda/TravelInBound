@@ -410,3 +410,118 @@ body {
         margin-bottom: 0.5rem;
     }
 }
+
+/* Find Bookings Page Styling */
+.filter-card {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.filter-card .card-header {
+    background-color: var(--primary-color);
+    color: var(--light-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-control, .form-select {
+    background-color: var(--light-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-dark);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--light-color);
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 0.2rem rgba(255, 191, 0, 0.25);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 191, 0, 0.1) !important;
+}
+
+.btn-outline-secondary {
+    color: var(--light-color);
+    border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+    color: var(--light-color);
+}
+
+.btn-outline-info {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-outline-info:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: var(--text-dark);
+}
+
+/* Status badges styling */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+.badge-sm {
+    font-size: 0.65em;
+    padding: 0.25em 0.5em;
+}
+
+/* Quick filter buttons */
+.btn-group .btn {
+    margin-right: 0.5rem;
+}
+
+/* Results table styling */
+.results-table {
+    background-color: var(--background-color);
+}
+
+.results-table th {
+    background-color: var(--primary-color);
+    color: var(--light-color);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+}
+
+.results-table td {
+    background-color: var(--background-color);
+    color: var(--light-color);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+/* No results styling */
+.no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.no-results i {
+    color: var(--border-color);
+    margin-bottom: 1rem;
+}
+
+/* Mobile responsiveness for filters */
+@media (max-width: 768px) {
+    .filter-actions .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+}

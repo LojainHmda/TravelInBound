@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask_app import db
+from app import db
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -27,8 +27,29 @@ from app.models.finance import (
     RECURRENCE_QUARTERLY, RECURRENCE_YEARLY
 )
 
-# Import User and Agent models from app directory to avoid duplicates
-from app.models.user import User, Agent
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+    
+    # Relationship with bookings
+    bookings = db.relationship('Booking', backref='requester', lazy=True)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class Agent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    specialty = db.Column(db.String(50))  # e.g., flights, hotels, etc.
+    
+    # Relationship with service items
+    service_items = db.relationship('ServiceItem', backref='assigned_agent', lazy=True)
+    
+    def __repr__(self):
+        return f'<Agent {self.name} - {self.specialty}>'
 
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""
@@ -52,7 +73,7 @@ class Customer(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    bookings = db.relationship('Booking', back_populates='customer', lazy=True)
+    bookings = db.relationship('Booking', backref='customer', lazy=True)
     
     @property
     def name(self):
@@ -83,7 +104,7 @@ class Booking(db.Model):
     # Relationships
     service_items = db.relationship('ServiceItem', backref='booking', lazy=True, cascade="all, delete-orphan")
     payments = db.relationship('Payment', backref='booking', lazy=True, cascade="all, delete-orphan")
-    customer = db.relationship('Customer', back_populates='bookings', lazy=True)
+    customer = db.relationship('Customer', backref='bookings', lazy=True)
     
     def __repr__(self):
         return f'<Booking {self.reference_number}>'

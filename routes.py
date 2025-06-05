@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from werkzeug.security import check_password_hash
 
-from flask_app import app, db
+from app import app, db
 from flask_login import login_user, logout_user, login_required, current_user
 from app.routes.auth import auth_bp
 
@@ -149,7 +149,38 @@ def index():
     recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
     return render_template('index.html', bookings=recent_bookings)
 
-# The dashboard function is already defined above with login functionality
+# Dashboard
+@app.route('/dashboard')
+def dashboard():
+    # Get counts for each status
+    request_count = Booking.query.filter_by(status=STATUS_REQUEST).count()
+    booked_count = Booking.query.filter_by(status=STATUS_BOOKED).count()
+    in_progress_count = Booking.query.filter_by(status=STATUS_IN_PROGRESS).count()
+    completed_count = Booking.query.filter_by(status=STATUS_CONFIRMED).count()
+    
+    # Get service items for each service type
+    flight_items = ServiceItem.query.filter_by(service_type=SERVICE_FLIGHT).all()
+    hotel_items = ServiceItem.query.filter_by(service_type=SERVICE_HOTEL).all()
+    transport_items = ServiceItem.query.filter_by(service_type=SERVICE_TRANSPORT).all()
+    visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
+    insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
+    
+    return render_template(
+        'booking/dashboard.html',
+        status_counts={
+            'request': request_count,
+            'booked': booked_count,
+            'in_progress': in_progress_count,
+            'completed': completed_count
+        },
+        service_items={
+            'flight': flight_items,
+            'hotel': hotel_items,
+            'transport': transport_items,
+            'visa': visa_items,
+            'insurance': insurance_items
+        }
+    )
 
 # New booking request (legacy - will be replaced by new_booking_detail)
 @app.route('/requests', methods=['GET', 'POST'])
@@ -647,14 +678,44 @@ def find_bookings():
     # Get all customers for dropdown
     customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
     
-    return render_template('booking/find_bookings.html', 
+    # Status choices for template
+    status_choices = [
+        ('REQUEST', 'Request'),
+        ('BOOKED', 'Booked'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled')
+    ]
+    
+    # Payment status choices
+    payment_status_choices = [
+        ('NONE', 'No Payment'),
+        ('PARTIAL', 'Partial Payment'),
+        ('FULL', 'Fully Paid')
+    ]
+    
+    # Service type choices
+    service_type_choices = [
+        ('FLIGHT', 'Flight'),
+        ('HOTEL', 'Hotel'),
+        ('TRANSPORT', 'Transport'),
+        ('VISA', 'Visa'),
+        ('INSURANCE', 'Insurance')
+    ]
+    
+    return render_template('find_bookings.html', 
                          bookings=bookings, 
                          customers=customers,
-                         search_term=search_term,
-                         status_filter=status_filter,
-                         service_type_filter=service_type_filter,
-                         date_from=date_from,
-                         date_to=date_to,
-                         customer_filter=customer_filter,
-                         amount_min=amount_min,
-                         amount_max=amount_max)
+                         status_choices=status_choices,
+                         payment_status_choices=payment_status_choices,
+                         service_type_choices=service_type_choices,
+                         filters={
+                             'search': search_term,
+                             'status': status_filter,
+                             'service_type': service_type_filter,
+                             'date_from': date_from,
+                             'date_to': date_to,
+                             'customer': customer_filter,
+                             'amount_min': amount_min,
+                             'amount_max': amount_max
+                         })
