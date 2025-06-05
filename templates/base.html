@@ -16,7 +16,7 @@
     <div id="sideMenu" class="side-menu">
         <div class="side-menu-header">
             <div class="d-flex justify-content-between align-items-center p-3">
-                <a class="navbar-brand ms-2 text-light" href="{{ url_for('index') }}">
+                <a class="navbar-brand ms-2 text-light" href="{{ url_for('main.index') }}">
                     <i class="fas fa-plane-departure me-4"></i>
                     ...TravelBookPro...Arab Ravel
                 </a>
@@ -28,12 +28,12 @@
         <div class="side-menu-content">
             <ul class="side-menu-nav">
                 <li class="side-menu-item">
-                    <a class="side-menu-link" href="{{ url_for('index') }}">
+                    <a class="side-menu-link" href="{{ url_for('main.index') }}">
                         <i class="fas fa-home me-2"></i> Home
                     </a>
                 </li>
                 <li class="side-menu-item">
-                    <a class="side-menu-link" href="{{ url_for('new_booking') }}">
+                    <a class="side-menu-link" href="{{ url_for('booking.new_booking') }}">
                         <i class="fas fa-plus-circle me-2"></i> New Booking
                     </a>
                 </li>
