@@ -16,8 +16,10 @@ csrf = CSRFProtect()
 
 def create_app():
     """Application factory function"""
-    # Create the Flask app
-    app = Flask(__name__)
+    # Create the Flask app with correct template and static folders
+    app = Flask(__name__, 
+                template_folder='../templates',
+                static_folder='../static')
     
     # Configure secret key and database URI
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-key-for-testing")
