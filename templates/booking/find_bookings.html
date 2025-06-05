@@ -1,53 +1,385 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Find Bookings{% endblock %}
 
 {% block content %}
-<style>
-    /* Find Bookings Specific Styles */
-    .find-bookings-header {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-        color: white;
-        padding: 2rem 0;
-        margin: -1.5rem -15px 2rem -15px;
-        border-radius: 0 0 15px 15px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 text-light">
+                    <i class="fas fa-search me-3"></i>Find Bookings
+                </h1>
+                <div>
+                    <span class="badge bg-secondary">{{ bookings|length }} Results</span>
+                </div>
+            </div>
+
+            <!-- Smart Filters Card -->
+            <div class="card mb-4" style="background-color: var(--background-color); border: 1px solid var(--border-color);">
+                <div class="card-header" style="background-color: var(--primary-color); color: var(--light-color);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Smart Filters
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('find_bookings') }}" id="searchForm">
+                        <div class="row g-3">
+                            <!-- Search Term -->
+                            <div class="col-md-6 col-lg-4">
+                                <label for="search" class="form-label text-light">
+                                    <i class="fas fa-search me-1"></i>Search
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="search" 
+                                       name="search" 
+                                       value="{{ filters.search if filters else '' }}"
+                                       placeholder="Reference, customer name, email..."
+                                       style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div class="col-md-6 col-lg-4">
+                                <label for="status" class="form-label text-light">
+                                    <i class="fas fa-flag me-1"></i>Status
+                                </label>
+                                <select class="form-select" 
+                                        id="status" 
+                                        name="status"
+                                        style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                                    <option value="">All Statuses</option>
+                                    {% if status_choices %}
+                                        {% for value, label in status_choices %}
+                                            <option value="{{ value }}" 
+                                                    {% if filters and filters.status == value %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="REQUEST">Request</option>
+                                        <option value="BOOKED">Booked</option>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="COMPLETED">Completed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Customer Filter -->
+                            <div class="col-md-6 col-lg-4">
+                                <label for="customer" class="form-label text-light">
+                                    <i class="fas fa-user me-1"></i>Customer
+                                </label>
+                                <select class="form-select" 
+                                        id="customer" 
+                                        name="customer"
+                                        style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                                    <option value="">All Customers</option>
+                                    {% if customers %}
+                                        {% for customer in customers %}
+                                            <option value="{{ customer.id }}" 
+                                                    {% if filters and filters.customer == customer.id|string %}selected{% endif %}>
+                                                {{ customer.name }}
+                                            </option>
+                                        {% endfor %}
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Date From -->
+                            <div class="col-md-6 col-lg-3">
+                                <label for="date_from" class="form-label text-light">
+                                    <i class="fas fa-calendar-alt me-1"></i>From Date
+                                </label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="date_from" 
+                                       name="date_from" 
+                                       value="{{ filters.date_from if filters else '' }}"
+                                       style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                            </div>
+
+                            <!-- Date To -->
+                            <div class="col-md-6 col-lg-3">
+                                <label for="date_to" class="form-label text-light">
+                                    <i class="fas fa-calendar-alt me-1"></i>To Date
+                                </label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="date_to" 
+                                       name="date_to" 
+                                       value="{{ filters.date_to if filters else '' }}"
+                                       style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                            </div>
+
+                            <!-- Service Type -->
+                            <div class="col-md-6 col-lg-3">
+                                <label for="service_type" class="form-label text-light">
+                                    <i class="fas fa-cogs me-1"></i>Service Type
+                                </label>
+                                <select class="form-select" 
+                                        id="service_type" 
+                                        name="service_type"
+                                        style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                                    <option value="">All Services</option>
+                                    {% if service_type_choices %}
+                                        {% for value, label in service_type_choices %}
+                                            <option value="{{ value }}" 
+                                                    {% if filters and filters.service_type == value %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="FLIGHT">Flight</option>
+                                        <option value="HOTEL">Hotel</option>
+                                        <option value="TRANSPORT">Transport</option>
+                                        <option value="VISA">Visa</option>
+                                        <option value="INSURANCE">Insurance</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- Amount Range -->
+                            <div class="col-md-6 col-lg-3">
+                                <label for="amount_min" class="form-label text-light">
+                                    <i class="fas fa-dollar-sign me-1"></i>Amount Range
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="amount_min" 
+                                           name="amount_min" 
+                                           value="{{ filters.amount_min if filters else '' }}"
+                                           placeholder="Min"
+                                           step="0.01"
+                                           style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="amount_max" 
+                                           name="amount_max" 
+                                           value="{{ filters.amount_max if filters else '' }}"
+                                           placeholder="Max"
+                                           step="0.01"
+                                           style="background-color: var(--light-color); border: 1px solid var(--border-color);">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Filter Actions -->
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-2"></i>Search
+                                    </button>
+                                    <a href="{{ url_for('find_bookings') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>Clear Filters
+                                    </a>
+                                    <button type="button" class="btn btn-outline-info" id="quickFilterToday">
+                                        <i class="fas fa-calendar-day me-2"></i>Today
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" id="quickFilterWeek">
+                                        <i class="fas fa-calendar-week me-2"></i>This Week
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" id="quickFilterMonth">
+                                        <i class="fas fa-calendar me-2"></i>This Month
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            {% if bookings %}
+                <div class="card" style="background-color: var(--background-color); border: 1px solid var(--border-color);">
+                    <div class="card-header" style="background-color: var(--primary-color); color: var(--light-color);">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Booking Results ({{ bookings|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" style="background-color: var(--background-color);">
+                                <thead style="background-color: var(--primary-color); color: var(--light-color);">
+                                    <tr>
+                                        <th>Reference</th>
+                                        <th>Customer</th>
+                                        <th>Status</th>
+                                        <th>Services</th>
+                                        <th>Amount</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                        <tr style="background-color: var(--background-color); color: var(--light-color);">
+                                            <td>
+                                                <strong class="text-warning">{{ booking.reference_number }}</strong>
+                                            </td>
+                                            <td>
+                                                {% if booking.customer %}
+                                                    <div>
+                                                        <strong>{{ booking.customer.name }}</strong><br>
+                                                        <small class="text-muted">{{ booking.customer.email }}</small>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">No customer assigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if booking.status == 'REQUEST' %}
+                                                    <span class="badge bg-warning text-dark">{{ booking.status.title() }}</span>
+                                                {% elif booking.status == 'BOOKED' %}
+                                                    <span class="badge bg-info">{{ booking.status.title() }}</span>
+                                                {% elif booking.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-primary">In Progress</span>
+                                                {% elif booking.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{{ booking.status.title() }}</span>
+                                                {% elif booking.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ booking.status.title() }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ booking.status.title() }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {{ booking.service_items|length }} service(s)<br>
+                                                    {% for item in booking.service_items[:2] %}
+                                                        <span class="badge badge-sm bg-dark me-1">{{ item.service_type }}</span>
+                                                    {% endfor %}
+                                                    {% if booking.service_items|length > 2 %}
+                                                        <span class="text-muted">+{{ booking.service_items|length - 2 }} more</span>
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <strong class="text-warning">${{ "%.2f"|format(booking.total_amount or 0) }}</strong>
+                                                {% if booking.payment_status == 'PARTIAL' %}
+                                                    <br><small class="text-info">Partial Payment</small>
+                                                {% elif booking.payment_status == 'FULL' %}
+                                                    <br><small class="text-success">Fully Paid</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ booking.created_at.strftime('%Y-%m-%d') }}<br>
+                                                    {{ booking.created_at.strftime('%H:%M') }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
+                                                       class="btn btn-outline-warning btn-sm">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- No Results -->
+                <div class="card" style="background-color: var(--background-color); border: 1px solid var(--border-color);">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4 class="text-light">No bookings found</h4>
+                        <p class="text-muted">Try adjusting your search filters or create a new booking.</p>
+                        <a href="{{ url_for('new_booking') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Create New Booking
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Quick Filters -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick filter buttons
+    const todayBtn = document.getElementById('quickFilterToday');
+    const weekBtn = document.getElementById('quickFilterWeek');
+    const monthBtn = document.getElementById('quickFilterMonth');
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    const searchForm = document.getElementById('searchForm');
+
+    // Get current date
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+
+    // Get start of week (Monday)
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
+
+    // Get start of month
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+
+    if (todayBtn) {
+        todayBtn.addEventListener('click', function() {
+            dateFromInput.value = todayStr;
+            dateToInput.value = todayStr;
+            searchForm.submit();
+        });
     }
-    
-    .btn-search {
-        background-color: #f59e0b;
-        border-color: #f59e0b;
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
+
+    if (weekBtn) {
+        weekBtn.addEventListener('click', function() {
+            dateFromInput.value = startOfWeekStr;
+            dateToInput.value = todayStr;
+            searchForm.submit();
+        });
     }
-    
-    .btn-search:hover {
-        background-color: #d97706;
-        border-color: #d97706;
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+
+    if (monthBtn) {
+        monthBtn.addEventListener('click', function() {
+            dateFromInput.value = startOfMonthStr;
+            dateToInput.value = todayStr;
+            searchForm.submit();
+        });
     }
-    
-    .btn-clear {
-        background-color: #6b7280;
-        border-color: #6b7280;
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
+
+    // Auto-submit form when filters change
+    const autoSubmitElements = ['status', 'customer', 'service_type'];
+    autoSubmitElements.forEach(function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.addEventListener('change', function() {
+                searchForm.submit();
+            });
+        }
+    });
+
+    // Submit form on Enter key in search input
+    const searchInput = document.getElementById('search');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchForm.submit();
+            }
+        });
     }
-    
-    .btn-clear:hover {
-        background-color: #4b5563;
-        border-color: #4b5563;
-        color: white;
-        transform: translateY(-1px);
-    }
-    
-    .filter-card {
+});
+</script>
+
+{% endblock %}
         background: white;
         border-radius: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

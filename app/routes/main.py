@@ -221,14 +221,44 @@ def find_bookings():
     # Get all customers for dropdown
     customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
     
+    # Status choices for template
+    status_choices = [
+        ('REQUEST', 'Request'),
+        ('BOOKED', 'Booked'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled')
+    ]
+    
+    # Payment status choices
+    payment_status_choices = [
+        ('NONE', 'No Payment'),
+        ('PARTIAL', 'Partial Payment'),
+        ('FULL', 'Fully Paid')
+    ]
+    
+    # Service type choices
+    service_type_choices = [
+        ('FLIGHT', 'Flight'),
+        ('HOTEL', 'Hotel'),
+        ('TRANSPORT', 'Transport'),
+        ('VISA', 'Visa'),
+        ('INSURANCE', 'Insurance')
+    ]
+    
     return render_template('booking/find_bookings.html', 
                          bookings=bookings, 
                          customers=customers,
-                         search_term=search_term,
-                         status_filter=status_filter,
-                         service_type_filter=service_type_filter,
-                         date_from=date_from,
-                         date_to=date_to,
-                         customer_filter=customer_filter,
-                         amount_min=amount_min,
-                         amount_max=amount_max)
+                         status_choices=status_choices,
+                         payment_status_choices=payment_status_choices,
+                         service_type_choices=service_type_choices,
+                         filters={
+                             'search': search_term,
+                             'status': status_filter,
+                             'service_type': service_type_filter,
+                             'date_from': date_from,
+                             'date_to': date_to,
+                             'customer': customer_filter,
+                             'amount_min': amount_min,
+                             'amount_max': amount_max
+                         })
