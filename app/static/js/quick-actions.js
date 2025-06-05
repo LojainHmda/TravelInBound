@@ -256,7 +256,7 @@ class QuickActionsFAB {
             html += '<h6 class="text-muted mb-2 mt-3">Customers</h6>';
             results.customers.forEach(customer => {
                 html += `
-                    <a href="/customer/${customer.id}" class="list-group-item list-group-item-action">
+                    <a href="/customers/${customer.id}" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">${customer.name}</h6>
                         </div>
