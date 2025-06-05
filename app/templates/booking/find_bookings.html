@@ -150,9 +150,9 @@
                                         {% if booking.status == 'REQUEST' %}
                                             <span class="badge bg-warning text-dark">{{ booking.status.replace('_', ' ').title() }}</span>
                                         {% elif booking.status == 'IN_PROGRESS' %}
-                                            <span class="badge bg-info">{{ booking.status.replace('_', ' ').title() }}</span>
+                                            <span class="badge text-dark" style="background-color: #FFBF00;">{{ booking.status.replace('_', ' ').title() }}</span>
                                         {% elif booking.status == 'COMPLETED' %}
-                                            <span class="badge bg-success">{{ booking.status.replace('_', ' ').title() }}</span>
+                                            <span class="badge text-dark" style="background-color: #FFBF00;">{{ booking.status.replace('_', ' ').title() }}</span>
                                         {% else %}
                                             <span class="badge bg-secondary">{{ booking.status.replace('_', ' ').title() }}</span>
                                         {% endif %}
