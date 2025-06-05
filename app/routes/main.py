@@ -58,7 +58,7 @@ def dashboard():
     insurance_items = [item for item in service_items if item.service_type == 'INSURANCE'][:5]
     
     return render_template(
-        'dashboard_redesigned.html',
+        'dashboard.html',
         request_count=request_count,
         booked_count=booked_count,
         in_progress_count=in_progress_count,
