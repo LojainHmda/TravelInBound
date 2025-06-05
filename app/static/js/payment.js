@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Handle process payment button click
-    if (processPaymentBtn) {
+    if (processPaymentBtn && paymentAmountInput && paymentModalMethodSelect) {
         processPaymentBtn.addEventListener('click', function() {
             // Get values from modal fields
             const amount = paymentAmountInput.value;

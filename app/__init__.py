@@ -64,13 +64,6 @@ def create_app():
         
         # Register supplier and customer blueprints - removed conflicting supplier routes
         
-        # Register aviation API blueprint for flight autocomplete
-        try:
-            from app.routes.api import api_bp
-            app.register_blueprint(api_bp, name='aviation_api_blueprint')
-        except Exception as e:
-            app.logger.error(f"Could not register aviation API blueprint: {str(e)}")
-        
         from app.routes.customer import customer_bp
         app.register_blueprint(customer_bp)
         
@@ -82,21 +75,22 @@ def create_app():
         from app.routes.voucher import voucher_bp
         app.register_blueprint(voucher_bp)
         
-        # Register API blueprint
-        from app.routes.api import api_bp
-        app.register_blueprint(api_bp)
-        
-        # Register search API
-        from app.routes.api.search import search_api
-        app.register_blueprint(search_api)
-        
-        # Register AI chat API
-        from app.routes.api.chat import chat_api
-        app.register_blueprint(chat_api)
-        
-        # Register invoice API
-        from app.routes.api.invoice import invoice_api
-        app.register_blueprint(invoice_api)
+        # Register API blueprint (only once)
+        try:
+            from app.routes.api import api_bp
+            app.register_blueprint(api_bp)
+            
+            # Register individual API modules
+            from app.routes.api.search import search_api
+            app.register_blueprint(search_api)
+            
+            from app.routes.api.chat import chat_api
+            app.register_blueprint(chat_api)
+            
+            from app.routes.api.invoice import invoice_api
+            app.register_blueprint(invoice_api)
+        except Exception as e:
+            app.logger.error(f"Could not register API blueprints: {str(e)}")
         
         # Register finance blueprint
         from app.routes.finance import finance
