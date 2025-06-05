@@ -80,15 +80,15 @@ def create_app():
             from app.routes.api import api_bp
             app.register_blueprint(api_bp)
             
-            # Register individual API modules
+            # Register individual API modules with proper URL prefixes
             from app.routes.api.search import search_api
-            app.register_blueprint(search_api)
+            app.register_blueprint(search_api, url_prefix='')
             
             from app.routes.api.chat import chat_api
             app.register_blueprint(chat_api, url_prefix='')
             
             from app.routes.api.invoice import invoice_api
-            app.register_blueprint(invoice_api)
+            app.register_blueprint(invoice_api, url_prefix='')
         except Exception as e:
             app.logger.error(f"Could not register API blueprints: {str(e)}")
         
