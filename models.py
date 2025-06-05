@@ -1,5 +1,5 @@
 from datetime import datetime
-from application import db
+from app import db
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -27,11 +27,29 @@ from app.models.finance import (
     RECURRENCE_QUARTERLY, RECURRENCE_YEARLY
 )
 
-# Import User model from app directory
-from app.models.user import User
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+    
+    # Relationship with bookings
+    bookings = db.relationship('Booking', backref='requester', lazy=True)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
 
-# Agent model is defined in app/models/user.py
-from app.models.user import Agent
+class Agent(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    specialty = db.Column(db.String(50))  # e.g., flights, hotels, etc.
+    
+    # Relationship with service items
+    service_items = db.relationship('ServiceItem', backref='assigned_agent', lazy=True)
+    
+    def __repr__(self):
+        return f'<Agent {self.name} - {self.specialty}>'
 
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""

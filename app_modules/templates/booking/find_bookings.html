@@ -1,159 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<style>
-    /* Find Bookings Specific Styles */
 
-    
-    .btn-search {
-        background-color: #f59e0b;
-        border-color: #f59e0b;
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-search:hover {
-        background-color: #d97706;
-        border-color: #d97706;
-        color: white;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
-    }
-    
-    .btn-clear {
-        background-color: #6b7280;
-        border-color: #6b7280;
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border-radius: 8px;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-clear:hover {
-        background-color: #4b5563;
-        border-color: #4b5563;
-        color: white;
-        transform: translateY(-1px);
-    }
-    
-    .filter-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-        overflow: hidden;
-    }
-    
-    .filter-header {
-        background-color: #f8fafc;
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid #e2e8f0;
-        color: #1e40af;
-        font-weight: 600;
-    }
-    
-    .results-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-    
-    .results-header {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        font-weight: 600;
-    }
-    
-    .booking-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        transition: all 0.3s ease;
-        background: white;
-    }
-    
-    .booking-card:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        transform: translateY(-2px);
-    }
-    
-    .status-badge {
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    
-    .status-request {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    
-    .status-booked {
-        background-color: #ddd6fe;
-        color: #5b21b6;
-    }
-    
-    .status-in-progress {
-        background-color: #bfdbfe;
-        color: #1d4ed8;
-    }
-    
-    .status-completed {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-    
-    .service-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.2rem;
-        margin-right: 0.75rem;
-    }
-    
-    .service-flight { background-color: #3b82f6; }
-    .service-hotel { background-color: #10b981; }
-    .service-transport { background-color: #f59e0b; }
-    .service-visa { background-color: #8b5cf6; }
-    .service-insurance { background-color: #ef4444; }
-    
-    .form-control:focus {
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
-    }
-    
-    .form-select:focus {
-        border-color: #f59e0b;
-        box-shadow: 0 0 0 0.2rem rgba(245, 158, 11, 0.25);
-    }
-</style>
-
-
+<!-- Page Header with Dark Blue Background -->
+<div class="hero-section" style="background: linear-gradient(135deg, var(--dark-blue, #1e3a8a) 0%, #1e40af 100%); margin-bottom: 2rem;">
+    <div class="hero-content">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="text-white mb-2">
+                    <i class="fas fa-search me-3"></i>Find Bookings
+                </h1>
+                <p class="text-white mb-0" style="opacity: 0.8;">Search and filter through all your bookings with advanced criteria</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-flex align-items-center justify-content-end text-white">
+                    <i class="fas fa-filter me-2" style="font-size: 2rem; color: var(--secondary-color, #FFBF00);"></i>
+                    <span class="h5 mb-0">Smart Filters</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="container-fluid">
     <!-- Search Filters -->
-    <div class="filter-card">
-        <div class="filter-header">
-            <i class="fas fa-sliders-h me-2"></i>Search Filters
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-sliders-h me-2"></i>Search Filters</h5>
         </div>
-        <div class="card-body p-4">
-            <form method="GET" action="{{ url_for('find_bookings') }}" id="searchForm">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('main.find_bookings') }}" id="searchForm">
                 <div class="row g-3">
                     <!-- Search Term -->
                     <div class="col-md-4">
                         <label for="search" class="form-label fw-bold">
-                            <i class="fas fa-search me-1"></i>Search Term1
+                            <i class="fas fa-search me-1"></i>Search Term
                         </label>
                         <input type="text" 
                                class="form-control" 
@@ -262,7 +143,7 @@
                     <!-- Action Buttons -->
                     <div class="col-md-2 d-flex align-items-end">
                         <div class="d-grid gap-2 w-100">
-                            <button type="submit" class="btn btn-search">
+                            <button type="submit" class="btn" style="background-color: var(--orange-yellow, #f59e0b); border-color: var(--orange-yellow, #f59e0b); color: white;">
                                 <i class="fas fa-search me-2"></i>Search
                             </button>
                         </div>
@@ -272,10 +153,10 @@
                 <div class="row mt-3">
                     <div class="col-12">
                         <div class="d-flex gap-2">
-                            <a href="{{ url_for('find_bookings') }}" class="btn btn-clear">
+                            <a href="{{ url_for('main.find_bookings') }}" class="btn btn-secondary">
                                 <i class="fas fa-times me-2"></i>Clear All
                             </a>
-                            <button type="button" class="btn btn-search" onclick="exportResults()">
+                            <button type="button" class="btn" style="background-color: var(--orange-yellow, #f59e0b); border-color: var(--orange-yellow, #f59e0b); color: white;" onclick="exportResults()">
                                 <i class="fas fa-download me-2"></i>Export Results
                             </button>
                         </div>
@@ -286,15 +167,15 @@
     </div>
 
     <!-- Search Results -->
-    <div class="results-card">
-        <div class="results-header">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <i class="fas fa-list me-2"></i>Search Results
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Search Results</h5>
                     <span class="badge bg-light text-dark ms-2">{{ bookings|length }} found</span>
                 </div>
                 <div>
-                    <small>Last updated: {{ moment().format('HH:mm') }}</small>
+                    <small>Filter results updated</small>
                 </div>
             </div>
         </div>
@@ -303,12 +184,12 @@
             {% if bookings %}
                 <div class="p-4">
                     {% for booking in bookings %}
-                    <div class="booking-card">
+                    <div class="card mb-3">
                         <div class="card-body">
                             <div class="row align-items-center">
                                 <div class="col-md-3">
                                     <div class="d-flex align-items-center">
-                                        <div class="service-icon service-flight">
+                                        <div class="service-icon-sm me-3" style="background-color: var(--secondary-color, #FFBF00);">
                                             <i class="fas fa-ticket-alt"></i>
                                         </div>
                                         <div>
@@ -337,7 +218,7 @@
                                 </div>
                                 
                                 <div class="col-md-2">
-                                    <span class="status-badge status-{{ booking.status.lower().replace('_', '-') }}">
+                                    <span class="badge status-{{ booking.status.lower().replace('_', '-') }}">
                                         {{ booking.status.replace('_', ' ').title() }}
                                     </span>
                                 </div>
@@ -355,11 +236,11 @@
                                 
                                 <div class="col-md-2">
                                     <div class="d-flex gap-1 justify-content-end">
-                                        <a href="{{ url_for('booking_details', booking_id=booking.id) }}" 
-                                           class="btn btn-search btn-sm">
+                                        <a href="/booking/{{ booking.id }}" 
+                                           class="btn btn-sm" style="background-color: var(--orange-yellow, #f59e0b); border-color: var(--orange-yellow, #f59e0b); color: white;">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button class="btn btn-search btn-sm" 
+                                        <button class="btn btn-sm" style="background-color: var(--orange-yellow, #f59e0b); border-color: var(--orange-yellow, #f59e0b); color: white;" 
                                                 onclick="showBookingServices({{ booking.id }})">
                                             <i class="fas fa-info-circle"></i>
                                         </button>
@@ -396,7 +277,7 @@
                     </div>
                     <h4 class="text-muted">No bookings found</h4>
                     <p class="text-muted">Try adjusting your search criteria or create a new booking.</p>
-                    <a href="{{ url_for('new_booking') }}" class="btn btn-search">
+                    <a href="{{ url_for('booking.new_booking') }}" class="btn btn-search">
                         <i class="fas fa-plus me-2"></i>Create New Booking
                     </a>
                 </div>
@@ -423,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function exportResults() {
     const searchParams = new URLSearchParams(window.location.search);
     searchParams.set('export', 'csv');
-    window.location.href = '{{ url_for("find_bookings") }}?' + searchParams.toString();
+    window.location.href = '{{ url_for("main.find_bookings") }}?' + searchParams.toString();
 }
 
 // Show booking services modal

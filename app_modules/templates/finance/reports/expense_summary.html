@@ -1,0 +1,496 @@
+{% extends 'base.html' %}
+
+{% block title %}Expense Summary Report - TravelBookPro{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+    .summary-card {
+        border-left: 4px solid #e74a3b;
+    }
+    
+    .category-title {
+        font-weight: 500;
+        color: #4e73df;
+    }
+    
+    .data-table th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+    }
+    
+    .total-row {
+        font-weight: 700;
+        background-color: #f8f9fc;
+    }
+    
+    .detail-rows {
+        background-color: #fcfcfc;
+    }
+    
+    .expense-detail {
+        margin-left: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .category-row {
+        background-color: rgba(231, 74, 59, 0.03);
+    }
+    
+    .expense-badge {
+        width: 12px;
+        height: 12px;
+        display: inline-block;
+        margin-right: 5px;
+        border-radius: 50%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Report Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0 text-gray-800">Expense Summary Report</h1>
+            <p class="text-muted">{{ start_date.strftime('%b %d, %Y') }} - {{ end_date.strftime('%b %d, %Y') }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('finance.reports') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Reports
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+                <i class="fas fa-print me-1"></i> Print Report
+            </button>
+            <form method="POST" action="{{ url_for('finance.generate_report') }}" class="d-inline">
+                {{ form.csrf_token }}
+                {{ form.report_type(value="expense_summary") }}
+                {{ form.date_from(value=start_date) }}
+                {{ form.date_to(value=end_date) }}
+                {{ form.group_by(value=form.group_by.data) }}
+                {{ form.include_details(value=form.include_details.data) }}
+                <button type="submit" name="export" class="btn btn-success btn-sm">
+                    <i class="fas fa-file-export me-1"></i> Export CSV
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Total Expenses
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "%.2f"|format(report_data.summary.total_expenses) }}</div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Top Expense Categories
+                            </div>
+                            <div class="progress-stacked mb-2">
+                                {% for category in report_data.summary.by_category %}
+                                <div class="progress" role="progressbar" 
+                                     style="width: {{ ((category.amount / report_data.summary.total_expenses) * 100)|round|int if report_data.summary.total_expenses > 0 else 0 }}%; 
+                                            background-color: {{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }};">
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex flex-wrap mt-2">
+                                {% for category in report_data.summary.by_category %}
+                                <div class="me-3 mb-2">
+                                    <span class="expense-badge" style="background-color: {{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }};"></span>
+                                    <span class="small">{{ category.name }}: ${{ "%.2f"|format(category.amount) }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Breakdown Chart -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">Expense Breakdown by Category</h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" id="chart-view-btn">
+                            <i class="fas fa-chart-pie me-1"></i> Chart View
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="table-view-btn">
+                            <i class="fas fa-table me-1"></i> Table View
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="chart-view" class="row">
+                        <div class="col-md-6">
+                            <div class="chart-pie pt-4 pb-2">
+                                <canvas id="expensePieChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-bar pt-4 pb-2">
+                                <canvas id="expenseBarChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="table-view" style="display: none;">
+                        <div class="table-responsive">
+                            <table class="table table-hover data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th class="text-right">Amount</th>
+                                        <th class="text-right">% of Total</th>
+                                        {% if form.include_details.data %}
+                                        <th class="text-right">Details</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for category in report_data.summary.by_category %}
+                                    <tr class="category-row">
+                                        <td class="category-title">
+                                            <span class="expense-badge" style="background-color: {{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }};"></span>
+                                            {{ category.name }}
+                                        </td>
+                                        <td class="text-right">${{ "%.2f"|format(category.amount) }}</td>
+                                        <td class="text-right">{{ "%.1f"|format((category.amount / report_data.summary.total_expenses * 100) if report_data.summary.total_expenses > 0 else 0) }}%</td>
+                                        {% if form.include_details.data %}
+                                        <td class="text-right">
+                                            <button type="button" class="btn btn-sm btn-outline-primary toggle-details" data-category="{{ category.id }}">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% if form.include_details.data and category.expenses %}
+                                    <tr class="detail-rows" id="details-{{ category.id }}" style="display: none;">
+                                        <td colspan="4">
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Expense</th>
+                                                            <th>Date</th>
+                                                            <th>Vendor</th>
+                                                            <th class="text-right">Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for expense in category.expenses %}
+                                                        <tr>
+                                                            <td>{{ expense.title }}</td>
+                                                            <td>{{ expense.date_incurred.strftime('%b %d, %Y') if expense.date_incurred else 'N/A' }}</td>
+                                                            <td>{{ expense.vendor_name or 'N/A' }}</td>
+                                                            <td class="text-right">${{ "%.2f"|format(expense.amount) }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                    <tr class="total-row">
+                                        <td>Total Expenses</td>
+                                        <td class="text-right">${{ "%.2f"|format(report_data.summary.total_expenses) }}</td>
+                                        <td class="text-right">100.0%</td>
+                                        {% if form.include_details.data %}
+                                        <td></td>
+                                        {% endif %}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expense Trends -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold">Expense Trends by Period</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="expenseTrendChart" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Notes -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold">Report Notes</h6>
+        </div>
+        <div class="card-body">
+            <p class="mb-0"><strong>Expense Summary Report</strong> for the period {{ start_date.strftime('%b %d, %Y') }} to {{ end_date.strftime('%b %d, %Y') }}.</p>
+            <ul>
+                <li>This report includes all operational expenses categorized by type.</li>
+                <li>Expenses are recorded on the date they were incurred, not when they were paid.</li>
+                <li>Supplier costs (direct costs for travel services) are not included in this report.</li>
+                <li>For a complete financial overview, see the Profit & Loss Statement.</li>
+            </ul>
+            <p class="text-muted small">This report is prepared using data from the TravelBookPro system and may not include manually adjusted transactions outside the system.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle between chart and table views
+        const chartViewBtn = document.getElementById('chart-view-btn');
+        const tableViewBtn = document.getElementById('table-view-btn');
+        const chartView = document.getElementById('chart-view');
+        const tableView = document.getElementById('table-view');
+        
+        chartViewBtn.addEventListener('click', function() {
+            chartView.style.display = 'block';
+            tableView.style.display = 'none';
+            chartViewBtn.classList.add('active');
+            tableViewBtn.classList.remove('active');
+        });
+        
+        tableViewBtn.addEventListener('click', function() {
+            chartView.style.display = 'none';
+            tableView.style.display = 'block';
+            tableViewBtn.classList.add('active');
+            chartViewBtn.classList.remove('active');
+        });
+        
+        // Toggle expense details
+        document.querySelectorAll('.toggle-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const categoryId = this.getAttribute('data-category');
+                const detailsRow = document.getElementById('details-' + categoryId);
+                const icon = this.querySelector('i');
+                
+                if (detailsRow.style.display === 'none') {
+                    detailsRow.style.display = 'table-row';
+                    icon.classList.remove('fa-plus');
+                    icon.classList.add('fa-minus');
+                } else {
+                    detailsRow.style.display = 'none';
+                    icon.classList.remove('fa-minus');
+                    icon.classList.add('fa-plus');
+                }
+            });
+        });
+        
+        // Expense Pie Chart
+        var pieCtx = document.getElementById('expensePieChart').getContext('2d');
+        var expensePieChart = new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for category in report_data.summary.by_category %}
+                        "{{ category.name }}",
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for category in report_data.summary.by_category %}
+                            {{ category.amount }},
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        {% for category in report_data.summary.by_category %}
+                            "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}",
+                        {% endfor %}
+                    ],
+                    hoverBackgroundColor: [
+                        {% for category in report_data.summary.by_category %}
+                            "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 205), ((loop.index0 * 121) % 205), ((loop.index0 * 173) % 205)) }}",
+                        {% endfor %}
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)"
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var dataset = data.datasets[tooltipItem.datasetIndex];
+                            var meta = dataset._meta[Object.keys(dataset._meta)[0]];
+                            var total = meta.total;
+                            var currentValue = dataset.data[tooltipItem.index];
+                            var percentage = parseFloat((currentValue/total*100).toFixed(1));
+                            return '$' + currentValue.toLocaleString() + ' (' + percentage + '%)';
+                        },
+                        title: function(tooltipItem, data) {
+                            return data.labels[tooltipItem[0].index];
+                        }
+                    }
+                },
+                legend: {
+                    position: 'right',
+                    labels: {
+                        boxWidth: 12
+                    }
+                },
+                cutoutPercentage: 70,
+            }
+        });
+        
+        // Expense Bar Chart
+        var barCtx = document.getElementById('expenseBarChart').getContext('2d');
+        var expenseBarChart = new Chart(barCtx, {
+            type: 'horizontalBar',
+            data: {
+                labels: [
+                    {% for category in report_data.summary.by_category %}
+                        "{{ category.name }}",
+                    {% endfor %}
+                ],
+                datasets: [{
+                    label: 'Amount',
+                    backgroundColor: [
+                        {% for category in report_data.summary.by_category %}
+                            "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}",
+                        {% endfor %}
+                    ],
+                    data: [
+                        {% for category in report_data.summary.by_category %}
+                            {{ category.amount }},
+                        {% endfor %}
+                    ]
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        gridLines: {
+                            display: true,
+                            color: "rgb(234, 236, 244)"
+                        }
+                    }],
+                    yAxes: [{
+                        gridLines: {
+                            display: false
+                        }
+                    }]
+                },
+                legend: {
+                    display: false
+                },
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var value = data.datasets[0].data[tooltipItem.index];
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Expense Trend Chart by Period
+        var trendCtx = document.getElementById('expenseTrendChart').getContext('2d');
+        var expenseTrendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: [
+                    {% for period in report_data.periods %}
+                        "{{ period.label }}",
+                    {% endfor %}
+                ],
+                datasets: [
+                    {% for category in report_data.summary.by_category %}
+                    {
+                        label: "{{ category.name }}",
+                        backgroundColor: "transparent",
+                        borderColor: "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}",
+                        pointBackgroundColor: "{{ '#%02x%02x%02x' % (((loop.index0 * 53) % 255), ((loop.index0 * 121) % 255), ((loop.index0 * 173) % 255)) }}",
+                        pointBorderColor: "#fff",
+                        pointRadius: 3,
+                        data: [
+                            {% for period in report_data.periods %}
+                                {{ period.expenses_by_category.get(category.id, 0) }},
+                            {% endfor %}
+                        ]
+                    },
+                    {% endfor %}
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        gridLines: {
+                            display: false
+                        }
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                        gridLines: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }]
+                },
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    titleMarginBottom: 10,
+                    titleFontColor: '#6e707e',
+                    titleFontSize: 14,
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    intersect: false,
+                    mode: 'index',
+                    caretPadding: 10,
+                    callbacks: {
+                        label: function(tooltipItem, chart) {
+                            var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+                            return datasetLabel + ': $' + tooltipItem.yLabel.toLocaleString();
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

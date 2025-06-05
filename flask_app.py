@@ -47,7 +47,7 @@ try:
     from app.routes.booking import booking_bp
     app.register_blueprint(voucher_bp)
     app.register_blueprint(booking_bp, url_prefix='/booking')
-except ImportError:
-    pass
+except ImportError as e:
+    logging.debug(f"Blueprint import error: {e}")
 
 # Routes will be imported by main.py to avoid circular imports

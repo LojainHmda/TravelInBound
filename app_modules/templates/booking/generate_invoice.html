@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="fw-bold">
+            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Invoice
+        </h2>
+        <p class="text-muted">
+            Booking #{{ booking.reference_number }} for {{ booking.requester.username }}
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Invoice Details</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Service</th>
+                                        <th>Description</th>
+                                        <th>Dates</th>
+                                        <th>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in booking.service_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.service_type == 'FLIGHT' %}
+                                                    <i class="fas fa-plane service-icon-table text-primary me-2"></i>
+                                                {% elif item.service_type == 'HOTEL' %}
+                                                    <i class="fas fa-hotel service-icon-table text-primary me-2"></i>
+                                                {% elif item.service_type == 'TRANSPORT' %}
+                                                    <i class="fas fa-taxi service-icon-table text-primary me-2"></i>
+                                                {% elif item.service_type == 'VISA' %}
+                                                    <i class="fas fa-passport service-icon-table text-primary me-2"></i>
+                                                {% elif item.service_type == 'INSURANCE' %}
+                                                    <i class="fas fa-shield-alt service-icon-table text-primary me-2"></i>
+                                                {% endif %}
+                                                {{ item.service_type }}
+                                            </div>
+                                        </td>
+                                        <td>{{ item.description }}</td>
+                                        <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
+                                        <td>${{ "%.2f"|format(item.amount) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-active">
+                                        <th colspan="3" class="text-end">Calculated Total:</th>
+                                        <th>${{ "%.2f"|format(booking.calculate_total()) }}</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.total_amount.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.total_amount(class="form-control") }}
+                        </div>
+                        <div class="form-text">You can adjust the final invoice amount if needed</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=3, placeholder="Additional notes or payment instructions") }}
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Invoice Information</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Generating an invoice will:
+                </p>
+                <ul>
+                    <li>Create a unique invoice number</li>
+                    <li>Update the booking status to 'INVOICE'</li>
+                    <li>Allow you to record payments against this invoice</li>
+                </ul>
+                <hr>
+                <p>
+                    <strong>Note:</strong> You can adjust the total amount before generating the invoice. This is useful if you need to apply discounts or additional fees.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

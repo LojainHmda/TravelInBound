@@ -1,0 +1,171 @@
+<!-- Customer Selection Modal -->
+<div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: #FFBF00; color: black;">
+                <h5 class="modal-title"><i class="fas fa-users me-2"></i>Select Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="form-control" id="customerSearchInput" placeholder="Search customers...">
+                </div>
+                
+                <div id="customerList" class="row">
+                    {% for customer in customers %}
+                    <div class="col-md-6 mb-3 customer-item">
+                        <div class="card customer-card p-3" data-customer-id="{{ customer.id }}" data-customer-name="{{ customer.name }}" data-customer-email="{{ customer.email }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ customer.name }}</h6>
+                                    <small class="text-muted">{{ customer.email }}</small>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input customer-select" type="radio" name="customerRadio" value="{{ customer.id }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Empty State -->
+                <div id="noCustomersFound" class="text-center py-4" style="display: none;">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <p>No customers found matching your search.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-yellow" id="selectCustomerBtn" disabled>Select Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Customer search functionality
+    const customerSearchInput = document.getElementById('customerSearchInput');
+    const customerItems = document.querySelectorAll('.customer-item');
+    const noCustomersFound = document.getElementById('noCustomersFound');
+    
+    customerSearchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        let matchFound = false;
+        
+        customerItems.forEach(item => {
+            const customerName = item.querySelector('.card').getAttribute('data-customer-name').toLowerCase();
+            const customerEmail = item.querySelector('.card').getAttribute('data-customer-email').toLowerCase();
+            
+            if (customerName.includes(searchTerm) || customerEmail.includes(searchTerm)) {
+                item.style.display = 'block';
+                matchFound = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        noCustomersFound.style.display = matchFound ? 'none' : 'block';
+    });
+    
+    // Customer selection
+    const customerRadios = document.querySelectorAll('.customer-select');
+    const selectCustomerBtn = document.getElementById('selectCustomerBtn');
+    
+    customerRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectCustomerBtn.disabled = false;
+        });
+    });
+    
+    // Customer cards click
+    const customerCards = document.querySelectorAll('.customer-card');
+    customerCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const radio = this.querySelector('.customer-select');
+            radio.checked = true;
+            selectCustomerBtn.disabled = false;
+            
+            // Remove selected class from all cards
+            customerCards.forEach(c => c.classList.remove('selected'));
+            // Add selected class to clicked card
+            this.classList.add('selected');
+        });
+    });
+    
+    // Select customer button
+    selectCustomerBtn.addEventListener('click', function() {
+        const selectedCustomer = document.querySelector('.customer-select:checked');
+        if (selectedCustomer) {
+            const customerId = selectedCustomer.value;
+            const card = selectedCustomer.closest('.customer-card');
+            const customerName = card.getAttribute('data-customer-name');
+            const customerEmail = card.getAttribute('data-customer-email');
+            
+            // Create form and submit it to create_booking_from_detail endpoint
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/booking/create-from-detail';
+            
+            // Add CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+            
+            // Add customer ID
+            const customerIdInput = document.createElement('input');
+            customerIdInput.type = 'hidden';
+            customerIdInput.name = 'customer';
+            customerIdInput.value = customerId;
+            
+            // Add request ID - generate a unique one if not already available
+            const requestIdInput = document.createElement('input');
+            requestIdInput.type = 'hidden';
+            requestIdInput.name = 'request_id';
+            requestIdInput.value = document.getElementById('request_id_field') ? 
+                                  document.getElementById('request_id_field').value : 
+                                  `IR-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+            
+            form.appendChild(customerIdInput);
+            form.appendChild(requestIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+});
+</script>
+
+<style>
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    color: #aaa;
+}
+#customerSearchInput {
+    padding-left: 30px;
+}
+.customer-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #ddd;
+}
+.customer-card:hover {
+    background-color: #f8f9fa;
+    border-color: #FFBF00;
+}
+.customer-card.selected {
+    background-color: #fff3cd;
+    border-color: #FFBF00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 191, 0, 0.25);
+}
+</style>

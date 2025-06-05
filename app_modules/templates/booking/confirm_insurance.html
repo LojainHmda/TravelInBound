@@ -1,0 +1,185 @@
+{% extends 'booking/confirmation_base.html' %}
+
+{% block service_icon %}fa-shield-alt{% endblock %}
+{% block confirmation_title %}Insurance Confirmation{% endblock %}
+{% block confirmation_subtitle %}Enter insurance confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Insurance Confirmation{% endblock %}
+{% block form_title %}Insurance Policy Details{% endblock %}
+{% block service_type %}INSURANCE{% endblock %}
+
+{% block supplier_options %}
+<!-- Dynamic insurance suppliers from database -->
+{% for supplier in suppliers %}
+<option value="{{ supplier.code }}" {% if confirmation_data.supplier == supplier.code %}selected{% endif %}>{{ supplier.name }}</option>
+{% endfor %}
+{% if not suppliers %}
+<!-- Fallback options if no suppliers in database -->
+<option value="SafetyWing" {% if confirmation_data.supplier == 'SafetyWing' %}selected{% endif %}>SafetyWing</option>
+{% endif %}
+{% endblock %}
+
+{% block form_content %}
+<!-- Hidden fields to store pre-populated values for JavaScript to use -->
+<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+<input type="hidden" name="insurance_type_value" value="{{ confirmation_data.insurance_type }}">
+<input type="hidden" name="currency_value" value="{{ confirmation_data.currency }}">
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h5>Policy Information</h5>
+        <div class="mb-3">
+            <label class="form-label">Insurance Type</label>
+            <select name="insurance_type" class="form-select" required>
+                <option value="">-- Select Type --</option>
+                <option value="Travel Medical" {% if confirmation_data.insurance_type == 'Travel Medical' %}selected{% endif %}>Travel Medical</option>
+                <option value="Trip Cancellation" {% if confirmation_data.insurance_type == 'Trip Cancellation' %}selected{% endif %}>Trip Cancellation</option>
+                <option value="Comprehensive" {% if confirmation_data.insurance_type == 'Comprehensive' %}selected{% endif %}>Comprehensive Travel</option>
+                <option value="Baggage" {% if confirmation_data.insurance_type == 'Baggage' %}selected{% endif %}>Baggage Loss/Delay</option>
+                <option value="Flight" {% if confirmation_data.insurance_type == 'Flight' %}selected{% endif %}>Flight Insurance</option>
+                <option value="Adventure" {% if confirmation_data.insurance_type == 'Adventure' %}selected{% endif %}>Adventure/Sports</option>
+                <option value="Business" {% if confirmation_data.insurance_type == 'Business' %}selected{% endif %}>Business Travel</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Policy Number</label>
+            <input type="text" name="policy_number" class="form-control" required>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Coverage Start</label>
+                <input type="date" name="coverage_start" class="form-control" required 
+                       value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Coverage End</label>
+                <input type="date" name="coverage_end" class="form-control" required 
+                       value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Coverage Amount</label>
+            <div class="input-group">
+                <select name="currency" class="form-select" style="max-width: 100px;">
+                    <option value="USD" {% if confirmation_data.currency == 'USD' %}selected{% endif %}>USD</option>
+                    <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                    <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                </select>
+                <input type="number" name="coverage_amount" class="form-control" required min="0" step="0.01">
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <h5>Insured Details</h5>
+        <div class="mb-3">
+            <label class="form-label">Primary Insured</label>
+            <input type="text" name="primary_insured" class="form-control" required>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Additional Insured Persons</label>
+            <div id="additionalInsured">
+                <div class="input-group mb-2">
+                    <input type="text" name="additional_insured[]" class="form-control" placeholder="Full name">
+                    <button type="button" class="btn btn-outline-danger remove-person">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="addInsured">
+                <i class="fas fa-plus-circle"></i> Add Person
+            </button>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Destination Countries</label>
+            <input type="text" name="destination_countries" class="form-control" required>
+            <small class="text-muted">Separate multiple countries with commas</small>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Emergency Contact Number</label>
+            <input type="text" name="emergency_contact" class="form-control" required>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h5>Coverage Details</h5>
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_medical" id="coverage_medical" checked>
+                    <label class="form-check-label" for="coverage_medical">
+                        Medical Expenses
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_evacuation" id="coverage_evacuation">
+                    <label class="form-check-label" for="coverage_evacuation">
+                        Emergency Evacuation
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_cancellation" id="coverage_cancellation">
+                    <label class="form-check-label" for="coverage_cancellation">
+                        Trip Cancellation
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_baggage" id="coverage_baggage">
+                    <label class="form-check-label" for="coverage_baggage">
+                        Baggage Loss
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_delay" id="coverage_delay">
+                    <label class="form-check-label" for="coverage_delay">
+                        Trip Delay
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_personal" id="coverage_personal">
+                    <label class="form-check-label" for="coverage_personal">
+                        Personal Liability
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_activities" id="coverage_activities">
+                    <label class="form-check-label" for="coverage_activities">
+                        Adventure Activities
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="coverage_preexisting" id="coverage_preexisting">
+                    <label class="form-check-label" for="coverage_preexisting">
+                        Pre-existing Conditions
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_insurance.js') }}"></script>
+{% endblock %}

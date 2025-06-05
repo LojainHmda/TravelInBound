@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Expense Categories - TravelBookPro{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Expense Categories Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Expense Categories</h1>
+        <div>
+            <a href="{{ url_for('finance.new_category') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> New Category
+            </a>
+            <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Expenses
+            </a>
+        </div>
+    </div>
+
+    <!-- Categories List -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold">Expense Categories</h6>
+            <span class="text-muted small">{{ categories|length }} categories found</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td><code>{{ category.code }}</code></td>
+                            <td>{{ category.description or '-' }}</td>
+                            <td>
+                                {% if category.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ category.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <a href="{{ url_for('finance.edit_category', category_id=category.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="fas fa-tags fa-3x mb-3"></i>
+                                    <p>No expense categories found.</p>
+                                    <a href="{{ url_for('finance.new_category') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i> Create Category
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Card -->
+    <div class="card border-left-info shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title text-info"><i class="fas fa-info-circle me-2"></i>About Expense Categories</h5>
+            <p class="card-text">Expense categories help you organize and track your operational expenses. Using consistent categories makes it easier to:</p>
+            <ul>
+                <li>Generate accurate reports on expense distribution</li>
+                <li>Track spending patterns across different areas of your business</li>
+                <li>Identify areas where costs might be reduced</li>
+                <li>Prepare accurate financial statements and tax reports</li>
+            </ul>
+            <p class="card-text mb-0">Each expense must be assigned to a category, so make sure to create categories that cover all aspects of your business operations.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
