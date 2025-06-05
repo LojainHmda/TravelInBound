@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Find Bookings{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+/* Find Bookings Page Styles */
+.find-bookings-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.filters-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 15px;
+}
+
+.filter-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-col label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #223A5E;
+}
+
+.filter-col input,
+.filter-col select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.quick-filters {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.quick-filter-btn {
+    background: #223A5E;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.quick-filter-btn:hover {
+    background: #1a2d4a;
+}
+
+.results-summary {
+    background: #f8f9fa;
+    border-left: 4px solid #FFBF00;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+}
+
+.results-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.results-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.results-table th {
+    background: #223A5E;
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 500;
+}
+
+.results-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.results-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.status-request {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-booked {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-in-progress {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-completed {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.action-btn {
+    background: #FFBF00;
+    color: #223A5E;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.action-btn:hover {
+    background: #e6ac00;
+    color: #223A5E;
+    text-decoration: none;
+}
+
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+    
+    .filter-col {
+        min-width: 100%;
+    }
+    
+    .quick-filters {
+        justify-content: center;
+    }
+    
+    .results-table {
+        overflow-x: auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="find-bookings-container">
+    <h2><i class="fas fa-filter me-2"></i>Find Bookings</h2>
+    
+    <!-- Filters Card -->
+    <div class="filters-card">
+        <form method="GET" id="findBookingsForm">
+            <!-- First Row: Search, Customer, Status -->
+            <div class="filter-row">
+                <div class="filter-col">
+                    <label for="search">Reference Number</label>
+                    <input type="text" id="search" name="search" value="{{ request.args.get('search', '') }}" 
+                           placeholder="Enter booking reference">
+                </div>
+                <div class="filter-col">
+                    <label for="customer">Customer Name</label>
+                    <input type="text" id="customer" name="customer" value="{{ request.args.get('customer', '') }}" 
+                           placeholder="Enter customer name">
+                </div>
+                <div class="filter-col">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="REQUEST" {{ 'selected' if request.args.get('status') == 'REQUEST' }}>Request</option>
+                        <option value="BOOKED" {{ 'selected' if request.args.get('status') == 'BOOKED' }}>Booked</option>
+                        <option value="IN_PROGRESS" {{ 'selected' if request.args.get('status') == 'IN_PROGRESS' }}>In Progress</option>
+                        <option value="COMPLETED" {{ 'selected' if request.args.get('status') == 'COMPLETED' }}>Completed</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Second Row: Date Range, Service Type -->
+            <div class="filter-row">
+                <div class="filter-col">
+                    <label for="date_from">From Date</label>
+                    <input type="date" id="date_from" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                <div class="filter-col">
+                    <label for="date_to">To Date</label>
+                    <input type="date" id="date_to" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                </div>
+                <div class="filter-col">
+                    <label for="service_type">Service Type</label>
+                    <select id="service_type" name="service_type">
+                        <option value="">All Services</option>
+                        <option value="FLIGHT" {{ 'selected' if request.args.get('service_type') == 'FLIGHT' }}>Flight</option>
+                        <option value="HOTEL" {{ 'selected' if request.args.get('service_type') == 'HOTEL' }}>Hotel</option>
+                        <option value="TRANSPORT" {{ 'selected' if request.args.get('service_type') == 'TRANSPORT' }}>Transport</option>
+                        <option value="VISA" {{ 'selected' if request.args.get('service_type') == 'VISA' }}>Visa</option>
+                        <option value="INSURANCE" {{ 'selected' if request.args.get('service_type') == 'INSURANCE' }}>Insurance</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Third Row: Amount Range -->
+            <div class="filter-row">
+                <div class="filter-col">
+                    <label for="amount_from">Amount From</label>
+                    <input type="number" id="amount_from" name="amount_from" value="{{ request.args.get('amount_from', '') }}" 
+                           placeholder="Min amount" step="0.01">
+                </div>
+                <div class="filter-col">
+                    <label for="amount_to">Amount To</label>
+                    <input type="number" id="amount_to" name="amount_to" value="{{ request.args.get('amount_to', '') }}" 
+                           placeholder="Max amount" step="0.01">
+                </div>
+                <div class="filter-col">
+                    <button type="submit" class="btn btn-primary" style="background: #223A5E; border-color: #223A5E; width: 100%;">
+                        <i class="fas fa-search me-1"></i>Search
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Date Filters -->
+            <div class="quick-filters">
+                <button type="button" class="quick-filter-btn" onclick="setQuickDate('today')">Today</button>
+                <button type="button" class="quick-filter-btn" onclick="setQuickDate('week')">This Week</button>
+                <button type="button" class="quick-filter-btn" onclick="setQuickDate('month')">This Month</button>
+                <button type="button" class="quick-filter-btn" onclick="clearFilters()">Clear All</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Results Summary -->
+    {% if bookings is defined %}
+    <div class="results-summary">
+        <strong>{{ total_bookings }}</strong> bookings found
+        {% if total_amount > 0 %}
+        | Total Amount: <strong>${{ "%.2f"|format(total_amount) }}</strong>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Results Table -->
+    <div class="results-table">
+        {% if bookings and bookings|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Services</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.reference_number }}</td>
+                    <td>
+                        {% if booking.customer %}
+                            {{ booking.customer.name }}
+                        {% else %}
+                            {{ booking.requester.username }}
+                        {% endif %}
+                    </td>
+                    <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
+                    <td>
+                        <span class="status-badge status-{{ booking.status.lower().replace('_', '-') }}">
+                            {{ booking.status.replace('_', ' ').title() }}
+                        </span>
+                    </td>
+                    <td>${{ "%.2f"|format(booking.total_amount) }}</td>
+                    <td>
+                        {% if booking.service_items %}
+                            {% for item in booking.service_items[:3] %}
+                                <small class="d-block">{{ item.service_type }}</small>
+                            {% endfor %}
+                            {% if booking.service_items|length > 3 %}
+                                <small class="text-muted">+{{ booking.service_items|length - 3 }} more</small>
+                            {% endif %}
+                        {% else %}
+                            <small class="text-muted">No services</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="action-btn" style="cursor: default;">
+                            <i class="fas fa-eye me-1"></i>View
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-results">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h5>No bookings found</h5>
+            <p class="text-muted">Try adjusting your search filters or create a new booking.</p>
+            <a href="{{ url_for('new_booking') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Create New Booking
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Auto-submit form when filters change
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('findBookingsForm');
+    const inputs = form.querySelectorAll('input, select');
+    
+    inputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value !== '' || this.name === 'status' || this.name === 'service_type') {
+                form.submit();
+            }
+        });
+        
+        // For text inputs, also listen for Enter key
+        if (input.type === 'text' || input.type === 'number') {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    form.submit();
+                }
+            });
+        }
+    });
+});
+
+// Quick date filter functions
+function setQuickDate(period) {
+    const today = new Date();
+    const dateFrom = document.getElementById('date_from');
+    const dateTo = document.getElementById('date_to');
+    
+    switch(period) {
+        case 'today':
+            const todayStr = today.toISOString().split('T')[0];
+            dateFrom.value = todayStr;
+            dateTo.value = todayStr;
+            break;
+            
+        case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            
+            dateFrom.value = weekStart.toISOString().split('T')[0];
+            dateTo.value = weekEnd.toISOString().split('T')[0];
+            break;
+            
+        case 'month':
+            const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            
+            dateFrom.value = monthStart.toISOString().split('T')[0];
+            dateTo.value = monthEnd.toISOString().split('T')[0];
+            break;
+    }
+    
+    // Submit form after setting dates
+    document.getElementById('findBookingsForm').submit();
+}
+
+function clearFilters() {
+    const form = document.getElementById('findBookingsForm');
+    const inputs = form.querySelectorAll('input, select');
+    
+    inputs.forEach(input => {
+        if (input.type === 'submit' || input.type === 'button') return;
+        input.value = '';
+    });
+    
+    // Submit form to show all results
+    form.submit();
+}
+</script>
+{% endblock %}
