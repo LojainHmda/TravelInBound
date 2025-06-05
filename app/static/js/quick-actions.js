@@ -22,7 +22,7 @@ class QuickActionsFAB {
         fabContainer.className = 'quick-actions-fab';
         fabContainer.innerHTML = `
             <div class="fab-actions" id="fabActions">
-                <a href="/booking/new" class="fab-action" data-tooltip="New Booking">
+                <a href="/booking/new/detail" class="fab-action" data-tooltip="New Booking">
                     <svg class="fab-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                     </svg>
