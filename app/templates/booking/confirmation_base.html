@@ -30,10 +30,10 @@
                     <h5 class="card-title text-primary">General Information</h5>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="confirmation_reference" class="form-label">Confirmation Reference</label>
+                            <label for="confirmation_reference" class="form-label">Confirmation Reference <span class="text-muted">(Optional)</span></label>
                             <input type="text" class="form-control" id="confirmation_reference" name="confirmation_reference" 
-                                 value="{{ confirmation_data.confirmation_reference|default('') }}" required>
-                            <small class="text-muted">Enter the unique reference/confirmation number</small>
+                                 value="{{ confirmation_data.confirmation_reference|default('') }}">
+                            <small class="text-muted">Enter reference/confirmation number if available</small>
                         </div>
                         <div class="col-md-6">
                             <label for="supplier" class="form-label">Supplier</label>

@@ -633,10 +633,10 @@ def add_service_item(booking_id):
         
         db.session.commit()
         
-        # Check if user wants to add confirmation details
+        # Check if user wants to add additional details
         add_confirmation = request.form.get('add_confirmation')
         if add_confirmation:
-            flash('Service item added successfully. Please fill in confirmation details.', 'success')
+            flash('Service item added successfully. Please fill in additional details.', 'success')
             return redirect(url_for('booking.confirm_service', item_id=service_item.id))
         else:
             flash('Service item added successfully', 'success')

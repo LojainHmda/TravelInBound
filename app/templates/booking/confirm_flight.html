@@ -1,10 +1,10 @@
 {% extends 'booking/confirmation_base.html' %}
 
 {% block service_icon %}fa-plane{% endblock %}
-{% block confirmation_title %}Flight Confirmation{% endblock %}
-{% block confirmation_subtitle %}Enter flight confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
-{% block breadcrumb_active %}Flight Confirmation{% endblock %}
-{% block form_title %}Outbound Flight Details{% endblock %}
+{% block confirmation_title %}Flight Additional Details{% endblock %}
+{% block confirmation_subtitle %}Enter additional flight details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Flight Details{% endblock %}
+{% block form_title %}Flight Details{% endblock %}
 {% block service_type %}FLIGHT{% endblock %}
 
 {% block supplier_options %}

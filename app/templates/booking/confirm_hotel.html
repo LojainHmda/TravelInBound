@@ -1,10 +1,10 @@
 {% extends 'booking/confirmation_base.html' %}
 
 {% block service_icon %}fa-hotel{% endblock %}
-{% block confirmation_title %}Hotel Confirmation{% endblock %}
-{% block confirmation_subtitle %}Enter hotel confirmation details for booking #{{ service_item.booking.reference_number }}{% endblock %}
-{% block breadcrumb_active %}Hotel Confirmation{% endblock %}
-{% block form_title %}Hotel Reservation Details{% endblock %}
+{% block confirmation_title %}Hotel Additional Details{% endblock %}
+{% block confirmation_subtitle %}Enter additional hotel details for booking #{{ service_item.booking.reference_number }}{% endblock %}
+{% block breadcrumb_active %}Hotel Details{% endblock %}
+{% block form_title %}Hotel Details{% endblock %}
 {% block service_type %}HOTEL{% endblock %}
 
 {% block supplier_options %}
