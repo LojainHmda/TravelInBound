@@ -2,12 +2,78 @@
 
 {% block title %}Create User - Arab Travel Group{% endblock %}
 
+{% block extra_css %}
+<style>
+    .create-user-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #FFD700 100%);
+        color: white;
+        padding: 2rem 1.5rem;
+        margin: -1rem -1rem 2rem -1rem;
+        border-radius: 0 0 15px 15px;
+        box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
+    }
+    
+    .create-user-header h4 {
+        color: white;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .create-user-header i {
+        color: #FFD700;
+        margin-right: 0.5rem;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        border: none;
+        color: #2c3e50;
+        border-radius: 15px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #FFA500, #FFD700);
+        color: #2c3e50;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
+    }
+    
+    .btn-secondary {
+        background: #2c3e50;
+        border: none;
+        color: white;
+        border-radius: 15px;
+        font-weight: 600;
+    }
+    
+    .btn-secondary:hover {
+        background: #34495e;
+        color: white;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- User Info Bar -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); font-size: 0.8rem; color: #2c3e50; font-weight: 600;">
+        <i class="fas fa-user-circle me-1"></i>
+        {{ current_user.username }} ({{ current_user.role.title() }})
+        <span style="margin-left: 10px;">
+            <i class="fas fa-clock me-1"></i>
+            <span id="current-time"></span>
+        </span>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header create-user-header">
                     <h4 class="mb-0"><i class="fas fa-user-plus"></i> Create New User</h4>
                 </div>
                 <div class="card-body">
@@ -83,4 +149,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('current-time').textContent = timeString;
+}
+
+// Update time immediately and then every second
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+
 {% endblock %}

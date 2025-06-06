@@ -5,12 +5,12 @@
 {% block extra_css %}
 <style>
     .arab-travel-header {
-        background: linear-gradient(135deg, #1a4fff 0%, #ff8c00 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #FFD700 100%);
         color: white;
         padding: 2rem 1.5rem;
         margin: -1rem -1rem 2rem -1rem;
         border-radius: 0 0 15px 15px;
-        box-shadow: 0 4px 15px rgba(26, 79, 255, 0.2);
+        box-shadow: 0 4px 15px rgba(44, 62, 80, 0.2);
     }
     
     .arab-travel-header h2 {
@@ -20,31 +20,43 @@
     }
     
     .arab-travel-header .btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        border-radius: 12px;
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        border: none;
+        color: #2c3e50;
+        border-radius: 15px;
         padding: 0.6rem 1.2rem;
-        font-weight: 500;
+        font-weight: 600;
         transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);
     }
     
     .arab-travel-header .btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
-        color: white;
+        background: linear-gradient(135deg, #FFA500, #FFD700);
+        color: #2c3e50;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+        box-shadow: 0 6px 20px rgba(255, 165, 0, 0.4);
     }
     
     .arab-travel-header i {
-        color: #ff8c00;
+        color: #FFD700;
         margin-right: 0.5rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- User Info Bar -->
+<div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); font-size: 0.8rem; color: #2c3e50; font-weight: 600;">
+        <i class="fas fa-user-circle me-1"></i>
+        {{ current_user.username }} ({{ current_user.role.title() }})
+        <span style="margin-left: 10px;">
+            <i class="fas fa-clock me-1"></i>
+            <span id="current-time"></span>
+        </span>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -130,4 +142,25 @@
         </div>
     </div>
 </div>
+
+<script>
+function updateTime() {
+    const now = new Date();
+    const timeString = now.toLocaleString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    document.getElementById('current-time').textContent = timeString;
+}
+
+// Update time immediately and then every second
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+
 {% endblock %}
