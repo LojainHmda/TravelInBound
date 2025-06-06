@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 import os
 import base64
 from werkzeug.utils import secure_filename
+
 from app import db
 from app.models.user import User
 from app.models.booking import Booking, Payment
@@ -1977,6 +1978,7 @@ def analyze_ticket_api():
         return jsonify({'error': str(e)}), 500
 
 @booking_bp.route('/api/scan-hotel-voucher', methods=['POST'])
+@csrf.exempt
 def scan_hotel_voucher():
     """API endpoint for analyzing hotel voucher images with AI"""
     try:
@@ -1987,15 +1989,36 @@ def scan_hotel_voucher():
         if not file or not file.filename:
             return jsonify({'error': 'Invalid file'}), 400
         
-        # Check if the file is an image
-        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-            return jsonify({'error': 'File must be an image (JPG, JPEG, PNG)'}), 400
+        # Check if the file is an image or PDF
+        if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.pdf')):
+            return jsonify({'error': 'File must be an image (JPG, JPEG, PNG) or PDF'}), 400
         
-        # Read file and convert to base64
-        file_data = file.read()
-        img_data = base64.b64encode(file_data).decode('utf-8')
+        # Handle different file types
+        if file.filename.lower().endswith('.pdf'):
+            # For PDF files, convert to images first
+            import tempfile
+            import os
+            from pdf2image import convert_from_bytes
+            
+            file_data = file.read()
+            
+            # Convert PDF to images
+            images = convert_from_bytes(file_data)
+            if not images:
+                return jsonify({'error': 'Could not process PDF file'}), 400
+            
+            # Use the first page for analysis
+            import io
+            img_buffer = io.BytesIO()
+            images[0].save(img_buffer, format='PNG')
+            img_buffer.seek(0)
+            img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
+        else:
+            # For image files
+            file_data = file.read()
+            img_data = base64.b64encode(file_data).decode('utf-8')
         
-        # Analyze the image with OpenAI
+        # Analyze with OpenAI
         from app.utils.openai_helper import analyze_hotel_voucher
         analysis_results = analyze_hotel_voucher(img_data)
         
