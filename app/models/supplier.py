@@ -22,8 +22,8 @@ class SupplierPrepaymentLine(db.Model):
     payment_status = db.Column(db.String(20), default='PENDING')
     invoice_reference = db.Column(db.String(100), nullable=True)
     
-    # Only one relationship to avoid circular dependencies
-    service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='joined')
+    # Simple relationship without eager loading to avoid circular dependencies
+    service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='select')
     
     def __repr__(self):
         return f'<SupplierPrepaymentLine {self.id}: ${self.amount:.2f} for Booking #{self.booking_id}>'
@@ -146,8 +146,8 @@ class SupplierPayment(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='joined')
-    prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='payment', lazy='joined', cascade="all, delete-orphan")
+    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='select')
+    prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='payment', lazy='dynamic', cascade="all, delete-orphan")
     
     @property
     def get_confirmation_cost(self):
