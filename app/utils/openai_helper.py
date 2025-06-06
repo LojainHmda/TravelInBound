@@ -208,3 +208,128 @@ def analyze_document(file_data, filename):
     except Exception as e:
         logger.error(f"Error analyzing document {filename}: {str(e)}")
         return get_empty_result_template(f"Error analyzing document: {str(e)}")
+
+def get_empty_hotel_result_template(error_message=None):
+    """Helper function to return a standardized empty hotel result template"""
+    result = {
+        "hotel_name": "",
+        "checkin_date": "",
+        "checkout_date": "",
+        "confirmation_number": "",
+        "room_type": "",
+        "guests": "",
+        "meal_plan": "",
+        "total_cost": "",
+        "nights": "",
+        "guest_names": [],
+        "address": "",
+        "phone": ""
+    }
+
+    if error_message:
+        result["error"] = error_message
+
+    return result
+
+def analyze_hotel_voucher(image_data):
+    """
+    Analyze a hotel voucher/booking confirmation image using OpenAI's vision capabilities.
+
+    Args:
+        image_data: Base64 encoded image data
+
+    Returns:
+        Dictionary containing extracted hotel information
+    """
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        logger.error("OpenAI API key not found in environment variables")
+        return get_empty_hotel_result_template("OpenAI API key not configured")
+
+    client = OpenAI(api_key=api_key)
+
+    try:
+        system_prompt = """
+        You are a hotel booking confirmation analyzer. Please carefully examine this hotel voucher/booking confirmation and extract the following key information:
+
+        1. Hotel name (full hotel name)
+        2. Check-in date (in format YYYY-MM-DD if possible)
+        3. Check-out date (in format YYYY-MM-DD if possible)
+        4. Confirmation number/booking reference
+        5. Room type (e.g., Standard Double, Suite, etc.)
+        6. Number of guests/occupancy
+        7. Meal plan (Room Only, Breakfast, Half Board, Full Board, All Inclusive)
+        8. Total cost/price (with currency if visible)
+        9. Number of nights
+        10. Guest names (if visible)
+        11. Hotel address (if visible)
+        12. Hotel phone number (if visible)
+
+        If any information is unclear or not visible, extract what you can confidently identify.
+        Return the results in JSON format with these exact keys:
+        - hotel_name
+        - checkin_date
+        - checkout_date
+        - confirmation_number
+        - room_type
+        - guests
+        - meal_plan
+        - total_cost
+        - nights
+        - guest_names (array)
+        - address
+        - phone
+
+        Focus on accuracy over completeness. If you cannot clearly read a field, leave it empty rather than guessing.
+        """
+
+        user_prompt = "Please analyze this hotel booking confirmation/voucher image and extract the hotel booking details in the requested JSON format."
+
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user_prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}
+                        }
+                    ]
+                }
+            ],
+            max_tokens=1000,
+            temperature=0.1
+        )
+
+        content = response.choices[0].message.content.strip()
+        logger.info(f"OpenAI response for hotel voucher: {content}")
+
+        # Try to parse JSON from the response
+        try:
+            # Look for JSON content
+            if content.startswith('```json'):
+                content = content[7:-3]  # Remove ```json and ```
+            elif content.startswith('```'):
+                content = content[3:-3]  # Remove ``` and ```
+            
+            result = json.loads(content)
+            
+            # Ensure all expected keys exist with default values
+            template = get_empty_hotel_result_template()
+            for key in template:
+                if key not in result:
+                    result[key] = template[key]
+            
+            return result
+            
+        except json.JSONDecodeError as json_err:
+            logger.error(f"Failed to parse JSON: {json_err}")
+            logger.error(f"Raw content: {content}")
+            return get_empty_hotel_result_template(f"Failed to parse response: {json_err}")
+
+    except Exception as e:
+        logger.error(f"Error in OpenAI hotel voucher analysis: {str(e)}")
+        return get_empty_hotel_result_template(f"Error analyzing hotel voucher: {str(e)}")

@@ -1,0 +1,272 @@
+<!-- Hotel Scanner Modal -->
+<div class="modal fade" id="hotelScannerModal" tabindex="-1" aria-labelledby="hotelScannerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="hotelScannerModalLabel"><i class="fas fa-hotel me-2"></i>Hotel Voucher Scanner</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Upload a hotel booking confirmation or voucher to automatically extract hotel details.
+                </div>
+
+                <div id="modalUploadSection">
+                    <form id="modalHotelUploadForm" class="mb-4">
+                        <div class="mb-3">
+                            <label for="modalHotelImage" class="form-label">Upload Hotel Voucher</label>
+                            <input type="file" class="form-control" id="modalHotelImage" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPG, JPEG, PNG</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Analyze Hotel Voucher
+                        </button>
+                    </form>
+                </div>
+
+                <div id="modalLoadingSection" style="display: none;">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3">Analyzing hotel voucher...</p>
+                    </div>
+                </div>
+
+                <div id="modalResultsSection" style="display: none;">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Hotel details extracted successfully!
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Hotel Information</h6>
+                            <div class="mb-2">
+                                <strong>Hotel Name:</strong>
+                                <span id="extractedHotelName">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Check-in:</strong>
+                                <span id="extractedCheckin">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Check-out:</strong>
+                                <span id="extractedCheckout">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Confirmation Number:</strong>
+                                <span id="extractedConfirmation">-</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Room Details</h6>
+                            <div class="mb-2">
+                                <strong>Room Type:</strong>
+                                <span id="extractedRoomType">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Guests:</strong>
+                                <span id="extractedGuests">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Meal Plan:</strong>
+                                <span id="extractedMealPlan">-</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Total Cost:</strong>
+                                <span id="extractedCost">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-success" id="fillHotelForm">
+                            <i class="fas fa-check me-2"></i>Fill Form with Extracted Data
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="scanAnotherHotel">
+                            <i class="fas fa-camera me-2"></i>Scan Another Voucher
+                        </button>
+                    </div>
+                </div>
+
+                <div id="modalErrorSection" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage">Failed to extract hotel details from the image.</span>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="retryHotelScan">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('hotelScannerModal');
+    const uploadForm = document.getElementById('modalHotelUploadForm');
+    const uploadSection = document.getElementById('modalUploadSection');
+    const loadingSection = document.getElementById('modalLoadingSection');
+    const resultsSection = document.getElementById('modalResultsSection');
+    const errorSection = document.getElementById('modalErrorSection');
+    
+    let extractedData = {};
+
+    // Handle form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('modalHotelImage');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Please select a file');
+            return;
+        }
+
+        // Show loading
+        uploadSection.style.display = 'none';
+        loadingSection.style.display = 'block';
+        resultsSection.style.display = 'none';
+        errorSection.style.display = 'none';
+
+        try {
+            // Create form data
+            const formData = new FormData();
+            formData.append('image', file);
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                             document.querySelector('input[name="csrf_token"]')?.value || '';
+            
+            // Send to backend
+            const response = await fetch('/api/scan-hotel-voucher', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Store extracted data
+                extractedData = result.data;
+                
+                // Display results
+                document.getElementById('extractedHotelName').textContent = result.data.hotel_name || '-';
+                document.getElementById('extractedCheckin').textContent = result.data.checkin_date || '-';
+                document.getElementById('extractedCheckout').textContent = result.data.checkout_date || '-';
+                document.getElementById('extractedConfirmation').textContent = result.data.confirmation_number || '-';
+                document.getElementById('extractedRoomType').textContent = result.data.room_type || '-';
+                document.getElementById('extractedGuests').textContent = result.data.guests || '-';
+                document.getElementById('extractedMealPlan').textContent = result.data.meal_plan || '-';
+                document.getElementById('extractedCost').textContent = result.data.total_cost || '-';
+                
+                // Show results
+                loadingSection.style.display = 'none';
+                resultsSection.style.display = 'block';
+            } else {
+                throw new Error(result.error || 'Failed to process image');
+            }
+        } catch (error) {
+            console.error('Error scanning hotel voucher:', error);
+            document.getElementById('errorMessage').textContent = error.message;
+            loadingSection.style.display = 'none';
+            errorSection.style.display = 'block';
+        }
+    });
+
+    // Fill form with extracted data
+    document.getElementById('fillHotelForm').addEventListener('click', function() {
+        // Fill hotel form fields
+        if (extractedData.hotel_name) {
+            const hotelNameField = document.querySelector('input[name="hotel_name"]');
+            if (hotelNameField) hotelNameField.value = extractedData.hotel_name;
+        }
+        
+        if (extractedData.checkin_date) {
+            const checkinField = document.querySelector('input[name="from_date"]');
+            if (checkinField) checkinField.value = extractedData.checkin_date;
+        }
+        
+        if (extractedData.checkout_date) {
+            const checkoutField = document.querySelector('input[name="to_date"]');
+            if (checkoutField) checkoutField.value = extractedData.checkout_date;
+        }
+        
+        if (extractedData.meal_plan) {
+            const mealPlanField = document.querySelector('select[name="meal_plan"]');
+            if (mealPlanField) {
+                const options = Array.from(mealPlanField.options);
+                const matchingOption = options.find(opt => 
+                    opt.text.toLowerCase().includes(extractedData.meal_plan.toLowerCase())
+                );
+                if (matchingOption) mealPlanField.value = matchingOption.value;
+            }
+        }
+        
+        if (extractedData.total_cost) {
+            const costField = document.querySelector('input[name="cost"]');
+            if (costField) {
+                // Extract numeric value from cost string
+                const numericCost = extractedData.total_cost.replace(/[^\d.]/g, '');
+                if (numericCost) costField.value = numericCost;
+            }
+        }
+        
+        if (extractedData.confirmation_number) {
+            const notesField = document.querySelector('textarea[name="special_notes"]');
+            if (notesField) {
+                const currentNotes = notesField.value;
+                const confirmationNote = `Confirmation: ${extractedData.confirmation_number}`;
+                notesField.value = currentNotes ? `${currentNotes}\n${confirmationNote}` : confirmationNote;
+            }
+        }
+
+        // Close modal
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        modalInstance.hide();
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            Hotel details filled successfully from scanned voucher!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const form = document.querySelector('form');
+        form.insertBefore(alertDiv, form.firstChild);
+    });
+
+    // Scan another voucher
+    document.getElementById('scanAnotherHotel').addEventListener('click', function() {
+        uploadSection.style.display = 'block';
+        resultsSection.style.display = 'none';
+        document.getElementById('modalHotelUploadForm').reset();
+    });
+
+    // Retry scan
+    document.getElementById('retryHotelScan').addEventListener('click', function() {
+        uploadSection.style.display = 'block';
+        errorSection.style.display = 'none';
+    });
+
+    // Reset modal when closed
+    modal.addEventListener('hidden.bs.modal', function() {
+        uploadSection.style.display = 'block';
+        loadingSection.style.display = 'none';
+        resultsSection.style.display = 'none';
+        errorSection.style.display = 'none';
+        document.getElementById('modalHotelUploadForm').reset();
+        extractedData = {};
+    });
+});
+</script>

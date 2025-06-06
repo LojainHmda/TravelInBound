@@ -1976,6 +1976,37 @@ def analyze_ticket_api():
         print(f"Error in API ticket analysis: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@booking_bp.route('/api/scan-hotel-voucher', methods=['POST'])
+def scan_hotel_voucher():
+    """API endpoint for analyzing hotel voucher images with AI"""
+    if 'image' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['image']
+    if not file or not file.filename:
+        return jsonify({'error': 'Invalid file'}), 400
+    
+    # Check if the file is an image
+    if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png')):
+        return jsonify({'error': 'File must be an image (JPG, JPEG, PNG)'}), 400
+    
+    try:
+        # Read file and convert to base64
+        file_data = file.read()
+        img_data = base64.b64encode(file_data).decode('utf-8')
+        
+        # Analyze the image with OpenAI
+        from app.utils.openai_helper import analyze_hotel_voucher
+        analysis_results = analyze_hotel_voucher(img_data)
+        
+        return jsonify({
+            'success': True,
+            'data': analysis_results
+        })
+    except Exception as e:
+        print(f"Error in hotel voucher analysis: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @booking_bp.route('/booking/<int:booking_id>/add_credit_line', methods=['POST'])
 def add_credit_line(booking_id):
     """Add a manual credit line to a booking"""
