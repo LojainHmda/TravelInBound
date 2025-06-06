@@ -30,7 +30,20 @@ finance = Blueprint('finance', __name__, url_prefix='/finance')
 @finance.route('/')
 @login_required
 def index():
-    """Finance module home with financial KPIs"""
+    """Finance module home with financial KPIs - Admin only access"""
+    if not current_user.can_access_finance():
+        flash('Access denied. Finance dashboard requires admin privileges.', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    return dashboard()
+
+@finance.route('/dashboard')
+@login_required  
+def dashboard():
+    """Finance dashboard with financial KPIs"""
+    if not current_user.can_access_finance():
+        flash('Access denied. Finance dashboard requires admin privileges.', 'error')
+        return redirect(url_for('main.dashboard'))
     # Get selected month from query parameter or default to current
     today = date.today()
     selected_month = request.args.get('month', 'current')

@@ -133,6 +133,41 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .user-avatar i {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+        
+        .user-details {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .user-role {
+            margin-top: 2px;
+        }
+        
+        .user-role .badge {
+            font-size: 0.7rem;
         }
         
         .sidebar-brand {
@@ -278,6 +313,39 @@
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
+                <div class="user-info">
+                    {% if current_user.is_authenticated %}
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">{{ current_user.full_name }}</div>
+                            <div class="user-role">
+                                {% if current_user.is_admin() %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-warning">{{ current_user.role.replace('_', ' ').title() }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog"></i>
+                            </button>
+                            <ul class="dropdown-menu">
+                                {% if current_user.is_admin() %}
+                                <li><a class="dropdown-item" href="{{ url_for('auth.admin_users') }}">
+                                    <i class="fas fa-users-cog"></i> User Management
+                                </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
                 <button id="toggle-sidebar" aria-label="Close Menu">
                     <i class="fas fa-times"></i>
                 </button>
@@ -326,12 +394,28 @@
                         Suppliers
                     </a>
                 </li>
+                {% if current_user.can_access_finance() %}
                 <li>
                     <a href="{{ url_for('finance.index') }}" class="{% if '/finance/' in request.path %}active{% endif %}">
                         <i class="fas fa-money-bill-wave"></i>
                         Finance
                     </a>
                 </li>
+                {% endif %}
+                {% if current_user.is_admin() %}
+                <li>
+                    <a href="{{ url_for('main.admin_dashboard') }}" class="{% if '/admin/' in request.path %}active{% endif %}">
+                        <i class="fas fa-shield-alt"></i>
+                        Admin Panel
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('auth.admin_users') }}" class="{% if request.path == url_for('auth.admin_users') %}active{% endif %}">
+                        <i class="fas fa-users-cog"></i>
+                        User Management
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             
             <!-- Sidebar Footer with Logo -->
