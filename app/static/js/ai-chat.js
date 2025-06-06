@@ -619,31 +619,20 @@ class AIChat {
     }
 
     handleNavigation(navigationData) {
-        // Show navigation confirmation message
-        const confirmMessage = `I can take you to ${navigationData.reason}. Would you like me to navigate there now?`;
+        // Show navigation message and navigate automatically
+        const navigateMessage = `I'll take you to ${navigationData.reason} now.`;
         
         this.addMessage({
             type: 'ai',
-            content: confirmMessage,
+            content: navigateMessage,
             timestamp: new Date(),
             navigationAction: navigationData
         });
 
-        // Add navigation button to the last message
-        const lastMessage = this.messagesContainer.lastElementChild;
-        if (lastMessage) {
-            const navigationButton = document.createElement('button');
-            navigationButton.className = 'btn btn-primary btn-sm mt-2';
-            navigationButton.textContent = `Go to ${navigationData.reason}`;
-            navigationButton.onclick = () => {
-                window.location.href = navigationData.url;
-            };
-            
-            const messageContent = lastMessage.querySelector('.ai-message-content');
-            if (messageContent) {
-                messageContent.appendChild(navigationButton);
-            }
-        }
+        // Navigate after a short delay to allow message to be seen
+        setTimeout(() => {
+            window.location.href = navigationData.url;
+        }, 1000);
     }
 
     getCSRFToken() {
