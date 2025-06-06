@@ -53,6 +53,15 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
 }
 
+/* Footer specific heading overrides */
+footer h1, footer h2, footer h3, footer h4, footer h5, footer h6 {
+    color: #FFD700 !important;
+}
+
+footer p, footer a, footer address {
+    color: #FFD700 !important;
+}
+
 .card-title, .card-header {
     color: var(--text-dark) !important;
 }
