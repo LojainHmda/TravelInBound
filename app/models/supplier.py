@@ -125,11 +125,7 @@ class SupplierService(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
-        try:
-            supplier_name = self.supplier.name
-        except:
-            supplier_name = "Unknown"
-        return f'<SupplierService {self.service_name} for {supplier_name}>'
+        return f'<SupplierService {self.service_name} (ID: {self.id})>'
 
 
 class SupplierPayment(db.Model):
@@ -199,8 +195,4 @@ class SupplierPayment(db.Model):
         return "Pending"
     
     def __repr__(self):
-        try:
-            supplier_name = self.supplier.name
-        except:
-            supplier_name = "Unknown"
-        return f'<SupplierPayment ${self.amount:.2f} to {supplier_name}>'
+        return f'<SupplierPayment ${self.amount:.2f} (ID: {self.id})>'

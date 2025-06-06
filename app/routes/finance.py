@@ -972,39 +972,37 @@ def supplier_costs():
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     
-    # Use a simpler query approach to avoid complex relationship errors
-    query = db.session.query(SupplierPrepaymentLine)
+    # Simple approach without complex joins to avoid relationship errors
+    prepayment_lines = SupplierPrepaymentLine.query.all()
     
-    # Apply filters
+    # Apply filters in Python to avoid complex SQL joins
     if supplier_id:
-        # Filter by supplier through payment relationship
-        supplier_payment_ids = db.session.query(SupplierPayment.id).filter(
-            SupplierPayment.supplier_id == int(supplier_id)
-        ).subquery()
-        query = query.filter(SupplierPrepaymentLine.supplier_payment_id.in_(
-            db.session.query(supplier_payment_ids)
-        ))
+        supplier_payments = SupplierPayment.query.filter_by(supplier_id=int(supplier_id)).all()
+        payment_ids = [p.id for p in supplier_payments]
+        prepayment_lines = [line for line in prepayment_lines if line.supplier_payment_id in payment_ids]
     
     if service_type:
-        query = query.filter(SupplierPrepaymentLine.service_type == service_type)
+        prepayment_lines = [line for line in prepayment_lines if line.service_type == service_type]
+    
     if payment_status:
-        query = query.filter(SupplierPrepaymentLine.payment_status == payment_status)
+        prepayment_lines = [line for line in prepayment_lines if line.payment_status == payment_status]
+    
     if from_date:
         try:
             from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
-            query = query.filter(SupplierPrepaymentLine.created_at >= from_date_obj)
+            prepayment_lines = [line for line in prepayment_lines if line.created_at.date() >= from_date_obj]
         except (ValueError, TypeError):
             flash('Invalid from date format', 'warning')
+    
     if to_date:
         try:
             to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
-            to_date_obj = datetime.combine(to_date_obj, datetime.max.time())
-            query = query.filter(SupplierPrepaymentLine.created_at <= to_date_obj)
+            prepayment_lines = [line for line in prepayment_lines if line.created_at.date() <= to_date_obj]
         except (ValueError, TypeError):
             flash('Invalid to date format', 'warning')
     
-    # Order by date descending
-    prepayment_lines = query.order_by(SupplierPrepaymentLine.created_at.desc()).all()
+    # Sort by date descending
+    prepayment_lines = sorted(prepayment_lines, key=lambda x: x.created_at, reverse=True)
     
     # Calculate total amount
     total_amount = sum(line.amount for line in prepayment_lines)
