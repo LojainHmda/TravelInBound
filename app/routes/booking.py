@@ -287,7 +287,7 @@ def new_booking():
                 flash(f'Invoice {booking.invoice_number} updated successfully with new amount: {booking.total_amount}', 'success')
                 
                 # Redirect to the booking details page
-                return redirect(url_for('booking.booking_details', booking_id=booking.id))
+                return redirect(url_for('booking.details', booking_id=booking.id))
                 
             elif form.validate():
                 # Regular validation for new bookings
