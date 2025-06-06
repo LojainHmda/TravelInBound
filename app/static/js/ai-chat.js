@@ -437,6 +437,11 @@ class AIChat {
                     timestamp: new Date()
                 });
 
+                // Handle navigation if requested
+                if (data.navigation && data.navigation.should_navigate) {
+                    this.handleNavigation(data.navigation);
+                }
+
                 // Handle screen updates if any
                 if (data.screen_updates) {
                     this.handleScreenUpdates(data.screen_updates);
@@ -610,6 +615,34 @@ class AIChat {
                 content: 'Sorry, I had trouble sending the WhatsApp message. Please try again.',
                 timestamp: new Date()
             });
+        }
+    }
+
+    handleNavigation(navigationData) {
+        // Show navigation confirmation message
+        const confirmMessage = `I can take you to ${navigationData.reason}. Would you like me to navigate there now?`;
+        
+        this.addMessage({
+            type: 'ai',
+            content: confirmMessage,
+            timestamp: new Date(),
+            navigationAction: navigationData
+        });
+
+        // Add navigation button to the last message
+        const lastMessage = this.messagesContainer.lastElementChild;
+        if (lastMessage) {
+            const navigationButton = document.createElement('button');
+            navigationButton.className = 'btn btn-primary btn-sm mt-2';
+            navigationButton.textContent = `Go to ${navigationData.reason}`;
+            navigationButton.onclick = () => {
+                window.location.href = navigationData.url;
+            };
+            
+            const messageContent = lastMessage.querySelector('.ai-message-content');
+            if (messageContent) {
+                messageContent.appendChild(navigationButton);
+            }
         }
     }
 

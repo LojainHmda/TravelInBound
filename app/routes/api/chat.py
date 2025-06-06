@@ -50,14 +50,21 @@ def ai_chat():
         
         # Analyze if this is a booking creation request
         booking_intent = analyze_booking_intent(user_query)
+        navigation_action = analyze_navigation_intent(user_query)
         
-        return jsonify({
+        response_data = {
             'success': True,
             'response': ai_response,
             'booking_data': booking_intent,
             'intent': {'type': 'booking_assistance'},
             'timestamp': str(data.get('timestamp', ''))
-        })
+        }
+        
+        # Add navigation action if detected
+        if navigation_action['should_navigate']:
+            response_data['navigation'] = navigation_action
+            
+        return jsonify(response_data)
         
     except Exception as e:
         return jsonify({
@@ -125,6 +132,44 @@ def analyze_booking_intent(query):
         'is_booking_request': False,
         'suggested_action': None,
         'confidence': 0.1
+    }
+
+def analyze_navigation_intent(query):
+    """Analyze if the query requires navigation to a specific page"""
+    query_lower = query.lower()
+    
+    # Navigation patterns and their corresponding URLs
+    navigation_patterns = {
+        'create booking': '/booking/new/detail',
+        'new booking': '/booking/new/detail',
+        'book': '/booking/new/detail',
+        'add customer': '/customers/new',
+        'new customer': '/customers/new',
+        'customer': '/customers',
+        'customers': '/customers',
+        'finance': '/finance',
+        'dashboard': '/dashboard',
+        'suppliers': '/suppliers',
+        'supplier': '/suppliers',
+        'search bookings': '/find-bookings',
+        'find bookings': '/find-bookings',
+        'operations': '/dashboard'
+    }
+    
+    for pattern, url in navigation_patterns.items():
+        if pattern in query_lower:
+            return {
+                'should_navigate': True,
+                'url': url,
+                'action': 'navigate',
+                'reason': f'User requested to {pattern}'
+            }
+    
+    return {
+        'should_navigate': False,
+        'url': None,
+        'action': None,
+        'reason': None
     }
 
 @chat_api.route('/api/chat/test', methods=['GET'])
