@@ -91,11 +91,11 @@
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--secondary-color);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             width: 100%;
             max-width: 420px;
             border: 1px solid rgba(255, 140, 0, 0.2);
@@ -134,7 +134,7 @@
         }
 
         .company-tagline {
-            color: var(--primary-color);
+            color: white;
             font-weight: 600;
             font-size: 1.1rem;
         }
@@ -156,8 +156,12 @@
             box-shadow: 0 0 0 0.2rem rgba(255, 140, 0, 0.25);
         }
 
+        .form-floating label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
         .btn-login {
-            background: var(--gradient);
+            background: var(--primary-color);
             border: none;
             border-radius: 12px;
             padding: 12px 30px;
@@ -170,6 +174,7 @@
         }
 
         .btn-login:hover {
+            background: #e67e00;
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(255, 140, 0, 0.3);
             color: white;
@@ -211,24 +216,26 @@
         }
 
         .login-info {
-            background: rgba(255, 140, 0, 0.1);
-            border: 1px solid rgba(255, 140, 0, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             padding: 15px;
             margin-bottom: 20px;
             font-size: 0.9rem;
+            color: white;
         }
 
         .login-info h6 {
-            color: var(--secondary-color);
+            color: white;
             margin-bottom: 10px;
         }
 
         .login-info code {
-            background: rgba(255, 140, 0, 0.2);
+            background: rgba(255, 140, 0, 0.3);
             padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.8rem;
+            color: white;
         }
     </style>
 </head>
@@ -255,7 +262,6 @@
                 <div class="logo">
                     <img src="{{ url_for('static', filename='arabilogo.jpg') }}" alt="Arab Travel Group Logo">
                 </div>
-                <div class="company-name">Arab Travel Group</div>
                 <div class="company-tagline">Travel Book Pro</div>
             </div>
 
