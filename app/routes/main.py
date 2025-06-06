@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, send_from_directory
+from flask_login import login_required, current_user
 from app import db
 from app.models.booking import Booking
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
@@ -9,6 +10,7 @@ from app.models.user import User
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
+@login_required
 def index():
     """Home page showing recent bookings"""
     try:
@@ -20,6 +22,7 @@ def index():
     return render_template('index.html', bookings=recent_bookings)
 
 @main_bp.route('/dashboard')
+@login_required
 def dashboard():
     """Dashboard showing booking statistics and status - OPTIMIZED"""
     # PERFORMANCE FIX: Use efficient single queries with proper limits
@@ -146,7 +149,31 @@ def search_and_history():
                          bookings=bookings,
                          has_search_params=has_search_params)
 
+@main_bp.route('/admin/dashboard')
+@login_required
+def admin_dashboard():
+    """Admin dashboard with full system overview"""
+    if not current_user.is_admin():
+        flash('Access denied. Admin privileges required.', 'error')
+        return redirect(url_for('main.dashboard'))
+    
+    from sqlalchemy import func
+    from app.models.customer import Customer
+    from app.models.supplier import Supplier
+    
+    # Get comprehensive statistics for admin
+    stats = {
+        'total_bookings': Booking.query.count(),
+        'total_customers': Customer.query.count(),
+        'total_users': User.query.count(),
+        'active_users': User.query.filter(User.active == True).count(),
+        'recent_bookings': Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    }
+    
+    return render_template('admin_dashboard.html', stats=stats)
+
 @main_bp.route('/find-bookings')
+@login_required
 def find_bookings():
     """Find Bookings page with comprehensive filtering - PERFORMANCE OPTIMIZED"""
     from datetime import datetime, timedelta

@@ -98,7 +98,7 @@ def create_app():
         
         # Register auth blueprint
         from app.routes.auth import auth_bp
-        app.register_blueprint(auth_bp)
+        app.register_blueprint(auth_bp, url_prefix='/auth')
         
         # Register tools blueprint
         from app.routes.tools import tools_bp
