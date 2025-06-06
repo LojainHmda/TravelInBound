@@ -19,9 +19,21 @@
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background: var(--white);
+            background: url('{{ url_for("static", filename="travel_background.jpg") }}') center center/cover no-repeat;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 0;
         }
 
         .floating-icons {
@@ -240,11 +252,7 @@
     </style>
 </head>
 <body>
-    <!-- Floating Travel Icons -->
-    <div class="floating-icons">
-        <i class="fas fa-plane floating-icon" style="top: 20%; left: 15%; font-size: 2rem; animation-delay: 0s;"></i>
-        <i class="fas fa-hotel floating-icon" style="top: 75%; right: 20%; font-size: 2rem; animation-delay: 3s;"></i>
-    </div>
+
 
     <div class="login-container">
         <div class="login-card">
