@@ -302,11 +302,60 @@
 <body>
     <!-- Top bar removed as requested -->
     
-    <!-- Only Burger Menu Toggle -->
-    <div class="burger-toggle-container">
-        <button class="burger-menu-btn" id="main-sidebar-toggle">
-            <i class="fas fa-bars"></i>
-        </button>
+    <!-- Top Horizontal Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <button class="burger-menu-btn" id="main-sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="brand">
+                <img src="{{ url_for('static', filename='images/arabilogo.jpg') }}" alt="Arab Travel Group" class="brand-logo">
+                <span class="brand-text">Travel Book Pro</span>
+            </div>
+        </div>
+        
+        <div class="top-bar-right">
+            {% if current_user.is_authenticated %}
+                <!-- User Management Quick Access -->
+                {% if current_user.is_admin() %}
+                <div class="user-mgmt-quick">
+                    <a href="{{ url_for('auth.admin_users') }}" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-users-cog"></i> User Management
+                    </a>
+                    <a href="{{ url_for('auth.create_user') }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-user-plus"></i> Add User
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Logged in User Info -->
+                <div class="user-info-top">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ current_user.username }}</div>
+                        <div class="user-role">
+                            {% if current_user.is_admin() %}
+                                <span class="badge bg-danger">Admin</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ current_user.role.replace('_', ' ').title() }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
     
     <div class="app-container">
