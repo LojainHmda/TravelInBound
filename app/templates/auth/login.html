@@ -9,7 +9,7 @@
     <style>
         :root {
             --primary-color: #ff8c00;
-            --secondary-color: #1a4fff;
+            --secondary-color: #ffb347;
             --light-orange: #FFB347;
             --gradient: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
         }
@@ -133,7 +133,8 @@
 
         .company-tagline {
             color: var(--primary-color);
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1.1rem;
         }
 
         .form-floating {
@@ -251,7 +252,7 @@
                     <img src="{{ url_for('static', filename='arabilogo.jpg') }}" alt="Arab Travel Group Logo">
                 </div>
                 <div class="company-name">Arab Travel Group</div>
-                <div class="company-tagline">Your Journey, Our Passion</div>
+                <div class="company-tagline">Travel Book Pro</div>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
