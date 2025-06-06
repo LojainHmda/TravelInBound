@@ -972,17 +972,19 @@ def supplier_costs():
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     
-    # Build query
-    query = SupplierPrepaymentLine.query
+    # Use a simpler query approach to avoid complex relationship errors
+    query = db.session.query(SupplierPrepaymentLine)
     
     # Apply filters
     if supplier_id:
-        # Find prepayment lines for supplier payments from this supplier
-        from app.models.supplier import SupplierPayment
-        supplier_payments = SupplierPayment.query.filter_by(supplier_id=int(supplier_id)).all()
-        payment_ids = [payment.id for payment in supplier_payments]
-        if payment_ids:
-            query = query.filter(SupplierPrepaymentLine.supplier_payment_id.in_(payment_ids))
+        # Filter by supplier through payment relationship
+        supplier_payment_ids = db.session.query(SupplierPayment.id).filter(
+            SupplierPayment.supplier_id == int(supplier_id)
+        ).subquery()
+        query = query.filter(SupplierPrepaymentLine.supplier_payment_id.in_(
+            db.session.query(supplier_payment_ids)
+        ))
+    
     if service_type:
         query = query.filter(SupplierPrepaymentLine.service_type == service_type)
     if payment_status:
