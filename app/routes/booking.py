@@ -1438,18 +1438,18 @@ def confirm_service(item_id):
     # Get all suppliers as base list
     all_suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
     
-    # Filter suppliers by service type if needed
+    # Filter suppliers by service type using the new multiple service types system
     service_type_suppliers = []
     if service_item.service_type == 'FLIGHT':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'AIRLINE' or not s.supplier_type]
+        service_type_suppliers = [s for s in all_suppliers if s.supports_service_type('FLIGHT') or not s.service_types]
     elif service_item.service_type == 'HOTEL':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'HOTEL' or not s.supplier_type]
+        service_type_suppliers = [s for s in all_suppliers if s.supports_service_type('HOTEL') or not s.service_types]
     elif service_item.service_type == 'TRANSPORT':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'TRANSPORT' or not s.supplier_type]
+        service_type_suppliers = [s for s in all_suppliers if s.supports_service_type('TRANSPORT') or not s.service_types]
     elif service_item.service_type == 'VISA':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'VISA' or not s.supplier_type]
+        service_type_suppliers = [s for s in all_suppliers if s.supports_service_type('VISA') or not s.service_types]
     elif service_item.service_type == 'INSURANCE':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'INSURANCE' or not s.supplier_type]
+        service_type_suppliers = [s for s in all_suppliers if s.supports_service_type('INSURANCE') or not s.service_types]
     else:
         service_type_suppliers = all_suppliers
     

@@ -1,8 +1,8 @@
 /* Main Color Variables */
 :root {
     --primary-color: #223A5E; /* Custom Dark Blue */
-    --secondary-color: #FFBF00; /* Yellow */
-    --button-color: #FFBF00; /* Yellow - main button color */
+    --secondary-color: #FFD700; /* Exact Yellow */
+    --button-color: #FFD700; /* Exact Yellow - main button color */
     --light-color: #ffffff; /* White */
     --text-dark: #223A5E; /* Custom Dark Blue for main text */
     --text-light: #f8f9fa;
@@ -10,15 +10,15 @@
     --background-color: #ffffff; /* White Background */
     --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
     --dashboard-text-color: #223A5E; /* Custom dark blue text for dashboard */
-    --dashboard-icon-color: #FFBF00; /* Yellow icons for dashboard */
+    --dashboard-icon-color: #FFD700; /* Exact Yellow icons for dashboard */
     --navy-blue: #223A5E; /* Custom Dark Blue color */
     --sidebar-bg: #223A5E; /* Custom Dark Blue sidebar background */
     
     /* Status Colors */
-    --status-request: #FFBF00; /* Yellow */
-    --status-invoice: #FFBF00; /* Yellow */
-    --status-in-progress: #FFBF00; /* Yellow */
-    --status-completed: #FFBF00; /* Yellow */
+    --status-request: #FFD700; /* Exact Yellow */
+    --status-invoice: #FFD700; /* Exact Yellow */
+    --status-in-progress: #FFD700; /* Exact Yellow */
+    --status-completed: #FFD700; /* Exact Yellow */
 }
 
 /* Smart Service Icon Badges */
@@ -89,13 +89,13 @@ p, span, div, label, td, th {
 }
 
 .btn-primary {
-    background-color: #FFBF00; /* Yellow */
-    border-color: #FFBF00;
+    background-color: #FFD700; /* Exact Yellow */
+    border-color: #FFD700;
     color: #000000; /* Black text */
 }
 
 .text-orange {
-    color: #FFBF00 !important;
+    color: #FFD700 !important;
 }
 
 .btn-primary:hover, .btn-primary:focus {
