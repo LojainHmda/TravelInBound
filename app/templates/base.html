@@ -313,39 +313,6 @@
         <!-- Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
-                <div class="user-info">
-                    {% if current_user.is_authenticated %}
-                        <div class="user-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <div class="user-details">
-                            <div class="user-name">{{ current_user.full_name }}</div>
-                            <div class="user-role">
-                                {% if current_user.is_admin() %}
-                                    <span class="badge bg-danger">Admin</span>
-                                {% else %}
-                                    <span class="badge bg-warning">{{ current_user.role.replace('_', ' ').title() }}</span>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-cog"></i>
-                            </button>
-                            <ul class="dropdown-menu">
-                                {% if current_user.is_admin() %}
-                                <li><a class="dropdown-item" href="{{ url_for('auth.admin_users') }}">
-                                    <i class="fas fa-users-cog"></i> User Management
-                                </a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a></li>
-                            </ul>
-                        </div>
-                    {% endif %}
-                </div>
                 <button id="toggle-sidebar" aria-label="Close Menu">
                     <i class="fas fa-times"></i>
                 </button>
