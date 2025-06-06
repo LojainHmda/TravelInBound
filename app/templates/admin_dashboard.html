@@ -7,12 +7,12 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="fas fa-shield-alt text-danger"></i> Admin Dashboard</h2>
+                <h2 style="color: #2c3e50; font-weight: 600; font-size: 1.8rem;"><i class="fas fa-shield-alt" style="color: #e74c3c;"></i> Admin Dashboard</h2>
                 <div class="btn-group">
-                    <a href="{{ url_for('auth.admin_users') }}" class="btn btn-primary">
+                    <a href="{{ url_for('auth.admin_users') }}" class="btn" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 10px 20px; border-radius: 6px; text-decoration: none; margin-right: 8px; font-weight: 500;">
                         <i class="fas fa-users"></i> Manage Users
                     </a>
-                    <a href="{{ url_for('finance.dashboard') }}" class="btn btn-success">
+                    <a href="{{ url_for('finance.dashboard') }}" class="btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
                         <i class="fas fa-chart-line"></i> Finance Dashboard
                     </a>
                 </div>
@@ -21,15 +21,15 @@
             <!-- System Statistics -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card text-white" style="background-color: #1a237e;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
+                    <div class="card text-white" style="background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 8px; border: none;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Total Bookings</h5>
-                                    <h2>{{ stats.total_bookings }}</h2>
+                                    <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Total Bookings</h6>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_bookings }}</h2>
                                 </div>
-                                <div class="align-self-center">
-                                    <i class="fas fa-calendar-check fa-2x" style="color: #FFC72C;"></i>
+                                <div class="text-end">
+                                    <i class="fas fa-calendar-check" style="color: #f39c12; font-size: 2rem;"></i>
                                 </div>
                             </div>
                         </div>
@@ -37,15 +37,15 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-white" style="background-color: #28a745;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
+                    <div class="card text-white" style="background: linear-gradient(135deg, #27ae60, #2ecc71); border-radius: 8px; border: none;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Total Customers</h5>
-                                    <h2>{{ stats.total_customers }}</h2>
+                                    <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Total Customers</h6>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_customers }}</h2>
                                 </div>
-                                <div class="align-self-center">
-                                    <i class="fas fa-users fa-2x" style="color: #FFC72C;"></i>
+                                <div class="text-end">
+                                    <i class="fas fa-users" style="color: #f39c12; font-size: 2rem;"></i>
                                 </div>
                             </div>
                         </div>
@@ -53,15 +53,15 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background-color: #FFC72C;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
+                    <div class="card text-dark" style="background: linear-gradient(135deg, #f39c12, #e67e22); border-radius: 8px; border: none;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Total Users</h5>
-                                    <h2>{{ stats.total_users }}</h2>
+                                    <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">Total Users</h6>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_users }}</h2>
                                 </div>
-                                <div class="align-self-center">
-                                    <i class="fas fa-user-cog fa-2x" style="color: #1a237e;"></i>
+                                <div class="text-end">
+                                    <i class="fas fa-user-cog" style="color: #2c3e50; font-size: 2rem;"></i>
                                 </div>
                             </div>
                         </div>
@@ -69,15 +69,15 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background-color: #17a2b8;">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between">
+                    <div class="card text-white" style="background: linear-gradient(135deg, #3498db, #2980b9); border-radius: 8px; border: none;">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h5 class="card-title">Active Users</h5>
-                                    <h2>{{ stats.active_users }}</h2>
+                                    <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; opacity: 0.9;">Active Users</h6>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.active_users }}</h2>
                                 </div>
-                                <div class="align-self-center">
-                                    <i class="fas fa-user-check fa-2x" style="color: #FFC72C;"></i>
+                                <div class="text-end">
+                                    <i class="fas fa-user-check" style="color: #f39c12; font-size: 2rem;"></i>
                                 </div>
                             </div>
                         </div>
@@ -88,28 +88,28 @@
             <!-- Quick Actions -->
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5><i class="fas fa-bolt"></i> Quick Actions</h5>
+                    <div class="card" style="border: none; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-bottom: 1px solid #dee2e6; border-radius: 8px 8px 0 0;">
+                            <h5 style="color: #2c3e50; font-weight: 600; margin: 0;"><i class="fas fa-bolt" style="color: #f39c12;"></i> Quick Actions</h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body" style="padding: 2rem;">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('auth.create_user') }}" class="btn btn-outline-primary w-100">
-                                        <i class="fas fa-user-plus"></i><br>
-                                        <small>Create New User</small>
+                                    <a href="{{ url_for('auth.create_user') }}" class="btn w-100" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
+                                        <i class="fas fa-user-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                                        <div style="font-weight: 500;">Create New User</div>
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-outline-success w-100">
-                                        <i class="fas fa-plus-circle"></i><br>
-                                        <small>Create Booking</small>
+                                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn w-100" style="background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
+                                        <i class="fas fa-plus-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                                        <div style="font-weight: 500;">Create Booking</div>
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('customer.new_customer') }}" class="btn btn-outline-info w-100">
-                                        <i class="fas fa-user-plus"></i><br>
-                                        <small>Add Customer</small>
+                                    <a href="{{ url_for('customer.new_customer') }}" class="btn w-100" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
+                                        <i class="fas fa-user-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
+                                        <div style="font-weight: 500;">Add Customer</div>
                                     </a>
                                 </div>
                             </div>
