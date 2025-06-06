@@ -1978,7 +1978,6 @@ def analyze_ticket_api():
         return jsonify({'error': str(e)}), 500
 
 @booking_bp.route('/api/scan-hotel-voucher', methods=['POST'])
-@csrf.exempt
 def scan_hotel_voucher():
     """API endpoint for analyzing hotel voucher images with AI"""
     try:
