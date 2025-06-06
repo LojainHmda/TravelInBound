@@ -26,13 +26,11 @@ def login():
                 login_user(user, remember=True)
                 next_page = request.args.get('next')
                 
-                # Redirect based on role
+                # Redirect to home page for all users
                 if next_page:
                     return redirect(next_page)
-                elif user.is_admin():
-                    return redirect(url_for('main.admin_dashboard'))
                 else:
-                    return redirect(url_for('main.dashboard'))
+                    return redirect(url_for('main.index'))
             else:
                 flash('Your account has been deactivated. Please contact an administrator.', 'error')
         else:
