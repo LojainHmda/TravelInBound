@@ -11,14 +11,15 @@
             --primary-color: #ff8c00;
             --secondary-color: #ffb347;
             --light-orange: #FFB347;
-            --gradient: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+            --light-grey: #f5f5f5;
+            --yellow: #ffd700;
         }
 
         body {
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            background: var(--gradient);
+            background: var(--light-grey);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
         }
@@ -35,7 +36,8 @@
 
         .floating-icon {
             position: absolute;
-            color: rgba(255, 140, 0, 0.3);
+            color: var(--yellow);
+            opacity: 0.4;
             animation: float 6s ease-in-out infinite;
         }
 
@@ -234,15 +236,17 @@
     <!-- Floating Travel Icons -->
     <div class="floating-icons">
         <i class="fas fa-plane floating-icon plane" style="top: 10%; left: 15%;"></i>
-        <i class="fas fa-passport floating-icon passport" style="top: 20%; right: 20%;"></i>
-        <i class="fas fa-id-card floating-icon visa" style="top: 35%; left: 10%;"></i>
-        <i class="fas fa-suitcase-rolling floating-icon suitcase" style="top: 50%; right: 15%;"></i>
+        <i class="fas fa-ship floating-icon cruise" style="top: 20%; right: 20%; font-size: 2.2rem; animation-duration: 9s;"></i>
+        <i class="fas fa-plane floating-icon plane" style="top: 35%; left: 10%;"></i>
+        <i class="fas fa-anchor floating-icon cruise" style="top: 50%; right: 15%; font-size: 1.8rem; animation-duration: 7s;"></i>
         <i class="fas fa-plane floating-icon plane" style="top: 65%; left: 20%;"></i>
-        <i class="fas fa-passport floating-icon passport" style="top: 75%; right: 25%;"></i>
-        <i class="fas fa-id-card floating-icon visa" style="top: 85%; left: 25%;"></i>
-        <i class="fas fa-map-marked-alt floating-icon" style="top: 15%; left: 45%; font-size: 1.4rem; animation-duration: 11s;"></i>
-        <i class="fas fa-globe-americas floating-icon" style="top: 40%; right: 40%; font-size: 1.7rem; animation-duration: 6s;"></i>
-        <i class="fas fa-plane floating-icon plane" style="top: 60%; left: 50%;"></i>
+        <i class="fas fa-ship floating-icon cruise" style="top: 75%; right: 25%; font-size: 2rem; animation-duration: 8s;"></i>
+        <i class="fas fa-plane floating-icon plane" style="top: 85%; left: 25%;"></i>
+        <i class="fas fa-sailboat floating-icon cruise" style="top: 15%; left: 45%; font-size: 1.6rem; animation-duration: 11s;"></i>
+        <i class="fas fa-plane floating-icon plane" style="top: 40%; right: 40%;"></i>
+        <i class="fas fa-ship floating-icon cruise" style="top: 60%; left: 50%; font-size: 1.9rem; animation-duration: 10s;"></i>
+        <i class="fas fa-plane floating-icon plane" style="top: 30%; right: 10%;"></i>
+        <i class="fas fa-anchor floating-icon cruise" style="top: 90%; right: 35%; font-size: 1.5rem; animation-duration: 6s;"></i>
     </div>
 
     <div class="login-container">
