@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                              document.querySelector('input[name="csrf_token"]')?.value || '';
             
             // Send to backend
-            const response = await fetch('/api/scan-hotel-voucher', {
+            const response = await fetch('/booking/api/scan-hotel-voucher', {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken
