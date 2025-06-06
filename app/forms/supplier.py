@@ -1,22 +1,21 @@
 from datetime import date
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Email, Optional, Length, NumberRange
 
 class SupplierForm(FlaskForm):
     """Form for creating and editing suppliers"""
     name = StringField('Supplier Name', validators=[DataRequired(), Length(min=3, max=100)])
     code = StringField('Supplier Code', validators=[DataRequired(), Length(min=2, max=20)])
-    supplier_type = SelectField('Supplier Type', choices=[
-        ('AIRLINE', 'Airline'),
-        ('HOTEL', 'Hotel'),
-        ('TRANSPORT', 'Transport'),
-        ('VISA', 'Visa Service'),
-        ('INSURANCE', 'Insurance'),
-        ('TOUR_OPERATOR', 'Tour Operator'),
-        ('OTHER', 'Other')
-    ])
+    # Multiple service types using checkboxes
+    service_flight = BooleanField('Flight Services')
+    service_hotel = BooleanField('Hotel Services')
+    service_transport = BooleanField('Transport Services')
+    service_visa = BooleanField('Visa Services')
+    service_insurance = BooleanField('Insurance Services')
+    service_tour = BooleanField('Tour Operator Services')
+    service_other = BooleanField('Other Services')
     email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
     website = StringField('Website', validators=[Optional(), Length(max=100)])

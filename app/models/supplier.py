@@ -33,7 +33,8 @@ class Supplier(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), nullable=False, unique=True)  # Short supplier code like "BA" for British Airways
-    supplier_type = db.Column(db.String(20))  # AIRLINE, HOTEL, TRANSPORT, VISA, INSURANCE
+    # Service types will be stored as comma-separated values or use SupplierService relationship
+    service_types = db.Column(db.Text)  # JSON string of service types: ["HOTEL", "FLIGHT", "TRANSPORT"]
     
     # Contact information
     email = db.Column(db.String(120))
@@ -71,6 +72,26 @@ class Supplier(db.Model):
         """Return formatted full address"""
         address_parts = [part for part in [self.address, self.city, self.country] if part]
         return ', '.join(address_parts) if address_parts else 'No address provided'
+    
+    def get_service_types_list(self):
+        """Return list of service types this supplier provides"""
+        if not self.service_types:
+            return []
+        try:
+            import json
+            return json.loads(self.service_types)
+        except:
+            # Fallback to comma-separated values
+            return [s.strip() for s in self.service_types.split(',') if s.strip()]
+    
+    def set_service_types(self, service_types_list):
+        """Set service types from a list"""
+        import json
+        self.service_types = json.dumps(service_types_list)
+    
+    def supports_service_type(self, service_type):
+        """Check if supplier supports a specific service type"""
+        return service_type in self.get_service_types_list()
     
     def get_unpaid_balance(self):
         """Calculate outstanding balance for this supplier"""

@@ -911,10 +911,26 @@ def new_supplier():
     
     if form.validate_on_submit():
         try:
+            # Collect selected service types from checkboxes
+            service_types = []
+            if form.service_flight.data:
+                service_types.append('FLIGHT')
+            if form.service_hotel.data:
+                service_types.append('HOTEL')
+            if form.service_transport.data:
+                service_types.append('TRANSPORT')
+            if form.service_visa.data:
+                service_types.append('VISA')
+            if form.service_insurance.data:
+                service_types.append('INSURANCE')
+            if form.service_tour.data:
+                service_types.append('TOUR')
+            if form.service_other.data:
+                service_types.append('OTHER')
+            
             supplier = Supplier(
                 name=form.name.data,
                 code=form.code.data,
-                supplier_type=form.supplier_type.data,
                 contact_person=form.contact_person.data,
                 email=form.email.data,
                 phone=form.phone.data,
@@ -929,6 +945,9 @@ def new_supplier():
                 tax_number=form.tax_number.data,
                 notes=form.notes.data
             )
+            
+            # Set service types using the new method
+            supplier.set_service_types(service_types)
             
             db.session.add(supplier)
             db.session.commit()

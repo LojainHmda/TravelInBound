@@ -62,9 +62,52 @@
                     <small class="text-muted">Unique code for this supplier</small>
                 </div>
                 
-                <div class="col-md-6">
-                    <label for="supplier_type" class="form-label">Supplier Type</label>
-                    {{ form.supplier_type(class="form-select") }}
+                <div class="col-12">
+                    <label class="form-label">Service Types Offered</label>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_flight(class="form-check-input") }}
+                                {{ form.service_flight.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_hotel(class="form-check-input") }}
+                                {{ form.service_hotel.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_transport(class="form-check-input") }}
+                                {{ form.service_transport.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_visa(class="form-check-input") }}
+                                {{ form.service_visa.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_insurance(class="form-check-input") }}
+                                {{ form.service_insurance.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_tour(class="form-check-input") }}
+                                {{ form.service_tour.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                {{ form.service_other(class="form-check-input") }}
+                                {{ form.service_other.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-6">
