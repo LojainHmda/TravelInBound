@@ -22,8 +22,8 @@ class SupplierPrepaymentLine(db.Model):
     payment_status = db.Column(db.String(20), default='PENDING')
     invoice_reference = db.Column(db.String(100), nullable=True)
     
-    # Simple relationship without eager loading to avoid circular dependencies
-    service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='select')
+    # Only one relationship to avoid circular dependencies
+    service_item = db.relationship('ServiceItem', backref='prepayment_lines', lazy='joined')
     
     def __repr__(self):
         return f'<SupplierPrepaymentLine {self.id}: ${self.amount:.2f} for Booking #{self.booking_id}>'
@@ -33,8 +33,7 @@ class Supplier(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), nullable=False, unique=True)  # Short supplier code like "BA" for British Airways
-    # Service types will be stored as comma-separated values or use SupplierService relationship
-    service_types = db.Column(db.Text)  # JSON string of service types: ["HOTEL", "FLIGHT", "TRANSPORT"]
+    supplier_type = db.Column(db.String(20))  # AIRLINE, HOTEL, TRANSPORT, VISA, INSURANCE
     
     # Contact information
     email = db.Column(db.String(120))
@@ -73,26 +72,6 @@ class Supplier(db.Model):
         address_parts = [part for part in [self.address, self.city, self.country] if part]
         return ', '.join(address_parts) if address_parts else 'No address provided'
     
-    def get_service_types_list(self):
-        """Return list of service types this supplier provides"""
-        if not self.service_types:
-            return []
-        try:
-            import json
-            return json.loads(self.service_types)
-        except:
-            # Fallback to comma-separated values
-            return [s.strip() for s in self.service_types.split(',') if s.strip()]
-    
-    def set_service_types(self, service_types_list):
-        """Set service types from a list"""
-        import json
-        self.service_types = json.dumps(service_types_list)
-    
-    def supports_service_type(self, service_type):
-        """Check if supplier supports a specific service type"""
-        return service_type in self.get_service_types_list()
-    
     def get_unpaid_balance(self):
         """Calculate outstanding balance for this supplier"""
         # Sum of all confirmation costs
@@ -125,7 +104,11 @@ class SupplierService(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
-        return f'<SupplierService {self.service_name} (ID: {self.id})>'
+        try:
+            supplier_name = self.supplier.name
+        except:
+            supplier_name = "Unknown"
+        return f'<SupplierService {self.service_name} for {supplier_name}>'
 
 
 class SupplierPayment(db.Model):
@@ -146,8 +129,8 @@ class SupplierPayment(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='select')
-    prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='payment', lazy='dynamic', cascade="all, delete-orphan")
+    service_confirmation = db.relationship('ServiceConfirmation', backref='payments', lazy='joined')
+    prepayment_lines = db.relationship('SupplierPrepaymentLine', backref='payment', lazy='joined', cascade="all, delete-orphan")
     
     @property
     def get_confirmation_cost(self):
@@ -195,4 +178,8 @@ class SupplierPayment(db.Model):
         return "Pending"
     
     def __repr__(self):
-        return f'<SupplierPayment ${self.amount:.2f} (ID: {self.id})>'
+        try:
+            supplier_name = self.supplier.name
+        except:
+            supplier_name = "Unknown"
+        return f'<SupplierPayment ${self.amount:.2f} to {supplier_name}>'

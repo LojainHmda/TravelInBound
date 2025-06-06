@@ -911,26 +911,10 @@ def new_supplier():
     
     if form.validate_on_submit():
         try:
-            # Collect selected service types from checkboxes
-            service_types = []
-            if form.service_flight.data:
-                service_types.append('FLIGHT')
-            if form.service_hotel.data:
-                service_types.append('HOTEL')
-            if form.service_transport.data:
-                service_types.append('TRANSPORT')
-            if form.service_visa.data:
-                service_types.append('VISA')
-            if form.service_insurance.data:
-                service_types.append('INSURANCE')
-            if form.service_tour.data:
-                service_types.append('TOUR')
-            if form.service_other.data:
-                service_types.append('OTHER')
-            
             supplier = Supplier(
                 name=form.name.data,
                 code=form.code.data,
+                supplier_type=form.supplier_type.data,
                 contact_person=form.contact_person.data,
                 email=form.email.data,
                 phone=form.phone.data,
@@ -945,9 +929,6 @@ def new_supplier():
                 tax_number=form.tax_number.data,
                 notes=form.notes.data
             )
-            
-            # Set service types using the new method
-            supplier.set_service_types(service_types)
             
             db.session.add(supplier)
             db.session.commit()
@@ -972,37 +953,37 @@ def supplier_costs():
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     
-    # Simple approach without complex joins to avoid relationship errors
-    prepayment_lines = SupplierPrepaymentLine.query.all()
+    # Build query
+    query = SupplierPrepaymentLine.query
     
-    # Apply filters in Python to avoid complex SQL joins
+    # Apply filters
     if supplier_id:
+        # Find prepayment lines for supplier payments from this supplier
+        from app.models.supplier import SupplierPayment
         supplier_payments = SupplierPayment.query.filter_by(supplier_id=int(supplier_id)).all()
-        payment_ids = [p.id for p in supplier_payments]
-        prepayment_lines = [line for line in prepayment_lines if line.supplier_payment_id in payment_ids]
-    
+        payment_ids = [payment.id for payment in supplier_payments]
+        if payment_ids:
+            query = query.filter(SupplierPrepaymentLine.supplier_payment_id.in_(payment_ids))
     if service_type:
-        prepayment_lines = [line for line in prepayment_lines if line.service_type == service_type]
-    
+        query = query.filter(SupplierPrepaymentLine.service_type == service_type)
     if payment_status:
-        prepayment_lines = [line for line in prepayment_lines if line.payment_status == payment_status]
-    
+        query = query.filter(SupplierPrepaymentLine.payment_status == payment_status)
     if from_date:
         try:
             from_date_obj = datetime.strptime(from_date, '%Y-%m-%d').date()
-            prepayment_lines = [line for line in prepayment_lines if line.created_at.date() >= from_date_obj]
+            query = query.filter(SupplierPrepaymentLine.created_at >= from_date_obj)
         except (ValueError, TypeError):
             flash('Invalid from date format', 'warning')
-    
     if to_date:
         try:
             to_date_obj = datetime.strptime(to_date, '%Y-%m-%d').date()
-            prepayment_lines = [line for line in prepayment_lines if line.created_at.date() <= to_date_obj]
+            to_date_obj = datetime.combine(to_date_obj, datetime.max.time())
+            query = query.filter(SupplierPrepaymentLine.created_at <= to_date_obj)
         except (ValueError, TypeError):
             flash('Invalid to date format', 'warning')
     
-    # Sort by date descending
-    prepayment_lines = sorted(prepayment_lines, key=lambda x: x.created_at, reverse=True)
+    # Order by date descending
+    prepayment_lines = query.order_by(SupplierPrepaymentLine.created_at.desc()).all()
     
     # Calculate total amount
     total_amount = sum(line.amount for line in prepayment_lines)
