@@ -4,14 +4,18 @@
 
 {% block content %}
 <!-- User Info Bar -->
-<div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-    <div style="background: linear-gradient(135deg, #FFD700, #FFA500); padding: 8px 16px; border-radius: 20px; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); font-size: 0.8rem; color: #2c3e50; font-weight: 600;">
-        <i class="fas fa-user-circle me-1"></i>
-        {{ current_user.username }} ({{ current_user.role.title() }})
-        <span style="margin-left: 10px;">
-            <i class="fas fa-clock me-1"></i>
-            <span id="current-time"></span>
-        </span>
+<div style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; padding: 12px 0; margin-bottom: 0;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div style="color: #6c757d; font-size: 0.9rem;">
+                <i class="fas fa-user-circle me-2"></i>
+                Logged in as: <strong>{{ current_user.username }}</strong> ({{ current_user.role.title() }})
+            </div>
+            <div style="color: #6c757d; font-size: 0.9rem;">
+                <i class="fas fa-clock me-1"></i>
+                <span id="current-time"></span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -21,10 +25,10 @@
             <div class="d-flex justify-content-between align-items-center mb-4 mt-4">
                 <h2 style="color: #2c3e50; font-weight: 600; font-size: 1.8rem;"><i class="fas fa-shield-alt" style="color: #e74c3c;"></i> Admin Dashboard</h2>
                 <div class="btn-group">
-                    <a href="{{ url_for('auth.admin_users') }}" class="btn" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #2c3e50; border: none; padding: 10px 20px; border-radius: 15px; text-decoration: none; margin-right: 8px; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <a href="{{ url_for('auth.admin_users') }}" class="btn" style="background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 6px; text-decoration: none; margin-right: 8px; font-weight: 500;">
                         <i class="fas fa-users"></i> Manage Users
                     </a>
-                    <a href="{{ url_for('finance.dashboard') }}" class="btn" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #2c3e50; border: none; padding: 10px 20px; border-radius: 15px; text-decoration: none; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <a href="{{ url_for('finance.dashboard') }}" class="btn" style="background: #f39c12; color: white; border: none; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">
                         <i class="fas fa-chart-line"></i> Finance Dashboard
                     </a>
                 </div>
@@ -33,12 +37,12 @@
             <!-- System Statistics -->
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <div class="card text-dark" style="background: #f39c12; border-radius: 8px; border: none;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">Total Bookings</h6>
-                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">{{ stats.total_bookings }}</h2>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_bookings }}</h2>
                                 </div>
                                 <div class="text-end">
                                     <i class="fas fa-calendar-check" style="color: #2c3e50; font-size: 2rem;"></i>
@@ -49,12 +53,12 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <div class="card text-dark" style="background: #f39c12; border-radius: 8px; border: none;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">Total Customers</h6>
-                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">{{ stats.total_customers }}</h2>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_customers }}</h2>
                                 </div>
                                 <div class="text-end">
                                     <i class="fas fa-users" style="color: #2c3e50; font-size: 2rem;"></i>
@@ -65,12 +69,12 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <div class="card text-dark" style="background: #f39c12; border-radius: 8px; border: none;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">Total Users</h6>
-                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">{{ stats.total_users }}</h2>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.total_users }}</h2>
                                 </div>
                                 <div class="text-end">
                                     <i class="fas fa-user-cog" style="color: #2c3e50; font-size: 2rem;"></i>
@@ -81,12 +85,12 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <div class="card text-dark" style="background: linear-gradient(135deg, #FFD700, #FFA500); border-radius: 15px; border: none; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                    <div class="card text-dark" style="background: #f39c12; border-radius: 8px; border: none;">
                         <div class="card-body p-4">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="card-title text-uppercase mb-2" style="font-size: 0.8rem; font-weight: 600; color: rgba(0,0,0,0.7);">Active Users</h6>
-                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700; color: #2c3e50;">{{ stats.active_users }}</h2>
+                                    <h2 class="mb-0" style="font-size: 2.5rem; font-weight: 700;">{{ stats.active_users }}</h2>
                                 </div>
                                 <div class="text-end">
                                     <i class="fas fa-user-check" style="color: #2c3e50; font-size: 2rem;"></i>
@@ -107,21 +111,21 @@
                         <div class="card-body" style="padding: 2rem;">
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('auth.create_user') }}" class="btn w-100" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #2c3e50; border: none; padding: 1.5rem; border-radius: 15px; text-decoration: none; transition: all 0.3s ease; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                                    <a href="{{ url_for('auth.create_user') }}" class="btn w-100" style="background: #f39c12; color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
                                         <i class="fas fa-user-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-                                        <div style="font-weight: 600;">Create New User</div>
+                                        <div style="font-weight: 500;">Create New User</div>
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn w-100" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #2c3e50; border: none; padding: 1.5rem; border-radius: 15px; text-decoration: none; transition: all 0.3s ease; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                                    <a href="{{ url_for('booking.new_booking_detail') }}" class="btn w-100" style="background: #f39c12; color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
                                         <i class="fas fa-plus-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-                                        <div style="font-weight: 600;">Create Booking</div>
+                                        <div style="font-weight: 500;">Create Booking</div>
                                     </a>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <a href="{{ url_for('customer.new_customer') }}" class="btn w-100" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #2c3e50; border: none; padding: 1.5rem; border-radius: 15px; text-decoration: none; transition: all 0.3s ease; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3);">
+                                    <a href="{{ url_for('customer.new_customer') }}" class="btn w-100" style="background: #f39c12; color: white; border: none; padding: 1.5rem; border-radius: 8px; text-decoration: none; transition: all 0.3s ease;">
                                         <i class="fas fa-user-plus" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block;"></i>
-                                        <div style="font-weight: 600;">Add Customer</div>
+                                        <div style="font-weight: 500;">Add Customer</div>
                                     </a>
                                 </div>
                             </div>
