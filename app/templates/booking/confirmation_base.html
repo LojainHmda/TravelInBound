@@ -74,11 +74,11 @@
                     <h5 class="card-title text-primary">Supplier Cost Tracking</h5>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label for="cost_amount" class="form-label">Cost Amount (Supplier)</label>
+                            <label for="cost_amount" class="form-label">Cost Amount (Supplier) <span class="text-muted">(Optional)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" class="form-control" id="cost_amount" name="cost_amount" 
-                                    value="{{ confirmation_data.cost_amount|default('0.00') }}" step="0.01" min="0" required>
+                                    value="{{ confirmation_data.cost_amount|default('0.00') }}" step="0.01" min="0">
                             </div>
                             <small class="text-muted">The amount you pay to the supplier</small>
                         </div>
@@ -123,15 +123,11 @@
                             <i class="fas fa-save"></i> Save Request
                         </button>
                         
-                        {% if confirmation_doc %}
-                        <button type="submit" name="action" value="confirm" class="btn btn-primary">
-                            <i class="fas fa-check-circle"></i> Update Confirmation
+                        <!-- Confirmation button with popup dialog -->
+                        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#confirmationModal">
+                            <i class="fas fa-check-circle"></i> 
+                            {% if confirmation_doc %}Update Confirmation{% else %}Confirm Service{% endif %}
                         </button>
-                        {% else %}
-                        <button type="submit" name="action" value="confirm" class="btn btn-primary">
-                            <i class="fas fa-check-circle"></i> Confirm Service
-                        </button>
-                        {% endif %}
                         
                         <!-- Link to supplier costs page -->
                         <a href="{{ url_for('confirmation.add_supplier_confirmation', item_id=service_item.id) }}" class="btn btn-outline-info ms-2">
@@ -150,6 +146,62 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="confirmationModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Service Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> By confirming this service, you are marking it as complete and ready for invoicing.
+                </div>
+                
+                <p class="mb-3">Please verify the following details before confirming:</p>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        All service details are accurate and complete
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Supplier information has been verified
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Cost information is correct (if provided)
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Service is ready for customer delivery
+                    </li>
+                </ul>
+                
+                <div class="bg-light p-3 rounded mt-3">
+                    <small class="text-muted">
+                        <strong>Note:</strong> Once confirmed, this service item will be marked as complete and 
+                        may trigger automatic supplier payment records if cost information is provided.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="confirmService()">
+                    <i class="fas fa-check-circle me-1"></i>Yes, Confirm Service
+                </button>
+            </div>
         </div>
     </div>
 </div>

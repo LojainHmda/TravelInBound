@@ -78,6 +78,48 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+// Function to handle confirmation modal submit
+function confirmService() {
+    console.log('Confirm service function called');
+    
+    // Get the form
+    const form = document.querySelector('form');
+    if (!form) {
+        console.error('Form not found');
+        return;
+    }
+    
+    // Restore required attributes for validation
+    const originalRequiredFields = document.querySelectorAll('[data-originally-required]');
+    originalRequiredFields.forEach(field => {
+        field.setAttribute('required', 'required');
+    });
+    
+    // Create a hidden input for the confirm action
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'confirm';
+    form.appendChild(actionInput);
+    
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Submit the form
+    form.submit();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark originally required fields for later restoration
+    const requiredFields = document.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+        field.setAttribute('data-originally-required', 'true');
+    });
     
     // Initialize any date pickers
     const datePickers = document.querySelectorAll('input[type="date"]');
