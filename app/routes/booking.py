@@ -1320,18 +1320,20 @@ def confirm_service(item_id):
                 flash('Moving to next service item for confirmation', 'info')
                 return redirect(url_for('booking.confirm_service', item_id=next_item.id))
         
-        # Check if all items are now confirmed regardless of the action
-        pending_items = ServiceItem.query.filter(
-            ServiceItem.booking_id == booking_id,
-            ServiceItem.status != STATUS_CONFIRMED
-        ).count()
-        
-        if pending_items == 0:
-            # All service items are confirmed, update booking status
-            booking = Booking.query.get(booking_id)
-            booking.status = STATUS_CONFIRMED
-            db.session.commit()
-            flash('All services confirmed! Booking is now confirmed.', 'success')
+        # Only check for booking completion if we actually confirmed an item (not for save_request)
+        if action == 'confirm':
+            # Check if all items are now confirmed
+            pending_items = ServiceItem.query.filter(
+                ServiceItem.booking_id == booking_id,
+                ServiceItem.status != STATUS_CONFIRMED
+            ).count()
+            
+            if pending_items == 0:
+                # All service items are confirmed, update booking status
+                booking = Booking.query.get(booking_id)
+                booking.status = STATUS_CONFIRMED
+                db.session.commit()
+                flash('All services confirmed! Booking is now confirmed.', 'success')
         
         # Default behavior: redirect to the booking details page
         return redirect(url_for('booking.details', booking_id=booking_id))
