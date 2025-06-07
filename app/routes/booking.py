@@ -3,6 +3,7 @@ import json
 import sys
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+from flask_login import login_required, current_user
 import os
 import base64
 from werkzeug.utils import secure_filename
@@ -933,6 +934,7 @@ def cancel_service_item(item_id):
     return redirect(url_for('booking.details', booking_id=booking.id))
 
 @booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
+@login_required
 def confirm_service(item_id):
     """Confirm details for a specific service item with a dedicated form"""
     import sys
