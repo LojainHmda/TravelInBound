@@ -634,10 +634,10 @@ p, span, div, label, td, th {
 }
 
 .status-step.completed .status-circle {
-    background-color: #28a745;
-    color: white;
-    border: 3px solid #28a745;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    background-color: #fffacd;
+    color: #223A5E;
+    border: 3px solid #f0e68c;
+    box-shadow: 0 4px 12px rgba(240, 230, 140, 0.4);
 }
 
 .status-step:not(.active):not(.completed) .status-circle {
@@ -678,8 +678,8 @@ p, span, div, label, td, th {
 }
 
 .status-connector.active {
-    background-color: #28a745;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    background-color: #f0e68c;
+    box-shadow: 0 2px 8px rgba(240, 230, 140, 0.4);
 }
 
 /* Responsive adjustments */
