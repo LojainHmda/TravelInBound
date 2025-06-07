@@ -736,19 +736,9 @@
                                     <td>${{ "%.2f"|format(item.amount) }}</td>
                                     <td class="align-middle text-center">
                                         {% if item.is_cancelled %}
-                                            <span class="badge" style="background-color: #FFBF00; color: black;">Cancelled</span>
+                                            <span class="badge" style="background-color: #dc3545; color: white;">Cancelled</span>
                                         {% else %}
-                                            {% if item.status == 'REQUEST' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Request</span>
-                                            {% elif item.status == 'BOOKED' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Booked</span>
-                                            {% elif item.status == 'IN_PROGRESS' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">In Progress</span>
-                                            {% elif item.status == 'CONFIRMED' %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">Confirmed</span>
-                                            {% else %}
-                                                <span class="badge" style="background-color: #FFBF00; color: black;">{{ item.status }}</span>
-                                            {% endif %}
+                                            <span class="badge" style="background-color: #20c997; color: white;">Active</span>
                                         {% endif %}
                                     </td>
                                     <td class="align-middle text-center">
