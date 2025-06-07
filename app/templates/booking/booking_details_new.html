@@ -571,9 +571,15 @@
                                                     <i class="fas fa-lock me-1"></i>Locked
                                                 </button>
                                             {% else %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;">
-                                                    <i class="fas fa-cogs me-1"></i>Confirm
-                                                </a>
+                                                <!-- Save Request Button -->
+                                                <button type="button" class="btn btn-sm me-1" style="background-color: #ffc107; color: #000; border: 1px solid #ffc107; font-size: 0.75rem; padding: 4px 8px;" onclick="saveServiceRequest({{ item.id }})">
+                                                    <i class="fas fa-save me-1"></i>Save Request
+                                                </button>
+                                                
+                                                <!-- Popup Confirm Button -->
+                                                <button type="button" class="btn btn-sm me-1" style="background-color: #28a745; color: white; border: 1px solid #28a745; font-size: 0.75rem; padding: 4px 8px;" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ item.id }}">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </button>
                                             {% endif %}
                                             
                                             <!-- DELETE button: Only for items that are NOT confirmed AND NOT invoiced -->
@@ -1882,5 +1888,95 @@ function toggleCreditForm() {
 </div>
 {% endif %}
 {% endfor %}
+
+<!-- Confirmation Modals for Service Items -->
+{% for item in booking.service_items %}
+{% if item.status != 'CONFIRMED' %}
+<div class="modal fade" id="confirmModal-{{ item.id }}" tabindex="-1" aria-labelledby="confirmModalLabel-{{ item.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="confirmModalLabel-{{ item.id }}">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm {{ item.service_type|capitalize }} Service
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> By confirming this service, you are marking it as complete and ready for invoicing.
+                </div>
+                
+                <div class="service-summary p-3 mb-3 border rounded bg-light">
+                    <div><strong>Type:</strong> {{ item.service_type }}</div>
+                    <div><strong>Description:</strong> {{ item.description }}</div>
+                    <div><strong>Amount:</strong> ${{ "%.2f"|format(item.amount) }}</div>
+                    <div><strong>Date Range:</strong> {{ item.start_date.strftime('%d %b %Y') }} - {{ item.end_date.strftime('%d %b %Y') }}</div>
+                </div>
+                
+                <p class="mb-3">Please verify the following details before confirming:</p>
+                
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        All service details are accurate and complete
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Supplier information has been verified
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Cost information is correct (if provided)
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        Service is ready for customer delivery
+                    </li>
+                </ul>
+                
+                <div class="bg-light p-3 rounded mt-3">
+                    <small class="text-muted">
+                        <strong>Note:</strong> Once confirmed, this service item will be marked as complete and 
+                        may trigger automatic supplier payment records if cost information is provided.
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmServiceFromModal({{ item.id }})">
+                    <i class="fas fa-check-circle me-1"></i>Yes, Confirm Service
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<script>
+// Function to handle "Save Request" action
+function saveServiceRequest(serviceId) {
+    console.log('Save Service Request for ID:', serviceId);
+    // Redirect to the confirmation page with save_request action
+    window.location.href = `/booking/confirm-service/${serviceId}?action=save_request`;
+}
+
+// Function to handle popup confirmation
+function confirmServiceFromModal(serviceId) {
+    console.log('Confirm service from modal for ID:', serviceId);
+    
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById(`confirmModal-${serviceId}`));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Redirect to the confirmation page with confirm action
+    window.location.href = `/booking/confirm-service/${serviceId}?action=confirm`;
+}
+</script>
 
 {% endblock %}
