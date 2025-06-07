@@ -486,12 +486,59 @@
 </style>
 
 <div class="container-fluid">
-    <!-- Header Bar - Only show for existing bookings -->
-    {% if booking %}
-
-    {% endif %}
-    
-
+    <!-- Status Flow Bar - Show for all booking pages -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="status-flow-container">
+                <div class="status-flow-bar">
+                    <!-- Step 1: Request -->
+                    <div class="status-step {% if not booking or booking.status == 'REQUEST' %}active{% elif booking and booking.status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="step-circle">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="step-label">Request</div>
+                        <div class="step-sublabel">Initial submission</div>
+                    </div>
+                    
+                    <!-- Connector Line 1 -->
+                    <div class="status-connector {% if booking and booking.status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}"></div>
+                    
+                    <!-- Step 2: In Progress -->
+                    <div class="status-step {% if booking and booking.status == 'IN_PROGRESS' %}active{% elif booking and booking.status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="step-circle">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="step-label">In Progress</div>
+                        <div class="step-sublabel">Processing</div>
+                    </div>
+                    
+                    <!-- Connector Line 2 -->
+                    <div class="status-connector {% if booking and booking.status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}"></div>
+                    
+                    <!-- Step 3: Confirmed -->
+                    <div class="status-step {% if booking and booking.status == 'CONFIRMED' %}active{% elif booking and booking.status == 'COMPLETED' %}completed{% endif %}">
+                        <div class="step-circle">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="step-label">Confirmed</div>
+                        <div class="step-sublabel">Services ready</div>
+                    </div>
+                    
+                    <!-- Connector Line 3 -->
+                    <div class="status-connector {% if booking and booking.status == 'COMPLETED' %}completed{% endif %}"></div>
+                    
+                    <!-- Step 4: Completed -->
+                    <div class="status-step {% if booking and booking.status == 'COMPLETED' %}active completed{% endif %}">
+                        <div class="step-circle">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="step-label">Completed</div>
+                        <div class="step-sublabel">Delivered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Customer and Booking Information - Only show for existing bookings -->
     {% if booking %}
@@ -524,60 +571,6 @@
                 </div>
             </div>
        
-    </div>
-
-    <!-- Status Flow Bar -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="status-flow-container">
-                <div class="status-flow-bar">
-                    <!-- Step 1: Request -->
-                    <div class="status-step {% if booking.status == 'REQUEST' %}active{% elif booking.status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
-                        <div class="step-circle">
-                            <i class="fas fa-edit"></i>
-                        </div>
-                        <div class="step-label">Request</div>
-                        <div class="step-sublabel">Initial submission</div>
-                    </div>
-                    
-                    <!-- Connector Line 1 -->
-                    <div class="status-connector {% if booking.status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}"></div>
-                    
-                    <!-- Step 2: In Progress -->
-                    <div class="status-step {% if booking.status == 'IN_PROGRESS' %}active{% elif booking.status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
-                        <div class="step-circle">
-                            <i class="fas fa-spinner"></i>
-                        </div>
-                        <div class="step-label">In Progress</div>
-                        <div class="step-sublabel">Processing</div>
-                    </div>
-                    
-                    <!-- Connector Line 2 -->
-                    <div class="status-connector {% if booking.status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}"></div>
-                    
-                    <!-- Step 3: Confirmed -->
-                    <div class="status-step {% if booking.status == 'CONFIRMED' %}active{% elif booking.status == 'COMPLETED' %}completed{% endif %}">
-                        <div class="step-circle">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="step-label">Confirmed</div>
-                        <div class="step-sublabel">Services ready</div>
-                    </div>
-                    
-                    <!-- Connector Line 3 -->
-                    <div class="status-connector {% if booking.status == 'COMPLETED' %}completed{% endif %}"></div>
-                    
-                    <!-- Step 4: Completed -->
-                    <div class="status-step {% if booking.status == 'COMPLETED' %}active completed{% endif %}">
-                        <div class="step-circle">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="step-label">Completed</div>
-                        <div class="step-sublabel">Delivered</div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     {% endif %}
     <!-- Action Buttons Toolbar -->
