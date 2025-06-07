@@ -577,7 +577,7 @@
                                                 </button>
                                                 
                                                 <!-- Popup Confirm Button -->
-                                                <button type="button" class="btn btn-sm me-1" style="background-color: #28a745; color: white; border: 1px solid #28a745; font-size: 0.75rem; padding: 4px 8px;" data-bs-toggle="modal" data-bs-target="#confirmModal-{{ item.id }}">
+                                                <button type="button" class="btn btn-sm me-1" style="background-color: #28a745; color: white; border: 1px solid #28a745; font-size: 0.75rem; padding: 4px 8px;" onclick="showConfirmModal({{ item.id }})">
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </button>
                                             {% endif %}
@@ -1964,14 +1964,56 @@ function saveServiceRequest(serviceId) {
     window.location.href = `/booking/confirm-service/${serviceId}?action=save_request`;
 }
 
+// Function to show confirmation modal
+function showConfirmModal(serviceId) {
+    console.log('Showing confirmation modal for service ID:', serviceId);
+    
+    // Check if Bootstrap is available
+    if (typeof bootstrap === 'undefined') {
+        console.error('Bootstrap not found, falling back to direct confirmation');
+        if (confirm('Are you sure you want to confirm this service?')) {
+            confirmServiceFromModal(serviceId);
+        }
+        return;
+    }
+    
+    // Try to show the modal
+    const modalElement = document.getElementById(`confirmModal-${serviceId}`);
+    if (!modalElement) {
+        console.error('Modal element not found for service ID:', serviceId);
+        if (confirm('Are you sure you want to confirm this service?')) {
+            confirmServiceFromModal(serviceId);
+        }
+        return;
+    }
+    
+    try {
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        console.log('Modal shown successfully');
+    } catch (error) {
+        console.error('Error showing modal:', error);
+        if (confirm('Are you sure you want to confirm this service?')) {
+            confirmServiceFromModal(serviceId);
+        }
+    }
+}
+
 // Function to handle popup confirmation
 function confirmServiceFromModal(serviceId) {
     console.log('Confirm service from modal for ID:', serviceId);
     
-    // Close the modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(`confirmModal-${serviceId}`));
-    if (modal) {
-        modal.hide();
+    // Try to close the modal if it exists
+    try {
+        const modalElement = document.getElementById(`confirmModal-${serviceId}`);
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+        }
+    } catch (error) {
+        console.log('Could not close modal:', error);
     }
     
     // Redirect to the confirmation page with confirm action
