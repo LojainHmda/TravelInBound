@@ -946,9 +946,10 @@ def confirm_service(item_id):
         form_notes = request.form.get('notes', '')
         service_type = request.form.get('service_type', '')
         
-        # Get the action type (save, next, complete)
-        action = request.form.get('action', 'save')
+        # Get the action type (save_request, confirm, next, complete)
+        action = request.form.get('action', 'confirm')
         
+        print(f"Action: {action}", file=sys.stderr)
         print(f"confirmation_reference: {confirmation_reference}", file=sys.stderr)
         print(f"supplier_code: {supplier_code}", file=sys.stderr)
         print(f"form_notes: {form_notes}", file=sys.stderr)
@@ -964,17 +965,29 @@ def confirm_service(item_id):
             else:
                 print(f"No supplier found with code: {supplier_code}", file=sys.stderr)
         
-        # CRITICAL BUSINESS RULE: Service items can only be confirmed if booking is IN_PROGRESS
-        if service_item.booking.status != STATUS_IN_PROGRESS:
-            flash('Cannot confirm service items until booking operations are started. The booking must be in IN_PROGRESS status first.', 'danger')
-            return redirect(url_for('booking.details', booking_id=service_item.booking_id))
-        
-        # Set item status to CONFIRMED when saving confirmation details
-        if service_item.status == STATUS_IN_PROGRESS:
-            service_item.status = STATUS_CONFIRMED
-        else:
-            flash('Service item must be in IN_PROGRESS status before it can be confirmed.', 'danger')
-            return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+        # Handle different action types
+        if action == 'save_request':
+            # Save as draft without validation - just save the data
+            print("Saving as request (draft mode) - no validation required", file=sys.stderr)
+            # Keep current status, don't change to CONFIRMED
+        elif action == 'confirm':
+            # Full confirmation with validation
+            print("Full confirmation mode - applying validation", file=sys.stderr)
+            
+            # CRITICAL BUSINESS RULE: Service items can only be confirmed if booking is IN_PROGRESS
+            if service_item.booking.status != STATUS_IN_PROGRESS:
+                flash('Cannot confirm service items until booking operations are started. The booking must be in IN_PROGRESS status first.', 'danger')
+                return redirect(url_for('booking.details', booking_id=service_item.booking_id))
+            
+            # Set item status to CONFIRMED when confirming
+            if service_item.status == STATUS_IN_PROGRESS:
+                service_item.status = STATUS_CONFIRMED
+            elif service_item.status == STATUS_REQUEST:
+                # Allow confirmation from REQUEST status too (for the checkbox flow)
+                service_item.status = STATUS_CONFIRMED
+            else:
+                flash('Service item must be in REQUEST or IN_PROGRESS status before it can be confirmed.', 'danger')
+                return redirect(url_for('booking.details', booking_id=service_item.booking_id))
         
         # Check if a confirmation document already exists
         document = Document.query.filter_by(
@@ -1187,99 +1200,109 @@ def confirm_service(item_id):
         saved_doc = Document.query.get(document.id)
         print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
         
-        # Mark this service item as CONFIRMED
-        service_item.status = STATUS_CONFIRMED
+        # Only mark as CONFIRMED if action is 'confirm', not for 'save_request'
+        if action == 'confirm':
+            service_item.status = STATUS_CONFIRMED
+        # For 'save_request', keep the current status (don't change to CONFIRMED)
+        
         db.session.commit()
         
-        # Create a supplier payment record based on the confirmation document
-        try:
-            from app.models.supplier import SupplierPayment, Supplier
-            from datetime import datetime
-            
-            # Parse the document notes to get cost information
-            confirmation_data = json.loads(document.notes)
-            
-            # Check if it has cost information
-            if 'cost_amount' in confirmation_data and confirmation_data['cost_amount'] > 0:
-                cost_amount = float(confirmation_data['cost_amount'])
+        # Create a supplier payment record based on the confirmation document (only for confirmed items)
+        if action == 'confirm':
+            try:
+                from app.models.supplier import SupplierPayment, Supplier
+                from datetime import datetime
                 
-                # Get supplier information
-                supplier_id = None
-                if 'supplier_id' in confirmation_data and confirmation_data['supplier_id']:
-                    supplier_id = int(confirmation_data['supplier_id'])
-                else:
-                    # Try to find supplier by name
-                    supplier_name = confirmation_data.get('supplier', 'Direct')
-                    supplier = Supplier.query.filter_by(name=supplier_name).first()
-                    if supplier:
-                        supplier_id = supplier.id
+                # Parse the document notes to get cost information
+                confirmation_data = json.loads(document.notes)
                 
-                if supplier_id:
-                    # Check if payment record exists for this document
-                    existing_payment = SupplierPayment.query.filter_by(
-                        notes=f"Payment for {service_item.service_type} confirmation document #{document.id}"
-                    ).first()
+                # Check if it has cost information
+                if 'cost_amount' in confirmation_data and confirmation_data['cost_amount'] > 0:
+                    cost_amount = float(confirmation_data['cost_amount'])
                     
-                    if not existing_payment:
-                        # Get payment due date if available
-                        payment_date = datetime.now().date()
-                        due_date = payment_date
-                        
-                        if 'payment_due_date' in confirmation_data and confirmation_data['payment_due_date']:
-                            try:
-                                due_date = datetime.strptime(confirmation_data['payment_due_date'], '%Y-%m-%d').date()
-                            except ValueError:
-                                pass
-                        
-                        # Create payment record
-                        payment = SupplierPayment(
-                            supplier_id=supplier_id,
-                            amount=cost_amount,
-                            payment_date=payment_date,
-                            due_date=due_date,
-                            status='PENDING',
-                            payment_reference=document.document_number,
-                            payment_method='BANK_TRANSFER',
+                    # Get supplier information
+                    supplier_id = None
+                    if 'supplier_id' in confirmation_data and confirmation_data['supplier_id']:
+                        supplier_id = int(confirmation_data['supplier_id'])
+                    else:
+                        # Try to find supplier by name
+                        supplier_name = confirmation_data.get('supplier', 'Direct')
+                        supplier = Supplier.query.filter_by(name=supplier_name).first()
+                        if supplier:
+                            supplier_id = supplier.id
+                    
+                    if supplier_id:
+                        # Check if payment record exists for this document
+                        existing_payment = SupplierPayment.query.filter_by(
                             notes=f"Payment for {service_item.service_type} confirmation document #{document.id}"
-                        )
+                        ).first()
                         
-                        db.session.add(payment)
-                        db.session.commit()
-                        print(f"Created supplier payment of ${cost_amount} for confirmation document #{document.id}", file=sys.stderr)
-                        
-                        # Now create a supplier prepayment line to link the payment with the booking and service item
-                        try:
-                            from app.models.supplier import SupplierPrepaymentLine
+                        if not existing_payment:
+                            # Get payment due date if available
+                            payment_date = datetime.now().date()
+                            due_date = payment_date
                             
-                            # Create the prepayment line
-                            prepayment_line = SupplierPrepaymentLine(
-                                supplier_payment_id=payment.id,
-                                booking_id=service_item.booking_id,
-                                service_item_id=service_item.id,
+                            if 'payment_due_date' in confirmation_data and confirmation_data['payment_due_date']:
+                                try:
+                                    due_date = datetime.strptime(confirmation_data['payment_due_date'], '%Y-%m-%d').date()
+                                except ValueError:
+                                    pass
+                            
+                            # Create payment record
+                            payment = SupplierPayment(
+                                supplier_id=supplier_id,
                                 amount=cost_amount,
-                                notes=f"Auto-created for {service_item.service_type} confirmation"
+                                payment_date=payment_date,
+                                due_date=due_date,
+                                status='PENDING',
+                                payment_reference=document.document_number,
+                                payment_method='BANK_TRANSFER',
+                                notes=f"Payment for {service_item.service_type} confirmation document #{document.id}"
                             )
                             
-                            # Add additional fields if they exist in the model
-                            if hasattr(SupplierPrepaymentLine, 'service_type'):
-                                prepayment_line.service_type = service_item.service_type
-                            if hasattr(SupplierPrepaymentLine, 'supplier_name'):
-                                prepayment_line.supplier_name = confirmation_data.get('supplier_name', 'Unknown Supplier')
-                            if hasattr(SupplierPrepaymentLine, 'confirmation_reference'):
-                                prepayment_line.confirmation_reference = confirmation_data.get('confirmation_reference', document.document_number)
-                            if hasattr(SupplierPrepaymentLine, 'payment_status'):
-                                prepayment_line.payment_status = 'PENDING'
-                            
-                            db.session.add(prepayment_line)
+                            db.session.add(payment)
                             db.session.commit()
-                            print(f"Created supplier prepayment line linking payment {payment.id} to booking {service_item.booking_id} and service {service_item.id}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"Error creating supplier prepayment line: {str(e)}", file=sys.stderr)
-        except Exception as e:
-            # Log the error but don't fail the response
-            print(f"Error creating supplier payment: {str(e)}", file=sys.stderr)
+                            print(f"Created supplier payment of ${cost_amount} for confirmation document #{document.id}", file=sys.stderr)
+                            
+                            # Now create a supplier prepayment line to link the payment with the booking and service item
+                            try:
+                                from app.models.supplier import SupplierPrepaymentLine
+                                
+                                # Create the prepayment line
+                                prepayment_line = SupplierPrepaymentLine(
+                                    supplier_payment_id=payment.id,
+                                    booking_id=service_item.booking_id,
+                                    service_item_id=service_item.id,
+                                    amount=cost_amount,
+                                    notes=f"Auto-created for {service_item.service_type} confirmation"
+                                )
+                                
+                                # Add additional fields if they exist in the model
+                                if hasattr(SupplierPrepaymentLine, 'service_type'):
+                                    prepayment_line.service_type = service_item.service_type
+                                if hasattr(SupplierPrepaymentLine, 'supplier_name'):
+                                    prepayment_line.supplier_name = confirmation_data.get('supplier_name', 'Unknown Supplier')
+                                if hasattr(SupplierPrepaymentLine, 'confirmation_reference'):
+                                    prepayment_line.confirmation_reference = confirmation_data.get('confirmation_reference', document.document_number)
+                                if hasattr(SupplierPrepaymentLine, 'payment_status'):
+                                    prepayment_line.payment_status = 'PENDING'
+                                
+                                db.session.add(prepayment_line)
+                                db.session.commit()
+                                print(f"Created supplier prepayment line linking payment {payment.id} to booking {service_item.booking_id} and service {service_item.id}", file=sys.stderr)
+                            except Exception as e:
+                                print(f"Error creating supplier prepayment line: {str(e)}", file=sys.stderr)
+            except Exception as e:
+                # Log the error but don't fail the response
+                print(f"Error creating supplier payment: {str(e)}", file=sys.stderr)
         
-        flash(f'{service_item.service_type} confirmation details saved', 'success')
+        # Set appropriate success message based on action type
+        if action == 'save_request':
+            flash(f'{service_item.service_type} additional details saved as request', 'success')
+        elif action == 'confirm':
+            flash(f'{service_item.service_type} confirmation details saved and confirmed', 'success')
+        else:
+            flash(f'{service_item.service_type} details saved', 'success')
         
         # Get the booking ID for subsequent operations
         booking_id = service_item.booking_id
