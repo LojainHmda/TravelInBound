@@ -23,6 +23,12 @@ from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
 
+@booking_bp.route('/demo/<int:booking_id>')
+def demo_status_bar(booking_id):
+    """Demo route to show the new status flow bar without authentication"""
+    booking = Booking.query.get_or_404(booking_id)
+    return render_template('booking/booking_details_new.html', booking=booking)
+
 def cascade_booking_status_to_service_items(booking, new_status):
     """Helper function to ensure service items follow booking status changes"""
     if new_status == STATUS_IN_PROGRESS:
