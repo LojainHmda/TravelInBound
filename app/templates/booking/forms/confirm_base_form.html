@@ -31,18 +31,10 @@
             {% endblock %}
             
             <div class="mt-3">
-                <!-- Save Request Button - bypasses validation -->
-                <button type="submit" name="action" value="save_request" class="btn btn-outline-warning me-2">
-                    <i class="fas fa-save me-1"></i> Save Request
-                </button>
-                
-                <!-- Popup Confirmation Button -->
-                <button type="button" class="btn btn-{{ 'success' if not confirmation_doc else 'primary' }} me-2" 
-                        data-bs-toggle="modal" data-bs-target="#confirmationModal-{{ service_item.id }}">
+                <button type="submit" class="btn btn-{{ 'success' if not confirmation_doc else 'primary' }}">
                     <i class="fas fa-{{ 'check' if not confirmation_doc else 'save' }} me-1"></i>
                     {{ 'Confirm' if not confirmation_doc else 'Update' }} {{ service_item.service_type|capitalize }}
                 </button>
-                
                 <button type="button" class="btn btn-outline-secondary ms-2 cancel-confirm-btn" data-service-id="{{ service_item.id }}">
                     <i class="fas fa-times me-1"></i> Cancel
                 </button>
@@ -50,63 +42,6 @@
         </form>
     </div>
 </div>
-
-<!-- Confirmation Modal for this service item -->
-<div class="modal fade" id="confirmationModal-{{ service_item.id }}" tabindex="-1" aria-labelledby="confirmationModalLabel-{{ service_item.id }}" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="confirmationModalLabel-{{ service_item.id }}">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm {{ service_item.service_type|capitalize }} Service
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info mb-3">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Important:</strong> By confirming this service, you are marking it as complete and ready for invoicing.
-                </div>
-                
-                <p class="mb-3">Please verify the following details before confirming:</p>
-                
-                <ul class="list-unstyled">
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        All service details are accurate and complete
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Supplier information has been verified
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Cost information is correct (if provided)
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Service is ready for customer delivery
-                    </li>
-                </ul>
-                
-                <div class="bg-light p-3 rounded mt-3">
-                    <small class="text-muted">
-                        <strong>Note:</strong> Once confirmed, this service item will be marked as complete and 
-                        may trigger automatic supplier payment records if cost information is provided.
-                    </small>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cancel
-                </button>
-                <button type="button" class="btn btn-primary" onclick="confirmServiceItem({{ service_item.id }})">
-                    <i class="fas fa-check-circle me-1"></i>Yes, Confirm Service
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 {% else %}
 <!-- Content for standalone form pages (not inline) -->
 <h1>Error: This template is meant to be used with inline_form=True</h1>

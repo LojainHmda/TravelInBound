@@ -364,7 +364,7 @@
                         Suppliers
                     </a>
                 </li>
-                {% if current_user.is_authenticated and current_user.can_access_finance() %}
+                {% if current_user.can_access_finance() %}
                 <li>
                     <a href="{{ url_for('finance.index') }}" class="{% if '/finance/' in request.path %}active{% endif %}">
                         <i class="fas fa-money-bill-wave"></i>
@@ -372,7 +372,7 @@
                     </a>
                 </li>
                 {% endif %}
-                {% if current_user.is_authenticated and current_user.is_admin() %}
+                {% if current_user.is_admin() %}
                 <li>
                     <a href="{{ url_for('auth.admin_users') }}" class="{% if request.path == url_for('auth.admin_users') %}active{% endif %}">
                         <i class="fas fa-users-cog"></i>

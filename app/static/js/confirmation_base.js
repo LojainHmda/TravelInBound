@@ -11,22 +11,20 @@ document.addEventListener('DOMContentLoaded', function() {
         originalRequiredFields.set(field, true);
     });
     
-    // Handle Save Request buttons (both standalone and inline forms)
-    const saveRequestBtns = document.querySelectorAll('button[name="action"][value="save_request"]');
-    saveRequestBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    // Handle Save Request button - disable HTML validation
+    const saveRequestBtn = document.querySelector('button[name="action"][value="save_request"]');
+    if (saveRequestBtn) {
+        saveRequestBtn.addEventListener('click', function(e) {
             console.log('Save Request button clicked - disabling HTML validation');
             // Remove required attributes to bypass HTML validation
             const form = this.closest('form');
-            if (form) {
-                const requiredFields = form.querySelectorAll('[required]');
-                requiredFields.forEach(field => {
-                    field.removeAttribute('required');
-                    field.classList.remove('is-invalid');
-                });
-            }
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                field.removeAttribute('required');
+                field.classList.remove('is-invalid');
+            });
         });
-    });
+    }
     
     // Handle Confirm button - ensure HTML validation is enabled
     const confirmBtns = document.querySelectorAll('button[name="action"][value="confirm"]');
@@ -108,40 +106,6 @@ function confirmService() {
     
     // Close the modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
-    if (modal) {
-        modal.hide();
-    }
-    
-    // Submit the form
-    form.submit();
-}
-
-// Function to handle confirmation for inline forms (booking details page)
-function confirmServiceItem(serviceId) {
-    console.log('Confirm service item function called for ID:', serviceId);
-    
-    // Get the specific form for this service item
-    const form = document.getElementById(`confirmForm-${serviceId}`);
-    if (!form) {
-        console.error('Form not found for service ID:', serviceId);
-        return;
-    }
-    
-    // Restore required attributes for validation
-    const requiredFields = form.querySelectorAll('[data-originally-required]');
-    requiredFields.forEach(field => {
-        field.setAttribute('required', 'required');
-    });
-    
-    // Create a hidden input for the confirm action
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
-    actionInput.value = 'confirm';
-    form.appendChild(actionInput);
-    
-    // Close the modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById(`confirmationModal-${serviceId}`));
     if (modal) {
         modal.hide();
     }

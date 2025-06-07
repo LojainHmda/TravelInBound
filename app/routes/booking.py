@@ -3,7 +3,6 @@ import json
 import sys
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
-from flask_login import login_required, current_user
 import os
 import base64
 from werkzeug.utils import secure_filename
@@ -23,12 +22,6 @@ from app.forms.invoice import GenerateInvoiceForm, PaymentForm
 
 # Create a blueprint for booking-related routes
 booking_bp = Blueprint('booking', __name__)
-
-@booking_bp.route('/demo/<int:booking_id>')
-def demo_status_bar(booking_id):
-    """Demo route to show the new status flow bar without authentication"""
-    booking = Booking.query.get_or_404(booking_id)
-    return render_template('booking/booking_details_new.html', booking=booking)
 
 def cascade_booking_status_to_service_items(booking, new_status):
     """Helper function to ensure service items follow booking status changes"""
@@ -934,7 +927,6 @@ def cancel_service_item(item_id):
     return redirect(url_for('booking.details', booking_id=booking.id))
 
 @booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
-@login_required
 def confirm_service(item_id):
     """Confirm details for a specific service item with a dedicated form"""
     import sys
