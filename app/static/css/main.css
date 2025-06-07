@@ -591,3 +591,129 @@ p, span, div, label, td, th {
         margin-bottom: 0.5rem;
     }
 }
+
+/* Modern Status Flow Styles */
+.status-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.status-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.status-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 3;
+}
+
+/* Status circle states */
+.status-step.active .status-circle {
+    background-color: #FFD700;
+    color: #223A5E;
+    border: 3px solid #223A5E;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.status-step.completed .status-circle {
+    background-color: #28a745;
+    color: white;
+    border: 3px solid #28a745;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.status-step:not(.active):not(.completed) .status-circle {
+    background-color: #e9ecef;
+    color: #6c757d;
+    border: 3px solid #dee2e6;
+}
+
+.status-label {
+    text-align: center;
+    min-width: 80px;
+}
+
+.status-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #223A5E;
+    margin-bottom: 2px;
+}
+
+.status-subtitle {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 400;
+}
+
+/* Connection lines between status circles */
+.status-connector {
+    height: 4px;
+    width: 80px;
+    background-color: #dee2e6;
+    margin: 0 -10px;
+    margin-top: -25px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.status-connector.active {
+    background-color: #28a745;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .status-flow {
+        padding: 15px 10px;
+    }
+    
+    .status-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+    }
+    
+    .status-connector {
+        width: 60px;
+        margin-top: -20px;
+    }
+    
+    .status-title {
+        font-size: 12px;
+    }
+    
+    .status-subtitle {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .status-connector {
+        width: 40px;
+    }
+    
+    .status-label {
+        min-width: 60px;
+    }
+}

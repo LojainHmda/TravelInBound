@@ -1,23 +1,68 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Status Flow Header -->
+<!-- Modern Status Flow Header -->
 {% if booking %}
-<div style="background-color: #e9ecef; color: #495057; padding: 12px 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #ced4da;">
-    <div class="d-flex align-items-center justify-content-center">
-        <!-- Status Flow -->
-        {% set current_status = booking.status %}
-        <span class="status-badge {% if current_status == 'REQUEST' %}status-active{% else %}status-inactive{% endif %}">
-            <i class="fas fa-file-alt me-1"></i>Request
-        </span>
-        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
-        <span class="status-badge {% if current_status == 'IN_PROGRESS' %}status-active{% elif current_status not in ['REQUEST'] %}status-active{% else %}status-inactive{% endif %}">
-            <i class="fas fa-cog me-1"></i>In Progress
-        </span>
-        <i class="fas fa-chevron-right mx-1" style="color: #ccc; font-size: 0.7rem;"></i>
-        <span class="status-badge {% if current_status == 'COMPLETED' %}status-active{% else %}status-inactive{% endif %}">
-            <i class="fas fa-check me-1"></i>Confirmed
-        </span>
+<div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #dee2e6;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-center">
+            <div class="status-flow">
+                {% set current_status = booking.status %}
+                
+                <!-- Request Stage -->
+                <div class="status-step {% if current_status == 'REQUEST' %}active{% else %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div class="status-label">
+                        <div class="status-title">Request</div>
+                        <div class="status-subtitle">Initial submission</div>
+                    </div>
+                </div>
+                
+                <!-- Connection Line 1 -->
+                <div class="status-connector {% if current_status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}active{% endif %}"></div>
+                
+                <!-- In Progress Stage -->
+                <div class="status-step {% if current_status == 'IN_PROGRESS' %}active{% elif current_status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <div class="status-label">
+                        <div class="status-title">In Progress</div>
+                        <div class="status-subtitle">Processing</div>
+                    </div>
+                </div>
+                
+                <!-- Connection Line 2 -->
+                <div class="status-connector {% if current_status in ['CONFIRMED', 'COMPLETED'] %}active{% endif %}"></div>
+                
+                <!-- Confirmed Stage -->
+                <div class="status-step {% if current_status == 'CONFIRMED' %}active{% elif current_status == 'COMPLETED' %}completed{% endif %}">
+                    <div class="status-circle">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="status-label">
+                        <div class="status-title">Confirmed</div>
+                        <div class="status-subtitle">Service ready</div>
+                    </div>
+                </div>
+                
+                <!-- Connection Line 3 -->
+                <div class="status-connector {% if current_status == 'COMPLETED' %}active{% endif %}"></div>
+                
+                <!-- Completed Stage -->
+                <div class="status-step {% if current_status == 'COMPLETED' %}active{% endif %}">
+                    <div class="status-circle">
+                        <i class="fas fa-flag-checkered"></i>
+                    </div>
+                    <div class="status-label">
+                        <div class="status-title">Completed</div>
+                        <div class="status-subtitle">Delivered</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
