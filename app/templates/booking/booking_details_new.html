@@ -2,12 +2,13 @@
 
 {% block content %}
 <!-- Modern Status Flow Header -->
-{% if booking %}
+<!-- Always show status flow - for new bookings show "Request" as active -->
+{% if booking or true %}
 <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; margin: -20px -20px 20px -20px; border-bottom: 1px solid #dee2e6;">
     <div class="container-fluid">
         <div class="d-flex justify-content-center">
             <div class="status-flow">
-                {% set current_status = booking.status %}
+                {% set current_status = booking.status if booking else 'REQUEST' %}
                 
                 <!-- Request Stage -->
                 <div class="status-step {% if current_status == 'REQUEST' %}active{% else %}completed{% endif %}">
