@@ -100,16 +100,22 @@ function confirmService() {
     });
     
     // Create a hidden input for the confirm action
-    const actionInput = document.createElement('input');
-    actionInput.type = 'hidden';
-    actionInput.name = 'action';
+    let actionInput = form.querySelector('input[name="action"]');
+    if (!actionInput) {
+        actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        form.appendChild(actionInput);
+    }
     actionInput.value = 'confirm';
-    form.appendChild(actionInput);
     
-    // Close the modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+    // Close any modal if it exists (for modal version)
+    const modal = document.getElementById('confirmationModal');
     if (modal) {
-        modal.hide();
+        const bootstrapModal = bootstrap.Modal.getInstance(modal);
+        if (bootstrapModal) {
+            bootstrapModal.hide();
+        }
     }
     
     // Submit the form
