@@ -1479,11 +1479,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="confirmationModalBody">
-                <!-- Content will be loaded here -->
+                <!-- Quick confirmation form will be loaded here -->
                 <div class="text-center">
                     <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                    <p class="mt-2">Loading confirmation form...</p>
+                    <p class="mt-2">Loading form...</p>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-yellow" id="saveConfirmation" style="display: none;">Save Details</button>
             </div>
         </div>
     </div>
@@ -1497,19 +1501,225 @@
 
 <!-- Confirmation Modal JavaScript -->
 <script>
-// Simple function to open confirmation modal - redirect to confirmation page
-function loadConfirmationModal(serviceItemId) {
-    // Simply redirect to the confirmation page
-    window.location.href = `/booking/confirm_service/${serviceItemId}`;
+// Function to load confirmation modal with form data
+async function loadConfirmationModal(serviceItemId) {
+    try {
+        // Show modal immediately with loading
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        modal.show();
+        
+        // Reset modal content
+        document.getElementById('confirmationModalBody').innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-2">Loading form...</p>
+            </div>
+        `;
+        document.getElementById('saveConfirmation').style.display = 'none';
+        
+        // Fetch service item data to determine form type
+        const response = await fetch(`/api/service-item/${serviceItemId}`);
+        const serviceData = await response.json();
+        
+        // Build appropriate form based on service type
+        let formHtml = '';
+        if (serviceData.service_type === 'FLIGHT') {
+            formHtml = buildFlightForm(serviceItemId, serviceData);
+        } else if (serviceData.service_type === 'HOTEL') {
+            formHtml = buildHotelForm(serviceItemId, serviceData);
+        } else {
+            formHtml = buildGenericForm(serviceItemId, serviceData);
+        }
+        
+        // Update modal content
+        document.getElementById('confirmationModalBody').innerHTML = formHtml;
+        document.getElementById('saveConfirmation').style.display = 'inline-block';
+        
+        // Set up save button click handler
+        document.getElementById('saveConfirmation').onclick = function() {
+            saveConfirmationDetails(serviceItemId);
+        };
+        
+    } catch (error) {
+        console.error('Error loading confirmation modal:', error);
+        document.getElementById('confirmationModalBody').innerHTML = 
+            '<div class="alert alert-danger">Error loading form. Please try again.</div>';
+    }
+}
+
+// Build flight confirmation form
+function buildFlightForm(serviceItemId, serviceData) {
+    return `
+        <form id="confirmationForm">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Airline</label>
+                        <input type="text" class="form-control" name="airline" placeholder="Enter airline name">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" class="form-control" name="flight_number" placeholder="e.g. AA123">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Departure Airport</label>
+                        <input type="text" class="form-control" name="departure_airport" placeholder="e.g. JFK">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Arrival Airport</label>
+                        <input type="text" class="form-control" name="arrival_airport" placeholder="e.g. LAX">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Flight Date</label>
+                        <input type="date" class="form-control" name="flight_date">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Flight Time</label>
+                        <input type="time" class="form-control" name="flight_time">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">PNR/Booking Reference</label>
+                <input type="text" class="form-control" name="pnr" placeholder="Enter booking reference">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" name="notes" rows="3" placeholder="Additional details..."></textarea>
+            </div>
+        </form>
+    `;
+}
+
+// Build hotel confirmation form
+function buildHotelForm(serviceItemId, serviceData) {
+    return `
+        <form id="confirmationForm">
+            <div class="mb-3">
+                <label class="form-label">Hotel Name</label>
+                <input type="text" class="form-control" name="hotel_name" placeholder="Enter hotel name" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Check-in Date</label>
+                        <input type="date" class="form-control" name="from_date" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Check-out Date</label>
+                        <input type="date" class="form-control" name="to_date" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Meal Plan</label>
+                        <select class="form-select" name="meal_plan">
+                            <option value="Room Only">Room Only</option>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Half Board">Half Board</option>
+                            <option value="Full Board">Full Board</option>
+                            <option value="All Inclusive">All Inclusive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Room Type</label>
+                        <input type="text" class="form-control" name="room_type" placeholder="e.g. Standard Double">
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Confirmation Number</label>
+                <input type="text" class="form-control" name="confirmation_reference" placeholder="Hotel confirmation number">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Special Notes</label>
+                <textarea class="form-control" name="special_notes" rows="3" placeholder="Special requests, notes..."></textarea>
+            </div>
+        </form>
+    `;
+}
+
+// Build generic confirmation form
+function buildGenericForm(serviceItemId, serviceData) {
+    return `
+        <form id="confirmationForm">
+            <div class="mb-3">
+                <label class="form-label">Confirmation Reference</label>
+                <input type="text" class="form-control" name="confirmation_reference" placeholder="Enter confirmation reference">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Supplier</label>
+                <input type="text" class="form-control" name="supplier" placeholder="Enter supplier name">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Cost Amount</label>
+                <input type="number" step="0.01" class="form-control" name="cost_amount" placeholder="0.00">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" name="notes" rows="3" placeholder="Additional details..."></textarea>
+            </div>
+        </form>
+    `;
+}
+
+// Save confirmation details
+async function saveConfirmationDetails(serviceItemId) {
+    try {
+        const form = document.getElementById('confirmationForm');
+        const formData = new FormData(form);
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                         document.querySelector('input[name="csrf_token"]')?.value || '';
+        formData.append('csrf_token', csrfToken);
+        
+        const response = await fetch(`/booking/confirm_service/${serviceItemId}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // Close modal and reload page
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmationModal'));
+            modal.hide();
+            window.location.reload();
+        } else {
+            alert('Error saving confirmation details. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving confirmation:', error);
+        alert('Error saving confirmation details. Please try again.');
+    }
 }
 
 // Check for automatic confirmation modal trigger
 {% if session.get('show_confirmation_modal') %}
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-redirect to confirmation form after page load
+    // Auto-load confirmation modal after page load
     setTimeout(function() {
         loadConfirmationModal({{ session.pop('show_confirmation_modal') }});
-    }, 1000); // Small delay to ensure page is fully loaded
+    }, 500);
 });
 {% endif %}
 </script>
