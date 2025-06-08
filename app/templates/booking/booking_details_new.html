@@ -617,9 +617,9 @@
                                                     <i class="fas fa-lock me-1"></i>Locked
                                                 </button>
                                             {% else %}
-                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;">
-                                                    <i class="fas fa-cogs me-1"></i>Confirm
-                                                </a>
+                                                <button onclick="loadConfirmationModal({{ item.id }})" class="btn btn-sm me-1" style="background-color: #FF8C00; color: white; border: 1px solid #FF8C00; font-size: 0.75rem; padding: 4px 8px;">
+                                                    <i class="fas fa-cogs me-1"></i>Add Details
+                                                </button>
                                             {% endif %}
                                             
                                             <!-- DELETE button: Only for items that are NOT confirmed AND NOT invoiced -->
@@ -1495,16 +1495,23 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/payment.js') }}"></script>
 
-<!-- Check for confirmation modal trigger -->
-{% if session.get('show_confirmation_modal') %}
+<!-- Confirmation Modal JavaScript -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Load confirmation form in modal
-    loadConfirmationModal({{ session.pop('show_confirmation_modal') }});
-});
-
+// Function to load confirmation modal - always available
 async function loadConfirmationModal(serviceItemId) {
     try {
+        // Show loading
+        document.getElementById('confirmationModalBody').innerHTML = `
+            <div class="text-center">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-2">Loading confirmation form...</p>
+            </div>
+        `;
+        
+        // Show the modal first
+        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+        modal.show();
+        
         // Load the confirmation form content
         const response = await fetch(`/booking/confirm-service/${serviceItemId}`);
         if (response.ok) {
@@ -1517,10 +1524,6 @@ async function loadConfirmationModal(serviceItemId) {
             
             // Update modal content
             document.getElementById('confirmationModalBody').innerHTML = formContent.innerHTML;
-            
-            // Show the modal
-            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-            modal.show();
             
             // Update form action to submit via modal
             const form = document.querySelector('#confirmationModal form');
@@ -1544,6 +1547,18 @@ async function loadConfirmationModal(serviceItemId) {
                     }
                 });
             }
+            
+            // Initialize any scripts in the loaded content
+            const scripts = formContent.querySelectorAll('script');
+            scripts.forEach(script => {
+                if (script.src) {
+                    const newScript = document.createElement('script');
+                    newScript.src = script.src;
+                    document.head.appendChild(newScript);
+                } else {
+                    eval(script.textContent);
+                }
+            });
         }
     } catch (error) {
         console.error('Error loading confirmation modal:', error);
@@ -1551,8 +1566,17 @@ async function loadConfirmationModal(serviceItemId) {
             '<div class="alert alert-danger">Error loading confirmation form. Please try again.</div>';
     }
 }
-</script>
+
+// Check for automatic confirmation modal trigger
+{% if session.get('show_confirmation_modal') %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-load confirmation form in modal after page load
+    setTimeout(function() {
+        loadConfirmationModal({{ session.pop('show_confirmation_modal') }});
+    }, 500); // Small delay to ensure page is fully loaded
+});
 {% endif %}
+</script>
 
 <script>
 // Generate Voucher Function
