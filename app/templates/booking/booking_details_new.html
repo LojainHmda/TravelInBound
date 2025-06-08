@@ -1497,83 +1497,19 @@
 
 <!-- Confirmation Modal JavaScript -->
 <script>
-// Function to load confirmation modal - always available
-async function loadConfirmationModal(serviceItemId) {
-    try {
-        // Show loading
-        document.getElementById('confirmationModalBody').innerHTML = `
-            <div class="text-center">
-                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                <p class="mt-2">Loading confirmation form...</p>
-            </div>
-        `;
-        
-        // Show the modal first
-        const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-        modal.show();
-        
-        // Load the confirmation form content
-        const response = await fetch(`/booking/confirm-service/${serviceItemId}`);
-        if (response.ok) {
-            const html = await response.text();
-            
-            // Extract just the form content from the full page
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const formContent = doc.querySelector('.container-fluid') || doc.querySelector('main') || doc.body;
-            
-            // Update modal content
-            document.getElementById('confirmationModalBody').innerHTML = formContent.innerHTML;
-            
-            // Update form action to submit via modal
-            const form = document.querySelector('#confirmationModal form');
-            if (form) {
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    // Submit form via fetch
-                    const formData = new FormData(form);
-                    const submitResponse = await fetch(form.action, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (submitResponse.ok) {
-                        // Close modal and reload page
-                        modal.hide();
-                        window.location.reload();
-                    } else {
-                        alert('Error saving confirmation details. Please try again.');
-                    }
-                });
-            }
-            
-            // Initialize any scripts in the loaded content
-            const scripts = formContent.querySelectorAll('script');
-            scripts.forEach(script => {
-                if (script.src) {
-                    const newScript = document.createElement('script');
-                    newScript.src = script.src;
-                    document.head.appendChild(newScript);
-                } else {
-                    eval(script.textContent);
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error loading confirmation modal:', error);
-        document.getElementById('confirmationModalBody').innerHTML = 
-            '<div class="alert alert-danger">Error loading confirmation form. Please try again.</div>';
-    }
+// Simple function to open confirmation modal - redirect to confirmation page
+function loadConfirmationModal(serviceItemId) {
+    // Simply redirect to the confirmation page
+    window.location.href = `/booking/confirm-service/${serviceItemId}`;
 }
 
 // Check for automatic confirmation modal trigger
 {% if session.get('show_confirmation_modal') %}
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-load confirmation form in modal after page load
+    // Auto-redirect to confirmation form after page load
     setTimeout(function() {
         loadConfirmationModal({{ session.pop('show_confirmation_modal') }});
-    }, 500); // Small delay to ensure page is fully loaded
+    }, 1000); // Small delay to ensure page is fully loaded
 });
 {% endif %}
 </script>
