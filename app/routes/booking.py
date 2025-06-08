@@ -1013,16 +1013,18 @@ def confirm_service(item_id):
         import json
         
         # Process cost tracking data (common for all service types)
-        cost_amount = request.form.get('cost_amount', '0.00')
+        cost_amount_str = request.form.get('cost_amount', '')
         cost_currency = request.form.get('cost_currency', 'USD')
         payment_due_date = request.form.get('payment_due_date', '')
         is_paid = 'is_paid' in request.form
         
-        # Convert cost amount to float
-        try:
-            cost_amount = float(cost_amount)
-        except ValueError:
-            cost_amount = 0.00
+        # Convert cost amount to float, but keep None for empty values (package pricing)
+        cost_amount = None
+        if cost_amount_str and cost_amount_str.strip():
+            try:
+                cost_amount = float(cost_amount_str)
+            except ValueError:
+                cost_amount = None
         
         print(f"Cost tracking data: amount={cost_amount}, currency={cost_currency}, due_date={payment_due_date}, is_paid={is_paid}", file=sys.stderr)
         
@@ -1216,8 +1218,8 @@ def confirm_service(item_id):
                 # Parse the document notes to get cost information
                 confirmation_data = json.loads(document.notes)
                 
-                # Check if it has cost information
-                if 'cost_amount' in confirmation_data and confirmation_data['cost_amount'] > 0:
+                # Check if it has cost information (skip for package pricing where cost is None)
+                if 'cost_amount' in confirmation_data and confirmation_data['cost_amount'] is not None and confirmation_data['cost_amount'] > 0:
                     cost_amount = float(confirmation_data['cost_amount'])
                     
                     # Get supplier information
