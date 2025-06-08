@@ -74,13 +74,13 @@
                     <h5 class="card-title text-primary">Supplier Cost Tracking</h5>
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label for="cost_amount" class="form-label">Cost Amount (Supplier) <span class="text-muted">(Optional)</span></label>
+                            <label for="cost_amount" class="form-label">Cost Amount (Supplier) <span class="text-muted">(Optional for packages)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" class="form-control" id="cost_amount" name="cost_amount" 
-                                    value="{{ confirmation_data.cost_amount|default('0.00') }}" step="0.01" min="0">
+                                    value="{{ confirmation_data.cost_amount|default('') }}" step="0.01" min="0" placeholder="0.00">
                             </div>
-                            <small class="text-muted">The amount you pay to the supplier</small>
+                            <small class="text-muted">Leave empty for package deals or bundled pricing</small>
                         </div>
                         <div class="col-md-4">
                             <label for="cost_currency" class="form-label">Currency</label>

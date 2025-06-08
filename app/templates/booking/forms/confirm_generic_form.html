@@ -27,8 +27,8 @@
 
 <div class="row mb-3">
     <div class="col-md-6">
-        <label class="form-label">Amount</label>
-        <input type="number" name="amount" class="form-control" value="{{ confirmation_data.amount or service_item.amount }}" step="0.01" required>
+        <label class="form-label">Amount <small class="text-muted">(optional for package pricing)</small></label>
+        <input type="number" name="amount" class="form-control" value="{{ confirmation_data.amount or service_item.amount }}" step="0.01">
     </div>
     <div class="col-md-6">
         <label class="form-label">Currency</label>
