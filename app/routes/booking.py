@@ -633,10 +633,13 @@ def add_service_item(booking_id):
         
         db.session.commit()
         
-        # Set session flag to trigger confirmation modal
-        session['show_confirmation_modal'] = service_item.id
-        flash('Service item added successfully. Please fill in additional details.', 'success')
-        return redirect(url_for('booking.details', booking_id=booking.id))
+        # Check if user wants to add additional details
+        add_confirmation = request.form.get('add_confirmation')
+        if add_confirmation:
+            flash('Service item added successfully. Please fill in additional details.', 'success')
+            return redirect(url_for('booking.confirm_service', item_id=service_item.id))
+        else:
+            flash('Service item added successfully', 'success')
     else:
         for field, errors in form.errors.items():
             for error in errors:

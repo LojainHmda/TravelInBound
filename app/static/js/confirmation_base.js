@@ -80,9 +80,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Function to handle confirmation modal submit
+// Function to handle direct confirmation submit (no modal)
 function confirmService() {
-    console.log('Confirm service function called');
+    console.log('Direct confirm service called');
     
     // Get the form
     const form = document.querySelector('form');
@@ -91,15 +91,7 @@ function confirmService() {
         return;
     }
     
-    // Restore required attributes for validation, except cost_amount which is optional for packages
-    const originalRequiredFields = document.querySelectorAll('[data-originally-required]');
-    originalRequiredFields.forEach(field => {
-        if (field.name !== 'cost_amount') {
-            field.setAttribute('required', 'required');
-        }
-    });
-    
-    // Create a hidden input for the confirm action
+    // Find or create action input
     let actionInput = form.querySelector('input[name="action"]');
     if (!actionInput) {
         actionInput = document.createElement('input');
@@ -109,16 +101,9 @@ function confirmService() {
     }
     actionInput.value = 'confirm';
     
-    // Close any modal if it exists (for modal version)
-    const modal = document.getElementById('confirmationModal');
-    if (modal) {
-        const bootstrapModal = bootstrap.Modal.getInstance(modal);
-        if (bootstrapModal) {
-            bootstrapModal.hide();
-        }
-    }
+    console.log('Submitting form with action: confirm');
     
-    // Submit the form
+    // Submit the form directly
     form.submit();
 }
 
