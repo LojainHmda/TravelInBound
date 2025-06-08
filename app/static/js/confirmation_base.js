@@ -26,30 +26,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Handle Confirm button - ensure HTML validation is enabled
+    // Handle Confirm button - ensure HTML validation is enabled (except for optional cost amounts)
     const confirmBtns = document.querySelectorAll('button[name="action"][value="confirm"]');
     confirmBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
             console.log('Confirm button clicked - enabling HTML validation');
-            // Restore required attributes for full validation
+            // Restore required attributes for full validation, except cost_amount which is optional for packages
             const form = this.closest('form');
             originalRequiredFields.forEach((isRequired, field) => {
-                if (isRequired) {
+                if (isRequired && field.name !== 'cost_amount') {
                     field.setAttribute('required', 'required');
                 }
             });
         });
     });
     
-    // Handle Next button - ensure HTML validation is enabled
+    // Handle Next button - ensure HTML validation is enabled (except for optional cost amounts)
     const nextBtn = document.querySelector('button[name="action"][value="next"]');
     if (nextBtn) {
         nextBtn.addEventListener('click', function(e) {
             console.log('Next button clicked - enabling HTML validation');
-            // Restore required attributes for full validation
+            // Restore required attributes for full validation, except cost_amount which is optional for packages
             const form = this.closest('form');
             originalRequiredFields.forEach((isRequired, field) => {
-                if (isRequired) {
+                if (isRequired && field.name !== 'cost_amount') {
                     field.setAttribute('required', 'required');
                 }
             });
@@ -91,10 +91,12 @@ function confirmService() {
         return;
     }
     
-    // Restore required attributes for validation
+    // Restore required attributes for validation, except cost_amount which is optional for packages
     const originalRequiredFields = document.querySelectorAll('[data-originally-required]');
     originalRequiredFields.forEach(field => {
-        field.setAttribute('required', 'required');
+        if (field.name !== 'cost_amount') {
+            field.setAttribute('required', 'required');
+        }
     });
     
     // Create a hidden input for the confirm action
