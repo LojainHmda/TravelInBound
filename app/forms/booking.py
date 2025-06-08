@@ -28,7 +28,7 @@ class BookingRequestForm(FlaskForm):
     from_date = DateField('From Date', validators=[DataRequired()])
     to_date = DateField('To Date', validators=[DataRequired()])
     description = TextAreaField('Description')
-    amount = FloatField('Amount')
+    amount = FloatField('Amount (Optional for packages)', validators=[Optional()])
     currency = SelectField('Currency', choices=[
         ('USD', 'USD'),
         ('EUR', 'EUR'),
@@ -66,6 +66,6 @@ class ServiceItemForm(FlaskForm):
     start_date = DateField('Start Date', validators=[DataRequired()])
     end_date = DateField('End Date', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
-    amount = FloatField('Amount', validators=[DataRequired()])
+    amount = FloatField('Amount (Optional for packages)', validators=[Optional()])
     
     submit = SubmitField('Add Service Item')

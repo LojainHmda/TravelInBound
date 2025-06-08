@@ -213,7 +213,7 @@ def new_booking():
                     'start_date': str(form.from_date.data) if form.from_date.data else '',  # For compatibility
                     'end_date': str(form.to_date.data) if form.to_date.data else '',        # For compatibility
                     'description': form.description.data,
-                    'amount': float(form.amount.data) if form.amount.data else 0.0,
+                    'amount': float(form.amount.data) if form.amount.data else None,
                     'currency': form.currency.data,
                     'item_id': str(uuid.uuid4())  # Add a unique ID for each item
                 }
@@ -376,7 +376,7 @@ def new_booking():
                                 start_date=start_date,
                                 end_date=end_date,
                                 description=item_data['description'],
-                                amount=float(item_data['amount']),
+                                amount=float(item_data['amount']) if item_data['amount'] else 0.0,
                                 status=STATUS_REQUEST
                             )
                             
@@ -387,14 +387,14 @@ def new_booking():
                         db.session.commit()
                 
                 # Also add the current item if it has data
-                elif form.description.data and form.amount.data:
+                elif form.description.data:  # Remove amount requirement for package pricing
                     service_item = ServiceItem(
                         booking_id=booking.id,
                         service_type=form.service_type.data,
                         start_date=form.from_date.data,
                         end_date=form.to_date.data,
                         description=form.description.data,
-                        amount=form.amount.data,
+                        amount=form.amount.data if form.amount.data else 0.0,
                         status=STATUS_REQUEST
                     )
                     
@@ -586,7 +586,7 @@ def add_service_item(booking_id):
             start_date=form.start_date.data,
             end_date=form.end_date.data,
             description=form.description.data,
-            amount=form.amount.data,
+            amount=form.amount.data if form.amount.data else 0.0,  # Default to 0.0 for database compatibility
             status=STATUS_REQUEST
         )
         

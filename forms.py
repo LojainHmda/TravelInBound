@@ -27,7 +27,7 @@ class NewBookingForm(FlaskForm):
     from_date = DateField('From Date', validators=[DataRequired()])
     to_date = DateField('To Date', validators=[DataRequired()])
     description = TextAreaField('Description')
-    amount = FloatField('Amount')
+    amount = FloatField('Amount (Optional for packages)', validators=[Optional()])
     currency = SelectField('Currency', choices=[
         ('USD', 'USD'),
         ('EUR', 'EUR'),
