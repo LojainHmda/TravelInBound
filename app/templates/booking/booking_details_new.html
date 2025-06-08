@@ -617,7 +617,7 @@
                                                     <i class="fas fa-lock me-1"></i>Locked
                                                 </button>
                                             {% else %}
-                                                <button onclick="loadConfirmationModal({{ item.id }})" class="btn btn-sm me-1" style="background-color: #FF8C00; color: white; border: 1px solid #FF8C00; font-size: 0.75rem; padding: 4px 8px;">
+                                                <button onclick="loadConfirmationModal({{ item.id }}, '{{ item.service_type }}')" class="btn btn-sm me-1" style="background-color: #FF8C00; color: white; border: 1px solid #FF8C00; font-size: 0.75rem; padding: 4px 8px;">
                                                     <i class="fas fa-cogs me-1"></i>Add Details
                                                 </button>
                                             {% endif %}
@@ -1502,33 +1502,20 @@
 <!-- Confirmation Modal JavaScript -->
 <script>
 // Function to load confirmation modal with form data
-async function loadConfirmationModal(serviceItemId) {
+function loadConfirmationModal(serviceItemId, serviceType) {
     try {
-        // Show modal immediately with loading
+        // Show modal immediately
         const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
         modal.show();
         
-        // Reset modal content
-        document.getElementById('confirmationModalBody').innerHTML = `
-            <div class="text-center">
-                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                <p class="mt-2">Loading form...</p>
-            </div>
-        `;
-        document.getElementById('saveConfirmation').style.display = 'none';
-        
-        // Fetch service item data to determine form type
-        const response = await fetch(`/api/service-item/${serviceItemId}`);
-        const serviceData = await response.json();
-        
         // Build appropriate form based on service type
         let formHtml = '';
-        if (serviceData.service_type === 'FLIGHT') {
-            formHtml = buildFlightForm(serviceItemId, serviceData);
-        } else if (serviceData.service_type === 'HOTEL') {
-            formHtml = buildHotelForm(serviceItemId, serviceData);
+        if (serviceType === 'FLIGHT') {
+            formHtml = buildFlightForm(serviceItemId);
+        } else if (serviceType === 'HOTEL') {
+            formHtml = buildHotelForm(serviceItemId);
         } else {
-            formHtml = buildGenericForm(serviceItemId, serviceData);
+            formHtml = buildGenericForm(serviceItemId);
         }
         
         // Update modal content
@@ -1548,7 +1535,7 @@ async function loadConfirmationModal(serviceItemId) {
 }
 
 // Build flight confirmation form
-function buildFlightForm(serviceItemId, serviceData) {
+function buildFlightForm(serviceItemId) {
     return `
         <form id="confirmationForm">
             <div class="row">
@@ -1606,7 +1593,7 @@ function buildFlightForm(serviceItemId, serviceData) {
 }
 
 // Build hotel confirmation form
-function buildHotelForm(serviceItemId, serviceData) {
+function buildHotelForm(serviceItemId) {
     return `
         <form id="confirmationForm">
             <div class="mb-3">
@@ -1660,7 +1647,7 @@ function buildHotelForm(serviceItemId, serviceData) {
 }
 
 // Build generic confirmation form
-function buildGenericForm(serviceItemId, serviceData) {
+function buildGenericForm(serviceItemId) {
     return `
         <form id="confirmationForm">
             <div class="mb-3">
@@ -1715,10 +1702,12 @@ async function saveConfirmationDetails(serviceItemId) {
 
 // Check for automatic confirmation modal trigger
 {% if session.get('show_confirmation_modal') %}
+{% set modal_service_id = session.pop('show_confirmation_modal') %}
+{% set modal_service_item = booking.service_items|selectattr('id', 'equalto', modal_service_id)|first %}
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-load confirmation modal after page load
     setTimeout(function() {
-        loadConfirmationModal({{ session.pop('show_confirmation_modal') }});
+        loadConfirmationModal({{ modal_service_id }}, '{{ modal_service_item.service_type if modal_service_item else "OTHER" }}');
     }, 500);
 });
 {% endif %}
