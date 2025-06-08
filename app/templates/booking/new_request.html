@@ -755,35 +755,29 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // Set default description and amount based on service type
+        // Set default description based on service type (amount left empty for package pricing)
         let description = '';
-        let amount = '';
         
         switch(serviceType) {
             case 'FLIGHT':
                 description = 'Flight Ticket';
-                amount = '350.00';
                 break;
             case 'HOTEL':
                 description = 'Hotel Accommodation';
-                amount = '200.00';
                 break;
             case 'TRANSPORT':
                 description = 'Transport Service';
-                amount = '75.00';
                 break;
             case 'VISA':
                 description = 'Visa Processing';
-                amount = '120.00';
                 break;
             case 'INSURANCE':
                 description = 'Travel Insurance';
-                amount = '80.00';
                 break;
         }
         
         descriptionInput.value = description;
-        amountInput.value = amount;
+        amountInput.value = ''; // Leave empty for package pricing flexibility
         
         // Set USD as default currency
         for (let i = 0; i < currencySelect.options.length; i++) {
