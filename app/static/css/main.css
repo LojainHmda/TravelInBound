@@ -592,13 +592,13 @@ p, span, div, label, td, th {
     }
 }
 
-/* Modern Status Flow Styles */
+/* Modern Status Flow Styles - Compact with Gradients */
 .status-flow {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px 0;
-    max-width: 800px;
+    padding: 15px 0;
+    max-width: 600px;
     margin: 0 auto;
 }
 
@@ -611,66 +611,67 @@ p, span, div, label, td, th {
 }
 
 .status-circle {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 14px;
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     transition: all 0.3s ease;
     position: relative;
     z-index: 3;
 }
 
-/* Status circle states */
+/* Status circle states with gradients */
 .status-step.active .status-circle {
-    background-color: #FFD700;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
     color: #223A5E;
-    border: 3px solid #223A5E;
-    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    border: 2px solid #223A5E;
+    box-shadow: 0 3px 10px rgba(255, 215, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
 .status-step.completed .status-circle {
-    background-color: #fffacd;
+    background: linear-gradient(135deg, #fffacd 0%, #f0e68c 50%, #daa520 100%);
     color: #223A5E;
-    border: 3px solid #f0e68c;
-    box-shadow: 0 4px 12px rgba(240, 230, 140, 0.4);
+    border: 2px solid #f0e68c;
+    box-shadow: 0 3px 10px rgba(240, 230, 140, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
 }
 
 .status-step:not(.active):not(.completed) .status-circle {
-    background-color: #e9ecef;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #dee2e6 100%);
     color: #6c757d;
-    border: 3px solid #dee2e6;
+    border: 2px solid #dee2e6;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 .status-label {
     text-align: center;
-    min-width: 80px;
+    min-width: 60px;
 }
 
 .status-title {
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     color: #223A5E;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
 }
 
 .status-subtitle {
-    font-size: 11px;
+    font-size: 9px;
     color: #6c757d;
     font-weight: 400;
 }
 
-/* Connection lines between status circles */
+/* Connection lines between status circles - compact with gradients */
 .status-connector {
-    height: 4px;
-    width: 80px;
-    background-color: #dee2e6;
-    margin: 0 -10px;
-    margin-top: -25px;
+    height: 3px;
+    width: 60px;
+    background: linear-gradient(90deg, #dee2e6 0%, #e9ecef 50%, #dee2e6 100%);
+    margin: 0 -8px;
+    margin-top: -20px;
     border-radius: 2px;
     transition: all 0.3s ease;
     position: relative;
@@ -678,42 +679,48 @@ p, span, div, label, td, th {
 }
 
 .status-connector.active {
-    background-color: #f0e68c;
-    box-shadow: 0 2px 8px rgba(240, 230, 140, 0.4);
+    background: linear-gradient(90deg, #f0e68c 0%, #daa520 50%, #f0e68c 100%);
+    box-shadow: 0 2px 6px rgba(240, 230, 140, 0.5);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - compact design */
 @media (max-width: 768px) {
     .status-flow {
-        padding: 15px 10px;
+        padding: 12px 8px;
     }
     
     .status-circle {
-        width: 40px;
-        height: 40px;
-        font-size: 14px;
-    }
-    
-    .status-connector {
-        width: 60px;
-        margin-top: -20px;
-    }
-    
-    .status-title {
+        width: 35px;
+        height: 35px;
         font-size: 12px;
     }
     
+    .status-connector {
+        width: 50px;
+        margin-top: -18px;
+    }
+    
+    .status-title {
+        font-size: 11px;
+    }
+    
     .status-subtitle {
-        font-size: 10px;
+        font-size: 8px;
     }
 }
 
 @media (max-width: 576px) {
     .status-connector {
-        width: 40px;
+        width: 35px;
     }
     
     .status-label {
-        min-width: 60px;
+        min-width: 50px;
+    }
+    
+    .status-circle {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
     }
 }
