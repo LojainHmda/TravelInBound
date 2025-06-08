@@ -644,19 +644,6 @@ def add_service_item(booking_id):
     
     return redirect(url_for('booking.details', booking_id=booking.id))
 
-@booking_bp.route('/api/service-item/<int:item_id>')
-def get_service_item_api(item_id):
-    """API endpoint to get service item data for modal"""
-    service_item = ServiceItem.query.get_or_404(item_id)
-    return {
-        'id': service_item.id,
-        'service_type': service_item.service_type,
-        'description': service_item.description,
-        'start_date': service_item.start_date.isoformat() if service_item.start_date else None,
-        'end_date': service_item.end_date.isoformat() if service_item.end_date else None,
-        'amount': service_item.amount
-    }
-
 @booking_bp.route('/<int:booking_id>/update_status', methods=['POST'])
 def update_booking_status(booking_id):
     """Update the status of an entire booking"""
