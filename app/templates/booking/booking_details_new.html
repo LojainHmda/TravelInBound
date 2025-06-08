@@ -1141,11 +1141,12 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="amount" class="form-label">Amount</label>
+                            <label for="amount" class="form-label">Amount <span class="text-muted">(Optional for packages)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" min="0" class="form-control" id="amount" name="amount" required>
+                                <input type="number" step="0.01" class="form-control" id="amount" name="amount" placeholder="0.00">
                             </div>
+                            <small class="text-muted">Leave empty for package deals or bundled pricing</small>
                         </div>
                     </div>
                     <div class="form-check mb-3">
