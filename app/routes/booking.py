@@ -821,8 +821,16 @@ def delete_service_item(item_id):
 def cancel_service_item(item_id):
     """Cancel a service item and generate a credit memo if it was already invoiced"""
     import sys
-    service_item = ServiceItem.query.get_or_404(item_id)
-    booking = service_item.booking
+    print(f"CANCEL SERVICE: Starting cancellation for item_id={item_id}", file=sys.stderr)
+    
+    try:
+        service_item = ServiceItem.query.get_or_404(item_id)
+        booking = service_item.booking
+        print(f"CANCEL SERVICE: Found service item {item_id} for booking {booking.id}", file=sys.stderr)
+    except Exception as e:
+        print(f"CANCEL SERVICE ERROR: Failed to get service item {item_id}: {e}", file=sys.stderr)
+        flash('Service item not found', 'error')
+        return redirect(url_for('main.dashboard'))
     
     # Check if this item can be cancelled
     if service_item.is_cancelled:
@@ -834,8 +842,20 @@ def cancel_service_item(item_id):
     
     # Process cancellation
     reason = request.form.get('cancel_reason', '')
-    credit_amount = float(request.form.get('credit_amount', service_item.amount))
-    cancellation_fee = float(request.form.get('cancellation_fee', 0))
+    print(f"CANCEL SERVICE: Form data - reason='{reason}'", file=sys.stderr)
+    
+    try:
+        credit_amount_str = request.form.get('credit_amount', str(service_item.amount))
+        credit_amount = float(credit_amount_str) if credit_amount_str else service_item.amount
+        print(f"CANCEL SERVICE: Credit amount = {credit_amount}", file=sys.stderr)
+        
+        cancellation_fee_str = request.form.get('cancellation_fee', '0')
+        cancellation_fee = float(cancellation_fee_str) if cancellation_fee_str else 0
+        print(f"CANCEL SERVICE: Cancellation fee = {cancellation_fee}", file=sys.stderr)
+    except (ValueError, TypeError) as e:
+        print(f"CANCEL SERVICE ERROR: Failed to parse amounts: {e}", file=sys.stderr)
+        flash('Invalid credit amount or cancellation fee entered', 'error')
+        return redirect(url_for('booking.details', booking_id=booking.id))
     
     # Mark item as cancelled
     service_item.is_cancelled = True
@@ -921,10 +941,26 @@ def cancel_service_item(item_id):
         # DO NOT change the booking total - it should remain as the original invoice amount
         
     # Update item status and save
-    db.session.commit()
+    try:
+        db.session.commit()
+        print(f"CANCEL SERVICE: Database commit successful for item {item_id}", file=sys.stderr)
+    except Exception as e:
+        print(f"CANCEL SERVICE ERROR: Database commit failed: {e}", file=sys.stderr)
+        db.session.rollback()
+        flash('Failed to cancel service item due to database error', 'error')
+        return redirect(url_for('booking.details', booking_id=booking.id))
     
     flash(f'Service item successfully cancelled', 'success')
-    return redirect(url_for('booking.details', booking_id=booking.id))
+    print(f"CANCEL SERVICE: Redirecting to booking details for booking {booking.id}", file=sys.stderr)
+    
+    try:
+        redirect_url = url_for('booking.details', booking_id=booking.id)
+        print(f"CANCEL SERVICE: Generated redirect URL: {redirect_url}", file=sys.stderr)
+        return redirect(redirect_url)
+    except Exception as e:
+        print(f"CANCEL SERVICE ERROR: Failed to generate redirect URL: {e}", file=sys.stderr)
+        flash('Service cancelled but failed to redirect', 'warning')
+        return redirect(url_for('main.dashboard'))
 
 @booking_bp.route('/confirm_service/<int:item_id>', methods=['GET', 'POST'])
 def confirm_service(item_id):
