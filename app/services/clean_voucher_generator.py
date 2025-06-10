@@ -69,13 +69,28 @@ class CleanVoucherGenerator:
         story.append(title)
         story.append(Spacer(1, 20))
         
+        # Get customer details (prefer customer over requester)
+        customer_name = 'N/A'
+        customer_email = 'N/A'
+        
+        if booking.customer:
+            customer_name = booking.customer.name
+            customer_email = booking.customer.email
+        elif booking.requester:
+            customer_name = booking.requester.username
+            customer_email = booking.requester.email
+        
+        # Filter for confirmed services only (exclude cancelled and unconfirmed)
+        confirmed_services = [item for item in booking.service_items 
+                            if item.status == 'CONFIRMED' and not item.is_cancelled]
+        
         # Customer and Voucher Details
         details_data = [
             ['Customer:', 'Voucher Details:'],
-            [booking.requester.username if booking.requester else 'N/A', f'Voucher Number: {booking.reference_number}'],
-            [booking.requester.email if booking.requester else 'N/A', f'Booking Date: {booking.created_at.strftime("%d %b %Y")}'],
-            ['', f'Total Pax: {len(booking.service_items) if booking.service_items else 1:02d}'],
-            ['', 'Status: Confirmed']
+            [customer_name, f'Voucher Number: {booking.reference_number}'],
+            [customer_email, f'Booking Date: {booking.created_at.strftime("%d %b %Y")}'],
+            ['', f'Total Services: {len(confirmed_services)}'],
+            ['', f'Status: {booking.status}']
         ]
         
         details_table = Table(details_data, colWidths=[3.25*inch, 3.25*inch])
@@ -97,13 +112,13 @@ class CleanVoucherGenerator:
         story.append(details_table)
         story.append(Spacer(1, 20))
         
-        # Service Details Table
-        if booking.service_items:
+        # Service Details Table - Only show confirmed services
+        if confirmed_services:
             service_data = [
                 ['Service', 'Description', 'Dates', 'Status', 'Amount']
             ]
             
-            for item in booking.service_items:
+            for item in confirmed_services:
                 service_icon = {
                     'FLIGHT': '✈',
                     'HOTEL': '🏨',
@@ -116,12 +131,8 @@ class CleanVoucherGenerator:
                 dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
                 amount = f"${item.amount:.2f}" if item.amount else "$0.00"
                 
-                if item.status == 'COMPLETED':
-                    status = "Confirmed"
-                elif item.status == 'IN_PROGRESS':
-                    status = "Processing"
-                else:
-                    status = "Pending"
+                # Since we're only showing confirmed services, all should show as "Confirmed"
+                status = "Confirmed"
                 
                 service_data.append([
                     service_name,
@@ -173,14 +184,14 @@ class CleanVoucherGenerator:
         )
         story.append(travel_info)
         
-        # Payment Summary
-        total_amount = booking.total_amount or 0
+        # Payment Summary - Calculate based on confirmed services only
+        confirmed_total = sum(item.amount for item in confirmed_services if item.amount) or 0
         paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
-        balance = total_amount - paid_amount
+        balance = confirmed_total - paid_amount
         
         payment_data = [
             ['Payment Summary'],
-            [f'Total Amount: ${total_amount:.2f}'],
+            [f'Total Amount: ${confirmed_total:.2f}'],
             [f'Amount Paid: ${paid_amount:.2f}'],
             [f'Balance Due: ${balance:.2f}']
         ]
