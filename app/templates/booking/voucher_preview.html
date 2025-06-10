@@ -144,17 +144,18 @@
                                     <div class="col-md-4">
                                         <h5 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i>Booking Summary</h5>
                                         <table class="table table-sm table-borderless mb-0">
+                                            {% set confirmed_services = booking.service_items|selectattr('status', 'equalto', 'CONFIRMED')|selectattr('is_cancelled', 'equalto', false)|list %}
                                             <tr>
                                                 <td class="fw-bold">Services:</td>
-                                                <td>{{ booking.service_items|length if booking.service_items else 0 }}</td>
+                                                <td>{{ confirmed_services|length }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-bold">Travel Date:</td>
-                                                <td>{{ booking.service_items[0].start_date.strftime('%d %b %Y') if booking.service_items else 'N/A' }}</td>
+                                                <td>{{ confirmed_services[0].start_date.strftime('%d %b %Y') if confirmed_services else 'N/A' }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-bold">Total Amount:</td>
-                                                <td class="text-primary fw-bold">${{ "%.2f"|format(booking.total_amount or 0) }}</td>
+                                                <td class="text-primary fw-bold">${{ "%.2f"|format((confirmed_services|sum(attribute='amount') or 0)) }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-bold">Status:</td>
@@ -177,10 +178,10 @@
                     </div>
                 </div>
 
-                <!-- Detailed Service Information -->
-                {% set flight_services = booking.service_items|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
-                {% set hotel_services = booking.service_items|selectattr('service_type', 'equalto', 'HOTEL')|list %}
-                {% set other_services = booking.service_items|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
+                <!-- Detailed Service Information - Only show confirmed, non-cancelled services -->
+                {% set flight_services = confirmed_services|selectattr('service_type', 'equalto', 'FLIGHT')|list %}
+                {% set hotel_services = confirmed_services|selectattr('service_type', 'equalto', 'HOTEL')|list %}
+                {% set other_services = confirmed_services|rejectattr('service_type', 'in', ['FLIGHT', 'HOTEL'])|list %}
 
                 <!-- Flight Details Section -->
                 {% if flight_services %}
@@ -283,11 +284,7 @@
                                             <tr>
                                                 <td><strong>Status:</strong></td>
                                                 <td>
-                                                    {% if flight.status == 'COMPLETED' %}
-                                                        <span class="badge bg-success">Confirmed</span>
-                                                    {% else %}
-                                                        <span class="badge bg-warning">Pending</span>
-                                                    {% endif %}
+                                                    <span class="badge bg-success">Confirmed</span>
                                                 </td>
                                             </tr>
                                         </table>
@@ -413,11 +410,7 @@
                                             <tr>
                                                 <td><strong>Status:</strong></td>
                                                 <td>
-                                                    {% if hotel.status == 'COMPLETED' %}
-                                                        <span class="badge bg-success">Confirmed</span>
-                                                    {% else %}
-                                                        <span class="badge bg-warning">Pending</span>
-                                                    {% endif %}
+                                                    <span class="badge bg-success">Confirmed</span>
                                                 </td>
                                             </tr>
                                         </table>
@@ -473,13 +466,7 @@
                                     <td>{{ item.description }}</td>
                                     <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                     <td>
-                                        {% if item.status == 'COMPLETED' %}
-                                            <span class="badge bg-success">Confirmed</span>
-                                        {% elif item.status == 'IN_PROGRESS' %}
-                                            <span class="badge bg-warning text-dark">Processing</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">Pending</span>
-                                        {% endif %}
+                                        <span class="badge bg-success">Confirmed</span>
                                     </td>
                                     <td class="text-end">${{ "%.2f"|format(item.amount) if item.amount else "0.00" }}</td>
                                 </tr>
