@@ -51,7 +51,7 @@ class CleanVoucherGenerator:
         booking = Booking.query.get_or_404(booking_id)
         
         buffer = BytesIO()
-        doc = SimpleDocTemplate(
+        pdf_doc = SimpleDocTemplate(
             buffer,
             pagesize=letter,
             rightMargin=0.75*inch,
@@ -286,7 +286,7 @@ class CleanVoucherGenerator:
         )
         story.append(thank_you)
         
-        doc.build(story)
+        pdf_doc.build(story)
         buffer.seek(0)
         return buffer
 
