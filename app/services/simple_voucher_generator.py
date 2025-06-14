@@ -1,6 +1,6 @@
 """
-Clean Voucher Generator Service
-Generates professional travel vouchers with clean, simple layout matching the preview
+Simple Voucher Generator Service
+Generates vouchers with real confirmation data, avoiding Document model conflicts
 """
 
 import json
@@ -13,46 +13,33 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 
-class CleanVoucherGenerator:
+class SimpleVoucherGenerator:
     def __init__(self):
         self.styles = getSampleStyleSheet()
-        self.setup_custom_styles()
+        self.setup_styles()
     
-    def setup_custom_styles(self):
-        """Setup clean, simple styles"""
+    def setup_styles(self):
+        """Setup custom styles"""
         self.styles.add(ParagraphStyle(
-            name='CleanTitle',
+            name='VoucherTitle',
             parent=self.styles['Heading1'],
-            fontSize=16,
-            spaceAfter=20,
+            fontSize=18,
+            textColor=colors.darkblue,
             alignment=TA_CENTER,
-            textColor=colors.darkblue
-        ))
-        
-        self.styles.add(ParagraphStyle(
-            name='SectionHeader',
-            parent=self.styles['Heading3'],
-            fontSize=11,
-            spaceAfter=8,
-            textColor=colors.grey
-        ))
-        
-        self.styles.add(ParagraphStyle(
-            name='CleanNormal',
-            parent=self.styles['Normal'],
-            fontSize=10,
-            spaceAfter=6
+            spaceAfter=20
         ))
     
     def generate_voucher(self, booking_id: int) -> BytesIO:
-        """Generate a clean voucher PDF"""
-        # Import models with specific aliases to avoid conflicts
-        from app.models.booking import Booking as BookingModel
+        """Generate voucher PDF"""
+        # Import here to avoid conflicts
+        import app.models.booking as booking_models
+        import app.models.service as service_models
         
-        booking = BookingModel.query.get_or_404(booking_id)
+        booking = booking_models.Booking.query.get_or_404(booking_id)
         
+        # Create PDF
         buffer = BytesIO()
-        pdf_doc = SimpleDocTemplate(
+        pdf_document = SimpleDocTemplate(
             buffer,
             pagesize=letter,
             rightMargin=0.75*inch,
@@ -66,12 +53,12 @@ class CleanVoucherGenerator:
         # Title
         title = Paragraph(
             f'<b>Travel Voucher #{booking.reference_number}</b>',
-            self.styles['CleanTitle']
+            self.styles['VoucherTitle']
         )
         story.append(title)
         story.append(Spacer(1, 20))
         
-        # Get customer details (prefer customer over requester)
+        # Customer info
         customer_name = 'N/A'
         customer_email = 'N/A'
         
@@ -82,11 +69,11 @@ class CleanVoucherGenerator:
             customer_name = booking.requester.username
             customer_email = booking.requester.email
         
-        # Filter for confirmed services only (exclude cancelled and unconfirmed)
+        # Filter confirmed services
         confirmed_services = [item for item in booking.service_items 
                             if item.status == 'CONFIRMED' and not item.is_cancelled]
         
-        # Customer and Voucher Details
+        # Customer details
         details_data = [
             ['Customer:', 'Voucher Details:'],
             [customer_name, f'Voucher Number: {booking.reference_number}'],
@@ -99,10 +86,10 @@ class CleanVoucherGenerator:
         details_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),  # Headers
+            ('FONTNAME', (0, 0), (1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (1, 0), 11),
             ('TEXTCOLOR', (0, 0), (1, 0), colors.grey),
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),  # Customer name
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (0, 1), 12),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -114,11 +101,9 @@ class CleanVoucherGenerator:
         story.append(details_table)
         story.append(Spacer(1, 20))
         
-        # Service Details Table - Only show confirmed services
+        # Service details
         if confirmed_services:
-            service_data = [
-                ['Service', 'Description', 'Dates', 'Status', 'Amount']
-            ]
+            service_data = [['Service', 'Description', 'Dates', 'Status', 'Amount']]
             
             for item in confirmed_services:
                 service_icon = {
@@ -132,18 +117,20 @@ class CleanVoucherGenerator:
                 service_name = f"{service_icon} {item.service_type}"
                 dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
                 amount = f"${item.amount:.2f}" if item.amount else "$0.00"
-                
-                # Get description from confirmation data if available
                 description = item.description or "N/A"
                 
-                # Extract better description from confirmation documents
-                for document in item.documents:
-                    if document.document_type == 'CONFIRMATION' and document.notes:
+                # Extract route from confirmation data
+                service_documents = service_models.Document.query.filter_by(
+                    service_item_id=item.id,
+                    document_type='CONFIRMATION'
+                ).all()
+                
+                for service_doc in service_documents:
+                    if service_doc.notes:
                         try:
-                            confirmation_data = json.loads(document.notes)
+                            confirmation_data = json.loads(service_doc.notes)
                             
                             if item.service_type == 'FLIGHT':
-                                # Build flight description from confirmation data
                                 departure = confirmation_data.get('departure_airport', '')
                                 arrival = confirmation_data.get('arrival_airport', '')
                                 flight_num = confirmation_data.get('flight_number', '')
@@ -156,45 +143,34 @@ class CleanVoucherGenerator:
                                         description = f"{departure} → {arrival}"
                                         
                             elif item.service_type == 'HOTEL':
-                                # Build hotel description from confirmation data
                                 hotel_name = confirmation_data.get('hotel_name', '')
                                 city = confirmation_data.get('city', '')
                                 if hotel_name:
                                     description = f"{hotel_name}" + (f", {city}" if city else "")
                                     
                         except (json.JSONDecodeError, AttributeError):
-                            pass  # Keep original description if parsing fails
-                
-                # Since we're only showing confirmed services, all should show as "Confirmed"
-                status = "Confirmed"
+                            pass
                 
                 service_data.append([
                     service_name,
                     description,
                     dates,
-                    status,
+                    "Confirmed",
                     amount
                 ])
             
             service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
             service_table.setStyle(TableStyle([
-                # Header row
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
                 ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                
-                # Data rows
                 ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
                 ('FONTSIZE', (0, 1), (-1, -1), 9),
-                
-                # Grid and alignment
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('ALIGN', (4, 0), (4, -1), 'RIGHT'),  # Amount column
+                ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                
-                # Padding
                 ('TOPPADDING', (0, 0), (-1, -1), 6),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
                 ('LEFTPADDING', (0, 0), (-1, -1), 8),
@@ -204,7 +180,7 @@ class CleanVoucherGenerator:
             story.append(service_table)
             story.append(Spacer(1, 20))
         
-        # Travel Information
+        # Travel info
         travel_info = Paragraph(
             '<b>Travel Information</b><br/><br/>'
             'Please keep this voucher with you during travel. Present it at check-in and to service providers as confirmation of your booking.',
@@ -218,7 +194,7 @@ class CleanVoucherGenerator:
         )
         story.append(travel_info)
         
-        # Payment Summary - Calculate based on confirmed services only
+        # Payment summary
         confirmed_total = sum(item.amount for item in confirmed_services if item.amount) or 0
         paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
         balance = confirmed_total - paid_amount
@@ -251,7 +227,7 @@ class CleanVoucherGenerator:
         story.append(payment_table)
         story.append(Spacer(1, 30))
         
-        # Company Footer
+        # Company footer
         company_header = Paragraph(
             '<b><font size="14" color="darkblue">ARABI TRAVEL</font></b>',
             ParagraphStyle('CompanyHeader', alignment=TA_CENTER, spaceAfter=15)
@@ -287,10 +263,10 @@ class CleanVoucherGenerator:
         )
         story.append(thank_you)
         
-        pdf_doc.build(story)
+        pdf_document.build(story)
         buffer.seek(0)
         return buffer
 
 
 # Global instance
-clean_voucher_generator = CleanVoucherGenerator()
+simple_voucher_generator = SimpleVoucherGenerator()
