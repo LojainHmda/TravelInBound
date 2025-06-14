@@ -215,33 +215,20 @@ class SimpleVoucherGenerator:
                                 passenger_names = confirmation_data.get('passenger_names', [])
                                 
                                 if departure and arrival:
-                                    # Build comprehensive flight description
-                                    flight_info = []
+                                    # Build concise flight description for table
                                     if flight_num and airline:
-                                        flight_info.append(f"{airline} {flight_num}")
+                                        description = f"{airline} {flight_num}: {departure} → {arrival}"
+                                    else:
+                                        description = f"{departure} → {arrival}"
                                     
-                                    flight_info.append(f"{departure} → {arrival}")
-                                    
-                                    if flight_date:
-                                        flight_info.append(f"Date: {flight_date}")
-                                    
-                                    if flight_time:
-                                        flight_info.append(f"Time: {flight_time}")
-                                    
-                                    if travel_class:
-                                        flight_info.append(f"Class: {travel_class}")
-                                    
-                                    if ticket_number:
-                                        flight_info.append(f"Ticket: {ticket_number}")
+                                    # Add essential details on separate lines
+                                    if flight_date and flight_time:
+                                        description += f"\n{flight_date} at {flight_time}"
+                                    elif flight_date:
+                                        description += f"\n{flight_date}"
                                     
                                     if pnr:
-                                        flight_info.append(f"PNR: {pnr}")
-                                    
-                                    if passenger_names:
-                                        passengers = ', '.join(passenger_names) if isinstance(passenger_names, list) else str(passenger_names)
-                                        flight_info.append(f"Passengers: {passengers}")
-                                    
-                                    description = ' | '.join(flight_info)
+                                        description += f"\nPNR: {pnr}"
                                         
                             elif item.service_type == 'HOTEL':
                                 hotel_name = confirmation_data.get('hotel_name', '')
@@ -252,15 +239,27 @@ class SimpleVoucherGenerator:
                         except (json.JSONDecodeError, AttributeError):
                             pass
                 
+                # Create wrapped paragraph for flight details
+                flight_para = Paragraph(
+                    description.replace('\n', '<br/>'),
+                    ParagraphStyle(
+                        'FlightDetail',
+                        fontSize=8,
+                        leading=10,
+                        alignment=TA_LEFT,
+                        wordWrap='LTR'
+                    )
+                )
+                
                 service_data.append([
                     service_name,
-                    description,
+                    flight_para,
                     dates,
                     "Confirmed",
                     amount
                 ])
             
-            service_table = Table(service_data, colWidths=[0.8*inch, 3.5*inch, 1.2*inch, 0.8*inch, 0.7*inch])
+            service_table = Table(service_data, colWidths=[0.6*inch, 3.8*inch, 1.2*inch, 0.7*inch, 0.7*inch])
             service_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
@@ -271,11 +270,12 @@ class SimpleVoucherGenerator:
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
                 ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('ALIGN', (4, 0), (4, -1), 'RIGHT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Changed to TOP for better text wrapping
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),  # Alternating rows
             ]))
             
             story.append(service_table)
