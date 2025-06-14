@@ -46,7 +46,7 @@ class CleanVoucherGenerator:
     
     def generate_voucher(self, booking_id: int) -> BytesIO:
         """Generate a clean voucher PDF"""
-        from app.models import Booking
+        from app.models.booking import Booking
         
         booking = Booking.query.get_or_404(booking_id)
         
