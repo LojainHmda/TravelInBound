@@ -190,7 +190,18 @@
                     {% for flight in flight_services %}
                     <div class="card mb-3">
                         <div class="card-header bg-light">
-                            <h6 class="mb-0">Flight {{ loop.index }} - {{ flight.description or 'Flight Booking' }}</h6>
+                            {% set flight_title = flight.description or 'Flight Booking' %}
+                            {% for doc in flight.documents if doc.document_type == 'CONFIRMATION' %}
+                                {% set confirmation_data = doc.notes|from_json if doc.notes else {} %}
+                                {% if confirmation_data.departure_airport and confirmation_data.arrival_airport %}
+                                    {% if confirmation_data.airline and confirmation_data.flight_number %}
+                                        {% set flight_title = confirmation_data.airline + ' ' + confirmation_data.flight_number + ': ' + confirmation_data.departure_airport + ' → ' + confirmation_data.arrival_airport %}
+                                    {% else %}
+                                        {% set flight_title = confirmation_data.departure_airport + ' → ' + confirmation_data.arrival_airport %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            <h6 class="mb-0">Flight {{ loop.index }} - {{ flight_title }}</h6>
                         </div>
                         <div class="card-body">
                             <div class="row">

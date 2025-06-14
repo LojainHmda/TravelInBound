@@ -3,6 +3,7 @@ Clean Voucher Generator Service
 Generates professional travel vouchers with clean, simple layout matching the preview
 """
 
+import json
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
@@ -131,12 +132,44 @@ class CleanVoucherGenerator:
                 dates = f"{item.start_date.strftime('%d %b')} - {item.end_date.strftime('%d %b %Y')}"
                 amount = f"${item.amount:.2f}" if item.amount else "$0.00"
                 
+                # Get description from confirmation data if available
+                description = item.description or "N/A"
+                
+                # Extract better description from confirmation documents
+                for doc in item.documents:
+                    if doc.document_type == 'CONFIRMATION' and doc.notes:
+                        try:
+                            confirmation_data = json.loads(doc.notes)
+                            
+                            if item.service_type == 'FLIGHT':
+                                # Build flight description from confirmation data
+                                departure = confirmation_data.get('departure_airport', '')
+                                arrival = confirmation_data.get('arrival_airport', '')
+                                flight_num = confirmation_data.get('flight_number', '')
+                                airline = confirmation_data.get('airline', '')
+                                
+                                if departure and arrival:
+                                    if flight_num and airline:
+                                        description = f"{airline} {flight_num}: {departure} → {arrival}"
+                                    else:
+                                        description = f"{departure} → {arrival}"
+                                        
+                            elif item.service_type == 'HOTEL':
+                                # Build hotel description from confirmation data
+                                hotel_name = confirmation_data.get('hotel_name', '')
+                                city = confirmation_data.get('city', '')
+                                if hotel_name:
+                                    description = f"{hotel_name}" + (f", {city}" if city else "")
+                                    
+                        except (json.JSONDecodeError, AttributeError):
+                            pass  # Keep original description if parsing fails
+                
                 # Since we're only showing confirmed services, all should show as "Confirmed"
                 status = "Confirmed"
                 
                 service_data.append([
                     service_name,
-                    item.description or "N/A",
+                    description,
                     dates,
                     status,
                     amount
