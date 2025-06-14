@@ -4,7 +4,7 @@ Voucher generation routes
 
 from flask import Blueprint, render_template, request, jsonify, send_file, flash, redirect, url_for
 from flask_login import login_required, current_user
-from app.services.voucher_generator import voucher_generator
+from app.services.clean_voucher_generator import CleanVoucherGenerator
 from app.models import Booking
 import tempfile
 import os
@@ -29,8 +29,9 @@ def generate_voucher(booking_id):
         # Get instructions from query parameter
         instructions = request.args.get('instructions', '')
         
-        # Generate the voucher PDF with instructions
-        voucher_buffer = voucher_generator.generate_voucher(booking_id, instructions)
+        # Generate the voucher PDF using clean generator
+        generator = CleanVoucherGenerator()
+        voucher_buffer = generator.generate_voucher(booking_id)
         
         # Create temporary file for download
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
@@ -66,8 +67,9 @@ def api_generate_voucher(booking_id):
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher PDF
-        voucher_buffer = voucher_generator.generate_voucher(booking_id)
+        # Generate the voucher PDF using clean generator
+        generator = CleanVoucherGenerator()
+        voucher_buffer = generator.generate_voucher(booking_id)
         
         return jsonify({
             'success': True,
