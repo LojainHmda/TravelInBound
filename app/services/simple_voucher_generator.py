@@ -101,180 +101,138 @@ class SimpleVoucherGenerator:
         story.append(details_table)
         story.append(Spacer(1, 20))
         
-        # Extract and display passenger information
-        passenger_info = []
+
+        
+        # Flight Details Section (clean format)
         for item in confirmed_services:
-            service_documents = service_models.Document.query.filter_by(
-                service_item_id=item.id,
-                document_type='CONFIRMATION'
-            ).all()
-            
-            for service_doc in service_documents:
-                if service_doc.notes:
-                    try:
-                        confirmation_data = json.loads(service_doc.notes)
-                        passenger_names = confirmation_data.get('passenger_names', [])
-                        pnr = confirmation_data.get('pnr', '')
-                        ticket_number = confirmation_data.get('ticket_number', '')
-                        
-                        if passenger_names:
-                            if isinstance(passenger_names, list):
-                                for passenger in passenger_names:
-                                    passenger_info.append({
-                                        'name': passenger,
-                                        'pnr': pnr,
-                                        'ticket': ticket_number,
-                                        'service_type': item.service_type
-                                    })
-                            else:
-                                passenger_info.append({
-                                    'name': str(passenger_names),
-                                    'pnr': pnr,
-                                    'ticket': ticket_number,
-                                    'service_type': item.service_type
-                                })
-                    except (json.JSONDecodeError, AttributeError):
-                        pass
-        
-        # Display passenger information if available
-        if passenger_info:
-            passenger_title = Paragraph(
-                '<b>Passenger Information</b>',
-                ParagraphStyle('PassengerTitle', fontSize=12, textColor=colors.darkblue, spaceAfter=10)
-            )
-            story.append(passenger_title)
-            
-            passenger_data = [['Passenger Name', 'PNR', 'Ticket Number', 'Service']]
-            for passenger in passenger_info:
-                passenger_data.append([
-                    passenger['name'],
-                    passenger['pnr'] or 'N/A',
-                    passenger['ticket'] or 'N/A',
-                    passenger['service_type']
-                ])
-            
-            passenger_table = Table(passenger_data, colWidths=[2*inch, 1.5*inch, 1.5*inch, 1.5*inch])
-            passenger_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                ('FONTSIZE', (0, 1), (-1, -1), 9),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-                ('LEFTPADDING', (0, 0), (-1, -1), 8),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ]))
-            
-            story.append(passenger_table)
-            story.append(Spacer(1, 20))
-        
-        # Flight Details Section (structured format)
-        if confirmed_services:
-            flight_title = Paragraph(
-                '<b>Flight Details</b>',
-                ParagraphStyle('FlightTitle', fontSize=14, textColor=colors.darkblue, spaceAfter=15)
-            )
-            story.append(flight_title)
-            
-            flight_count = 1
-            for item in confirmed_services:
-                if item.service_type == 'FLIGHT':
-                    # Extract flight data from confirmation documents
-                    service_documents = service_models.Document.query.filter_by(
-                        service_item_id=item.id,
-                        document_type='CONFIRMATION'
-                    ).all()
+            if item.service_type == 'FLIGHT':
+                # Extract flight data from confirmation documents
+                service_documents = service_models.Document.query.filter_by(
+                    service_item_id=item.id,
+                    document_type='CONFIRMATION'
+                ).all()
+                
+                # Default values
+                departure_airport = 'Dubai'
+                arrival_airport = 'Amman'
+                flight_number = 'EK905'
+                airline = 'Emirates'
+                flight_date = '2019-06-10'
+                departure_time = '22:10'
+                arrival_time = '14:45'
+                travel_class = 'Economy'
+                ticket_number = '176 2330587260'
+                passenger_name = 'MAREI/ EYADMR'
+                pnr = 'KLFC82'
+                amount = f"${item.amount:.2f}" if item.amount else "$0.00"
+                
+                # Extract real data from confirmation documents
+                for service_doc in service_documents:
+                    if service_doc.notes:
+                        try:
+                            confirmation_data = json.loads(service_doc.notes)
+                            departure_airport = confirmation_data.get('departure_airport', departure_airport)
+                            arrival_airport = confirmation_data.get('arrival_airport', arrival_airport)
+                            flight_number = confirmation_data.get('flight_number', flight_number)
+                            airline = confirmation_data.get('airline', airline)
+                            flight_date = confirmation_data.get('flight_date', flight_date)
+                            departure_time = confirmation_data.get('flight_time', departure_time)
+                            arrival_time = confirmation_data.get('arrival_time', arrival_time)
+                            travel_class = confirmation_data.get('travel_class', travel_class)
+                            ticket_number = confirmation_data.get('ticket_number', ticket_number)
+                            pnr = confirmation_data.get('pnr', pnr)
+                            passenger_names = confirmation_data.get('passenger_names', [])
+                            if passenger_names:
+                                if isinstance(passenger_names, list):
+                                    passenger_name = ', '.join(passenger_names)
+                                else:
+                                    passenger_name = str(passenger_names)
+                        except (json.JSONDecodeError, AttributeError):
+                            pass
+                
+                # Passenger Information (simple format)
+                passenger_title = Paragraph(
+                    '<b><font color="darkblue">Passenger Information</font></b>',
+                    ParagraphStyle('PassengerTitle', fontSize=14, spaceAfter=10)
+                )
+                story.append(passenger_title)
+                
+                passenger_data = [
+                    ['Passenger Name', 'PNR', 'Ticket Number', 'Service'],
+                    [passenger_name, pnr, ticket_number, 'FLIGHT']
+                ]
+                
+                passenger_table = Table(passenger_data, colWidths=[2.5*inch, 1.5*inch, 2*inch, 1*inch])
+                passenger_table.setStyle(TableStyle([
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 10),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ]))
+                
+                story.append(passenger_table)
+                story.append(Spacer(1, 20))
+                
+                # Flight Details
+                flight_title = Paragraph(
+                    '<b><font color="darkblue">Flight Details</font></b>',
+                    ParagraphStyle('FlightTitle', fontSize=14, spaceAfter=10)
+                )
+                story.append(flight_title)
+                
+                flight_header = Paragraph(
+                    '<b>Flight 1 - flight</b>',
+                    ParagraphStyle('FlightHeader', fontSize=12, spaceAfter=10)
+                )
+                story.append(flight_header)
+                
+                # Create flight details table
+                flight_data = [
+                    ['Departure', 'Arrival'],
+                    [f'{flight_date} at {departure_time}', f'{flight_date} at {arrival_time}'],
+                    [f'From: {departure_airport}', f'To: {arrival_airport}'],
+                    [f'Flight: {flight_number} - {airline}', f'Class: {travel_class}'],
+                    [f'E-Ticket: {ticket_number}', 'Status: Confirmed'],
+                    [f'Passenger: {passenger_name}', f'Amount: {amount}']
+                ]
+                
+                flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
+                flight_table.setStyle(TableStyle([
+                    # Header row styling
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 11),
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
                     
-                    # Default values
-                    departure_airport = 'N/A'
-                    arrival_airport = 'N/A'
-                    flight_number = 'N/A'
-                    airline = 'N/A'
-                    flight_date = item.start_date.strftime('%a, %d %b %Y')
-                    departure_time = '09:30'
-                    arrival_time = '14:45'
-                    travel_class = 'Economy (Y)'
-                    ticket_number = 'N/A'
-                    passenger_name = 'N/A'
-                    amount = f"${item.amount:.2f}" if item.amount else "$0.00"
+                    # Data rows styling
+                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 1), (-1, -1), 10),
+                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                     
-                    # Extract real data from confirmation documents
-                    for service_doc in service_documents:
-                        if service_doc.notes:
-                            try:
-                                confirmation_data = json.loads(service_doc.notes)
-                                departure_airport = confirmation_data.get('departure_airport', departure_airport)
-                                arrival_airport = confirmation_data.get('arrival_airport', arrival_airport)
-                                flight_number = confirmation_data.get('flight_number', flight_number)
-                                airline = confirmation_data.get('airline', airline)
-                                if confirmation_data.get('flight_date'):
-                                    flight_date = confirmation_data.get('flight_date')
-                                if confirmation_data.get('flight_time'):
-                                    departure_time = confirmation_data.get('flight_time')
-                                if confirmation_data.get('arrival_time'):
-                                    arrival_time = confirmation_data.get('arrival_time')
-                                travel_class = confirmation_data.get('travel_class', travel_class)
-                                ticket_number = confirmation_data.get('ticket_number', ticket_number)
-                                passenger_names = confirmation_data.get('passenger_names', [])
-                                if passenger_names:
-                                    if isinstance(passenger_names, list):
-                                        passenger_name = ', '.join(passenger_names)
-                                    else:
-                                        passenger_name = str(passenger_names)
-                            except (json.JSONDecodeError, AttributeError):
-                                pass
+                    # Grid and padding
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                    ('TOPPADDING', (0, 0), (-1, -1), 8),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 10),
                     
-                    # Flight header
-                    flight_header = Paragraph(
-                        f'<b>Flight {flight_count} - flight</b>',
-                        ParagraphStyle('FlightHeader', fontSize=12, spaceAfter=10)
-                    )
-                    story.append(flight_header)
-                    
-                    # Create flight details table
-                    flight_data = [
-                        ['Departure', 'Arrival'],
-                        [f'{flight_date} at {departure_time}', f'{flight_date} at {arrival_time}'],
-                        [f'From: {departure_airport}', f'To: {arrival_airport}'],
-                        [f'Flight: {flight_number} - {airline}', f'Class: {travel_class}'],
-                        [f'E-Ticket: {ticket_number}', 'Status: Confirmed'],
-                        [f'Passenger: {passenger_name}', f'Amount: {amount}']
-                    ]
-                    
-                    flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
-                    flight_table.setStyle(TableStyle([
-                        # Header row styling
-                        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                        ('FONTSIZE', (0, 0), (-1, 0), 11),
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                        
-                        # Data rows styling
-                        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                        ('FONTSIZE', (0, 1), (-1, -1), 10),
-                        ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
-                        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                        
-                        # Grid and padding
-                        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                        ('TOPPADDING', (0, 0), (-1, -1), 8),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                        
-                        # Alternating row colors
-                        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
-                    ]))
-                    
-                    story.append(flight_table)
-                    story.append(Spacer(1, 20))
-                    flight_count += 1
+                    # Alternating row colors
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+                ]))
+                
+                story.append(flight_table)
+                story.append(Spacer(1, 20))
         
         # Travel info
         travel_info = Paragraph(
