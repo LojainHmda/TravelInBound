@@ -197,9 +197,8 @@ class SimpleVoucherGenerator:
                 )
                 story.append(flight_header)
                 
-                # Flight details table
+                # Flight details table (no header)
                 flight_data = [
-                    ['Departure', 'Arrival'],
                     [f"Tue, {flight_details['flight_date']} at {flight_details['departure_time']}", 
                      f"Tue, {flight_details['flight_date']} at {flight_details['arrival_time']}"],
                     [f"From: {flight_details['departure_airport']}", 
@@ -212,21 +211,15 @@ class SimpleVoucherGenerator:
                 
                 flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
                 flight_table.setStyle(TableStyle([
-                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                    ('FONTSIZE', (0, 0), (-1, 0), 11),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-                    ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                    ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-                    ('FONTSIZE', (0, 1), (-1, -1), 10),
-                    ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 10),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                     ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                     ('TOPPADDING', (0, 0), (-1, -1), 8),
                     ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
                     ('LEFTPADDING', (0, 0), (-1, -1), 10),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
                 ]))
                 
                 story.append(flight_table)
