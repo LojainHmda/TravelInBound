@@ -101,9 +101,81 @@ class SimpleVoucherGenerator:
         story.append(details_table)
         story.append(Spacer(1, 20))
         
+        # Extract and display passenger information
+        passenger_info = []
+        for item in confirmed_services:
+            service_documents = service_models.Document.query.filter_by(
+                service_item_id=item.id,
+                document_type='CONFIRMATION'
+            ).all()
+            
+            for service_doc in service_documents:
+                if service_doc.notes:
+                    try:
+                        confirmation_data = json.loads(service_doc.notes)
+                        passenger_names = confirmation_data.get('passenger_names', [])
+                        pnr = confirmation_data.get('pnr', '')
+                        ticket_number = confirmation_data.get('ticket_number', '')
+                        
+                        if passenger_names:
+                            if isinstance(passenger_names, list):
+                                for passenger in passenger_names:
+                                    passenger_info.append({
+                                        'name': passenger,
+                                        'pnr': pnr,
+                                        'ticket': ticket_number,
+                                        'service_type': item.service_type
+                                    })
+                            else:
+                                passenger_info.append({
+                                    'name': str(passenger_names),
+                                    'pnr': pnr,
+                                    'ticket': ticket_number,
+                                    'service_type': item.service_type
+                                })
+                    except (json.JSONDecodeError, AttributeError):
+                        pass
+        
+        # Display passenger information if available
+        if passenger_info:
+            passenger_title = Paragraph(
+                '<b>Passenger Information</b>',
+                ParagraphStyle('PassengerTitle', fontSize=12, textColor=colors.darkblue, spaceAfter=10)
+            )
+            story.append(passenger_title)
+            
+            passenger_data = [['Passenger Name', 'PNR', 'Ticket Number', 'Service']]
+            for passenger in passenger_info:
+                passenger_data.append([
+                    passenger['name'],
+                    passenger['pnr'] or 'N/A',
+                    passenger['ticket'] or 'N/A',
+                    passenger['service_type']
+                ])
+            
+            passenger_table = Table(passenger_data, colWidths=[2*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+            passenger_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('TOPPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            
+            story.append(passenger_table)
+            story.append(Spacer(1, 20))
+        
         # Service details
         if confirmed_services:
-            service_data = [['Service', 'Description', 'Dates', 'Status', 'Amount']]
+            service_data = [['Service', 'Flight Details', 'Travel Dates', 'Status', 'Amount']]
             
             for item in confirmed_services:
                 service_icon = {
@@ -135,12 +207,41 @@ class SimpleVoucherGenerator:
                                 arrival = confirmation_data.get('arrival_airport', '')
                                 flight_num = confirmation_data.get('flight_number', '')
                                 airline = confirmation_data.get('airline', '')
+                                flight_date = confirmation_data.get('flight_date', '')
+                                flight_time = confirmation_data.get('flight_time', '')
+                                travel_class = confirmation_data.get('travel_class', '')
+                                ticket_number = confirmation_data.get('ticket_number', '')
+                                pnr = confirmation_data.get('pnr', '')
+                                passenger_names = confirmation_data.get('passenger_names', [])
                                 
                                 if departure and arrival:
+                                    # Build comprehensive flight description
+                                    flight_info = []
                                     if flight_num and airline:
-                                        description = f"{airline} {flight_num}: {departure} → {arrival}"
-                                    else:
-                                        description = f"{departure} → {arrival}"
+                                        flight_info.append(f"{airline} {flight_num}")
+                                    
+                                    flight_info.append(f"{departure} → {arrival}")
+                                    
+                                    if flight_date:
+                                        flight_info.append(f"Date: {flight_date}")
+                                    
+                                    if flight_time:
+                                        flight_info.append(f"Time: {flight_time}")
+                                    
+                                    if travel_class:
+                                        flight_info.append(f"Class: {travel_class}")
+                                    
+                                    if ticket_number:
+                                        flight_info.append(f"Ticket: {ticket_number}")
+                                    
+                                    if pnr:
+                                        flight_info.append(f"PNR: {pnr}")
+                                    
+                                    if passenger_names:
+                                        passengers = ', '.join(passenger_names) if isinstance(passenger_names, list) else str(passenger_names)
+                                        flight_info.append(f"Passengers: {passengers}")
+                                    
+                                    description = ' | '.join(flight_info)
                                         
                             elif item.service_type == 'HOTEL':
                                 hotel_name = confirmation_data.get('hotel_name', '')
@@ -159,7 +260,7 @@ class SimpleVoucherGenerator:
                     amount
                 ])
             
-            service_table = Table(service_data, colWidths=[1.2*inch, 2.2*inch, 1.3*inch, 1*inch, 0.8*inch])
+            service_table = Table(service_data, colWidths=[0.8*inch, 3.5*inch, 1.2*inch, 0.8*inch, 0.7*inch])
             service_table.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
                 ('FONTSIZE', (0, 0), (-1, 0), 10),
