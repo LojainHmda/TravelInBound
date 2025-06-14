@@ -197,7 +197,7 @@ class SimpleVoucherGenerator:
                 )
                 story.append(flight_header)
                 
-                # Flight details table (no header)
+                # Flight details table (no header, no shading)
                 flight_data = [
                     [f"Tue, {flight_details['flight_date']} at {flight_details['departure_time']}", 
                      f"Tue, {flight_details['flight_date']} at {flight_details['arrival_time']}"],
@@ -205,11 +205,13 @@ class SimpleVoucherGenerator:
                      f"To: {flight_details['arrival_airport']}"],
                     [f"Flight: {flight_details['flight_number']} - {flight_details['airline']}", 
                      f"Class: {flight_details['travel_class']}"],
-                    [f"E-Ticket: {flight_details['ticket_number']}", 'Status: Confirmed'],
-                    [f'Passenger: {passenger_name}', f"Amount: {flight_details['amount']}"]
+                    [f"E-Ticket: {flight_details['ticket_number']}", 'Status: Confirmed']
                 ]
                 
-                flight_table = Table(flight_data, colWidths=[3.25*inch, 3.25*inch])
+                # Passenger row spanning both columns to prevent overlap
+                flight_data.append([f'Passenger: {passenger_name}', f"Amount: {flight_details['amount']}"])
+                
+                flight_table = Table(flight_data, colWidths=[4*inch, 2.5*inch])
                 flight_table.setStyle(TableStyle([
                     ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
                     ('FONTSIZE', (0, 0), (-1, -1), 10),
