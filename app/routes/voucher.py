@@ -67,8 +67,8 @@ def api_generate_voucher(booking_id):
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher PDF using clean generator
-        generator = CleanVoucherGenerator()
+        # Generate the voucher PDF using simple generator
+        generator = SimpleVoucherGenerator()
         voucher_buffer = generator.generate_voucher(booking_id)
         
         return jsonify({
