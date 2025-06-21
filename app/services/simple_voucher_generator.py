@@ -51,19 +51,36 @@ class SimpleVoucherGenerator:
         story = []
         
         # Logo and Title
-        try:
-            from reportlab.lib.utils import ImageReader
-            import os
-            logo_path = os.path.join('static', 'images', 'arabilogo.jpg')
-            if os.path.exists(logo_path):
-                logo = ImageReader(logo_path)
-                logo_img = Image(logo, width=2*inch, height=1*inch)
-                logo_img.hAlign = 'CENTER'
-                story.append(logo_img)
-                story.append(Spacer(1, 10))
-        except:
-            # Fallback if logo not found
-            pass
+        logo_added = False
+        logo_paths = [
+            'static/arabilogo.jpg',
+            './static/arabilogo.jpg',
+            'arabilogo.jpg',
+            'attached_assets/arabilogo.jpg'
+        ]
+        
+        for logo_path in logo_paths:
+            try:
+                from reportlab.lib.utils import ImageReader
+                import os
+                if os.path.exists(logo_path):
+                    logo = ImageReader(logo_path)
+                    logo_img = Image(logo, width=2*inch, height=1*inch)
+                    logo_img.hAlign = 'CENTER'
+                    story.append(logo_img)
+                    story.append(Spacer(1, 10))
+                    logo_added = True
+                    break
+            except Exception as e:
+                continue
+        
+        if not logo_added:
+            # Add company name as header if logo not found
+            company_name = Paragraph(
+                '<b><font color="darkblue" size="16">ARABI TRAVEL</font></b>',
+                ParagraphStyle('CompanyName', alignment=TA_CENTER, spaceAfter=15)
+            )
+            story.append(company_name)
         
         # Title
         title = Paragraph(
