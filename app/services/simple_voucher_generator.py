@@ -53,16 +53,18 @@ class SimpleVoucherGenerator:
         # Logo and Title
         logo_added = False
         logo_paths = [
+            'app/static/arabilogo.jpg',
             'static/arabilogo.jpg',
             './static/arabilogo.jpg',
-            'arabilogo.jpg',
-            'attached_assets/arabilogo.jpg'
+            'attached_assets/arabilogo.jpg',
+            './attached_assets/arabilogo.jpg'
         ]
         
         for logo_path in logo_paths:
             try:
                 from reportlab.lib.utils import ImageReader
                 import os
+                print(f"Trying logo path: {logo_path}, exists: {os.path.exists(logo_path)}")
                 if os.path.exists(logo_path):
                     logo = ImageReader(logo_path)
                     logo_img = Image(logo, width=2*inch, height=1*inch)
@@ -70,8 +72,10 @@ class SimpleVoucherGenerator:
                     story.append(logo_img)
                     story.append(Spacer(1, 10))
                     logo_added = True
+                    print(f"Successfully loaded logo from: {logo_path}")
                     break
             except Exception as e:
+                print(f"Failed to load logo from {logo_path}: {e}")
                 continue
         
         if not logo_added:
