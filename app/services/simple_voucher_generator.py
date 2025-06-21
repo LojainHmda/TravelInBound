@@ -285,7 +285,7 @@ class SimpleVoucherGenerator:
             [f'Balance Due: ${balance:.2f}']
         ]
         
-        payment_table = Table(payment_data, colWidths=[3*inch])
+        payment_table = Table(payment_data, colWidths=[4.5*inch])
         payment_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (0, 0), 11),
