@@ -8,7 +8,7 @@ from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
@@ -49,6 +49,21 @@ class SimpleVoucherGenerator:
         )
         
         story = []
+        
+        # Logo and Title
+        try:
+            from reportlab.lib.utils import ImageReader
+            import os
+            logo_path = os.path.join('static', 'images', 'arabilogo.jpg')
+            if os.path.exists(logo_path):
+                logo = ImageReader(logo_path)
+                logo_img = Image(logo, width=2*inch, height=1*inch)
+                logo_img.hAlign = 'CENTER'
+                story.append(logo_img)
+                story.append(Spacer(1, 10))
+        except:
+            # Fallback if logo not found
+            pass
         
         # Title
         title = Paragraph(
@@ -283,23 +298,25 @@ class SimpleVoucherGenerator:
         
         footer_data = [
             ['Banking Information', 'Contact Information'],
-            ['Arabi Travel Bank: Account USD= 9070-142464-510', '📧 sales@arabtravel.ps'],
-            ['Bank Of Palestine: Ramallah Branch - 0458/2220908/001/3000/000', '🌐 www.arabtravel.ps'],
-            ['Arab Bank: Acct. No.: 142464', '📞 +97022956640'],
-            ['', '📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27']
+            ['Arabi Travel Bank: Account USD=\n9070-142464-510', 'sales@arabtravel.ps'],
+            ['Bank Of Palestine: Ramallah Branch\n0458/2220908/001/3000/000', 'www.arabtravel.ps'],
+            ['Arab Bank: Acct. No.: 142464', '+97022956640'],
+            ['', 'Alersal St, zakat Bld, Ramallah\nP.OBOX:27']
         ]
         
-        footer_table = Table(footer_data, colWidths=[3.25*inch, 3.25*inch])
+        footer_table = Table(footer_data, colWidths=[4*inch, 2.5*inch])
         footer_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 11),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.grey),
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
         ]))
         
         story.append(footer_table)
