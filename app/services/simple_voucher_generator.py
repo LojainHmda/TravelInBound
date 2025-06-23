@@ -52,28 +52,33 @@ class SimpleVoucherGenerator:
         
         # Logo and Title
         logo_added = False
-        logo_paths = [
-            'app/static/arabilogo.jpg',
-            'static/arabilogo.jpg',
-            './static/arabilogo.jpg',
-            'attached_assets/arabilogo.jpg',
-            './attached_assets/arabilogo.jpg'
-        ]
         
-        for logo_path in logo_paths:
-            try:
-                from reportlab.lib.utils import ImageReader
-                import os
+        # Try to load logo from multiple paths
+        try:
+            from reportlab.lib.utils import ImageReader
+            import os
+            
+            logo_paths = [
+                'attached_assets/arabilogo.jpg',
+                'static/arabilogo.jpg', 
+                'app/static/arabilogo.jpg',
+                'arabilogo.jpg'
+            ]
+            
+            for logo_path in logo_paths:
                 if os.path.exists(logo_path):
-                    logo = ImageReader(logo_path)
-                    logo_img = Image(logo, width=2*inch, height=1*inch)
-                    logo_img.hAlign = 'CENTER'
-                    story.append(logo_img)
-                    story.append(Spacer(1, 10))
-                    logo_added = True
-                    break
-            except Exception as e:
-                continue
+                    try:
+                        logo = ImageReader(logo_path)
+                        logo_img = Image(logo, width=2.5*inch, height=1.2*inch)
+                        logo_img.hAlign = 'CENTER'
+                        story.append(logo_img)
+                        story.append(Spacer(1, 15))
+                        logo_added = True
+                        break
+                    except:
+                        continue
+        except:
+            pass
         
         if not logo_added:
             # Add company name as header if logo not found
@@ -274,7 +279,7 @@ class SimpleVoucherGenerator:
         )
         story.append(travel_info)
         
-        # Payment summary
+        # Payment summary - left aligned
         confirmed_total = sum(item.amount for item in confirmed_services if item.amount) or 0
         paid_amount = sum(p.amount for p in booking.payments) if booking.payments else 0
         balance = confirmed_total - paid_amount
@@ -302,7 +307,9 @@ class SimpleVoucherGenerator:
             ('BOTTOMPADDING', (0, 0), (0, -1), 6),
             ('LEFTPADDING', (0, 0), (0, -1), 8),
             ('RIGHTPADDING', (0, 0), (0, -1), 8),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
         ]))
+        payment_table.hAlign = 'LEFT'
         
         story.append(payment_table)
         story.append(Spacer(1, 30))
