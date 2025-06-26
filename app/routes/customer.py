@@ -226,12 +226,9 @@ def api_list_customers():
 @customer_bp.route('/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image"""
-    # Disable CSRF validation by setting a valid token in the request context
-    from flask import g, session
-    import secrets
-    if not hasattr(g, 'csrf_token'):
-        g.csrf_token = secrets.token_hex(16)
-    session['csrf_token'] = g.csrf_token
+    # Skip CSRF validation by manually setting valid token
+    from flask import g
+    g.csrf_valid = True
     
     try:
         if 'passport_image' not in request.files:

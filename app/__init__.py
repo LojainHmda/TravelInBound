@@ -34,10 +34,15 @@ def create_app():
     login_manager.login_message = 'Please log in to access this page'
     login_manager.login_message_category = 'warning'
     
-    # Initialize CSRF protection with exemptions
+    # Initialize CSRF protection
     csrf.init_app(app)
     
-    # CSRF exemption will be handled by separate API blueprint
+    # Disable CSRF validation for specific routes
+    @app.before_request
+    def handle_csrf_exemptions():
+        if is_csrf_exempt(request):
+            # Skip CSRF validation entirely for exempt routes
+            setattr(csrf, '_csrf_disabled', True)
     
     # Register custom Jinja2 filters
     @app.template_filter('from_json')
