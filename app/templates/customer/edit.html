@@ -121,16 +121,11 @@
               <div class="card-header d-flex justify-content-between align-items-center">
                 <h6 class="mb-0">Travel Document Information</h6>
                 <button type="button" class="btn btn-sm" style="background-color: #FFD700; color: #000000;" 
-                        onclick="openPassportScanner()">
+                        data-bs-toggle="modal" data-bs-target="#passportScanModal">
                   <i class="fas fa-camera me-1"></i>Scan Passport
                 </button>
               </div>
               <div class="card-body">
-                <!-- Passport Scanner Modal Trigger -->
-                <div class="alert alert-info mb-3" id="scannerAlert" style="display: none;">
-                  <i class="fas fa-info-circle me-2"></i>
-                  Upload a clear photo of the passport data page to automatically fill the form fields.
-                </div>
                 <div class="row mb-3">
                   <div class="col-md-6">
                     <div class="form-group mb-3">
@@ -179,7 +174,77 @@
   </div>
 </div>
 
+<!-- Passport Scanning Modal -->
+<div class="modal fade" id="passportScanModal" tabindex="-1" aria-labelledby="passportScanModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color: #000080; color: white;">
+        <h5 class="modal-title" id="passportScanModalLabel">
+          <i class="fas fa-passport me-2"></i>Scan Passport
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center mb-4">
+          <p class="mb-3">Upload a clear photo of the passport data page to automatically fill customer details.</p>
+          <div class="upload-area border-dashed p-4 mb-3" style="border: 2px dashed #FFD700; background-color: #FFFEF7;">
+            <i class="fas fa-upload fa-3x text-warning mb-3"></i>
+            <div>
+              <input type="file" id="passportImageInput" accept="image/*" style="display: none;">
+              <button type="button" class="btn" style="background-color: #FFD700; color: #000000;" onclick="document.getElementById('passportImageInput').click()">
+                Choose Passport Image
+              </button>
+            </div>
+            <p class="small mt-2 mb-0">Supported formats: JPG, PNG, GIF, BMP</p>
+          </div>
+          <div id="imagePreview" style="display: none;">
+            <img id="previewImg" src="" alt="Passport Preview" style="max-width: 100%; max-height: 300px;" class="border rounded">
+            <div class="mt-2">
+              <button type="button" class="btn btn-sm btn-secondary me-2" onclick="clearPassportImage()">Clear</button>
+              <button type="button" class="btn btn-sm" style="background-color: #000080; color: white;" onclick="scanPassport()">
+                <i class="fas fa-search me-1"></i>Extract Data
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="scanningProgress" style="display: none;" class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Scanning...</span>
+          </div>
+          <p class="mt-2">Analyzing passport image...</p>
+        </div>
+        
+        <div id="scanResults" style="display: none;">
+          <div class="alert alert-success">
+            <i class="fas fa-check-circle me-2"></i>
+            Passport data extracted successfully! Click "Apply Data" to fill the form.
+          </div>
+          <div id="extractedData" class="row small">
+            <!-- Extracted data will be displayed here -->
+          </div>
+        </div>
+        
+        <div id="scanError" style="display: none;">
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <span id="errorMessage">Unable to extract passport data. Please try with a clearer image.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="applyDataBtn" class="btn" style="background-color: #FFD700; color: #000000; display: none;" onclick="applyPassportData()">
+          Apply Data to Form
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  let extractedPassportData = null;
+
   // Show/hide company fields based on customer type
   document.addEventListener('DOMContentLoaded', function() {
     const customerTypeSelect = document.getElementById('customer_type');
@@ -198,6 +263,151 @@
     
     // On change
     customerTypeSelect.addEventListener('change', toggleCompanyFields);
+
+    // Passport image input handler
+    document.getElementById('passportImageInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('previewImg').src = e.target.result;
+          document.getElementById('imagePreview').style.display = 'block';
+          hideAllScanStates();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
   });
+
+  function hideAllScanStates() {
+    document.getElementById('scanningProgress').style.display = 'none';
+    document.getElementById('scanResults').style.display = 'none';
+    document.getElementById('scanError').style.display = 'none';
+    document.getElementById('applyDataBtn').style.display = 'none';
+  }
+
+  function clearPassportImage() {
+    document.getElementById('passportImageInput').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    hideAllScanStates();
+    extractedPassportData = null;
+  }
+
+  async function scanPassport() {
+    const fileInput = document.getElementById('passportImageInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+      alert('Please select a passport image first.');
+      return;
+    }
+
+    // Show scanning progress
+    hideAllScanStates();
+    document.getElementById('scanningProgress').style.display = 'block';
+
+    try {
+      const formData = new FormData();
+      formData.append('passport_image', file);
+
+      const response = await fetch('/customers/api/scan-passport', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        extractedPassportData = result.data;
+        displayExtractedData(result.data);
+        document.getElementById('scanResults').style.display = 'block';
+        document.getElementById('applyDataBtn').style.display = 'inline-block';
+      } else {
+        document.getElementById('errorMessage').textContent = result.error || 'Unable to extract passport data.';
+        document.getElementById('scanError').style.display = 'block';
+      }
+    } catch (error) {
+      document.getElementById('errorMessage').textContent = 'Error scanning passport: ' + error.message;
+      document.getElementById('scanError').style.display = 'block';
+    } finally {
+      document.getElementById('scanningProgress').style.display = 'none';
+    }
+  }
+
+  function displayExtractedData(data) {
+    const container = document.getElementById('extractedData');
+    container.innerHTML = '';
+
+    const fields = [
+      { key: 'first_name', label: 'First Name' },
+      { key: 'last_name', label: 'Last Name' },
+      { key: 'passport_number', label: 'Passport Number' },
+      { key: 'nationality', label: 'Nationality' },
+      { key: 'date_of_birth', label: 'Date of Birth' },
+      { key: 'passport_expiry', label: 'Passport Expiry' }
+    ];
+
+    fields.forEach(field => {
+      if (data[field.key]) {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 mb-2';
+        col.innerHTML = `
+          <strong>${field.label}:</strong><br>
+          <span class="text-muted">${data[field.key]}</span>
+        `;
+        container.appendChild(col);
+      }
+    });
+  }
+
+  function applyPassportData() {
+    if (!extractedPassportData) {
+      alert('No passport data available to apply.');
+      return;
+    }
+
+    const data = extractedPassportData;
+
+    // Fill form fields with extracted data
+    if (data.first_name) {
+      document.getElementById('first_name').value = data.first_name;
+    }
+    if (data.last_name) {
+      document.getElementById('last_name').value = data.last_name;
+    }
+    if (data.passport_number) {
+      document.getElementById('passport_number').value = data.passport_number;
+    }
+    if (data.nationality) {
+      document.getElementById('nationality').value = data.nationality;
+    }
+    if (data.date_of_birth) {
+      document.getElementById('date_of_birth').value = data.date_of_birth;
+    }
+    if (data.passport_expiry) {
+      document.getElementById('passport_expiry').value = data.passport_expiry;
+    }
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('passportScanModal'));
+    modal.hide();
+
+    // Show success message
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+      <i class="fas fa-check-circle me-2"></i>
+      Passport data applied successfully to the form!
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.card-body').insertBefore(alert, document.querySelector('.card-body').firstChild);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      if (alert.parentNode) {
+        alert.remove();
+      }
+    }, 5000);
+  }
 </script>
 {% endblock %}
