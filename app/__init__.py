@@ -37,12 +37,7 @@ def create_app():
     # Initialize CSRF protection with exemptions
     csrf.init_app(app)
     
-    # Add before_request handler to skip CSRF for exempt routes
-    @app.before_request
-    def handle_csrf_exemptions():
-        if is_csrf_exempt(request):
-            from flask import g
-            g._csrf_token = request.headers.get('X-CSRFToken', '')
+    # CSRF exemption will be handled by separate API blueprint
     
     # Register custom Jinja2 filters
     @app.template_filter('from_json')
@@ -82,17 +77,25 @@ def create_app():
         from app.routes.voucher import voucher_bp
         app.register_blueprint(voucher_bp)
         
-        # Register API blueprint (only once)
+        # Register API blueprint with CSRF exemption
+        from app.routes.api import api_bp
+        app.register_blueprint(api_bp)
+        
+        # Exempt the API blueprint from CSRF protection
+        csrf.exempt(api_bp)
+        
+        # Register individual API modules with proper URL prefixes (if they exist)
         try:
-            from app.routes.api import api_bp
-            app.register_blueprint(api_bp)
-            
-            # Register individual API modules with proper URL prefixes
             from app.routes.api.search import search_api
             app.register_blueprint(search_api, url_prefix='')
+        except ImportError:
+            pass
             
+        try:
             from app.routes.api.chat import chat_api
             app.register_blueprint(chat_api, url_prefix='')
+        except ImportError:
+            pass
             
             from app.routes.api.invoice import invoice_api
             app.register_blueprint(invoice_api, url_prefix='')
