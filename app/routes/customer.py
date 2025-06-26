@@ -223,58 +223,7 @@ def api_list_customers():
     
     return jsonify(customers_list)
 
-@customer_bp.route('/api/scan-passport', methods=['POST'])
-def scan_passport():
-    """API endpoint to extract customer data from passport image"""
-    try:
-        if 'passport_image' not in request.files:
-            return jsonify({'error': 'No passport image provided'}), 400
-        
-        file = request.files['passport_image']
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-        
-        # Validate file type
-        if not file.filename:
-            return jsonify({'error': 'No file selected'}), 400
-            
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
-            return jsonify({'error': 'Invalid file type. Please upload an image.'}), 400
-        
-        # Create temp directory if it doesn't exist
-        temp_dir = os.path.join(current_app.root_path, 'temp')
-        ensure_upload_dir(temp_dir)
-        
-        # Save temporary file
-        filename = secure_filename(file.filename)
-        temp_path = os.path.join(temp_dir, f"passport_{uuid.uuid4()}_{filename}")
-        file.save(temp_path)
-        
-        try:
-            # Extract passport data using AI
-            scanner = PassportScanner()
-            passport_data = scanner.extract_passport_data(temp_path)
-            
-            # Clean up temporary file
-            os.remove(temp_path)
-            
-            return jsonify({
-                'success': True,
-                'data': passport_data
-            })
-            
-        except Exception as e:
-            # Clean up temporary file on error
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-            raise e
-            
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': f'Error processing passport: {str(e)}'
-        }), 500
+# Passport scanning functionality moved to /api/scan-passport endpoint (CSRF exempt)
 
 @customer_bp.route('/api/search')
 def api_search_customers():

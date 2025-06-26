@@ -11,6 +11,11 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 @api_bp.route('/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image - CSRF exempt"""
+    # Manually bypass CSRF for this specific endpoint
+    from flask_wtf.csrf import validate_csrf
+    from flask import g
+    g.csrf_valid = True
+    
     try:
         if 'passport_image' not in request.files:
             return jsonify({
