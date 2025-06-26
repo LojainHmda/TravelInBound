@@ -34,8 +34,15 @@ def create_app():
     login_manager.login_message = 'Please log in to access this page'
     login_manager.login_message_category = 'warning'
     
-    # Initialize CSRF protection
+    # Initialize CSRF protection with exemptions
     csrf.init_app(app)
+    
+    # Add before_request handler to skip CSRF for exempt routes
+    @app.before_request
+    def handle_csrf_exemptions():
+        if is_csrf_exempt(request):
+            from flask import g
+            g._csrf_token = request.headers.get('X-CSRFToken', '')
     
     # Register custom Jinja2 filters
     @app.template_filter('from_json')
