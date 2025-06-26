@@ -226,6 +226,10 @@ def api_list_customers():
 @customer_bp.route('/api/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image"""
+    # Skip CSRF validation for API endpoint
+    from flask import g
+    g._csrf_token = True
+    
     try:
         if 'passport_image' not in request.files:
             return jsonify({'error': 'No passport image provided'}), 400
@@ -235,9 +239,11 @@ def scan_passport():
             return jsonify({'error': 'No file selected'}), 400
         
         # Validate file type
+        if not file.filename:
+            return jsonify({'error': 'No file selected'}), 400
+            
         allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
-        if not ('.' in file.filename and 
-                file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
             return jsonify({'error': 'Invalid file type. Please upload an image.'}), 400
         
         # Create temp directory if it doesn't exist

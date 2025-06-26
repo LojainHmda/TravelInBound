@@ -108,6 +108,14 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Performance Monitoring**: Dedicated monitoring server on port 9000
 - **Error Handling**: Comprehensive logging and error tracking
 
+## Recent Changes
+- June 26, 2025: Added AI-powered passport scanning for customer creation
+  - Implemented PassportScanner service using OpenAI GPT-4o vision API
+  - Created `/customers/api/scan-passport` endpoint for passport image processing
+  - Enhanced customer creation form with passport scanning modal interface
+  - Automatic form population with extracted passport data (name, passport number, nationality, dates)
+  - Uses same OpenAI approach for document analysis as existing ticket scanning
+
 ## Changelog
 - June 26, 2025. Initial setup
 
