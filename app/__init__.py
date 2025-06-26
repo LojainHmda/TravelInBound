@@ -37,12 +37,13 @@ def create_app():
     # Initialize CSRF protection
     csrf.init_app(app)
     
-    # Disable CSRF validation for specific routes
-    @app.before_request
-    def handle_csrf_exemptions():
+    # Override CSRF protection to allow exemptions
+    original_protect = csrf.protect
+    def custom_protect():
         if is_csrf_exempt(request):
-            # Skip CSRF validation entirely for exempt routes
-            setattr(csrf, '_csrf_disabled', True)
+            return  # Skip CSRF protection for exempt routes
+        return original_protect()
+    csrf.protect = custom_protect
     
     # Register custom Jinja2 filters
     @app.template_filter('from_json')
