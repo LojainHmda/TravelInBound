@@ -226,10 +226,6 @@ def api_list_customers():
 @customer_bp.route('/api/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image"""
-    # Skip CSRF validation for API endpoint
-    from flask import g
-    g._csrf_token = True
-    
     try:
         if 'passport_image' not in request.files:
             return jsonify({'error': 'No passport image provided'}), 400

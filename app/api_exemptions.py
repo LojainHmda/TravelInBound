@@ -7,6 +7,7 @@ from flask import Blueprint
 csrf_exempt_routes = [
     '/tools/analyze-ticket',  # Flight ticket scanner API endpoint
     '/booking/service_item',  # Service item operations including delete
+    '/customers/api/scan-passport',  # Passport scanner API endpoint
 ]
 
 def is_csrf_exempt(request):
