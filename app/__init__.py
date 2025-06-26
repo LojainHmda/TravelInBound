@@ -77,14 +77,12 @@ def create_app():
         from app.routes.voucher import voucher_bp
         app.register_blueprint(voucher_bp)
         
-        # Register API blueprint with CSRF exemption
+        # Register main API blueprint with CSRF exemption for passport scanning
         from app.routes.api import api_bp
         app.register_blueprint(api_bp)
-        
-        # Exempt the API blueprint from CSRF protection
         csrf.exempt(api_bp)
         
-        # Register individual API modules with proper URL prefixes (if they exist)
+        # Register other API modules if they exist
         try:
             from app.routes.api.search import search_api
             app.register_blueprint(search_api, url_prefix='')
@@ -97,10 +95,11 @@ def create_app():
         except ImportError:
             pass
             
+        try:
             from app.routes.api.invoice import invoice_api
             app.register_blueprint(invoice_api, url_prefix='')
-        except Exception as e:
-            app.logger.error(f"Could not register API blueprints: {str(e)}")
+        except ImportError:
+            pass
         
         # Register finance blueprint
         from app.routes.finance import finance
