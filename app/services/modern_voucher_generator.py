@@ -35,7 +35,7 @@ class ModernVoucherGenerator:
         self.styles.add(ParagraphStyle(
             name='CompanyHeader',
             parent=self.styles['Heading1'],
-            fontSize=24,
+            fontSize=16,
             textColor=self.primary_color,
             alignment=TA_CENTER,
             fontName='Helvetica-Bold',
@@ -47,7 +47,7 @@ class ModernVoucherGenerator:
         self.styles.add(ParagraphStyle(
             name='VoucherTitle',
             parent=self.styles['Heading2'],
-            fontSize=16,
+            fontSize=12,
             textColor=self.accent_color,
             alignment=TA_RIGHT,
             fontName='Helvetica-Bold',
@@ -406,13 +406,14 @@ class ModernVoucherGenerator:
             else:
                 etickets_text = "To be provided"
             
-            # Simple table with confirmation data including passengers and e-tickets
+            # Create table with header row like your image design
             flight_data = [
-                ["Airline:", airline, "Flight Number:", flight_number],
-                ["From:", departure_airport, "To:", arrival_airport],
-                ["Date:", formatted_date, "Time:", flight_time],
-                ["Class:", travel_class, "Passengers:", passengers_text],
-                ["Ticket Number:", etickets_text, "", ""]
+                ["Service", "Description", "Dates", "Status", "Amount"],
+                ["FLIGHT", f"{airline} {flight_number}", formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["Route", f"{departure_airport} → {arrival_airport}", flight_time, "", ""],
+                ["Class", travel_class, "", "", ""],
+                ["Passengers", passengers_text, "", "", ""],
+                ["Ticket Number", etickets_text, "", "", ""]
             ]
         else:
             # Fallback if no confirmation data
@@ -426,16 +427,30 @@ class ModernVoucherGenerator:
                 ["Status:", "Confirmed"]
             ]
         
-        flight_table = Table(flight_data, colWidths=[1*inch, 2*inch, 1*inch, 2*inch])
+        flight_table = Table(flight_data, colWidths=[1.2*inch, 1.8*inch, 1.2*inch, 0.8*inch, 1*inch])
         flight_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
-            ('TEXTCOLOR', (0, 0), (0, -1), self.primary_color),
-            ('TEXTCOLOR', (2, 0), (2, -1), self.primary_color),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            # Header row styling
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            
+            # Alternating row colors
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Border and grid
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            
+            # Cell padding
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            
+            # Alignment
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
         content.append(flight_table)
@@ -596,20 +611,37 @@ class ModernVoucherGenerator:
         balance_due = total_amount - total_payments
         
         payment_data = [
-            ["Total Amount:", f"${total_amount:.2f}"],
-            ["Amount Paid:", f"${total_payments:.2f}"],
-            ["Balance Due:", f"${balance_due:.2f}"]
+            ["Description", "Amount"],
+            ["Total Amount", f"${total_amount:.2f}"],
+            ["Amount Paid", f"${total_payments:.2f}"],
+            ["Balance Due", f"${balance_due:.2f}"]
         ]
         
         payment_table = Table(payment_data, colWidths=[2*inch, 2*inch])
         payment_table.setStyle(TableStyle([
+            # Header row styling
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            
+            # Alternating row colors
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Border and grid
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            
+            # Cell padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            
+            # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
-            ('LINEBELOW', (0, -1), (-1, -1), 2, self.accent_color),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         
         content.append(payment_table)
