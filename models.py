@@ -1,6 +1,7 @@
 from datetime import datetime
 from app import db
 from app.models.user import User, Agent
+from app.models.customer import Customer
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -32,39 +33,7 @@ from app.models.finance import (
 
 # Agent model is now imported from app.models.user to avoid conflicts
 
-class Customer(db.Model):
-    """Customer model for tracking individual and corporate customers"""
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(100), nullable=False)
-    last_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(20))
-    address = db.Column(db.Text)
-    city = db.Column(db.String(100))
-    country = db.Column(db.String(100))
-    passport_number = db.Column(db.String(50))
-    passport_expiry = db.Column(db.Date)
-    date_of_birth = db.Column(db.Date)
-    nationality = db.Column(db.String(100))
-    customer_type = db.Column(db.String(20), default='Individual')
-    company_name = db.Column(db.String(100))
-    tax_number = db.Column(db.String(50))
-    notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    bookings = db.relationship('Booking', backref='customer', lazy=True)
-    
-    @property
-    def name(self):
-        """Get full name by combining first and last name"""
-        return f"{self.first_name} {self.last_name}".strip()
-    
-    def get_full_address(self):
-        """Get complete address"""
-        parts = [self.address, self.city, self.country]
-        return ", ".join([part for part in parts if part]) or "No address provided"
+# Customer model is now imported from app.models.customer to avoid conflicts
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
