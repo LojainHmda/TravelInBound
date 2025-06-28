@@ -1,5 +1,6 @@
 from datetime import datetime
 from app import db
+from app.models.user import User
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -27,17 +28,7 @@ from app.models.finance import (
     RECURRENCE_QUARTERLY, RECURRENCE_YEARLY
 )
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256))
-    
-    # Relationship with bookings
-    bookings = db.relationship('Booking', backref='requester', lazy=True)
-    
-    def __repr__(self):
-        return f'<User {self.username}>'
+# User model is now imported from app.models.user to avoid conflicts
 
 class Agent(db.Model):
     id = db.Column(db.Integer, primary_key=True)
