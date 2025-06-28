@@ -56,14 +56,22 @@ document.addEventListener('DOMContentLoaded', function() {
 // Filter bookings by status
 function filterBookings(status) {
     const bookingTable = document.getElementById('bookingTable');
-    const rows = bookingTable.querySelectorAll('tbody tr');
     const title = document.getElementById('bookingTableTitle');
+    const resetBtn = document.getElementById('resetFilterBtn');
+    
+    // Check if elements exist before using them
+    if (!bookingTable || !title || !resetBtn) {
+        console.warn('Required DOM elements not found for filtering');
+        return;
+    }
+    
+    const rows = bookingTable.querySelectorAll('tbody tr');
     
     if (status === '') {
         // Show all
         rows.forEach(row => row.style.display = '');
-        title.innerHTML = '<i class="fas fa-list-alt me-2"></i>All Booking Requests';
-        document.getElementById('resetFilterBtn').style.display = 'none';
+        title.innerHTML = '<i class="fas fa-list-alt me-2" style="color: #FFC107;"></i>Recent Bookings';
+        resetBtn.style.display = 'none';
     } else {
         // Filter by status
         rows.forEach(row => {
@@ -75,8 +83,8 @@ function filterBookings(status) {
             }
         });
         
-        title.innerHTML = `<i class="fas fa-filter me-2"></i>${status} Bookings`;
-        document.getElementById('resetFilterBtn').style.display = 'inline-block';
+        title.innerHTML = `<i class="fas fa-filter me-2" style="color: #FFC107;"></i>${status} Bookings`;
+        resetBtn.style.display = 'inline-block';
     }
     
     // Clear any open details when filtering
@@ -86,7 +94,7 @@ function filterBookings(status) {
     
     // Reset all view buttons
     document.querySelectorAll('.view-booking-btn').forEach(btn => {
-        btn.innerHTML = '<i class="fas fa-eye"></i> View';
+        btn.innerHTML = '<i class="fas fa-eye" style="color: #FF8C00;"></i> View';
     });
 }
 
