@@ -95,6 +95,9 @@ def dashboard():
     visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
+    # Get all bookings for the table display to show all 31 bookings
+    all_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
+    
     return render_template(
         'booking/dashboard.html',
         status_counts={
@@ -109,7 +112,8 @@ def dashboard():
             'transport': transport_items,
             'visa': visa_items,
             'insurance': insurance_items
-        }
+        },
+        bookings=all_bookings
     )
 
 @app.route('/operations')
