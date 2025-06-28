@@ -377,6 +377,7 @@ class ModernVoucherGenerator:
             travel_class = confirmation_details.get('travel_class', 'Economy')
             passenger_names = confirmation_details.get('passenger_names', [])
             eticket_numbers = confirmation_details.get('eticket_numbers', [])
+            ticket_number = confirmation_details.get('ticket_number', '')
             
             # Format date
             try:
@@ -397,9 +398,11 @@ class ModernVoucherGenerator:
                 else:
                     passengers_text = booking.requester.username
             
-            # Format e-ticket numbers
+            # Format e-ticket numbers - use ticket_number if eticket_numbers is empty
             if eticket_numbers:
                 etickets_text = ", ".join(eticket_numbers)
+            elif ticket_number:
+                etickets_text = ticket_number
             else:
                 etickets_text = "To be provided"
             
@@ -409,7 +412,7 @@ class ModernVoucherGenerator:
                 ["From:", departure_airport, "To:", arrival_airport],
                 ["Date:", formatted_date, "Time:", flight_time],
                 ["Class:", travel_class, "Passengers:", passengers_text],
-                ["E-Ticket(s):", etickets_text, "", ""]
+                ["Ticket Number:", etickets_text, "", ""]
             ]
         else:
             # Fallback if no confirmation data
