@@ -29,8 +29,8 @@ def generate_voucher(booking_id):
         # Get instructions from query parameter
         instructions = request.args.get('instructions', '')
         
-        # Generate the voucher PDF using simple generator
-        generator = SimpleVoucherGenerator()
+        # Generate the voucher PDF using modern generator
+        generator = ModernVoucherGenerator()
         voucher_buffer = generator.generate_voucher(booking_id)
         
         # Create temporary file for download
@@ -67,8 +67,8 @@ def api_generate_voucher(booking_id):
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher PDF using simple generator
-        generator = SimpleVoucherGenerator()
+        # Generate the voucher PDF using modern generator
+        generator = ModernVoucherGenerator()
         voucher_buffer = generator.generate_voucher(booking_id)
         
         return jsonify({

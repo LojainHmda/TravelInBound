@@ -125,14 +125,13 @@ class ModernVoucherGenerator:
         # Customer information section
         content.extend(self._create_customer_section(booking))
         
-        # Services section
-        content.extend(self._create_services_section(booking))
+        # Flight details section only (matching concept design)
+        flight_services = [item for item in booking.service_items if item.service_type == 'FLIGHT']
+        if flight_services:
+            content.extend(self._create_flight_details(flight_services[0], self._get_confirmation_details(flight_services[0]), 1))
         
-        # Payment summary section
-        content.extend(self._create_payment_section(booking))
-        
-        # Footer section
-        content.extend(self._create_footer())
+        # Clean spacing for minimal design
+        content.append(Spacer(1, 0.5*inch))
         
         # Build PDF
         pdf_document.build(content)
