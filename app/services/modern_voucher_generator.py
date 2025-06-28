@@ -18,13 +18,14 @@ from reportlab.graphics import renderPDF
 
 class ModernVoucherGenerator:
     def __init__(self):
-        self.styles = getSampleStyleSheet()
-        self.setup_custom_styles()
-        # Brand colors matching dashboard
+        # Brand colors matching dashboard - define these first
         self.primary_color = colors.Color(0, 0.031, 0.5)  # #000080 - Dark blue
         self.accent_color = colors.Color(1, 0.549, 0)     # #FF8C00 - Orange
         self.gold_color = colors.Color(1, 0.843, 0)       # #FFD700 - Gold
         self.light_gray = colors.Color(0.95, 0.95, 0.95)  # Light gray for backgrounds
+        
+        self.styles = getSampleStyleSheet()
+        self.setup_custom_styles()
     
     def setup_custom_styles(self):
         """Setup custom paragraph styles for modern design"""
