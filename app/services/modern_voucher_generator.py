@@ -164,8 +164,13 @@ class ModernVoucherGenerator:
         
         if os.path.exists(logo_path):
             # Create header with logo and text aligned
+            from reportlab.platypus import Image
+            
+            # Create image with proper sizing
+            logo_img = Image(logo_path, width=1.2*inch, height=1.2*inch)
+            
             header_data = [
-                [ImageReader(logo_path), 
+                [logo_img, 
                  Paragraph("ARABI TRAVEL<br/>TRAVEL VOUCHER", self.styles['CompanyHeader'])]
             ]
             
