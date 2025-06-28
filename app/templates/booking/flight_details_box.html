@@ -1,0 +1,159 @@
+
+<div class="flight-details-box">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-plane me-2"></i>
+                Flight Details
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Outbound Journey Section -->
+            <div class="journey-section mb-4">
+                <h6 class="text-primary border-bottom pb-2 mb-3">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    Outbound Journey (11 Jul 2025)
+                </h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Airline</label>
+                            <div class="fw-bold">Emirates</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Flight No.</label>
+                            <div class="fw-bold">EK905</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Route</label>
+                            <div class="fw-bold">package sharm shekh</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Departure</label>
+                            <div class="fw-bold">11 Jul 2025 TBD</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Arrival</label>
+                            <div class="fw-bold text-primary">18 Jul 2025 TBD</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Class</label>
+                            <div class="fw-bold">
+                                <span class="badge bg-orange">Economy</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Return Journey Section (if applicable) -->
+            <div class="journey-section">
+                <h6 class="text-primary border-bottom pb-2 mb-3">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Return Journey
+                </h6>
+                
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Airline</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Flight No.</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Route</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Departure</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Arrival</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-2">
+                        <div class="info-box">
+                            <label class="form-label text-muted small mb-1">Class</label>
+                            <div class="fw-bold">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.flight-details-box .info-box {
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--secondary-color);
+    min-height: 60px;
+    transition: all 0.2s ease;
+}
+
+.flight-details-box .info-box:hover {
+    background-color: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.flight-details-box .journey-section:last-child {
+    margin-bottom: 0 !important;
+}
+
+.flight-details-box .card-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+}
+
+.flight-details-box .text-primary {
+    color: var(--primary-color) !important;
+}
+
+.flight-details-box .bg-orange {
+    background-color: var(--secondary-color) !important;
+    color: #000 !important;
+}
+
+@media (max-width: 768px) {
+    .flight-details-box .info-box {
+        min-height: 50px;
+        padding: 8px;
+    }
+}
+</style>
