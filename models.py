@@ -2,6 +2,7 @@ from datetime import datetime
 from app import db
 from app.models.user import User, Agent
 from app.models.customer import Customer
+from app.models.booking import Booking
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -35,122 +36,7 @@ from app.models.finance import (
 
 # Customer model is now imported from app.models.customer to avoid conflicts
 
-class Booking(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    reference_number = db.Column(db.String(20), unique=True, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
-    status = db.Column(db.String(20), default=STATUS_REQUEST)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    total_amount = db.Column(db.Float, default=0.0)
-    
-    # Invoice and payment tracking
-    invoice_number = db.Column(db.String(20), nullable=True)
-    invoice_date = db.Column(db.DateTime, nullable=True)
-    payment_status = db.Column(db.String(20), default='NONE')  # NONE, PARTIAL, FULL
-    payment_date = db.Column(db.DateTime, nullable=True)
-    
-    # Relationships
-    service_items = db.relationship('ServiceItem', backref='booking', lazy=True, cascade="all, delete-orphan")
-    payments = db.relationship('Payment', backref='booking', lazy=True, cascade="all, delete-orphan")
-    customer = db.relationship('Customer', backref='bookings', lazy=True)
-    
-    def __repr__(self):
-        return f'<Booking {self.reference_number}>'
-    
-    def calculate_total(self):
-        """Calculate the total amount for this booking"""
-        total = sum(item.amount for item in self.service_items)
-        self.total_amount = total
-        return total
-    
-    def can_complete(self):
-        """Check if all service items are confirmed"""
-        return all(item.status == STATUS_CONFIRMED for item in self.service_items)
-        
-    def get_credit_memos(self):
-        """Get all credit memos for this booking"""
-        from app.models.invoice import Invoice
-        return Invoice.query.filter_by(booking_id=self.id, is_credit_memo=True).all()
-    
-    def get_total_credits(self):
-        """Calculate total credit memo amount"""
-        credit_memos = self.get_credit_memos()
-        return sum(abs(memo.total_amount) for memo in credit_memos)
-    
-    def get_balance_due(self):
-        """Calculate balance due considering payments and credit memos"""
-        total_paid = sum(payment.amount for payment in self.payments)
-        total_credits = self.get_total_credits()
-        return self.total_amount - total_paid - total_credits
-    
-    def update_payment_status(self):
-        """Update payment status based on payments received and credit memos"""
-        import sys
-        print(f"Updating payment status for booking #{self.id} - {self.reference_number}", file=sys.stderr)
-        
-        total_paid = sum(payment.amount for payment in self.payments)
-        total_credits = self.get_total_credits()
-        balance_due = self.get_balance_due()
-        
-        print(f"  Total amount: ${self.total_amount}, Paid: ${total_paid}, Credits: ${total_credits}, Balance due: ${balance_due}", file=sys.stderr)
-        
-        if balance_due <= 0:
-            print(f"  Payment is FULL (balance due: ${balance_due})", file=sys.stderr)
-            self.payment_status = 'FULL'
-        elif total_paid > 0 or total_credits > 0:
-            print(f"  Payment is PARTIAL (balance due: ${balance_due})", file=sys.stderr)
-            self.payment_status = 'PARTIAL'
-        else:
-            print(f"  Payment is NONE", file=sys.stderr)
-            self.payment_status = 'NONE'
-        
-        print(f"  Updated payment_status to: {self.payment_status}", file=sys.stderr)
-            
-    def generate_invoice_number(self):
-        """Generate a unique invoice number"""
-        if not self.invoice_number:
-            year = datetime.utcnow().strftime('%y')
-            count = db.session.query(Booking).filter(
-                Booking.invoice_number.isnot(None)
-            ).count()
-            self.invoice_number = f"INV-{year}-{count+1:04d}"
-            self.invoice_date = datetime.utcnow()
-        return self.invoice_number
-        
-    def generate_credit_memo_number(self):
-        """Generate a unique credit memo number"""
-        year = datetime.utcnow().strftime('%y')
-        count = db.session.query(Booking).filter(
-            Booking.invoice_number.isnot(None)
-        ).count()
-        return f"CM-{year}-{count+1:04d}"
-        
-    def generate_separate_invoice_for_items(self, service_items):
-        """
-        Generate a separate invoice number for specific service items
-        and mark them as invoiced
-        """
-        # First, make sure we have service items to invoice
-        if not service_items or len(service_items) == 0:
-            return None
-            
-        # Generate a new invoice number  
-        year = datetime.utcnow().strftime('%y')
-        count = db.session.query(Booking).filter(
-            Booking.invoice_number.isnot(None)
-        ).count()
-        invoice_number = f"INV-{year}-{count+1:04d}"
-        invoice_date = datetime.utcnow()
-        
-        # Update each service item
-        for item in service_items:
-            item.invoice_number = invoice_number
-            item.invoice_date = invoice_date
-            item.is_invoiced = True
-            
-        return invoice_number
+# Booking model is now imported from app.models.booking to avoid conflicts
 
 class ServiceItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
