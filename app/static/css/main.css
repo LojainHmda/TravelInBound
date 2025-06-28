@@ -198,7 +198,12 @@ p, span, div, label, td, th {
 
 .table > thead > tr > th {
     border-bottom: 0;
-    padding: 12px 15px;
+    padding: 8px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 80px;
+    font-size: 0.85rem;
 }
 
 .table > tbody > tr {
@@ -206,9 +211,40 @@ p, span, div, label, td, th {
 }
 
 .table > tbody > tr > td {
-    padding: 12px 15px;
+    padding: 8px 10px;
     vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    font-size: 0.85rem;
 }
+
+/* Responsive table wrapper */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for flight details tables specifically */
+.flight-details-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.flight-details-table th,
+.flight-details-table td {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    padding: 6px 8px;
+}
+
+.flight-details-table .airline-col { width: 15%; }
+.flight-details-table .flight-col { width: 12%; }
+.flight-details-table .route-col { width: 25%; }
+.flight-details-table .departure-col { width: 18%; }
+.flight-details-table .arrival-col { width: 18%; }
+.flight-details-table .class-col { width: 12%; }
 
 .badge.bg-orange {
     background-color: var(--secondary-color);
@@ -432,6 +468,75 @@ p, span, div, label, td, th {
 
 .nav-tabs .nav-link:hover {
     border-color: transparent;
+}
+
+/* Table Responsiveness - General */
+@media (max-width: 992px) {
+    .table th, .table td {
+        padding: 6px 4px;
+        font-size: 0.8rem;
+    }
+    
+    .table th {
+        min-width: 60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+    
+    .table th, .table td {
+        padding: 4px 2px;
+        white-space: normal;
+        word-break: break-word;
+        max-width: 100px;
+    }
+    
+    /* Stack table data on very small screens */
+    .table-stack {
+        display: block;
+        width: 100%;
+    }
+    
+    .table-stack thead,
+    .table-stack tbody,
+    .table-stack th,
+    .table-stack td,
+    .table-stack tr {
+        display: block;
+    }
+    
+    .table-stack thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .table-stack tr {
+        border: 1px solid #ccc;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    
+    .table-stack td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        text-align: left;
+    }
+    
+    .table-stack td:before {
+        content: attr(data-label) ": ";
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+    }
 }
 
 /* Media Queries */
