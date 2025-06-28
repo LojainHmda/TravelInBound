@@ -115,6 +115,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - Implemented ModernVoucherGenerator with clean design matching user concept
   - Added blue headers and professional flight table layout for vouchers
   - Fixed initialization order issues in voucher generator color definitions
+  - Cleaned up codebase by removing all duplicate voucher generators (voucher_generator.py, clean_voucher_generator.py, simple_voucher_generator.py)
 - June 26, 2025: Added AI-powered passport scanning for customer creation
   - Implemented PassportScanner service using OpenAI GPT-4o vision API
   - Created `/customers/api/scan-passport` endpoint for passport image processing
