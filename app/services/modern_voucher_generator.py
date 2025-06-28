@@ -321,28 +321,14 @@ class ModernVoucherGenerator:
         """Create flight details with compact form layout"""
         content = []
         
-        # Main Flight Details header with blue background
-        flight_header = Table([["Flight Details"]], colWidths=[6*inch])
-        flight_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        content.append(flight_header)
-        
-        # Extract flight information from confirmation details or item description
+        # Extract flight information from confirmation details
         flight_info = self._extract_flight_info(item, confirmation_details)
         
-        # Outbound Journey header
-        journey_date = item.start_date.strftime('%d %b %Y')
+        # Outbound Journey header (single header to avoid duplication)
+        journey_date = flight_info['departure'][:11] if len(flight_info['departure']) > 11 else flight_info['departure']
         outbound_header = Table([[f"Outbound Journey ({journey_date})"]], colWidths=[6*inch])
         outbound_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.Color(0.4, 0.6, 0.8)),
+            ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
@@ -393,44 +379,48 @@ class ModernVoucherGenerator:
         return content
 
     def _extract_flight_info(self, item, confirmation_details):
-        """Extract flight information from service item and confirmation details"""
-        # Try to get data from confirmation details first
+        """Extract flight information from confirmation details"""
         if confirmation_details:
-            airline = confirmation_details.get('airline', 'Emirates')
-            flight_number = confirmation_details.get('flight_number', 'EK905')
-            route = confirmation_details.get('route', item.description)
-            departure_time = confirmation_details.get('departure_time', 'TBD')
-            arrival_time = confirmation_details.get('arrival_time', 'TBD')
-            flight_class = confirmation_details.get('class', 'Economy')
-        else:
-            # Parse from item description or use reasonable defaults
-            description = item.description or ""
+            # Use actual confirmation data
+            airline = confirmation_details.get('airline', 'TBD')
+            flight_number = confirmation_details.get('flight_number', 'TBD')
+            departure_airport = confirmation_details.get('departure_airport', 'TBD')
+            arrival_airport = confirmation_details.get('arrival_airport', 'TBD')
+            flight_time = confirmation_details.get('flight_time', 'TBD')
+            flight_class = confirmation_details.get('travel_class', 'Economy')
             
-            # Try to extract airline from description
-            if 'emirates' in description.lower():
-                airline = 'Emirates'
-                flight_number = 'EK905'
-            elif 'qatar' in description.lower():
-                airline = 'Qatar Airways'
-                flight_number = 'QR123'
-            elif 'etihad' in description.lower():
-                airline = 'Etihad Airways'
-                flight_number = 'EY456'
+            # Use confirmation flight date if available, otherwise use service dates
+            flight_date = confirmation_details.get('flight_date', item.start_date.strftime('%Y-%m-%d'))
+            if flight_date and flight_date != item.start_date.strftime('%Y-%m-%d'):
+                # Convert date format from YYYY-MM-DD to DD MMM YYYY
+                try:
+                    from datetime import datetime
+                    date_obj = datetime.strptime(flight_date, '%Y-%m-%d')
+                    departure_date = date_obj.strftime('%d %b %Y')
+                except:
+                    departure_date = item.start_date.strftime('%d %b %Y')
             else:
-                airline = 'Emirates'
-                flight_number = 'EK905'
+                departure_date = item.start_date.strftime('%d %b %Y')
+                
+            arrival_date = item.end_date.strftime('%d %b %Y')
             
-            route = description if description else "package sharm shekh"
-            departure_time = 'TBD'
-            arrival_time = 'TBD'
+            # Create route from airports
+            if departure_airport != 'TBD' and arrival_airport != 'TBD':
+                route = f"{departure_airport} → {arrival_airport}"
+            else:
+                route = item.description if item.description else 'TBD'
+            
+            departure = f"{departure_date} {flight_time}" if flight_time != 'TBD' else departure_date
+            arrival = arrival_date  # Arrival time not typically in confirmation
+            
+        else:
+            # Fallback to service item data only if no confirmation
+            airline = 'TBD'
+            flight_number = 'TBD'
+            route = item.description if item.description else 'TBD'
+            departure = item.start_date.strftime('%d %b %Y')
+            arrival = item.end_date.strftime('%d %b %Y')
             flight_class = 'Economy'
-        
-        # Format departure and arrival with dates
-        departure_date = item.start_date.strftime('%d %b %Y')
-        arrival_date = item.end_date.strftime('%d %b %Y')
-        
-        departure = f"{departure_date} {departure_time}"
-        arrival = f"{arrival_date} {arrival_time}"
         
         return {
             'airline': airline,
