@@ -503,55 +503,87 @@ class ModernVoucherGenerator:
         }
 
     def _create_hotel_details(self, item, confirmation_details, index):
-        """Create hotel-specific details"""
+        """Create hotel details using confirmation data with flight-style table"""
         content = []
         
-        hotel_title = f"Hotel {index} - {item.description}"
-        content.append(Paragraph(hotel_title, self.styles['ServiceDetail']))
-        
-        # Hotel details table
-        hotel_data = [
-            ["Hotel Information", "Booking Details"],
-            [
-                f"Hotel: {confirmation_details.get('hotel_name', item.description) if confirmation_details else item.description}",
-                f"Check-in: {item.start_date.strftime('%d %b %Y')}"
-            ],
-            [
-                f"Address: {confirmation_details.get('address', 'TBD') if confirmation_details else 'TBD'}",
-                f"Check-out: {item.end_date.strftime('%d %b %Y')}"
-            ]
-        ]
-        
+        # Extract hotel information from confirmation details
         if confirmation_details:
-            nights = (item.end_date - item.start_date).days
-            hotel_data.extend([
-                [f"Phone: {confirmation_details.get('phone', 'TBD')}", f"Nights: {nights} nights"],
-                [f"Confirmation: {confirmation_details.get('confirmation_number', 'TBD')}", f"Status: Confirmed"],
-                [f"Room: {confirmation_details.get('room_type', 'TBD')}", f"Amount: ${item.amount:.2f}" if item.amount else "Amount: TBD"]
-            ])
+            hotel_name = confirmation_details.get('hotel_name', item.description)
+            from_date = confirmation_details.get('from_date', item.start_date.strftime('%Y-%m-%d'))
+            to_date = confirmation_details.get('to_date', item.end_date.strftime('%Y-%m-%d'))
+            meal_plan = confirmation_details.get('meal_plan', 'Room Only')
+            rooms = confirmation_details.get('rooms', {})
+            
+            # Format dates
+            try:
+                from datetime import datetime
+                checkin_obj = datetime.strptime(from_date, '%Y-%m-%d')
+                checkout_obj = datetime.strptime(to_date, '%Y-%m-%d')
+                formatted_checkin = checkin_obj.strftime('%d %b %Y')
+                formatted_checkout = checkout_obj.strftime('%d %b %Y')
+                nights = (checkout_obj - checkin_obj).days
+            except:
+                formatted_checkin = item.start_date.strftime('%d %b %Y')
+                formatted_checkout = item.end_date.strftime('%d %b %Y')
+                nights = (item.end_date - item.start_date).days
+            
+            # Format room information
+            room_info = []
+            if rooms.get('single', 0) > 0:
+                room_info.append(f"{rooms['single']} Single")
+            if rooms.get('double', 0) > 0:
+                room_info.append(f"{rooms['double']} Double")
+            if rooms.get('twin', 0) > 0:
+                room_info.append(f"{rooms['twin']} Twin")
+            if rooms.get('triple', 0) > 0:
+                room_info.append(f"{rooms['triple']} Triple")
+            
+            room_text = ", ".join(room_info) if room_info else "1 Room"
+            
+            # Create table with same style as flight details
+            hotel_data = [
+                ["Service", "Description", "Dates", "Status", "Amount"],
+                ["HOTEL", hotel_name, f"{formatted_checkin} - {formatted_checkout}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["Meal Plan", meal_plan, f"{nights} nights", "", ""],
+                ["Rooms", room_text, "", "", ""]
+            ]
         else:
+            # Fallback if no confirmation data
             nights = (item.end_date - item.start_date).days
-            hotel_data.extend([
-                [f"Phone: TBD", f"Nights: {nights} nights"],
-                [f"Confirmation: TBD", f"Status: Confirmed"],
-                [f"Room: TBD", f"Amount: ${item.amount:.2f}" if item.amount else "Amount: TBD"]
-            ])
+            hotel_data = [
+                ["Service", "Description", "Dates", "Status", "Amount"],
+                ["HOTEL", item.description, f"{item.start_date.strftime('%d %b %Y')} - {item.end_date.strftime('%d %b %Y')}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["Duration", f"{nights} nights", "", "", ""]
+            ]
         
-        hotel_table = Table(hotel_data, colWidths=[3*inch, 3*inch])
+        hotel_table = Table(hotel_data, colWidths=[1.2*inch, 1.8*inch, 1.2*inch, 0.8*inch, 1*inch])
         hotel_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), self.light_gray),
+            # Header row styling
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            
+            # Alternating row colors for data rows only
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Only outer border and header line - no internal borders
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            
+            # Compact padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            
+            # Alignment
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
         
         content.append(hotel_table)
-        content.append(Spacer(1, 0.1*inch))
+        content.append(Spacer(1, 0.2*inch))
         
         return content
 
