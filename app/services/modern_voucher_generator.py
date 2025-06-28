@@ -19,8 +19,8 @@ from reportlab.graphics import renderPDF
 
 class ModernVoucherGenerator:
     def __init__(self):
-        # Brand colors matching dashboard - define these first
-        self.primary_color = colors.Color(0, 0.031, 0.5)  # #000080 - Dark blue
+        # Brand colors matching dashboard - using correct 0-1 range
+        self.primary_color = colors.Color(0, 0, 0.5)      # #000080 - Dark blue
         self.accent_color = colors.Color(1, 0.549, 0)     # #FF8C00 - Orange
         self.gold_color = colors.Color(1, 0.843, 0)       # #FFD700 - Gold
         self.light_gray = colors.Color(0.95, 0.95, 0.95)  # Light gray for backgrounds
@@ -150,14 +150,42 @@ class ModernVoucherGenerator:
         return buffer
 
     def _create_company_header(self):
-        """Create company header"""
+        """Create company header with logo and aligned content"""
         content = []
         
-        # Company name and voucher title
-        content.append(Paragraph("ARABI TRAVEL", self.styles['CompanyHeader']))
-        content.append(Paragraph("TRAVEL VOUCHER", self.styles['VoucherTitle']))
-        content.append(Spacer(1, 0.3*inch))
+        # Logo and company info in a table for proper alignment
+        from reportlab.lib.utils import ImageReader
+        import os
         
+        # Try to load the logo
+        logo_path = os.path.join('static', 'images', 'arabilogo.jpg')
+        if not os.path.exists(logo_path):
+            logo_path = 'arabilogo.jpg'  # Try root directory
+        
+        if os.path.exists(logo_path):
+            # Create header with logo and text aligned
+            header_data = [
+                [ImageReader(logo_path), 
+                 Paragraph("ARABI TRAVEL<br/>TRAVEL VOUCHER", self.styles['CompanyHeader'])]
+            ]
+            
+            header_table = Table(header_data, colWidths=[1.5*inch, 4.5*inch])
+            header_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),  # Logo left aligned
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'),  # Text center aligned
+                ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ]))
+            content.append(header_table)
+        else:
+            # Fallback without logo
+            content.append(Paragraph("ARABI TRAVEL", self.styles['CompanyHeader']))
+            content.append(Paragraph("TRAVEL VOUCHER", self.styles['VoucherTitle']))
+        
+        content.append(Spacer(1, 0.3*inch))
         return content
 
     def _create_header(self, booking):
@@ -185,7 +213,8 @@ class ModernVoucherGenerator:
             ]
         ]
         
-        header_table = Table(header_data, colWidths=[3*inch, 3*inch])
+        # Use full page width for header
+        header_table = Table(header_data, colWidths=[3.25*inch, 3.25*inch])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -341,6 +370,8 @@ class ModernVoucherGenerator:
             flight_date = confirmation_details.get('flight_date', item.start_date.strftime('%Y-%m-%d'))
             flight_time = confirmation_details.get('flight_time', 'N/A')
             travel_class = confirmation_details.get('travel_class', 'Economy')
+            passenger_names = confirmation_details.get('passenger_names', [])
+            eticket_numbers = confirmation_details.get('eticket_numbers', [])
             
             # Format date
             try:
@@ -350,22 +381,44 @@ class ModernVoucherGenerator:
             except:
                 formatted_date = flight_date
             
-            # Simple table with confirmation data
+            # Format passenger names
+            if passenger_names:
+                passengers_text = ", ".join(passenger_names)
+            else:
+                # Try to get from booking customer or requester
+                booking = item.booking
+                if booking.customer:
+                    passengers_text = booking.customer.name
+                else:
+                    passengers_text = booking.requester.username
+            
+            # Format e-ticket numbers
+            if eticket_numbers:
+                etickets_text = ", ".join(eticket_numbers)
+            else:
+                etickets_text = "To be provided"
+            
+            # Simple table with confirmation data including passengers and e-tickets
             flight_data = [
                 ["Airline:", airline, "Flight Number:", flight_number],
                 ["From:", departure_airport, "To:", arrival_airport],
                 ["Date:", formatted_date, "Time:", flight_time],
-                ["Class:", travel_class, "", ""]
+                ["Class:", travel_class, "Passengers:", passengers_text],
+                ["E-Ticket(s):", etickets_text, "", ""]
             ]
         else:
             # Fallback if no confirmation data
+            booking = item.booking
+            passenger_name = booking.customer.name if booking.customer else booking.requester.username
+            
             flight_data = [
                 ["Service:", item.description or "Flight Service"],
                 ["Date:", item.start_date.strftime('%d %b %Y')],
+                ["Passenger:", passenger_name],
                 ["Status:", "Confirmed"]
             ]
         
-        flight_table = Table(flight_data, colWidths=[1.2*inch, 2.3*inch, 1.2*inch, 1.3*inch])
+        flight_table = Table(flight_data, colWidths=[1*inch, 2*inch, 1*inch, 2*inch])
         flight_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
