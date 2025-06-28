@@ -1,6 +1,6 @@
 from datetime import datetime
 from app import db
-from app.models.user import User
+from app.models.user import User, Agent
 
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
@@ -30,17 +30,7 @@ from app.models.finance import (
 
 # User model is now imported from app.models.user to avoid conflicts
 
-class Agent(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    specialty = db.Column(db.String(50))  # e.g., flights, hotels, etc.
-    
-    # Relationship with service items
-    service_items = db.relationship('ServiceItem', backref='assigned_agent', lazy=True)
-    
-    def __repr__(self):
-        return f'<Agent {self.name} - {self.specialty}>'
+# Agent model is now imported from app.models.user to avoid conflicts
 
 class Customer(db.Model):
     """Customer model for tracking individual and corporate customers"""
