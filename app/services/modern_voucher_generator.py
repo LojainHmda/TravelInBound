@@ -124,11 +124,8 @@ class ModernVoucherGenerator:
         # Company header
         content.extend(self._create_company_header())
         
-        # Header section
+        # Header section (contains both customer and voucher details)
         content.extend(self._create_header(booking))
-        
-        # Customer information section
-        content.extend(self._create_customer_section(booking))
         
         # Only show confirmed services in voucher
         confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
@@ -318,63 +315,69 @@ class ModernVoucherGenerator:
         return content
 
     def _create_flight_details(self, item, confirmation_details, index):
-        """Create flight details with compact form layout"""
+        """Create simple flight details from confirmation data"""
         content = []
         
-        # Extract flight information from confirmation details
-        flight_info = self._extract_flight_info(item, confirmation_details)
-        
-        # Outbound Journey header (single header to avoid duplication)
-        journey_date = flight_info['departure'][:11] if len(flight_info['departure']) > 11 else flight_info['departure']
-        outbound_header = Table([[f"Outbound Journey ({journey_date})"]], colWidths=[6*inch])
-        outbound_header.setStyle(TableStyle([
+        # Blue header for flight section
+        flight_header = Table([["Flight Details"]], colWidths=[6*inch])
+        flight_header.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ]))
-        content.append(outbound_header)
+        content.append(flight_header)
         
-        # Extract flight data from confirmation details or use actual booking data
-        flight_info = self._extract_flight_info(item, confirmation_details)
+        # Simple display of confirmation details
+        if confirmation_details:
+            airline = confirmation_details.get('airline', 'N/A')
+            flight_number = confirmation_details.get('flight_number', 'N/A')
+            departure_airport = confirmation_details.get('departure_airport', 'N/A')
+            arrival_airport = confirmation_details.get('arrival_airport', 'N/A')
+            flight_date = confirmation_details.get('flight_date', item.start_date.strftime('%Y-%m-%d'))
+            flight_time = confirmation_details.get('flight_time', 'N/A')
+            travel_class = confirmation_details.get('travel_class', 'Economy')
+            
+            # Format date
+            try:
+                from datetime import datetime
+                date_obj = datetime.strptime(flight_date, '%Y-%m-%d')
+                formatted_date = date_obj.strftime('%d %b %Y')
+            except:
+                formatted_date = flight_date
+            
+            # Simple table with confirmation data
+            flight_data = [
+                ["Airline:", airline, "Flight Number:", flight_number],
+                ["From:", departure_airport, "To:", arrival_airport],
+                ["Date:", formatted_date, "Time:", flight_time],
+                ["Class:", travel_class, "", ""]
+            ]
+        else:
+            # Fallback if no confirmation data
+            flight_data = [
+                ["Service:", item.description or "Flight Service"],
+                ["Date:", item.start_date.strftime('%d %b %Y')],
+                ["Status:", "Confirmed"]
+            ]
         
-        # Create compact form-style layout for flight details
-        flight_details_data = [
-            ["Airline:", flight_info['airline'], "Flight No.:", flight_info['flight_number']],
-            ["Route:", flight_info['route'], "Class:", flight_info['class']],
-            ["Departure:", flight_info['departure'], "Arrival:", flight_info['arrival']],
-        ]
-        
-        flight_details_table = Table(flight_details_data, colWidths=[1*inch, 2*inch, 1*inch, 2*inch])
-        flight_details_table.setStyle(TableStyle([
-            # Label styling (left columns)
+        flight_table = Table(flight_data, colWidths=[1.2*inch, 2.3*inch, 1.2*inch, 1.3*inch])
+        flight_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
             ('TEXTCOLOR', (0, 0), (0, -1), self.primary_color),
             ('TEXTCOLOR', (2, 0), (2, -1), self.primary_color),
-            
-            # Value styling (right columns)
-            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
-            ('FONTNAME', (3, 0), (3, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            
-            # Alignment and padding
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            
-            # Light border for separation
-            ('LINEBELOW', (0, 0), (-1, -2), 0.5, colors.lightgrey),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
         ]))
         
-        content.append(flight_details_table)
+        content.append(flight_table)
         content.append(Spacer(1, 0.2*inch))
         return content
 
