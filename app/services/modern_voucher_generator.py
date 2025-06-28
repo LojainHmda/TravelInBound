@@ -1,3 +1,4 @@
+
 """
 Modern Voucher Generator Service
 Creates clean, professional vouchers with improved visual design
@@ -101,7 +102,7 @@ class ModernVoucherGenerator:
 
     def generate_voucher(self, booking_id: int) -> BytesIO:
         """Generate modern voucher PDF"""
-        from models import Booking
+        from app.models import Booking
         
         booking = Booking.query.get_or_404(booking_id)
         
@@ -120,24 +121,47 @@ class ModernVoucherGenerator:
         # Build document content
         content = []
         
+        # Company header
+        content.extend(self._create_company_header())
+        
         # Header section
         content.extend(self._create_header(booking))
         
         # Customer information section
         content.extend(self._create_customer_section(booking))
         
-        # Flight details section only (matching concept design)
-        flight_services = [item for item in booking.service_items if item.service_type == 'FLIGHT']
-        if flight_services:
-            content.extend(self._create_flight_details(flight_services[0], self._get_confirmation_details(flight_services[0]), 1))
+        # Only show confirmed services in voucher
+        confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
         
-        # Clean spacing for minimal design
-        content.append(Spacer(1, 0.5*inch))
+        if confirmed_services:
+            # Services section with only confirmed services
+            content.extend(self._create_services_section_confirmed(booking, confirmed_services))
+        else:
+            # If no confirmed services, show a message
+            content.append(Paragraph("No confirmed services to display in voucher.", self.styles['ServiceDetail']))
+            content.append(Spacer(1, 0.2*inch))
+        
+        # Payment section
+        content.extend(self._create_payment_section(booking))
+        
+        # Footer
+        content.extend(self._create_footer())
         
         # Build PDF
         pdf_document.build(content)
         buffer.seek(0)
         return buffer
+
+    def _create_company_header(self):
+        """Create company header"""
+        content = []
+        
+        # Company name and voucher title
+        content.append(Paragraph("ARABI TRAVEL", self.styles['CompanyHeader']))
+        content.append(Paragraph("TRAVEL VOUCHER", self.styles['VoucherTitle']))
+        content.append(Spacer(1, 0.3*inch))
+        
+        return content
 
     def _create_header(self, booking):
         """Create clean header matching the concept design"""
@@ -146,6 +170,8 @@ class ModernVoucherGenerator:
         # Customer and Voucher Details sections side by side
         customer_name = booking.customer.name if booking.customer else booking.requester.username
         customer_email = booking.customer.email if booking.customer else booking.requester.email
+        
+        confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
         
         header_data = [
             [
@@ -156,8 +182,8 @@ class ModernVoucherGenerator:
                 Paragraph(f"{customer_name}<br/>{customer_email}", self.styles['CustomerInfo']),
                 Paragraph(f"<b>Voucher Number:</b> {booking.reference_number}<br/>" + 
                          f"<b>Booking Date:</b> {booking.created_at.strftime('%d %b %Y')}<br/>" +
-                         f"<b>Total Services:</b> {len(booking.service_items)}<br/>" +
-                         f"<b>Status:</b> <font color='green'>{booking.status}</font>", 
+                         f"<b>Confirmed Services:</b> {len(confirmed_services)}<br/>" +
+                         f"<b>Status:</b> <font color='green'>Confirmed</font>", 
                          self.styles['CustomerInfo'])
             ]
         ]
@@ -184,11 +210,13 @@ class ModernVoucherGenerator:
         customer_email = booking.customer.email if booking.customer else booking.requester.email
         customer_phone = getattr(booking.customer, 'phone', 'N/A') if booking.customer else 'N/A'
         
+        confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
+        
         customer_data = [
             ["Customer:", customer_name, "Voucher Number:", booking.reference_number],
             ["Email:", customer_email, "Booking Date:", booking.created_at.strftime('%d %b %Y')],
-            ["Phone:", customer_phone, "Total Services:", str(len(booking.service_items))],
-            ["", "", "Status:", booking.status.title()]
+            ["Phone:", customer_phone, "Confirmed Services:", str(len(confirmed_services))],
+            ["", "", "Status:", "Confirmed"]
         ]
         
         customer_table = Table(customer_data, colWidths=[1*inch, 2.5*inch, 1.2*inch, 1.3*inch])
@@ -210,17 +238,17 @@ class ModernVoucherGenerator:
         
         return content
 
-    def _create_services_section(self, booking):
-        """Create services section with clean formatting"""
+    def _create_services_section_confirmed(self, booking, confirmed_services):
+        """Create services section with only confirmed services"""
         content = []
         
-        if not booking.service_items:
-            content.append(Paragraph("No services found for this booking.", self.styles['ServiceDetail']))
+        if not confirmed_services:
+            content.append(Paragraph("No confirmed services found for this booking.", self.styles['ServiceDetail']))
             return content
         
-        # Group services by type
+        # Group confirmed services by type
         services_by_type = {}
-        for item in booking.service_items:
+        for item in confirmed_services:
             service_type = item.service_type
             if service_type not in services_by_type:
                 services_by_type[service_type] = []
@@ -232,13 +260,12 @@ class ModernVoucherGenerator:
         
         for service_type, items in services_by_type.items():
             quantity = len(items)
-            service_total = sum(item.amount for item in items)
-            status = "Confirmed" if all(item.status == 'CONFIRMED' for item in items) else "Pending"
+            service_total = sum(item.amount for item in items if item.amount)
             
             summary_data.append([
                 service_type.title(),
                 str(quantity),
-                status,
+                "Confirmed",
                 f"${service_total:.2f}"
             ])
             total_amount += service_total
@@ -260,11 +287,11 @@ class ModernVoucherGenerator:
             ('BACKGROUND', (0, -1), (-1, -1), self.light_gray),
         ]))
         
-        content.append(Paragraph("Services Summary", self.styles['SectionHeader']))
+        content.append(Paragraph("Confirmed Services", self.styles['SectionHeader']))
         content.append(summary_table)
         content.append(Spacer(1, 0.2*inch))
         
-        # Detailed service information
+        # Detailed service information for confirmed services only
         for service_type, items in services_by_type.items():
             content.extend(self._create_service_details(service_type, items))
         
@@ -327,16 +354,16 @@ class ModernVoucherGenerator:
         flight_headers = ["Airline", "Flight No.", "Route", "Departure", "Arrival", "Class"]
         
         # Extract flight data from confirmation details or use defaults
-        airline = confirmation_details.get('airline', 'Emirates') if confirmation_details else 'Emirates'
-        flight_no = confirmation_details.get('flight_number', 'EK 903') if confirmation_details else 'EK 903'
-        route = confirmation_details.get('route', 'AMM - DXB') if confirmation_details else 'AMM - DXB'
-        departure_time = confirmation_details.get('departure_time', '08:15') if confirmation_details else '08:15'
-        arrival_time = confirmation_details.get('arrival_time', '12:30') if confirmation_details else '12:30'
+        airline = confirmation_details.get('airline', 'TBD') if confirmation_details else 'TBD'
+        flight_no = confirmation_details.get('flight_number', 'TBD') if confirmation_details else 'TBD'
+        route = confirmation_details.get('route', item.description) if confirmation_details else item.description
+        departure_time = confirmation_details.get('departure_time', 'TBD') if confirmation_details else 'TBD'
+        arrival_time = confirmation_details.get('arrival_time', 'TBD') if confirmation_details else 'TBD'
         flight_class = confirmation_details.get('class', 'Economy') if confirmation_details else 'Economy'
         
         # Format departure and arrival with dates
         departure = f"{item.start_date.strftime('%d %b %Y')} {departure_time}"
-        arrival = f"{item.start_date.strftime('%d %b %Y')} {arrival_time}"
+        arrival = f"{item.end_date.strftime('%d %b %Y')} {arrival_time}"
         
         flight_data = [
             flight_headers,
@@ -347,11 +374,11 @@ class ModernVoucherGenerator:
         if confirmation_details and 'connecting_flight' in confirmation_details:
             connecting = confirmation_details['connecting_flight']
             flight_data.append([
-                connecting.get('airline', 'Emirates'),
-                connecting.get('flight_number', 'EK 721'),
-                connecting.get('route', 'DXB - JFK'),
-                connecting.get('departure', '14:45'),
-                connecting.get('arrival', '20:30'),
+                connecting.get('airline', 'TBD'),
+                connecting.get('flight_number', 'TBD'),
+                connecting.get('route', 'TBD'),
+                connecting.get('departure', 'TBD'),
+                connecting.get('arrival', 'TBD'),
                 connecting.get('class', 'Economy')
             ])
         
@@ -379,27 +406,6 @@ class ModernVoucherGenerator:
         ]))
         
         content.append(flight_table)
-        
-        # Add return journey if applicable
-        if item.end_date != item.start_date:
-            return_date = item.end_date.strftime('%d %b %Y')
-            return_header = Table([[f"Return Journey ({return_date})"]], colWidths=[6*inch])
-            return_header.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, -1), colors.Color(0.4, 0.6, 0.8)),
-                ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 10),
-                ('TOPPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ]))
-            content.append(Spacer(1, 0.1*inch))
-            content.append(return_header)
-            
-            # Return flight details would go here
-            # For now, we'll leave it as a placeholder since the concept shows outbound only
-        
         content.append(Spacer(1, 0.2*inch))
         return content
 
@@ -418,19 +424,25 @@ class ModernVoucherGenerator:
                 f"Check-in: {item.start_date.strftime('%d %b %Y')}"
             ],
             [
-                f"Address: {confirmation_details.get('address', 'N/A') if confirmation_details else 'N/A'}",
+                f"Address: {confirmation_details.get('address', 'TBD') if confirmation_details else 'TBD'}",
                 f"Check-out: {item.end_date.strftime('%d %b %Y')}"
             ]
         ]
         
         if confirmation_details:
-            if 'phone' in confirmation_details:
-                nights = (item.end_date - item.start_date).days
-                hotel_data.extend([
-                    [f"Phone: {confirmation_details.get('phone', 'N/A')}", f"Nights: {nights} nights"],
-                    [f"Confirmation: {confirmation_details.get('confirmation_number', 'N/A')}", f"Status: {item.status.title()}"],
-                    [f"Room: {confirmation_details.get('room_type', 'N/A')}", f"Amount: ${item.amount:.2f}"]
-                ])
+            nights = (item.end_date - item.start_date).days
+            hotel_data.extend([
+                [f"Phone: {confirmation_details.get('phone', 'TBD')}", f"Nights: {nights} nights"],
+                [f"Confirmation: {confirmation_details.get('confirmation_number', 'TBD')}", f"Status: Confirmed"],
+                [f"Room: {confirmation_details.get('room_type', 'TBD')}", f"Amount: ${item.amount:.2f}" if item.amount else "Amount: TBD"]
+            ])
+        else:
+            nights = (item.end_date - item.start_date).days
+            hotel_data.extend([
+                [f"Phone: TBD", f"Nights: {nights} nights"],
+                [f"Confirmation: TBD", f"Status: Confirmed"],
+                [f"Room: TBD", f"Amount: ${item.amount:.2f}" if item.amount else "Amount: TBD"]
+            ])
         
         hotel_table = Table(hotel_data, colWidths=[3*inch, 3*inch])
         hotel_table.setStyle(TableStyle([
@@ -462,7 +474,7 @@ class ModernVoucherGenerator:
             ["Service Information", "Details"],
             [f"Type: {item.service_type.title()}", f"Start: {item.start_date.strftime('%d %b %Y')}"],
             [f"Description: {item.description}", f"End: {item.end_date.strftime('%d %b %Y')}"],
-            [f"Status: {item.status.title()}", f"Amount: ${item.amount:.2f}"]
+            [f"Status: Confirmed", f"Amount: ${item.amount:.2f}" if item.amount else "Amount: TBD"]
         ]
         
         service_table = Table(service_data, colWidths=[3*inch, 3*inch])
@@ -489,8 +501,12 @@ class ModernVoucherGenerator:
         
         content.append(Paragraph("Payment Summary", self.styles['SectionHeader']))
         
-        total_amount = booking.calculate_total()
-        total_payments = sum(payment.amount for payment in booking.payments)
+        # Calculate total from confirmed services only
+        confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
+        total_amount = sum(item.amount for item in confirmed_services if item.amount)
+        
+        # Get total payments
+        total_payments = sum(payment.amount for payment in booking.payments) if booking.payments else 0
         balance_due = total_amount - total_payments
         
         payment_data = [
@@ -568,14 +584,15 @@ class ModernVoucherGenerator:
         confirmation_details = {}
         
         # Look for confirmation documents
-        for document in service_item.documents:
-            if document.document_type == 'CONFIRMATION' and document.notes:
-                try:
-                    # Parse JSON notes for confirmation details
-                    doc_data = json.loads(document.notes)
-                    confirmation_details.update(doc_data)
-                except (json.JSONDecodeError, TypeError):
-                    # If not JSON, treat as plain text
-                    pass
+        if hasattr(service_item, 'documents') and service_item.documents:
+            for document in service_item.documents:
+                if document.document_type == 'CONFIRMATION' and document.notes:
+                    try:
+                        # Parse JSON notes for confirmation details
+                        doc_data = json.loads(document.notes)
+                        confirmation_details.update(doc_data)
+                    except (json.JSONDecodeError, TypeError):
+                        # If not JSON, treat as plain text
+                        pass
         
         return confirmation_details
