@@ -16,7 +16,7 @@ voucher_bp = Blueprint('voucher', __name__)
 def voucher_preview(booking_id):
     """Show voucher preview page"""
     booking = Booking.query.get_or_404(booking_id)
-    return render_template('booking/voucher_preview.html', booking=booking)
+    return render_template('booking/voucher_preview_new.html', booking=booking)
 
 @voucher_bp.route('/booking/<int:booking_id>/voucher', methods=['POST', 'GET'])
 @login_required
