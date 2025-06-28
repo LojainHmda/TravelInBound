@@ -408,11 +408,13 @@ class ModernVoucherGenerator:
             else:
                 etickets_text = "To be provided"
             
-            # Create table with header row like your image design
+            # Create table with header row - combine route info in description
+            route_info = f"{departure_airport} → {arrival_airport}"
+            full_description = f"{airline} {flight_number}\n{route_info}"
+            
             flight_data = [
                 ["Service", "Description", "Dates", "Status", "Amount"],
-                ["FLIGHT", f"{airline} {flight_number}", formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
-                ["Route", f"{departure_airport} → {arrival_airport}", flight_time, "", ""],
+                ["FLIGHT", full_description, formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Class", travel_class, "", "", ""],
                 ["Passengers", passengers_text, "", "", ""],
                 ["Ticket Number", etickets_text, "", "", ""]
@@ -599,10 +601,8 @@ class ModernVoucherGenerator:
         return content
 
     def _create_payment_section(self, booking):
-        """Create payment summary section"""
+        """Create payment summary section with integrated header"""
         content = []
-        
-        content.append(Paragraph("Payment Summary", self.styles['SectionHeader']))
         
         # Calculate total from confirmed services only
         confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
@@ -612,6 +612,20 @@ class ModernVoucherGenerator:
         total_payments = sum(payment.amount for payment in booking.payments) if booking.payments else 0
         balance_due = total_amount - total_payments
         
+        # Blue header for payment section (same style as flight details)
+        payment_header = Table([["Payment Summary"]], colWidths=[6*inch])
+        payment_header.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        content.append(payment_header)
+        
         payment_data = [
             ["Description", "Amount"],
             ["Total Amount", f"${total_amount:.2f}"],
@@ -619,7 +633,7 @@ class ModernVoucherGenerator:
             ["Balance Due", f"${balance_due:.2f}"]
         ]
         
-        payment_table = Table(payment_data, colWidths=[2*inch, 2*inch])
+        payment_table = Table(payment_data, colWidths=[3*inch, 3*inch])
         payment_table.setStyle(TableStyle([
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
