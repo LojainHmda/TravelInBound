@@ -354,19 +354,7 @@ class ModernVoucherGenerator:
         """Create simple flight details from confirmation data"""
         content = []
         
-        # Blue header for flight section
-        flight_header = Table([["Flight Details"]], colWidths=[6*inch])
-        flight_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        content.append(flight_header)
+
         
         # Simple display of confirmation details
         if confirmation_details:
