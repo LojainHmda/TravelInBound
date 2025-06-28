@@ -71,11 +71,11 @@ class ModernVoucherGenerator:
         self.styles.add(ParagraphStyle(
             name='CustomerInfo',
             parent=self.styles['Normal'],
-            fontSize=11,
+            fontSize=9,
             textColor=colors.black,
             alignment=TA_LEFT,
             fontName='Helvetica',
-            spaceAfter=4
+            spaceAfter=2
         ))
         
         # Service details
@@ -218,13 +218,15 @@ class ModernVoucherGenerator:
             ]
         ]
         
-        # Use full page width for header
-        header_table = Table(header_data, colWidths=[3.25*inch, 3.25*inch])
+        # Use full page width for header alignment
+        header_table = Table(header_data, colWidths=[3*inch, 3*inch])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
         
         content.append(header_table)
@@ -432,25 +434,25 @@ class ModernVoucherGenerator:
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             
-            # Alternating row colors
+            # Alternating row colors for data rows only
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
             
-            # Border and grid
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            # Only outer border and header line - no internal borders
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
             
-            # Cell padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            # Compact padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         
         content.append(flight_table)
@@ -622,26 +624,26 @@ class ModernVoucherGenerator:
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             
-            # Alternating row colors
+            # Alternating row colors for data rows only
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
             
-            # Border and grid
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            # Only outer border and header line - no internal borders
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
             
-            # Cell padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            # Compact padding
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         
         content.append(payment_table)
