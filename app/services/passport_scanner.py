@@ -22,20 +22,47 @@ class PassportScanner:
         Convert PDF to image and return as base64 string
         """
         try:
-            # Convert PDF to images (take first page)
-            images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, dpi=300)
+            # Convert PDF to images with higher quality settings
+            images = convert_from_bytes(
+                pdf_bytes, 
+                first_page=1, 
+                last_page=1, 
+                dpi=600,  # Higher DPI for better text recognition
+                fmt='JPEG',
+                thread_count=1
+            )
             if not images:
                 raise ValueError("No pages found in PDF")
             
-            # Convert PIL image to base64
+            # Get the first page and enhance for OCR
             img = images[0]
+            
+            # Convert to RGB if not already
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Enhance image quality
+            from PIL import ImageEnhance
+            # Increase contrast for better text recognition
+            enhancer = ImageEnhance.Contrast(img)
+            img = enhancer.enhance(1.5)
+            
+            # Increase sharpness
+            enhancer = ImageEnhance.Sharpness(img)
+            img = enhancer.enhance(2.0)
+            
+            # Convert to base64
             buffer = io.BytesIO()
-            img.save(buffer, format='JPEG', quality=95)
+            img.save(buffer, format='JPEG', quality=95, optimize=True)
             img_bytes = buffer.getvalue()
+            
+            print(f"DEBUG: Converted PDF to image - size: {len(img_bytes)} bytes, dimensions: {img.size}")
             return base64.b64encode(img_bytes).decode('utf-8')
             
         except Exception as e:
             print(f"Error converting PDF to image: {e}")
+            import traceback
+            traceback.print_exc()
             raise
     
     def extract_passport_data(self, file_data: bytes, filename: str = '') -> Dict[str, Optional[str]]:

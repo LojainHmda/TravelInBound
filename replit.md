@@ -109,6 +109,13 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- June 29, 2025: Enhanced passport scanning to support PDF files
+  - Updated PassportScanner service to handle both image and PDF formats
+  - Added PDF to image conversion using pdf2image library for document processing
+  - Enhanced file type detection based on filename extension and file headers
+  - Updated customer creation interface to accept PDF files (accept="image/*,application/pdf")
+  - Modified UI text and button labels to reflect support for both images and PDFs
+  - Added /customers/api/scan-passport to CSRF exemptions for proper API functionality
 - June 29, 2025: Fixed voucher table alignment and font sizing issues
   - Adjusted table column widths to prevent text overlap (Service: 1.0", Description: 2.0", Dates: 1.5", Status: 1.0", Amount: 0.8")
   - Reduced font size from 8pt to 7pt for more compact display
