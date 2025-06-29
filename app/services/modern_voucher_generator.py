@@ -312,7 +312,7 @@ class ModernVoucherGenerator:
         """Create detailed service information"""
         content = []
         
-        content.append(Paragraph(f"{service_type.title()} Details", self.styles['SectionHeader']))
+        # No separate section header - it's now integrated into the table
         
         for i, item in enumerate(items, 1):
             # Get confirmation details from documents
