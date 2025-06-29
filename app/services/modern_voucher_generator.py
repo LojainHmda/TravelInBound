@@ -419,12 +419,12 @@ class ModernVoucherGenerator:
                 ["Status:", "Confirmed"]
             ]
         
-        flight_table = Table(flight_data, colWidths=[1.2*inch, 1.8*inch, 1.2*inch, 0.8*inch, 1*inch])
+        flight_table = Table(flight_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         flight_table.setStyle(TableStyle([
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             
             # Alternating row colors for data rows only
@@ -434,11 +434,11 @@ class ModernVoucherGenerator:
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
             
-            # Compact padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            # Compact padding with better spacing
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -556,12 +556,12 @@ class ModernVoucherGenerator:
                 ["Duration", f"{nights} nights", "", "", ""]
             ]
         
-        hotel_table = Table(hotel_data, colWidths=[1.2*inch, 1.8*inch, 1.2*inch, 0.8*inch, 1*inch])
+        hotel_table = Table(hotel_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         hotel_table.setStyle(TableStyle([
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             
             # Alternating row colors for data rows only
@@ -571,11 +571,11 @@ class ModernVoucherGenerator:
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
             
-            # Compact padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            # Compact padding with better spacing
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -653,12 +653,12 @@ class ModernVoucherGenerator:
             ["Balance Due", f"${balance_due:.2f}"]
         ]
         
-        payment_table = Table(payment_data, colWidths=[3*inch, 3*inch])
+        payment_table = Table(payment_data, colWidths=[4.5*inch, 1.8*inch])
         payment_table.setStyle(TableStyle([
             # Header row styling
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('FONTSIZE', (0, 0), (-1, -1), 7),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             
             # Alternating row colors for data rows only
@@ -668,11 +668,11 @@ class ModernVoucherGenerator:
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
             
-            # Compact padding
-            ('LEFTPADDING', (0, 0), (-1, -1), 4),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 3),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            # Compact padding with better spacing
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
