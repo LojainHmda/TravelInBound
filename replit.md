@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- June 29, 2025: Enhanced hotel autocomplete system with comprehensive database
+  - Processed CSV file with 354 hotels from multiple destinations (Turkey, Dubai, UAE)
+  - Added hotels from Istanbul, Antalya, Bodrum, Kemer, Alanya, Marmaris, Dubai and other locations
+  - Enhanced hotel_autocomplete_data.js with luxury resorts, boutique hotels, and international chains
+  - Updated city list to include Turkish and UAE destinations for better location coverage
+  - Improved hotel dropdown with authentic hotel names from operational database
 - June 29, 2025: Made phone number mandatory with unique constraint
   - Updated Customer model to require phone field (nullable=False, unique=True)
   - Enhanced CustomerForm validation to make phone field required

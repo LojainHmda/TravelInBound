@@ -52,7 +52,18 @@ const HOTEL_CITIES = [
     { code: "DOH", name: "Doha, Qatar" },
     { code: "JED", name: "Jeddah, Saudi Arabia" },
     { code: "RUH", name: "Riyadh, Saudi Arabia" },
-    { code: "TLV", name: "Tel Aviv, Israel" }
+    { code: "TLV", name: "Tel Aviv, Israel" },
+    // Enhanced cities from hotel database
+    { code: "DXB", name: "Dubai, UAE" },
+    { code: "IST", name: "Istanbul, Turkey" },
+    { code: "ANT", name: "Antalya, Turkey" },
+    { code: "BOD", name: "Bodrum, Turkey" },
+    { code: "KEM", name: "Kemer, Turkey" },
+    { code: "ALA", name: "Alanya, Turkey" },
+    { code: "MAR", name: "Marmaris, Turkey" },
+    { code: "BEL", name: "Belek, Turkey" },
+    { code: "AKS", name: "Aksu, Turkey" },
+    { code: "FET", name: "Fethiye, Turkey" }
 ];
 
 const HOTEL_CHAINS = [
