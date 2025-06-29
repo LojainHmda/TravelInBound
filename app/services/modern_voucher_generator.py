@@ -194,37 +194,50 @@ class ModernVoucherGenerator:
         return content
 
     def _create_header(self, booking):
-        """Create clean header matching the concept design"""
+        """Create clean header matching the preview page design"""
         content = []
         
-        # Customer and Voucher Details sections side by side
+        # Customer information
         customer_name = booking.customer.name if booking.customer else booking.requester.username
         customer_email = booking.customer.email if booking.customer else booking.requester.email
+        customer_phone = getattr(booking.customer, 'phone', '') if booking.customer else ''
         
+        # Calculate totals
         confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
+        total_pax = len(confirmed_services)  # or actual passenger count if available
         
+        # Create two-column layout
         header_data = [
             [
-                Paragraph("<b>Customer:</b>", self.styles['SectionHeader']),
-                Paragraph("<b>Voucher Details:</b>", self.styles['SectionHeader'])
+                Paragraph("<font color='grey' size='10'>Customer:</font>", self.styles['Normal']),
+                Paragraph("<font color='grey' size='10'>Voucher Details:</font>", self.styles['Normal'])
             ],
             [
-                Paragraph(f"{customer_name}<br/>{customer_email}", self.styles['CustomerInfo']),
-                Paragraph(f"<b>Voucher Number:</b> {booking.reference_number}<br/>" + 
-                         f"<b>Booking Date:</b> {booking.created_at.strftime('%d %b %Y')}<br/>" +
-                         f"<b>Confirmed Services:</b> {len(confirmed_services)}<br/>" +
-                         f"<b>Status:</b> <font color='green'>Confirmed</font>", 
-                         self.styles['CustomerInfo'])
+                Paragraph(f"<font size='14'><b>{customer_name}</b></font>", self.styles['Normal']),
+                Paragraph(f"<b>Voucher Number:</b> {booking.reference_number}", self.styles['Normal'])
+            ],
+            [
+                Paragraph(f"<font color='grey' size='9'>{customer_email}</font>", self.styles['Normal']),
+                Paragraph(f"<b>Booking Date:</b> {booking.created_at.strftime('%d %b %Y')}", self.styles['Normal'])
+            ],
+            [
+                Paragraph(f"<font color='grey' size='9'>{customer_phone}</font>" if customer_phone else "", self.styles['Normal']),
+                Paragraph(f"<b>Total Pax:</b> {total_pax:02d}", self.styles['Normal'])
+            ],
+            [
+                "",
+                Paragraph('<b>Status:</b> <font color="white" backColor="green" size="8"> Confirmed </font>', self.styles['Normal'])
             ]
         ]
         
-        # Use full page width for header alignment
-        header_table = Table(header_data, colWidths=[3*inch, 3*inch])
+        # Use full page width for header alignment with proper spacing
+        header_table = Table(header_data, colWidths=[3.5*inch, 2.8*inch])
         header_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),  # Left column left aligned
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'), # Right column right aligned
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
             ('RIGHTPADDING', (0, 0), (-1, -1), 0),
         ]))
@@ -234,42 +247,7 @@ class ModernVoucherGenerator:
         
         return content
 
-    def _create_customer_section(self, booking):
-        """Create customer information section"""
-        content = []
-        
-        # Customer details in a clean table format
-        customer_name = booking.customer.name if booking.customer else booking.requester.username
-        customer_email = booking.customer.email if booking.customer else booking.requester.email
-        customer_phone = getattr(booking.customer, 'phone', 'N/A') if booking.customer else 'N/A'
-        
-        confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
-        
-        customer_data = [
-            ["Customer:", customer_name, "Voucher Number:", booking.reference_number],
-            ["Email:", customer_email, "Booking Date:", booking.created_at.strftime('%d %b %Y')],
-            ["Phone:", customer_phone, "Confirmed Services:", str(len(confirmed_services))],
-            ["", "", "Status:", "Confirmed"]
-        ]
-        
-        customer_table = Table(customer_data, colWidths=[1*inch, 2.5*inch, 1.2*inch, 1.3*inch])
-        customer_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
-            ('TEXTCOLOR', (0, 0), (0, -1), self.primary_color),
-            ('TEXTCOLOR', (2, 0), (2, -1), self.primary_color),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ]))
-        
-        content.append(customer_table)
-        content.append(Spacer(1, 0.3*inch))
-        
-        return content
+
 
     def _create_services_section_confirmed(self, booking, confirmed_services):
         """Create services section with only confirmed services"""
