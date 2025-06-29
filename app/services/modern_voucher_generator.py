@@ -410,11 +410,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - light blue background
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            # Column header row (row 1) - yellow background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('FONTSIZE', (0, 1), (-1, 1), 11),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            
+            # Font size for data rows
+            ('FONTSIZE', (0, 2), (-1, -1), 11),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -557,11 +560,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - light blue background
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            # Column header row (row 1) - yellow background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('FONTSIZE', (0, 1), (-1, 1), 11),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            
+            # Font size for data rows
+            ('FONTSIZE', (0, 2), (-1, -1), 11),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -649,11 +655,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - light blue background
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            # Column header row (row 1) - yellow background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('FONTSIZE', (0, 1), (-1, 1), 11),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            
+            # Font size for data rows
+            ('FONTSIZE', (0, 2), (-1, -1), 11),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -726,11 +735,14 @@ class ModernVoucherGenerator:
         footer_table.setStyle(TableStyle([
             ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.grey),
+            # Light gray background for footer
+            ('BACKGROUND', (0, 0), (-1, -1), colors.Color(0.95, 0.95, 0.95)),
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.lightgrey),
         ]))
         
         content.append(footer_table)
