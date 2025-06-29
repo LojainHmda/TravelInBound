@@ -104,8 +104,9 @@ def new_customer():
             return redirect(url_for('customer.view_customer', customer_id=customer.id))
         except Exception as e:
             db.session.rollback()
-            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e):
+            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e) or 'uq_customer_phone' in str(e):
                 form.phone.errors.append('This phone number is already registered to another customer.')
+                flash('Phone number already exists. Please use a different phone number.', 'error')
             else:
                 flash('An error occurred while creating the customer. Please try again.', 'error')
     
@@ -126,8 +127,9 @@ def edit_customer(customer_id):
             return redirect(url_for('customer.view_customer', customer_id=customer.id))
         except Exception as e:
             db.session.rollback()
-            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e):
+            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e) or 'uq_customer_phone' in str(e):
                 form.phone.errors.append('This phone number is already registered to another customer.')
+                flash('Phone number already exists. Please use a different phone number.', 'error')
             else:
                 flash('An error occurred while updating the customer. Please try again.', 'error')
     

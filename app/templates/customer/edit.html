@@ -71,6 +71,13 @@
                 <div class="form-group mb-3">
                   {{ form.phone.label(class="form-label") }}
                   {{ form.phone(class="form-control") }}
+                  {% if form.phone.errors %}
+                    <div class="text-danger">
+                      {% for error in form.phone.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
                 </div>
               </div>
             </div>
