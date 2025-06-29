@@ -632,22 +632,8 @@ class ModernVoucherGenerator:
         total_payments = sum(payment.amount for payment in booking.payments) if booking.payments else 0
         balance_due = total_amount - total_payments
         
-        # Blue header for payment section (same style as flight details)
-        payment_header = Table([["Payment Summary"]], colWidths=[6*inch])
-        payment_header.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.primary_color),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 12),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
-        content.append(payment_header)
-        
         payment_data = [
-            ["Description", "Amount"],
+            ["Payment Summary", "Amount"],
             ["Total Amount", f"${total_amount:.2f}"],
             ["Amount Paid", f"${total_payments:.2f}"],
             ["Balance Due", f"${balance_due:.2f}"]
