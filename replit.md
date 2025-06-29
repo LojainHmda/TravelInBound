@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- June 29, 2025: Made phone number mandatory with unique constraint
+  - Updated Customer model to require phone field (nullable=False, unique=True)
+  - Enhanced CustomerForm validation to make phone field required
+  - Added database constraint validation with proper error handling for duplicate phone numbers
+  - Applied database migration to resolve existing duplicate phone numbers
+  - Added unique constraint (uq_customer_phone) to customer table phone column
 - June 29, 2025: Enhanced passport scanning to support PDF files
   - Updated PassportScanner service to handle both image and PDF formats
   - Added PDF to image conversion using pdf2image library for document processing
