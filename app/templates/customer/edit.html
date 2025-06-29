@@ -310,7 +310,7 @@
       const formData = new FormData();
       formData.append('passport_image', file);
 
-      const response = await fetch('/customers/scan-passport', {
+      const response = await fetch('/customers/api/scan-passport', {
         method: 'POST',
         body: formData
       });

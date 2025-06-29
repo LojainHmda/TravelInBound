@@ -14,21 +14,19 @@ class PassportScanner:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
     
-    def extract_passport_data(self, image_path: str) -> Dict[str, Optional[str]]:
+    def extract_passport_data(self, base64_image: str) -> Dict[str, Optional[str]]:
         """
-        Extract passport information from an image using OpenAI Vision API
+        Extract passport information from a base64 encoded image using OpenAI Vision API
         
         Args:
-            image_path: Path to the passport image file
+            base64_image: Base64 encoded passport image
             
         Returns:
             Dictionary containing extracted passport information
         """
         try:
-            # Read and encode image
-            with open(image_path, 'rb') as image_file:
-                image_data = image_file.read()
-                base64_image = base64.b64encode(image_data).decode('utf-8')
+            # The image is already base64 encoded, no need to read from file
+            print(f"DEBUG: Processing passport image, base64 length: {len(base64_image)}")
             
             # Prepare the prompt for passport data extraction
             prompt = """
@@ -89,6 +87,8 @@ class PassportScanner:
             
         except Exception as e:
             print(f"Error extracting passport data: {e}")
+            import traceback
+            traceback.print_exc()
             return self._empty_result()
     
     def _validate_and_clean_data(self, data: Dict) -> Dict[str, Optional[str]]:

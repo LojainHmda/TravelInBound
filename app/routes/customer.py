@@ -223,7 +223,7 @@ def api_list_customers():
     
     return jsonify(customers_list)
 
-@customer_bp.route('/scan-passport', methods=['POST'])
+@customer_bp.route('/api/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image"""
     # Skip CSRF validation by manually setting valid token
@@ -231,6 +231,8 @@ def scan_passport():
     g.csrf_valid = True
     
     try:
+        print(f"DEBUG: Scanning passport, request files: {list(request.files.keys())}")
+        
         if 'passport_image' not in request.files:
             return jsonify({
                 'success': False, 
@@ -252,15 +254,21 @@ def scan_passport():
                 'error': 'Empty file uploaded'
             }), 400
         
+        print(f"DEBUG: File size: {len(file_content)} bytes")
+        
         # Convert to base64
         import base64
         base64_image = base64.b64encode(file_content).decode('utf-8')
+        
+        print(f"DEBUG: Base64 length: {len(base64_image)}")
         
         # Initialize passport scanner and extract data
         scanner = PassportScanner()
         extracted_data = scanner.extract_passport_data(base64_image)
         
-        if extracted_data:
+        print(f"DEBUG: Extracted data: {extracted_data}")
+        
+        if extracted_data and any(v for v in extracted_data.values() if v):
             return jsonify({
                 'success': True,
                 'data': extracted_data
@@ -272,6 +280,9 @@ def scan_passport():
             })
             
     except Exception as e:
+        print(f"DEBUG: Exception in scan_passport: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': f'Error processing passport image: {str(e)}'
