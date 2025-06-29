@@ -128,7 +128,8 @@ function setupViewButtons() {
     const viewButtons = document.querySelectorAll('.view-booking-btn');
     
     viewButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+        if (button) {
+            button.addEventListener('click', function(e) {
             e.preventDefault();
             
             const bookingId = this.getAttribute('data-booking-id');
@@ -161,7 +162,8 @@ function setupViewButtons() {
                 // Load details via AJAX if not already loaded
                 loadBookingDetails(bookingId, this);
             }
-        });
+            });
+        }
     });
 }
 
