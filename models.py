@@ -7,7 +7,7 @@ from app.models.booking import Booking
 # Status constants
 STATUS_REQUEST = 'REQUEST'     # Initial booking request state
 STATUS_BOOKED = 'BOOKED'       # Confirmed booking (after invoice/payment)
-STATUS_IN_PROGRESS = 'IN-PROGRESS'  # Operations started
+STATUS_IN_PROGRESS = 'IN_PROGRESS'  # Operations started
 STATUS_CONFIRMED = 'CONFIRMED'      # All services confirmed
 STATUS_COMPLETED = STATUS_CONFIRMED  # Alias for backward compatibility
 
