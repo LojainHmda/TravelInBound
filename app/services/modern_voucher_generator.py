@@ -332,6 +332,19 @@ class ModernVoucherGenerator:
         """Create simple flight details from confirmation data"""
         content = []
         
+        # Add right-aligned section header
+        section_header = Paragraph("✈ Flight Details", self.styles['Normal'])
+        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
+        section_header_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        content.append(section_header_table)
+        
 
         
         # Simple display of confirmation details
@@ -380,7 +393,7 @@ class ModernVoucherGenerator:
             
             flight_data = [
                 ["Service", "Description", "Dates", "Status", "Amount"],
-                ["FLIGHT", full_description, formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["✈ FLIGHT", full_description, formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Class", travel_class, "", "", ""],
                 ["Passengers", passengers_text, "", "", ""],
                 ["Ticket Number", etickets_text, "", "", ""]
@@ -484,6 +497,19 @@ class ModernVoucherGenerator:
         """Create hotel details using confirmation data with flight-style table"""
         content = []
         
+        # Add right-aligned section header
+        section_header = Paragraph("🏨 Hotel Details", self.styles['Normal'])
+        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
+        section_header_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        content.append(section_header_table)
+        
         # Extract hotel information from confirmation details
         if confirmation_details:
             hotel_name = confirmation_details.get('hotel_name', item.description)
@@ -521,7 +547,7 @@ class ModernVoucherGenerator:
             # Create table with same style as flight details
             hotel_data = [
                 ["Service", "Description", "Dates", "Status", "Amount"],
-                ["HOTEL", hotel_name, f"{formatted_checkin} - {formatted_checkout}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["🏨 HOTEL", hotel_name, f"{formatted_checkin} - {formatted_checkout}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Meal Plan", meal_plan, f"{nights} nights", "", ""],
                 ["Rooms", room_text, "", "", ""]
             ]
@@ -602,6 +628,19 @@ class ModernVoucherGenerator:
         """Create payment summary section with integrated header"""
         content = []
         
+        # Add right-aligned section header
+        section_header = Paragraph("💳 Payment Summary", self.styles['Normal'])
+        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
+        section_header_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        content.append(section_header_table)
+        
         # Calculate total from confirmed services only
         confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
         total_amount = sum(item.amount for item in confirmed_services if item.amount)
@@ -611,7 +650,7 @@ class ModernVoucherGenerator:
         balance_due = total_amount - total_payments
         
         payment_data = [
-            ["Payment Summary", "Amount"],
+            ["Description", "Amount"],
             ["Total Amount", f"${total_amount:.2f}"],
             ["Amount Paid", f"${total_payments:.2f}"],
             ["Balance Due", f"${balance_due:.2f}"]
