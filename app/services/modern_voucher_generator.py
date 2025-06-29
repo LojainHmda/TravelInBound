@@ -332,18 +332,7 @@ class ModernVoucherGenerator:
         """Create simple flight details from confirmation data"""
         content = []
         
-        # Add right-aligned section header
-        section_header = Paragraph("✈ Flight Details", self.styles['Normal'])
-        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
-        section_header_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        content.append(section_header_table)
+
         
 
         
@@ -412,11 +401,11 @@ class ModernVoucherGenerator:
         
         flight_table = Table(flight_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         flight_table.setStyle(TableStyle([
-            # Header row styling
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            # Header row styling - dark blue background
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 7),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             
             # Alternating row colors for data rows only
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -497,18 +486,7 @@ class ModernVoucherGenerator:
         """Create hotel details using confirmation data with flight-style table"""
         content = []
         
-        # Add right-aligned section header
-        section_header = Paragraph("🏨 Hotel Details", self.styles['Normal'])
-        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
-        section_header_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        content.append(section_header_table)
+
         
         # Extract hotel information from confirmation details
         if confirmation_details:
@@ -562,11 +540,11 @@ class ModernVoucherGenerator:
         
         hotel_table = Table(hotel_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         hotel_table.setStyle(TableStyle([
-            # Header row styling
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            # Header row styling - dark blue background
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 7),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             
             # Alternating row colors for data rows only
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -628,18 +606,7 @@ class ModernVoucherGenerator:
         """Create payment summary section with integrated header"""
         content = []
         
-        # Add right-aligned section header
-        section_header = Paragraph("💳 Payment Summary", self.styles['Normal'])
-        section_header_table = Table([[section_header]], colWidths=[6.3*inch])
-        section_header_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('TEXTCOLOR', (0, 0), (-1, -1), self.primary_color),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ]))
-        content.append(section_header_table)
+
         
         # Calculate total from confirmed services only
         confirmed_services = [item for item in booking.service_items if item.status == 'CONFIRMED']
@@ -658,11 +625,11 @@ class ModernVoucherGenerator:
         
         payment_table = Table(payment_data, colWidths=[4.5*inch, 1.8*inch])
         payment_table.setStyle(TableStyle([
-            # Header row styling
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            # Header row styling - dark blue background
+            ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 7),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             
             # Alternating row colors for data rows only
             ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -700,39 +667,53 @@ class ModernVoucherGenerator:
         """Create footer with contact and banking information"""
         content = []
         
-        # Banking and contact information
+        # Add company name centered at top
+        content.append(Spacer(1, 0.3*inch))
+        company_name = Paragraph("<para align='center'><font size='12'><b>ARABI TRAVEL</b></font></para>", self.styles['Normal'])
+        content.append(company_name)
+        content.append(Spacer(1, 0.15*inch))
+        
+        # Banking and contact information in two columns
         footer_data = [
-            ["Banking Information", "Contact Information"],
-            ["Arabi Travel Bank", "sales@arabtravel.ps"],
-            ["Account USD= 9070-142464-510", "www.arabtravel.ps"],
-            ["Bank Of Palestine", "+97022956640"],
-            ["Branch Name: Ramallah Branch", "Alersal St, zakat Bld"],
-            ["0458/2220908/001/3000/000", "Ramallah, P.OBOX:27"]
+            [
+                Paragraph("<b>Banking Information</b>", self.styles['Normal']),
+                Paragraph("<b>Contact Information</b>", self.styles['Normal'])
+            ],
+            [
+                Paragraph("<b>Arabi Travel Bank:</b> Account USD= 9070-142464-510", self.styles['Normal']),
+                Paragraph("📧 sales@arabtravel.ps", self.styles['Normal'])
+            ],
+            [
+                Paragraph("<b>Bank Of Palestine:</b> Ramallah Branch - 0458/2220908/001/3000/000", self.styles['Normal']),
+                Paragraph("🌐 www.arabtravel.ps", self.styles['Normal'])
+            ],
+            [
+                Paragraph("<b>Arab Bank:</b> Acct. No.: 142464", self.styles['Normal']),
+                Paragraph("📞 +97022956640", self.styles['Normal'])
+            ],
+            [
+                "",
+                Paragraph("📍 Alersal St, zakat Bld, Ramallah, P.OBOX:27", self.styles['Normal'])
+            ]
         ]
         
-        footer_table = Table(footer_data, colWidths=[3*inch, 3*inch])
+        footer_table = Table(footer_data, colWidths=[3.5*inch, 2.8*inch])
         footer_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), self.light_gray),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('TEXTCOLOR', (0, 0), (-1, 0), self.primary_color),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 8),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.grey),
         ]))
         
         content.append(footer_table)
-        content.append(Spacer(1, 0.2*inch))
+        content.append(Spacer(1, 0.15*inch))
         
         # Thank you message
-        thank_you = """
-        <para align="center"><b>ARABI TRAVEL</b><br/>
-        Thank you for booking with Arabi Travel</para>
-        """
-        content.append(Paragraph(thank_you, self.styles['Footer']))
+        thank_you = Paragraph("<para align='center'><i>Thank you for choosing Arabi Travel for your journey</i></para>", self.styles['Normal'])
+        content.append(thank_you)
         
         return content
 
