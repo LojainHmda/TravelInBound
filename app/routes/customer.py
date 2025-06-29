@@ -226,9 +226,6 @@ def api_list_customers():
 @customer_bp.route('/api/scan-passport', methods=['POST'])
 def scan_passport():
     """API endpoint to extract customer data from passport image"""
-    # Skip CSRF validation by manually setting valid token
-    from flask import g
-    g.csrf_valid = True
     
     try:
         print(f"DEBUG: Scanning passport, request files: {list(request.files.keys())}")
