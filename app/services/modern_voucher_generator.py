@@ -641,18 +641,27 @@ class ModernVoucherGenerator:
         
         payment_table = Table(payment_data, colWidths=[4.5*inch, 1.8*inch])
         payment_table.setStyle(TableStyle([
-            # Header row styling - dark blue background
+            # Section header row (row 0) - span across all columns with dark blue background
+            ('SPAN', (0, 0), (-1, 0)),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Alternating row colors for data rows only
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            # Column header row (row 1) - light blue background
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
-            # Only outer border and header line - no internal borders
+            # Alternating row colors for data rows only (starting from row 2)
+            ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Only outer border and lines under headers
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            ('LINEBELOW', (0, 1), (-1, 1), 0.5, colors.grey),
             
             # Compact padding with better spacing
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
@@ -662,7 +671,7 @@ class ModernVoucherGenerator:
             
             # Alignment
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         
