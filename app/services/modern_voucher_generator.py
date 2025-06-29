@@ -410,11 +410,11 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background matching system theme
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.8, 0)),
+            # Column header row (row 1) - light gray background with dark blue text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.95, 0.95, 0.95)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
-            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.Color(0, 0, 0.5)),
             
             # Font size for data rows
             ('FONTSIZE', (0, 2), (-1, -1), 9),
@@ -560,11 +560,11 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background matching system theme
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.8, 0)),
+            # Column header row (row 1) - light gray background with dark blue text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.95, 0.95, 0.95)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
-            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.Color(0, 0, 0.5)),
             
             # Font size for data rows
             ('FONTSIZE', (0, 2), (-1, -1), 9),
@@ -655,11 +655,11 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background matching system theme
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.8, 0)),
+            # Column header row (row 1) - light gray background with dark blue text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.95, 0.95, 0.95)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
-            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.Color(0, 0, 0.5)),
             
             # Font size for data rows
             ('FONTSIZE', (0, 2), (-1, -1), 9),
