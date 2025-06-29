@@ -410,8 +410,8 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
+            # Column header row (row 1) - orange background matching system theme
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.73, 0.2)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
@@ -560,8 +560,8 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
+            # Column header row (row 1) - orange background matching system theme
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.73, 0.2)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
@@ -655,8 +655,8 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow-orange background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
+            # Column header row (row 1) - orange background matching system theme
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.73, 0.2)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
