@@ -53,27 +53,51 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Show all bookings by reloading the page with all bookings
+function showAllBookings() {
+    // Add URL parameter to show all bookings
+    const url = new URL(window.location);
+    url.searchParams.set('show_all', 'true');
+    window.location.href = url.toString();
+}
+
 // Filter bookings by status
 function filterBookings(status) {
     const bookingTable = document.getElementById('bookingTable');
     const title = document.getElementById('bookingTableTitle');
     const resetBtn = document.getElementById('resetFilterBtn');
+    const showAllBtn = document.getElementById('showAllBtn');
     
     // Check if elements exist before using them
-    if (!bookingTable || !title || !resetBtn) {
+    if (!bookingTable || !title || !resetBtn || !showAllBtn) {
         console.warn('Required DOM elements not found for filtering');
         return;
     }
     
     const rows = bookingTable.querySelectorAll('tbody tr');
     
-    if (status === '') {
+    if (status === 'REQUEST') {
+        // Show only REQUEST status (back to default)
+        rows.forEach(row => {
+            const statusCell = row.querySelector('td:nth-child(3) .badge');
+            if (statusCell && statusCell.textContent.trim() === 'REQUEST') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        title.innerHTML = '<i class="fas fa-clipboard-list me-2" style="color: #FFC107;"></i>Request Bookings';
+        resetBtn.style.display = 'none';
+        showAllBtn.style.display = 'inline-block';
+    } else if (status === '') {
         // Show all
         rows.forEach(row => row.style.display = '');
-        title.innerHTML = '<i class="fas fa-list-alt me-2" style="color: #FFC107;"></i>Recent Bookings';
-        resetBtn.style.display = 'none';
+        title.innerHTML = '<i class="fas fa-list-alt me-2" style="color: #FFC107;"></i>All Bookings';
+        resetBtn.style.display = 'inline-block';
+        showAllBtn.style.display = 'none';
     } else {
-        // Filter by status
+        // Filter by specific status
         rows.forEach(row => {
             const statusCell = row.querySelector('td:nth-child(3) .badge');
             if (statusCell && statusCell.textContent.trim() === status) {
@@ -85,6 +109,7 @@ function filterBookings(status) {
         
         title.innerHTML = `<i class="fas fa-filter me-2" style="color: #FFC107;"></i>${status} Bookings`;
         resetBtn.style.display = 'inline-block';
+        showAllBtn.style.display = 'none';
     }
     
     // Clear any open details when filtering

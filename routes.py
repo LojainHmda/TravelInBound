@@ -95,7 +95,9 @@ def dashboard():
     visa_items = ServiceItem.query.filter_by(service_type=SERVICE_VISA).all()
     insurance_items = ServiceItem.query.filter_by(service_type=SERVICE_INSURANCE).all()
     
-    # Get all bookings for the table display to show all 31 bookings
+    # Get REQUEST status bookings by default to match the highlighted count
+    request_bookings = Booking.query.filter_by(status=STATUS_REQUEST).order_by(Booking.created_at.desc()).all()
+    # Also get all bookings for when "show all" filter is applied
     all_bookings = Booking.query.order_by(Booking.created_at.desc()).all()
     
     return render_template(
@@ -113,7 +115,8 @@ def dashboard():
             'visa': visa_items,
             'insurance': insurance_items
         },
-        bookings=all_bookings
+        bookings=request_bookings,
+        all_bookings=all_bookings
     )
 
 @app.route('/operations')
