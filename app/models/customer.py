@@ -7,7 +7,7 @@ class Customer(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100))
     email = db.Column(db.String(120), nullable=False)
-    phone = db.Column(db.String(20))
+    phone = db.Column(db.String(20), nullable=False, unique=True)
     address = db.Column(db.Text)
     city = db.Column(db.String(50))
     country = db.Column(db.String(50))

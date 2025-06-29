@@ -96,11 +96,18 @@ def new_customer():
             notes=form.notes.data
         )
         
-        db.session.add(customer)
-        db.session.commit()
-        
-        flash(f'Customer {customer.name} created successfully', 'success')
-        return redirect(url_for('customer.view_customer', customer_id=customer.id))
+        try:
+            db.session.add(customer)
+            db.session.commit()
+            
+            flash(f'Customer {customer.name} created successfully', 'success')
+            return redirect(url_for('customer.view_customer', customer_id=customer.id))
+        except Exception as e:
+            db.session.rollback()
+            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e):
+                form.phone.errors.append('This phone number is already registered to another customer.')
+            else:
+                flash('An error occurred while creating the customer. Please try again.', 'error')
     
     return render_template('customer/edit.html', form=form, is_new=True)
 
@@ -111,11 +118,18 @@ def edit_customer(customer_id):
     form = CustomerForm(obj=customer)
     
     if form.validate_on_submit():
-        form.populate_obj(customer)
-        db.session.commit()
-        
-        flash(f'Customer {customer.name} updated successfully', 'success')
-        return redirect(url_for('customer.view_customer', customer_id=customer.id))
+        try:
+            form.populate_obj(customer)
+            db.session.commit()
+            
+            flash(f'Customer {customer.name} updated successfully', 'success')
+            return redirect(url_for('customer.view_customer', customer_id=customer.id))
+        except Exception as e:
+            db.session.rollback()
+            if 'UNIQUE constraint failed: customer.phone' in str(e) or 'duplicate key value violates unique constraint' in str(e):
+                form.phone.errors.append('This phone number is already registered to another customer.')
+            else:
+                flash('An error occurred while updating the customer. Please try again.', 'error')
     
     return render_template('customer/edit.html', form=form, customer=customer, is_new=False)
 

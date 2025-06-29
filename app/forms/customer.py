@@ -10,7 +10,7 @@ class CustomerForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=1, max=100)])
     last_name = StringField('Last Name', validators=[Optional(), Length(max=100)])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    phone = StringField('Phone', validators=[DataRequired(), Length(min=1, max=20)])
     address = TextAreaField('Address', validators=[Optional()])
     city = StringField('City', validators=[Optional(), Length(max=50)])
     country = StringField('Country', validators=[Optional(), Length(max=50)])
