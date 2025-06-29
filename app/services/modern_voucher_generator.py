@@ -381,8 +381,9 @@ class ModernVoucherGenerator:
             full_description = f"{airline} {flight_number}\n{route_info}"
             
             flight_data = [
+                ["✈ Flight Details", "", "", "", ""],
                 ["Service", "Description", "Dates", "Status", "Amount"],
-                ["✈ FLIGHT", full_description, formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["FLIGHT", full_description, formatted_date, "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Class", travel_class, "", "", ""],
                 ["Passengers", passengers_text, "", "", ""],
                 ["Ticket Number", etickets_text, "", "", ""]
@@ -401,27 +402,33 @@ class ModernVoucherGenerator:
         
         flight_table = Table(flight_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         flight_table.setStyle(TableStyle([
-            # Header row styling - dark blue background
+            # Section header row (row 0) - span across all columns with dark blue background
+            ('SPAN', (0, 0), (-1, 0)),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Alternating row colors for data rows only
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            # Column header row (row 1) - light blue background
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
-            # Only outer border and header line - no internal borders
+            # Alternating row colors for data rows only (starting from row 2)
+            ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Only outer border and lines under headers
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            ('LINEBELOW', (0, 1), (-1, 1), 0.5, colors.grey),
             
             # Compact padding with better spacing
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            
-            # Alignment
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         
@@ -524,8 +531,9 @@ class ModernVoucherGenerator:
             
             # Create table with same style as flight details
             hotel_data = [
+                ["🏨 Hotel Details", "", "", "", ""],
                 ["Service", "Description", "Dates", "Status", "Amount"],
-                ["🏨 HOTEL", hotel_name, f"{formatted_checkin} - {formatted_checkout}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
+                ["HOTEL", hotel_name, f"{formatted_checkin} - {formatted_checkout}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Meal Plan", meal_plan, f"{nights} nights", "", ""],
                 ["Rooms", room_text, "", "", ""]
             ]
@@ -533,6 +541,7 @@ class ModernVoucherGenerator:
             # Fallback if no confirmation data
             nights = (item.end_date - item.start_date).days
             hotel_data = [
+                ["🏨 Hotel Details", "", "", "", ""],
                 ["Service", "Description", "Dates", "Status", "Amount"],
                 ["HOTEL", item.description, f"{item.start_date.strftime('%d %b %Y')} - {item.end_date.strftime('%d %b %Y')}", "Confirmed", f"${item.amount:.2f}" if item.amount else "$0.00"],
                 ["Duration", f"{nights} nights", "", "", ""]
@@ -540,27 +549,33 @@ class ModernVoucherGenerator:
         
         hotel_table = Table(hotel_data, colWidths=[1.0*inch, 2.0*inch, 1.5*inch, 1.0*inch, 0.8*inch])
         hotel_table.setStyle(TableStyle([
-            # Header row styling - dark blue background
+            # Section header row (row 0) - span across all columns with dark blue background
+            ('SPAN', (0, 0), (-1, 0)),
             ('BACKGROUND', (0, 0), (-1, 0), colors.Color(0, 0, 0.5)),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 7),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Alternating row colors for data rows only
-            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            # Column header row (row 1) - light blue background
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(0.8, 0.85, 1)),
+            ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
-            # Only outer border and header line - no internal borders
+            # Alternating row colors for data rows only (starting from row 2)
+            ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
+            
+            # Only outer border and lines under headers
             ('BOX', (0, 0), (-1, -1), 0.5, colors.grey),
             ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+            ('LINEBELOW', (0, 1), (-1, 1), 0.5, colors.grey),
             
             # Compact padding with better spacing
             ('LEFTPADDING', (0, 0), (-1, -1), 6),
             ('RIGHTPADDING', (0, 0), (-1, -1), 6),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            
-            # Alignment
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
         
@@ -617,6 +632,7 @@ class ModernVoucherGenerator:
         balance_due = total_amount - total_payments
         
         payment_data = [
+            ["💳 Payment Summary", ""],
             ["Description", "Amount"],
             ["Total Amount", f"${total_amount:.2f}"],
             ["Amount Paid", f"${total_payments:.2f}"],
