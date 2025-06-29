@@ -5,6 +5,8 @@ Creates clean, professional vouchers with improved visual design
 """
 
 import json
+import csv
+import os
 from io import BytesIO
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib import colors
@@ -532,6 +534,9 @@ class ModernVoucherGenerator:
             
             room_text = ", ".join(room_info) if room_info else "1 Room"
             
+            # Get hotel address and phone from database
+            hotel_address, hotel_phone = self._get_hotel_contact_info(hotel_name)
+            
             # Create table with same style as flight details
             hotel_data = [
                 ["🏨 Hotel Details", "", "", "", ""],
@@ -540,6 +545,12 @@ class ModernVoucherGenerator:
                 ["Meal Plan", meal_plan, f"{nights} nights", "", ""],
                 ["Rooms", room_text, "", "", ""]
             ]
+            
+            # Add address and phone if available
+            if hotel_address:
+                hotel_data.append(["Address", hotel_address, "", "", ""])
+            if hotel_phone:
+                hotel_data.append(["Phone", hotel_phone, "", "", ""])
         else:
             # Fallback if no confirmation data
             nights = (item.end_date - item.start_date).days
@@ -771,3 +782,43 @@ class ModernVoucherGenerator:
                         pass
         
         return confirmation_details
+
+    def _get_hotel_contact_info(self, hotel_name):
+        """Look up hotel address and phone from CSV database"""
+        try:
+            csv_path = os.path.join(os.path.dirname(__file__), '../../attached_assets/hotelconswithaddress_1751201464690.csv')
+            
+            if not os.path.exists(csv_path):
+                return None, None
+                
+            with open(csv_path, 'r', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    # Check if hotel name matches (case insensitive, partial match)
+                    if hotel_name and row.get('Hotel Name'):
+                        if hotel_name.lower() in row['Hotel Name'].lower() or row['Hotel Name'].lower() in hotel_name.lower():
+                            # Extract address components
+                            address_parts = []
+                            if row.get('Address'):
+                                address_parts.append(row['Address'].strip())
+                            if row.get('address line2'):
+                                address_parts.append(row['address line2'].strip())
+                            if row.get('Address line3'):
+                                address_parts.append(row['Address line3'].strip())
+                            
+                            # Clean and format address
+                            address = ', '.join([part for part in address_parts if part and part != ','])
+                            
+                            # Extract phone number (column name varies in CSV)
+                            phone = None
+                            for col in ['address 4', 'Address line4', 'phone']:
+                                if row.get(col) and '+' in str(row[col]):
+                                    phone = row[col].strip()
+                                    break
+                            
+                            return address if address else None, phone
+                            
+        except Exception as e:
+            print(f"Error reading hotel CSV: {e}")
+            
+        return None, None

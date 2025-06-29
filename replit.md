@@ -109,6 +109,11 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- June 29, 2025: Added hotel address and phone number display to vouchers
+  - Enhanced ModernVoucherGenerator to include hotel contact information in voucher hotel section
+  - Added _get_hotel_contact_info method to look up addresses and phone numbers from CSV database
+  - Hotel vouchers now display full address and phone number below hotel details when available
+  - Integrated with existing hotel database containing 354 hotels with authentic contact information
 - June 29, 2025: Enhanced hotel autocomplete system with comprehensive database
   - Processed CSV file with 354 hotels from multiple destinations (Turkey, Dubai, UAE)
   - Added hotels from Istanbul, Antalya, Bodrum, Kemer, Alanya, Marmaris, Dubai and other locations
