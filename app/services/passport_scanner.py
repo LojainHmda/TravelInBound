@@ -7,26 +7,62 @@ import re
 from datetime import datetime
 from typing import Dict, Optional
 import json
+import io
 
 from openai import OpenAI
+from pdf2image import convert_from_bytes
+from PIL import Image
 
 class PassportScanner:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
     
-    def extract_passport_data(self, base64_image: str) -> Dict[str, Optional[str]]:
+    def _convert_pdf_to_image(self, pdf_bytes: bytes) -> str:
         """
-        Extract passport information from a base64 encoded image using OpenAI Vision API
+        Convert PDF to image and return as base64 string
+        """
+        try:
+            # Convert PDF to images (take first page)
+            images = convert_from_bytes(pdf_bytes, first_page=1, last_page=1, dpi=300)
+            if not images:
+                raise ValueError("No pages found in PDF")
+            
+            # Convert PIL image to base64
+            img = images[0]
+            buffer = io.BytesIO()
+            img.save(buffer, format='JPEG', quality=95)
+            img_bytes = buffer.getvalue()
+            return base64.b64encode(img_bytes).decode('utf-8')
+            
+        except Exception as e:
+            print(f"Error converting PDF to image: {e}")
+            raise
+    
+    def extract_passport_data(self, file_data: bytes, filename: str = '') -> Dict[str, Optional[str]]:
+        """
+        Extract passport information from image or PDF file using OpenAI Vision API
         
         Args:
-            base64_image: Base64 encoded passport image
+            file_data: Raw file bytes (image or PDF)
+            filename: Optional filename to determine file type
             
         Returns:
             Dictionary containing extracted passport information
         """
         try:
-            # The image is already base64 encoded, no need to read from file
-            print(f"DEBUG: Processing passport image, base64 length: {len(base64_image)}")
+            print(f"DEBUG: Processing passport file, size: {len(file_data)} bytes, filename: {filename}")
+            
+            # Determine if this is a PDF file
+            is_pdf = filename.lower().endswith('.pdf') if filename else file_data.startswith(b'%PDF')
+            
+            if is_pdf:
+                print("DEBUG: Converting PDF to image")
+                base64_image = self._convert_pdf_to_image(file_data)
+            else:
+                # Convert image bytes to base64
+                base64_image = base64.b64encode(file_data).decode('utf-8')
+            
+            print(f"DEBUG: Base64 image length: {len(base64_image)}")
             
             # Prepare the prompt for passport data extraction
             prompt = """

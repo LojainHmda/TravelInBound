@@ -243,7 +243,7 @@ def scan_passport():
                 'error': 'No file selected'
             }), 400
         
-        # Read and encode the image
+        # Read the file data
         file_content = file.read()
         if not file_content:
             return jsonify({
@@ -253,15 +253,9 @@ def scan_passport():
         
         print(f"DEBUG: File size: {len(file_content)} bytes")
         
-        # Convert to base64
-        import base64
-        base64_image = base64.b64encode(file_content).decode('utf-8')
-        
-        print(f"DEBUG: Base64 length: {len(base64_image)}")
-        
-        # Initialize passport scanner and extract data
+        # Initialize passport scanner and extract data with raw file data
         scanner = PassportScanner()
-        extracted_data = scanner.extract_passport_data(base64_image)
+        extracted_data = scanner.extract_passport_data(file_content, file.filename or '')
         
         print(f"DEBUG: Extracted data: {extracted_data}")
         

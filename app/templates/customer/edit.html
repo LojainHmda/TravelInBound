@@ -186,16 +186,16 @@
       </div>
       <div class="modal-body">
         <div class="text-center mb-4">
-          <p class="mb-3">Upload a clear photo of the passport data page to automatically fill customer details.</p>
+          <p class="mb-3">Upload a clear photo or PDF of the passport data page to automatically fill customer details.</p>
           <div class="upload-area border-dashed p-4 mb-3" style="border: 2px dashed #FFD700; background-color: #FFFEF7;">
             <i class="fas fa-upload fa-3x text-warning mb-3"></i>
             <div>
-              <input type="file" id="passportImageInput" accept="image/*" style="display: none;">
+              <input type="file" id="passportImageInput" accept="image/*,application/pdf" style="display: none;">
               <button type="button" class="btn" style="background-color: #FFD700; color: #000000;" onclick="document.getElementById('passportImageInput').click()">
                 Choose Passport Image
               </button>
             </div>
-            <p class="small mt-2 mb-0">Supported formats: JPG, PNG, GIF, BMP</p>
+            <p class="small mt-2 mb-0">Supported formats: JPG, PNG, GIF, BMP, PDF</p>
           </div>
           <div id="imagePreview" style="display: none;">
             <img id="previewImg" src="" alt="Passport Preview" style="max-width: 100%; max-height: 300px;" class="border rounded">
