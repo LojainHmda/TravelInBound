@@ -109,6 +109,13 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- June 29, 2025: Fixed voucher table alignment and font sizing issues
+  - Adjusted table column widths to prevent text overlap (Service: 1.0", Description: 2.0", Dates: 1.5", Status: 1.0", Amount: 0.8")
+  - Reduced font size from 8pt to 7pt for more compact display
+  - Fixed hotel table to use actual confirmation data from Jumeirah Beach Hotel, Dubai
+  - Applied consistent table styling across flight, hotel, and payment sections
+  - Improved padding and spacing for better text alignment
+  - Removed duplicate "Flight Details" header to eliminate redundancy
 - June 28, 2025: Fixed database model conflicts and implemented comprehensive voucher system
   - Resolved table redefinition errors by removing duplicate model definitions from models.py
   - Properly imported User, Agent, Customer, and Booking models from dedicated app.models files
