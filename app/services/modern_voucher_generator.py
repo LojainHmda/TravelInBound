@@ -410,14 +410,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
+            # Column header row (row 1) - yellow-orange background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, 1), 11),
+            ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
             # Font size for data rows
-            ('FONTSIZE', (0, 2), (-1, -1), 11),
+            ('FONTSIZE', (0, 2), (-1, -1), 9),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -560,14 +560,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
+            # Column header row (row 1) - yellow-orange background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, 1), 11),
+            ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
             # Font size for data rows
-            ('FONTSIZE', (0, 2), (-1, -1), 11),
+            ('FONTSIZE', (0, 2), (-1, -1), 9),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
@@ -655,14 +655,14 @@ class ModernVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
             ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
             
-            # Column header row (row 1) - yellow background with black text
-            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 1, 0)),
+            # Column header row (row 1) - yellow-orange background with black text
+            ('BACKGROUND', (0, 1), (-1, 1), colors.Color(1, 0.65, 0)),
             ('FONTNAME', (0, 1), (-1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 1), (-1, 1), 11),
+            ('FONTSIZE', (0, 1), (-1, 1), 9),
             ('TEXTCOLOR', (0, 1), (-1, 1), colors.black),
             
             # Font size for data rows
-            ('FONTSIZE', (0, 2), (-1, -1), 11),
+            ('FONTSIZE', (0, 2), (-1, -1), 9),
             
             # Alternating row colors for data rows only (starting from row 2)
             ('ROWBACKGROUNDS', (0, 2), (-1, -1), [colors.white, colors.Color(0.98, 0.98, 0.98)]),
