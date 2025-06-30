@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import csv
 from io import BytesIO
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from reportlab.lib.units import inch
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -59,9 +59,9 @@ class AirlineVoucherGenerator:
     def generate_pdf(self):
         """Generate PDF voucher with airline industry format"""
         try:
-            # Create PDF buffer
+            # Create PDF buffer in landscape orientation
             buffer = BytesIO()
-            doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+            doc = SimpleDocTemplate(buffer, pagesize=landscape(letter), topMargin=0.5*inch)
             
             # Get data from confirmed services only
             confirmed_services = [s for s in self.booking.service_items if s.status == 'CONFIRMED']
@@ -123,7 +123,7 @@ class AirlineVoucherGenerator:
         styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=styles['Heading2'],
-            fontSize=13,  # Reduced by 1 point
+            fontSize=11,  # Made smaller
             textColor=colors.white,
             alignment=TA_LEFT,
             fontName='Helvetica-Bold',
@@ -135,7 +135,7 @@ class AirlineVoucherGenerator:
         styles.add(ParagraphStyle(
             name='PassengerName',
             parent=styles['Normal'],
-            fontSize=11,  # Reduced by 1 point
+            fontSize=10,  # Made smaller
             fontName='Helvetica-Bold',
             spaceAfter=0.05*inch
         ))
@@ -153,7 +153,7 @@ class AirlineVoucherGenerator:
             ['TRAVEL BOOKING VOUCHER']
         ]
         
-        header_table = Table(header_data, colWidths=[7*inch])
+        header_table = Table(header_data, colWidths=[10*inch])
         header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
@@ -241,11 +241,11 @@ class AirlineVoucherGenerator:
         flight_header_data = [['✈ FLIGHT DETAILS']]
         flight_header_table = Table(flight_header_data, colWidths=[7*inch])
         flight_header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#87CEEB')),  # Light sky blue instead of dark blue
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),  # Black text on light background
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 13),  # Reduced by 1 point
+            ('FONTSIZE', (0, 0), (-1, -1), 11),  # Made smaller
             ('TOPPADDING', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ('LEFTPADDING', (0, 0), (-1, -1), 15),
@@ -504,20 +504,20 @@ class AirlineVoucherGenerator:
         
         hotel_details = {
             'name': hotel_name,
-            'address': address or "Contact hotel for address details",
-            'rating': "Contact hotel for details",
+            'address': address if address else "TBA - Contact hotel",
+            'rating': "TBA - Contact hotel",
             'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')}" if hotel_service.start_date else "TBA",
             'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')}" if hotel_service.end_date else "TBA",
             'nights': f"{nights} nights",
-            'room_type': 'As per booking confirmation',
+            'room_type': 'TBA - Contact hotel',
             'room_number': 'TBA - Check with hotel',
-            'bed_config': 'As per booking confirmation',
-            'capacity': 'As per booking confirmation',
-            'guests': 'As per booking',
+            'bed_config': 'TBA - Contact hotel',
+            'capacity': 'TBA - Contact hotel',
+            'guests': 'TBA - Contact hotel',
             'confirmation': confirmation_number,
-            'amenities': 'As per hotel policy',
-            'rate_type': 'As booked',
-            'parking': 'Check with hotel'
+            'amenities': 'TBA - Contact hotel',
+            'rate_type': 'TBA - Contact hotel',
+            'parking': 'TBA - Contact hotel'
         }
         
         return hotel_details
