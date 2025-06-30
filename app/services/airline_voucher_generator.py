@@ -183,7 +183,7 @@ class AirlineVoucherGenerator:
             [f'Booking Reference: {self.booking.reference_number}', status]
         ]
         
-        ref_table = Table(ref_data, colWidths=[5*inch, 2*inch])
+        ref_table = Table(ref_data, colWidths=[8*inch, 2*inch])
         ref_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f5f5')),
             ('TEXTCOLOR', (0, 0), (0, 0), colors.black),
@@ -239,7 +239,7 @@ class AirlineVoucherGenerator:
         
         # Section header
         flight_header_data = [['✈ FLIGHT DETAILS']]
-        flight_header_table = Table(flight_header_data, colWidths=[7*inch])
+        flight_header_table = Table(flight_header_data, colWidths=[10*inch])
         flight_header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#87CEEB')),  # Light sky blue instead of dark blue
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),  # Black text on light background
@@ -252,22 +252,26 @@ class AirlineVoucherGenerator:
         ]))
         elements.append(flight_header_table)
         
-        # Flight route info
+        # Flight route info with flight number and time
         route_data = [
             [flight_details['route']],
+            [f"Flight {flight_details['flight_number']} | {flight_details['departure']} → {flight_details['arrival']}"],
             [flight_details['airports']]
         ]
-        route_table = Table(route_data, colWidths=[7*inch])
+        route_table = Table(route_data, colWidths=[10*inch])
         route_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 13),  # Reduced by 1 point
-            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (0, 1), 10),  # Reduced by 1 point
+            ('FONTSIZE', (0, 0), (0, 0), 12),  # Route title
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (0, 1), 9),   # Flight number and time line
+            ('FONTNAME', (0, 2), (0, 2), 'Helvetica'),
+            ('FONTSIZE', (0, 2), (0, 2), 8),   # Airport details
             ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
-            ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.black),
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(route_table)
         
@@ -286,7 +290,7 @@ class AirlineVoucherGenerator:
             ['Terminal Information', flight_details['terminals']]
         ]
         
-        flight_table = Table(flight_table_data, colWidths=[2.5*inch, 4.5*inch])
+        flight_table = Table(flight_table_data, colWidths=[3.5*inch, 6.5*inch])
         flight_table.setStyle(TableStyle([
             # Header row - light golden color from your image
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
@@ -323,7 +327,7 @@ class AirlineVoucherGenerator:
         
         # Section header
         hotel_header_data = [['🏨 HOTEL ACCOMMODATION']]
-        hotel_header_table = Table(hotel_header_data, colWidths=[7*inch])
+        hotel_header_table = Table(hotel_header_data, colWidths=[10*inch])
         hotel_header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
@@ -342,7 +346,7 @@ class AirlineVoucherGenerator:
             [hotel_details['address']],
             [hotel_details['rating']]
         ]
-        hotel_info_table = Table(hotel_info_data, colWidths=[7*inch])
+        hotel_info_table = Table(hotel_info_data, colWidths=[10*inch])
         hotel_info_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (0, 0), 13),  # Reduced by 1 point
@@ -372,7 +376,7 @@ class AirlineVoucherGenerator:
             ['Parking:', hotel_details['parking']]
         ]
         
-        hotel_table = Table(hotel_table_data, colWidths=[2.5*inch, 4.5*inch])
+        hotel_table = Table(hotel_table_data, colWidths=[3.5*inch, 6.5*inch])
         hotel_table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
@@ -403,7 +407,7 @@ class AirlineVoucherGenerator:
             [f'${total:.2f}']
         ]
         
-        total_table = Table(total_data, colWidths=[7*inch])
+        total_table = Table(total_data, colWidths=[10*inch])
         total_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.green),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
