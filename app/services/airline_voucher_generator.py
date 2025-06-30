@@ -445,71 +445,79 @@ class AirlineVoucherGenerator:
     def _extract_flight_details_from_service(self, flight_service):
         """Extract flight details from confirmed service data"""
         # Look for service confirmations with flight details
-        flight_confirmations = []
-        for doc in flight_service.documents:
-            if doc.document_type == 'CONFIRMATION':
-                flight_confirmations.append(doc)
-        
-        # Extract details from description and documents
         description = flight_service.description or ""
         
-        # Default flight details - extract from actual confirmation if available
+        # Parse flight number from description
+        import re
+        flight_number = "TBA"
+        if description:
+            flight_match = re.search(r'([A-Z]{2,3}\s*\d+)', description, re.IGNORECASE)
+            if flight_match:
+                flight_number = flight_match.group(1).upper().replace(' ', ' ')
+        
+        # Parse route information from description
+        route_parts = description.split() if description else []
+        route = f"{route_parts[0] if route_parts else 'Departure'} → {route_parts[-1] if len(route_parts) > 1 else 'Arrival'}"
+        
+        # Only use real data from the service
         flight_details = {
-            'route': 'DUBAI → AMMAN',  # Extract from description
-            'airports': 'Dubai International (DXB) to Queen Alia International (AMM)',
-            'flight_number': 'EK 905',  # Parse from confirmation
-            'eticket': '176-2365789012',  # Extract from ticket document
-            'aircraft': 'Boeing 777-300ER',
-            'class': 'Economy',
-            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')} - 11:55 PM (GST)" if flight_service.start_date else "TBA",
-            'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')} - 6:20 AM (AST)" if flight_service.end_date else "TBA",
-            'duration': '6h 25m (Non-stop)',
-            'seats': '14A, 14B',  # Extract from confirmation
-            'baggage': '2x Checked bags included',
-            'terminals': 'DXB Terminal 3 → AMM Terminal 1'
+            'route': route,
+            'airports': f"As per itinerary ({description})" if description else "As per booking confirmation",
+            'flight_number': flight_number,
+            'eticket': f"TBA - Check with airline",  # Only show if we have actual ticket docs
+            'aircraft': 'TBA - Check with airline',
+            'class': 'As booked',
+            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')}" if flight_service.start_date else "TBA",
+            'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')}" if flight_service.end_date else "TBA",
+            'duration': 'TBA - Check with airline',  # Don't make up durations
+            'seats': 'TBA - Check with airline',
+            'baggage': 'As per airline policy',
+            'terminals': 'TBA - Check with airline'
         }
         
-        # Parse actual flight details from description if structured
-        if "flight" in description.lower() or "EK" in description:
-            # Try to extract flight number from description
-            import re
-            flight_match = re.search(r'(EK\s*\d+|[A-Z]{2}\s*\d+)', description, re.IGNORECASE)
-            if flight_match:
-                flight_details['flight_number'] = flight_match.group(1).upper()
+        # Look for actual ticket documents to get real e-ticket numbers
+        for doc in flight_service.documents:
+            if doc.document_type == 'TICKET' and doc.document_number:
+                flight_details['eticket'] = doc.document_number
+            elif doc.document_type == 'CONFIRMATION' and doc.document_number:
+                flight_details['eticket'] = f"Conf: {doc.document_number}"
         
         return flight_details
     
     def _extract_hotel_details_from_service(self, hotel_service):
         """Extract hotel details from confirmed service data"""
-        description = hotel_service.description or ""
+        description = hotel_service.description or "Hotel Accommodation"
         
-        # Try to extract hotel name from description
-        hotel_name = "Jumeirah Beach Hotel"  # Default
-        if description and len(description) > 5:
-            # Use description as hotel name if it looks like one
-            hotel_name = description.strip()
+        # Use actual description as hotel name
+        hotel_name = description.strip() if description.strip() else "Hotel Accommodation"
         
         # Get hotel contact info from database
         address, phone = self._get_hotel_contact_info(hotel_name)
         
         nights = (hotel_service.end_date - hotel_service.start_date).days if hotel_service.start_date and hotel_service.end_date else 1
         
+        # Look for actual confirmation numbers from documents
+        confirmation_number = f'HTL-{self.booking.reference_number[-6:]}'
+        for doc in hotel_service.documents:
+            if doc.document_type == 'CONFIRMATION' and doc.document_number:
+                confirmation_number = doc.document_number
+        
         hotel_details = {
             'name': hotel_name,
-            'address': address or "Jumeirah Beach Road, Dubai, UAE",
-            'rating': "★★★★★ 4.8/5 Rating",
-            'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')} - 3:00 PM" if hotel_service.start_date else "TBA",
-            'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')} - 12:00 PM" if hotel_service.end_date else "TBA",
+            'address': address or "Contact hotel for address details",
+            'rating': "Contact hotel for details",
+            'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')}" if hotel_service.start_date else "TBA",
+            'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')}" if hotel_service.end_date else "TBA",
             'nights': f"{nights} nights",
-            'room_type': 'Ocean Deluxe Room',
-            'room_number': 'TBA (To Be Assigned)',
-            'bed_config': '1 King Bed',
-            'capacity': 'Maximum 2 guests',
-            'guests': '2 Adults',
-            'confirmation': f'HTL-{self.booking.reference_number[-6:]}',
-            'amenities': 'WiFi, Pool, Beach Access, Spa',
-            'rate_type': 'Flexible Rate',
-            'parking': 'Complimentary valet parking'
+            'room_type': 'As per booking confirmation',
+            'room_number': 'TBA - Check with hotel',
+            'bed_config': 'As per booking confirmation',
+            'capacity': 'As per booking confirmation',
+            'guests': 'As per booking',
+            'confirmation': confirmation_number,
+            'amenities': 'As per hotel policy',
+            'rate_type': 'As booked',
+            'parking': 'Check with hotel'
         }
         
         return hotel_details
