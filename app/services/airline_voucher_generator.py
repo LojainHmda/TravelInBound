@@ -123,7 +123,7 @@ class AirlineVoucherGenerator:
         styles.add(ParagraphStyle(
             name='SectionHeader',
             parent=styles['Heading2'],
-            fontSize=14,
+            fontSize=13,  # Reduced by 1 point
             textColor=colors.white,
             alignment=TA_LEFT,
             fontName='Helvetica-Bold',
@@ -135,7 +135,7 @@ class AirlineVoucherGenerator:
         styles.add(ParagraphStyle(
             name='PassengerName',
             parent=styles['Normal'],
-            fontSize=12,
+            fontSize=11,  # Reduced by 1 point
             fontName='Helvetica-Bold',
             spaceAfter=0.05*inch
         ))
@@ -209,22 +209,24 @@ class AirlineVoucherGenerator:
         elements = []
         styles = self._setup_styles()
         
-        # Passenger header
+        # Passenger header with more spacing
         passenger_header = Paragraph("PASSENGERS:", styles['PassengerName'])
         elements.append(passenger_header)
+        elements.append(Spacer(1, 0.1*inch))  # Add extra spacing
         
-        # Customer info
+        # Customer info with better spacing
         customer = self.booking.customer
         if customer:
             passenger_name = f"1. {customer.last_name.upper()}, {customer.first_name.upper()} - Adult"
             passenger_para = Paragraph(passenger_name, styles['Normal'])
             elements.append(passenger_para)
+            elements.append(Spacer(1, 0.08*inch))  # Add spacing after passenger name
         
-        # Booking date
+        # Booking date with spacing
         booking_date = self.booking.created_at.strftime("%B %d, %Y") if self.booking.created_at else "N/A"
         date_para = Paragraph(f"Booking Date: {booking_date} | Total Passengers: 1", styles['Normal'])
         elements.append(date_para)
-        elements.append(Spacer(1, 0.2*inch))
+        elements.append(Spacer(1, 0.25*inch))  # Increased spacing after section
         
         return elements
     
@@ -243,7 +245,7 @@ class AirlineVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('FONTSIZE', (0, 0), (-1, -1), 13),  # Reduced by 1 point
             ('TOPPADDING', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ('LEFTPADDING', (0, 0), (-1, -1), 15),
@@ -259,9 +261,9 @@ class AirlineVoucherGenerator:
         route_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 14),
+            ('FONTSIZE', (0, 0), (0, 0), 13),  # Reduced by 1 point
             ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
-            ('FONTSIZE', (0, 1), (0, 1), 11),
+            ('FONTSIZE', (0, 1), (0, 1), 10),  # Reduced by 1 point
             ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
             ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
@@ -286,20 +288,20 @@ class AirlineVoucherGenerator:
         
         flight_table = Table(flight_table_data, colWidths=[2.5*inch, 4.5*inch])
         flight_table.setStyle(TableStyle([
-            # Header row
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c5aa0')),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            # Header row - light golden color from your image
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#FFD700')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
             ('SPAN', (0, 0), (1, 0)),
             
-            # Data rows - labels
-            ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#f0f8ff')),
+            # Data rows - labels with lighter background
+            ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#f8f8f8')),
             ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
             
-            # All cells
+            # All cells - reduced font size by 1 point (from 10 to 9)
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
@@ -327,7 +329,7 @@ class AirlineVoucherGenerator:
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('FONTSIZE', (0, 0), (-1, -1), 13),  # Reduced by 1 point
             ('TOPPADDING', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ('LEFTPADDING', (0, 0), (-1, -1), 15),
@@ -343,11 +345,11 @@ class AirlineVoucherGenerator:
         hotel_info_table = Table(hotel_info_data, colWidths=[7*inch])
         hotel_info_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 14),
+            ('FONTSIZE', (0, 0), (0, 0), 13),  # Reduced by 1 point
             ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
-            ('FONTSIZE', (0, 1), (0, 1), 11),
+            ('FONTSIZE', (0, 1), (0, 1), 10),  # Reduced by 1 point
             ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
-            ('FONTSIZE', (0, 2), (0, 2), 11),
+            ('FONTSIZE', (0, 2), (0, 2), 10),  # Reduced by 1 point
             ('TEXTCOLOR', (0, 2), (0, 2), colors.HexColor('#f39c12')),
             ('TOPPADDING', (0, 0), (-1, -1), 5),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
@@ -374,12 +376,14 @@ class AirlineVoucherGenerator:
         hotel_table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),  # Reduced font size by 1 point
             ('TOPPADDING', (0, 0), (-1, -1), 6),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
             ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            # Add light gray background for labels
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f8f8f8')),
         ]))
         
         elements.append(hotel_table)
