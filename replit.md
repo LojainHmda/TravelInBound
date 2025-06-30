@@ -109,6 +109,17 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- December 30, 2025: Implemented professional airline-style voucher system
+  - Created new AirlineVoucherGenerator service matching professional airline industry standards
+  - Added passenger list display with names and types (Adult/Child) prominently at top
+  - Implemented PNR/booking reference display in header section
+  - Added E-ticket numbers in flight information table format
+  - Enhanced flight details with professional table layout including aircraft type, seat assignments, baggage allowance
+  - Integrated hotel confirmation numbers and detailed amenities grid
+  - Added important travel information section with airline industry guidelines
+  - Updated voucher routes to use new HTML-based generation instead of PDF
+  - Fixed dashboard status constant mismatch (IN-PROGRESS to IN_PROGRESS) to match database
+  - Removed duplicate dashboard function that was causing booking count display issues
 - June 29, 2025: Added hotel address and phone number display to vouchers
   - Enhanced ModernVoucherGenerator to include hotel contact information in voucher hotel section
   - Added _get_hotel_contact_info method to look up addresses and phone numbers from CSV database

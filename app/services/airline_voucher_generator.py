@@ -1,11 +1,18 @@
 """
 Modern Airline-Style Voucher Generator
-Generates professional travel vouchers with airline industry formatting
+Generates professional travel vouchers with airline industry formatting as PDF
 """
 import logging
 from datetime import datetime
 import os
 import csv
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 class AirlineVoucherGenerator:
     def __init__(self, booking):
