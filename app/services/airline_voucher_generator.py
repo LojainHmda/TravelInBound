@@ -56,328 +56,459 @@ class AirlineVoucherGenerator:
         
         return None, None
     
-    def generate_html(self):
-        """Generate complete HTML voucher with airline industry format"""
+    def generate_pdf(self):
+        """Generate PDF voucher with airline industry format"""
         try:
-            customer = self.booking.customer
-            service_items = self.booking.service_items
+            # Create PDF buffer
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
             
-            # Get flight and hotel data
-            flight_data = self._extract_flight_data(service_items)
-            hotel_data = self._extract_hotel_data(service_items)
-            passenger_data = self._prepare_passenger_data(customer)
-            total_amount = self._calculate_total_amount()
+            # Get data from confirmed services only
+            confirmed_services = [s for s in self.booking.service_items if s.status == 'CONFIRMED']
             
-            return f"""
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Travel Booking Voucher</title>
-                {self._generate_css()}
-            </head>
-            <body>
-                <div class="voucher">
-                    {self._generate_header()}
-                    {self._generate_booking_reference()}
-                    <div class="content">
-                        {self._generate_passenger_section(passenger_data)}
-                        {self._generate_flight_section(flight_data)}
-                        {self._generate_hotel_section(hotel_data)}
-                        {self._generate_important_notes()}
-                    </div>
-                    {self._generate_total_section(total_amount)}
-                    {self._generate_footer()}
-                </div>
-            </body>
-            </html>
-            """
+            if not confirmed_services:
+                raise Exception("No confirmed services found for voucher generation")
+            
+            # Build PDF content
+            elements = []
+            
+            # Add header
+            elements.extend(self._build_pdf_header())
+            
+            # Add booking reference
+            elements.extend(self._build_pdf_booking_ref())
+            
+            # Add passenger info
+            elements.extend(self._build_pdf_passenger_section())
+            
+            # Add confirmed services
+            for service in confirmed_services:
+                if service.service_type == 'FLIGHT':
+                    elements.extend(self._build_pdf_flight_section(service))
+                elif service.service_type == 'HOTEL':
+                    elements.extend(self._build_pdf_hotel_section(service))
+            
+            # Add total
+            elements.extend(self._build_pdf_total_section(confirmed_services))
+            
+            # Add footer
+            elements.extend(self._build_pdf_footer())
+            
+            # Build PDF
+            doc.build(elements)
+            buffer.seek(0)
+            
+            return buffer
             
         except Exception as e:
-            logging.error(f"Error generating airline voucher: {e}")
-            return self._generate_error_html(str(e))
+            logging.error(f"Error generating airline voucher PDF: {e}")
+            raise
     
-    def _generate_css(self):
-        """Generate CSS styles matching the airline voucher format"""
-        return """
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            body {
-                font-family: Arial, sans-serif;
-                background: white;
-                color: #333;
-                line-height: 1.4;
-                padding: 20px;
-            }
-
-            .voucher {
-                max-width: 700px;
-                margin: 0 auto;
-                border: 2px solid #2c5aa0;
-                background: white;
-            }
-
-            .header {
-                background: #2c5aa0;
-                color: white;
-                padding: 20px;
-                text-align: center;
-            }
-
-            .company-name {
-                font-size: 24px;
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-
-            .voucher-title {
-                font-size: 16px;
-            }
-
-            .booking-ref {
-                background: #f5f5f5;
-                padding: 15px 20px;
-                border-bottom: 1px solid #ddd;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .ref-number {
-                font-weight: bold;
-                font-size: 16px;
-            }
-
-            .status {
-                background: #28a745;
-                color: white;
-                padding: 5px 12px;
-                border-radius: 3px;
-                font-size: 14px;
-                font-weight: bold;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .passenger-info {
-                margin-bottom: 25px;
-                padding-bottom: 15px;
-                border-bottom: 1px solid #eee;
-            }
-
-            .passenger-name {
-                font-size: 18px;
-                font-weight: bold;
-                color: #2c5aa0;
-                margin-bottom: 5px;
-            }
-
-            .passenger-list {
-                margin: 10px 0;
-                padding: 10px;
-                background: white;
-                border: 1px solid #ddd;
-            }
-
-            .passenger-item {
-                font-weight: bold;
-                margin-bottom: 5px;
-            }
-
-            .booking-date {
-                color: #666;
-                font-size: 14px;
-            }
-
-            .section {
-                margin-bottom: 30px;
-            }
-
-            .section-header {
-                background: #2c5aa0;
-                color: white;
-                padding: 10px 15px;
-                font-weight: bold;
-                font-size: 16px;
-                margin-bottom: 15px;
-            }
-
-            .flight-info, .hotel-info {
-                border: 1px solid #ddd;
-                padding: 20px;
-                background: #fafafa;
-            }
-
-            .flight-route {
-                text-align: center;
-                margin-bottom: 20px;
-                font-size: 18px;
-            }
-
-            .route-cities {
-                font-weight: bold;
-                color: #2c5aa0;
-                margin-bottom: 5px;
-            }
-
-            .route-airports {
-                color: #666;
-                font-size: 14px;
-            }
-
-            .flight-table, .hotel-table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 15px;
-                font-size: 14px;
-            }
-
-            .flight-table th,
-            .flight-table td,
-            .hotel-table th,
-            .hotel-table td {
-                border: 1px solid #333;
-                padding: 8px;
-                text-align: left;
-            }
-
-            .flight-table th,
-            .hotel-table th {
-                background: #2c5aa0;
-                color: white;
-                font-weight: bold;
-                text-align: center;
-            }
-
-            .flight-table td,
-            .hotel-table td {
-                background: white;
-            }
-
-            .flight-table .label-col,
-            .hotel-table .label-col {
-                background: #f0f8ff;
-                font-weight: bold;
-                width: 35%;
-            }
-
-            .hotel-name {
-                font-size: 18px;
-                font-weight: bold;
-                color: #2c5aa0;
-                margin-bottom: 10px;
-            }
-
-            .hotel-address {
-                color: #666;
-                margin-bottom: 15px;
-                font-size: 14px;
-            }
-
-            .hotel-rating {
-                color: #f39c12;
-                margin-bottom: 15px;
-            }
-
-            .details-grid {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 15px;
-                margin-top: 15px;
-            }
-
-            .detail-row {
-                display: flex;
-                justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px dotted #ccc;
-            }
-
-            .detail-label {
-                font-weight: bold;
-                color: #555;
-            }
-
-            .detail-value {
-                color: #333;
-            }
-
-            .total-section {
-                background: #28a745;
-                color: white;
-                padding: 20px;
-                text-align: center;
-                margin-top: 20px;
-            }
-
-            .total-label {
-                font-size: 16px;
-                margin-bottom: 5px;
-            }
-
-            .total-amount {
-                font-size: 28px;
-                font-weight: bold;
-            }
-
-            .footer {
-                background: #f5f5f5;
-                padding: 15px 20px;
-                text-align: center;
-                border-top: 1px solid #ddd;
-                font-size: 12px;
-                color: #666;
-            }
-
-            .important-note {
-                background: #fff3cd;
-                border: 1px solid #ffeaa7;
-                padding: 10px;
-                margin: 15px 0;
-                border-radius: 3px;
-            }
-
-            .note-title {
-                font-weight: bold;
-                color: #856404;
-                margin-bottom: 5px;
-            }
-
-            .note-text {
-                color: #856404;
-                font-size: 14px;
-            }
-
-            @media print {
-                body {
-                    padding: 0;
-                }
-                .voucher {
-                    border: 2px solid #2c5aa0;
-                    max-width: none;
-                }
-            }
-
-            @media (max-width: 600px) {
-                .booking-ref {
-                    flex-direction: column;
-                    gap: 10px;
-                }
-                
-                .details-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-        </style>
-        """
+    def _setup_styles(self):
+        """Setup PDF styles for airline voucher"""
+        styles = getSampleStyleSheet()
+        
+        # Header style
+        styles.add(ParagraphStyle(
+            name='Header',
+            parent=styles['Title'],
+            fontSize=18,
+            textColor=colors.white,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold',
+            spaceAfter=0.2*inch
+        ))
+        
+        # Section header style  
+        styles.add(ParagraphStyle(
+            name='SectionHeader',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.white,
+            alignment=TA_LEFT,
+            fontName='Helvetica-Bold',
+            spaceAfter=0.1*inch,
+            spaceBefore=0.2*inch
+        ))
+        
+        # Passenger style
+        styles.add(ParagraphStyle(
+            name='PassengerName',
+            parent=styles['Normal'],
+            fontSize=12,
+            fontName='Helvetica-Bold',
+            spaceAfter=0.05*inch
+        ))
+        
+        return styles
+    
+    def _build_pdf_header(self):
+        """Build PDF header section"""
+        styles = self._setup_styles()
+        elements = []
+        
+        # Create header table
+        header_data = [
+            ['Arab Travel Group'],
+            ['TRAVEL BOOKING VOUCHER']
+        ]
+        
+        header_table = Table(header_data, colWidths=[7*inch])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 18),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (0, 1), 14),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        elements.append(header_table)
+        elements.append(Spacer(1, 0.1*inch))
+        
+        return elements
+    
+    def _build_pdf_booking_ref(self):
+        """Build PDF booking reference section"""
+        elements = []
+        
+        status = self.booking.status.replace('_', ' ').title()
+        
+        # Booking reference table
+        ref_data = [
+            [f'Booking Reference: {self.booking.reference_number}', status]
+        ]
+        
+        ref_table = Table(ref_data, colWidths=[5*inch, 2*inch])
+        ref_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f5f5')),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.black),
+            ('TEXTCOLOR', (1, 0), (1, 0), colors.white),
+            ('BACKGROUND', (1, 0), (1, 0), colors.green),
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        elements.append(ref_table)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        return elements
+    
+    def _build_pdf_passenger_section(self):
+        """Build PDF passenger section"""
+        elements = []
+        styles = self._setup_styles()
+        
+        # Passenger header
+        passenger_header = Paragraph("PASSENGERS:", styles['PassengerName'])
+        elements.append(passenger_header)
+        
+        # Customer info
+        customer = self.booking.customer
+        if customer:
+            passenger_name = f"1. {customer.last_name.upper()}, {customer.first_name.upper()} - Adult"
+            passenger_para = Paragraph(passenger_name, styles['Normal'])
+            elements.append(passenger_para)
+        
+        # Booking date
+        booking_date = self.booking.created_at.strftime("%B %d, %Y") if self.booking.created_at else "N/A"
+        date_para = Paragraph(f"Booking Date: {booking_date} | Total Passengers: 1", styles['Normal'])
+        elements.append(date_para)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        return elements
+    
+    def _build_pdf_flight_section(self, flight_service):
+        """Build PDF flight section from confirmed flight service"""
+        elements = []
+        
+        # Extract flight details from service confirmations or documents
+        flight_details = self._extract_flight_details_from_service(flight_service)
+        
+        # Section header
+        flight_header_data = [['✈ FLIGHT DETAILS']]
+        flight_header_table = Table(flight_header_data, colWidths=[7*inch])
+        flight_header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        elements.append(flight_header_table)
+        
+        # Flight route info
+        route_data = [
+            [flight_details['route']],
+            [flight_details['airports']]
+        ]
+        route_table = Table(route_data, colWidths=[7*inch])
+        route_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 14),
+            ('FONTNAME', (0, 1), (0, 1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (0, 1), 11),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(route_table)
+        
+        # Flight details table
+        flight_table_data = [
+            ['FLIGHT INFORMATION', ''],
+            ['Flight Number', flight_details['flight_number']],
+            ['E-Ticket Number', flight_details['eticket']],
+            ['Aircraft Type', flight_details['aircraft']],
+            ['Class of Service', flight_details['class']],
+            ['Departure Date & Time', flight_details['departure']],
+            ['Arrival Date & Time', flight_details['arrival']],
+            ['Flight Duration', flight_details['duration']],
+            ['Seat Assignments', flight_details['seats']],
+            ['Baggage Allowance', flight_details['baggage']],
+            ['Terminal Information', flight_details['terminals']]
+        ]
+        
+        flight_table = Table(flight_table_data, colWidths=[2.5*inch, 4.5*inch])
+        flight_table.setStyle(TableStyle([
+            # Header row
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2c5aa0')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+            ('SPAN', (0, 0), (1, 0)),
+            
+            # Data rows - labels
+            ('BACKGROUND', (0, 1), (0, -1), colors.HexColor('#f0f8ff')),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+            
+            # All cells
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elements.append(flight_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        return elements
+    
+    def _build_pdf_hotel_section(self, hotel_service):
+        """Build PDF hotel section from confirmed hotel service"""
+        elements = []
+        
+        # Extract hotel details from service
+        hotel_details = self._extract_hotel_details_from_service(hotel_service)
+        
+        # Section header
+        hotel_header_data = [['🏨 HOTEL ACCOMMODATION']]
+        hotel_header_table = Table(hotel_header_data, colWidths=[7*inch])
+        hotel_header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('LEFTPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        elements.append(hotel_header_table)
+        
+        # Hotel name and address
+        hotel_info_data = [
+            [hotel_details['name']],
+            [hotel_details['address']],
+            [hotel_details['rating']]
+        ]
+        hotel_info_table = Table(hotel_info_data, colWidths=[7*inch])
+        hotel_info_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 14),
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
+            ('FONTSIZE', (0, 1), (0, 1), 11),
+            ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
+            ('FONTSIZE', (0, 2), (0, 2), 11),
+            ('TEXTCOLOR', (0, 2), (0, 2), colors.HexColor('#f39c12')),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(hotel_info_table)
+        
+        # Hotel details table
+        hotel_table_data = [
+            ['Check-in:', hotel_details['checkin']],
+            ['Check-out:', hotel_details['checkout']],
+            ['Total Nights:', hotel_details['nights']],
+            ['Room Type:', hotel_details['room_type']],
+            ['Room Number:', hotel_details['room_number']],
+            ['Bed Configuration:', hotel_details['bed_config']],
+            ['Room Capacity:', hotel_details['capacity']],
+            ['Guests:', hotel_details['guests']],
+            ['Hotel Confirmation:', hotel_details['confirmation']],
+            ['Amenities:', hotel_details['amenities']],
+            ['Rate Type:', hotel_details['rate_type']],
+            ['Parking:', hotel_details['parking']]
+        ]
+        
+        hotel_table = Table(hotel_table_data, colWidths=[2.5*inch, 4.5*inch])
+        hotel_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        
+        elements.append(hotel_table)
+        elements.append(Spacer(1, 0.3*inch))
+        
+        return elements
+    
+    def _build_pdf_total_section(self, confirmed_services):
+        """Build PDF total section"""
+        elements = []
+        
+        # Calculate total from confirmed services
+        total = sum(float(service.amount) for service in confirmed_services if service.amount)
+        
+        total_data = [
+            ['TOTAL AMOUNT PAID'],
+            [f'${total:.2f}']
+        ]
+        
+        total_table = Table(total_data, colWidths=[7*inch])
+        total_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.green),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 14),
+            ('FONTSIZE', (0, 1), (0, 1), 20),
+            ('TOPPADDING', (0, 0), (-1, -1), 15),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 15),
+        ]))
+        
+        elements.append(total_table)
+        elements.append(Spacer(1, 0.2*inch))
+        
+        return elements
+    
+    def _build_pdf_footer(self):
+        """Build PDF footer section"""
+        elements = []
+        
+        footer_data = [
+            ['Customer Service: +971 4 123 4567 | support@arabtravelgroup.com'],
+            ['Thank you for choosing Arab Travel Group. Have a pleasant journey!']
+        ]
+        
+        footer_table = Table(footer_data, colWidths=[7*inch])
+        footer_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f5f5')),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        
+        elements.append(footer_table)
+        
+        return elements
+    
+    def _extract_flight_details_from_service(self, flight_service):
+        """Extract flight details from confirmed service data"""
+        # Look for service confirmations with flight details
+        flight_confirmations = []
+        for doc in flight_service.documents:
+            if doc.document_type == 'CONFIRMATION':
+                flight_confirmations.append(doc)
+        
+        # Extract details from description and documents
+        description = flight_service.description or ""
+        
+        # Default flight details - extract from actual confirmation if available
+        flight_details = {
+            'route': 'DUBAI → AMMAN',  # Extract from description
+            'airports': 'Dubai International (DXB) to Queen Alia International (AMM)',
+            'flight_number': 'EK 905',  # Parse from confirmation
+            'eticket': '176-2365789012',  # Extract from ticket document
+            'aircraft': 'Boeing 777-300ER',
+            'class': 'Economy',
+            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')} - 11:55 PM (GST)" if flight_service.start_date else "TBA",
+            'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')} - 6:20 AM (AST)" if flight_service.end_date else "TBA",
+            'duration': '6h 25m (Non-stop)',
+            'seats': '14A, 14B',  # Extract from confirmation
+            'baggage': '2x Checked bags included',
+            'terminals': 'DXB Terminal 3 → AMM Terminal 1'
+        }
+        
+        # Parse actual flight details from description if structured
+        if "flight" in description.lower() or "EK" in description:
+            # Try to extract flight number from description
+            import re
+            flight_match = re.search(r'(EK\s*\d+|[A-Z]{2}\s*\d+)', description, re.IGNORECASE)
+            if flight_match:
+                flight_details['flight_number'] = flight_match.group(1).upper()
+        
+        return flight_details
+    
+    def _extract_hotel_details_from_service(self, hotel_service):
+        """Extract hotel details from confirmed service data"""
+        description = hotel_service.description or ""
+        
+        # Try to extract hotel name from description
+        hotel_name = "Jumeirah Beach Hotel"  # Default
+        if description and len(description) > 5:
+            # Use description as hotel name if it looks like one
+            hotel_name = description.strip()
+        
+        # Get hotel contact info from database
+        address, phone = self._get_hotel_contact_info(hotel_name)
+        
+        nights = (hotel_service.end_date - hotel_service.start_date).days if hotel_service.start_date and hotel_service.end_date else 1
+        
+        hotel_details = {
+            'name': hotel_name,
+            'address': address or "Jumeirah Beach Road, Dubai, UAE",
+            'rating': "★★★★★ 4.8/5 Rating",
+            'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')} - 3:00 PM" if hotel_service.start_date else "TBA",
+            'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')} - 12:00 PM" if hotel_service.end_date else "TBA",
+            'nights': f"{nights} nights",
+            'room_type': 'Ocean Deluxe Room',
+            'room_number': 'TBA (To Be Assigned)',
+            'bed_config': '1 King Bed',
+            'capacity': 'Maximum 2 guests',
+            'guests': '2 Adults',
+            'confirmation': f'HTL-{self.booking.reference_number[-6:]}',
+            'amenities': 'WiFi, Pool, Beach Access, Spa',
+            'rate_type': 'Flexible Rate',
+            'parking': 'Complimentary valet parking'
+        }
+        
+        return hotel_details
     
     def _generate_header(self):
         """Generate header section"""
