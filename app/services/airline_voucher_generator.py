@@ -433,7 +433,7 @@ class AirlineVoucherGenerator:
             ['Thank you for choosing Arab Travel Group. Have a pleasant journey!']
         ]
         
-        footer_table = Table(footer_data, colWidths=[7*inch])
+        footer_table = Table(footer_data, colWidths=[10*inch])
         footer_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f5f5')),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
