@@ -1,0 +1,453 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Booking Voucher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: #333;
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        .voucher {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 2px solid #2c5aa0;
+            background: white;
+        }
+
+        .header {
+            background: #2c5aa0;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .voucher-title {
+            font-size: 16px;
+        }
+
+        .booking-ref {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ref-number {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .status {
+            background: #28a745;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 3px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .passenger-info {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .passenger-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .booking-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: #2c5aa0;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .flight-info, .hotel-info {
+            border: 1px solid #ddd;
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .flight-route {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .route-cities {
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .route-airports {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .detail-value {
+            color: #333;
+        }
+
+        .flight-table, .hotel-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .flight-table th,
+        .flight-table td,
+        .hotel-table th,
+        .hotel-table td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .flight-table th,
+        .hotel-table th {
+            background: #2c5aa0;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .flight-table td,
+        .hotel-table td {
+            background: white;
+        }
+
+        .flight-table .label-col,
+        .hotel-table .label-col {
+            background: #f0f8ff;
+            font-weight: bold;
+            width: 35%;
+        }
+
+        .hotel-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+
+        .hotel-address {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .hotel-rating {
+            color: #f39c12;
+            margin-bottom: 15px;
+        }
+
+        .total-section {
+            background: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .total-label {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .total-amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 15px 20px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .important-note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 3px;
+        }
+
+        .note-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 5px;
+        }
+
+        .note-text {
+            color: #856404;
+            font-size: 14px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .voucher {
+                border: 2px solid #2c5aa0;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .booking-ref {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="voucher">
+        <!-- Header -->
+        <div class="header">
+            <div class="company-name">TravelBooker</div>
+            <div class="voucher-title">TRAVEL BOOKING VOUCHER</div>
+        </div>
+
+        <!-- Booking Reference -->
+        <div class="booking-ref">
+            <div>
+                <strong>Booking Reference:</strong> 
+                <span class="ref-number">TB-2025-789456</span>
+            </div>
+            <div class="status">CONFIRMED</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Passenger Information -->
+            <div class="passenger-info">
+                <div class="passenger-name">PASSENGERS:</div>
+                <div style="margin: 10px 0; padding: 10px; background: white; border: 1px solid #ddd;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">1. SMITH, JOHN MR - Adult</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">2. SMITH, JANE MS - Adult</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">3. SMITH, EMILY MS - Child (Age 8)</div>
+                </div>
+                <div class="booking-date">Booking Date: July 1, 2025 | Total Passengers: 3</div>
+            </div>
+
+            <!-- Flight Section -->
+            <div class="section">
+                <div class="section-header">✈ FLIGHT DETAILS</div>
+                <div class="flight-info">
+                    <div class="flight-route">
+                        <div class="route-cities">NEW YORK → LOS ANGELES</div>
+                        <div class="route-airports">John F. Kennedy (JFK) to Los Angeles International (LAX)</div>
+                    </div>
+                    
+                    <table class="flight-table">
+                        <thead>
+                            <tr>
+                                <th colspan="2">FLIGHT INFORMATION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="label-col">Flight Number</td>
+                                <td>AA 1234</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">E-Ticket Number</td>
+                                <td>001-2365789012</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Aircraft Type</td>
+                                <td>Boeing 737-800</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Class of Service</td>
+                                <td>Economy</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Departure Date & Time</td>
+                                <td>July 15, 2025 - 8:30 AM (EST)</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Arrival Date & Time</td>
+                                <td>July 15, 2025 - 11:45 AM (PST)</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Flight Duration</td>
+                                <td>5h 15m (Non-stop)</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Seat Assignments</td>
+                                <td>14A, 14B, 14C</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Baggage Allowance</td>
+                                <td>3x Checked bags included</td>
+                            </tr>
+                            <tr>
+                                <td class="label-col">Terminal Information</td>
+                                <td>JFK Terminal 8 → LAX Terminal 4</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hotel Section -->
+            <div class="section">
+                <div class="section-header">🏨 HOTEL ACCOMMODATION</div>
+                <div class="hotel-info">
+                    <div class="hotel-name">GRAND PLAZA HOTEL</div>
+                    <div class="hotel-address">1247 Downtown Boulevard, Los Angeles, CA 90015</div>
+                    <div class="hotel-rating">★★★★☆ 4.2/5 Rating</div>
+                    
+                    <div class="details-grid">
+                        <div class="detail-row">
+                            <span class="detail-label">Check-in:</span>
+                            <span class="detail-value">July 15, 2025 - 3:00 PM</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Check-out:</span>
+                            <span class="detail-value">July 18, 2025 - 11:00 AM</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Total Nights:</span>
+                            <span class="detail-value">3 nights</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Room Type:</span>
+                            <span class="detail-value">Deluxe King Suite</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Room Number:</span>
+                            <span class="detail-value">1205 (12th Floor)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Bed Configuration:</span>
+                            <span class="detail-value">1 King Bed + Sofa Bed</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Room Capacity:</span>
+                            <span class="detail-value">Maximum 3 guests</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Guests:</span>
+                            <span class="detail-value">2 Adults, 1 Child</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Hotel Confirmation:</span>
+                            <span class="detail-value">HTL-789456123</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Amenities:</span>
+                            <span class="detail-value">WiFi, Pool, Gym, Breakfast</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Rate Type:</span>
+                            <span class="detail-value">Non-refundable</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Parking:</span>
+                            <span class="detail-value">Valet parking included</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="important-note">
+                <div class="note-title">Important Information:</div>
+                <div class="note-text">
+                    • Please arrive at the airport 2 hours before domestic flights<br>
+                    • Valid photo ID required for all passengers during check-in<br>
+                    • E-ticket must be presented at security and boarding gate<br>
+                    • Hotel check-in requires credit card for incidentals<br>
+                    • Present this voucher at hotel reception<br>
+                    • Child policy: Children under 12 must be accompanied by adults<br>
+                    • Cancellation: Flight non-refundable, Hotel non-refundable after July 10, 2025
+                </div>
+            </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-section">
+            <div class="total-label">TOTAL AMOUNT PAID</div>
+            <div class="total-amount">$1,247.50</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div><strong>Customer Service:</strong> 1-800-TRAVEL-1 | support@travelbooker.com</div>
+            <div style="margin-top: 5px;">Thank you for choosing TravelBooker. Have a pleasant journey!</div>
+        </div>
+    </div>
+</body>
+</html>
