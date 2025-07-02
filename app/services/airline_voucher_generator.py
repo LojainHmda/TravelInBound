@@ -178,15 +178,15 @@ class AirlineVoucherGenerator:
         
         status = self.booking.status.replace('_', ' ').title()
         
-        # Booking reference table
+        # Booking reference table with yellow-orange gradient and dark blue font
         ref_data = [
             [f'Booking Reference: {self.booking.reference_number}', status]
         ]
         
         ref_table = Table(ref_data, colWidths=[8*inch, 2*inch])
         ref_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f5f5f5')),
-            ('TEXTCOLOR', (0, 0), (0, 0), colors.black),
+            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor('#FFB347')),  # Yellow-orange gradient color
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),   # Dark blue font
             ('TEXTCOLOR', (1, 0), (1, 0), colors.white),
             ('BACKGROUND', (1, 0), (1, 0), colors.green),
             ('ALIGN', (0, 0), (0, 0), 'LEFT'),
@@ -395,6 +395,8 @@ class AirlineVoucherGenerator:
         
         # Hotel details table
         hotel_table_data = [
+            ['Address:', hotel_details['address']],
+            ['Phone Number:', hotel_details['phone']],
             ['Check-in:', hotel_details['checkin']],
             ['Check-out:', hotel_details['checkout']],
             ['Total Nights:', hotel_details['nights']],
@@ -575,6 +577,7 @@ class AirlineVoucherGenerator:
         hotel_details = {
             'name': hotel_name,
             'address': address if address else "Contact hotel for address",
+            'phone': phone if phone else "Contact hotel for number",
             'rating': "See hotel details",
             'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')}" if hotel_service.start_date else "See booking",
             'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')}" if hotel_service.end_date else "See booking", 
