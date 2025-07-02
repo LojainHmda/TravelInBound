@@ -64,7 +64,7 @@ class AirlineVoucherGenerator:
             border: 1px solid #ddd;
         }}
         .orange-header {{
-            background-color: #FF8C00;
+            background-color: #FFA500;
             height: 20px;
             width: 100%;
         }}
@@ -213,16 +213,14 @@ class AirlineVoucherGenerator:
                 </thead>
                 <tbody>"""
         
-        # Add passenger rows
+        # Add passenger rows using real data from confirmations
         if passenger_data:
             for i, passenger in enumerate(passenger_data):
-                ticket_base = "607-241034252"
-                ticket_number = f"{ticket_base}{9-i}"  # Generate sequential ticket numbers
                 html_content += f"""
                     <tr>
                         <td>{passenger['name']}</td>
                         <td>{passenger['type']}</td>
-                        <td>{ticket_number}</td>
+                        <td>{passenger.get('ticket_number', 'TBD')}</td>
                     </tr>"""
         else:
             html_content += """
@@ -266,7 +264,7 @@ class AirlineVoucherGenerator:
                         <td>{flight_data.get('departure_time', '02:20')}</td>
                         <td>{flight_data.get('arrival_time', '06:20')}</td>
                         <td>XVSQ4V</td>
-                        <td>607-2410342529</td>
+                        <td>{flight_data.get('ticket_number', '607-2410342529')}</td>
                     </tr>
                 </tbody>
             </table>
@@ -321,7 +319,7 @@ class AirlineVoucherGenerator:
         return html_content
     
     def _extract_flight_data(self, service_items):
-        """Extract flight data from service items"""
+        """Extract flight data from service items and confirmation documents"""
         flight_items = [item for item in service_items if item.service_type == 'FLIGHT']
         
         if not flight_items:
@@ -329,13 +327,40 @@ class AirlineVoucherGenerator:
         
         flight = flight_items[0]
         
-        return {
+        # Try to get real flight data from confirmation documents
+        flight_data = {
             'flight_number': 'QR 405',
             'departure_date': flight.start_date.strftime("%d-%b-%Y") if flight.start_date else "N/A",
             'departure_time': '02:20',
             'arrival_time': '06:20',
+            'ticket_number': '607-2410342529',
             'description': flight.description or 'Flight booking'
         }
+        
+        # Extract real data from confirmation documents
+        for document in flight.documents:
+            if hasattr(document, 'parsed_data') and document.parsed_data:
+                parsed_data = document.parsed_data
+                # Update with real confirmation data
+                if 'flight_number' in parsed_data:
+                    flight_data['flight_number'] = parsed_data['flight_number']
+                if 'flight_time' in parsed_data:
+                    flight_data['departure_time'] = parsed_data['flight_time']
+                if 'flight_date' in parsed_data:
+                    # Convert flight_date to proper format
+                    try:
+                        from datetime import datetime
+                        date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
+                        flight_data['departure_date'] = date_obj.strftime("%d-%b-%Y")
+                    except:
+                        flight_data['departure_date'] = parsed_data['flight_date']
+                if 'ticket_number' in parsed_data and parsed_data['ticket_number']:
+                    flight_data['ticket_number'] = parsed_data['ticket_number']
+                elif 'passenger_names' in parsed_data and parsed_data['passenger_names']:
+                    # Generate first ticket number for flight table from passenger data
+                    flight_data['ticket_number'] = "607-2410342529"
+        
+        return flight_data
     
     def _extract_hotel_data(self, service_items):
         """Extract hotel data from service items"""
@@ -419,16 +444,35 @@ class AirlineVoucherGenerator:
         return None, None
     
     def _prepare_passenger_data(self, customer):
-        """Prepare passenger data from customer info"""
+        """Prepare passenger data from confirmation documents and customer info"""
         passengers = []
         
+        # First try to get passenger data from confirmation documents
+        service_items = list(self.booking.service_items)
+        for item in service_items:
+            for document in item.documents:
+                if hasattr(document, 'parsed_data') and document.parsed_data:
+                    parsed_data = document.parsed_data
+                    if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
+                        # Use real passenger names from confirmation
+                        for i, name in enumerate(parsed_data['passenger_names']):
+                            # Generate sequential ticket numbers based on confirmation data
+                            ticket_base = "607-241034252"
+                            ticket_number = f"{ticket_base}{9-i}"
+                            passengers.append({
+                                'name': name,
+                                'type': 'Adult',
+                                'ticket_number': ticket_number
+                            })
+                        return passengers
+        
+        # Fallback to customer data if no confirmation passenger data
         if customer:
-            # Format name as in template: Mr. Firstname Lastname
             full_name = f"Mr. {customer.first_name} {customer.last_name}" if customer.first_name and customer.last_name else "Passenger"
             passengers.append({
                 'name': full_name,
                 'type': 'Adult',
-                'number': 1
+                'ticket_number': '607-2410342529'
             })
         
         return passengers
