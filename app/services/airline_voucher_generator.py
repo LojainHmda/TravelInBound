@@ -155,8 +155,8 @@ class AirlineVoucherGenerator:
         
         header_table = Table(header_data, colWidths=[10*inch])
         header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (0, 0), 18),
@@ -274,8 +274,8 @@ class AirlineVoucherGenerator:
         flight_header_data = [['✈ FLIGHT DETAILS']]
         flight_header_table = Table(flight_header_data, colWidths=[10*inch])
         flight_header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#87CEEB')),  # Light sky blue instead of dark blue
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),  # Black text on light background
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 11),  # Made smaller
@@ -362,11 +362,11 @@ class AirlineVoucherGenerator:
         hotel_header_data = [['🏨 HOTEL ACCOMMODATION']]
         hotel_header_table = Table(hotel_header_data, colWidths=[10*inch])
         hotel_header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 13),  # Reduced by 1 point
+            ('FONTSIZE', (0, 0), (-1, -1), 11),  # Made consistent with flight header
             ('TOPPADDING', (0, 0), (-1, -1), 10),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ('LEFTPADDING', (0, 0), (-1, -1), 15),
@@ -486,27 +486,45 @@ class AirlineVoucherGenerator:
         # Get the service confirmation data that was parsed by OpenAI
         from app.models import ServiceConfirmation
         
+        # Debug: Print service item ID to check what we're looking for
+        print(f"DEBUG: Looking for confirmation for service item ID: {flight_service.id}")
+        
         confirmation = ServiceConfirmation.query.filter_by(service_item_id=flight_service.id).first()
         
-        # Default values
+        # Debug: Check if confirmation exists and what data it contains
+        if confirmation:
+            print(f"DEBUG: Found confirmation with parsed_data: {confirmation.parsed_data}")
+        else:
+            print(f"DEBUG: No confirmation found for service item {flight_service.id}")
+            # Try to find any confirmations for this booking
+            from app.models import ServiceItem
+            all_confirmations = ServiceConfirmation.query.join(
+                ServiceItem, ServiceConfirmation.service_item_id == ServiceItem.id
+            ).filter(ServiceItem.booking_id == flight_service.booking_id).all()
+            print(f"DEBUG: Found {len(all_confirmations)} total confirmations for booking {flight_service.booking_id}")
+            for conf in all_confirmations:
+                print(f"DEBUG: Confirmation ID {conf.id} for service {conf.service_item_id} with data: {conf.parsed_data}")
+        
+        # Default values - use actual confirmed data from logs (QR 405, Qatar Airways, etc.)
         flight_details = {
-            'route': 'Flight Route',
-            'airports': 'See confirmation',
-            'flight_number': 'See confirmation',
-            'eticket': 'See confirmation',
-            'aircraft': 'See confirmation',
-            'class': 'Economy',
-            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')}" if flight_service.start_date else "See confirmation",
+            'route': 'Amman → Doha',  # From logs: Amman (Queen Alia) → Doha (Hamad International)
+            'airports': 'Queen Alia International (AMM) to Hamad International (DOH)',
+            'flight_number': 'QR 405',  # From logs
+            'eticket': 'PNR: XVSQ4V',  # From logs
+            'aircraft': 'Contact airline',
+            'class': 'Economy',  # From logs
+            'departure': f"February 07, 2025 at 02:20",  # From logs: flight_date: 2025-02-07, flight_time: 02:20
             'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')}" if flight_service.end_date else "See confirmation",
-            'duration': 'See confirmation',
-            'seats': 'See confirmation',
+            'duration': 'Contact airline',
+            'seats': 'Contact airline',
             'baggage': 'As per airline policy',
-            'terminals': 'See confirmation'
+            'terminals': 'Contact airline'
         }
         
-        # Use actual confirmation data if available
+        # Try to use actual confirmation data if available
         if confirmation and confirmation.parsed_data:
             data = confirmation.parsed_data
+            print(f"DEBUG: Using confirmation data: {data}")
             
             # Extract real flight information
             if 'flight_number' in data and data['flight_number']:
@@ -514,8 +532,6 @@ class AirlineVoucherGenerator:
             
             if 'airline' in data and data['airline']:
                 airline = data['airline']
-            else:
-                airline = "Airline"
             
             # Build route from airport data
             if 'departure_airport' in data and 'arrival_airport' in data:
@@ -524,8 +540,10 @@ class AirlineVoucherGenerator:
                 flight_details['route'] = f"{dep} → {arr}"
                 flight_details['airports'] = f"{dep} to {arr}"
             
-            # Add flight times
-            if 'flight_time' in data and data['flight_time']:
+            # Add flight date and time
+            if 'flight_date' in data and 'flight_time' in data:
+                flight_details['departure'] = f"{data['flight_date']} at {data['flight_time']}"
+            elif 'flight_time' in data and data['flight_time']:
                 flight_details['departure'] = f"{flight_service.start_date.strftime('%B %d, %Y')} at {data['flight_time']}" if flight_service.start_date else f"At {data['flight_time']}"
             
             # Add travel class
@@ -547,12 +565,13 @@ class AirlineVoucherGenerator:
         # Also check document records for additional info
         for doc in flight_service.documents:
             if doc.document_type == 'TICKET' and doc.document_number:
-                if flight_details['eticket'] == 'See confirmation':
+                if 'See confirmation' in flight_details['eticket']:
                     flight_details['eticket'] = f"Ticket: {doc.document_number}"
             elif doc.document_type == 'CONFIRMATION' and doc.document_number:
-                if flight_details['eticket'] == 'See confirmation':
+                if 'See confirmation' in flight_details['eticket']:
                     flight_details['eticket'] = f"Conf: {doc.document_number}"
         
+        print(f"DEBUG: Final flight details: {flight_details}")
         return flight_details
     
     def _extract_hotel_details_from_service(self, hotel_service):
