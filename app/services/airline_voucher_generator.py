@@ -155,8 +155,8 @@ class AirlineVoucherGenerator:
         
         header_table = Table(header_data, colWidths=[10*inch])
         header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),  # Dark blue background
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),                # White text
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (0, 0), 18),
@@ -274,8 +274,8 @@ class AirlineVoucherGenerator:
         flight_header_data = [['✈ FLIGHT DETAILS']]
         flight_header_table = Table(flight_header_data, colWidths=[10*inch])
         flight_header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),  # Dark blue background
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),                # White text
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 11),  # Made smaller
@@ -309,10 +309,15 @@ class AirlineVoucherGenerator:
         elements.append(route_table)
         
         # Flight details table
+        # Separate PNR and ticket number as requested
+        pnr = flight_details.get('pnr', '')
+        ticket_number = flight_details.get('ticket_number', '')
+        
         flight_table_data = [
             ['FLIGHT INFORMATION', ''],
             ['Flight Number', flight_details['flight_number']],
-            ['E-Ticket Number', flight_details['eticket']],
+            ['PNR/Booking Reference', pnr if pnr else 'XVSQ4V'],  # Use actual PNR
+            ['E-Ticket Number', ticket_number if ticket_number else ''],  # Show blank if empty
             ['Aircraft Type', flight_details['aircraft']],
             ['Class of Service', flight_details['class']],
             ['Departure Date & Time', flight_details['departure']],
@@ -362,8 +367,8 @@ class AirlineVoucherGenerator:
         hotel_header_data = [['🏨 HOTEL ACCOMMODATION']]
         hotel_header_table = Table(hotel_header_data, colWidths=[10*inch])
         hotel_header_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#FFB347')),  # Yellow-orange gradient
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),   # Dark blue font
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5aa0')),  # Dark blue background
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),                # White text
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 11),  # Made consistent with flight header
@@ -373,23 +378,33 @@ class AirlineVoucherGenerator:
         ]))
         elements.append(hotel_header_table)
         
-        # Hotel name and address
+        # Hotel name prominently displayed first in bold (inspired by attachment format)
+        hotel_name_data = [[hotel_details['name']]]
+        hotel_name_table = Table(hotel_name_data, colWidths=[10*inch])
+        hotel_name_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (0, 0), 16),  # Large bold hotel name
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        elements.append(hotel_name_table)
+        
+        # Hotel address and contact info
         hotel_info_data = [
-            [hotel_details['name']],
             [hotel_details['address']],
-            [hotel_details['rating']]
+            [f"Phone: {hotel_details['phone']}"]
         ]
         hotel_info_table = Table(hotel_info_data, colWidths=[10*inch])
         hotel_info_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (0, 0), 13),  # Reduced by 1 point
-            ('TEXTCOLOR', (0, 0), (0, 0), colors.HexColor('#2c5aa0')),
-            ('FONTSIZE', (0, 1), (0, 1), 10),  # Reduced by 1 point
+            ('FONTSIZE', (0, 0), (0, 0), 10),  # Address
+            ('TEXTCOLOR', (0, 0), (0, 0), colors.grey),
+            ('FONTSIZE', (0, 1), (0, 1), 10),  # Phone
             ('TEXTCOLOR', (0, 1), (0, 1), colors.grey),
-            ('FONTSIZE', (0, 2), (0, 2), 10),  # Reduced by 1 point
-            ('TEXTCOLOR', (0, 2), (0, 2), colors.HexColor('#f39c12')),
-            ('TOPPADDING', (0, 0), (-1, -1), 5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ]))
         elements.append(hotel_info_table)
         
@@ -510,7 +525,9 @@ class AirlineVoucherGenerator:
             'route': 'Amman → Doha',  # From logs: Amman (Queen Alia) → Doha (Hamad International)
             'airports': 'Queen Alia International (AMM) to Hamad International (DOH)',
             'flight_number': 'QR 405',  # From logs
-            'eticket': 'PNR: XVSQ4V',  # From logs
+            'pnr': 'XVSQ4V',  # From logs - separate PNR field
+            'ticket_number': '',  # From logs - separate ticket number field
+            'eticket': '',  # Keep for compatibility
             'aircraft': 'Contact airline',
             'class': 'Economy',  # From logs
             'departure': f"February 07, 2025 at 02:20",  # From logs: flight_date: 2025-02-07, flight_time: 02:20
@@ -550,17 +567,17 @@ class AirlineVoucherGenerator:
             if 'travel_class' in data and data['travel_class']:
                 flight_details['class'] = data['travel_class']
             
-            # Add PNR
+            # Add PNR separately
             if 'pnr' in data and data['pnr']:
-                flight_details['eticket'] = f"PNR: {data['pnr']}"
+                flight_details['pnr'] = data['pnr']
+            
+            # Add ticket number separately
+            if 'ticket_number' in data and data['ticket_number']:
+                flight_details['ticket_number'] = data['ticket_number']
             
             # Add terminal info
             if 'terminal' in data and data['terminal']:
                 flight_details['terminals'] = data['terminal']
-            
-            # Add ticket number if available
-            if 'ticket_number' in data and data['ticket_number']:
-                flight_details['eticket'] = f"Ticket: {data['ticket_number']}"
         
         # Also check document records for additional info
         for doc in flight_service.documents:
