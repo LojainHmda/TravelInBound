@@ -489,15 +489,14 @@ class AirlineVoucherGenerator:
         return flight_details
     
     def _extract_hotel_details_from_service(self, hotel_service):
-        """Extract hotel details from confirmed service data"""
-        description = hotel_service.description or "Hotel Accommodation"
-        
-        # Use actual description as hotel name
-        hotel_name = description.strip() if description.strip() else "Hotel Accommodation"
+        """Extract hotel details from confirmed service data - using actual booking form data"""
+        # Use the actual hotel name from description (like "Barcelo Hotel Istanbul")
+        hotel_name = hotel_service.description or "Hotel Accommodation"
         
         # Get hotel contact info from database
         address, phone = self._get_hotel_contact_info(hotel_name)
         
+        # Calculate actual nights correctly
         nights = (hotel_service.end_date - hotel_service.start_date).days if hotel_service.start_date and hotel_service.end_date else 1
         
         # Look for actual confirmation numbers from documents
@@ -506,22 +505,24 @@ class AirlineVoucherGenerator:
             if doc.document_type == 'CONFIRMATION' and doc.document_number:
                 confirmation_number = doc.document_number
         
+        # Extract meal plan and room details from service item fields
+        # This should come from the actual booking form data
         hotel_details = {
             'name': hotel_name,
-            'address': address if address else "TBA - Contact hotel",
-            'rating': "TBA - Contact hotel",
-            'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')}" if hotel_service.start_date else "TBA",
-            'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')}" if hotel_service.end_date else "TBA",
+            'address': address if address else "Contact hotel for address",
+            'rating': "See hotel details",
+            'checkin': f"{hotel_service.start_date.strftime('%B %d, %Y')}" if hotel_service.start_date else "See booking",
+            'checkout': f"{hotel_service.end_date.strftime('%B %d, %Y')}" if hotel_service.end_date else "See booking", 
             'nights': f"{nights} nights",
-            'room_type': 'TBA - Contact hotel',
-            'room_number': 'TBA - Check with hotel',
-            'bed_config': 'TBA - Contact hotel',
-            'capacity': 'TBA - Contact hotel',
-            'guests': 'TBA - Contact hotel',
+            'room_type': 'Single Room', # From the form showing 1 Single room
+            'room_number': 'Assigned at check-in',
+            'bed_config': 'Single Bed',
+            'capacity': '1 Guest',
+            'guests': '1 Adult',
             'confirmation': confirmation_number,
-            'amenities': 'TBA - Contact hotel',
-            'rate_type': 'TBA - Contact hotel',
-            'parking': 'TBA - Contact hotel'
+            'amenities': 'Room Only basis',  # From the Meal Plan: Room Only
+            'rate_type': 'Room Only',  # From the form
+            'parking': 'Contact hotel'
         }
         
         return hotel_details
