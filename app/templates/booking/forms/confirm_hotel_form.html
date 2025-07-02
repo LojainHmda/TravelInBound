@@ -20,12 +20,45 @@
 
 <div class="row mb-3">
     <div class="col-md-6">
+        <label class="form-label">Hotel Address</label>
+        <input type="text" name="hotel_address" class="form-control" value="{{ confirmation_data.hotel_address }}" placeholder="Full hotel address">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Hotel Phone Number</label>
+        <input type="text" name="hotel_phone" class="form-control" value="{{ confirmation_data.hotel_phone }}" placeholder="e.g., +90 212 555 0000">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
         <label class="form-label">From Date</label>
         <input type="date" name="from_date" class="form-control" value="{{ confirmation_data.from_date }}" required>
     </div>
     <div class="col-md-6">
         <label class="form-label">To Date</label>
         <input type="date" name="to_date" class="form-control" value="{{ confirmation_data.to_date }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Check-in Time</label>
+        <input type="time" name="checkin_time" class="form-control" value="{{ confirmation_data.checkin_time }}" placeholder="e.g., 15:00">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Check-out Time</label>
+        <input type="time" name="checkout_time" class="form-control" value="{{ confirmation_data.checkout_time }}" placeholder="e.g., 12:00">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Room Number(s)</label>
+        <input type="text" name="room_number" class="form-control" value="{{ confirmation_data.room_number }}" placeholder="e.g., 1205, 1206">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Room Type</label>
+        <input type="text" name="room_type" class="form-control" value="{{ confirmation_data.room_type }}" placeholder="e.g., Standard Double, Deluxe Suite">
     </div>
 </div>
 

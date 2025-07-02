@@ -26,25 +26,12 @@ def generate_voucher(booking_id):
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher PDF using airline generator
+        # Generate the voucher HTML using airline generator
         generator = AirlineVoucherGenerator(booking)
-        voucher_buffer = generator.generate_pdf()
+        voucher_html = generator.generate_html()
         
-        # Create temporary file for download
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
-        temp_file.write(voucher_buffer.getvalue())
-        temp_file.close()
-        
-        # Generate filename
-        filename = f"Voucher_{booking.reference_number}.pdf"
-        
-        # Return the file for download
-        return send_file(
-            temp_file.name,
-            as_attachment=True,
-            download_name=filename,
-            mimetype='application/pdf'
-        )
+        # Return HTML voucher directly
+        return voucher_html
         
     except Exception as e:
         flash(f'Error generating voucher: {str(e)}', 'error')

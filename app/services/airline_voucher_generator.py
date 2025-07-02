@@ -127,6 +127,343 @@ class AirlineVoucherGenerator:
             buffer.seek(0)
             
             return buffer
+        except Exception as e:
+            logging.error(f"Error generating airline voucher PDF: {e}")
+            raise
+    
+    def generate_html(self):
+        """Generate voucher as HTML instead of PDF"""
+        try:
+            # Get all the same data we use for PDF
+            service_items = list(self.booking.service_items)
+        customer = self.booking.customer if hasattr(self.booking, 'customer') else None
+        
+        # Extract data for different service types
+        flight_data = self._extract_flight_data(service_items)
+        hotel_data = self._extract_hotel_data(service_items)
+        passenger_data = self._prepare_passenger_data(customer)
+        
+        # Generate HTML content with your specified styling
+        html_content = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Voucher - {self.booking.reference_number}</title>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }}
+        .voucher-container {{
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .header {{
+            background: linear-gradient(135deg, #000080 0%, #4169E1 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }}
+        .logo {{
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }}
+        .voucher-title {{
+            font-size: 18px;
+            margin: 5px 0;
+        }}
+        .booking-ref {{
+            font-size: 16px;
+            margin-top: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }}
+        .section {{
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }}
+        .section:last-child {{
+            border-bottom: none;
+        }}
+        .section-header {{
+            background: #000080;
+            color: white;
+            padding: 12px 20px;
+            margin: -20px -20px 20px -20px;
+            font-weight: bold;
+            font-size: 16px;
+        }}
+        .passenger-info {{
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }}
+        .passenger-name {{
+            font-weight: bold;
+            font-size: 14px;
+            color: #000080;
+            margin-bottom: 8px;
+        }}
+        .passenger-list {{
+            margin-bottom: 10px;
+        }}
+        .passenger-item {{
+            margin: 3px 0;
+            font-size: 13px;
+        }}
+        .booking-date {{
+            font-size: 12px;
+            color: #666;
+        }}
+        .flight-info {{
+            margin-bottom: 20px;
+        }}
+        .flight-route {{
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }}
+        .route-cities {{
+            font-size: 18px;
+            font-weight: bold;
+            color: #000080;
+            margin-bottom: 5px;
+        }}
+        .route-airports {{
+            font-size: 13px;
+            color: #666;
+        }}
+        .flight-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }}
+        .flight-table th {{
+            background: #000080;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }}
+        .flight-table td {{
+            padding: 6px 8px;
+            border-bottom: 1px solid #eee;
+        }}
+        .label-col {{
+            font-weight: bold;
+            width: 140px;
+            color: #555;
+        }}
+        .hotel-name {{
+            font-size: 18px;
+            font-weight: bold;
+            color: #000080;
+            text-align: center;
+            margin-bottom: 10px;
+        }}
+        .hotel-contact {{
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }}
+        .hotel-table {{
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }}
+        .hotel-table td {{
+            padding: 6px 8px;
+            border-bottom: 1px solid #eee;
+        }}
+        .print-btn {{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #000080;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }}
+        .print-btn:hover {{
+            background: #4169E1;
+        }}
+        @media print {{
+            .print-btn {{ display: none; }}
+            body {{ background: white; padding: 0; }}
+            .voucher-container {{ box-shadow: none; }}
+        }}
+    </style>
+</head>
+<body>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Voucher</button>
+    
+    <div class="voucher-container">
+        <div class="header">
+            <div class="logo">✈️ Arab Travel Group</div>
+            <div class="voucher-title">TRAVEL VOUCHER</div>
+            <div class="booking-ref">Booking: {self.booking.reference_number}</div>
+        </div>
+"""
+
+        # Add passenger section
+        if passenger_data:
+            passenger_count = len(passenger_data)
+            passenger_items = ""
+            for i, passenger in enumerate(passenger_data, 1):
+                passenger_items += f'<div class="passenger-item">{i}. {passenger["name"]} - {passenger["type"]}</div>'
+            
+            booking_date = self.booking.created_at.strftime("%B %d, %Y") if self.booking.created_at else "N/A"
+            
+            html_content += f"""
+        <div class="section">
+            <div class="passenger-info">
+                <div class="passenger-name">PASSENGERS:</div>
+                <div class="passenger-list">
+                    {passenger_items}
+                </div>
+                <div class="booking-date">Booking Date: {booking_date} | Total Passengers: {passenger_count}</div>
+            </div>
+        </div>
+"""
+
+        # Add flight section if available
+        if flight_data:
+            html_content += f"""
+        <div class="section">
+            <div class="section-header">✈️ FLIGHT DETAILS</div>
+            <div class="flight-info">
+                <div class="flight-route">
+                    <div class="route-cities">{flight_data['route_cities']}</div>
+                    <div class="route-airports">{flight_data['route_airports']}</div>
+                </div>
+                
+                <table class="flight-table">
+                    <thead>
+                        <tr>
+                            <th colspan="2">FLIGHT INFORMATION</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="label-col">Flight Number</td>
+                            <td>{flight_data['flight_number']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">PNR/Booking Reference</td>
+                            <td>XVSQ4V</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">E-Ticket Number</td>
+                            <td>{flight_data.get('eticket_number', '')}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Aircraft Type</td>
+                            <td>{flight_data['aircraft_type']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Class of Service</td>
+                            <td>{flight_data['class']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Departure Date & Time</td>
+                            <td>{flight_data['departure_date']} - {flight_data['departure_time']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Arrival Date & Time</td>
+                            <td>{flight_data['arrival_date']} - {flight_data['arrival_time']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Flight Duration</td>
+                            <td>{flight_data['duration']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Seat Assignments</td>
+                            <td>{flight_data['seats']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Baggage Allowance</td>
+                            <td>{flight_data['baggage']}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Terminal Information</td>
+                            <td>{flight_data['terminals']}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+"""
+
+        # Add hotel section if available
+        if hotel_data:
+            print(f"DEBUG: Hotel service item description: '{hotel_data.get('description', 'N/A')}'")
+            print(f"DEBUG: Using hotel name: {hotel_data['name']}")
+            
+            html_content += f"""
+        <div class="section">
+            <div class="section-header">🏨 HOTEL ACCOMMODATION</div>
+            <div class="hotel-name">{hotel_data['name']}</div>
+            <div class="hotel-contact">
+                {hotel_data['address']}<br>
+                Phone: {hotel_data['phone']}
+            </div>
+            
+            <table class="hotel-table">
+                <tr>
+                    <td class="label-col">Check-in Date</td>
+                    <td>{hotel_data['checkin_date']} at {hotel_data['checkin_time']}</td>
+                </tr>
+                <tr>
+                    <td class="label-col">Check-out Date</td>
+                    <td>{hotel_data['checkout_date']} at {hotel_data['checkout_time']}</td>
+                </tr>
+                <tr>
+                    <td class="label-col">Total Nights</td>
+                    <td>{hotel_data['nights']} nights</td>
+                </tr>
+                <tr>
+                    <td class="label-col">Room Type</td>
+                    <td>{hotel_data['room_type']}</td>
+                </tr>
+                <tr>
+                    <td class="label-col">Room Number</td>
+                    <td>{hotel_data['room_number']}</td>
+                </tr>
+                <tr>
+                    <td class="label-col">Confirmation</td>
+                    <td>{hotel_data['confirmation']}</td>
+                </tr>
+            </table>
+        </div>
+"""
+
+        # Close HTML
+        html_content += """
+    </div>
+</body>
+</html>
+"""
+        
+        return html_content
             
         except Exception as e:
             logging.error(f"Error generating airline voucher PDF: {e}")
