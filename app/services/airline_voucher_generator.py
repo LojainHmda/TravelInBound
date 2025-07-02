@@ -205,28 +205,61 @@ class AirlineVoucherGenerator:
         return elements
     
     def _build_pdf_passenger_section(self):
-        """Build PDF passenger section"""
+        """Build PDF passenger section using actual confirmation data"""
         elements = []
         styles = self._setup_styles()
+        
+        # Get passenger names from flight confirmations
+        from app.models import ServiceConfirmation, ServiceItem
+        
+        passenger_names = []
+        total_passengers = 0
+        
+        # Look for flight services with confirmation data
+        flight_services = ServiceItem.query.filter_by(booking_id=self.booking.id, service_type='Flight').all()
+        for flight_service in flight_services:
+            confirmation = ServiceConfirmation.query.filter_by(service_item_id=flight_service.id).first()
+            if confirmation and confirmation.parsed_data:
+                data = confirmation.parsed_data
+                if 'passenger_names' in data and data['passenger_names']:
+                    passenger_names.extend(data['passenger_names'])
+                if 'passenger_count' in data:
+                    count_data = data['passenger_count']
+                    if isinstance(count_data, dict):
+                        adults = int(count_data.get('adults', 0))
+                        children = int(count_data.get('children', 0))
+                        infants = int(count_data.get('infants', 0))
+                        total_passengers = adults + children + infants
+        
+        # Remove duplicates while preserving order
+        unique_passengers = list(dict.fromkeys(passenger_names))
         
         # Passenger header with more spacing
         passenger_header = Paragraph("PASSENGERS:", styles['PassengerName'])
         elements.append(passenger_header)
-        elements.append(Spacer(1, 0.1*inch))  # Add extra spacing
+        elements.append(Spacer(1, 0.1*inch))
         
-        # Customer info with better spacing
-        customer = self.booking.customer
-        if customer:
-            passenger_name = f"1. {customer.last_name.upper()}, {customer.first_name.upper()} - Adult"
-            passenger_para = Paragraph(passenger_name, styles['Normal'])
-            elements.append(passenger_para)
-            elements.append(Spacer(1, 0.08*inch))  # Add spacing after passenger name
+        # Add actual passenger names if available
+        if unique_passengers:
+            for i, passenger_name in enumerate(unique_passengers, 1):
+                passenger_para = Paragraph(f"{i}. {passenger_name.upper()} - Adult", styles['Normal'])
+                elements.append(passenger_para)
+                elements.append(Spacer(1, 0.08*inch))
+        else:
+            # Fallback to customer info if no confirmation data
+            customer = self.booking.customer
+            if customer:
+                passenger_name = f"1. {customer.last_name.upper()}, {customer.first_name.upper()} - Adult"
+                passenger_para = Paragraph(passenger_name, styles['Normal'])
+                elements.append(passenger_para)
+                elements.append(Spacer(1, 0.08*inch))
+                total_passengers = 1
         
-        # Booking date with spacing
+        # Booking date with actual passenger count
         booking_date = self.booking.created_at.strftime("%B %d, %Y") if self.booking.created_at else "N/A"
-        date_para = Paragraph(f"Booking Date: {booking_date} | Total Passengers: 1", styles['Normal'])
+        date_para = Paragraph(f"Booking Date: {booking_date} | Total Passengers: {total_passengers}", styles['Normal'])
         elements.append(date_para)
-        elements.append(Spacer(1, 0.25*inch))  # Increased spacing after section
+        elements.append(Spacer(1, 0.25*inch))
         
         return elements
     
@@ -447,44 +480,76 @@ class AirlineVoucherGenerator:
         return elements
     
     def _extract_flight_details_from_service(self, flight_service):
-        """Extract flight details from confirmed service data"""
-        # Look for service confirmations with flight details
-        description = flight_service.description or ""
+        """Extract flight details from confirmed service data using actual confirmation data"""
+        # Get the service confirmation data that was parsed by OpenAI
+        from app.models import ServiceConfirmation
         
-        # Parse flight number from description
-        import re
-        flight_number = "TBA"
-        if description:
-            flight_match = re.search(r'([A-Z]{2,3}\s*\d+)', description, re.IGNORECASE)
-            if flight_match:
-                flight_number = flight_match.group(1).upper().replace(' ', ' ')
+        confirmation = ServiceConfirmation.query.filter_by(service_item_id=flight_service.id).first()
         
-        # Parse route information from description
-        route_parts = description.split() if description else []
-        route = f"{route_parts[0] if route_parts else 'Departure'} → {route_parts[-1] if len(route_parts) > 1 else 'Arrival'}"
-        
-        # Only use real data from the service
+        # Default values
         flight_details = {
-            'route': route,
-            'airports': f"As per itinerary ({description})" if description else "As per booking confirmation",
-            'flight_number': flight_number,
-            'eticket': f"TBA - Check with airline",  # Only show if we have actual ticket docs
-            'aircraft': 'TBA - Check with airline',
-            'class': 'As booked',
-            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')}" if flight_service.start_date else "TBA",
-            'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')}" if flight_service.end_date else "TBA",
-            'duration': 'TBA - Check with airline',  # Don't make up durations
-            'seats': 'TBA - Check with airline',
+            'route': 'Flight Route',
+            'airports': 'See confirmation',
+            'flight_number': 'See confirmation',
+            'eticket': 'See confirmation',
+            'aircraft': 'See confirmation',
+            'class': 'Economy',
+            'departure': f"{flight_service.start_date.strftime('%B %d, %Y')}" if flight_service.start_date else "See confirmation",
+            'arrival': f"{flight_service.end_date.strftime('%B %d, %Y')}" if flight_service.end_date else "See confirmation",
+            'duration': 'See confirmation',
+            'seats': 'See confirmation',
             'baggage': 'As per airline policy',
-            'terminals': 'TBA - Check with airline'
+            'terminals': 'See confirmation'
         }
         
-        # Look for actual ticket documents to get real e-ticket numbers
+        # Use actual confirmation data if available
+        if confirmation and confirmation.parsed_data:
+            data = confirmation.parsed_data
+            
+            # Extract real flight information
+            if 'flight_number' in data and data['flight_number']:
+                flight_details['flight_number'] = data['flight_number']
+            
+            if 'airline' in data and data['airline']:
+                airline = data['airline']
+            else:
+                airline = "Airline"
+            
+            # Build route from airport data
+            if 'departure_airport' in data and 'arrival_airport' in data:
+                dep = data['departure_airport']
+                arr = data['arrival_airport']
+                flight_details['route'] = f"{dep} → {arr}"
+                flight_details['airports'] = f"{dep} to {arr}"
+            
+            # Add flight times
+            if 'flight_time' in data and data['flight_time']:
+                flight_details['departure'] = f"{flight_service.start_date.strftime('%B %d, %Y')} at {data['flight_time']}" if flight_service.start_date else f"At {data['flight_time']}"
+            
+            # Add travel class
+            if 'travel_class' in data and data['travel_class']:
+                flight_details['class'] = data['travel_class']
+            
+            # Add PNR
+            if 'pnr' in data and data['pnr']:
+                flight_details['eticket'] = f"PNR: {data['pnr']}"
+            
+            # Add terminal info
+            if 'terminal' in data and data['terminal']:
+                flight_details['terminals'] = data['terminal']
+            
+            # Add ticket number if available
+            if 'ticket_number' in data and data['ticket_number']:
+                flight_details['eticket'] = f"Ticket: {data['ticket_number']}"
+        
+        # Also check document records for additional info
         for doc in flight_service.documents:
             if doc.document_type == 'TICKET' and doc.document_number:
-                flight_details['eticket'] = doc.document_number
+                if flight_details['eticket'] == 'See confirmation':
+                    flight_details['eticket'] = f"Ticket: {doc.document_number}"
             elif doc.document_type == 'CONFIRMATION' and doc.document_number:
-                flight_details['eticket'] = f"Conf: {doc.document_number}"
+                if flight_details['eticket'] == 'See confirmation':
+                    flight_details['eticket'] = f"Conf: {doc.document_number}"
         
         return flight_details
     
