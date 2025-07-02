@@ -459,24 +459,27 @@ class AirlineVoucherGenerator:
                 reader = csv.DictReader(file)
                 for row in reader:
                     if hotel_name and row.get('Hotel Name'):
-                        if hotel_name.lower() in row['Hotel Name'].lower() or row['Hotel Name'].lower() in hotel_name.lower():
+                        # Exact match for Barcelo Hotel Istanbul
+                        if hotel_name.strip().lower() == row['Hotel Name'].strip().lower():
+                            # Get full address from the CSV
                             address_parts = []
                             if row.get('Address'):
                                 address_parts.append(row['Address'].strip())
-                            if row.get('address line2'):
+                            if row.get('address line2') and row['address line2'].strip():
                                 address_parts.append(row['address line2'].strip())
-                            if row.get('Address line3'):
+                            if row.get('Address line3') and row['Address line3'].strip():
                                 address_parts.append(row['Address line3'].strip())
                             
-                            address = ', '.join([part for part in address_parts if part and part != ','])
+                            # Join address parts properly
+                            address = ', '.join([part for part in address_parts if part and part.strip() and part != ','])
                             
-                            phone = None
-                            for col in ['address 4', 'Address line4', 'phone']:
-                                if row.get(col) and '+' in str(row[col]):
-                                    phone = row[col].strip()
-                                    break
+                            # Get phone number from address 4 column
+                            phone = row.get('address 4', '').strip()
+                            if not phone or '+' not in phone:
+                                # Try other phone columns if available
+                                phone = row.get('Address line4', '').strip()
                             
-                            return address if address else None, phone
+                            return address if address else None, phone if phone else None
                             
         except Exception as e:
             logging.error(f"Error reading hotel CSV: {e}")
