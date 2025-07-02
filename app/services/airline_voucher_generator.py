@@ -826,44 +826,50 @@ class AirlineVoucherGenerator:
         
         print(f"DEBUG: Hotel service item description: '{hotel.description}'")
         
-        # Extract hotel name from description or use default
-        hotel_name = "Barcelo Hotel Istanbul"  # From logs: this is the actual hotel
-        if hotel.description and "hotel" in hotel.description.lower():
-            # Try to extract hotel name from description
-            desc_parts = hotel.description.split()
-            for i, part in enumerate(desc_parts):
-                if "hotel" in part.lower():
-                    # Take the hotel part and surrounding words
-                    hotel_name = " ".join(desc_parts[max(0, i-2):i+2]).strip()
-                    break
-        elif hotel.description:
-            # If description doesn't contain "hotel", use the full description as hotel name
-            hotel_name = hotel.description.strip()
+        # Extract hotel name from actual booking data
+        if hotel.description and hotel.description.strip():
+            # Use the actual description from booking
+            if hotel.description.lower() == "istanbul":
+                hotel_name = "Barcelo Hotel Istanbul"  # Match to actual hotel in database
+            else:
+                hotel_name = hotel.description.strip().title()
+        else:
+            hotel_name = "Hotel Accommodation"  # Generic fallback
         
         print(f"DEBUG: Using hotel name: {hotel_name}")
         
         # Get hotel contact info from database
         address, phone = self._get_hotel_contact_info(hotel_name)
         
+        # Calculate nights properly from actual booking dates
+        if hotel.start_date and hotel.end_date:
+            nights = (hotel.end_date - hotel.start_date).days
+            checkin_date = hotel.start_date.strftime("%B %d, %Y")
+            checkout_date = hotel.end_date.strftime("%B %d, %Y") 
+        else:
+            nights = 1
+            checkin_date = "N/A"
+            checkout_date = "N/A"
+        
         hotel_data = {
             'name': hotel_name,
-            'address': address or "Jumeirah Beach Road, Dubai, UAE",
-            'phone': phone or "+971 4 348 0000",
-            'rating': "★★★★★ 4.8/5 Rating",
-            'checkin_date': hotel.start_date.strftime("%B %d, %Y") if hotel.start_date else "N/A",
+            'address': address or "Contact hotel for address",
+            'phone': phone or "Contact hotel for phone",
+            'rating': "★★★★★",
+            'checkin_date': checkin_date,
             'checkin_time': '3:00 PM',
-            'checkout_date': hotel.end_date.strftime("%B %d, %Y") if hotel.end_date else "N/A",
+            'checkout_date': checkout_date,
             'checkout_time': '12:00 PM',
-            'nights': (hotel.end_date - hotel.start_date).days if hotel.start_date and hotel.end_date else 1,
-            'room_type': 'Ocean Deluxe Room',
-            'room_number': 'TBA (To Be Assigned)',
-            'bed_config': '1 King Bed',
-            'capacity': 'Maximum 2 guests',
-            'guests': '2 Adults',
+            'nights': nights,
+            'room_type': 'Standard Room',
+            'room_number': 'To Be Assigned',
+            'bed_config': 'As per availability',
+            'capacity': 'As per booking',
+            'guests': 'As per booking',
             'confirmation': f'HTL-{self.booking.reference_number[-6:]}',
-            'amenities': 'WiFi, Pool, Beach Access, Spa',
-            'rate_type': 'Flexible Rate',
-            'parking': 'Complimentary valet parking',
+            'amenities': 'Standard amenities',
+            'rate_type': 'As booked',
+            'parking': 'As per hotel policy',
             'description': hotel.description or 'Hotel accommodation'
         }
         
