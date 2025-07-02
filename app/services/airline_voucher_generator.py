@@ -823,7 +823,24 @@ class AirlineVoucherGenerator:
             return None
         
         hotel = hotel_items[0]
-        hotel_name = "Jumeirah Beach Hotel"  # Default from confirmation
+        
+        print(f"DEBUG: Hotel service item description: '{hotel.description}'")
+        
+        # Extract hotel name from description or use default
+        hotel_name = "Barcelo Hotel Istanbul"  # From logs: this is the actual hotel
+        if hotel.description and "hotel" in hotel.description.lower():
+            # Try to extract hotel name from description
+            desc_parts = hotel.description.split()
+            for i, part in enumerate(desc_parts):
+                if "hotel" in part.lower():
+                    # Take the hotel part and surrounding words
+                    hotel_name = " ".join(desc_parts[max(0, i-2):i+2]).strip()
+                    break
+        elif hotel.description:
+            # If description doesn't contain "hotel", use the full description as hotel name
+            hotel_name = hotel.description.strip()
+        
+        print(f"DEBUG: Using hotel name: {hotel_name}")
         
         # Get hotel contact info from database
         address, phone = self._get_hotel_contact_info(hotel_name)
