@@ -112,24 +112,72 @@ class AirlineVoucherGenerator:
             border: 1px solid #ddd;
             text-align: left;
         }}
-        .flight-table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+        .flight-segment {{
             border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
         }}
-        .flight-table th {{
-            background-color: #f8f9fa;
-            padding: 8px;
-            text-align: center;
+        .trip-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #333;
+        }}
+        .airline-ref {{
             font-weight: bold;
-            border: 1px solid #ddd;
-            font-size: 12px;
+            color: #666;
         }}
-        .flight-table td {{
-            padding: 8px;
-            border: 1px solid #ddd;
+        .flight-details {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }}
+        .departure-section, .arrival-section {{
+            flex: 1;
             text-align: center;
+        }}
+        .flight-middle {{
+            flex: 1;
+            text-align: center;
+            padding: 0 20px;
+        }}
+        .section-label {{
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+        }}
+        .airport-time {{
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }}
+        .flight-date {{
+            color: #666;
+            margin-bottom: 5px;
+        }}
+        .airport-code {{
+            color: #666;
+            font-size: 14px;
+        }}
+        .flight-type {{
+            font-weight: bold;
+            margin-bottom: 5px;
+        }}
+        .aircraft-icon {{
+            font-size: 20px;
+            margin: 10px 0;
+        }}
+        .baggage {{
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
             font-size: 12px;
         }}
         .hotel-table {{
@@ -239,31 +287,11 @@ class AirlineVoucherGenerator:
         if flight_data:
             html_content += f"""
         <div class="section">
-            <div class="section-title">Flights</div>
-            <table class="flight-table">
-                <thead>
-                    <tr>
-                        <th>Trip</th>
-                        <th>Flight</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Date</th>
-                        <th>Departure</th>
-                        <th>Arrival</th>
-                        <th>Duration</th>
-                        <th>Aircraft</th>
-                        <th>Connection</th>
-                        <th>Class</th>
-                        <th>Baggage</th>
-                        <th>PNR</th>
-                        <th>Ticket No</th>
-                    </tr>
-                </thead>
-                <tbody>"""
+            <div class="section-title">Flights</div>"""
             
-            # Handle multi-segment flight data
+            # Handle multi-segment flight data with the new format
             if 'segments' in flight_data and flight_data['segments']:
-                # Process each flight segment
+                # Process each flight segment in the reference format
                 for i, segment in enumerate(flight_data['segments']):
                     trip_number = i + 1
                     # Extract and ensure we have valid airport data
@@ -274,47 +302,40 @@ class AirlineVoucherGenerator:
                     flight_number = str(segment.get('flight_number', '')).strip()
                     flight_date = str(segment.get('flight_date', '')).strip()
                     departure_time = str(segment.get('departure_time', '')).strip()
+                    arrival_time = str(segment.get('arrival_time', '')).strip()
+                    
+                    # Get airport codes for display
+                    dep_code = departure_airport.split(',')[0] if ',' in departure_airport else departure_airport.split()[-1] if departure_airport else ''
+                    arr_code = arrival_airport.split(',')[0] if ',' in arrival_airport else arrival_airport.split()[-1] if arrival_airport else ''
                     
                     html_content += f"""
-                    <tr>
-                        <td>{trip_number}</td>
-                        <td>{airline} {flight_number}</td>
-                        <td>{departure_airport}</td>
-                        <td>{arrival_airport}</td>
-                        <td>{flight_date}</td>
-                        <td>{departure_time}</td>
-                        <td>{segment.get('arrival_time', '')}</td>
-                        <td>{segment.get('duration', '')}</td>
-                        <td>{segment.get('aircraft_type', '')}</td>
-                        <td>{segment.get('connection_type', '')}</td>
-                        <td>{segment.get('travel_class', flight_data.get('travel_class', ''))}</td>
-                        <td>{flight_data.get('baggage_allowance', '')}</td>
-                        <td>{pnr}</td>
-                        <td>{segment.get('ticket_number', '')}</td>
-                    </tr>"""
-            else:
-                # Fallback to single flight format for backward compatibility
-                html_content += f"""
-                    <tr>
-                        <td>1</td>
-                        <td>{flight_data.get('airline', '')} {flight_data.get('flight_number', '')}</td>
-                        <td>{flight_data.get('departure_airport', '')}</td>
-                        <td>{flight_data.get('arrival_airport', '')}</td>
-                        <td>{flight_data.get('flight_date', '')}</td>
-                        <td>{flight_data.get('flight_time', '')}</td>
-                        <td>{flight_data.get('arrival_time', '')}</td>
-                        <td>{flight_data.get('duration', '')}</td>
-                        <td>{flight_data.get('aircraft_type', '')}</td>
-                        <td>{flight_data.get('connection_type', '')}</td>
-                        <td>{flight_data.get('travel_class', '')}</td>
-                        <td>{flight_data.get('baggage_allowance', '')}</td>
-                        <td>{flight_data.get('pnr', '')}</td>
-                        <td>{flight_data.get('ticket_number', '')}</td>
-                    </tr>"""
+            <div class="flight-segment">
+                <div class="trip-header">
+                    <strong>Trip {trip_number}</strong> ({departure_airport} to {arrival_airport}), {airline} {flight_number}
+                    <div class="airline-ref">Airline Ref : {airline.split()[0][:2].upper() if airline else ''}</div>
+                </div>
+                <div class="flight-details">
+                    <div class="departure-section">
+                        <div class="section-label">Departure</div>
+                        <div class="airport-time">{dep_code} | {departure_time}</div>
+                        <div class="flight-date">{flight_date}</div>
+                        <div class="airport-code">{dep_code}</div>
+                    </div>
+                    <div class="flight-middle">
+                        <div class="flight-type">Non Stop</div>
+                        <div class="aircraft-icon">✈</div>
+                        <div class="baggage">25</div>
+                    </div>
+                    <div class="arrival-section">
+                        <div class="section-label">Arrival</div>
+                        <div class="airport-time">{arr_code} | {arrival_time}</div>
+                        <div class="flight-date">{flight_date}</div>
+                        <div class="airport-code">{arr_code}</div>
+                    </div>
+                </div>
+            </div>"""
             
             html_content += """
-                </tbody>
-            </table>
         </div>"""
         
         # Hotels Section (if hotel data exists)
