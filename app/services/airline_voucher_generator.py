@@ -363,70 +363,69 @@ class AirlineVoucherGenerator:
         if not flight_items:
             return None
         
-        flight = flight_items[0]
+        # Initialize flight data with segments array
+        flight_data = {
+            'segments': [],
+            'passenger_names': []
+        }
         
-        # Initialize empty flight data - only populate with authentic confirmation data
-        flight_data = {}
+        # Process ALL flight items and their confirmation documents
+        for flight_item in flight_items:
+            for document in flight_item.documents:
+                if document.document_type == 'CONFIRMATION' and document.notes:
+                    try:
+                        import json
+                        parsed_data = json.loads(document.notes)
+                        print(f"DEBUG: Processing flight document {document.id} with keys: {list(parsed_data.keys())}")
+                        
+                        # Handle multi-segment flights
+                        if 'segments' in parsed_data and parsed_data['segments']:
+                            print(f"DEBUG: Found {len(parsed_data['segments'])} segments in document {document.id}")
+                            for i, segment in enumerate(parsed_data['segments']):
+                                if segment.get('airline') and segment.get('flight_number'):
+                                    flight_data['segments'].append(segment)
+                                    print(f"DEBUG: Added segment {i}: {segment['airline']} {segment['flight_number']}")
+                        else:
+                            # Handle single flight format - convert to segment
+                            if parsed_data.get('airline') and parsed_data.get('flight_number'):
+                                single_segment = {
+                                    'airline': parsed_data.get('airline', ''),
+                                    'flight_number': parsed_data.get('flight_number', ''),
+                                    'departure_airport': parsed_data.get('departure_airport', ''),
+                                    'arrival_airport': parsed_data.get('arrival_airport', ''),
+                                    'flight_date': parsed_data.get('flight_date', ''),
+                                    'departure_time': parsed_data.get('flight_time', ''),
+                                    'arrival_time': parsed_data.get('arrival_time', ''),
+                                    'duration': parsed_data.get('duration', ''),
+                                    'connection_type': parsed_data.get('connection_type', ''),
+                                    'aircraft_type': parsed_data.get('aircraft_type', ''),
+                                }
+                                flight_data['segments'].append(single_segment)
+                                print(f"DEBUG: Converted single flight to segment: {single_segment['airline']} {single_segment['flight_number']}")
+                        
+                        # Collect passenger names from all documents (combine them)
+                        if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
+                            flight_data['passenger_names'].extend(parsed_data['passenger_names'])
+                        
+                        # Set common flight details from the most recent document
+                        flight_data['travel_class'] = parsed_data.get('travel_class', flight_data.get('travel_class', ''))
+                        flight_data['baggage_allowance'] = parsed_data.get('baggage_allowance', flight_data.get('baggage_allowance', ''))
+                        flight_data['seat_assignment'] = parsed_data.get('seat_assignment', flight_data.get('seat_assignment', ''))
+                        flight_data['ticket_number'] = parsed_data.get('ticket_number', flight_data.get('ticket_number', ''))
+                        flight_data['pnr'] = parsed_data.get('pnr', flight_data.get('pnr', ''))
+                        flight_data['terminal'] = parsed_data.get('terminal', flight_data.get('terminal', ''))
+                        
+                    except (json.JSONDecodeError, TypeError) as e:
+                        print(f"DEBUG: Failed to parse flight JSON from document {document.id}: {e}")
+                        pass
         
-        # Extract real data from confirmation documents (stored in notes as JSON)
-        for document in flight.documents:
-            if document.document_type == 'CONFIRMATION' and document.notes:
-                try:
-                    import json
-                    parsed_data = json.loads(document.notes)
-                    print(f"DEBUG: Flight confirmation data available: {list(parsed_data.keys())}")
-                    
-                    # Handle multi-segment flights
-                    if 'segments' in parsed_data and parsed_data['segments']:
-                        flight_data['segments'] = []
-                        for segment in parsed_data['segments']:
-                            # Only include segments with authentic data
-                            if segment.get('airline') and segment.get('flight_number'):
-                                flight_data['segments'].append(segment)
-                        
-                        # If we have segments, use multi-segment format
-                        if flight_data['segments']:
-                            flight_data['flight_type'] = parsed_data.get('flight_type', 'multi_city')
-                    
-                    # Extract single-flight format data for backward compatibility or when no segments
-                    if 'segments' not in flight_data or not flight_data['segments']:
-                        # Legacy single flight format
-                        flight_data['airline'] = parsed_data.get('airline', '')
-                        flight_data['flight_number'] = parsed_data.get('flight_number', '')
-                        flight_data['departure_airport'] = parsed_data.get('departure_airport', '')
-                        flight_data['arrival_airport'] = parsed_data.get('arrival_airport', '')
-                        flight_data['flight_time'] = parsed_data.get('flight_time', '')
-                        flight_data['arrival_time'] = parsed_data.get('arrival_time', '')
-                        flight_data['duration'] = parsed_data.get('duration', '')
-                        flight_data['aircraft_type'] = parsed_data.get('aircraft_type', '')
-                        flight_data['connection_type'] = parsed_data.get('connection_type', '')
-                        
-                        # Format flight date properly
-                        if parsed_data.get('flight_date'):
-                            try:
-                                from datetime import datetime
-                                date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
-                                flight_data['flight_date'] = date_obj.strftime("%d-%b-%Y")
-                            except:
-                                flight_data['flight_date'] = parsed_data['flight_date']
-                    
-                    # Common flight details that apply to all formats
-                    flight_data['travel_class'] = parsed_data.get('travel_class', '')
-                    flight_data['baggage_allowance'] = parsed_data.get('baggage_allowance', '')
-                    flight_data['seat_assignment'] = parsed_data.get('seat_assignment', '')
-                    flight_data['ticket_number'] = parsed_data.get('ticket_number', '')
-                    flight_data['pnr'] = parsed_data.get('pnr', '')
-                    flight_data['terminal'] = parsed_data.get('terminal', '')
-                    
-                    # Only include passenger names if they exist
-                    if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
-                        flight_data['passenger_names'] = parsed_data['passenger_names']
-                        
-                except (json.JSONDecodeError, TypeError) as e:
-                    print(f"DEBUG: Failed to parse flight JSON from notes: {e}")
-                    pass
+        # Remove duplicate passenger names
+        if flight_data['passenger_names']:
+            flight_data['passenger_names'] = list(dict.fromkeys(flight_data['passenger_names']))
         
-        return flight_data if flight_data else None
+        print(f"DEBUG: Final flight_data has {len(flight_data['segments'])} total segments and {len(flight_data['passenger_names'])} passengers")
+        
+        return flight_data if flight_data['segments'] else None
     
     def _extract_hotel_data(self, service_items):
         """Extract hotel data from service items and confirmation documents"""
