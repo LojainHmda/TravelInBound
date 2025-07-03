@@ -304,9 +304,35 @@ class AirlineVoucherGenerator:
                     departure_time = str(segment.get('departure_time', '')).strip()
                     arrival_time = str(segment.get('arrival_time', '')).strip()
                     
-                    # Get airport codes for display
-                    dep_code = departure_airport.split(',')[0] if ',' in departure_airport else departure_airport.split()[-1] if departure_airport else ''
-                    arr_code = arrival_airport.split(',')[0] if ',' in arrival_airport else arrival_airport.split()[-1] if arrival_airport else ''
+                    # Get airport codes for display - extract 3-letter codes properly
+                    dep_code = ''
+                    arr_code = ''
+                    
+                    # For departure airport
+                    if 'Queen Alia' in departure_airport:
+                        dep_code = 'AMM'
+                    elif 'Dhabi' in departure_airport or 'Abu Dhabi' in departure_airport:
+                        dep_code = 'AUH'
+                    elif 'Doha' in departure_airport:
+                        dep_code = 'DOH'
+                    else:
+                        # Fallback: look for 3-letter uppercase codes
+                        import re
+                        codes = re.findall(r'\b[A-Z]{3}\b', departure_airport)
+                        dep_code = codes[0] if codes else departure_airport.split()[-1][:3]
+                    
+                    # For arrival airport
+                    if 'Queen Alia' in arrival_airport:
+                        arr_code = 'AMM'
+                    elif 'Dhabi' in arrival_airport or 'Abu Dhabi' in arrival_airport:
+                        arr_code = 'AUH'
+                    elif 'Doha' in arrival_airport:
+                        arr_code = 'DOH'
+                    else:
+                        # Fallback: look for 3-letter uppercase codes
+                        import re
+                        codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
+                        arr_code = codes[0] if codes else arrival_airport.split()[-1][:3]
                     
                     html_content += f"""
             <div class="flight-segment">
@@ -445,9 +471,28 @@ class AirlineVoucherGenerator:
                                 flight_data['segments'].append(single_segment)
 
                         
-                        # Collect passenger names from all documents (combine them)
+                        # Collect passenger names ONLY for the current document/flight
+                        # Don't mix passenger names between different flight confirmations
                         if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
-                            flight_data['passenger_names'].extend(parsed_data['passenger_names'])
+                            # For multi-segment flights, assign passengers to the current segments only
+                            current_doc_passengers = parsed_data['passenger_names']
+                            segment_start_index = len(flight_data['segments']) - len(parsed_data.get('segments', [1]))
+                            
+                            # Assign passengers to segments from this document only
+                            if 'segments' in parsed_data and parsed_data['segments']:
+                                for i, segment in enumerate(parsed_data['segments']):
+                                    segment_index = segment_start_index + i
+                                    if segment_index < len(flight_data['segments']):
+                                        # Store passenger names for this specific segment
+                                        flight_data['segments'][segment_index]['passenger_names'] = current_doc_passengers
+                            else:
+                                # Single flight - assign to the last segment
+                                if flight_data['segments']:
+                                    flight_data['segments'][-1]['passenger_names'] = current_doc_passengers
+                            
+                            # Also keep global passenger list for backward compatibility
+                            if not flight_data['passenger_names']:  # Only if empty
+                                flight_data['passenger_names'] = current_doc_passengers
                         
                         # Store segment-specific data without mixing between flights
                         # Each segment should keep its own PNR, ticket number, etc.
@@ -633,31 +678,37 @@ class AirlineVoucherGenerator:
         return None, None
     
     def _prepare_passenger_data(self, customer):
-        """Prepare passenger data from confirmation documents and customer info"""
+        """Prepare passenger data from first flight segment only (to avoid mixing between flights)"""
         passengers = []
         
-        # First try to get passenger data from confirmation documents
-        service_items = list(self.booking.service_items)
-        for item in service_items:
-            for document in item.documents:
-                if document.document_type == 'CONFIRMATION' and document.notes:
-                    try:
-                        import json
-                        parsed_data = json.loads(document.notes)
-                        if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
-                            # Use real passenger names from confirmation
-                            ticket_number = parsed_data.get('ticket_number', '')
-                            for i, name in enumerate(parsed_data['passenger_names']):
-                                passengers.append({
-                                    'name': name,
-                                    'type': 'Adult',
-                                    'ticket_number': ticket_number
-                                })
-                            return passengers
-                    except (json.JSONDecodeError, TypeError):
-                        pass
+        # Get flight data using the same logic as the voucher
+        flight_data = self._extract_flight_data(self.booking.service_items)
         
-        # Fallback to customer data if no confirmation passenger data
+        if flight_data and flight_data.get('segments'):
+            # Use passenger names from the FIRST segment only to avoid mixing
+            first_segment = flight_data['segments'][0]
+            if 'passenger_names' in first_segment and first_segment['passenger_names']:
+                ticket_number = first_segment.get('ticket_number', '')
+                for name in first_segment['passenger_names']:
+                    passengers.append({
+                        'name': name,
+                        'type': 'Adult',
+                        'ticket_number': ticket_number
+                    })
+                return passengers
+            
+            # Fallback to global passenger names if segment doesn't have specific ones
+            if flight_data.get('passenger_names'):
+                # Use only the first set of passenger names to avoid duplicates
+                for name in flight_data['passenger_names']:
+                    passengers.append({
+                        'name': name,
+                        'type': 'Adult', 
+                        'ticket_number': ''
+                    })
+                return passengers
+        
+        # Final fallback to customer data if no confirmation passenger data
         if customer:
             full_name = f"Mr. {customer.first_name} {customer.last_name}" if customer.first_name and customer.last_name else "Passenger"
             passengers.append({
