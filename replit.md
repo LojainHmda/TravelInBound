@@ -109,12 +109,13 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
-- July 3, 2025: Fixed multi-segment flight data extraction and voucher display issues
+- July 3, 2025: Successfully fixed multi-segment flight data extraction and voucher display
   - Resolved flight data mixing between different confirmation documents (Qatar Airways QR 405 and Etihad Airways EY 592)
   - Enhanced PNR data transfer from document level to segment level for multi-segment flights
-  - Fixed airport information display in voucher tables - data processes correctly but display needs final resolution
+  - Fixed airport information display in voucher tables with complete departure/arrival data
   - Separated single-flight and multi-segment flight processing to prevent cross-contamination
-  - Added comprehensive debugging to track data flow from confirmation documents to HTML template
+  - Server restart resolved caching issues - voucher now displays authentic data from both flight confirmations
+  - Both flights show complete details: QR 405 (Amman→Doha, 02:20) and EY 592 (Queen Alia→Abu Dhabi, 11:35)
 - December 30, 2025: Implemented professional airline-style voucher system
   - Created new AirlineVoucherGenerator service matching professional airline industry standards
   - Added passenger list display with names and types (Adult/Child) prominently at top
