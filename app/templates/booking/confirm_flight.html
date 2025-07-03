@@ -19,6 +19,13 @@
 {% endblock %}
 
 {% block form_content %}
+<!-- Multi-Segment Flight Interface Alert -->
+<div class="alert alert-success" style="border: 3px solid #28a745; background-color: #d4edda;">
+    <i class="fas fa-check-circle me-2"></i>
+    <strong>Enhanced Multi-Segment Flight Interface</strong><br>
+    This interface supports one-way, round-trip, and multi-city flights. Use the flight type dropdown below to configure your booking.
+</div>
+
 <!-- Hidden fields to store pre-populated values for JavaScript to use -->
 <input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
 <input type="hidden" name="travel_class_value" value="{{ confirmation_data.travel_class }}">
@@ -87,22 +94,23 @@
         <!-- Flight Type Selection -->
         <div class="row mb-3">
             <div class="col-md-12">
-                <label class="form-label">Flight Type</label>
-                <select name="flight_type" id="flight_type" class="form-select" onchange="updateFlightSegments()">
+                <label class="form-label"><strong>Flight Type</strong></label>
+                <select name="flight_type" id="flight_type" class="form-select form-select-lg" onchange="updateFlightSegments()" style="border: 2px solid #0066cc;">
                     <option value="one_way">One Way</option>
                     <option value="round_trip">Round Trip</option>
                     <option value="multi_city">Multi-City</option>
                 </select>
+                <small class="text-primary fw-bold">Select flight type to see segment options</small>
             </div>
         </div>
 
         <!-- Dynamic Flight Segments Container -->
-        <div id="flightSegmentsContainer">
+        <div id="flightSegmentsContainer" style="border: 2px solid #e0e0e0; padding: 15px; border-radius: 8px; margin: 10px 0;">
             <!-- Segment 1 (always visible) -->
-            <div class="flight-segment" data-segment="1">
-                <h6 class="text-primary">
+            <div class="flight-segment" data-segment="1" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                <h6 class="text-primary" style="background-color: #007bff; color: white !important; padding: 8px; border-radius: 4px; margin: -15px -15px 15px -15px;">
                     <i class="fas fa-plane me-2"></i>Flight Segment 1
-                    <span class="segment-label ms-2 text-muted">(Outbound)</span>
+                    <span class="segment-label ms-2">(Outbound)</span>
                 </h6>
                 
                 <div class="row mb-3">
