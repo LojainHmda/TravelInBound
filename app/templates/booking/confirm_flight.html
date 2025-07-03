@@ -83,66 +83,101 @@
             </button>
             <small class="ms-2 text-muted">Supports return trips and connecting flights</small>
         </div>
-        
+
+        <!-- Flight Type Selection -->
         <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Departure Airport</label>
-                <input type="text" name="departure_airport" id="departure_airport" class="form-control" value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Type to search by airport code or name" required>
-                <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Arrival Airport</label>
-                <input type="text" name="arrival_airport" id="arrival_airport" class="form-control" value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Type to search by airport code or name" required>
-                <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
-            </div>
-        </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Airline</label>
-                <input type="text" name="airline" id="airline" class="form-control" value="{{ confirmation_data.airline|default('') }}" placeholder="Type to search by airline code or name" required>
-                <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Flight Number</label>
-                <input type="text" name="flight_number" id="flight_number" class="form-control" value="{{ confirmation_data.flight_number|default('') }}" required>
-            </div>
-        </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Date</label>
-                <input type="date" name="flight_date" id="flight_date" class="form-control" required 
-                       value="{{ confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Time</label>
-                <input type="time" name="flight_time" id="flight_time" class="form-control" value="{{ confirmation_data.flight_time|default('') }}" required>
-            </div>
-        </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <label class="form-label">Terminal</label>
-                <input type="text" name="terminal" id="terminal" class="form-control" value="{{ confirmation_data.terminal|default('') }}">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Class</label>
-                <select name="travel_class" id="travel_class" class="form-select" required>
-                    <option value="Economy" {% if confirmation_data.travel_class == 'Economy' %}selected{% endif %}>Economy</option>
-                    <option value="Premium Economy" {% if confirmation_data.travel_class == 'Premium Economy' %}selected{% endif %}>Premium Economy</option>
-                    <option value="Business" {% if confirmation_data.travel_class == 'Business' %}selected{% endif %}>Business</option>
-                    <option value="First" {% if confirmation_data.travel_class == 'First' %}selected{% endif %}>First</option>
+            <div class="col-md-12">
+                <label class="form-label">Flight Type</label>
+                <select name="flight_type" id="flight_type" class="form-select" onchange="updateFlightSegments()">
+                    <option value="one_way">One Way</option>
+                    <option value="round_trip">Round Trip</option>
+                    <option value="multi_city">Multi-City</option>
                 </select>
             </div>
-            <div class="col-md-4">
+        </div>
+
+        <!-- Dynamic Flight Segments Container -->
+        <div id="flightSegmentsContainer">
+            <!-- Segment 1 (always visible) -->
+            <div class="flight-segment" data-segment="1">
+                <h6 class="text-primary">
+                    <i class="fas fa-plane me-2"></i>Flight Segment 1
+                    <span class="segment-label ms-2 text-muted">(Outbound)</span>
+                </h6>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Departure Airport</label>
+                        <input type="text" name="segments[0][departure_airport]" class="form-control departure-airport" value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Arrival Airport</label>
+                        <input type="text" name="segments[0][arrival_airport]" class="form-control arrival-airport" value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Type to search by airport code or name" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Airline</label>
+                        <input type="text" name="segments[0][airline]" class="form-control airline" value="{{ confirmation_data.airline|default('') }}" placeholder="Type to search by airline code or name" required>
+                        <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" name="segments[0][flight_number]" class="form-control flight-number" value="{{ confirmation_data.flight_number|default('') }}" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="segments[0][flight_date]" class="form-control flight-date" required 
+                               value="{{ confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" name="segments[0][departure_time]" class="form-control departure-time" value="{{ confirmation_data.flight_time|default('') }}" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Terminal</label>
+                        <input type="text" name="segments[0][terminal]" class="form-control terminal" value="{{ confirmation_data.terminal|default('') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Class</label>
+                        <select name="segments[0][travel_class]" class="form-select travel-class" required>
+                            <option value="Economy" {% if confirmation_data.travel_class == 'Economy' %}selected{% endif %}>Economy</option>
+                            <option value="Premium Economy" {% if confirmation_data.travel_class == 'Premium Economy' %}selected{% endif %}>Premium Economy</option>
+                            <option value="Business" {% if confirmation_data.travel_class == 'Business' %}selected{% endif %}>Business</option>
+                            <option value="First" {% if confirmation_data.travel_class == 'First' %}selected{% endif %}>First</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="segments[0][arrival_time]" class="form-control arrival-time">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Segment Button -->
+        <div class="mb-3" id="addSegmentContainer" style="display: none;">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="addFlightSegment()">
+                <i class="fas fa-plus me-2"></i>Add Flight Segment
+            </button>
+        </div>
+
+        <!-- Common Flight Information -->
+        <div class="row mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Ticket Number</label>
                 <input type="text" name="ticket_number" id="ticket_number" class="form-control" value="{{ confirmation_data.ticket_number|default('') }}">
             </div>
-        </div>
-        
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <label class="form-label">PNR (Booking Reference)</label>
                 <input type="text" name="pnr" id="booking_reference" class="form-control" value="{{ confirmation_data.pnr|default('') }}">
                 <small class="text-muted">Airline's 6-character reference code</small>
@@ -291,6 +326,198 @@ function populateFlightDetailsFromTicket(flightData) {
     }, 5000);
 }
 
+// Flight segments management
+let segmentCount = 1;
+
+function updateFlightSegments() {
+    const flightType = document.getElementById('flight_type').value;
+    const container = document.getElementById('flightSegmentsContainer');
+    const addButton = document.getElementById('addSegmentContainer');
+    
+    // Reset to one segment
+    const segments = container.querySelectorAll('.flight-segment');
+    for (let i = 1; i < segments.length; i++) {
+        segments[i].remove();
+    }
+    segmentCount = 1;
+    
+    // Update first segment label
+    const firstSegmentLabel = container.querySelector('.segment-label');
+    
+    if (flightType === 'round_trip') {
+        firstSegmentLabel.textContent = '(Outbound)';
+        addReturnSegment();
+        addButton.style.display = 'none';
+    } else if (flightType === 'multi_city') {
+        firstSegmentLabel.textContent = '(Segment 1)';
+        addButton.style.display = 'block';
+    } else {
+        firstSegmentLabel.textContent = '(One Way)';
+        addButton.style.display = 'none';
+    }
+}
+
+function addReturnSegment() {
+    const container = document.getElementById('flightSegmentsContainer');
+    segmentCount++;
+    
+    const segmentHtml = `
+        <div class="flight-segment mt-4" data-segment="${segmentCount}">
+            <h6 class="text-primary">
+                <i class="fas fa-plane me-2"></i>Flight Segment ${segmentCount}
+                <span class="segment-label ms-2 text-muted">(Return)</span>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeSegment(${segmentCount})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </h6>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departure Airport</label>
+                    <input type="text" name="segments[${segmentCount-1}][departure_airport]" class="form-control departure-airport" placeholder="Type to search by airport code or name" required>
+                    <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Airport</label>
+                    <input type="text" name="segments[${segmentCount-1}][arrival_airport]" class="form-control arrival-airport" placeholder="Type to search by airport code or name" required>
+                    <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Airline</label>
+                    <input type="text" name="segments[${segmentCount-1}][airline]" class="form-control airline" placeholder="Type to search by airline code or name" required>
+                    <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Flight Number</label>
+                    <input type="text" name="segments[${segmentCount-1}][flight_number]" class="form-control flight-number" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="segments[${segmentCount-1}][flight_date]" class="form-control flight-date" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" name="segments[${segmentCount-1}][departure_time]" class="form-control departure-time" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Terminal</label>
+                    <input type="text" name="segments[${segmentCount-1}][terminal]" class="form-control terminal">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Class</label>
+                    <select name="segments[${segmentCount-1}][travel_class]" class="form-select travel-class" required>
+                        <option value="Economy">Economy</option>
+                        <option value="Premium Economy">Premium Economy</option>
+                        <option value="Business">Business</option>
+                        <option value="First">First</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" name="segments[${segmentCount-1}][arrival_time]" class="form-control arrival-time">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', segmentHtml);
+}
+
+function addFlightSegment() {
+    const container = document.getElementById('flightSegmentsContainer');
+    segmentCount++;
+    
+    const segmentHtml = `
+        <div class="flight-segment mt-4" data-segment="${segmentCount}">
+            <h6 class="text-primary">
+                <i class="fas fa-plane me-2"></i>Flight Segment ${segmentCount}
+                <span class="segment-label ms-2 text-muted">(Segment ${segmentCount})</span>
+                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeSegment(${segmentCount})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </h6>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departure Airport</label>
+                    <input type="text" name="segments[${segmentCount-1}][departure_airport]" class="form-control departure-airport" placeholder="Type to search by airport code or name" required>
+                    <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Airport</label>
+                    <input type="text" name="segments[${segmentCount-1}][arrival_airport]" class="form-control arrival-airport" placeholder="Type to search by airport code or name" required>
+                    <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Airline</label>
+                    <input type="text" name="segments[${segmentCount-1}][airline]" class="form-control airline" placeholder="Type to search by airline code or name" required>
+                    <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Flight Number</label>
+                    <input type="text" name="segments[${segmentCount-1}][flight_number]" class="form-control flight-number" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="segments[${segmentCount-1}][flight_date]" class="form-control flight-date" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" name="segments[${segmentCount-1}][departure_time]" class="form-control departure-time" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Terminal</label>
+                    <input type="text" name="segments[${segmentCount-1}][terminal]" class="form-control terminal">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Class</label>
+                    <select name="segments[${segmentCount-1}][travel_class]" class="form-select travel-class" required>
+                        <option value="Economy">Economy</option>
+                        <option value="Premium Economy">Premium Economy</option>
+                        <option value="Business">Business</option>
+                        <option value="First">First</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" name="segments[${segmentCount-1}][arrival_time]" class="form-control arrival-time">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', segmentHtml);
+}
+
+function removeSegment(segmentNumber) {
+    const segment = document.querySelector(`[data-segment="${segmentNumber}"]`);
+    if (segment) {
+        segment.remove();
+        // Update segment count if removing the last segment
+        if (segmentNumber === segmentCount) {
+            segmentCount--;
+        }
+    }
+}
+
 // Multi-segment flight scanning functionality
 function openMultiSegmentScanModal() {
     // Create modal HTML
@@ -416,65 +643,21 @@ function fillFlightFormFromMultiSegmentData(flightData) {
     
     console.log('Filling form with multi-segment flight data:', flightData);
     
-    // Handle both old format and new segments format
-    let primaryFlight = null;
-    
-    if (flightData.segments && flightData.segments.length > 0) {
-        // Use first segment as primary flight for this form
-        primaryFlight = flightData.segments[0];
+    // Determine flight type and set dropdown
+    const flightTypeSelect = document.getElementById('flight_type');
+    if (flightData.flight_type) {
+        flightTypeSelect.value = flightData.flight_type;
+    } else if (flightData.segments && flightData.segments.length > 1) {
+        flightTypeSelect.value = 'round_trip'; // Default to round trip for multiple segments
     } else {
-        // Use the flat data structure
-        primaryFlight = flightData;
+        flightTypeSelect.value = 'one_way';
     }
     
-    if (!primaryFlight) {
-        console.warn('No primary flight data found');
-        return;
-    }
-    
-    // Fill basic flight information
-    if (primaryFlight.airline) {
-        document.getElementById('airline').value = primaryFlight.airline;
-    }
-    
-    if (primaryFlight.flight_number) {
-        document.getElementById('flight_number').value = primaryFlight.flight_number;
-    }
-    
-    if (primaryFlight.departure_airport) {
-        document.getElementById('departure_airport').value = primaryFlight.departure_airport;
-    }
-    
-    if (primaryFlight.arrival_airport) {
-        document.getElementById('arrival_airport').value = primaryFlight.arrival_airport;
-    }
-    
-    if (primaryFlight.flight_date) {
-        document.getElementById('flight_date').value = primaryFlight.flight_date;
-    }
-    
-    if (primaryFlight.departure_time) {
-        document.getElementById('flight_time').value = primaryFlight.departure_time;
-    }
-    
-    if (primaryFlight.terminal || flightData.terminal) {
-        document.getElementById('terminal').value = primaryFlight.terminal || flightData.terminal;
-    }
-    
-    if (primaryFlight.travel_class || flightData.travel_class) {
-        document.getElementById('travel_class').value = primaryFlight.travel_class || flightData.travel_class;
-    }
-    
-    if (primaryFlight.ticket_number || flightData.ticket_number) {
-        document.getElementById('ticket_number').value = primaryFlight.ticket_number || flightData.ticket_number;
-    }
-    
-    if (primaryFlight.pnr || flightData.booking_reference) {
-        document.getElementById('booking_reference').value = primaryFlight.pnr || flightData.booking_reference;
-    }
+    // Update segments based on flight type
+    updateFlightSegments();
     
     // Fill passenger information
-    const passengerNames = flightData.passenger_names || primaryFlight.passenger_names || [];
+    const passengerNames = flightData.passenger_names || [];
     if (passengerNames.length > 0) {
         // Clear existing passenger inputs
         const passengerContainer = document.getElementById('passengerNames');
@@ -501,30 +684,27 @@ function fillFlightFormFromMultiSegmentData(flightData) {
         }
     }
     
-    // Show multiple flight segments notification if applicable
-    if (flightData.segments && flightData.segments.length > 1) {
-        const notification = document.createElement('div');
-        notification.className = 'alert alert-warning alert-dismissible fade show mt-3';
-        notification.innerHTML = `
-            <i class="fas fa-info-circle me-2"></i>
-            <strong>Multi-segment flight detected!</strong> Found ${flightData.segments.length} flight segments. Only the first segment is filled in this form. 
-            For return or connecting flights, please create additional flight service items.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        
-        // Insert the alert at the top of the form
-        const form = document.querySelector('form');
-        if (form && form.firstChild) {
-            form.insertBefore(notification, form.firstChild);
-        }
+    // Fill common flight information
+    if (flightData.ticket_number) {
+        document.getElementById('ticket_number').value = flightData.ticket_number;
     }
+    
+    if (flightData.pnr || flightData.booking_reference) {
+        document.getElementById('booking_reference').value = flightData.pnr || flightData.booking_reference;
+    }
+    
+    // Fill segments data
+    const segments = flightData.segments || [flightData];
+    segments.forEach((segment, index) => {
+        fillSegmentData(index, segment);
+    });
     
     // Show success notification
     const alert = document.createElement('div');
     alert.className = 'alert alert-success alert-dismissible fade show mt-3';
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>
-        Flight details successfully imported from document!
+        Flight details successfully imported from document! Found ${segments.length} flight segment(s).
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
@@ -540,6 +720,58 @@ function fillFlightFormFromMultiSegmentData(flightData) {
             alert.parentNode.removeChild(alert);
         }
     }, 5000);
+}
+
+function fillSegmentData(segmentIndex, segmentData) {
+    // Get all form elements for this segment
+    const segmentFields = {
+        departure_airport: document.querySelector(`input[name="segments[${segmentIndex}][departure_airport]"]`),
+        arrival_airport: document.querySelector(`input[name="segments[${segmentIndex}][arrival_airport]"]`),
+        airline: document.querySelector(`input[name="segments[${segmentIndex}][airline]"]`),
+        flight_number: document.querySelector(`input[name="segments[${segmentIndex}][flight_number]"]`),
+        flight_date: document.querySelector(`input[name="segments[${segmentIndex}][flight_date]"]`),
+        departure_time: document.querySelector(`input[name="segments[${segmentIndex}][departure_time]"]`),
+        arrival_time: document.querySelector(`input[name="segments[${segmentIndex}][arrival_time]"]`),
+        terminal: document.querySelector(`input[name="segments[${segmentIndex}][terminal]"]`),
+        travel_class: document.querySelector(`select[name="segments[${segmentIndex}][travel_class]"]`)
+    };
+    
+    // Fill data for each field
+    if (segmentFields.departure_airport && segmentData.departure_airport) {
+        segmentFields.departure_airport.value = segmentData.departure_airport;
+    }
+    
+    if (segmentFields.arrival_airport && segmentData.arrival_airport) {
+        segmentFields.arrival_airport.value = segmentData.arrival_airport;
+    }
+    
+    if (segmentFields.airline && segmentData.airline) {
+        segmentFields.airline.value = segmentData.airline;
+    }
+    
+    if (segmentFields.flight_number && segmentData.flight_number) {
+        segmentFields.flight_number.value = segmentData.flight_number;
+    }
+    
+    if (segmentFields.flight_date && segmentData.flight_date) {
+        segmentFields.flight_date.value = segmentData.flight_date;
+    }
+    
+    if (segmentFields.departure_time && segmentData.departure_time) {
+        segmentFields.departure_time.value = segmentData.departure_time;
+    }
+    
+    if (segmentFields.arrival_time && segmentData.arrival_time) {
+        segmentFields.arrival_time.value = segmentData.arrival_time;
+    }
+    
+    if (segmentFields.terminal && segmentData.terminal) {
+        segmentFields.terminal.value = segmentData.terminal;
+    }
+    
+    if (segmentFields.travel_class && segmentData.travel_class) {
+        segmentFields.travel_class.value = segmentData.travel_class;
+    }
 }
 </script>
 {% endblock %}
