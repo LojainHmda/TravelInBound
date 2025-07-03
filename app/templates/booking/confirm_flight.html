@@ -72,12 +72,16 @@
     <div class="col-md-8">
         <h5>Flight Information</h5>
         
-        <!-- Ticket Scanner Button -->
+        <!-- AI Multi-Segment Flight Scanner Button -->
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ticketScannerModal">
-                <i class="fas fa-camera me-2"></i> Scan Flight Ticket
+            <div class="alert alert-info">
+                <i class="fas fa-magic me-2"></i>
+                <strong>Smart Scanning:</strong> Upload your flight confirmation document to automatically detect return trips and multi-segment flights
+            </div>
+            <button type="button" class="btn btn-primary" onclick="openMultiSegmentScanModal()">
+                <i class="fas fa-camera me-2"></i>Scan Flight Document (Multi-Segment)
             </button>
-            <small class="ms-2 text-muted">Upload a flight ticket to automatically extract details</small>
+            <small class="ms-2 text-muted">Supports return trips and connecting flights</small>
         </div>
         
         <div class="row mb-3">
@@ -270,6 +274,257 @@ function populateFlightDetailsFromTicket(flightData) {
     alert.innerHTML = `
         <i class="fas fa-check-circle me-2"></i>
         Flight details successfully imported from ticket!
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    // Insert the alert at the top of the form
+    const form = document.querySelector('form');
+    if (form && form.firstChild) {
+        form.insertBefore(alert, form.firstChild);
+    }
+    
+    // Auto-dismiss the alert after 5 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 5000);
+}
+
+// Multi-segment flight scanning functionality
+function openMultiSegmentScanModal() {
+    // Create modal HTML
+    const modalHTML = `
+    <div class="modal fade" id="multiSegmentScanModal" tabindex="-1" aria-labelledby="multiSegmentScanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="multiSegmentScanModalLabel">
+                        <i class="fas fa-camera me-2"></i>Scan Multi-Segment Flight Document
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Upload your flight confirmation document (PDF or image). Our AI will automatically detect return trips and connecting flights.
+                    </div>
+                    <div class="mb-3">
+                        <label for="multiSegmentDocumentFile" class="form-label">Select Document</label>
+                        <input type="file" class="form-control" id="multiSegmentDocumentFile" accept="image/*,application/pdf">
+                    </div>
+                    <div id="multiSegmentScanProgress" style="display: none;">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span>Analyzing document...</span>
+                        </div>
+                    </div>
+                    <div id="multiSegmentScanResults" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Document analyzed successfully! Flight details will be filled automatically.
+                        </div>
+                    </div>
+                    <div id="multiSegmentScanError" style="display: none;">
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <span id="multiSegmentErrorMessage">Error analyzing document</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="multiSegmentScanButton" onclick="scanMultiSegmentDocument()">
+                        <i class="fas fa-magic me-2"></i>Scan Document
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    
+    // Add modal to page if it doesn't exist
+    if (!document.getElementById('multiSegmentScanModal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('multiSegmentScanModal'));
+    modal.show();
+}
+
+function scanMultiSegmentDocument() {
+    const fileInput = document.getElementById('multiSegmentDocumentFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a document to scan');
+        return;
+    }
+    
+    // Show progress
+    document.getElementById('multiSegmentScanProgress').style.display = 'block';
+    document.getElementById('multiSegmentScanResults').style.display = 'none';
+    document.getElementById('multiSegmentScanError').style.display = 'none';
+    document.getElementById('multiSegmentScanButton').disabled = true;
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('document', file);
+    
+    // Send to scanning endpoint
+    fetch('/booking/scan-flight-document', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('multiSegmentScanProgress').style.display = 'none';
+        document.getElementById('multiSegmentScanButton').disabled = false;
+        
+        if (data.success) {
+            // Show success message
+            document.getElementById('multiSegmentScanResults').style.display = 'block';
+            
+            // Fill form with scanned data
+            fillFlightFormFromMultiSegmentData(data.flight_data);
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('multiSegmentScanModal')).hide();
+            }, 2000);
+        } else {
+            // Show error
+            document.getElementById('multiSegmentErrorMessage').textContent = data.error || 'Failed to scan document';
+            document.getElementById('multiSegmentScanError').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        document.getElementById('multiSegmentScanProgress').style.display = 'none';
+        document.getElementById('multiSegmentScanButton').disabled = false;
+        document.getElementById('multiSegmentErrorMessage').textContent = 'Network error: ' + error.message;
+        document.getElementById('multiSegmentScanError').style.display = 'block';
+    });
+}
+
+function fillFlightFormFromMultiSegmentData(flightData) {
+    if (!flightData) {
+        console.warn('No flight data provided');
+        return;
+    }
+    
+    console.log('Filling form with multi-segment flight data:', flightData);
+    
+    // Handle both old format and new segments format
+    let primaryFlight = null;
+    
+    if (flightData.segments && flightData.segments.length > 0) {
+        // Use first segment as primary flight for this form
+        primaryFlight = flightData.segments[0];
+    } else {
+        // Use the flat data structure
+        primaryFlight = flightData;
+    }
+    
+    if (!primaryFlight) {
+        console.warn('No primary flight data found');
+        return;
+    }
+    
+    // Fill basic flight information
+    if (primaryFlight.airline) {
+        document.getElementById('airline').value = primaryFlight.airline;
+    }
+    
+    if (primaryFlight.flight_number) {
+        document.getElementById('flight_number').value = primaryFlight.flight_number;
+    }
+    
+    if (primaryFlight.departure_airport) {
+        document.getElementById('departure_airport').value = primaryFlight.departure_airport;
+    }
+    
+    if (primaryFlight.arrival_airport) {
+        document.getElementById('arrival_airport').value = primaryFlight.arrival_airport;
+    }
+    
+    if (primaryFlight.flight_date) {
+        document.getElementById('flight_date').value = primaryFlight.flight_date;
+    }
+    
+    if (primaryFlight.departure_time) {
+        document.getElementById('flight_time').value = primaryFlight.departure_time;
+    }
+    
+    if (primaryFlight.terminal || flightData.terminal) {
+        document.getElementById('terminal').value = primaryFlight.terminal || flightData.terminal;
+    }
+    
+    if (primaryFlight.travel_class || flightData.travel_class) {
+        document.getElementById('travel_class').value = primaryFlight.travel_class || flightData.travel_class;
+    }
+    
+    if (primaryFlight.ticket_number || flightData.ticket_number) {
+        document.getElementById('ticket_number').value = primaryFlight.ticket_number || flightData.ticket_number;
+    }
+    
+    if (primaryFlight.pnr || flightData.booking_reference) {
+        document.getElementById('booking_reference').value = primaryFlight.pnr || flightData.booking_reference;
+    }
+    
+    // Fill passenger information
+    const passengerNames = flightData.passenger_names || primaryFlight.passenger_names || [];
+    if (passengerNames.length > 0) {
+        // Clear existing passenger inputs
+        const passengerContainer = document.getElementById('passengerNames');
+        if (passengerContainer) {
+            passengerContainer.innerHTML = '';
+            
+            // Add each passenger name
+            passengerNames.forEach((name, index) => {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'input-group mb-2';
+                inputGroup.innerHTML = `
+                    <span class="input-group-text">Passenger ${index + 1}</span>
+                    <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                    ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                `;
+                passengerContainer.appendChild(inputGroup);
+            });
+            
+            // Update passenger count
+            const adults = document.querySelector('input[name="adults"]');
+            if (adults) {
+                adults.value = passengerNames.length;
+            }
+        }
+    }
+    
+    // Show multiple flight segments notification if applicable
+    if (flightData.segments && flightData.segments.length > 1) {
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-warning alert-dismissible fade show mt-3';
+        notification.innerHTML = `
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Multi-segment flight detected!</strong> Found ${flightData.segments.length} flight segments. Only the first segment is filled in this form. 
+            For return or connecting flights, please create additional flight service items.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert the alert at the top of the form
+        const form = document.querySelector('form');
+        if (form && form.firstChild) {
+            form.insertBefore(notification, form.firstChild);
+        }
+    }
+    
+    // Show success notification
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show mt-3';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Flight details successfully imported from document!
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
     
