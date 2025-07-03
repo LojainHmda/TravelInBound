@@ -585,20 +585,22 @@ class AirlineVoucherGenerator:
         service_items = list(self.booking.service_items)
         for item in service_items:
             for document in item.documents:
-                if hasattr(document, 'parsed_data') and document.parsed_data:
-                    parsed_data = document.parsed_data
-                    if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
-                        # Use real passenger names from confirmation
-                        for i, name in enumerate(parsed_data['passenger_names']):
-                            # Generate sequential ticket numbers based on confirmation data
-                            ticket_base = "607-241034252"
-                            ticket_number = f"{ticket_base}{9-i}"
-                            passengers.append({
-                                'name': name,
-                                'type': 'Adult',
-                                'ticket_number': ticket_number
-                            })
-                        return passengers
+                if document.document_type == 'CONFIRMATION' and document.notes:
+                    try:
+                        import json
+                        parsed_data = json.loads(document.notes)
+                        if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
+                            # Use real passenger names from confirmation
+                            ticket_number = parsed_data.get('ticket_number', '')
+                            for i, name in enumerate(parsed_data['passenger_names']):
+                                passengers.append({
+                                    'name': name,
+                                    'type': 'Adult',
+                                    'ticket_number': ticket_number
+                                })
+                            return passengers
+                    except (json.JSONDecodeError, TypeError):
+                        pass
         
         # Fallback to customer data if no confirmation passenger data
         if customer:
@@ -606,7 +608,7 @@ class AirlineVoucherGenerator:
             passengers.append({
                 'name': full_name,
                 'type': 'Adult',
-                'ticket_number': '607-2410342529'
+                'ticket_number': ''
             })
         
         return passengers
