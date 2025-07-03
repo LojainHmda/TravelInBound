@@ -266,6 +266,7 @@ class AirlineVoucherGenerator:
                 # Process each flight segment
                 for i, segment in enumerate(flight_data['segments']):
                     trip_number = i + 1
+                    print(f"DEBUG: Rendering segment {i}: airline={segment.get('airline')}, departure={segment.get('departure_airport')}, arrival={segment.get('arrival_airport')}, pnr={segment.get('pnr')}")
                     html_content += f"""
                     <tr>
                         <td>{trip_number}</td>
@@ -408,6 +409,9 @@ class AirlineVoucherGenerator:
                                     'duration': parsed_data.get('duration', ''),
                                     'connection_type': parsed_data.get('connection_type', ''),
                                     'aircraft_type': parsed_data.get('aircraft_type', ''),
+                                    'pnr': parsed_data.get('pnr', ''),
+                                    'ticket_number': parsed_data.get('ticket_number', ''),
+                                    'travel_class': parsed_data.get('travel_class', ''),
                                 }
                                 flight_data['segments'].append(single_segment)
                                 print(f"DEBUG: Converted single flight to segment: {single_segment['airline']} {single_segment['flight_number']}")
