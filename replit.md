@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 3, 2025: Successfully implemented and tested multi-segment flight confirmation system
+  - Enhanced flight confirmation interface with prominent styling and visual indicators
+  - Added multi-segment flight container with clear visual borders and segment separation
+  - Successfully processed round-trip flight with 2 segments (Etihad Airways EY 592 and EY 418)
+  - System correctly captured passenger details, PNR, and flight times for both segments
+  - Confirmed multi-segment data storage in JSON format within confirmation documents
 - July 3, 2025: Added multi-segment flight scanning to confirmation form
   - Enhanced OpenAI helper to detect return trips and multi-city flights from single document upload
   - Updated flight confirmation form with AI scanning button for automatic form population
