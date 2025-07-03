@@ -298,7 +298,7 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('nights', 'N/A')}</td>
                         <td>1</td>
                         <td>{hotel_data.get('room_type', 'Standard Room')}</td>
-                        <td>Bed & Breakfast</td>
+                        <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
                         <td>{customer.first_name + ' ' + customer.last_name if customer else 'Guest'}</td>
                     </tr>
                 </tbody>
@@ -327,38 +327,46 @@ class AirlineVoucherGenerator:
         
         flight = flight_items[0]
         
-        # Try to get real flight data from confirmation documents
+        # Initialize with defaults - will be overridden by real confirmation data
         flight_data = {
-            'flight_number': 'QR 405',
-            'departure_date': flight.start_date.strftime("%d-%b-%Y") if flight.start_date else "N/A",
-            'departure_time': '02:20',
-            'arrival_time': '06:20',
-            'ticket_number': '607-2410342529',
+            'flight_number': 'TBD',
+            'departure_date': flight.start_date.strftime("%d-%b-%Y") if flight.start_date else "TBD",
+            'departure_time': 'TBD',
+            'arrival_time': 'TBD',
+            'ticket_number': 'TBD',
             'description': flight.description or 'Flight booking'
         }
         
-        # Extract real data from confirmation documents
+        # Extract real data from confirmation documents (stored in notes as JSON)
         for document in flight.documents:
-            if hasattr(document, 'parsed_data') and document.parsed_data:
-                parsed_data = document.parsed_data
-                # Update with real confirmation data
-                if 'flight_number' in parsed_data:
-                    flight_data['flight_number'] = parsed_data['flight_number']
-                if 'flight_time' in parsed_data:
-                    flight_data['departure_time'] = parsed_data['flight_time']
-                if 'flight_date' in parsed_data:
-                    # Convert flight_date to proper format
-                    try:
-                        from datetime import datetime
-                        date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
-                        flight_data['departure_date'] = date_obj.strftime("%d-%b-%Y")
-                    except:
-                        flight_data['departure_date'] = parsed_data['flight_date']
-                if 'ticket_number' in parsed_data and parsed_data['ticket_number']:
-                    flight_data['ticket_number'] = parsed_data['ticket_number']
-                elif 'passenger_names' in parsed_data and parsed_data['passenger_names']:
-                    # Generate first ticket number for flight table from passenger data
-                    flight_data['ticket_number'] = "607-2410342529"
+            if document.document_type == 'CONFIRMATION' and document.notes:
+                try:
+                    import json
+                    parsed_data = json.loads(document.notes)
+                    print(f"DEBUG: Flight confirmation data available: {list(parsed_data.keys())}")
+                    
+                    # Only use real data from confirmation - no hardcoded values
+                    if 'flight_number' in parsed_data and parsed_data['flight_number']:
+                        flight_data['flight_number'] = parsed_data['flight_number']
+                    if 'flight_time' in parsed_data and parsed_data['flight_time']:
+                        flight_data['departure_time'] = parsed_data['flight_time']
+                    if 'flight_date' in parsed_data and parsed_data['flight_date']:
+                        # Convert flight_date to proper format
+                        try:
+                            from datetime import datetime
+                            date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
+                            flight_data['departure_date'] = date_obj.strftime("%d-%b-%Y")
+                        except:
+                            flight_data['departure_date'] = parsed_data['flight_date']
+                    
+                    # Only use ticket number if it exists in confirmation
+                    if 'ticket_number' in parsed_data and parsed_data['ticket_number']:
+                        flight_data['ticket_number'] = parsed_data['ticket_number']
+                    # Don't fabricate ticket numbers - keep as 'TBD' if not in confirmation
+                        
+                except (json.JSONDecodeError, TypeError) as e:
+                    print(f"DEBUG: Failed to parse flight JSON from notes: {e}")
+                    pass
         
         return flight_data
     
@@ -380,6 +388,7 @@ class AirlineVoucherGenerator:
             'checkout_date': hotel.end_date.strftime("%d-%b-%Y") if hotel.end_date else "N/A",
             'nights': (hotel.end_date - hotel.start_date).days if hotel.start_date and hotel.end_date else 1,
             'room_type': 'Standard Room',
+            'meal_plan': 'Room Only',  # Will be overridden by confirmation data
             'description': hotel.description or 'Hotel accommodation'
         }
         
@@ -448,6 +457,10 @@ class AirlineVoucherGenerator:
                                 hotel_data['room_type'] = 'Triple Room'
                             elif rooms_data.get('other'):
                                 hotel_data['room_type'] = rooms_data['other']
+                    
+                    # Extract meal plan from confirmation
+                    if 'meal_plan' in parsed_data and parsed_data['meal_plan']:
+                        hotel_data['meal_plan'] = parsed_data['meal_plan']
                                 
                 except (json.JSONDecodeError, TypeError) as e:
                     print(f"DEBUG: Failed to parse JSON from notes: {e}")
