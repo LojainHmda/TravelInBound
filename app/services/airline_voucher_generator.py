@@ -385,11 +385,11 @@ class AirlineVoucherGenerator:
                     try:
                         import json
                         parsed_data = json.loads(document.notes)
-                        print(f"DEBUG: Processing flight document {document.id} with keys: {list(parsed_data.keys())}")
+
                         
                         # Handle multi-segment flights
                         if 'segments' in parsed_data and parsed_data['segments']:
-                            print(f"DEBUG: Found {len(parsed_data['segments'])} segments in document {document.id}")
+
                             for i, segment in enumerate(parsed_data['segments']):
                                 if segment.get('airline') and segment.get('flight_number'):
                                     # Copy segment data and add document-level PNR/ticket info if missing
@@ -402,7 +402,7 @@ class AirlineVoucherGenerator:
                                         segment_with_pnr['travel_class'] = parsed_data['travel_class']
                                     
                                     flight_data['segments'].append(segment_with_pnr)
-                                    print(f"DEBUG: Added segment {i}: {segment['airline']} {segment['flight_number']} with PNR {segment_with_pnr.get('pnr', 'NONE')}")
+
                         else:
                             # Handle single flight format - convert to segment
                             if parsed_data.get('airline') and parsed_data.get('flight_number'):
@@ -422,7 +422,7 @@ class AirlineVoucherGenerator:
                                     'travel_class': parsed_data.get('travel_class', ''),
                                 }
                                 flight_data['segments'].append(single_segment)
-                                print(f"DEBUG: Converted single flight to segment: {single_segment['airline']} {single_segment['flight_number']}")
+
                         
                         # Collect passenger names from all documents (combine them)
                         if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
@@ -451,14 +451,14 @@ class AirlineVoucherGenerator:
                             flight_data['seat_assignment'] = parsed_data.get('seat_assignment', '')
                         
                     except (json.JSONDecodeError, TypeError) as e:
-                        print(f"DEBUG: Failed to parse flight JSON from document {document.id}: {e}")
+
                         pass
         
         # Remove duplicate passenger names
         if flight_data['passenger_names']:
             flight_data['passenger_names'] = list(dict.fromkeys(flight_data['passenger_names']))
         
-        print(f"DEBUG: Final flight_data has {len(flight_data['segments'])} total segments and {len(flight_data['passenger_names'])} passengers")
+
         
         return flight_data if flight_data['segments'] else None
     
