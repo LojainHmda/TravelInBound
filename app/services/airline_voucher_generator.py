@@ -383,8 +383,17 @@ class AirlineVoucherGenerator:
                             print(f"DEBUG: Found {len(parsed_data['segments'])} segments in document {document.id}")
                             for i, segment in enumerate(parsed_data['segments']):
                                 if segment.get('airline') and segment.get('flight_number'):
-                                    flight_data['segments'].append(segment)
-                                    print(f"DEBUG: Added segment {i}: {segment['airline']} {segment['flight_number']}")
+                                    # Copy segment data and add document-level PNR/ticket info if missing
+                                    segment_with_pnr = segment.copy()
+                                    if not segment_with_pnr.get('pnr') and parsed_data.get('pnr'):
+                                        segment_with_pnr['pnr'] = parsed_data['pnr']
+                                    if not segment_with_pnr.get('ticket_number') and parsed_data.get('ticket_number'):
+                                        segment_with_pnr['ticket_number'] = parsed_data['ticket_number']
+                                    if not segment_with_pnr.get('travel_class') and parsed_data.get('travel_class'):
+                                        segment_with_pnr['travel_class'] = parsed_data['travel_class']
+                                    
+                                    flight_data['segments'].append(segment_with_pnr)
+                                    print(f"DEBUG: Added segment {i}: {segment['airline']} {segment['flight_number']} with PNR {segment_with_pnr.get('pnr', 'NONE')}")
                         else:
                             # Handle single flight format - convert to segment
                             if parsed_data.get('airline') and parsed_data.get('flight_number'):
