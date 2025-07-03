@@ -266,19 +266,23 @@ class AirlineVoucherGenerator:
                 # Process each flight segment
                 for i, segment in enumerate(flight_data['segments']):
                     trip_number = i + 1
-                    departure_airport = segment.get('departure_airport', '')
-                    arrival_airport = segment.get('arrival_airport', '')
-                    pnr = segment.get('pnr', '')
-                    print(f"DEBUG: Rendering segment {i}: airline={segment.get('airline')}, departure={departure_airport}, arrival={arrival_airport}, pnr={pnr}")
-                    print(f"DEBUG: HTML values - departure='{departure_airport}', arrival='{arrival_airport}', pnr='{pnr}'")
-                    row_html = f"""
+                    # Extract and ensure we have valid airport data
+                    departure_airport = str(segment.get('departure_airport', '')).strip()
+                    arrival_airport = str(segment.get('arrival_airport', '')).strip()
+                    pnr = str(segment.get('pnr', '')).strip()
+                    airline = str(segment.get('airline', '')).strip()
+                    flight_number = str(segment.get('flight_number', '')).strip()
+                    flight_date = str(segment.get('flight_date', '')).strip()
+                    departure_time = str(segment.get('departure_time', '')).strip()
+                    
+                    html_content += f"""
                     <tr>
                         <td>{trip_number}</td>
-                        <td>{segment.get('airline', '')} {segment.get('flight_number', '')}</td>
+                        <td>{airline} {flight_number}</td>
                         <td>{departure_airport}</td>
                         <td>{arrival_airport}</td>
-                        <td>{segment.get('flight_date', '')}</td>
-                        <td>{segment.get('departure_time', '')}</td>
+                        <td>{flight_date}</td>
+                        <td>{departure_time}</td>
                         <td>{segment.get('arrival_time', '')}</td>
                         <td>{segment.get('duration', '')}</td>
                         <td>{segment.get('aircraft_type', '')}</td>
@@ -288,8 +292,6 @@ class AirlineVoucherGenerator:
                         <td>{pnr}</td>
                         <td>{segment.get('ticket_number', '')}</td>
                     </tr>"""
-                    print(f"DEBUG: Generated HTML row: {row_html[:200]}...")
-                    html_content += row_html
             else:
                 # Fallback to single flight format for backward compatibility
                 html_content += f"""
