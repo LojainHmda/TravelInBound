@@ -311,28 +311,28 @@ class AirlineVoucherGenerator:
                     # For departure airport
                     if 'Queen Alia' in departure_airport:
                         dep_code = 'AMM'
-                    elif 'Dhabi' in departure_airport or 'Abu Dhabi' in departure_airport:
+                    elif 'Abu Dhabi' in departure_airport or 'Dhabi' in departure_airport:
                         dep_code = 'AUH'
-                    elif 'Doha' in departure_airport:
+                    elif 'Doha' in departure_airport or 'Hamad' in departure_airport:
                         dep_code = 'DOH'
                     else:
                         # Fallback: look for 3-letter uppercase codes
                         import re
                         codes = re.findall(r'\b[A-Z]{3}\b', departure_airport)
-                        dep_code = codes[0] if codes else departure_airport.split()[-1][:3]
+                        dep_code = codes[0] if codes else departure_airport.split()[-1][:3].upper()
                     
                     # For arrival airport
                     if 'Queen Alia' in arrival_airport:
                         arr_code = 'AMM'
-                    elif 'Dhabi' in arrival_airport or 'Abu Dhabi' in arrival_airport:
+                    elif 'Abu Dhabi' in arrival_airport or 'Dhabi' in arrival_airport:
                         arr_code = 'AUH'
-                    elif 'Doha' in arrival_airport:
+                    elif 'Doha' in arrival_airport or 'Hamad' in arrival_airport:
                         arr_code = 'DOH'
                     else:
                         # Fallback: look for 3-letter uppercase codes
                         import re
                         codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
-                        arr_code = codes[0] if codes else arrival_airport.split()[-1][:3]
+                        arr_code = codes[0] if codes else arrival_airport.split()[-1][:3].upper()
                     
                     html_content += f"""
             <div class="flight-segment">
