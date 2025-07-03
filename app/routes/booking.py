@@ -2199,3 +2199,41 @@ def add_credit_line(booking_id):
         flash(f'Error adding credit line: {str(e)}', 'danger')
     
     return redirect(url_for('booking.details', booking_id=booking_id))
+
+
+@booking_bp.route('/scan-flight-document', methods=['POST'])
+@login_required
+def scan_flight_document():
+    """API endpoint to scan flight confirmation documents using AI"""
+    try:
+        if 'document' not in request.files:
+            return jsonify({'success': False, 'error': 'No document uploaded'})
+        
+        file = request.files['document']
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'})
+        
+        # Read file data
+        file_data = file.read()
+        
+        # Analyze the document using OpenAI
+        from app.utils.openai_helper import analyze_document
+        result = analyze_document(file_data, file.filename)
+        
+        if result and ('segments' in result and result['segments']) or any(key in result for key in ['flight_number', 'airline']):
+            return jsonify({
+                'success': True, 
+                'flight_data': result,
+                'message': 'Document analyzed successfully'
+            })
+        else:
+            return jsonify({
+                'success': False, 
+                'error': 'No flight information found in document'
+            })
+            
+    except Exception as e:
+        return jsonify({
+            'success': False, 
+            'error': f'Error processing document: {str(e)}'
+        })

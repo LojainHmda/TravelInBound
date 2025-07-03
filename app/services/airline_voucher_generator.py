@@ -678,34 +678,42 @@ class AirlineVoucherGenerator:
         return None, None
     
     def _prepare_passenger_data(self, customer):
-        """Prepare passenger data from first flight segment only (to avoid mixing between flights)"""
+        """Prepare passenger data from ALL flight segments to show complete passenger list"""
         passengers = []
+        added_passengers = set()  # Track unique passengers to avoid duplicates
         
         # Get flight data using the same logic as the voucher
         flight_data = self._extract_flight_data(self.booking.service_items)
         
         if flight_data and flight_data.get('segments'):
-            # Use passenger names from the FIRST segment only to avoid mixing
-            first_segment = flight_data['segments'][0]
-            if 'passenger_names' in first_segment and first_segment['passenger_names']:
-                ticket_number = first_segment.get('ticket_number', '')
-                for name in first_segment['passenger_names']:
-                    passengers.append({
-                        'name': name,
-                        'type': 'Adult',
-                        'ticket_number': ticket_number
-                    })
+            # Collect passenger names from ALL segments
+            for segment in flight_data['segments']:
+                if 'passenger_names' in segment and segment['passenger_names']:
+                    ticket_number = segment.get('ticket_number', '')
+                    for name in segment['passenger_names']:
+                        # Only add if not already added (avoid duplicates)
+                        if name not in added_passengers:
+                            passengers.append({
+                                'name': name,
+                                'type': 'Adult',
+                                'ticket_number': ticket_number
+                            })
+                            added_passengers.add(name)
+            
+            # If we have passengers, return them
+            if passengers:
                 return passengers
             
-            # Fallback to global passenger names if segment doesn't have specific ones
+            # Fallback to global passenger names if segments don't have specific ones
             if flight_data.get('passenger_names'):
-                # Use only the first set of passenger names to avoid duplicates
                 for name in flight_data['passenger_names']:
-                    passengers.append({
-                        'name': name,
-                        'type': 'Adult', 
-                        'ticket_number': ''
-                    })
+                    if name not in added_passengers:
+                        passengers.append({
+                            'name': name,
+                            'type': 'Adult', 
+                            'ticket_number': ''
+                        })
+                        added_passengers.add(name)
                 return passengers
         
         # Final fallback to customer data if no confirmation passenger data

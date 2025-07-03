@@ -88,14 +88,18 @@ def analyze_flight_ticket(image_data):
         system_prompt = """
         You are a flight ticket analyzer. Please carefully examine this airline ticket and extract the following key information:
 
+        IMPORTANT: This ticket might contain multiple flight segments (outbound, return, or connecting flights). 
+        Please extract ALL segments if they exist.
+
+        For each flight segment, extract:
         1. Flight number (including airline code like 'RJ 502')
         2. Airline name (e.g., 'Royal Jordanian')
         3. Departure airport (city and code, e.g., 'Cairo (CAI)')
         4. Arrival airport (city and code, e.g., 'Amman (AMM)')
-        5. Departure date (in format DD-MM-YYYY if possible)
-        6. Departure time
+        5. Departure date (in format YYYY-MM-DD if possible)
+        6. Departure time (in format HH:MM)
         7. Arrival date (if different from departure)
-        8. Arrival time
+        8. Arrival time (in format HH:MM)
         9. Booking reference/PNR (usually 5-6 alphanumeric characters)
         10. Passenger name(s)
         11. Ticket number(s) (usually 13-14 digits)
@@ -104,21 +108,33 @@ def analyze_flight_ticket(image_data):
 
         Respond with a JSON object ONLY with these exact keys:
         {
-            "flight_number": "",
-            "airline": "",
-            "departure_airport": "",
-            "departure_code": "",
-            "arrival_airport": "",
-            "arrival_code": "",
-            "departure_date": "",
-            "departure_time": "",
-            "arrival_date": "",
-            "arrival_time": "",
+            "flight_type": "one_way|round_trip|multi_city",
+            "segments": [
+                {
+                    "flight_number": "",
+                    "airline": "",
+                    "departure_airport": "",
+                    "departure_code": "",
+                    "arrival_airport": "",
+                    "arrival_code": "",
+                    "flight_date": "",
+                    "departure_time": "",
+                    "arrival_time": "",
+                    "duration": "",
+                    "connection_type": "",
+                    "aircraft_type": ""
+                }
+            ],
             "booking_reference": "",
             "passenger_names": [],
-            "ticket_numbers": []
+            "ticket_numbers": [],
+            "travel_class": "",
+            "terminal": "",
+            "baggage_allowance": "",
+            "seat_assignment": ""
         }
 
+        If you find multiple flight segments (return or connecting flights), add them as separate objects in the segments array.
         If you cannot find a particular piece of information, leave its value as an empty string or empty array.
         """
 
@@ -157,16 +173,63 @@ def analyze_flight_ticket(image_data):
             result = json.loads(content)
             logger.info("Successfully parsed OpenAI response")
 
-            expected_keys = [
-                "flight_number", "airline", "departure_airport", "departure_code",
-                "arrival_airport", "arrival_code", "departure_date", "departure_time",
-                "arrival_date", "arrival_time", "booking_reference",
-                "passenger_names", "ticket_numbers"
-            ]
+            # Ensure the result has the new multi-segment format
+            if 'segments' not in result:
+                # Convert old format to new format
+                if any(key in result for key in ["flight_number", "airline", "departure_airport"]):
+                    segments = [{
+                        "flight_number": result.get("flight_number", ""),
+                        "airline": result.get("airline", ""),
+                        "departure_airport": result.get("departure_airport", ""),
+                        "departure_code": result.get("departure_code", ""),
+                        "arrival_airport": result.get("arrival_airport", ""),
+                        "arrival_code": result.get("arrival_code", ""),
+                        "flight_date": result.get("departure_date", ""),
+                        "departure_time": result.get("departure_time", ""),
+                        "arrival_time": result.get("arrival_time", ""),
+                        "duration": "",
+                        "connection_type": "",
+                        "aircraft_type": ""
+                    }]
+                    result = {
+                        "flight_type": "one_way",
+                        "segments": segments,
+                        "booking_reference": result.get("booking_reference", ""),
+                        "passenger_names": result.get("passenger_names", []),
+                        "ticket_numbers": result.get("ticket_numbers", []),
+                        "travel_class": "",
+                        "terminal": "",
+                        "baggage_allowance": "",
+                        "seat_assignment": ""
+                    }
+                else:
+                    # Empty result
+                    result = {
+                        "flight_type": "one_way",
+                        "segments": [],
+                        "booking_reference": "",
+                        "passenger_names": [],
+                        "ticket_numbers": [],
+                        "travel_class": "",
+                        "terminal": "",
+                        "baggage_allowance": "",
+                        "seat_assignment": ""
+                    }
 
-            for key in expected_keys:
-                if key not in result:
-                    result[key] = "" if key not in ["passenger_names", "ticket_numbers"] else []
+            # Ensure segments is a list
+            if not isinstance(result.get('segments'), list):
+                result['segments'] = []
+
+            # Validate each segment has required keys
+            for segment in result['segments']:
+                segment_keys = [
+                    "flight_number", "airline", "departure_airport", "departure_code",
+                    "arrival_airport", "arrival_code", "flight_date", "departure_time",
+                    "arrival_time", "duration", "connection_type", "aircraft_type"
+                ]
+                for key in segment_keys:
+                    if key not in segment:
+                        segment[key] = ""
 
             return result
 
