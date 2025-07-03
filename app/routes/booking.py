@@ -1065,26 +1065,64 @@ def confirm_service(item_id):
         print(f"Cost tracking data: amount={cost_amount}, currency={cost_currency}, due_date={payment_due_date}, is_paid={is_paid}", file=sys.stderr)
         
         if service_item.service_type == 'FLIGHT':
+            # Handle multi-segment flight confirmation
+            flight_type = request.form.get('flight_type', 'one_way')
+            print(f"Processing flight confirmation with type: {flight_type}", file=sys.stderr)
+            
+            # Collect flight segments
+            segments = []
+            segment_index = 0
+            
+            # Process all segments from the form
+            while f'segments[{segment_index}][airline]' in request.form:
+                segment_data = {
+                    'airline': request.form.get(f'segments[{segment_index}][airline]', ''),
+                    'flight_number': request.form.get(f'segments[{segment_index}][flight_number]', ''),
+                    'departure_airport': request.form.get(f'segments[{segment_index}][departure_airport]', ''),
+                    'arrival_airport': request.form.get(f'segments[{segment_index}][arrival_airport]', ''),
+                    'flight_date': request.form.get(f'segments[{segment_index}][flight_date]', ''),
+                    'departure_time': request.form.get(f'segments[{segment_index}][departure_time]', ''),
+                    'arrival_time': request.form.get(f'segments[{segment_index}][arrival_time]', ''),
+                    'duration': request.form.get(f'segments[{segment_index}][duration]', ''),
+                    'connection_type': request.form.get(f'segments[{segment_index}][connection_type]', ''),
+                    'aircraft_type': request.form.get(f'segments[{segment_index}][aircraft_type]', ''),
+                }
+                
+                # Only add segment if it has essential data
+                if segment_data['airline'] and segment_data['flight_number']:
+                    segments.append(segment_data)
+                    print(f"Added segment {segment_index + 1}: {segment_data['airline']} {segment_data['flight_number']}", file=sys.stderr)
+                
+                segment_index += 1
+            
+            # If no segments data found, fall back to old single-flight format for backward compatibility
+            if not segments:
+                segments = [{
+                    'airline': request.form.get('airline', ''),
+                    'flight_number': request.form.get('flight_number', ''),
+                    'departure_airport': request.form.get('departure_airport', ''),
+                    'arrival_airport': request.form.get('arrival_airport', ''),
+                    'flight_date': request.form.get('flight_date', ''),
+                    'departure_time': request.form.get('flight_time', ''),  # Old field name
+                    'arrival_time': request.form.get('arrival_time', ''),
+                    'duration': request.form.get('duration', ''),
+                    'connection_type': request.form.get('connection_type', ''),
+                    'aircraft_type': request.form.get('aircraft_type', ''),
+                }]
+                print("Using legacy single-flight format for backward compatibility", file=sys.stderr)
+            
             flight_details = {
-                'airline': request.form.get('airline', ''),
-                'flight_number': request.form.get('flight_number', ''),
-                'departure_airport': request.form.get('departure_airport', ''),
-                'arrival_airport': request.form.get('arrival_airport', ''),
-                'flight_date': request.form.get('flight_date', ''),
-                'flight_time': request.form.get('flight_time', ''),
-                'arrival_time': request.form.get('arrival_time', ''),
-                'duration': request.form.get('duration', ''),
+                'flight_type': flight_type,
+                'segments': segments,
                 'travel_class': request.form.get('travel_class', ''),
                 'terminal': request.form.get('terminal', ''),
-                'aircraft_type': request.form.get('aircraft_type', ''),
-                'connection_type': request.form.get('connection_type', ''),
                 'baggage_allowance': request.form.get('baggage_allowance', ''),
                 'seat_assignment': request.form.get('seat_assignment', ''),
                 'ticket_number': request.form.get('ticket_number', ''),
+                'pnr': request.form.get('pnr', ''),
                 'supplier': supplier_code,
                 'supplier_id': supplier_object.id if supplier_object else None,
                 'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
-                'pnr': request.form.get('pnr', ''),
                 'passenger_count': {
                     'adults': request.form.get('adults', 1),
                     'children': request.form.get('children', 0),
@@ -1095,7 +1133,18 @@ def confirm_service(item_id):
                 'cost_currency': cost_currency,
                 'payment_due_date': payment_due_date,
                 'is_paid': is_paid,
-                'notes': form_notes
+                'notes': form_notes,
+                # Legacy fields for backward compatibility with existing voucher templates
+                'airline': segments[0]['airline'] if segments else '',
+                'flight_number': segments[0]['flight_number'] if segments else '',
+                'departure_airport': segments[0]['departure_airport'] if segments else '',
+                'arrival_airport': segments[0]['arrival_airport'] if segments else '',
+                'flight_date': segments[0]['flight_date'] if segments else '',
+                'flight_time': segments[0]['departure_time'] if segments else '',
+                'arrival_time': segments[0]['arrival_time'] if segments else '',
+                'duration': segments[0]['duration'] if segments else '',
+                'connection_type': segments[0]['connection_type'] if segments else '',
+                'aircraft_type': segments[0]['aircraft_type'] if segments else '',
             }
             
             # Get passenger names
@@ -1103,6 +1152,7 @@ def confirm_service(item_id):
             if passenger_names:
                 flight_details['passenger_names'] = passenger_names
             
+            print(f"Final flight details with {len(segments)} segments: {flight_details}", file=sys.stderr)
             document.notes = json.dumps(flight_details)
         
         elif service_item.service_type == 'HOTEL':

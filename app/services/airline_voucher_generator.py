@@ -259,23 +259,51 @@ class AirlineVoucherGenerator:
                         <th>Ticket No</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody>"""
+            
+            # Handle multi-segment flight data
+            if 'segments' in flight_data and flight_data['segments']:
+                # Process each flight segment
+                for i, segment in enumerate(flight_data['segments']):
+                    trip_number = i + 1
+                    html_content += f"""
+                    <tr>
+                        <td>{trip_number}</td>
+                        <td>{segment.get('airline', '')} {segment.get('flight_number', '')}</td>
+                        <td>{segment.get('departure_airport', 'TBD')}</td>
+                        <td>{segment.get('arrival_airport', 'TBD')}</td>
+                        <td>{segment.get('flight_date', 'N/A')}</td>
+                        <td>{segment.get('departure_time', 'TBD')}</td>
+                        <td>{segment.get('arrival_time', 'TBD')}</td>
+                        <td>{segment.get('duration', 'TBD')}</td>
+                        <td>{segment.get('aircraft_type', 'TBD')}</td>
+                        <td>{segment.get('connection_type', 'TBD')}</td>
+                        <td>{flight_data.get('travel_class', 'Economy')}</td>
+                        <td>{flight_data.get('baggage_allowance', 'TBD')}</td>
+                        <td>{flight_data.get('pnr', 'TBD')}</td>
+                        <td>{flight_data.get('ticket_number', 'TBD')}</td>
+                    </tr>"""
+            else:
+                # Fallback to single flight format for backward compatibility
+                html_content += f"""
                     <tr>
                         <td>1</td>
-                        <td>{flight_data.get('flight_number', 'QR 405')}</td>
-                        <td>AMM</td>
-                        <td>DOH</td>
-                        <td>{flight_data.get('departure_date', 'N/A')}</td>
-                        <td>{flight_data.get('departure_time', '02:20')}</td>
+                        <td>{flight_data.get('airline', '')} {flight_data.get('flight_number', '')}</td>
+                        <td>{flight_data.get('departure_airport', 'TBD')}</td>
+                        <td>{flight_data.get('arrival_airport', 'TBD')}</td>
+                        <td>{flight_data.get('flight_date', 'N/A')}</td>
+                        <td>{flight_data.get('flight_time', 'TBD')}</td>
                         <td>{flight_data.get('arrival_time', 'TBD')}</td>
                         <td>{flight_data.get('duration', 'TBD')}</td>
                         <td>{flight_data.get('aircraft_type', 'TBD')}</td>
                         <td>{flight_data.get('connection_type', 'TBD')}</td>
                         <td>{flight_data.get('travel_class', 'Economy')}</td>
                         <td>{flight_data.get('baggage_allowance', 'TBD')}</td>
-                        <td>XVSQ4V</td>
+                        <td>{flight_data.get('pnr', 'TBD')}</td>
                         <td>{flight_data.get('ticket_number', 'TBD')}</td>
-                    </tr>
+                    </tr>"""
+            
+            html_content += """
                 </tbody>
             </table>
         </div>"""
