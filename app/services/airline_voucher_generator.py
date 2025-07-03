@@ -371,9 +371,9 @@ class AirlineVoucherGenerator:
         
         hotel = hotel_items[0]
         
-        # Initialize with defaults, then override with real data
+        # Initialize with defaults - DO NOT use hotel.description as it may be wrong
         hotel_data = {
-            'name': hotel.description or 'Hotel Accommodation',
+            'name': 'Hotel Accommodation',  # Will be overridden by confirmation data
             'address': 'Hotel Address',
             'phone': 'N/A',
             'checkin_date': hotel.start_date.strftime("%d-%b-%Y") if hotel.start_date else "N/A",
@@ -383,14 +383,23 @@ class AirlineVoucherGenerator:
             'description': hotel.description or 'Hotel accommodation'
         }
         
+        print(f"DEBUG: Hotel description from ServiceItem: {hotel.description}")
+        print(f"DEBUG: Number of documents for hotel: {len(hotel.documents)}")
+        
         # Extract real data from confirmation documents
         for document in hotel.documents:
+            print(f"DEBUG: Checking document ID {document.id}")
             if hasattr(document, 'parsed_data') and document.parsed_data:
                 parsed_data = document.parsed_data
+                print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
+                print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
                 
                 # Use real hotel name from confirmation
                 if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
                     hotel_data['name'] = parsed_data['hotel_name']
+                    print(f"DEBUG: Set hotel name to: '{hotel_data['name']}'")
+                else:
+                    print("DEBUG: No hotel_name found in parsed_data")
                 
                 # Use real dates from confirmation
                 if 'from_date' in parsed_data and parsed_data['from_date']:
