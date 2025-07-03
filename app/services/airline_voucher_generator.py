@@ -270,18 +270,18 @@ class AirlineVoucherGenerator:
                     <tr>
                         <td>{trip_number}</td>
                         <td>{segment.get('airline', '')} {segment.get('flight_number', '')}</td>
-                        <td>{segment.get('departure_airport', 'TBD')}</td>
-                        <td>{segment.get('arrival_airport', 'TBD')}</td>
-                        <td>{segment.get('flight_date', 'N/A')}</td>
-                        <td>{segment.get('departure_time', 'TBD')}</td>
-                        <td>{segment.get('arrival_time', 'TBD')}</td>
-                        <td>{segment.get('duration', 'TBD')}</td>
-                        <td>{segment.get('aircraft_type', 'TBD')}</td>
-                        <td>{segment.get('connection_type', 'TBD')}</td>
-                        <td>{flight_data.get('travel_class', 'Economy')}</td>
-                        <td>{flight_data.get('baggage_allowance', 'TBD')}</td>
-                        <td>{flight_data.get('pnr', 'TBD')}</td>
-                        <td>{flight_data.get('ticket_number', 'TBD')}</td>
+                        <td>{segment.get('departure_airport', '')}</td>
+                        <td>{segment.get('arrival_airport', '')}</td>
+                        <td>{segment.get('flight_date', '')}</td>
+                        <td>{segment.get('departure_time', '')}</td>
+                        <td>{segment.get('arrival_time', '')}</td>
+                        <td>{segment.get('duration', '')}</td>
+                        <td>{segment.get('aircraft_type', '')}</td>
+                        <td>{segment.get('connection_type', '')}</td>
+                        <td>{flight_data.get('travel_class', '')}</td>
+                        <td>{flight_data.get('baggage_allowance', '')}</td>
+                        <td>{flight_data.get('pnr', '')}</td>
+                        <td>{flight_data.get('ticket_number', '')}</td>
                     </tr>"""
             else:
                 # Fallback to single flight format for backward compatibility
@@ -289,18 +289,18 @@ class AirlineVoucherGenerator:
                     <tr>
                         <td>1</td>
                         <td>{flight_data.get('airline', '')} {flight_data.get('flight_number', '')}</td>
-                        <td>{flight_data.get('departure_airport', 'TBD')}</td>
-                        <td>{flight_data.get('arrival_airport', 'TBD')}</td>
-                        <td>{flight_data.get('flight_date', 'N/A')}</td>
-                        <td>{flight_data.get('flight_time', 'TBD')}</td>
-                        <td>{flight_data.get('arrival_time', 'TBD')}</td>
-                        <td>{flight_data.get('duration', 'TBD')}</td>
-                        <td>{flight_data.get('aircraft_type', 'TBD')}</td>
-                        <td>{flight_data.get('connection_type', 'TBD')}</td>
-                        <td>{flight_data.get('travel_class', 'Economy')}</td>
-                        <td>{flight_data.get('baggage_allowance', 'TBD')}</td>
-                        <td>{flight_data.get('pnr', 'TBD')}</td>
-                        <td>{flight_data.get('ticket_number', 'TBD')}</td>
+                        <td>{flight_data.get('departure_airport', '')}</td>
+                        <td>{flight_data.get('arrival_airport', '')}</td>
+                        <td>{flight_data.get('flight_date', '')}</td>
+                        <td>{flight_data.get('flight_time', '')}</td>
+                        <td>{flight_data.get('arrival_time', '')}</td>
+                        <td>{flight_data.get('duration', '')}</td>
+                        <td>{flight_data.get('aircraft_type', '')}</td>
+                        <td>{flight_data.get('connection_type', '')}</td>
+                        <td>{flight_data.get('travel_class', '')}</td>
+                        <td>{flight_data.get('baggage_allowance', '')}</td>
+                        <td>{flight_data.get('pnr', '')}</td>
+                        <td>{flight_data.get('ticket_number', '')}</td>
                     </tr>"""
             
             html_content += """
@@ -365,15 +365,8 @@ class AirlineVoucherGenerator:
         
         flight = flight_items[0]
         
-        # Initialize with defaults - will be overridden by real confirmation data
-        flight_data = {
-            'flight_number': 'TBD',
-            'departure_date': flight.start_date.strftime("%d-%b-%Y") if flight.start_date else "TBD",
-            'departure_time': 'TBD',
-            'arrival_time': 'TBD',
-            'ticket_number': 'TBD',
-            'description': flight.description or 'Flight booking'
-        }
+        # Initialize empty flight data - only populate with authentic confirmation data
+        flight_data = {}
         
         # Extract real data from confirmation documents (stored in notes as JSON)
         for document in flight.documents:
@@ -383,44 +376,57 @@ class AirlineVoucherGenerator:
                     parsed_data = json.loads(document.notes)
                     print(f"DEBUG: Flight confirmation data available: {list(parsed_data.keys())}")
                     
-                    # Only use real data from confirmation - no hardcoded values
-                    if 'flight_number' in parsed_data and parsed_data['flight_number']:
-                        flight_data['flight_number'] = parsed_data['flight_number']
-                    if 'flight_time' in parsed_data and parsed_data['flight_time']:
-                        flight_data['departure_time'] = parsed_data['flight_time']
-                    if 'arrival_time' in parsed_data and parsed_data['arrival_time']:
-                        flight_data['arrival_time'] = parsed_data['arrival_time']
-                    if 'duration' in parsed_data and parsed_data['duration']:
-                        flight_data['duration'] = parsed_data['duration']
-                    if 'flight_date' in parsed_data and parsed_data['flight_date']:
-                        # Convert flight_date to proper format
-                        try:
-                            from datetime import datetime
-                            date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
-                            flight_data['departure_date'] = date_obj.strftime("%d-%b-%Y")
-                        except:
-                            flight_data['departure_date'] = parsed_data['flight_date']
+                    # Handle multi-segment flights
+                    if 'segments' in parsed_data and parsed_data['segments']:
+                        flight_data['segments'] = []
+                        for segment in parsed_data['segments']:
+                            # Only include segments with authentic data
+                            if segment.get('airline') and segment.get('flight_number'):
+                                flight_data['segments'].append(segment)
+                        
+                        # If we have segments, use multi-segment format
+                        if flight_data['segments']:
+                            flight_data['flight_type'] = parsed_data.get('flight_type', 'multi_city')
                     
-                    # Aircraft and connection information
-                    if 'aircraft_type' in parsed_data and parsed_data['aircraft_type']:
-                        flight_data['aircraft_type'] = parsed_data['aircraft_type']
-                    if 'connection_type' in parsed_data and parsed_data['connection_type']:
-                        flight_data['connection_type'] = parsed_data['connection_type']
-                    if 'baggage_allowance' in parsed_data and parsed_data['baggage_allowance']:
-                        flight_data['baggage_allowance'] = parsed_data['baggage_allowance']
-                    if 'seat_assignment' in parsed_data and parsed_data['seat_assignment']:
-                        flight_data['seat_assignment'] = parsed_data['seat_assignment']
+                    # Extract single-flight format data for backward compatibility or when no segments
+                    if 'segments' not in flight_data or not flight_data['segments']:
+                        # Legacy single flight format
+                        flight_data['airline'] = parsed_data.get('airline', '')
+                        flight_data['flight_number'] = parsed_data.get('flight_number', '')
+                        flight_data['departure_airport'] = parsed_data.get('departure_airport', '')
+                        flight_data['arrival_airport'] = parsed_data.get('arrival_airport', '')
+                        flight_data['flight_time'] = parsed_data.get('flight_time', '')
+                        flight_data['arrival_time'] = parsed_data.get('arrival_time', '')
+                        flight_data['duration'] = parsed_data.get('duration', '')
+                        flight_data['aircraft_type'] = parsed_data.get('aircraft_type', '')
+                        flight_data['connection_type'] = parsed_data.get('connection_type', '')
+                        
+                        # Format flight date properly
+                        if parsed_data.get('flight_date'):
+                            try:
+                                from datetime import datetime
+                                date_obj = datetime.strptime(parsed_data['flight_date'], '%Y-%m-%d')
+                                flight_data['flight_date'] = date_obj.strftime("%d-%b-%Y")
+                            except:
+                                flight_data['flight_date'] = parsed_data['flight_date']
                     
-                    # Only use ticket number if it exists in confirmation
-                    if 'ticket_number' in parsed_data and parsed_data['ticket_number']:
-                        flight_data['ticket_number'] = parsed_data['ticket_number']
-                    # Don't fabricate ticket numbers - keep as 'TBD' if not in confirmation
+                    # Common flight details that apply to all formats
+                    flight_data['travel_class'] = parsed_data.get('travel_class', '')
+                    flight_data['baggage_allowance'] = parsed_data.get('baggage_allowance', '')
+                    flight_data['seat_assignment'] = parsed_data.get('seat_assignment', '')
+                    flight_data['ticket_number'] = parsed_data.get('ticket_number', '')
+                    flight_data['pnr'] = parsed_data.get('pnr', '')
+                    flight_data['terminal'] = parsed_data.get('terminal', '')
+                    
+                    # Only include passenger names if they exist
+                    if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
+                        flight_data['passenger_names'] = parsed_data['passenger_names']
                         
                 except (json.JSONDecodeError, TypeError) as e:
                     print(f"DEBUG: Failed to parse flight JSON from notes: {e}")
                     pass
         
-        return flight_data
+        return flight_data if flight_data else None
     
     def _extract_hotel_data(self, service_items):
         """Extract hotel data from service items and confirmation documents"""
