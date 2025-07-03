@@ -271,7 +271,7 @@ class AirlineVoucherGenerator:
                     pnr = segment.get('pnr', '')
                     print(f"DEBUG: Rendering segment {i}: airline={segment.get('airline')}, departure={departure_airport}, arrival={arrival_airport}, pnr={pnr}")
                     print(f"DEBUG: HTML values - departure='{departure_airport}', arrival='{arrival_airport}', pnr='{pnr}'")
-                    html_content += f"""
+                    row_html = f"""
                     <tr>
                         <td>{trip_number}</td>
                         <td>{segment.get('airline', '')} {segment.get('flight_number', '')}</td>
@@ -288,6 +288,8 @@ class AirlineVoucherGenerator:
                         <td>{pnr}</td>
                         <td>{segment.get('ticket_number', '')}</td>
                     </tr>"""
+                    print(f"DEBUG: Generated HTML row: {row_html[:200]}...")
+                    html_content += row_html
             else:
                 # Fallback to single flight format for backward compatibility
                 html_content += f"""
