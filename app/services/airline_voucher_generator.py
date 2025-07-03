@@ -278,10 +278,10 @@ class AirlineVoucherGenerator:
                         <td>{segment.get('duration', '')}</td>
                         <td>{segment.get('aircraft_type', '')}</td>
                         <td>{segment.get('connection_type', '')}</td>
-                        <td>{flight_data.get('travel_class', '')}</td>
+                        <td>{segment.get('travel_class', flight_data.get('travel_class', ''))}</td>
                         <td>{flight_data.get('baggage_allowance', '')}</td>
-                        <td>{flight_data.get('pnr', '')}</td>
-                        <td>{flight_data.get('ticket_number', '')}</td>
+                        <td>{segment.get('pnr', '')}</td>
+                        <td>{segment.get('ticket_number', '')}</td>
                     </tr>"""
             else:
                 # Fallback to single flight format for backward compatibility
@@ -407,13 +407,27 @@ class AirlineVoucherGenerator:
                         if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
                             flight_data['passenger_names'].extend(parsed_data['passenger_names'])
                         
-                        # Set common flight details from the most recent document
-                        flight_data['travel_class'] = parsed_data.get('travel_class', flight_data.get('travel_class', ''))
-                        flight_data['baggage_allowance'] = parsed_data.get('baggage_allowance', flight_data.get('baggage_allowance', ''))
-                        flight_data['seat_assignment'] = parsed_data.get('seat_assignment', flight_data.get('seat_assignment', ''))
-                        flight_data['ticket_number'] = parsed_data.get('ticket_number', flight_data.get('ticket_number', ''))
-                        flight_data['pnr'] = parsed_data.get('pnr', flight_data.get('pnr', ''))
-                        flight_data['terminal'] = parsed_data.get('terminal', flight_data.get('terminal', ''))
+                        # Store segment-specific data without mixing between flights
+                        # Each segment should keep its own PNR, ticket number, etc.
+                        if 'segments' in parsed_data and parsed_data['segments']:
+                            # For multi-segment format, data is already in segments
+                            pass
+                        else:
+                            # For single flight, add the specific data to the segment we just created
+                            if flight_data['segments']:
+                                last_segment = flight_data['segments'][-1]
+                                last_segment['pnr'] = parsed_data.get('pnr', '')
+                                last_segment['ticket_number'] = parsed_data.get('ticket_number', '')
+                                last_segment['travel_class'] = parsed_data.get('travel_class', '')
+                                last_segment['terminal'] = parsed_data.get('terminal', '')
+                        
+                        # Only set global values if not already set (from first document)
+                        if not flight_data.get('travel_class'):
+                            flight_data['travel_class'] = parsed_data.get('travel_class', '')
+                        if not flight_data.get('baggage_allowance'):
+                            flight_data['baggage_allowance'] = parsed_data.get('baggage_allowance', '')
+                        if not flight_data.get('seat_assignment'):
+                            flight_data['seat_assignment'] = parsed_data.get('seat_assignment', '')
                         
                     except (json.JSONDecodeError, TypeError) as e:
                         print(f"DEBUG: Failed to parse flight JSON from document {document.id}: {e}")
