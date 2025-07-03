@@ -386,63 +386,74 @@ class AirlineVoucherGenerator:
         print(f"DEBUG: Hotel description from ServiceItem: {hotel.description}")
         print(f"DEBUG: Number of documents for hotel: {len(hotel.documents)}")
         
-        # Extract real data from confirmation documents
+        # Extract real data from confirmation documents  
         for document in hotel.documents:
             print(f"DEBUG: Checking document ID {document.id}")
-            if hasattr(document, 'parsed_data') and document.parsed_data:
-                parsed_data = document.parsed_data
-                print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
-                print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
-                
-                # Use real hotel name from confirmation
-                if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
-                    hotel_data['name'] = parsed_data['hotel_name']
-                    print(f"DEBUG: Set hotel name to: '{hotel_data['name']}'")
-                else:
-                    print("DEBUG: No hotel_name found in parsed_data")
-                
-                # Use real dates from confirmation
-                if 'from_date' in parsed_data and parsed_data['from_date']:
-                    try:
-                        from datetime import datetime
-                        from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
-                        hotel_data['checkin_date'] = from_date.strftime("%d-%b-%Y")
-                    except:
-                        hotel_data['checkin_date'] = parsed_data['from_date']
-                
-                if 'to_date' in parsed_data and parsed_data['to_date']:
-                    try:
-                        from datetime import datetime
-                        to_date = datetime.strptime(parsed_data['to_date'], '%Y-%m-%d')
-                        hotel_data['checkout_date'] = to_date.strftime("%d-%b-%Y")
+            print(f"DEBUG: Document type: {document.document_type}")
+            print(f"DEBUG: Document notes length: {len(document.notes) if document.notes else 0}")
+            
+            if document.document_type == 'CONFIRMATION' and document.notes:
+                try:
+                    # Parse JSON notes for confirmation details (this is where the real data is!)
+                    import json
+                    parsed_data = json.loads(document.notes)
+                    print(f"DEBUG: Successfully parsed JSON from notes")
+                    print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
+                    print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
+                    
+                    # Use real hotel name from confirmation
+                    if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
+                        hotel_data['name'] = parsed_data['hotel_name']
+                        print(f"DEBUG: Set hotel name to: '{hotel_data['name']}'")
                         
-                        # Calculate real nights from confirmation dates
-                        if 'from_date' in parsed_data:
+                    # Use real dates from confirmation
+                    if 'from_date' in parsed_data and parsed_data['from_date']:
+                        try:
+                            from datetime import datetime
                             from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
-                            hotel_data['nights'] = (to_date - from_date).days
-                    except:
-                        hotel_data['checkout_date'] = parsed_data['to_date']
-                
-                # Extract room information
-                if 'rooms' in parsed_data and parsed_data['rooms']:
-                    rooms_data = parsed_data['rooms']
-                    if isinstance(rooms_data, dict):
-                        # Convert string numbers to integers for comparison
-                        single_count = int(rooms_data.get('single', 0))
-                        double_count = int(rooms_data.get('double', 0))
-                        twin_count = int(rooms_data.get('twin', 0))
-                        triple_count = int(rooms_data.get('triple', 0))
-                        
-                        if single_count > 0:
-                            hotel_data['room_type'] = 'Single Room'
-                        elif double_count > 0:
-                            hotel_data['room_type'] = 'Double Room'
-                        elif twin_count > 0:
-                            hotel_data['room_type'] = 'Twin Room'
-                        elif triple_count > 0:
-                            hotel_data['room_type'] = 'Triple Room'
-                        elif rooms_data.get('other'):
-                            hotel_data['room_type'] = rooms_data['other']
+                            hotel_data['checkin_date'] = from_date.strftime("%d-%b-%Y")
+                        except:
+                            hotel_data['checkin_date'] = parsed_data['from_date']
+                    
+                    if 'to_date' in parsed_data and parsed_data['to_date']:
+                        try:
+                            from datetime import datetime
+                            to_date = datetime.strptime(parsed_data['to_date'], '%Y-%m-%d')
+                            hotel_data['checkout_date'] = to_date.strftime("%d-%b-%Y")
+                            
+                            # Calculate real nights from confirmation dates
+                            if 'from_date' in parsed_data:
+                                from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
+                                hotel_data['nights'] = (to_date - from_date).days
+                        except:
+                            hotel_data['checkout_date'] = parsed_data['to_date']
+                    
+                    # Extract room information
+                    if 'rooms' in parsed_data and parsed_data['rooms']:
+                        rooms_data = parsed_data['rooms']
+                        if isinstance(rooms_data, dict):
+                            # Convert string numbers to integers for comparison
+                            single_count = int(rooms_data.get('single', 0))
+                            double_count = int(rooms_data.get('double', 0))
+                            twin_count = int(rooms_data.get('twin', 0))
+                            triple_count = int(rooms_data.get('triple', 0))
+                            
+                            if single_count > 0:
+                                hotel_data['room_type'] = 'Single Room'
+                            elif double_count > 0:
+                                hotel_data['room_type'] = 'Double Room'
+                            elif twin_count > 0:
+                                hotel_data['room_type'] = 'Twin Room'
+                            elif triple_count > 0:
+                                hotel_data['room_type'] = 'Triple Room'
+                            elif rooms_data.get('other'):
+                                hotel_data['room_type'] = rooms_data['other']
+                                
+                except (json.JSONDecodeError, TypeError) as e:
+                    print(f"DEBUG: Failed to parse JSON from notes: {e}")
+                    # If not JSON, treat as plain text
+                    pass
+
         
         # Get hotel contact info from database using the real hotel name
         address, phone = self._get_hotel_contact_info(hotel_data['name'])
