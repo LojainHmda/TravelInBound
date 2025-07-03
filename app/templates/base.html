@@ -364,7 +364,7 @@
                         Suppliers
                     </a>
                 </li>
-                {% if current_user.can_access_finance() %}
+                {% if current_user.is_authenticated and current_user.can_access_finance() %}
                 <li>
                     <a href="{{ url_for('finance.index') }}" class="{% if '/finance/' in request.path %}active{% endif %}">
                         <i class="fas fa-money-bill-wave"></i>

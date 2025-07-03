@@ -250,6 +250,11 @@ class AirlineVoucherGenerator:
                         <th>Date</th>
                         <th>Departure</th>
                         <th>Arrival</th>
+                        <th>Duration</th>
+                        <th>Aircraft</th>
+                        <th>Connection</th>
+                        <th>Class</th>
+                        <th>Baggage</th>
                         <th>PNR</th>
                         <th>Ticket No</th>
                     </tr>
@@ -262,9 +267,14 @@ class AirlineVoucherGenerator:
                         <td>DOH</td>
                         <td>{flight_data.get('departure_date', 'N/A')}</td>
                         <td>{flight_data.get('departure_time', '02:20')}</td>
-                        <td>{flight_data.get('arrival_time', '06:20')}</td>
+                        <td>{flight_data.get('arrival_time', 'TBD')}</td>
+                        <td>{flight_data.get('duration', 'TBD')}</td>
+                        <td>{flight_data.get('aircraft_type', 'TBD')}</td>
+                        <td>{flight_data.get('connection_type', 'TBD')}</td>
+                        <td>{flight_data.get('travel_class', 'Economy')}</td>
+                        <td>{flight_data.get('baggage_allowance', 'TBD')}</td>
                         <td>XVSQ4V</td>
-                        <td>{flight_data.get('ticket_number', '607-2410342529')}</td>
+                        <td>{flight_data.get('ticket_number', 'TBD')}</td>
                     </tr>
                 </tbody>
             </table>
@@ -350,6 +360,10 @@ class AirlineVoucherGenerator:
                         flight_data['flight_number'] = parsed_data['flight_number']
                     if 'flight_time' in parsed_data and parsed_data['flight_time']:
                         flight_data['departure_time'] = parsed_data['flight_time']
+                    if 'arrival_time' in parsed_data and parsed_data['arrival_time']:
+                        flight_data['arrival_time'] = parsed_data['arrival_time']
+                    if 'duration' in parsed_data and parsed_data['duration']:
+                        flight_data['duration'] = parsed_data['duration']
                     if 'flight_date' in parsed_data and parsed_data['flight_date']:
                         # Convert flight_date to proper format
                         try:
@@ -358,6 +372,16 @@ class AirlineVoucherGenerator:
                             flight_data['departure_date'] = date_obj.strftime("%d-%b-%Y")
                         except:
                             flight_data['departure_date'] = parsed_data['flight_date']
+                    
+                    # Aircraft and connection information
+                    if 'aircraft_type' in parsed_data and parsed_data['aircraft_type']:
+                        flight_data['aircraft_type'] = parsed_data['aircraft_type']
+                    if 'connection_type' in parsed_data and parsed_data['connection_type']:
+                        flight_data['connection_type'] = parsed_data['connection_type']
+                    if 'baggage_allowance' in parsed_data and parsed_data['baggage_allowance']:
+                        flight_data['baggage_allowance'] = parsed_data['baggage_allowance']
+                    if 'seat_assignment' in parsed_data and parsed_data['seat_assignment']:
+                        flight_data['seat_assignment'] = parsed_data['seat_assignment']
                     
                     # Only use ticket number if it exists in confirmation
                     if 'ticket_number' in parsed_data and parsed_data['ticket_number']:

@@ -39,8 +39,19 @@
         <input type="date" name="flight_date" class="form-control" value="{{ confirmation_data.flight_date }}" required>
     </div>
     <div class="col-md-6">
-        <label class="form-label">Flight Time</label>
+        <label class="form-label">Departure Time</label>
         <input type="time" name="flight_time" class="form-control" value="{{ confirmation_data.flight_time }}" required>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Arrival Time</label>
+        <input type="time" name="arrival_time" class="form-control" value="{{ confirmation_data.arrival_time }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Flight Duration</label>
+        <input type="text" name="duration" class="form-control" value="{{ confirmation_data.duration }}" placeholder="e.g., 4h 25m">
     </div>
 </div>
 
@@ -57,6 +68,32 @@
     <div class="col-md-6">
         <label class="form-label">Terminal</label>
         <input type="text" name="terminal" class="form-control" value="{{ confirmation_data.terminal }}" placeholder="e.g., T5">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Aircraft Type</label>
+        <input type="text" name="aircraft_type" class="form-control" value="{{ confirmation_data.aircraft_type }}" placeholder="e.g., Boeing 777">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Connection Type</label>
+        <select name="connection_type" class="form-select">
+            <option value="Non Stop" {% if confirmation_data.connection_type == 'Non Stop' %}selected{% endif %}>Non Stop</option>
+            <option value="1 Stop" {% if confirmation_data.connection_type == '1 Stop' %}selected{% endif %}>1 Stop</option>
+            <option value="2+ Stops" {% if confirmation_data.connection_type == '2+ Stops' %}selected{% endif %}>2+ Stops</option>
+        </select>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Baggage Allowance</label>
+        <input type="text" name="baggage_allowance" class="form-control" value="{{ confirmation_data.baggage_allowance }}" placeholder="e.g., 25kg">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Seat Assignment</label>
+        <input type="text" name="seat_assignment" class="form-control" value="{{ confirmation_data.seat_assignment }}" placeholder="e.g., 12A, 12B">
     </div>
 </div>
 
