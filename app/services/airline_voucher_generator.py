@@ -266,13 +266,17 @@ class AirlineVoucherGenerator:
                 # Process each flight segment
                 for i, segment in enumerate(flight_data['segments']):
                     trip_number = i + 1
-                    print(f"DEBUG: Rendering segment {i}: airline={segment.get('airline')}, departure={segment.get('departure_airport')}, arrival={segment.get('arrival_airport')}, pnr={segment.get('pnr')}")
+                    departure_airport = segment.get('departure_airport', '')
+                    arrival_airport = segment.get('arrival_airport', '')
+                    pnr = segment.get('pnr', '')
+                    print(f"DEBUG: Rendering segment {i}: airline={segment.get('airline')}, departure={departure_airport}, arrival={arrival_airport}, pnr={pnr}")
+                    print(f"DEBUG: HTML values - departure='{departure_airport}', arrival='{arrival_airport}', pnr='{pnr}'")
                     html_content += f"""
                     <tr>
                         <td>{trip_number}</td>
                         <td>{segment.get('airline', '')} {segment.get('flight_number', '')}</td>
-                        <td>{segment.get('departure_airport', '')}</td>
-                        <td>{segment.get('arrival_airport', '')}</td>
+                        <td>{departure_airport}</td>
+                        <td>{arrival_airport}</td>
                         <td>{segment.get('flight_date', '')}</td>
                         <td>{segment.get('departure_time', '')}</td>
                         <td>{segment.get('arrival_time', '')}</td>
@@ -281,7 +285,7 @@ class AirlineVoucherGenerator:
                         <td>{segment.get('connection_type', '')}</td>
                         <td>{segment.get('travel_class', flight_data.get('travel_class', ''))}</td>
                         <td>{flight_data.get('baggage_allowance', '')}</td>
-                        <td>{segment.get('pnr', '')}</td>
+                        <td>{pnr}</td>
                         <td>{segment.get('ticket_number', '')}</td>
                     </tr>"""
             else:
