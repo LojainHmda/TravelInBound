@@ -86,56 +86,76 @@ def analyze_flight_ticket(image_data):
 
     try:
         system_prompt = """
-        You are a flight ticket analyzer. Please carefully examine this airline ticket and extract the following key information:
+        You are an expert airline ticket analyzer specializing in complex multi-leg and connecting flight itineraries. 
+        Examine this airline ticket/e-ticket carefully and extract ALL flight information.
 
-        IMPORTANT: This ticket might contain multiple flight segments (outbound, return, or connecting flights). 
-        Please extract ALL segments if they exist.
+        CRITICAL: Look for ALL flight segments including:
+        - Outbound flights (departure city to destination)
+        - Return flights (destination back to origin)  
+        - Connecting flights (intermediate stops)
+        - Multi-city segments (different destinations)
+        - Code-share flights (same journey operated by different airlines)
 
-        For each flight segment, extract:
-        1. Flight number (including airline code like 'RJ 502')
-        2. Airline name (e.g., 'Royal Jordanian')
-        3. Departure airport (city and code, e.g., 'Cairo (CAI)')
-        4. Arrival airport (city and code, e.g., 'Amman (AMM)')
-        5. Departure date (in format YYYY-MM-DD if possible)
-        6. Departure time (in format HH:MM)
-        7. Arrival date (if different from departure)
-        8. Arrival time (in format HH:MM)
-        9. Booking reference/PNR (usually 5-6 alphanumeric characters)
-        10. Passenger name(s)
-        11. Ticket number(s) (usually 13-14 digits)
+        AIRLINE TICKET PATTERNS TO RECOGNIZE:
+        - Qatar Airways tickets often show connecting flights through Doha (DOH)
+        - Emirates tickets may connect through Dubai (DXB)
+        - Turkish Airlines connects through Istanbul (IST)
+        - Look for flight tables, itinerary sections, or segment listings
+        - Check for "via" or "connecting through" phrases
+        - Identify layover times and connection airports
 
-        If the ticket is partially visible or any information is unclear, extract what you can confidently identify.
+        For EACH flight segment found, extract:
+        1. Flight number (e.g., 'QR 402', 'EK 903', 'TK 154')
+        2. Airline name (Qatar Airways, Emirates, Turkish Airlines, etc.)
+        3. Departure airport with city name and code (e.g., 'Amman Queen Alia (AMM)')
+        4. Arrival airport with city name and code (e.g., 'Doha Hamad (DOH)')
+        5. Flight date (YYYY-MM-DD format preferred)
+        6. Departure time (HH:MM in 24-hour format)
+        7. Arrival time (HH:MM in 24-hour format)
+        8. Connection type ("direct", "connecting", "layover")
+        9. Aircraft type if visible (e.g., "Boeing 777", "Airbus A350")
 
-        Respond with a JSON object ONLY with these exact keys:
+        PASSENGER & BOOKING INFO:
+        - PNR/Booking reference (typically 5-6 alphanumeric characters)
+        - All passenger names listed
+        - E-ticket numbers (13-digit numbers starting with airline code)
+        - Travel class (Economy, Business, First)
+        - Seat assignments if shown
+
+        OUTPUT FORMAT - JSON ONLY:
         {
             "flight_type": "one_way|round_trip|multi_city",
             "segments": [
                 {
-                    "flight_number": "",
-                    "airline": "",
-                    "departure_airport": "",
-                    "departure_code": "",
-                    "arrival_airport": "",
-                    "arrival_code": "",
-                    "flight_date": "",
-                    "departure_time": "",
-                    "arrival_time": "",
-                    "duration": "",
-                    "connection_type": "",
-                    "aircraft_type": ""
+                    "flight_number": "QR 402",
+                    "airline": "Qatar Airways", 
+                    "departure_airport": "Amman Queen Alia Intl",
+                    "departure_code": "AMM",
+                    "arrival_airport": "Doha Hamad Intl",
+                    "arrival_code": "DOH",
+                    "flight_date": "2025-07-15",
+                    "departure_time": "14:30",
+                    "arrival_time": "16:45",
+                    "duration": "2h 15m",
+                    "connection_type": "connecting",
+                    "aircraft_type": "Boeing 777"
                 }
             ],
-            "booking_reference": "",
-            "passenger_names": [],
-            "ticket_numbers": [],
-            "travel_class": "",
-            "terminal": "",
-            "baggage_allowance": "",
-            "seat_assignment": ""
+            "booking_reference": "ABC123",
+            "passenger_names": ["John Smith", "Jane Smith"],
+            "ticket_numbers": ["1572345678901", "1572345678902"],
+            "travel_class": "Economy",
+            "terminal": "Terminal 3",
+            "baggage_allowance": "23kg",
+            "seat_assignment": "12A, 12B"
         }
 
-        If you find multiple flight segments (return or connecting flights), add them as separate objects in the segments array.
-        If you cannot find a particular piece of information, leave its value as an empty string or empty array.
+        IMPORTANT: 
+        - Add ALL segments as separate objects in the segments array
+        - For connecting flights, identify the connection airport correctly
+        - If round-trip, ensure both outbound AND return segments are captured
+        - For multi-city, capture each city-to-city segment
+        - If information is unclear, extract what you can confidently read
         """
 
         logger.info(f"Sending request to OpenAI API with image of size {len(image_data)}")

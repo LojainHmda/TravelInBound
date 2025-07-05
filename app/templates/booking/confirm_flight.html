@@ -651,18 +651,42 @@ function fillFlightFormFromMultiSegmentData(flightData) {
     
     console.log('Filling form with multi-segment flight data:', flightData);
     
-    // Determine flight type and set dropdown
+    // Determine flight type based on segments analysis
     const flightTypeSelect = document.getElementById('flight_type');
-    if (flightData.flight_type) {
-        flightTypeSelect.value = flightData.flight_type;
-    } else if (flightData.segments && flightData.segments.length > 1) {
-        flightTypeSelect.value = 'round_trip'; // Default to round trip for multiple segments
-    } else {
-        flightTypeSelect.value = 'one_way';
+    let detectedFlightType = 'one_way';
+    
+    if (flightData.segments && flightData.segments.length > 0) {
+        const segments = flightData.segments;
+        
+        if (segments.length === 1) {
+            detectedFlightType = 'one_way';
+        } else if (segments.length === 2) {
+            // Check if it's a round trip (same origin/destination reversed)
+            const firstDeparture = segments[0].departure_code || segments[0].departure_airport;
+            const firstArrival = segments[0].arrival_code || segments[0].arrival_airport;
+            const secondDeparture = segments[1].departure_code || segments[1].departure_airport;
+            const secondArrival = segments[1].arrival_code || segments[1].arrival_airport;
+            
+            if (firstDeparture === secondArrival && firstArrival === secondDeparture) {
+                detectedFlightType = 'round_trip';
+            } else {
+                detectedFlightType = 'multi_city';
+            }
+        } else {
+            detectedFlightType = 'multi_city';
+        }
     }
     
-    // Update segments based on flight type
+    // Use provided flight type or detected type
+    flightTypeSelect.value = flightData.flight_type || detectedFlightType;
+    
+    // Update segments UI based on flight type
     updateFlightSegments();
+    
+    // Wait for UI update then fill segments
+    setTimeout(() => {
+        fillAllSegments(flightData.segments || [flightData]);
+    }, 100);
     
     // Fill passenger information
     const passengerNames = flightData.passenger_names || [];
@@ -779,6 +803,58 @@ function fillSegmentData(segmentIndex, segmentData) {
     
     if (segmentFields.travel_class && segmentData.travel_class) {
         segmentFields.travel_class.value = segmentData.travel_class;
+    }
+}
+
+function fillAllSegments(segments) {
+    // Fill each segment with improved data mapping
+    segments.forEach((segment, index) => {
+        fillSegmentDataEnhanced(index, segment);
+    });
+    
+    // If we have more segments than UI elements, create additional segments
+    const currentSegments = document.querySelectorAll('.flight-segment').length;
+    if (segments.length > currentSegments) {
+        for (let i = currentSegments; i < segments.length; i++) {
+            addFlightSegment();
+            setTimeout(() => {
+                fillSegmentDataEnhanced(i, segments[i]);
+            }, 50);
+        }
+    }
+}
+
+function fillSegmentDataEnhanced(segmentIndex, segmentData) {
+    console.log(`Filling segment ${segmentIndex}:`, segmentData);
+    
+    // Enhanced field mapping with better error handling
+    const fieldMappings = [
+        {field: 'departure_airport', data: segmentData.departure_airport || `${segmentData.departure_code || ''}`},
+        {field: 'arrival_airport', data: segmentData.arrival_airport || `${segmentData.arrival_code || ''}`},
+        {field: 'airline', data: segmentData.airline || ''},
+        {field: 'flight_number', data: segmentData.flight_number || ''},
+        {field: 'flight_date', data: segmentData.flight_date || ''},
+        {field: 'departure_time', data: segmentData.departure_time || ''},
+        {field: 'arrival_time', data: segmentData.arrival_time || ''},
+        {field: 'terminal', data: segmentData.terminal || ''},
+        {field: 'aircraft_type', data: segmentData.aircraft_type || ''},
+        {field: 'duration', data: segmentData.duration || ''}
+    ];
+    
+    fieldMappings.forEach(mapping => {
+        const element = document.querySelector(`input[name="segments[${segmentIndex}][${mapping.field}]"], select[name="segments[${segmentIndex}][${mapping.field}]"]`);
+        if (element && mapping.data) {
+            element.value = mapping.data;
+            console.log(`Set ${mapping.field} to: ${mapping.data}`);
+        }
+    });
+    
+    // Handle travel class separately
+    if (segmentData.travel_class) {
+        const travelClassElement = document.querySelector(`select[name="segments[${segmentIndex}][travel_class]"]`);
+        if (travelClassElement) {
+            travelClassElement.value = segmentData.travel_class;
+        }
     }
 }
 </script>
