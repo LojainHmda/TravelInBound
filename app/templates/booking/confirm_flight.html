@@ -17,7 +17,7 @@
             </nav>
         </div>
     </div>
-
+    
     <!-- Centered Card Container -->
     <div class="row justify-content-center">
         <div class="col-xl-8 col-lg-10 col-md-12">
@@ -28,10 +28,10 @@
                 </div>
                 <div class="card-body">
                     <p class="lead mb-4">Enter additional flight details for booking #{{ service_item.booking.reference_number }}</p>
-
+                    
                     <form method="POST" action="{{ url_for('booking.confirm_service', item_id=service_item.id) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
+                        
                         <!-- Multi-Segment Flight Interface Alert -->
                         <div class="mb-4">
                             <div class="alert alert-success" style="border: 3px solid #28a745; background-color: #d4edda;">
@@ -87,7 +87,7 @@
                                         <i class="fas fa-plane text-primary me-2"></i>
                                         <h6 class="mb-0 text-primary">✈ Flight Segment 1 (Outbound)</h6>
                                     </div>
-
+                                    
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Departure Airport</label>
@@ -100,7 +100,7 @@
                                                    value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Enter airport code (e.g. DOH) or start typing name for suggestions">
                                         </div>
                                     </div>
-
+                                    
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Airline</label>
@@ -113,7 +113,7 @@
                                                    value="{{ confirmation_data.flight_number|default('') }}" placeholder="e.g. QR 405">
                                         </div>
                                     </div>
-
+                                    
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label class="form-label">Date</label>
@@ -133,7 +133,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                            
                             <!-- Add Segment Button -->
                             <div class="mb-3" id="addSegmentContainer" style="display: none;">
                                 <button type="button" class="btn btn-outline-primary btn-sm" onclick="addFlightSegment()">
@@ -156,7 +156,7 @@
                                     <small class="text-muted">Airline's 6-character reference code</small>
                                 </div>
                             </div>
-
+                            
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Travel Class</label>
@@ -191,7 +191,7 @@
                                     <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
                                 </div>
                             </div>
-
+                            
                             <!-- Passenger Names Section -->
                             <div class="mb-3">
                                 <label class="form-label">Passenger Names</label>
@@ -291,16 +291,16 @@
 // Initialize multi-segment data from server
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing flight form with confirmation data...');
-
+    
     // Load segments from server data if available
     {% if confirmation_data.segments %}
     const segmentsData = {{ confirmation_data.segments|tojson|safe }};
     console.log('Loading segments data:', segmentsData);
-
+    
     // Set flight type based on number of segments
     const flightType = segmentsData.length > 2 ? 'multi_city' : (segmentsData.length === 2 ? 'round_trip' : 'one_way');
     document.getElementById('flight_type').value = flightType;
-
+    
     // Load each segment
     segmentsData.forEach((segment, index) => {
         if (index === 0) {
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const flightDateField = document.getElementById('flight-date-0');
             const depTimeField = document.getElementById('departure-time-0');
             const arrTimeField = document.getElementById('arrival-time-0');
-
+            
             if (airlineField) airlineField.value = segment.airline || '';
             if (flightNumberField) flightNumberField.value = segment.flight_number || '';
             if (depAirportField) depAirportField.value = segment.departure_airport || '';
@@ -325,11 +325,11 @@ document.addEventListener('DOMContentLoaded', function() {
             addFlightSegmentWithData(segment, index);
         }
     });
-
+    
     // Update flight segments UI
     updateFlightSegments();
     {% endif %}
-
+    
     // Initialize airline and airport autocomplete
     initializeAutocomplete();
 });
@@ -342,12 +342,12 @@ function addFlightSegmentWithData(segmentData, index) {
 
 function initializeAutocomplete() {
     console.log('Initializing autocomplete...');
-
+    
     // Add autocomplete to airline fields
     document.querySelectorAll('.airline-autocomplete').forEach(input => {
         setupAirlineAutocomplete(input);
     });
-
+    
     // Add autocomplete to airport fields  
     document.querySelectorAll('.airport-autocomplete').forEach(input => {
         setupAirportAutocomplete(input);
@@ -359,16 +359,16 @@ function setupAirlineAutocomplete(input) {
         console.warn('Airlines data not loaded');
         return;
     }
-
+    
     input.addEventListener('input', function() {
         const query = this.value.toLowerCase();
         if (query.length < 2) return;
-
+        
         const matches = airlines.filter(airline => 
             airline.code.toLowerCase().includes(query) || 
             airline.name.toLowerCase().includes(query)
         ).slice(0, 10);
-
+        
         showAutocompleteSuggestions(this, matches, (airline) => `${airline.code} - ${airline.name}`);
     });
 }
@@ -378,17 +378,17 @@ function setupAirportAutocomplete(input) {
         console.warn('Airports data not loaded');
         return;
     }
-
+    
     input.addEventListener('input', function() {
         const query = this.value.toLowerCase();
         if (query.length < 2) return;
-
+        
         const matches = airports.filter(airport => 
             airport.code.toLowerCase().includes(query) || 
             airport.name.toLowerCase().includes(query) ||
             airport.city.toLowerCase().includes(query)
         ).slice(0, 10);
-
+        
         showAutocompleteSuggestions(this, matches, (airport) => `${airport.code} - ${airport.name}, ${airport.city}`);
     });
 }
@@ -399,9 +399,9 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
     if (existingSuggestions) {
         existingSuggestions.remove();
     }
-
+    
     if (suggestions.length === 0) return;
-
+    
     // Create suggestions dropdown
     const suggestionsDiv = document.createElement('div');
     suggestionsDiv.className = 'autocomplete-suggestions';
@@ -418,7 +418,7 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
         z-index: 1000;
         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     `;
-
+    
     suggestions.forEach(item => {
         const suggestionDiv = document.createElement('div');
         suggestionDiv.className = 'autocomplete-suggestion';
@@ -428,27 +428,27 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
             border-bottom: 1px solid #eee;
         `;
         suggestionDiv.textContent = formatter(item);
-
+        
         suggestionDiv.addEventListener('mouseenter', function() {
             this.style.backgroundColor = '#f5f5f5';
         });
-
+        
         suggestionDiv.addEventListener('mouseleave', function() {
             this.style.backgroundColor = 'white';
         });
-
+        
         suggestionDiv.addEventListener('click', function() {
             input.value = item.code || item.name;
             suggestionsDiv.remove();
         });
-
+        
         suggestionsDiv.appendChild(suggestionDiv);
     });
-
+    
     // Position relative to input
     input.parentNode.style.position = 'relative';
     input.parentNode.appendChild(suggestionsDiv);
-
+    
     // Close suggestions when clicking outside
     document.addEventListener('click', function closeHandler(e) {
         if (!input.parentNode.contains(e.target)) {
@@ -459,167 +459,57 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
 }
 
 // Function to populate flight form from scanned ticket data (global scope)
-function populateFlightDetailsFromTicket(flightData) {
-    console.log('populateFlightDetailsFromTicket called with:', flightData);
-
+window.populateFlightDetailsFromTicket = function(flightData) {
+    console.log('Populating flight form with scanned data:', flightData);
+    
     if (!flightData) {
-        console.error('No flight data provided');
+        console.warn('No flight data provided');
         return;
     }
-
-    console.log('Filling form with flight data:', flightData);
-
-    // Set flight type
-    const flightTypeSelect = document.getElementById('flight_type');
-    let detectedFlightType = 'one_way';
-
+    
+    // Handle multi-segment flights
     if (flightData.segments && flightData.segments.length > 0) {
-        const segments = flightData.segments;
-        if (segments.length === 2) {
-            detectedFlightType = 'round_trip';
-        } else if (segments.length > 2) {
-            detectedFlightType = 'multi_city';
+        // Set flight type based on number of segments
+        const flightTypeField = document.getElementById('flight_type');
+        if (flightTypeField) {
+            if (flightData.segments.length > 2) {
+                flightTypeField.value = 'multi_city';
+            } else if (flightData.segments.length === 2) {
+                flightTypeField.value = 'round_trip';
+            } else {
+                flightTypeField.value = 'one_way';
+            }
         }
+        
+        // Populate first segment data
+        const firstSegment = flightData.segments[0];
+        populateSegmentFields(firstSegment, 0);
+        
+        // If more than one segment, add additional segments
+        if (flightData.segments.length > 1) {
+            for (let i = 1; i < flightData.segments.length; i++) {
+                console.log(`Additional segment ${i}:`, flightData.segments[i]);
+                addFlightSegmentUI(flightData.segments[i], i);
+            }
+        }
+    } else {
+        // Single flight data
+        populateSegmentFields(flightData, 0);
     }
-
-    flightTypeSelect.value = flightData.flight_type || detectedFlightType;
+    
+    // Populate common fields
+    populateCommonFields(flightData);
+    
+    // Re-initialize autocomplete for populated fields
+    initializeAutocompleteForNewFields();
+    
+    // Update flight segments display
     updateFlightSegments();
-
-    // Fill first segment with data
-    setTimeout(() => {
-        if (flightData.segments && flightData.segments.length > 0) {
-            const firstSegment = flightData.segments[0];
-            
-            // Fill first segment fields
-            const airlineField = document.querySelector('input[name="segments[0][airline]"]');
-            const flightNumberField = document.querySelector('input[name="segments[0][flight_number]"]');
-            const depAirportField = document.querySelector('input[name="segments[0][departure_airport]"]');
-            const arrAirportField = document.querySelector('input[name="segments[0][arrival_airport]"]');
-            const flightDateField = document.querySelector('input[name="segments[0][flight_date]"]');
-            const depTimeField = document.querySelector('input[name="segments[0][departure_time]"]');
-            const arrTimeField = document.querySelector('input[name="segments[0][arrival_time]"]');
-
-            if (airlineField && firstSegment.airline) airlineField.value = firstSegment.airline;
-            if (flightNumberField && firstSegment.flight_number) flightNumberField.value = firstSegment.flight_number;
-            if (depAirportField && firstSegment.departure_airport) depAirportField.value = firstSegment.departure_airport;
-            if (arrAirportField && firstSegment.arrival_airport) arrAirportField.value = firstSegment.arrival_airport;
-            if (flightDateField && firstSegment.flight_date) flightDateField.value = firstSegment.flight_date;
-            if (depTimeField && firstSegment.departure_time) depTimeField.value = firstSegment.departure_time;
-            if (arrTimeField && firstSegment.arrival_time) arrTimeField.value = firstSegment.arrival_time;
-        }
-
-        // Fill common fields
-        if (flightData.pnr) {
-            const pnrField = document.querySelector('input[name="pnr"]');
-            if (pnrField) pnrField.value = flightData.pnr;
-        }
-
-        if (flightData.ticket_number) {
-            const ticketField = document.querySelector('input[name="ticket_number"]');
-            if (ticketField) ticketField.value = flightData.ticket_number;
-        }
-
-        if (flightData.travel_class) {
-            const classField = document.querySelector('select[name="travel_class"]');
-            if (classField) classField.value = flightData.travel_class;
-        }
-
-        // Fill passenger names
-        if (flightData.passenger_names && flightData.passenger_names.length > 0) {
-            const passengerContainer = document.getElementById('passengerNames');
-            if (passengerContainer) {
-                passengerContainer.innerHTML = '';
-
-                flightData.passenger_names.forEach((name, index) => {
-                    const inputGroup = document.createElement('div');
-                    inputGroup.className = 'input-group mb-2';
-                    inputGroup.innerHTML = `
-                        <span class="input-group-text">Passenger ${index + 1}</span>
-                        <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
-                        ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
-                    `;
-                    passengerContainer.appendChild(inputGroup);
-                });
-
-                // Update passenger count
-                const adults = document.querySelector('input[name="adults"]');
-                if (adults) adults.value = flightData.passenger_names.length;
-            }
-        }
-
-        console.log('Form populated successfully');
-    }, 300);
-}
-
-function fillAllSegments(segments) {
-    console.log('fillAllSegments called with:', segments);
-
-    if (!segments || segments.length === 0) {
-        console.log('No segments to fill');
-        return;
-    }
-
-    // First, ensure we have enough segment containers
-    const currentSegments = document.querySelectorAll('.flight-segment').length;
-    const neededSegments = segments.length;
-
-    console.log(`Current segments: ${currentSegments}, Needed: ${neededSegments}`);
-
-    // Add more segments if needed
-    for (let i = currentSegments; i < neededSegments; i++) {
-        addFlightSegment();
-    }
-
-    // Wait a bit for DOM updates, then fill each segment
-    setTimeout(() => {
-        segments.forEach((segment, index) => {
-            console.log(`Filling segment ${index}:`, segment);
-
-            const airlineField = document.querySelector(`input[name="segments[${index}][airline]"]`);
-            const flightNumberField = document.querySelector(`input[name="segments[${index}][flight_number]"]`);
-            const depAirportField = document.querySelector(`input[name="segments[${index}][departure_airport]"]`);
-            const arrAirportField = document.querySelector(`input[name="segments[${index}][arrival_airport]"]`);
-            const flightDateField = document.querySelector(`input[name="segments[${index}][flight_date]"]`);
-            const depTimeField = document.querySelector(`input[name="segments[${index}][departure_time]"]`);
-            const arrTimeField = document.querySelector(`input[name="segments[${index}][arrival_time]"]`);
-
-            if (airlineField) {
-                airlineField.value = segment.airline || '';
-                console.log(`Set airline ${index}:`, segment.airline);
-            }
-            if (flightNumberField) {
-                flightNumberField.value = segment.flight_number || '';
-                console.log(`Set flight number ${index}:`, segment.flight_number);
-            }
-            if (depAirportField) {
-                depAirportField.value = segment.departure_airport || '';
-                console.log(`Set departure airport ${index}:`, segment.departure_airport);
-            }
-            if (arrAirportField) {
-                arrAirportField.value = segment.arrival_airport || '';
-                console.log(`Set arrival airport ${index}:`, segment.arrival_airport);
-            }
-            if (flightDateField) {
-                flightDateField.value = segment.flight_date || '';
-                console.log(`Set flight date ${index}:`, segment.flight_date);
-            }
-            if (depTimeField) {
-                depTimeField.value = segment.departure_time || '';
-                console.log(`Set departure time ${index}:`, segment.departure_time);
-            }
-            if (arrTimeField) {
-                arrTimeField.value = segment.arrival_time || '';
-                console.log(`Set arrival time ${index}:`, segment.arrival_time);
-            }
-        });
-
-        console.log('All segments filled successfully');
-    }, 100);
 }
 
 function populateSegmentFields(segmentData, index) {
     console.log(`Populating segment ${index}:`, segmentData);
-
+    
     // For the first segment (index 0), map to the existing form fields
     if (index === 0) {
         const fieldMappings = [
@@ -631,7 +521,7 @@ function populateSegmentFields(segmentData, index) {
             { data: 'departure_time', field: 'segments[0][departure_time]' },
             { data: 'arrival_time', field: 'segments[0][arrival_time]' }
         ];
-
+        
         fieldMappings.forEach(mapping => {
             const field = document.getElementsByName(mapping.field)[0];
             if (field && segmentData[mapping.data]) {
@@ -649,22 +539,22 @@ function populateSegmentFields(segmentData, index) {
 
 function addFlightSegmentUI(segmentData, index) {
     console.log(`🚀 Creating new UI for segment ${index}:`, segmentData);
-
+    
     const flightSegmentsContainer = document.getElementById('flightSegments');
     if (!flightSegmentsContainer) {
         console.error('Flight segments container not found');
         return;
     }
-
+    
     const segmentLabel = index === 1 ? '(Return)' : `(Segment ${index + 1})`;
-
+    
     const segmentHTML = `
     <div class="flight-segment mb-4" style="border: 2px solid #28a745; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
         <div class="d-flex align-items-center mb-3">
             <i class="fas fa-plane text-success me-2"></i>
             <h6 class="mb-0 text-success">✈ Flight Segment ${index + 1} ${segmentLabel}</h6>
         </div>
-
+        
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Departure Airport</label>
@@ -677,7 +567,7 @@ function addFlightSegmentUI(segmentData, index) {
                        value="${segmentData.arrival_airport || ''}" placeholder="Enter airport code or name">
             </div>
         </div>
-
+        
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Airline</label>
@@ -690,7 +580,7 @@ function addFlightSegmentUI(segmentData, index) {
                        value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405">
             </div>
         </div>
-
+        
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Date</label>
@@ -710,9 +600,9 @@ function addFlightSegmentUI(segmentData, index) {
         </div>
     </div>
     `;
-
+    
     flightSegmentsContainer.insertAdjacentHTML('beforeend', segmentHTML);
-
+    
     // Initialize autocomplete for the new fields
     const newSegment = flightSegmentsContainer.lastElementChild;
     newSegment.querySelectorAll('.airline-autocomplete').forEach(input => {
@@ -725,7 +615,7 @@ function addFlightSegmentUI(segmentData, index) {
 
 function populateCommonFields(flightData) {
     console.log('📋 Populating common fields with:', flightData);
-
+    
     try {
         // Map common flight data to form fields
         const commonMappings = [
@@ -734,17 +624,17 @@ function populateCommonFields(flightData) {
             { data: 'travel_class', field: 'travel_class' },
             { data: 'terminal', field: 'terminal' }
         ];
-
+        
         commonMappings.forEach(mapping => {
             try {
                 const field = document.getElementsByName(mapping.field)[0];
                 let value = flightData[mapping.data];
-
+                
                 // Handle arrays (like ticket_numbers)
                 if (Array.isArray(value) && value.length > 0) {
                     value = value[0]; // Use first ticket number
                 }
-
+                
                 if (field && value) {
                     field.value = value;
                     console.log(`✅ Set ${mapping.field} = ${value}`);
@@ -755,7 +645,7 @@ function populateCommonFields(flightData) {
                 console.error(`Error setting field ${mapping.field}:`, e);
             }
         });
-
+        
         // Handle passenger count
         if (flightData.passenger_count) {
             ['adults', 'children', 'infants'].forEach(type => {
@@ -765,51 +655,28 @@ function populateCommonFields(flightData) {
                 }
             });
         }
-
+        
         // Handle passenger names
-    const passengerNames = flightData.passenger_names || [];
-    if (passengerNames.length > 0) {
-        // Clear existing passenger inputs
-        const passengerContainer = document.getElementById('passengerNames');
-        if (passengerContainer) {
-            passengerContainer.innerHTML = '';
-
-            // Add each passenger name
-            passengerNames.forEach((name, index) => {
-                const inputGroup = document.createElement('div');
-                inputGroup.className = 'input-group mb-2';
-                inputGroup.innerHTML = `
-                    <span class="input-group-text">Passenger ${index + 1}</span>
-                    <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
-                    ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
-                `;
-                passengerContainer.appendChild(inputGroup);
-            });
-
-            // Update passenger count to match
-            const adults = document.querySelector('input[name="adults"]');
-            if (adults) {
-                adults.value = passengerNames.length;
+        if (flightData.passenger_names && flightData.passenger_names.length > 0) {
+            // Clear existing passenger fields first
+            const passengerContainer = document.getElementById('passengerNames');
+            if (passengerContainer) {
+                passengerContainer.innerHTML = '';
+                
+                // Add passenger fields for each name
+                flightData.passenger_names.forEach((name, index) => {
+                    const passengerDiv = document.createElement('div');
+                    passengerDiv.className = 'input-group mb-2';
+                    passengerDiv.innerHTML = `
+                        <span class="input-group-text">Passenger ${index + 1}</span>
+                        <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                        ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                    `;
+                    passengerContainer.appendChild(passengerDiv);
+                });
             }
         }
-    }
-
-    // Fill other flight details
-    if (flightData.pnr) {
-        const pnrField = document.querySelector('input[name="pnr"]');
-        if (pnrField) pnrField.value = flightData.pnr;
-    }
-
-    if (flightData.travel_class) {
-        const travelClassField = document.querySelector('select[name="travel_class"]');
-        if (travelClassField) travelClassField.value = flightData.travel_class;
-    }
-
-    if (flightData.ticket_number) {
-        const ticketNumberField = document.querySelector('input[name="ticket_number"]');
-        if (ticketNumberField) ticketNumberField.value = flightData.ticket_number;
-    }
-
+        
     } catch (e) {
         console.error('Error in populateCommonFields:', e);
     }
@@ -820,12 +687,12 @@ function initializeAutocompleteForNewFields() {
     document.querySelectorAll('.airline-autocomplete').forEach(input => {
         setupAirlineAutocomplete(input);
     });
-
+    
     // Re-initialize autocomplete for all airport fields  
     document.querySelectorAll('.airport-autocomplete').forEach(input => {
         setupAirportAutocomplete(input);
     });
-
+    
     console.log('🔄 Autocomplete reinitialized for all fields');
 }
 
@@ -833,7 +700,7 @@ function initializeAutocompleteForNewFields() {
 function updateFlightSegments() {
     const flightType = document.getElementById('flight_type').value;
     const addSegmentContainer = document.getElementById('addSegmentContainer');
-
+    
     if (flightType === 'multi_city') {
         addSegmentContainer.style.display = 'block';
     } else {
@@ -856,7 +723,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const passengerNamesContainer = document.getElementById('passengerNames');
             const currentPassengers = passengerNamesContainer.querySelectorAll('.input-group').length;
             const passengerNumber = currentPassengers + 1;
-
+            
             const newPassengerDiv = document.createElement('div');
             newPassengerDiv.className = 'input-group mb-2';
             newPassengerDiv.innerHTML = `
@@ -866,9 +733,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-times"></i>
                 </button>
             `;
-
+            
             passengerNamesContainer.appendChild(newPassengerDiv);
-
+            
             // Add event listener for the new remove button
             const removeBtn = newPassengerDiv.querySelector('.remove-passenger');
             removeBtn.addEventListener('click', function() {
@@ -877,7 +744,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
+    
     // Remove passenger functionality for existing passengers
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-passenger') || e.target.parentNode.classList.contains('remove-passenger')) {
@@ -886,7 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePassengerNumbers();
         }
     });
-
+    
     function updatePassengerNumbers() {
         const passengerDivs = document.querySelectorAll('#passengerNames .input-group');
         passengerDivs.forEach((div, index) => {
