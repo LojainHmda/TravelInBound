@@ -321,14 +321,19 @@ def get_empty_hotel_result_template(error_message=None):
         "checkin_date": "",
         "checkout_date": "",
         "confirmation_number": "",
-        "room_type": "",
-        "guests": "",
-        "meal_plan": "",
         "total_cost": "",
         "nights": "",
-        "guest_names": [],
         "address": "",
-        "phone": ""
+        "phone": "",
+        "rooms": [
+            {
+                "room_type": "",
+                "board_basis": "Room Only",
+                "adults": 2,
+                "children": 0,
+                "lead_passenger": ""
+            }
+        ]
     }
 
     if error_message:
@@ -361,29 +366,54 @@ def analyze_hotel_voucher(image_data):
         2. Check-in date (in format YYYY-MM-DD if possible)
         3. Check-out date (in format YYYY-MM-DD if possible)
         4. Confirmation number/booking reference
-        5. Room type (e.g., Standard Double, Suite, etc.)
-        6. Number of guests/occupancy
-        7. Meal plan (Room Only, Breakfast, Half Board, Full Board, All Inclusive)
-        8. Total cost/price (with currency if visible)
-        9. Number of nights
-        10. Guest names (if visible)
-        11. Hotel address (if visible)
-        12. Hotel phone number (if visible)
+        5. Individual room details (if multiple rooms are shown)
+        6. Total cost/price (with currency if visible)
+        7. Number of nights
+        8. Hotel address (if visible)
+        9. Hotel phone number (if visible)
 
-        If any information is unclear or not visible, extract what you can confidently identify.
+        IMPORTANT: If multiple rooms are listed, extract each room separately with its details.
+        For each room, include:
+        - Room type (e.g., "Urban Deluxe Twin Bed", "Standard Double", "Suite", etc.)
+        - Board basis/meal plan (Room Only, BB, HB, FB, AI)
+        - Number of adults
+        - Number of children (if specified)
+        - Lead passenger/guest name for that room
+
         Return the results in JSON format with these exact keys:
         - hotel_name
         - checkin_date
         - checkout_date
         - confirmation_number
-        - room_type
-        - guests
-        - meal_plan
         - total_cost
         - nights
-        - guest_names (array)
         - address
         - phone
+        - rooms (array of room objects with keys: room_type, board_basis, adults, children, lead_passenger)
+
+        Example for multiple rooms:
+        {
+          "hotel_name": "Jumeirah Beach Hotel",
+          "checkin_date": "2024-12-15",
+          "checkout_date": "2024-12-18",
+          "confirmation_number": "JBH123456",
+          "rooms": [
+            {
+              "room_type": "Urban Deluxe Twin Bed",
+              "board_basis": "All Inclusive (AI)",
+              "adults": 2,
+              "children": 0,
+              "lead_passenger": "Mr. YOUSEF"
+            },
+            {
+              "room_type": "Urban Deluxe Twin Bed", 
+              "board_basis": "All Inclusive (AI)",
+              "adults": 2,
+              "children": 0,
+              "lead_passenger": "Ms. SARAH"
+            }
+          ]
+        }
 
         Focus on accuracy over completeness. If you cannot clearly read a field, leave it empty rather than guessing.
         """

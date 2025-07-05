@@ -25,12 +25,21 @@
 <input type="hidden" name="status_value" value="{{ confirmation_data.status }}">
 <input type="hidden" name="currency_value" value="{{ confirmation_data.currency }}">
 
-<!-- Hotel Voucher Scanner -->
-<div class="mb-3">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#hotelScannerModal">
-        <i class="fas fa-camera me-2"></i> Scan Hotel Voucher
-    </button>
-    <small class="ms-2 text-muted">Upload a hotel booking confirmation to automatically extract details</small>
+<!-- AI Hotel Scanner (Matching Flight Design) -->
+<div class="mb-4">
+    <div class="p-3" style="background-color: #1e3a8a; border-radius: 8px; border: 2px solid #1e40af;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1 text-white">
+                    <i class="fas fa-robot me-2"></i>AI Assistant
+                </h6>
+                <small class="text-white opacity-75">Upload a hotel booking confirmation to automatically fill the form</small>
+            </div>
+            <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#hotelScannerModal" style="background-color: #ffc107; border: 2px solid #ffca2c; font-weight: bold;">
+                <i class="fas fa-scan me-1"></i>Scan with AI
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="row mb-4">
@@ -95,29 +104,69 @@
         </div>
         
         <div id="roomDetails">
-            <h6 class="mt-3">Room Configuration</h6>
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label class="form-label">Single</label>
-                    <input type="number" name="single_rooms" class="form-control" value="{{ confirmation_data.rooms.single|default(0) }}" min="0">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Double</label>
-                    <input type="number" name="double_rooms" class="form-control" value="{{ confirmation_data.rooms.double|default(0) }}" min="0">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Twin</label>
-                    <input type="number" name="twin_rooms" class="form-control" value="{{ confirmation_data.rooms.twin|default(0) }}" min="0">
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label">Triple</label>
-                    <input type="number" name="triple_rooms" class="form-control" value="{{ confirmation_data.rooms.triple|default(0) }}" min="0">
-                </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mt-3 mb-0">Room Configuration & Lead Passengers</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addHotelRoom()">
+                    <i class="fas fa-plus me-1"></i>Add Room
+                </button>
             </div>
             
-            <div class="mb-3">
-                <label class="form-label">Other Room Types</label>
-                <input type="text" name="other_rooms" class="form-control" value="{{ confirmation_data.rooms.other|default('') }}" placeholder="E.g., Family, Suite, etc.">
+            <div id="hotelRoomsContainer">
+                <!-- Rooms will be dynamically added here -->
+                <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-primary">🏨 Room 1</h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" style="display: none;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Room Type</label>
+                            <select name="rooms[0][room_type]" class="form-control">
+                                <option value="">Select Room Type</option>
+                                <option value="Single Room">Single Room</option>
+                                <option value="Double Room">Double Room</option>
+                                <option value="Twin Room">Twin Room</option>
+                                <option value="Triple Room">Triple Room</option>
+                                <option value="Family Room">Family Room</option>
+                                <option value="Suite">Suite</option>
+                                <option value="Junior Suite">Junior Suite</option>
+                                <option value="Executive Suite">Executive Suite</option>
+                                <option value="Presidential Suite">Presidential Suite</option>
+                                <option value="Connecting Rooms">Connecting Rooms</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Board Basis</label>
+                            <select name="rooms[0][board_basis]" class="form-control">
+                                <option value="Room Only">Room Only</option>
+                                <option value="Bed & Breakfast (BB)">Bed & Breakfast (BB)</option>
+                                <option value="Half Board (HB)">Half Board (HB)</option>
+                                <option value="Full Board (FB)">Full Board (FB)</option>
+                                <option value="All Inclusive (AI)">All Inclusive (AI)</option>
+                                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Adults</label>
+                            <input type="number" name="rooms[0][adults]" class="form-control" value="2" min="1" max="6">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Children</label>
+                            <input type="number" name="rooms[0][children]" class="form-control" value="0" min="0" max="4">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Lead Passenger Name</label>
+                            <input type="text" name="rooms[0][lead_passenger]" class="form-control" placeholder="Mr. YOUSEF">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
