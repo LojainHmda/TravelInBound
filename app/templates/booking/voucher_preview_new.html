@@ -207,22 +207,72 @@
 
 {% block scripts %}
 <script>
-function shareToWhatsApp() {
+async function shareToWhatsApp() {
     const bookingRef = '{{ booking.reference_number }}';
     const customerName = '{{ booking.requester.username if booking.requester else "Customer" }}';
     const amount = '{{ "%.2f"|format(booking.total_amount or 0) }}';
     
-    const message = `🎫 *Travel Voucher Generated*\n\n` +
-                   `📋 Booking: ${bookingRef}\n` +
-                   `👤 Customer: ${customerName}\n` +
-                   `💰 Total: $${amount}\n\n` +
-                   `✅ Your travel voucher is ready! Download it from: ${window.location.origin}/booking/{{ booking.id }}/voucher\n\n` +
-                   `🌟 *Arabi Travel* - Your trusted travel partner\n` +
-                   `📞 +97022956640\n` +
-                   `🌐 www.arabtravel.ps`;
-    
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    try {
+        // First, download the PDF
+        showNotification('⏳ Preparing PDF for sharing...', 'Generating voucher document', 'info');
+        
+        const response = await fetch('/booking/{{ booking.id }}/voucher', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'csrf_token={{ csrf_token() }}'
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Voucher_${bookingRef}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('✅ PDF Downloaded!', 'Now opening WhatsApp to share', 'success');
+            
+            // After download, open WhatsApp with message
+            setTimeout(() => {
+                const message = `🎫 *Travel Voucher Ready*\n\n` +
+                               `📋 Booking: ${bookingRef}\n` +
+                               `👤 Customer: ${customerName}\n` +
+                               `💰 Total: $${amount}\n\n` +
+                               `📎 PDF voucher downloaded to your device\n` +
+                               `📤 Please attach the PDF file manually\n\n` +
+                               `🌟 *Arabi Travel* - Your trusted travel partner\n` +
+                               `📞 +97022956640\n` +
+                               `🌐 www.arabtravel.ps`;
+                
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+            }, 1000);
+            
+        } else {
+            throw new Error('Failed to generate PDF');
+        }
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+        showNotification('❌ Error', 'Failed to prepare PDF. Opening WhatsApp without attachment.', 'error');
+        
+        // Fallback to original message
+        const message = `🎫 *Travel Voucher Generated*\n\n` +
+                       `📋 Booking: ${bookingRef}\n` +
+                       `👤 Customer: ${customerName}\n` +
+                       `💰 Total: $${amount}\n\n` +
+                       `✅ Your travel voucher is ready! Download it from: ${window.location.origin}/booking/{{ booking.id }}/voucher\n\n` +
+                       `🌟 *Arabi Travel* - Your trusted travel partner\n` +
+                       `📞 +97022956640\n` +
+                       `🌐 www.arabtravel.ps`;
+        
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+    }
 }
 </script>
 {% endblock %}
