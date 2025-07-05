@@ -244,11 +244,80 @@
     </div>
 </div>
 
+<!-- Segment 4 (Hidden by default) -->
+<div class="flight-segment" data-segment="4" style="display: none;">
+    <div class="card mb-3">
+        <div class="card-header">
+            <h6 class="mb-0">Trip 4 - Additional Flight</h6>
+            <button type="button" class="btn btn-sm btn-outline-danger float-end" onclick="removeSegment(4)">
+                <i class="fas fa-times"></i> Remove
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Airline</label>
+                    <input type="text" name="segments[3][airline]" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Flight Number</label>
+                    <input type="text" name="segments[3][flight_number]" class="form-control" placeholder="e.g., EY 592" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departure Airport</label>
+                    <input type="text" name="segments[3][departure_airport]" class="form-control" placeholder="e.g., AMM" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Airport</label>
+                    <input type="text" name="segments[3][arrival_airport]" class="form-control" placeholder="e.g., AUH" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Flight Date</label>
+                    <input type="date" name="segments[3][flight_date]" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" name="segments[3][departure_time]" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" name="segments[3][arrival_time]" class="form-control">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Duration</label>
+                    <input type="text" name="segments[3][duration]" class="form-control" placeholder="e.g., 25">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Connection Type</label>
+                    <select name="segments[3][connection_type]" class="form-select">
+                        <option value="Non Stop">Non Stop</option>
+                        <option value="1 Stop">1 Stop</option>
+                        <option value="2+ Stops">2+ Stops</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Aircraft Type</label>
+                    <input type="text" name="segments[3][aircraft_type]" class="form-control" placeholder="e.g., Boeing 777">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Segment Button for Multi-City -->
 <div class="row mb-3" id="add_segment_container" style="display: none;">
     <div class="col-md-12">
         <button type="button" class="btn btn-outline-primary" onclick="addSegment()">
-            <i class="fas fa-plus"></i> Add Another Flight Segment
+            <i class="fas fa-plus"></i> Add 4th Flight Segment
         </button>
     </div>
 </div>
@@ -443,24 +512,45 @@ function toggleFlightSegments() {
 
 function addSegment() {
     const segment3 = document.querySelector('[data-segment="3"]');
+    const segment4 = document.querySelector('[data-segment="4"]');
+    const addContainer = document.getElementById('add_segment_container');
+    
     if (segment3.style.display === 'none') {
+        // Show segment 3 first
         segment3.style.display = 'block';
         segment3.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
-        document.getElementById('add_segment_container').style.display = 'none';
+        // Change button text for 4th segment
+        addContainer.querySelector('button').innerHTML = '<i class="fas fa-plus"></i> Add 4th Flight Segment';
+    } else if (segment4.style.display === 'none') {
+        // Show segment 4
+        segment4.style.display = 'block';
+        segment4.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
+        // Hide add button as we've reached maximum
+        addContainer.style.display = 'none';
     }
 }
 
 function removeSegment(segmentNum) {
     const segment = document.querySelector(`[data-segment="${segmentNum}"]`);
+    const addContainer = document.getElementById('add_segment_container');
+    
     segment.style.display = 'none';
     segment.querySelectorAll('input, select').forEach(input => {
         input.required = false;
         input.value = '';
     });
     
-    if (segmentNum === 3) {
-        document.getElementById('add_segment_container').style.display = 'block';
+    // Show add button and update text based on what's visible
+    const segment3 = document.querySelector('[data-segment="3"]');
+    const segment4 = document.querySelector('[data-segment="4"]');
+    
+    if (segment4.style.display === 'none' && segment3.style.display === 'none') {
+        addContainer.querySelector('button').innerHTML = '<i class="fas fa-plus"></i> Add Another Flight Segment';
+    } else if (segment4.style.display === 'none') {
+        addContainer.querySelector('button').innerHTML = '<i class="fas fa-plus"></i> Add 4th Flight Segment';
     }
+    
+    addContainer.style.display = 'block';
 }
 
 // Initialize on page load
@@ -599,7 +689,7 @@ function fillFlightForm(flightData) {
     let flightType = 'one_way';
     
     if (segmentCount === 2) {
-        // Check if it's a round trip (return flight)
+        // Check if it's a round trip (direct return flight on same route)
         const segment1 = flightData.segments[0];
         const segment2 = flightData.segments[1];
         if (segment1.arrival_airport === segment2.departure_airport && 
@@ -609,6 +699,7 @@ function fillFlightForm(flightData) {
             flightType = 'multi_city';
         }
     } else if (segmentCount > 2) {
+        // Always treat more than 2 segments as multi-city
         flightType = 'multi_city';
     }
     
@@ -618,13 +709,19 @@ function fillFlightForm(flightData) {
     
     // For multi-segment flights, ensure all segments are visible
     if (segmentCount > 2) {
-        // Show all segments needed
+        // Show all segments needed (up to 4 segments total)
         for (let i = 2; i < Math.min(segmentCount, 4); i++) {
             const segment = document.querySelector(\`[data-segment="\${i + 1}"]\`);
             if (segment) {
                 segment.style.display = 'block';
                 segment.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
+                console.log(\`Showing segment \${i + 1} for multi-segment flight\`);
             }
+        }
+        
+        // Hide add button if we're showing 4 segments
+        if (segmentCount >= 4) {
+            document.getElementById('add_segment_container').style.display = 'none';
         }
     }
     
@@ -646,7 +743,7 @@ function fillFlightForm(flightData) {
     
     // Fill segment data
     flightData.segments.forEach((segment, index) => {
-        if (index >= 3) return; // Max 3 segments supported in form
+        if (index >= 4) return; // Max 4 segments supported in form
         
         const segmentIndex = index;
         const prefix = \`segments[\${segmentIndex}]\`;
