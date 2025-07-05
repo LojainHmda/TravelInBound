@@ -179,7 +179,7 @@ def analyze_flight_ticket(image_data):
                 ]}
             ],
             response_format={"type": "json_object"},
-            max_tokens=2000
+            max_tokens=3000
         )
 
         content = response.choices[0].message.content
@@ -187,9 +187,31 @@ def analyze_flight_ticket(image_data):
             logger.error("Empty response from OpenAI API")
             return get_empty_result_template("Empty response from OpenAI API")
 
-        logger.info(f"Raw response: {content[:100]}...")
+        # Check if the response was truncated
+        finish_reason = response.choices[0].finish_reason
+        if finish_reason == 'length':
+            logger.warning("OpenAI response was truncated due to token limit")
+            
+        logger.info(f"Raw response length: {len(content)} characters")
+        logger.info(f"Finish reason: {finish_reason}")
+        logger.info(f"Raw response: {content[:200]}...")
 
         try:
+            # Handle potential markdown JSON formatting and truncation
+            if content.startswith('```json'):
+                content = content[7:-3].strip()
+            elif content.startswith('```'):
+                content = content[3:-3].strip()
+            
+            # If response was truncated, try to fix incomplete JSON
+            if finish_reason == 'length' and not content.endswith('}'):
+                logger.warning("Attempting to fix truncated JSON response")
+                # Count open/close braces to try to balance them
+                open_braces = content.count('{')
+                close_braces = content.count('}')
+                missing_braces = open_braces - close_braces
+                content = content.rstrip(',') + '}' * missing_braces
+            
             result = json.loads(content)
             logger.info("Successfully parsed OpenAI response")
 
