@@ -91,3 +91,32 @@ def api_generate_voucher(booking_id):
             'success': False,
             'error': str(e)
         }), 500
+
+@voucher_bp.route('/booking/<int:booking_id>/voucher/share/<token>')
+def share_voucher_pdf(booking_id, token):
+    """Shareable PDF link with token for WhatsApp sharing"""
+    import hashlib
+    import time
+    
+    # Simple token validation (you can make this more secure)
+    expected_token = hashlib.md5(f"{booking_id}-arabi-travel".encode()).hexdigest()[:8]
+    
+    if token != expected_token:
+        return "Invalid share link", 403
+    
+    try:
+        booking = Booking.query.get_or_404(booking_id)
+        generator = AirlineVoucherGenerator(booking)
+        pdf_buffer = generator.generate_pdf()
+        
+        from flask import Response
+        return Response(
+            pdf_buffer.getvalue(),
+            mimetype='application/pdf',
+            headers={
+                'Content-Disposition': f'inline; filename=Voucher_{booking.reference_number}.pdf',
+                'Content-Type': 'application/pdf'
+            }
+        )
+    except Exception as e:
+        return f"Error generating voucher: {str(e)}", 500
