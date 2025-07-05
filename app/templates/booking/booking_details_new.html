@@ -620,6 +620,14 @@
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" title="View confirmation details (invoiced services are read-only)">
                                                     <i class="fas fa-eye me-1"></i>View
                                                 </a>
+                                            {% elif item.status == 'CONFIRMED' %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" title="View confirmation details">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                            {% elif item.status == 'IN_PROGRESS' or item.status == 'REQUEST' %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #FFBF00; color: black; border: 1px solid #DAA520; font-size: 0.75rem; padding: 4px 8px; font-weight: 600;" title="Confirm this service">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </a>
                                             {% else %}
                                                 <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm me-1" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; font-size: 0.75rem; padding: 4px 8px;" title="Add/edit confirmation details">
                                                     <i class="fas fa-cogs me-1"></i>Confirm
