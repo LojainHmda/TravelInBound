@@ -109,6 +109,11 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: VOUCHER STYLING IMPROVEMENTS - Enhanced readability and visual hierarchy
+  - Updated header to dark blue (#2E5A87) background with white text for better contrast
+  - Increased hotel table font size from 12px to 14px for improved readability
+  - Made hotel names bold with larger 16px font and dark blue color for emphasis
+  - Enhanced visual hierarchy in hotel section for clearer information display
 - July 5, 2025: VOUCHER HEADER AND FOOTER UPDATES - Updated branding and contact information
   - Changed header from gradient to solid orange-yellow (#FFD700) background with dark blue text
   - Removed text shadow for cleaner appearance on solid background

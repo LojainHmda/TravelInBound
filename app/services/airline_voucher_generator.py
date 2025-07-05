@@ -64,9 +64,9 @@ class AirlineVoucherGenerator:
             border: 1px solid #ddd;
         }}
         .company-header {{
-            background: #FFD700;
+            background: #2E5A87;
             padding: 20px;
-            color: #2E5A87;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -234,13 +234,18 @@ class AirlineVoucherGenerator:
             text-align: center;
             font-weight: bold;
             border: 1px solid #ddd;
-            font-size: 12px;
+            font-size: 14px;
         }}
         .hotel-table td {{
             padding: 8px;
             border: 1px solid #ddd;
             text-align: left;
-            font-size: 12px;
+            font-size: 14px;
+        }}
+        .hotel-name {{
+            font-weight: bold;
+            font-size: 16px;
+            color: #2E5A87;
         }}
         .footer {{
             text-align: center;
@@ -472,7 +477,7 @@ class AirlineVoucherGenerator:
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="font-weight: bold;">{hotel_data.get('name', 'Hotel Name')}</td>
+                        <td><span class="hotel-name">{hotel_data.get('name', 'Hotel Name')}</span></td>
                         <td>{hotel_data.get('address', 'Hotel Address')}<br>Phone: {hotel_data.get('phone', 'N/A')}</td>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
                         <td>{hotel_data.get('checkout_date', 'N/A')}</td>
