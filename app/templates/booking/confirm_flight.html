@@ -523,7 +523,9 @@ function populateSegmentFields(segmentData, index) {
             const field = document.getElementsByName(mapping.field)[0];
             if (field && segmentData[mapping.data]) {
                 field.value = segmentData[mapping.data];
-                console.log(`Set ${mapping.field} = ${segmentData[mapping.data]}`);
+                console.log(`✅ Set ${mapping.field} = ${segmentData[mapping.data]}`);
+            } else {
+                console.warn(`❌ Field not found or no data: ${mapping.field}`, segmentData[mapping.data]);
             }
         });
     } else {
@@ -609,19 +611,30 @@ function addFlightSegmentUI(segmentData, index) {
 }
 
 function populateCommonFields(flightData) {
+    console.log('📋 Populating common fields with:', flightData);
+    
     // Map common flight data to form fields
     const commonMappings = [
-        { data: 'ticket_number', field: 'ticket_number' },
-        { data: 'pnr', field: 'pnr' },
+        { data: 'ticket_numbers', field: 'ticket_number' }, // Note: AI returns ticket_numbers array
+        { data: 'booking_reference', field: 'pnr' }, // Note: AI returns booking_reference
         { data: 'travel_class', field: 'travel_class' },
         { data: 'terminal', field: 'terminal' }
     ];
     
     commonMappings.forEach(mapping => {
         const field = document.getElementsByName(mapping.field)[0];
-        if (field && flightData[mapping.data]) {
-            field.value = flightData[mapping.data];
-            console.log(`Set ${mapping.field} = ${flightData[mapping.data]}`);
+        let value = flightData[mapping.data];
+        
+        // Handle arrays (like ticket_numbers)
+        if (Array.isArray(value) && value.length > 0) {
+            value = value[0]; // Use first ticket number
+        }
+        
+        if (field && value) {
+            field.value = value;
+            console.log(`✅ Set ${mapping.field} = ${value}`);
+        } else {
+            console.warn(`❌ Field not found or no data: ${mapping.field}`, value);
         }
     });
     
