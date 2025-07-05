@@ -12,14 +12,24 @@
     </div>
     <div class="col-md-3 text-end">
         <div class="btn-group">
-            <a href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}" class="btn btn-primary">
-                <i class="fas fa-download me-2"></i>Download PDF
-            </a>
+            <form method="POST" action="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-download me-2"></i>Download PDF
+                </button>
+            </form>
             <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
                 <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}"><i class="fas fa-file-pdf me-2"></i>Download PDF</a></li>
+                <li>
+                    <form method="POST" action="{{ url_for('voucher.generate_voucher', booking_id=booking.id) }}" style="display: inline; width: 100%;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                            <i class="fas fa-file-pdf me-2"></i>Download PDF
+                        </button>
+                    </form>
+                </li>
                 <li><a class="dropdown-item" href="#" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp me-2"></i>Share via WhatsApp</a></li>
                 <li><a class="dropdown-item" href="#" onclick="window.print()"><i class="fas fa-print me-2"></i>Print Voucher</a></li>
             </ul>
