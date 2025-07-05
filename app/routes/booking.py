@@ -1612,24 +1612,45 @@ def confirm_service(item_id):
             print(f"Error parsing JSON: {str(e)}", file=sys.stderr)
     
     # Get suppliers from database for the dropdown
-    from app.models.supplier import Supplier
+    from app.models.supplier import Supplier, SupplierService
     
     # Get all suppliers as base list
     all_suppliers = Supplier.query.filter_by(is_active=True).order_by(Supplier.name).all()
     
-    # Filter suppliers by service type if needed
+    # Filter suppliers by their SupplierService relationships for the specific service type
     service_type_suppliers = []
+    
+    # Query suppliers that have services matching the service item type
+    suppliers_with_service = db.session.query(Supplier).join(SupplierService).filter(
+        Supplier.is_active == True,
+        SupplierService.service_type == service_item.service_type
+    ).order_by(Supplier.name).all()
+    
+    # Also include suppliers with matching main supplier_type for backward compatibility
     if service_item.service_type == 'FLIGHT':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'AIRLINE' or not s.supplier_type]
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'AIRLINE']
     elif service_item.service_type == 'HOTEL':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'HOTEL' or not s.supplier_type]
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'HOTEL']
     elif service_item.service_type == 'TRANSPORT':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'TRANSPORT' or not s.supplier_type]
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'TRANSPORT']
     elif service_item.service_type == 'VISA':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'VISA' or not s.supplier_type]
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'VISA']
     elif service_item.service_type == 'INSURANCE':
-        service_type_suppliers = [s for s in all_suppliers if s.supplier_type == 'INSURANCE' or not s.supplier_type]
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'INSURANCE']
     else:
+        legacy_suppliers = []
+    
+    # Combine both lists and remove duplicates
+    combined_suppliers = suppliers_with_service + legacy_suppliers
+    seen_ids = set()
+    service_type_suppliers = []
+    for supplier in combined_suppliers:
+        if supplier.id not in seen_ids:
+            service_type_suppliers.append(supplier)
+            seen_ids.add(supplier.id)
+    
+    # If no specific suppliers found, show all suppliers
+    if not service_type_suppliers:
         service_type_suppliers = all_suppliers
     
     # Show the appropriate confirmation form based on service type

@@ -109,6 +109,23 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: IMPLEMENTED MULTI-SERVICE SUPPLIER SYSTEM - Major supplier logic enhancement
+  - ✅ UPDATED SUPPLIER FILTERING: Changed from single supplier_type to SupplierService relationship-based filtering
+  - ✅ MULTI-SERVICE CAPABILITY: Suppliers can now offer multiple service types (e.g., airline that also provides hotels)
+  - ✅ ENHANCED CONFIRMATION LISTS: Suppliers appear in confirmation dropdowns for all their service types
+  - ✅ DATABASE ENHANCEMENT: Added comprehensive SupplierService records for all existing suppliers
+  - Examples: booking.com now offers both flights and hotels, Pal.Tours provides full travel services (flights, hotels, transport, visa, insurance)
+  - Updated booking confirmation logic to query suppliers via their SupplierService relationships
+  - Maintained backward compatibility with legacy supplier_type filtering
+  - Created comprehensive supplier service matrix with realistic commission rates
+- July 5, 2025: ENHANCED WHATSAPP SHARING WITH AUTO PDF DOWNLOAD
+  - ✅ AUTOMATIC PDF DOWNLOAD: WhatsApp share function now downloads PDF before opening WhatsApp
+  - ✅ USER NOTIFICATIONS: Progress indicators show PDF generation and download status
+  - ✅ IMPROVED WORKFLOW: PDF automatically saved to device, WhatsApp opens with pre-filled message
+  - Enhanced error handling with fallback to original sharing method if PDF download fails
+- July 5, 2025: UI IMPROVEMENTS - Changed "Download PDF" to "Print PDF" buttons
+  - Updated voucher interface button text from "Download PDF" to "Print PDF" with print icons
+  - Maintains same functionality but better reflects intended use case
 - July 5, 2025: FINALLY RESOLVED PDF VOUCHER DOWNLOAD ISSUE COMPLETELY
   - ✅ ROOT CAUSE IDENTIFIED: Download buttons were using GET requests but PDF generation required POST requests
   - ✅ SOLUTION IMPLEMENTED: Updated voucher_preview_new.html to use POST forms with CSRF tokens for PDF downloads
