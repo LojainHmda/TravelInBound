@@ -242,71 +242,68 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- Segment 4 (Hidden by default) -->
-<div class="flight-segment" data-segment="4" style="display: none;">
-    <div class="card mb-3">
-        <div class="card-header">
-            <h6 class="mb-0">Trip 4 - Additional Flight</h6>
-            <button type="button" class="btn btn-sm btn-outline-danger float-end" onclick="removeSegment(4)">
-                <i class="fas fa-times"></i> Remove
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Airline</label>
-                    <input type="text" name="segments[3][airline]" class="form-control" required>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Flight Number</label>
-                    <input type="text" name="segments[3][flight_number]" class="form-control" placeholder="e.g., EY 592" required>
-                </div>
+    
+    <!-- Segment 4 (Fourth segment for multi-city - Hidden by default) -->
+    <div class="flight-segment" data-segment="4" style="display: none;">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6 class="mb-0">Trip 4 - Additional Flight <button type="button" class="btn btn-sm btn-outline-danger float-end" onclick="removeSegment(4)">Remove</button></h6>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Departure Airport</label>
-                    <input type="text" name="segments[3][departure_airport]" class="form-control" placeholder="e.g., AMM" required>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Airline</label>
+                        <input type="text" name="segments[3][airline]" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" name="segments[3][flight_number]" class="form-control" placeholder="e.g., EY 417">
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Arrival Airport</label>
-                    <input type="text" name="segments[3][arrival_airport]" class="form-control" placeholder="e.g., AUH" required>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Departure Airport</label>
+                        <input type="text" name="segments[3][departure_airport]" class="form-control" placeholder="e.g., KUL">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Arrival Airport</label>
+                        <input type="text" name="segments[3][arrival_airport]" class="form-control" placeholder="e.g., AUH">
+                    </div>
                 </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Flight Date</label>
-                    <input type="date" name="segments[3][flight_date]" class="form-control" required>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Flight Date</label>
+                        <input type="date" name="segments[3][flight_date]" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" name="segments[3][departure_time]" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="segments[3][arrival_time]" class="form-control">
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Departure Time</label>
-                    <input type="time" name="segments[3][departure_time]" class="form-control" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Arrival Time</label>
-                    <input type="time" name="segments[3][arrival_time]" class="form-control">
-                </div>
-            </div>
-            
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Duration</label>
-                    <input type="text" name="segments[3][duration]" class="form-control" placeholder="e.g., 25">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Connection Type</label>
-                    <select name="segments[3][connection_type]" class="form-select">
-                        <option value="Non Stop">Non Stop</option>
-                        <option value="1 Stop">1 Stop</option>
-                        <option value="2+ Stops">2+ Stops</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Aircraft Type</label>
-                    <input type="text" name="segments[3][aircraft_type]" class="form-control" placeholder="e.g., Boeing 777">
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Duration</label>
+                        <input type="text" name="segments[3][duration]" class="form-control" placeholder="e.g., 25">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Connection Type</label>
+                        <select name="segments[3][connection_type]" class="form-select">
+                            <option value="Non Stop">Non Stop</option>
+                            <option value="1 Stop">1 Stop</option>
+                            <option value="2+ Stops">2+ Stops</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Aircraft Type</label>
+                        <input type="text" name="segments[3][aircraft_type]" class="form-control" placeholder="e.g., Boeing 777">
+                    </div>
                 </div>
             </div>
         </div>
@@ -316,7 +313,7 @@
 <!-- Add Segment Button for Multi-City -->
 <div class="row mb-3" id="add_segment_container" style="display: none;">
     <div class="col-md-12">
-        <button type="button" class="btn btn-outline-primary" onclick="addFlightSegment()">
+        <button type="button" class="btn btn-outline-primary" onclick="addSegment()">
             <i class="fas fa-plus"></i> Add Another Flight Segment
         </button>
     </div>
@@ -341,61 +338,19 @@
 
 <div class="row mb-3">
     <div class="col-md-6">
-        <label class="form-label">Flight Date</label>
-        <input type="date" name="flight_date" class="form-control" value="{{ confirmation_data.flight_date }}" required>
+        <label class="form-label">PNR/Booking Reference</label>
+        <input type="text" name="pnr" class="form-control" value="{{ confirmation_data.pnr }}" placeholder="e.g., XVS04V">
     </div>
     <div class="col-md-6">
-        <label class="form-label">Departure Time</label>
-        <input type="time" name="flight_time" class="form-control" value="{{ confirmation_data.flight_time }}" required>
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label class="form-label">Arrival Time</label>
-        <input type="time" name="arrival_time" class="form-control" value="{{ confirmation_data.arrival_time }}">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Flight Duration</label>
-        <input type="text" name="duration" class="form-control" value="{{ confirmation_data.duration }}" placeholder="e.g., 4h 25m">
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label class="form-label">Travel Class</label>
-        <select name="travel_class" class="form-select">
-            <option value="Economy" {% if confirmation_data.travel_class == 'Economy' %}selected{% endif %}>Economy</option>
-            <option value="Premium Economy" {% if confirmation_data.travel_class == 'Premium Economy' %}selected{% endif %}>Premium Economy</option>
-            <option value="Business" {% if confirmation_data.travel_class == 'Business' %}selected{% endif %}>Business</option>
-            <option value="First" {% if confirmation_data.travel_class == 'First' %}selected{% endif %}>First</option>
-        </select>
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Terminal</label>
-        <input type="text" name="terminal" class="form-control" value="{{ confirmation_data.terminal }}" placeholder="e.g., T5">
-    </div>
-</div>
-
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label class="form-label">Aircraft Type</label>
-        <input type="text" name="aircraft_type" class="form-control" value="{{ confirmation_data.aircraft_type }}" placeholder="e.g., Boeing 777">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Connection Type</label>
-        <select name="connection_type" class="form-select">
-            <option value="Non Stop" {% if confirmation_data.connection_type == 'Non Stop' %}selected{% endif %}>Non Stop</option>
-            <option value="1 Stop" {% if confirmation_data.connection_type == '1 Stop' %}selected{% endif %}>1 Stop</option>
-            <option value="2+ Stops" {% if confirmation_data.connection_type == '2+ Stops' %}selected{% endif %}>2+ Stops</option>
-        </select>
+        <label class="form-label">E-Ticket Number</label>
+        <input type="text" name="ticket_number" class="form-control" value="{{ confirmation_data.ticket_number }}" placeholder="e.g., 607-1234567890">
     </div>
 </div>
 
 <div class="row mb-3">
     <div class="col-md-6">
         <label class="form-label">Baggage Allowance</label>
-        <input type="text" name="baggage_allowance" class="form-control" value="{{ confirmation_data.baggage_allowance }}" placeholder="e.g., 25kg">
+        <input type="text" name="baggage_allowance" class="form-control" value="{{ confirmation_data.baggage_allowance }}" placeholder="e.g., 23kg">
     </div>
     <div class="col-md-6">
         <label class="form-label">Seat Assignment</label>
@@ -403,71 +358,55 @@
     </div>
 </div>
 
+<!-- Passenger Information -->
 <div class="row mb-3">
-    <div class="col-md-6">
-        <label class="form-label">PNR</label>
-        <input type="text" name="pnr" class="form-control" value="{{ confirmation_data.pnr }}" placeholder="Booking Reference">
-    </div>
-    <div class="col-md-6">
-        <label class="form-label">Ticket Number</label>
-        <input type="text" name="ticket_number" class="form-control" value="{{ confirmation_data.ticket_number }}" placeholder="E-ticket Number">
-    </div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header">
-        <h6 class="mb-0">Passenger Information</h6>
-    </div>
-    <div class="card-body">
-        <div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Passenger Count</label>
+        <div class="row">
             <div class="col-md-4">
                 <label class="form-label">Adults</label>
-                <input type="number" name="adults" class="form-control" value="{{ confirmation_data.passenger_count.adults if confirmation_data.passenger_count and confirmation_data.passenger_count.adults else 1 }}" min="0">
+                <input type="number" name="adults" class="form-control" value="{{ confirmation_data.passenger_count.adults if confirmation_data.passenger_count else 1 }}" min="1" max="9">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Children</label>
-                <input type="number" name="children" class="form-control" value="{{ confirmation_data.passenger_count.children if confirmation_data.passenger_count and confirmation_data.passenger_count.children else 0 }}" min="0">
+                <input type="number" name="children" class="form-control" value="{{ confirmation_data.passenger_count.children if confirmation_data.passenger_count else 0 }}" min="0" max="9">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Infants</label>
-                <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants if confirmation_data.passenger_count and confirmation_data.passenger_count.infants else 0 }}" min="0">
+                <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants if confirmation_data.passenger_count else 0 }}" min="0" max="9">
             </div>
-        </div>
-        
-        <div id="passengerNames">
-            <label class="form-label">Passenger Names</label>
-            {% if confirmation_data.passenger_names %}
-                {% for name in confirmation_data.passenger_names %}
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Passenger {{ loop.index }}</span>
-                    <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
-                    <button type="button" class="btn btn-outline-danger remove-passenger">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="input-group mb-2">
-                    <span class="input-group-text">Passenger 1</span>
-                    <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
-                    <button type="button" class="btn btn-outline-danger remove-passenger">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            {% endif %}
-        </div>
-        
-        <div class="mt-2">
-            <button type="button" id="addPassenger" class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-plus me-1"></i> Add Passenger
-            </button>
         </div>
     </div>
 </div>
 
-<div class="mb-3">
-    <label class="form-label">Notes</label>
-    <textarea name="notes" class="form-control" rows="2">{{ confirmation_data.notes }}</textarea>
+<!-- Passenger Names -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Passenger Names</label>
+        <div id="passenger_names_container">
+            {% if confirmation_data.passenger_names %}
+                {% for name in confirmation_data.passenger_names %}
+                <div class="mb-2">
+                    <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="e.g., SMITH/John Mr">
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="mb-2">
+                <input type="text" name="passenger_names[]" class="form-control" placeholder="e.g., SMITH/John Mr">
+            </div>
+            {% endif %}
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPassengerName()">
+            <i class="fas fa-plus"></i> Add Passenger
+        </button>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" class="form-control" rows="2">{{ confirmation_data.notes }}</textarea>
+    </div>
 </div>
 {% endblock %}
 
@@ -510,28 +449,23 @@ function toggleFlightSegments() {
     }
 }
 
-function addFlightSegment() {
+function addSegment() {
     const segment3 = document.querySelector('[data-segment="3"]');
     const segment4 = document.querySelector('[data-segment="4"]');
     const addContainer = document.getElementById('add_segment_container');
     
-    console.log('addFlightSegment called - segment3 display:', segment3.style.display);
-    console.log('addFlightSegment called - segment4 display:', segment4.style.display);
-    
-    if (segment3.style.display === 'none' || segment3.style.display === '') {
+    if (segment3.style.display === 'none') {
         // Show segment 3 first
         segment3.style.display = 'block';
         segment3.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
         // Change button text for 4th segment
         addContainer.querySelector('button').innerHTML = '<i class="fas fa-plus"></i> Add 4th Flight Segment';
-        console.log('Segment 3 shown');
-    } else if (segment4.style.display === 'none' || segment4.style.display === '') {
+    } else if (segment4.style.display === 'none') {
         // Show segment 4
         segment4.style.display = 'block';
         segment4.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
         // Hide add button as we've reached maximum
         addContainer.style.display = 'none';
-        console.log('Segment 4 shown, hiding add button');
     }
 }
 
@@ -596,30 +530,35 @@ function openScanModal() {
                     <div id="scanResults" style="display: none;">
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle me-2"></i>
-                            Document analyzed successfully! Flight details will be filled automatically.
+                            Document scanned successfully! Form has been filled with extracted data.
                         </div>
                     </div>
                     <div id="scanError" style="display: none;">
                         <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <span id="errorMessage">Error analyzing document</span>
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <span id="errorMessage">Failed to scan document</span>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="scanButton" onclick="scanDocument()">
-                        <i class="fas fa-magic me-2"></i>Scan Document
+                        <i class="fas fa-upload me-2"></i>Scan Document
                     </button>
                 </div>
             </div>
         </div>
-    </div>`;
+    </div>
+    `;
     
-    // Add modal to page if it doesn't exist
-    if (!document.getElementById('scanModal')) {
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    // Remove existing modal if any
+    const existingModal = document.getElementById('scanModal');
+    if (existingModal) {
+        existingModal.remove();
     }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('scanModal'));
@@ -631,7 +570,7 @@ function scanDocument() {
     const file = fileInput.files[0];
     
     if (!file) {
-        alert('Please select a document to scan');
+        alert('Please select a file to scan');
         return;
     }
     
@@ -641,7 +580,7 @@ function scanDocument() {
     document.getElementById('scanError').style.display = 'none';
     document.getElementById('scanButton').disabled = true;
     
-    // Create FormData
+    // Prepare form data
     const formData = new FormData();
     formData.append('document', file);
     
@@ -709,18 +648,18 @@ function fillFlightForm(flightData) {
     }
     
     // Set flight type
-    document.querySelector(\`input[name="flight_type"][value="\${flightType}"]\`).checked = true;
+    document.querySelector(`input[name="flight_type"][value="${flightType}"]`).checked = true;
     toggleFlightSegments();
     
     // For multi-segment flights, ensure all segments are visible
     if (segmentCount > 2) {
         // Show all segments needed (up to 4 segments total)
         for (let i = 2; i < Math.min(segmentCount, 4); i++) {
-            const segment = document.querySelector(\`[data-segment="\${i + 1}"]\`);
+            const segment = document.querySelector(`[data-segment="${i + 1}"]`);
             if (segment) {
                 segment.style.display = 'block';
                 segment.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
-                console.log(\`Showing segment \${i + 1} for multi-segment flight\`);
+                console.log(`Showing segment ${i + 1} for multi-segment flight`);
             }
         }
         
@@ -751,24 +690,24 @@ function fillFlightForm(flightData) {
         if (index >= 4) return; // Max 4 segments supported in form
         
         const segmentIndex = index;
-        const prefix = \`segments[\${segmentIndex}]\`;
+        const prefix = `segments[${segmentIndex}]`;
         
         // Fill segment fields
         const fields = {
-            [\`\${prefix}[airline]\`]: segment.airline,
-            [\`\${prefix}[flight_number]\`]: segment.flight_number,
-            [\`\${prefix}[departure_airport]\`]: segment.departure_airport,
-            [\`\${prefix}[arrival_airport]\`]: segment.arrival_airport,
-            [\`\${prefix}[flight_date]\`]: segment.flight_date,
-            [\`\${prefix}[departure_time]\`]: segment.departure_time,
-            [\`\${prefix}[arrival_time]\`]: segment.arrival_time,
-            [\`\${prefix}[duration]\`]: segment.duration,
-            [\`\${prefix}[connection_type]\`]: segment.connection_type,
-            [\`\${prefix}[aircraft_type]\`]: segment.aircraft_type
+            [`${prefix}[airline]`]: segment.airline,
+            [`${prefix}[flight_number]`]: segment.flight_number,
+            [`${prefix}[departure_airport]`]: segment.departure_airport,
+            [`${prefix}[arrival_airport]`]: segment.arrival_airport,
+            [`${prefix}[flight_date]`]: segment.flight_date,
+            [`${prefix}[departure_time]`]: segment.departure_time,
+            [`${prefix}[arrival_time]`]: segment.arrival_time,
+            [`${prefix}[duration]`]: segment.duration,
+            [`${prefix}[connection_type]`]: segment.connection_type,
+            [`${prefix}[aircraft_type]`]: segment.aircraft_type
         };
         
         Object.entries(fields).forEach(([name, value]) => {
-            const input = document.querySelector(\`input[name="\${name}"], select[name="\${name}"]\`);
+            const input = document.querySelector(`input[name="${name}"], select[name="${name}"]`);
             if (input && value) {
                 input.value = value;
             }
@@ -776,6 +715,21 @@ function fillFlightForm(flightData) {
     });
     
     console.log('Flight form filled with scanned data:', flightData);
+}
+
+function addPassengerName() {
+    const container = document.getElementById('passenger_names_container');
+    const newInput = document.createElement('div');
+    newInput.className = 'mb-2';
+    newInput.innerHTML = `
+        <div class="input-group">
+            <input type="text" name="passenger_names[]" class="form-control" placeholder="e.g., SMITH/John Mr">
+            <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    container.appendChild(newInput);
 }
 </script>
 {% endblock %}
