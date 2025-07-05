@@ -315,11 +315,19 @@ class AirlineVoucherGenerator:
                         dep_code = 'AUH'
                     elif 'Doha' in departure_airport or 'Hamad' in departure_airport:
                         dep_code = 'DOH'
+                    elif 'Dubai' in departure_airport:
+                        dep_code = 'DXB'
+                    elif 'Cairo' in departure_airport:
+                        dep_code = 'CAI'
+                    elif 'Istanbul' in departure_airport:
+                        dep_code = 'IST'
+                    elif 'London' in departure_airport:
+                        dep_code = 'LHR'
                     else:
-                        # Fallback: look for 3-letter uppercase codes
+                        # Fallback: look for 3-letter uppercase codes in the text
                         import re
                         codes = re.findall(r'\b[A-Z]{3}\b', departure_airport)
-                        dep_code = codes[0] if codes else departure_airport.split()[-1][:3].upper()
+                        dep_code = codes[0] if codes else departure_airport[:3].upper()
                     
                     # For arrival airport
                     if 'Queen Alia' in arrival_airport:
@@ -328,11 +336,19 @@ class AirlineVoucherGenerator:
                         arr_code = 'AUH'
                     elif 'Doha' in arrival_airport or 'Hamad' in arrival_airport:
                         arr_code = 'DOH'
+                    elif 'Dubai' in arrival_airport:
+                        arr_code = 'DXB'
+                    elif 'Cairo' in arrival_airport:
+                        arr_code = 'CAI'
+                    elif 'Istanbul' in arrival_airport:
+                        arr_code = 'IST'
+                    elif 'London' in arrival_airport:
+                        arr_code = 'LHR'
                     else:
-                        # Fallback: look for 3-letter uppercase codes
+                        # Fallback: look for 3-letter uppercase codes in the text
                         import re
                         codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
-                        arr_code = codes[0] if codes else arrival_airport.split()[-1][:3].upper()
+                        arr_code = codes[0] if codes else arrival_airport[:3].upper()
                     
                     html_content += f"""
             <div class="flight-segment">
