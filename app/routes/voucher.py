@@ -21,17 +21,32 @@ def voucher_preview(booking_id):
 @voucher_bp.route('/booking/<int:booking_id>/voucher', methods=['POST', 'GET'])
 @login_required
 def generate_voucher(booking_id):
-    """Generate and display airline-style voucher for booking"""
+    """Generate voucher - HTML for GET, PDF for POST"""
     try:
+        from flask import Response
         # Get the booking
         booking = Booking.query.get_or_404(booking_id)
         
-        # Generate the voucher HTML using airline generator
+        # Generate the voucher using airline generator
         generator = AirlineVoucherGenerator(booking)
-        voucher_html = generator.generate_html()
         
-        # Return HTML voucher directly
-        return voucher_html
+        if request.method == 'POST':
+            # Generate PDF for download
+            pdf_buffer = generator.generate_pdf()
+            
+            # Return PDF as download
+            return Response(
+                pdf_buffer.getvalue(),
+                mimetype='application/pdf',
+                headers={
+                    'Content-Disposition': f'attachment; filename=Voucher_{booking.reference_number}.pdf',
+                    'Content-Type': 'application/pdf'
+                }
+            )
+        else:
+            # Return HTML voucher for preview
+            voucher_html = generator.generate_html()
+            return voucher_html
         
     except Exception as e:
         flash(f'Error generating voucher: {str(e)}', 'error')

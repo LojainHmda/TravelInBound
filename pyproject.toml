@@ -27,4 +27,5 @@ dependencies = [
     "psutil>=7.0.0",
     "twilio>=9.6.1",
     "reportlab>=4.4.1",
+    "weasyprint>=65.1",
 ]

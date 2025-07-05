@@ -6,6 +6,8 @@ import os
 import csv
 import logging
 from datetime import datetime
+from io import BytesIO
+import base64
 
 class AirlineVoucherGenerator:
     def __init__(self, booking):
@@ -792,6 +794,92 @@ class AirlineVoucherGenerator:
             logging.error(f"Error reading hotel CSV: {e}")
             
         return None, None
+    
+    def generate_pdf(self):
+        """Generate PDF from HTML content using weasyprint"""
+        try:
+            # Import weasyprint for HTML to PDF conversion
+            from weasyprint import HTML
+            
+            # Generate the HTML content
+            html_content = self.generate_html()
+            
+            # Create PDF from HTML with proper encoding
+            html_doc = HTML(string=html_content, encoding='utf-8')
+            
+            # Generate PDF and return as BytesIO
+            pdf_buffer = BytesIO()
+            html_doc.write_pdf(pdf_buffer)
+            pdf_buffer.seek(0)
+            
+            return pdf_buffer
+            
+        except ImportError as e:
+            logging.error(f"Weasyprint not available: {e}")
+            # Fallback: use reportlab for basic PDF generation
+            return self._generate_pdf_reportlab()
+        except Exception as e:
+            logging.error(f"Error generating PDF with weasyprint: {e}")
+            # Fallback to reportlab
+            return self._generate_pdf_reportlab()
+    
+    def _generate_pdf_reportlab(self):
+        """Fallback PDF generation using reportlab"""
+        from reportlab.lib.pagesizes import A4
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from reportlab.lib import colors
+        from reportlab.lib.enums import TA_CENTER, TA_LEFT
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=72, leftMargin=72, topMargin=72, bottomMargin=18)
+        
+        # Get styles
+        styles = getSampleStyleSheet()
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#2E5A87'),
+            alignment=TA_CENTER,
+            spaceAfter=20
+        )
+        
+        # Build content
+        content = []
+        
+        # Header
+        content.append(Paragraph("Arab Travel Group", title_style))
+        content.append(Paragraph(f"Travel Voucher - {self.booking.reference_number}", styles['Heading2']))
+        content.append(Spacer(1, 20))
+        
+        # Customer info
+        if hasattr(self.booking, 'customer') and self.booking.customer:
+            customer = self.booking.customer
+            content.append(Paragraph(f"<b>Customer:</b> {customer.first_name} {customer.last_name}", styles['Normal']))
+            if customer.email:
+                content.append(Paragraph(f"<b>Email:</b> {customer.email}", styles['Normal']))
+            if customer.phone:
+                content.append(Paragraph(f"<b>Phone:</b> {customer.phone}", styles['Normal']))
+            content.append(Spacer(1, 20))
+        
+        # Services
+        for service in self.booking.service_items:
+            if service.status == 'CONFIRMED':
+                content.append(Paragraph(f"<b>{service.service_type}:</b> {service.description}", styles['Normal']))
+                content.append(Paragraph(f"Dates: {service.start_date} to {service.end_date}", styles['Normal']))
+                content.append(Spacer(1, 10))
+        
+        # Footer
+        content.append(Spacer(1, 30))
+        content.append(Paragraph("Arab Travel Group - Professional Travel Services", styles['Normal']))
+        content.append(Paragraph("sales@arabtravel.ps | www.arabtravel.ps | +97022956640", styles['Normal']))
+        
+        # Build PDF
+        doc.build(content)
+        buffer.seek(0)
+        return buffer
     
     def _prepare_passenger_data(self, customer):
         """Prepare passenger data from ALL flight segments to show complete passenger list"""
