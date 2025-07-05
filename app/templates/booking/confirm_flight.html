@@ -488,8 +488,8 @@ window.populateFlightDetailsFromTicket = function(flightData) {
         // If more than one segment, add additional segments
         if (flightData.segments.length > 1) {
             for (let i = 1; i < flightData.segments.length; i++) {
-                // For now, just populate first segment - full multi-segment UI would need more work
                 console.log(`Additional segment ${i}:`, flightData.segments[i]);
+                addFlightSegmentUI(flightData.segments[i], i);
             }
         }
     } else {
@@ -538,7 +538,7 @@ function populateSegmentFields(segmentData, index) {
 }
 
 function addFlightSegmentUI(segmentData, index) {
-    console.log(`Adding UI for segment ${index}:`, segmentData);
+    console.log(`🚀 Creating new UI for segment ${index}:`, segmentData);
     
     const flightSegmentsContainer = document.getElementById('flightSegments');
     if (!flightSegmentsContainer) {

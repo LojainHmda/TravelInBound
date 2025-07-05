@@ -109,6 +109,15 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: ENHANCED MULTI-SEGMENT FLIGHT SCANNING - Fixed JavaScript errors and improved AI extraction
+  - Increased OpenAI token limit from 2000 to 3000 tokens for complete multi-segment extraction
+  - Fixed JavaScript syntax errors in populateCommonFields function with proper try-catch blocks
+  - Made populateFlightDetailsFromTicket globally accessible to resolve modal function calling issues
+  - Enhanced logging to show successful extraction of all 4 Qatar Airways segments (QR 405, QR 846, QR 837, QR 402)
+  - Fixed form field mapping to properly populate airline, flight number, airports, dates, and times
+  - Added automatic UI creation for additional flight segments beyond the first segment
+  - Enhanced autocomplete reinitialization for dynamically added fields
+  - Fixed booking reference and passenger name population from AI extraction
 - July 5, 2025: CRITICAL WORKFLOW FIXES - Resolved auto-invoicing bug and status cascade issues
   - Fixed critical bug where service items were automatically marked as "INVOICED" when booking moved to IN_PROGRESS
   - Removed automatic is_invoiced=True setting from cascade_booking_status_to_service_items function
