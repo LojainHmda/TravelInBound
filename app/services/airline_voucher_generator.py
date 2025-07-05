@@ -152,6 +152,15 @@ class AirlineVoucherGenerator:
             font-size: 13px;
             margin-bottom: 4px;
         }}
+        .pnr-number {{
+            color: #2E5A87;
+            font-size: 13px;
+            margin-bottom: 4px;
+            background-color: #F0F8FF;
+            padding: 2px 6px;
+            border-radius: 3px;
+            display: inline-block;
+        }}
         .eticket-number {{
             color: #FFD700;
             background-color: #2E5A87;
@@ -405,19 +414,24 @@ class AirlineVoucherGenerator:
                         codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
                         arr_code = codes[0] if codes else arrival_airport[:3].upper()
                     
-                    # Get passenger names and e-ticket number for this specific segment
+                    # Get passenger names, e-ticket number, and PNR for this specific segment
                     segment_passengers = segment.get('passenger_names', [])
                     segment_ticket_number = segment.get('ticket_number', '')
+                    segment_pnr = segment.get('pnr', '')
                     
                     # Build passenger and ticket info display
                     passenger_ticket_info = ""
-                    if segment_passengers or segment_ticket_number:
+                    if segment_passengers or segment_ticket_number or segment_pnr:
                         passenger_ticket_info = '<div class="passenger-ticket-info">'
                         
                         # Display passenger names in bold
                         if segment_passengers:
                             passenger_list = ', '.join(segment_passengers)
                             passenger_ticket_info += f'<div class="passenger-names"><strong>Passengers: {passenger_list}</strong></div>'
+                        
+                        # Display PNR in bold
+                        if segment_pnr:
+                            passenger_ticket_info += f'<div class="pnr-number"><strong>PNR: {segment_pnr}</strong></div>'
                         
                         # Display e-ticket number in bold
                         if segment_ticket_number:

@@ -109,6 +109,11 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: ADDED PNR DISPLAY TO FLIGHT VOUCHERS - Enhanced ticket information visibility
+  - Added PNR (Passenger Name Record) display below each flight segment in vouchers
+  - PNR appears with light blue background styling for clear identification
+  - Now shows complete ticket information: Passengers, PNR, and E-Ticket numbers
+  - PNR data automatically extracted from flight confirmations (e.g., "XVS04V" for Qatar Airways)
 - July 5, 2025: VOUCHER STYLING IMPROVEMENTS - Enhanced readability and visual hierarchy
   - Updated header to dark blue (#2E5A87) background with white text for better contrast
   - Increased hotel table font size from 12px to 14px for improved readability
