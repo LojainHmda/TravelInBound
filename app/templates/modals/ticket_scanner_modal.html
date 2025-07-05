@@ -91,6 +91,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" id="scanAgainButton" style="display: none;" onclick="resetScanModal()">
+                    <i class="fas fa-upload me-2"></i>Scan Another Document
+                </button>
                 <button type="button" class="btn btn-success" id="useTicketDataButton" style="display: none;">
                     <i class="fas fa-check me-2"></i>Use Flight Data
                 </button>
@@ -195,8 +198,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal_passenger_names').textContent = 
                 flightData.passenger_names && flightData.passenger_names.length ? flightData.passenger_names.join(', ') : 'Not detected';
             
-            // Show the Use Flight Data button
+            // Show the Use Flight Data and Scan Again buttons
             useTicketDataButton.style.display = 'block';
+            document.getElementById('scanAgainButton').style.display = 'block';
         })
         .catch(error => {
             console.error('Modal - Error during ticket analysis:', error);
@@ -229,4 +233,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Function to reset the modal for scanning again
+function resetScanModal() {
+    // Reset form
+    document.getElementById('modalTicketUploadForm').reset();
+    
+    // Clear extracted data
+    extractedFlightData = null;
+    
+    // Show upload section, hide others
+    document.getElementById('modalUploadSection').style.display = 'block';
+    document.getElementById('modalLoadingSection').style.display = 'none';
+    document.getElementById('modalResultsSection').style.display = 'none';
+    document.getElementById('modalErrorSection').style.display = 'none';
+    
+    // Hide buttons
+    document.getElementById('useTicketDataButton').style.display = 'none';
+    document.getElementById('scanAgainButton').style.display = 'none';
+}
 </script>

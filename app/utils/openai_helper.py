@@ -179,7 +179,7 @@ def analyze_flight_ticket(image_data):
                 ]}
             ],
             response_format={"type": "json_object"},
-            max_tokens=1000
+            max_tokens=2000
         )
 
         content = response.choices[0].message.content

@@ -507,23 +507,104 @@ function populateFlightDetailsFromTicket(flightData) {
 function populateSegmentFields(segmentData, index) {
     console.log(`Populating segment ${index}:`, segmentData);
     
-    // Map the segment data to form fields
-    const fieldMappings = [
-        { data: 'airline', field: `airline_${index}` },
-        { data: 'flight_number', field: `flight_number_${index}` },
-        { data: 'departure_airport', field: `departure_airport_${index}` },
-        { data: 'arrival_airport', field: `arrival_airport_${index}` },
-        { data: 'flight_date', field: `flight_date_${index}` },
-        { data: 'departure_time', field: `departure_time_${index}` },
-        { data: 'arrival_time', field: `arrival_time_${index}` }
-    ];
+    // For the first segment (index 0), map to the existing form fields
+    if (index === 0) {
+        const fieldMappings = [
+            { data: 'airline', field: 'airline_0' },
+            { data: 'flight_number', field: 'flight_number_0' },
+            { data: 'departure_airport', field: 'departure_airport_0' },
+            { data: 'arrival_airport', field: 'arrival_airport_0' },
+            { data: 'flight_date', field: 'flight_date_0' },
+            { data: 'departure_time', field: 'departure_time_0' },
+            { data: 'arrival_time', field: 'arrival_time_0' }
+        ];
+        
+        fieldMappings.forEach(mapping => {
+            const field = document.getElementsByName(mapping.field)[0];
+            if (field && segmentData[mapping.data]) {
+                field.value = segmentData[mapping.data];
+                console.log(`Set ${mapping.field} = ${segmentData[mapping.data]}`);
+            }
+        });
+    } else {
+        // For additional segments, we need to create new segment UI
+        addFlightSegmentUI(segmentData, index);
+    }
+}
+
+function addFlightSegmentUI(segmentData, index) {
+    console.log(`Adding UI for segment ${index}:`, segmentData);
     
-    fieldMappings.forEach(mapping => {
-        const field = document.getElementsByName(mapping.field)[0];
-        if (field && segmentData[mapping.data]) {
-            field.value = segmentData[mapping.data];
-            console.log(`Set ${mapping.field} = ${segmentData[mapping.data]}`);
-        }
+    const flightSegmentsContainer = document.getElementById('flightSegments');
+    if (!flightSegmentsContainer) {
+        console.error('Flight segments container not found');
+        return;
+    }
+    
+    const segmentLabel = index === 1 ? '(Return)' : `(Segment ${index + 1})`;
+    
+    const segmentHTML = `
+    <div class="flight-segment mb-4" style="border: 2px solid #28a745; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+        <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-plane text-success me-2"></i>
+            <h6 class="mb-0 text-success">✈ Flight Segment ${index + 1} ${segmentLabel}</h6>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Departure Airport</label>
+                <input type="text" name="departure_airport_${index}" class="form-control airport-autocomplete" 
+                       value="${segmentData.departure_airport || ''}" placeholder="Enter airport code or name">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Arrival Airport</label>
+                <input type="text" name="arrival_airport_${index}" class="form-control airport-autocomplete" 
+                       value="${segmentData.arrival_airport || ''}" placeholder="Enter airport code or name">
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Airline</label>
+                <input type="text" name="airline_${index}" class="form-control airline-autocomplete" 
+                       value="${segmentData.airline || ''}" placeholder="Enter airline code or name">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Flight Number</label>
+                <input type="text" name="flight_number_${index}" class="form-control" 
+                       value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405">
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Date</label>
+                <input type="date" name="flight_date_${index}" class="form-control" 
+                       value="${segmentData.flight_date || ''}" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Departure Time</label>
+                <input type="time" name="departure_time_${index}" class="form-control" 
+                       value="${segmentData.departure_time || ''}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Arrival Time</label>
+                <input type="time" name="arrival_time_${index}" class="form-control" 
+                       value="${segmentData.arrival_time || ''}">
+            </div>
+        </div>
+    </div>
+    `;
+    
+    flightSegmentsContainer.insertAdjacentHTML('beforeend', segmentHTML);
+    
+    // Initialize autocomplete for the new fields
+    const newSegment = flightSegmentsContainer.lastElementChild;
+    newSegment.querySelectorAll('.airline-autocomplete').forEach(input => {
+        setupAirlineAutocomplete(input);
+    });
+    newSegment.querySelectorAll('.airport-autocomplete').forEach(input => {
+        setupAirportAutocomplete(input);
     });
 }
 
