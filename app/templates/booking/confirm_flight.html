@@ -458,6 +458,124 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
     });
 }
 
+// Function to populate flight form from scanned ticket data
+function populateFlightDetailsFromTicket(flightData) {
+    console.log('Populating flight form with scanned data:', flightData);
+    
+    if (!flightData) {
+        console.warn('No flight data provided');
+        return;
+    }
+    
+    // Handle multi-segment flights
+    if (flightData.segments && flightData.segments.length > 0) {
+        // Set flight type based on number of segments
+        const flightTypeField = document.getElementById('flight_type');
+        if (flightTypeField) {
+            if (flightData.segments.length > 2) {
+                flightTypeField.value = 'multi_city';
+            } else if (flightData.segments.length === 2) {
+                flightTypeField.value = 'round_trip';
+            } else {
+                flightTypeField.value = 'one_way';
+            }
+        }
+        
+        // Populate first segment data
+        const firstSegment = flightData.segments[0];
+        populateSegmentFields(firstSegment, 0);
+        
+        // If more than one segment, add additional segments
+        if (flightData.segments.length > 1) {
+            for (let i = 1; i < flightData.segments.length; i++) {
+                // For now, just populate first segment - full multi-segment UI would need more work
+                console.log(`Additional segment ${i}:`, flightData.segments[i]);
+            }
+        }
+    } else {
+        // Single flight data
+        populateSegmentFields(flightData, 0);
+    }
+    
+    // Populate common fields
+    populateCommonFields(flightData);
+    
+    // Update flight segments display
+    updateFlightSegments();
+}
+
+function populateSegmentFields(segmentData, index) {
+    console.log(`Populating segment ${index}:`, segmentData);
+    
+    // Map the segment data to form fields
+    const fieldMappings = [
+        { data: 'airline', field: `airline_${index}` },
+        { data: 'flight_number', field: `flight_number_${index}` },
+        { data: 'departure_airport', field: `departure_airport_${index}` },
+        { data: 'arrival_airport', field: `arrival_airport_${index}` },
+        { data: 'flight_date', field: `flight_date_${index}` },
+        { data: 'departure_time', field: `departure_time_${index}` },
+        { data: 'arrival_time', field: `arrival_time_${index}` }
+    ];
+    
+    fieldMappings.forEach(mapping => {
+        const field = document.getElementsByName(mapping.field)[0];
+        if (field && segmentData[mapping.data]) {
+            field.value = segmentData[mapping.data];
+            console.log(`Set ${mapping.field} = ${segmentData[mapping.data]}`);
+        }
+    });
+}
+
+function populateCommonFields(flightData) {
+    // Map common flight data to form fields
+    const commonMappings = [
+        { data: 'ticket_number', field: 'ticket_number' },
+        { data: 'pnr', field: 'pnr' },
+        { data: 'travel_class', field: 'travel_class' },
+        { data: 'terminal', field: 'terminal' }
+    ];
+    
+    commonMappings.forEach(mapping => {
+        const field = document.getElementsByName(mapping.field)[0];
+        if (field && flightData[mapping.data]) {
+            field.value = flightData[mapping.data];
+            console.log(`Set ${mapping.field} = ${flightData[mapping.data]}`);
+        }
+    });
+    
+    // Handle passenger count
+    if (flightData.passenger_count) {
+        ['adults', 'children', 'infants'].forEach(type => {
+            const field = document.getElementsByName(type)[0];
+            if (field && flightData.passenger_count[type] !== undefined) {
+                field.value = flightData.passenger_count[type];
+            }
+        });
+    }
+    
+    // Handle passenger names
+    if (flightData.passenger_names && flightData.passenger_names.length > 0) {
+        // Clear existing passenger fields first
+        const passengerContainer = document.getElementById('passengerNames');
+        if (passengerContainer) {
+            passengerContainer.innerHTML = '';
+            
+            // Add passenger fields for each name
+            flightData.passenger_names.forEach((name, index) => {
+                const passengerDiv = document.createElement('div');
+                passengerDiv.className = 'input-group mb-2';
+                passengerDiv.innerHTML = `
+                    <span class="input-group-text">Passenger ${index + 1}</span>
+                    <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                    ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                `;
+                passengerContainer.appendChild(passengerDiv);
+            });
+        }
+    }
+}
+
 // Flight segments management functions
 function updateFlightSegments() {
     const flightType = document.getElementById('flight_type').value;

@@ -139,16 +139,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create form data for upload
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('document', file);
         
-        // Add CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        // Add CSRF token from the form
+        const csrfToken = document.querySelector('[name=csrf_token]').value;
         formData.append('csrf_token', csrfToken);
         
         console.log('Modal - Sending file to server for analysis...');
         
         // Send to server for analysis
-        fetch('/tools/analyze-ticket', {
+        fetch('/booking/scan-flight-document', {
             method: 'POST',
             body: formData,
             credentials: 'same-origin'
@@ -166,31 +166,34 @@ document.addEventListener('DOMContentLoaded', function() {
             // Hide loading
             modalLoadingSection.style.display = 'none';
             
-            if (data.error) {
+            if (!data.success || data.error) {
                 // Show error
                 modalErrorSection.style.display = 'block';
-                document.getElementById('modalErrorMessage').textContent = data.error;
+                document.getElementById('modalErrorMessage').textContent = data.error || 'Failed to analyze document';
                 return;
             }
             
             // Show results
             modalResultsSection.style.display = 'block';
             
-            const results = data.results;
-            extractedFlightData = results;
+            const flightData = data.flight_data;
+            extractedFlightData = flightData;
+            
+            // Get the first segment for display
+            const firstSegment = flightData.segments && flightData.segments.length > 0 ? flightData.segments[0] : flightData;
             
             // Populate the results
-            document.getElementById('modal_flight_number').textContent = results.flight_number || 'Not detected';
-            document.getElementById('modal_airline').textContent = results.airline || 'Not detected';
+            document.getElementById('modal_flight_number').textContent = firstSegment.flight_number || flightData.flight_number || 'Not detected';
+            document.getElementById('modal_airline').textContent = firstSegment.airline || flightData.airline || 'Not detected';
             document.getElementById('modal_departure').textContent = 
-                `${results.departure_airport || 'Unknown'} ${results.departure_code ? '(' + results.departure_code + ')' : ''}`;
+                `${firstSegment.departure_airport || flightData.departure_airport || 'Unknown'}`;
             document.getElementById('modal_arrival').textContent = 
-                `${results.arrival_airport || 'Unknown'} ${results.arrival_code ? '(' + results.arrival_code + ')' : ''}`;
-            document.getElementById('modal_date').textContent = results.departure_date || 'Not detected';
-            document.getElementById('modal_time').textContent = results.departure_time || 'Not detected';
-            document.getElementById('modal_booking_reference').textContent = results.booking_reference || 'Not detected';
+                `${firstSegment.arrival_airport || flightData.arrival_airport || 'Unknown'}`;
+            document.getElementById('modal_date').textContent = firstSegment.flight_date || flightData.flight_date || 'Not detected';
+            document.getElementById('modal_time').textContent = firstSegment.departure_time || flightData.departure_time || flightData.flight_time || 'Not detected';
+            document.getElementById('modal_booking_reference').textContent = flightData.pnr || flightData.booking_reference || 'Not detected';
             document.getElementById('modal_passenger_names').textContent = 
-                results.passenger_names && results.passenger_names.length ? results.passenger_names.join(', ') : 'Not detected';
+                flightData.passenger_names && flightData.passenger_names.length ? flightData.passenger_names.join(', ') : 'Not detected';
             
             // Show the Use Flight Data button
             useTicketDataButton.style.display = 'block';
