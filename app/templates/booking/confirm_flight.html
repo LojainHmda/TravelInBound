@@ -458,8 +458,8 @@ function showAutocompleteSuggestions(input, suggestions, formatter) {
     });
 }
 
-// Function to populate flight form from scanned ticket data
-function populateFlightDetailsFromTicket(flightData) {
+// Function to populate flight form from scanned ticket data (global scope)
+window.populateFlightDetailsFromTicket = function(flightData) {
     console.log('Populating flight form with scanned data:', flightData);
     
     if (!flightData) {
@@ -645,35 +645,36 @@ function populateCommonFields(flightData) {
                 console.error(`Error setting field ${mapping.field}:`, e);
             }
         });
-    
-    // Handle passenger count
-    if (flightData.passenger_count) {
-        ['adults', 'children', 'infants'].forEach(type => {
-            const field = document.getElementsByName(type)[0];
-            if (field && flightData.passenger_count[type] !== undefined) {
-                field.value = flightData.passenger_count[type];
-            }
-        });
-    }
-    
-    // Handle passenger names
-    if (flightData.passenger_names && flightData.passenger_names.length > 0) {
-        // Clear existing passenger fields first
-        const passengerContainer = document.getElementById('passengerNames');
-        if (passengerContainer) {
-            passengerContainer.innerHTML = '';
-            
-            // Add passenger fields for each name
-            flightData.passenger_names.forEach((name, index) => {
-                const passengerDiv = document.createElement('div');
-                passengerDiv.className = 'input-group mb-2';
-                passengerDiv.innerHTML = `
-                    <span class="input-group-text">Passenger ${index + 1}</span>
-                    <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
-                    ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
-                `;
-                passengerContainer.appendChild(passengerDiv);
+        
+        // Handle passenger count
+        if (flightData.passenger_count) {
+            ['adults', 'children', 'infants'].forEach(type => {
+                const field = document.getElementsByName(type)[0];
+                if (field && flightData.passenger_count[type] !== undefined) {
+                    field.value = flightData.passenger_count[type];
+                }
             });
+        }
+        
+        // Handle passenger names
+        if (flightData.passenger_names && flightData.passenger_names.length > 0) {
+            // Clear existing passenger fields first
+            const passengerContainer = document.getElementById('passengerNames');
+            if (passengerContainer) {
+                passengerContainer.innerHTML = '';
+                
+                // Add passenger fields for each name
+                flightData.passenger_names.forEach((name, index) => {
+                    const passengerDiv = document.createElement('div');
+                    passengerDiv.className = 'input-group mb-2';
+                    passengerDiv.innerHTML = `
+                        <span class="input-group-text">Passenger ${index + 1}</span>
+                        <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                        ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                    `;
+                    passengerContainer.appendChild(passengerDiv);
+                });
+            }
         }
         
     } catch (e) {
