@@ -117,6 +117,9 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - Form now automatically displays all saved segments when opening existing confirmations
   - Database investigation confirmed all 4 Qatar Airways segments properly stored (QR 405, QR 846, QR 837, QR 402)
   - Complete end-to-end functionality: scan → modal preview → form population → database storage → form display
+  - **SEGMENT MANAGEMENT**: Fixed "Add segment" button to create new flight segments with proper UI and autocomplete
+  - **AUTOCOMPLETE SYSTEM**: Added missing flight_autocomplete.js include and initialization for airline/airport lookup
+  - All new segments now have working airline and airport autocomplete with proper data sourcing
 - July 5, 2025: CRITICAL WORKFLOW FIXES - Resolved auto-invoicing bug and status cascade issues
   - Fixed critical bug where service items were automatically marked as "INVOICED" when booking moved to IN_PROGRESS
   - Removed automatic is_invoiced=True setting from cascade_booking_status_to_service_items function

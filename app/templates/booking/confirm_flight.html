@@ -286,6 +286,7 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/confirm_flight.js') }}"></script>
 <script src="{{ url_for('static', filename='js/flight_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flight_autocomplete.js') }}"></script>
 
 <script>
 // Initialize multi-segment data from server
@@ -710,8 +711,144 @@ function updateFlightSegments() {
 
 function addFlightSegment() {
     console.log('Adding new flight segment...');
-    // This function would add additional flight segments
-    // Implementation would go here for the full multi-segment support
+    
+    const flightSegmentsContainer = document.getElementById('flightSegments');
+    if (!flightSegmentsContainer) {
+        console.error('Flight segments container not found');
+        return;
+    }
+    
+    // Count existing segments to determine the new index
+    const existingSegments = flightSegmentsContainer.querySelectorAll('.flight-segment').length;
+    const newIndex = existingSegments + 1; // +1 because we have segment 0 as base
+    
+    console.log(`Creating segment ${newIndex}`);
+    
+    // Create empty segment data for new manual entry
+    const emptySegmentData = {
+        airline: '',
+        flight_number: '',
+        departure_airport: '',
+        arrival_airport: '',
+        flight_date: '',
+        departure_time: '',
+        arrival_time: ''
+    };
+    
+    // Use the existing addFlightSegmentUI function
+    addFlightSegmentUI(emptySegmentData, newIndex);
+}
+
+function addFlightSegmentUI(segmentData, index) {
+    console.log(`🚀 Creating UI for flight segment ${index + 1}:`, segmentData);
+    
+    const flightSegmentsContainer = document.getElementById('flightSegments');
+    if (!flightSegmentsContainer) {
+        console.error('Flight segments container not found');
+        return;
+    }
+    
+    // Create new segment HTML
+    const segmentHTML = `
+        <div class="flight-segment card border-primary mb-3" style="border-width: 2px;">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-plane"></i> Flight Segment ${index + 1}</span>
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="removeFlightSegment(${index})">
+                    <i class="fas fa-times"></i> Remove
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Airline</label>
+                        <input type="text" name="segments[${index}][airline]" class="form-control airline-autocomplete" 
+                               value="${segmentData.airline || ''}" placeholder="Type airline code or name (e.g. QR, Qatar Airways)" required>
+                        <small class="form-text text-muted">Enter airline code (e.g. QR) or start typing name for suggestions</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Flight Number</label>
+                        <input type="text" name="segments[${index}][flight_number]" class="form-control" 
+                               value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405" required>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Departure Airport</label>
+                        <input type="text" name="segments[${index}][departure_airport]" class="form-control airport-autocomplete" 
+                               value="${segmentData.departure_airport || ''}" placeholder="Type airport code or name (e.g. AMM, Queen Alia)" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. AMM) or start typing name for suggestions</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Arrival Airport</label>
+                        <input type="text" name="segments[${index}][arrival_airport]" class="form-control airport-autocomplete" 
+                               value="${segmentData.arrival_airport || ''}" placeholder="Type airport code or name (e.g. DOH, Hamad)" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. DOH) or start typing name for suggestions</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="segments[${index}][flight_date]" class="form-control" 
+                               value="${segmentData.flight_date || ''}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" name="segments[${index}][departure_time]" class="form-control" 
+                               value="${segmentData.departure_time || ''}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="segments[${index}][arrival_time]" class="form-control" 
+                               value="${segmentData.arrival_time || ''}">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add the new segment to the container
+    flightSegmentsContainer.insertAdjacentHTML('beforeend', segmentHTML);
+    
+    // Initialize autocomplete for the new fields
+    initializeAutocompleteForNewFields();
+    
+    // Update flight segments display
+    updateFlightSegments();
+    
+    console.log(`✅ Added flight segment ${index + 1} UI`);
+}
+
+function removeFlightSegment(index) {
+    const segment = document.querySelector(`.flight-segment:nth-child(${index + 1})`);
+    if (segment) {
+        segment.remove();
+        updateFlightSegments();
+        console.log(`🗑️ Removed flight segment ${index + 1}`);
+    }
+}
+
+function initializeAutocompleteForNewFields() {
+    console.log('🔧 Initializing autocomplete for new fields...');
+    
+    // Initialize airline autocomplete for all fields
+    document.querySelectorAll('.airline-autocomplete').forEach(input => {
+        if (!input.hasAttribute('data-autocomplete-initialized')) {
+            setupAirlineAutocomplete(input);
+            input.setAttribute('data-autocomplete-initialized', 'true');
+        }
+    });
+    
+    // Initialize airport autocomplete for all fields
+    document.querySelectorAll('.airport-autocomplete').forEach(input => {
+        if (!input.hasAttribute('data-autocomplete-initialized')) {
+            setupAirportAutocomplete(input);
+            input.setAttribute('data-autocomplete-initialized', 'true');
+        }
+    });
+    
+    console.log('✅ Autocomplete initialized for all fields');
 }
 
 // Passenger names management functions
@@ -818,7 +955,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log(`✅ Successfully loaded ${segmentsData.length} flight segments from saved data`);
     }
+    {% else %}
+    // No saved segments, initialize autocomplete for the base form
+    console.log('🔧 No saved segments found, initializing autocomplete for base form...');
+    initializeAutocompleteForNewFields();
     {% endif %}
+    
+    // Test that functions are available
+    console.log('🧪 Testing function availability:');
+    console.log('- addFlightSegment:', typeof addFlightSegment);
+    console.log('- setupAirlineAutocomplete:', typeof setupAirlineAutocomplete);
+    console.log('- setupAirportAutocomplete:', typeof setupAirportAutocomplete);
 });
 
 </script>
