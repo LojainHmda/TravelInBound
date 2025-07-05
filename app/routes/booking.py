@@ -1150,13 +1150,21 @@ def confirm_service(item_id):
             import sys
             print("Processing HOTEL confirmation form submission", file=sys.stderr)
             
-            # Log form values for debugging
-            single_rooms = request.form.get('single_rooms', '0')
-            double_rooms = request.form.get('double_rooms', '0')
-            twin_rooms = request.form.get('twin_rooms', '0')
-            triple_rooms = request.form.get('triple_rooms', '0')
+            # Process new room array structure
+            rooms_data = []
+            room_index = 0
+            while f'rooms[{room_index}][room_type]' in request.form:
+                room_data = {
+                    'room_type': request.form.get(f'rooms[{room_index}][room_type]', ''),
+                    'board_basis': request.form.get(f'rooms[{room_index}][board_basis]', 'Room Only'),
+                    'adults': int(request.form.get(f'rooms[{room_index}][adults]', '2')),
+                    'children': int(request.form.get(f'rooms[{room_index}][children]', '0')),
+                    'lead_passenger': request.form.get(f'rooms[{room_index}][lead_passenger]', '')
+                }
+                rooms_data.append(room_data)
+                room_index += 1
             
-            print(f"Room counts from form - single: {single_rooms}, double: {double_rooms}, twin: {twin_rooms}, triple: {triple_rooms}", file=sys.stderr)
+            print(f"Extracted {len(rooms_data)} rooms from form: {rooms_data}", file=sys.stderr)
             
             hotel_details = {
                 'hotel_name': request.form.get('hotel_name', ''),
@@ -1170,13 +1178,7 @@ def confirm_service(item_id):
                 'supplier_id': supplier_object.id if supplier_object else None,
                 'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
                 'special_notes': request.form.get('special_notes', ''),
-                'rooms': {
-                    'single': int(single_rooms) if single_rooms.isdigit() else 0,
-                    'double': int(double_rooms) if double_rooms.isdigit() else 0,
-                    'twin': int(twin_rooms) if twin_rooms.isdigit() else 0,
-                    'triple': int(triple_rooms) if triple_rooms.isdigit() else 0,
-                    'other': request.form.get('other_rooms', '')
-                },
+                'rooms': rooms_data,  # Use new room array structure
                 # Add cost tracking fields
                 'cost_amount': cost_amount,
                 'cost_currency': cost_currency,
@@ -1553,6 +1555,50 @@ def confirm_service(item_id):
                 parsed_data = json.loads(confirmation_doc.notes)
                 # Debug output to see what's in the parsed data
                 print(f"PARSED DATA CONTENTS: {parsed_data}", file=sys.stderr)
+                
+                # Handle backward compatibility for hotel room structure
+                if service_item.service_type == 'HOTEL' and 'rooms' in parsed_data:
+                    if isinstance(parsed_data['rooms'], dict) and 'single' in parsed_data['rooms']:
+                        # Convert old format to new format
+                        old_rooms = parsed_data['rooms']
+                        new_rooms = []
+                        
+                        # Add rooms based on old counts
+                        for room_type, count in [('Single Room', old_rooms.get('single', 0)),
+                                               ('Double Room', old_rooms.get('double', 0)),
+                                               ('Twin Room', old_rooms.get('twin', 0)),
+                                               ('Triple Room', old_rooms.get('triple', 0))]:
+                            for i in range(int(count)):
+                                new_rooms.append({
+                                    'room_type': room_type,
+                                    'board_basis': parsed_data.get('meal_plan', 'Room Only'),
+                                    'adults': 2 if room_type != 'Single Room' else 1,
+                                    'children': 0,
+                                    'lead_passenger': ''
+                                })
+                        
+                        if old_rooms.get('other'):
+                            new_rooms.append({
+                                'room_type': old_rooms['other'],
+                                'board_basis': parsed_data.get('meal_plan', 'Room Only'),
+                                'adults': 2,
+                                'children': 0,
+                                'lead_passenger': ''
+                            })
+                        
+                        # If no rooms, add default
+                        if not new_rooms:
+                            new_rooms.append({
+                                'room_type': '',
+                                'board_basis': 'Room Only',
+                                'adults': 2,
+                                'children': 0,
+                                'lead_passenger': ''
+                            })
+                        
+                        parsed_data['rooms'] = new_rooms
+                        print(f"Converted old room format to new: {new_rooms}", file=sys.stderr)
+                
                 # Update our defaults with the parsed data
                 confirmation_data.update(parsed_data)
                 # Add confirmation reference number

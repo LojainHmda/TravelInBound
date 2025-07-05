@@ -374,11 +374,11 @@ def analyze_hotel_voucher(image_data):
 
         IMPORTANT: If multiple rooms are listed, extract each room separately with its details.
         For each room, include:
-        - Room type (e.g., "Urban Deluxe Twin Bed", "Standard Double", "Suite", etc.)
-        - Board basis/meal plan (Room Only, BB, HB, FB, AI)
-        - Number of adults
-        - Number of children (if specified)
-        - Lead passenger/guest name for that room
+        - Room type: Extract the EXACT room type name as written (e.g., "Urban Deluxe Twin Bed", "Classic Room Single", "Standard Double Room", "Executive Suite", etc.)
+        - Board basis: Use the full descriptive format - "Room Only", "Bed & Breakfast (BB)", "Half Board (HB)", "Full Board (FB)", "All Inclusive (AI)", "Ultra All Inclusive"
+        - Number of adults (usually shown as a number)
+        - Number of children (if specified, otherwise 0)
+        - Lead passenger/guest name for that room (exact name as shown)
 
         Return the results in JSON format with these exact keys:
         - hotel_name
@@ -393,24 +393,35 @@ def analyze_hotel_voucher(image_data):
 
         Example for multiple rooms:
         {
-          "hotel_name": "Jumeirah Beach Hotel",
-          "checkin_date": "2024-12-15",
-          "checkout_date": "2024-12-18",
-          "confirmation_number": "JBH123456",
+          "hotel_name": "PARKROYAL COLLECTION Kuala Lumpur",
+          "checkin_date": "2025-06-06",
+          "checkout_date": "2025-11-06",
+          "confirmation_number": "18",
+          "total_cost": "",
+          "nights": 5,
+          "address": "Jln Sultan Ismail, Bukit Bintang, 50250 Kuala Lumpur",
+          "phone": "+60 3-2782 8388",
           "rooms": [
             {
-              "room_type": "Urban Deluxe Twin Bed",
-              "board_basis": "All Inclusive (AI)",
+              "room_type": "urban deluxe twin bed",
+              "board_basis": "Bed & Breakfast (BB)",
               "adults": 2,
               "children": 0,
-              "lead_passenger": "Mr. YOUSEF"
+              "lead_passenger": "Mr. YOUSEF ABUSALEEM"
             },
             {
-              "room_type": "Urban Deluxe Twin Bed", 
-              "board_basis": "All Inclusive (AI)",
+              "room_type": "urban deluxe twin bed",
+              "board_basis": "Bed & Breakfast (BB)",
               "adults": 2,
               "children": 0,
-              "lead_passenger": "Ms. SARAH"
+              "lead_passenger": "Mr. Yazan Abdalnabi"
+            },
+            {
+              "room_type": "urban deluxe twin bed",
+              "board_basis": "Bed & Breakfast (BB)",
+              "adults": 2,
+              "children": 0,
+              "lead_passenger": "Mr. Malik Abdalnabi"
             }
           ]
         }
