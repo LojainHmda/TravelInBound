@@ -34,6 +34,31 @@ class AirlineVoucherGenerator:
         
         return hotels_data
     
+    def _get_logo_base64(self):
+        """Convert logo to base64 for PDF embedding"""
+        try:
+            # Try multiple possible logo locations
+            possible_paths = [
+                'app/static/arabilogo.jpg',
+                'static/arabilogo.jpg', 
+                'arabilogo.jpg',
+                'attached_assets/arabilogo.jpg'
+            ]
+            
+            for logo_path in possible_paths:
+                if os.path.exists(logo_path):
+                    with open(logo_path, 'rb') as f:
+                        logo_data = f.read()
+                        logo_base64 = base64.b64encode(logo_data).decode('utf-8')
+                        return f"data:image/jpeg;base64,{logo_base64}"
+            
+            # If no logo found, return empty string
+            logging.warning("Arab Travel Group logo not found in any expected location")
+            return ""
+        except Exception as e:
+            logging.error(f"Error loading logo: {e}")
+            return ""
+    
     def generate_html(self):
         """Generate voucher HTML matching the exact template layout"""
         service_items = list(self.booking.service_items)
@@ -44,8 +69,11 @@ class AirlineVoucherGenerator:
         hotel_data = self._extract_hotel_data(service_items)
         passenger_data = self._prepare_passenger_data(customer)
         
+        # Convert logo to base64 for PDF compatibility
+        logo_base64 = self._get_logo_base64()
+        
         # Generate HTML exactly matching the template
-        html_content = f"""<!DOCTYPE html>
+        html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -279,7 +307,7 @@ class AirlineVoucherGenerator:
     <div class="voucher-container">
         <!-- Company Header with Arab Travel Group Branding -->
         <div class="company-header">
-            <img src="/static/arabilogo.jpg" alt="Arab Travel Group" class="company-logo">
+            <img src="{logo_base64}" alt="Arab Travel Group" class="company-logo">
             <div class="company-info">
                 <h1 class="company-name">Arab Travel Group</h1>
                 <p class="company-tagline">Your Gateway to Exceptional Travel Experiences</p>
@@ -528,6 +556,8 @@ class AirlineVoucherGenerator:
 </body>
 </html>"""
         
+        # Replace the logo placeholder with actual base64 data
+        html_content = html_template.replace('{logo_base64}', logo_base64)
         return html_content
     
     def _extract_flight_data(self, service_items):
