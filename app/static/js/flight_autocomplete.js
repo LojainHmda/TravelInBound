@@ -13,14 +13,8 @@ function setupAirlineAutocomplete(inputElement) {
     console.log('🛫 Setting up airline autocomplete for:', inputElement.name);
     
     // Check if data is available
-    console.log('🔍 Checking airlines data availability...');
-    console.log('typeof airlines:', typeof airlines);
-    console.log('window.airlines:', typeof window.airlines);
-    console.log('airlines length:', airlines ? airlines.length : 'N/A');
-    
     if (typeof airlines === 'undefined' || !airlines) {
         console.error('❌ Airlines data not available for autocomplete');
-        console.log('Available global variables:', Object.keys(window).filter(key => key.includes('airline')));
         return;
     }
     
@@ -54,15 +48,11 @@ function setupAirlineAutocomplete(inputElement) {
         }
         
         try {
-            console.log('🔍 Airlines array check:', typeof airlines, airlines ? airlines.length : 'undefined');
-            
             // Filter airlines
             const filteredAirlines = airlines.filter(airline => 
                 airline.code.toLowerCase().includes(query) || 
                 airline.name.toLowerCase().includes(query)
             ).slice(0, 10);
-            
-            console.log('🎯 Filtered airlines for query "' + query + '":', filteredAirlines.length);
             
             if (filteredAirlines.length === 0) {
                 suggestionsContainer.style.display = 'none';
