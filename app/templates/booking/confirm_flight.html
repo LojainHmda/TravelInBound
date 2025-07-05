@@ -19,20 +19,24 @@
 {% endblock %}
 
 {% block form_content %}
-<!-- Multi-Segment Flight Interface Alert -->
-<div class="alert alert-success" style="border: 3px solid #28a745; background-color: #d4edda;">
-    <i class="fas fa-check-circle me-2"></i>
-    <strong>Enhanced Multi-Segment Flight Interface</strong><br>
-    This interface supports one-way, round-trip, and multi-city flights. Use the flight type dropdown below to configure your booking.
-</div>
+<!-- Centered container for better layout -->
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <!-- Multi-Segment Flight Interface Alert -->
+            <div class="alert alert-success" style="border: 3px solid #28a745; background-color: #d4edda;">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Enhanced Multi-Segment Flight Interface</strong><br>
+                This interface supports one-way, round-trip, and multi-city flights. Use the flight type dropdown below to configure your booking.
+            </div>
 
-<!-- Hidden fields to store pre-populated values for JavaScript to use -->
-<input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
-<input type="hidden" name="travel_class_value" value="{{ confirmation_data.travel_class }}">
+            <!-- Hidden fields to store pre-populated values for JavaScript to use -->
+            <input type="hidden" name="supplier_value" value="{{ confirmation_data.supplier }}">
+            <input type="hidden" name="travel_class_value" value="{{ confirmation_data.travel_class }}">
 
-<div class="row mb-4">
-    <div class="col-md-4">
-        <h5>Passenger Information</h5>
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <h5>Passenger Information</h5>
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Adults (12+ years)</label>
@@ -116,37 +120,41 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Departure Airport</label>
-                        <input type="text" name="segments[0][departure_airport]" class="form-control departure-airport" value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Type to search by airport code or name" required>
-                        <small class="form-text text-muted">Enter airport code (e.g. LHR) or start typing name for suggestions</small>
+                        <input type="text" name="segments[0][departure_airport]" id="departure-airport-0" class="form-control airport-autocomplete" value="{{ confirmation_data.segments[0].departure_airport if confirmation_data.segments else confirmation_data.departure_airport|default('') }}" placeholder="Type airport code or name (e.g. AMM, Queen Alia)" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. AMM) or start typing name for suggestions</small>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Arrival Airport</label>
-                        <input type="text" name="segments[0][arrival_airport]" class="form-control arrival-airport" value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Type to search by airport code or name" required>
-                        <small class="form-text text-muted">Enter airport code (e.g. JFK) or start typing name for suggestions</small>
+                        <input type="text" name="segments[0][arrival_airport]" id="arrival-airport-0" class="form-control airport-autocomplete" value="{{ confirmation_data.segments[0].arrival_airport if confirmation_data.segments else confirmation_data.arrival_airport|default('') }}" placeholder="Type airport code or name (e.g. DOH, Hamad)" required>
+                        <small class="form-text text-muted">Enter airport code (e.g. DOH) or start typing name for suggestions</small>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Airline</label>
-                        <input type="text" name="segments[0][airline]" class="form-control airline" value="{{ confirmation_data.airline|default('') }}" placeholder="Type to search by airline code or name" required>
-                        <small class="form-text text-muted">Enter airline code (e.g. BA) or start typing name for suggestions</small>
+                        <input type="text" name="segments[0][airline]" id="airline-0" class="form-control airline-autocomplete" value="{{ confirmation_data.segments[0].airline if confirmation_data.segments else confirmation_data.airline|default('') }}" placeholder="Type airline code or name (e.g. QR, Qatar Airways)" required>
+                        <small class="form-text text-muted">Enter airline code (e.g. QR) or start typing name for suggestions</small>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Flight Number</label>
-                        <input type="text" name="segments[0][flight_number]" class="form-control flight-number" value="{{ confirmation_data.flight_number|default('') }}" required>
+                        <input type="text" name="segments[0][flight_number]" id="flight-number-0" class="form-control" value="{{ confirmation_data.segments[0].flight_number if confirmation_data.segments else confirmation_data.flight_number|default('') }}" placeholder="e.g. QR405" required>
                     </div>
                 </div>
                 
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Date</label>
-                        <input type="date" name="segments[0][flight_date]" class="form-control flight-date" required 
-                               value="{{ confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
+                        <input type="date" name="segments[0][flight_date]" id="flight-date-0" class="form-control flight-date" required 
+                               value="{{ confirmation_data.segments[0].flight_date if confirmation_data.segments else confirmation_data.flight_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Departure Time</label>
-                        <input type="time" name="segments[0][departure_time]" class="form-control departure-time" value="{{ confirmation_data.flight_time|default('') }}" required>
+                        <input type="time" name="segments[0][departure_time]" id="departure-time-0" class="form-control departure-time" value="{{ confirmation_data.segments[0].departure_time if confirmation_data.segments else confirmation_data.flight_time|default('') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="segments[0][arrival_time]" id="arrival-time-0" class="form-control arrival-time" value="{{ confirmation_data.segments[0].arrival_time if confirmation_data.segments else confirmation_data.arrival_time|default('') }}">
                     </div>
                 </div>
                 
@@ -190,6 +198,8 @@
                 <input type="text" name="pnr" id="booking_reference" class="form-control" value="{{ confirmation_data.pnr|default('') }}">
                 <small class="text-muted">Airline's 6-character reference code</small>
             </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -207,6 +217,167 @@
 <script src="{{ url_for('static', filename='js/flight_autocomplete.js') }}"></script>
 
 <script>
+// Initialize multi-segment data from server
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing flight form with confirmation data...');
+    
+    // Load segments from server data if available
+    {% if confirmation_data.segments %}
+    const segmentsData = {{ confirmation_data.segments|tojson|safe }};
+    console.log('Loading segments data:', segmentsData);
+    
+    // Set flight type based on number of segments
+    const flightType = segmentsData.length > 2 ? 'multi_city' : (segmentsData.length === 2 ? 'round_trip' : 'one_way');
+    document.getElementById('flight_type').value = flightType;
+    
+    // Load each segment
+    segmentsData.forEach((segment, index) => {
+        if (index === 0) {
+            // First segment is already in the form, just populate it
+            document.getElementById('airline-0').value = segment.airline || '';
+            document.getElementById('flight-number-0').value = segment.flight_number || '';
+            document.getElementById('departure-airport-0').value = segment.departure_airport || '';
+            document.getElementById('arrival-airport-0').value = segment.arrival_airport || '';
+            document.getElementById('flight-date-0').value = segment.flight_date || '';
+            document.getElementById('departure-time-0').value = segment.departure_time || '';
+            document.getElementById('arrival-time-0').value = segment.arrival_time || '';
+        } else {
+            // Add additional segments
+            addFlightSegmentWithData(segment, index);
+        }
+    });
+    
+    // Update flight segments UI
+    updateFlightSegments();
+    {% endif %}
+    
+    // Initialize airline and airport autocomplete
+    initializeAutocomplete();
+});
+
+function addFlightSegmentWithData(segmentData, index) {
+    console.log('Adding segment with data:', segmentData, 'at index:', index);
+    // This function would add additional segments with the provided data
+    // For now, we'll focus on the first segment working properly
+}
+
+function initializeAutocomplete() {
+    console.log('Initializing autocomplete...');
+    
+    // Add autocomplete to airline fields
+    document.querySelectorAll('.airline-autocomplete').forEach(input => {
+        setupAirlineAutocomplete(input);
+    });
+    
+    // Add autocomplete to airport fields  
+    document.querySelectorAll('.airport-autocomplete').forEach(input => {
+        setupAirportAutocomplete(input);
+    });
+}
+
+function setupAirlineAutocomplete(input) {
+    if (typeof airlines === 'undefined') {
+        console.warn('Airlines data not loaded');
+        return;
+    }
+    
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        if (query.length < 2) return;
+        
+        const matches = airlines.filter(airline => 
+            airline.code.toLowerCase().includes(query) || 
+            airline.name.toLowerCase().includes(query)
+        ).slice(0, 10);
+        
+        showAutocompleteSuggestions(this, matches, (airline) => `${airline.code} - ${airline.name}`);
+    });
+}
+
+function setupAirportAutocomplete(input) {
+    if (typeof airports === 'undefined') {
+        console.warn('Airports data not loaded');
+        return;
+    }
+    
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        if (query.length < 2) return;
+        
+        const matches = airports.filter(airport => 
+            airport.code.toLowerCase().includes(query) || 
+            airport.name.toLowerCase().includes(query) ||
+            airport.city.toLowerCase().includes(query)
+        ).slice(0, 10);
+        
+        showAutocompleteSuggestions(this, matches, (airport) => `${airport.code} - ${airport.name}, ${airport.city}`);
+    });
+}
+
+function showAutocompleteSuggestions(input, suggestions, formatter) {
+    // Remove existing suggestions
+    const existingSuggestions = input.parentNode.querySelector('.autocomplete-suggestions');
+    if (existingSuggestions) {
+        existingSuggestions.remove();
+    }
+    
+    if (suggestions.length === 0) return;
+    
+    // Create suggestions dropdown
+    const suggestionsDiv = document.createElement('div');
+    suggestionsDiv.className = 'autocomplete-suggestions';
+    suggestionsDiv.style.cssText = `
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    `;
+    
+    suggestions.forEach(item => {
+        const suggestionDiv = document.createElement('div');
+        suggestionDiv.className = 'autocomplete-suggestion';
+        suggestionDiv.style.cssText = `
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        `;
+        suggestionDiv.textContent = formatter(item);
+        
+        suggestionDiv.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#f5f5f5';
+        });
+        
+        suggestionDiv.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = 'white';
+        });
+        
+        suggestionDiv.addEventListener('click', function() {
+            input.value = item.code || item.name;
+            suggestionsDiv.remove();
+        });
+        
+        suggestionsDiv.appendChild(suggestionDiv);
+    });
+    
+    // Position relative to input
+    input.parentNode.style.position = 'relative';
+    input.parentNode.appendChild(suggestionsDiv);
+    
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function closeHandler(e) {
+        if (!input.parentNode.contains(e.target)) {
+            suggestionsDiv.remove();
+            document.removeEventListener('click', closeHandler);
+        }
+    });
+}
 // Function to populate flight form with extracted ticket data
 function populateFlightDetailsFromTicket(flightData) {
     if (!flightData) return;
