@@ -1275,19 +1275,36 @@ def confirm_service(item_id):
         # Save changes
         import sys
         print(f"About to save document with notes: {document.notes[:100]}...", file=sys.stderr)
-        db.session.add(document)
-        db.session.commit()
         
-        # Verify the document was saved by retrieving it again
-        saved_doc = Document.query.get(document.id)
-        print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
+        try:
+            db.session.add(document)
+            db.session.commit()
+            print(f"Document successfully saved to database", file=sys.stderr)
+            
+            # Verify the document was saved by retrieving it again
+            saved_doc = Document.query.get(document.id)
+            print(f"Document after commit - ID: {saved_doc.id}, Notes length: {len(saved_doc.notes) if saved_doc.notes else 0}", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to save document: {e}", file=sys.stderr)
+            db.session.rollback()
+            flash(f'Failed to save confirmation: {e}', 'danger')
+            return redirect(url_for('booking.confirm_service', item_id=item_id))
         
         # Only mark as CONFIRMED if action is 'confirm', not for 'save_request'
         if action == 'confirm':
+            print(f"Marking service item {service_item.id} as CONFIRMED", file=sys.stderr)
             service_item.status = STATUS_CONFIRMED
-        # For 'save_request', keep the current status (don't change to CONFIRMED)
+        else:
+            print(f"Keeping service item {service_item.id} in current status: {service_item.status}", file=sys.stderr)
         
-        db.session.commit()
+        try:
+            db.session.commit()
+            print(f"Service item status successfully updated", file=sys.stderr)
+        except Exception as e:
+            print(f"ERROR: Failed to update service item status: {e}", file=sys.stderr)
+            db.session.rollback()
+            flash(f'Failed to update service status: {e}', 'danger')
+            return redirect(url_for('booking.confirm_service', item_id=item_id))
         
         # Create a supplier payment record based on the confirmation document (only for confirmed items)
         if action == 'confirm':
