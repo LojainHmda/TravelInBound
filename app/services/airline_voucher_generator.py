@@ -140,6 +140,26 @@ class AirlineVoucherGenerator:
             padding: 15px;
             background-color: #f9f9f9;
         }}
+        .passenger-ticket-info {{
+            margin-top: 12px;
+            padding: 8px 0;
+            border-top: 1px solid #e0e0e0;
+            background-color: #fff;
+            border-radius: 4px;
+        }}
+        .passenger-names {{
+            color: #2E5A87;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }}
+        .eticket-number {{
+            color: #FFD700;
+            background-color: #2E5A87;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+        }}
         .trip-header {{
             display: flex;
             justify-content: space-between;
@@ -380,6 +400,26 @@ class AirlineVoucherGenerator:
                         codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
                         arr_code = codes[0] if codes else arrival_airport[:3].upper()
                     
+                    # Get passenger names and e-ticket number for this specific segment
+                    segment_passengers = segment.get('passenger_names', [])
+                    segment_ticket_number = segment.get('ticket_number', '')
+                    
+                    # Build passenger and ticket info display
+                    passenger_ticket_info = ""
+                    if segment_passengers or segment_ticket_number:
+                        passenger_ticket_info = '<div class="passenger-ticket-info">'
+                        
+                        # Display passenger names in bold
+                        if segment_passengers:
+                            passenger_list = ', '.join(segment_passengers)
+                            passenger_ticket_info += f'<div class="passenger-names"><strong>Passengers: {passenger_list}</strong></div>'
+                        
+                        # Display e-ticket number in bold
+                        if segment_ticket_number:
+                            passenger_ticket_info += f'<div class="eticket-number"><strong>E-Ticket: {segment_ticket_number}</strong></div>'
+                        
+                        passenger_ticket_info += '</div>'
+                    
                     html_content += f"""
             <div class="flight-segment">
                 <div class="trip-header">
@@ -405,6 +445,7 @@ class AirlineVoucherGenerator:
                         <div class="airport-code">{arr_code}</div>
                     </div>
                 </div>
+                {passenger_ticket_info}
             </div>"""
             
             html_content += """

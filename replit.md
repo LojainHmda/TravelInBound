@@ -109,6 +109,18 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: ENHANCED FLIGHT VOUCHER PASSENGER DISPLAY - Added passenger names and e-ticket numbers in bold below each flight leg
+  - Enhanced AirlineVoucherGenerator to display passenger names prominently below each flight segment
+  - Added e-ticket numbers in bold with yellow text on blue background for visibility
+  - Created passenger-ticket-info section with professional styling and clear visual separation
+  - Each flight leg now shows complete passenger list and ticket numbers for easy reference
+  - Styling includes Arab Travel Group branding colors (Navy Blue #2E5A87 and Gold #FFD700)
+- July 5, 2025: HOTEL ROOM ARRAY SYSTEM - Fixed hotel confirmations to handle multiple rooms with lead passengers
+  - Replaced hardcoded single/double/twin room structure with dynamic room arrays
+  - Added backward compatibility to convert old room format to new array structure
+  - Enhanced AI prompts to extract room types, board basis, and lead passenger names
+  - Updated modal and form to display multiple rooms like "CLASSIC ROOM SINGLE" with "Marcel Eyad"
+  - System now properly processes PARKROYAL format confirmations with detailed room information
 - July 5, 2025: ENHANCED HOTEL CONFIRMATION SYSTEM - Updated hotel AI scanner to match flight design consistency
   - Applied same dark blue header with yellow "Scan with AI" button to hotel confirmation form
   - Confirmed existing AI-powered hotel voucher scanning system is fully functional
