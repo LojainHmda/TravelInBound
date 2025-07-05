@@ -62,17 +62,8 @@
                         </div>
                         <div class="col-md-6">
                             <h6>Room Details</h6>
-                            <div class="mb-2">
-                                <strong>Room Type:</strong>
-                                <span id="extractedRoomType">-</span>
-                            </div>
-                            <div class="mb-2">
-                                <strong>Guests:</strong>
-                                <span id="extractedGuests">-</span>
-                            </div>
-                            <div class="mb-2">
-                                <strong>Meal Plan:</strong>
-                                <span id="extractedMealPlan">-</span>
+                            <div id="extractedRoomsContainer">
+                                <!-- Dynamic room details will be populated here -->
                             </div>
                             <div class="mb-2">
                                 <strong>Total Cost:</strong>
@@ -158,15 +149,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store extracted data
                 extractedData = result.data;
                 
-                // Display results
+                // Display basic hotel information
                 document.getElementById('extractedHotelName').textContent = result.data.hotel_name || '-';
                 document.getElementById('extractedCheckin').textContent = result.data.checkin_date || '-';
                 document.getElementById('extractedCheckout').textContent = result.data.checkout_date || '-';
                 document.getElementById('extractedConfirmation').textContent = result.data.confirmation_number || '-';
-                document.getElementById('extractedRoomType').textContent = result.data.room_type || '-';
-                document.getElementById('extractedGuests').textContent = result.data.guests || '-';
-                document.getElementById('extractedMealPlan').textContent = result.data.meal_plan || '-';
                 document.getElementById('extractedCost').textContent = result.data.total_cost || '-';
+                
+                // Display room details dynamically
+                const roomsContainer = document.getElementById('extractedRoomsContainer');
+                roomsContainer.innerHTML = '';
+                
+                if (result.data.rooms && Array.isArray(result.data.rooms) && result.data.rooms.length > 0) {
+                    result.data.rooms.forEach((room, index) => {
+                        const roomDiv = document.createElement('div');
+                        roomDiv.className = 'mb-3 p-2 border rounded bg-light';
+                        roomDiv.innerHTML = `
+                            <strong>Room ${index + 1}:</strong><br>
+                            <small>
+                                <strong>Type:</strong> ${room.room_type || 'N/A'}<br>
+                                <strong>Board:</strong> ${room.board_basis || 'N/A'}<br>
+                                <strong>Guests:</strong> ${room.adults || 0} Adults, ${room.children || 0} Children<br>
+                                <strong>Lead Passenger:</strong> ${room.lead_passenger || 'N/A'}
+                            </small>
+                        `;
+                        roomsContainer.appendChild(roomDiv);
+                    });
+                } else {
+                    roomsContainer.innerHTML = '<div class="text-muted">No room details extracted</div>';
+                }
                 
                 // Show results
                 loadingSection.style.display = 'none';
@@ -184,48 +195,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fill form with extracted data
     document.getElementById('fillHotelForm').addEventListener('click', function() {
-        // Fill hotel form fields
-        if (extractedData.hotel_name) {
-            const hotelNameField = document.querySelector('input[name="hotel_name"]');
-            if (hotelNameField) hotelNameField.value = extractedData.hotel_name;
-        }
-        
-        if (extractedData.checkin_date) {
-            const checkinField = document.querySelector('input[name="from_date"]');
-            if (checkinField) checkinField.value = extractedData.checkin_date;
-        }
-        
-        if (extractedData.checkout_date) {
-            const checkoutField = document.querySelector('input[name="to_date"]');
-            if (checkoutField) checkoutField.value = extractedData.checkout_date;
-        }
-        
-        if (extractedData.meal_plan) {
-            const mealPlanField = document.querySelector('select[name="meal_plan"]');
-            if (mealPlanField) {
-                const options = Array.from(mealPlanField.options);
-                const matchingOption = options.find(opt => 
-                    opt.text.toLowerCase().includes(extractedData.meal_plan.toLowerCase())
-                );
-                if (matchingOption) mealPlanField.value = matchingOption.value;
+        // Use the enhanced form population function
+        if (typeof populateHotelFormFromScan === 'function') {
+            populateHotelFormFromScan(extractedData);
+        } else {
+            console.error('populateHotelFormFromScan function not found');
+            // Fallback to basic field filling
+            if (extractedData.hotel_name) {
+                const hotelNameField = document.querySelector('input[name="hotel_name"]');
+                if (hotelNameField) hotelNameField.value = extractedData.hotel_name;
             }
-        }
-        
-        if (extractedData.total_cost) {
-            const costField = document.querySelector('input[name="cost"]');
-            if (costField) {
-                // Extract numeric value from cost string
-                const numericCost = extractedData.total_cost.replace(/[^\d.]/g, '');
-                if (numericCost) costField.value = numericCost;
+            
+            if (extractedData.checkin_date) {
+                const checkinField = document.querySelector('input[name="from_date"]');
+                if (checkinField) checkinField.value = extractedData.checkin_date;
             }
-        }
-        
-        if (extractedData.confirmation_number) {
-            const notesField = document.querySelector('textarea[name="special_notes"]');
-            if (notesField) {
-                const currentNotes = notesField.value;
-                const confirmationNote = `Confirmation: ${extractedData.confirmation_number}`;
-                notesField.value = currentNotes ? `${currentNotes}\n${confirmationNote}` : confirmationNote;
+            
+            if (extractedData.checkout_date) {
+                const checkoutField = document.querySelector('input[name="to_date"]');
+                if (checkoutField) checkoutField.value = extractedData.checkout_date;
             }
         }
 

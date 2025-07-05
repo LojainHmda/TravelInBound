@@ -418,7 +418,17 @@ def analyze_hotel_voucher(image_data):
         Focus on accuracy over completeness. If you cannot clearly read a field, leave it empty rather than guessing.
         """
 
-        user_prompt = "Please analyze this hotel booking confirmation/voucher image and extract the hotel booking details in the requested JSON format."
+        user_prompt = """Please analyze this hotel booking confirmation/voucher image and extract the hotel booking details in the requested JSON format.
+
+IMPORTANT: If this is clearly a flight ticket or e-ticket instead of a hotel confirmation, respond with a JSON error like:
+{"error": "This appears to be a flight ticket, not a hotel confirmation. Please upload a hotel booking confirmation."}
+
+Otherwise, extract all the hotel details as requested, paying special attention to:
+- Multiple rooms if shown in a table format
+- Each room's lead passenger name
+- Room types (like "urban deluxe twin bed")
+- Board basis (BB = Bed & Breakfast, etc.)
+"""
 
         response = client.chat.completions.create(
             model=MODEL_NAME,
