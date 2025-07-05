@@ -931,9 +931,31 @@ def new_supplier():
             )
             
             db.session.add(supplier)
+            db.session.flush()  # Get the supplier ID before creating services
+            
+            # Create SupplierService records for each selected service type
+            from app.models.supplier import SupplierService
+            for service_type in form.service_types.data:
+                # Default commission rates per service type
+                default_rates = {
+                    'FLIGHT': 8.0,
+                    'HOTEL': 15.0,
+                    'TRANSPORT': 12.0,
+                    'VISA': 10.0,
+                    'INSURANCE': 25.0
+                }
+                
+                service = SupplierService(
+                    supplier_id=supplier.id,
+                    service_type=service_type,
+                    service_name=f"{service_type.title()} Services",
+                    commission_rate=default_rates.get(service_type, 10.0)
+                )
+                db.session.add(service)
+            
             db.session.commit()
             
-            flash('Supplier created successfully!', 'success')
+            flash('Supplier created successfully with selected service types!', 'success')
             return redirect(url_for('finance.list_suppliers'))
             
         except Exception as e:

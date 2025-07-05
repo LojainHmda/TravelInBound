@@ -57,8 +57,29 @@
                 </div>
                 
                 <div class="col-md-6">
-                    <label for="supplier_type" class="form-label">Supplier Type</label>
+                    <label for="supplier_type" class="form-label">Primary Supplier Type</label>
                     {{ form.supplier_type(class="form-select") }}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Service Types *</label>
+                    <small class="text-muted d-block mb-2">Select all service types this supplier offers</small>
+                    <div class="row">
+                        {% for value, label in form.service_types.choices %}
+                        <div class="col-md-4 col-sm-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="{{ value }}" 
+                                       id="service_{{ value }}" name="service_types">
+                                <label class="form-check-label" for="service_{{ value }}">
+                                    {{ label }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.service_types.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
                 </div>
 
                 <div class="col-md-6">
