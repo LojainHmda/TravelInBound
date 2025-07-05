@@ -616,6 +616,18 @@ function fillFlightForm(flightData) {
     document.querySelector(\`input[name="flight_type"][value="\${flightType}"]\`).checked = true;
     toggleFlightSegments();
     
+    // For multi-segment flights, ensure all segments are visible
+    if (segmentCount > 2) {
+        // Show all segments needed
+        for (let i = 2; i < Math.min(segmentCount, 4); i++) {
+            const segment = document.querySelector(\`[data-segment="\${i + 1}"]\`);
+            if (segment) {
+                segment.style.display = 'block';
+                segment.querySelectorAll('input[name*="airline"], input[name*="flight_number"], input[name*="departure_airport"], input[name*="arrival_airport"], input[name*="flight_date"], input[name*="departure_time"]').forEach(input => input.required = true);
+            }
+        }
+    }
+    
     // Fill common fields
     if (flightData.booking_reference) {
         const confirmationRef = document.querySelector('input[name="confirmation_reference"]');

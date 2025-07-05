@@ -1137,8 +1137,14 @@ def confirm_service(item_id):
             if passenger_names:
                 flight_details['passenger_names'] = passenger_names
             
-            print(f"Final flight details with {len(segments)} segments: {flight_details}", file=sys.stderr)
+            print(f"Final flight details with {len(segments)} segments prepared for saving", file=sys.stderr)
+            print(f"Flight details JSON length: {len(json.dumps(flight_details))}", file=sys.stderr)
+            
+            # Save the flight details to the document
             document.notes = json.dumps(flight_details)
+            
+            # Verify the document has the data before saving
+            print(f"Document notes set - first 200 chars: {document.notes[:200]}", file=sys.stderr)
         
         elif service_item.service_type == 'HOTEL':
             import sys
