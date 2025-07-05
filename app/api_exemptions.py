@@ -11,6 +11,12 @@ csrf_exempt_routes = [
     '/booking/scan-flight-document',  # Multi-segment flight document scanner API endpoint
 ]
 
+# Voucher generation routes - check for pattern matching
+def is_voucher_route(path):
+    """Check if the path is a voucher generation route"""
+    import re
+    return bool(re.match(r'^/booking/\d+/voucher(/test)?$', path))
+
 def is_csrf_exempt(request):
     """Check if the current request path should be exempted from CSRF protection"""
-    return request.path in csrf_exempt_routes
+    return request.path in csrf_exempt_routes or is_voucher_route(request.path)
