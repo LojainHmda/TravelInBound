@@ -9,6 +9,12 @@ from app.models.user import User
 # Create a blueprint for main routes
 main_bp = Blueprint('main', __name__)
 
+@main_bp.route('/supplier/<int:supplier_id>')
+@login_required
+def supplier_redirect(supplier_id):
+    """Redirect /supplier/X to /finance/supplier/X"""
+    return redirect(url_for('finance.supplier_details', supplier_id=supplier_id))
+
 @main_bp.route('/')
 @login_required
 def index():
