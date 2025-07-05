@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: CRITICAL WORKFLOW FIXES - Resolved auto-invoicing bug and status cascade issues
+  - Fixed critical bug where service items were automatically marked as "INVOICED" when booking moved to IN_PROGRESS
+  - Removed automatic is_invoiced=True setting from cascade_booking_status_to_service_items function
+  - Fixed confirm button visibility logic throughout booking details and dashboard
+  - Updated service status workflow to properly display: REQUEST → IN_PROGRESS → CONFIRMED → INVOICED
+  - Enhanced error logging for multi-segment flight confirmation debugging
 - July 5, 2025: CRITICAL FIX - Resolved auto-invoicing bug and confirmation editing restrictions
   - Fixed services defaulting to "INVOICED" status when they should only be marked as invoiced when explicitly generating an invoice
   - Removed automatic is_invoiced=True setting in service creation logic

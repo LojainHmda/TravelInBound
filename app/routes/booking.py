@@ -32,11 +32,8 @@ def cascade_booking_status_to_service_items(booking, new_status):
                 old_item_status = item.status
                 item.status = STATUS_IN_PROGRESS
                 
-                # Apply invoice details if booking has them
-                if booking.invoice_number:
-                    item.invoice_number = booking.invoice_number
-                    item.invoice_date = booking.invoice_date
-                    item.is_invoiced = True
+                # DON'T automatically mark as invoiced - invoicing only happens when explicitly generating an invoice
+                # Invoice fields should only be set when actually generating invoice, not when starting operations
                 
                 print(f"CASCADED: Service item {item.id} from {old_item_status} to IN_PROGRESS", file=sys.stderr)
         
