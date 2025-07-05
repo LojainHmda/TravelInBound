@@ -91,12 +91,12 @@
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Departure Airport</label>
-                                            <input type="text" name="departure_airport_0" id="departure-airport-0" class="form-control airport-autocomplete" 
+                                            <input type="text" name="segments[0][departure_airport]" id="departure-airport-0" class="form-control airport-autocomplete" 
                                                    value="{{ confirmation_data.departure_airport|default('') }}" placeholder="Enter airport code (e.g. AMM) or start typing name for suggestions">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Arrival Airport</label>
-                                            <input type="text" name="arrival_airport_0" id="arrival-airport-0" class="form-control airport-autocomplete" 
+                                            <input type="text" name="segments[0][arrival_airport]" id="arrival-airport-0" class="form-control airport-autocomplete" 
                                                    value="{{ confirmation_data.arrival_airport|default('') }}" placeholder="Enter airport code (e.g. DOH) or start typing name for suggestions">
                                         </div>
                                     </div>
@@ -104,12 +104,12 @@
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Airline</label>
-                                            <input type="text" name="airline_0" id="airline-0" class="form-control airline-autocomplete" 
+                                            <input type="text" name="segments[0][airline]" id="airline-0" class="form-control airline-autocomplete" 
                                                    value="{{ confirmation_data.airline|default('') }}" placeholder="Enter airline code (e.g. QR) or start typing name for suggestions">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Flight Number</label>
-                                            <input type="text" name="flight_number_0" id="flight-number-0" class="form-control" 
+                                            <input type="text" name="segments[0][flight_number]" id="flight-number-0" class="form-control" 
                                                    value="{{ confirmation_data.flight_number|default('') }}" placeholder="e.g. QR 405">
                                         </div>
                                     </div>
@@ -117,17 +117,17 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <label class="form-label">Date</label>
-                                            <input type="date" name="flight_date_0" id="flight-date-0" class="form-control" 
+                                            <input type="date" name="segments[0][flight_date]" id="flight-date-0" class="form-control" 
                                                    value="{{ confirmation_data.flight_date|default('') }}" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Departure Time</label>
-                                            <input type="time" name="departure_time_0" id="departure-time-0" class="form-control" 
+                                            <input type="time" name="segments[0][departure_time]" id="departure-time-0" class="form-control" 
                                                    value="{{ confirmation_data.flight_time|default('') }}">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Arrival Time</label>
-                                            <input type="time" name="arrival_time_0" id="arrival-time-0" class="form-control" 
+                                            <input type="time" name="segments[0][arrival_time]" id="arrival-time-0" class="form-control" 
                                                    value="{{ confirmation_data.arrival_time|default('') }}">
                                         </div>
                                     </div>
@@ -513,13 +513,13 @@ function populateSegmentFields(segmentData, index) {
     // For the first segment (index 0), map to the existing form fields
     if (index === 0) {
         const fieldMappings = [
-            { data: 'airline', field: 'airline_0' },
-            { data: 'flight_number', field: 'flight_number_0' },
-            { data: 'departure_airport', field: 'departure_airport_0' },
-            { data: 'arrival_airport', field: 'arrival_airport_0' },
-            { data: 'flight_date', field: 'flight_date_0' },
-            { data: 'departure_time', field: 'departure_time_0' },
-            { data: 'arrival_time', field: 'arrival_time_0' }
+            { data: 'airline', field: 'segments[0][airline]' },
+            { data: 'flight_number', field: 'segments[0][flight_number]' },
+            { data: 'departure_airport', field: 'segments[0][departure_airport]' },
+            { data: 'arrival_airport', field: 'segments[0][arrival_airport]' },
+            { data: 'flight_date', field: 'segments[0][flight_date]' },
+            { data: 'departure_time', field: 'segments[0][departure_time]' },
+            { data: 'arrival_time', field: 'segments[0][arrival_time]' }
         ];
         
         fieldMappings.forEach(mapping => {
@@ -558,12 +558,12 @@ function addFlightSegmentUI(segmentData, index) {
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Departure Airport</label>
-                <input type="text" name="departure_airport_${index}" class="form-control airport-autocomplete" 
+                <input type="text" name="segments[${index}][departure_airport]" class="form-control airport-autocomplete" 
                        value="${segmentData.departure_airport || ''}" placeholder="Enter airport code or name">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Arrival Airport</label>
-                <input type="text" name="arrival_airport_${index}" class="form-control airport-autocomplete" 
+                <input type="text" name="segments[${index}][arrival_airport]" class="form-control airport-autocomplete" 
                        value="${segmentData.arrival_airport || ''}" placeholder="Enter airport code or name">
             </div>
         </div>
@@ -571,12 +571,12 @@ function addFlightSegmentUI(segmentData, index) {
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Airline</label>
-                <input type="text" name="airline_${index}" class="form-control airline-autocomplete" 
+                <input type="text" name="segments[${index}][airline]" class="form-control airline-autocomplete" 
                        value="${segmentData.airline || ''}" placeholder="Enter airline code or name">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Flight Number</label>
-                <input type="text" name="flight_number_${index}" class="form-control" 
+                <input type="text" name="segments[${index}][flight_number]" class="form-control" 
                        value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405">
             </div>
         </div>
@@ -584,17 +584,17 @@ function addFlightSegmentUI(segmentData, index) {
         <div class="row mb-3">
             <div class="col-md-4">
                 <label class="form-label">Date</label>
-                <input type="date" name="flight_date_${index}" class="form-control" 
+                <input type="date" name="segments[${index}][flight_date]" class="form-control" 
                        value="${segmentData.flight_date || ''}" required>
             </div>
             <div class="col-md-4">
                 <label class="form-label">Departure Time</label>
-                <input type="time" name="departure_time_${index}" class="form-control" 
+                <input type="time" name="segments[${index}][departure_time]" class="form-control" 
                        value="${segmentData.departure_time || ''}">
             </div>
             <div class="col-md-4">
                 <label class="form-label">Arrival Time</label>
-                <input type="time" name="arrival_time_${index}" class="form-control" 
+                <input type="time" name="segments[${index}][arrival_time]" class="form-control" 
                        value="${segmentData.arrival_time || ''}">
             </div>
         </div>
