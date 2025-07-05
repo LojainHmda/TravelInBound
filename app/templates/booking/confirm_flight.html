@@ -191,6 +191,35 @@
                                     <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
                                 </div>
                             </div>
+                            
+                            <!-- Passenger Names Section -->
+                            <div class="mb-3">
+                                <label class="form-label">Passenger Names</label>
+                                <div id="passengerNames">
+                                    {% if confirmation_data is defined and confirmation_data.passenger_names is defined %}
+                                        {% for name in confirmation_data.passenger_names %}
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">Passenger {{ loop.index }}</span>
+                                            <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
+                                            {% if not loop.first %}
+                                            <button type="button" class="btn btn-outline-danger remove-passenger">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <!-- Default single passenger field -->
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">Passenger 1</span>
+                                            <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <button type="button" id="addPassenger" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Add Passenger
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Cost Information -->
@@ -446,5 +475,54 @@ function addFlightSegment() {
     // This function would add additional flight segments
     // Implementation would go here for the full multi-segment support
 }
+
+// Passenger names management functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add passenger functionality
+    const addPassengerBtn = document.getElementById('addPassenger');
+    if (addPassengerBtn) {
+        addPassengerBtn.addEventListener('click', function() {
+            const passengerNamesContainer = document.getElementById('passengerNames');
+            const currentPassengers = passengerNamesContainer.querySelectorAll('.input-group').length;
+            const passengerNumber = currentPassengers + 1;
+            
+            const newPassengerDiv = document.createElement('div');
+            newPassengerDiv.className = 'input-group mb-2';
+            newPassengerDiv.innerHTML = `
+                <span class="input-group-text">Passenger ${passengerNumber}</span>
+                <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                <button type="button" class="btn btn-outline-danger remove-passenger">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            passengerNamesContainer.appendChild(newPassengerDiv);
+            
+            // Add event listener for the new remove button
+            const removeBtn = newPassengerDiv.querySelector('.remove-passenger');
+            removeBtn.addEventListener('click', function() {
+                newPassengerDiv.remove();
+                updatePassengerNumbers();
+            });
+        });
+    }
+    
+    // Remove passenger functionality for existing passengers
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-passenger') || e.target.parentNode.classList.contains('remove-passenger')) {
+            const passengerDiv = e.target.closest('.input-group');
+            passengerDiv.remove();
+            updatePassengerNumbers();
+        }
+    });
+    
+    function updatePassengerNumbers() {
+        const passengerDivs = document.querySelectorAll('#passengerNames .input-group');
+        passengerDivs.forEach((div, index) => {
+            const span = div.querySelector('.input-group-text');
+            span.textContent = `Passenger ${index + 1}`;
+        });
+    }
+});
 </script>
 {% endblock %}
