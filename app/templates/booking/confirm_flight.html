@@ -500,6 +500,9 @@ function populateFlightDetailsFromTicket(flightData) {
     // Populate common fields
     populateCommonFields(flightData);
     
+    // Re-initialize autocomplete for populated fields
+    initializeAutocompleteForNewFields();
+    
     // Update flight segments display
     updateFlightSegments();
 }
@@ -613,30 +616,35 @@ function addFlightSegmentUI(segmentData, index) {
 function populateCommonFields(flightData) {
     console.log('📋 Populating common fields with:', flightData);
     
-    // Map common flight data to form fields
-    const commonMappings = [
-        { data: 'ticket_numbers', field: 'ticket_number' }, // Note: AI returns ticket_numbers array
-        { data: 'booking_reference', field: 'pnr' }, // Note: AI returns booking_reference
-        { data: 'travel_class', field: 'travel_class' },
-        { data: 'terminal', field: 'terminal' }
-    ];
-    
-    commonMappings.forEach(mapping => {
-        const field = document.getElementsByName(mapping.field)[0];
-        let value = flightData[mapping.data];
+    try {
+        // Map common flight data to form fields
+        const commonMappings = [
+            { data: 'ticket_numbers', field: 'ticket_number' }, // Note: AI returns ticket_numbers array
+            { data: 'booking_reference', field: 'pnr' }, // Note: AI returns booking_reference
+            { data: 'travel_class', field: 'travel_class' },
+            { data: 'terminal', field: 'terminal' }
+        ];
         
-        // Handle arrays (like ticket_numbers)
-        if (Array.isArray(value) && value.length > 0) {
-            value = value[0]; // Use first ticket number
-        }
-        
-        if (field && value) {
-            field.value = value;
-            console.log(`✅ Set ${mapping.field} = ${value}`);
-        } else {
-            console.warn(`❌ Field not found or no data: ${mapping.field}`, value);
-        }
-    });
+        commonMappings.forEach(mapping => {
+            try {
+                const field = document.getElementsByName(mapping.field)[0];
+                let value = flightData[mapping.data];
+                
+                // Handle arrays (like ticket_numbers)
+                if (Array.isArray(value) && value.length > 0) {
+                    value = value[0]; // Use first ticket number
+                }
+                
+                if (field && value) {
+                    field.value = value;
+                    console.log(`✅ Set ${mapping.field} = ${value}`);
+                } else {
+                    console.warn(`❌ Field not found or no data: ${mapping.field}`, value);
+                }
+            } catch (e) {
+                console.error(`Error setting field ${mapping.field}:`, e);
+            }
+        });
     
     // Handle passenger count
     if (flightData.passenger_count) {
@@ -667,7 +675,24 @@ function populateCommonFields(flightData) {
                 passengerContainer.appendChild(passengerDiv);
             });
         }
+        
+    } catch (e) {
+        console.error('Error in populateCommonFields:', e);
     }
+}
+
+function initializeAutocompleteForNewFields() {
+    // Re-initialize autocomplete for all airline fields
+    document.querySelectorAll('.airline-autocomplete').forEach(input => {
+        setupAirlineAutocomplete(input);
+    });
+    
+    // Re-initialize autocomplete for all airport fields  
+    document.querySelectorAll('.airport-autocomplete').forEach(input => {
+        setupAirportAutocomplete(input);
+    });
+    
+    console.log('🔄 Autocomplete reinitialized for all fields');
 }
 
 // Flight segments management functions
