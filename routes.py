@@ -586,3 +586,9 @@ def search_and_history():
     bookings = query.order_by(Booking.created_at.desc()).all()
     
     return render_template('booking/search_and_history.html', bookings=bookings)
+
+@app.route('/test-download')
+def test_download():
+    """Serve the test download page"""
+    from flask import send_from_directory
+    return send_from_directory('.', 'test_download.html')
