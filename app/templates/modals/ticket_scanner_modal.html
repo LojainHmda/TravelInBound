@@ -42,43 +42,25 @@
                         <strong>Success!</strong> Ticket details have been extracted.
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <th width="30%">Flight Number</th>
-                                    <td id="modal_flight_number">-</td>
-                                </tr>
-                                <tr>
-                                    <th>Airline</th>
-                                    <td id="modal_airline">-</td>
-                                </tr>
-                                <tr>
-                                    <th>From</th>
-                                    <td id="modal_departure">-</td>
-                                </tr>
-                                <tr>
-                                    <th>To</th>
-                                    <td id="modal_arrival">-</td>
-                                </tr>
-                                <tr>
-                                    <th>Date</th>
-                                    <td id="modal_date">-</td>
-                                </tr>
-                                <tr>
-                                    <th>Time</th>
-                                    <td id="modal_time">-</td>
-                                </tr>
-                                <tr>
-                                    <th>Booking Reference</th>
-                                    <td id="modal_booking_reference">-</td>
-                                </tr>
-                                <tr>
-                                    <th>Passenger(s)</th>
-                                    <td id="modal_passenger_names">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <!-- Flight Type and Common Info -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Flight Type:</strong> <span id="modal_flight_type">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Booking Reference:</strong> <span id="modal_booking_reference">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <strong>Passenger(s):</strong> <span id="modal_passenger_names">-</span>
+                        </div>
+                    </div>
+
+                    <!-- Flight Segments Container -->
+                    <div id="modalFlightSegments">
+                        <!-- Flight segments will be populated here -->
                     </div>
                 </div>
 
@@ -182,21 +164,62 @@ document.addEventListener('DOMContentLoaded', function() {
             const flightData = data.flight_data;
             extractedFlightData = flightData;
             
-            // Get the first segment for display
-            const firstSegment = flightData.segments && flightData.segments.length > 0 ? flightData.segments[0] : flightData;
-            
-            // Populate the results
-            document.getElementById('modal_flight_number').textContent = firstSegment.flight_number || flightData.flight_number || 'Not detected';
-            document.getElementById('modal_airline').textContent = firstSegment.airline || flightData.airline || 'Not detected';
-            document.getElementById('modal_departure').textContent = 
-                `${firstSegment.departure_airport || flightData.departure_airport || 'Unknown'}`;
-            document.getElementById('modal_arrival').textContent = 
-                `${firstSegment.arrival_airport || flightData.arrival_airport || 'Unknown'}`;
-            document.getElementById('modal_date').textContent = firstSegment.flight_date || flightData.flight_date || 'Not detected';
-            document.getElementById('modal_time').textContent = firstSegment.departure_time || flightData.departure_time || flightData.flight_time || 'Not detected';
+            // Populate common information
+            document.getElementById('modal_flight_type').textContent = flightData.flight_type || 'Not detected';
             document.getElementById('modal_booking_reference').textContent = flightData.pnr || flightData.booking_reference || 'Not detected';
             document.getElementById('modal_passenger_names').textContent = 
                 flightData.passenger_names && flightData.passenger_names.length ? flightData.passenger_names.join(', ') : 'Not detected';
+            
+            // Populate all flight segments
+            const segmentsContainer = document.getElementById('modalFlightSegments');
+            segmentsContainer.innerHTML = '';
+            
+            if (flightData.segments && flightData.segments.length > 0) {
+                flightData.segments.forEach((segment, index) => {
+                    const segmentDiv = document.createElement('div');
+                    segmentDiv.className = 'card mb-3';
+                    segmentDiv.innerHTML = `
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-plane me-2"></i>Flight Segment ${index + 1}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Flight:</strong> ${segment.flight_number || 'N/A'} (${segment.airline || 'N/A'})<br>
+                                    <strong>Route:</strong> ${segment.departure_airport || 'N/A'} → ${segment.arrival_airport || 'N/A'}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Date:</strong> ${segment.flight_date || 'N/A'}<br>
+                                    <strong>Time:</strong> ${segment.departure_time || 'N/A'} - ${segment.arrival_time || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    segmentsContainer.appendChild(segmentDiv);
+                });
+            } else {
+                // Fallback for single flight data
+                const segmentDiv = document.createElement('div');
+                segmentDiv.className = 'card mb-3';
+                segmentDiv.innerHTML = `
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-plane me-2"></i>Flight Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Flight:</strong> ${flightData.flight_number || 'N/A'} (${flightData.airline || 'N/A'})<br>
+                                <strong>Route:</strong> ${flightData.departure_airport || 'N/A'} → ${flightData.arrival_airport || 'N/A'}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Date:</strong> ${flightData.flight_date || 'N/A'}<br>
+                                <strong>Time:</strong> ${flightData.departure_time || flightData.flight_time || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                segmentsContainer.appendChild(segmentDiv);
+            }
             
             // Show the Use Flight Data and Scan Again buttons
             useTicketDataButton.style.display = 'block';
