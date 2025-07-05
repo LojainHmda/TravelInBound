@@ -63,10 +63,32 @@ class AirlineVoucherGenerator:
             background: white;
             border: 1px solid #ddd;
         }}
-        .orange-header {{
-            background-color: #FFA500;
-            height: 20px;
-            width: 100%;
+        .company-header {{
+            background: linear-gradient(135deg, #000080 0%, #FFD700 100%);
+            padding: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }}
+        .company-logo {{
+            height: 50px;
+            width: auto;
+        }}
+        .company-info {{
+            text-align: center;
+            flex-grow: 1;
+        }}
+        .company-name {{
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }}
+        .company-tagline {{
+            font-size: 12px;
+            margin: 5px 0 0 0;
+            opacity: 0.9;
         }}
         .section {{
             padding: 20px;
@@ -219,7 +241,15 @@ class AirlineVoucherGenerator:
 </head>
 <body>
     <div class="voucher-container">
-        <div class="orange-header"></div>
+        <!-- Company Header with Arab Travel Group Branding -->
+        <div class="company-header">
+            <img src="/static/arabilogo.jpg" alt="Arab Travel Group" class="company-logo">
+            <div class="company-info">
+                <h1 class="company-name">Arab Travel Group</h1>
+                <p class="company-tagline">Your Gateway to Exceptional Travel Experiences</p>
+            </div>
+            <div style="width: 50px;"></div> <!-- Spacer for balance -->
+        </div>
         
         <!-- Booking Information Section -->
         <div class="section">
