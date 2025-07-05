@@ -32,7 +32,13 @@ def generate_voucher(booking_id):
         
         if request.method == 'POST':
             # Generate PDF for download
+            import logging
+            logging.info(f"Generating PDF for booking {booking.reference_number}")
             pdf_buffer = generator.generate_pdf()
+            
+            # Log PDF generation success
+            pdf_size = len(pdf_buffer.getvalue())
+            logging.info(f"PDF generated successfully, size: {pdf_size} bytes")
             
             # Return PDF as download
             return Response(
@@ -52,11 +58,7 @@ def generate_voucher(booking_id):
         flash(f'Error generating voucher: {str(e)}', 'error')
         return redirect(url_for('voucher.voucher_preview', booking_id=booking_id))
 
-@voucher_bp.route('/booking/<int:booking_id>/voucher')
-@login_required  
-def download_voucher(booking_id):
-    """Download voucher PDF directly"""
-    return generate_voucher(booking_id)
+
 
 @voucher_bp.route('/api/booking/<int:booking_id>/voucher', methods=['POST'])
 @login_required

@@ -114,6 +114,8 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - Implemented proper PDF generation using weasyprint library for HTML-to-PDF conversion
   - Added fallback PDF generation using reportlab for compatibility
   - PDF now maintains exact same styling and layout as HTML voucher
+  - Resolved route conflicts that were causing incorrect response handling
+  - Added comprehensive logging for PDF generation debugging
   - Voucher route now returns HTML for preview (GET) and PDF for download (POST)
 - July 5, 2025: ADDED PNR DISPLAY TO FLIGHT VOUCHERS - Enhanced ticket information visibility
   - Added PNR (Passenger Name Record) display below each flight segment in vouchers
