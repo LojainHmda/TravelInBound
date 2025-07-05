@@ -762,5 +762,64 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Initialize multi-segment data from server when viewing existing confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Initializing flight form with saved confirmation data...');
+    
+    // Load segments from server data if available
+    {% if confirmation_data.segments %}
+    const segmentsData = {{ confirmation_data.segments|tojson|safe }};
+    console.log('📋 Loading saved segments data:', segmentsData);
+    
+    if (segmentsData && segmentsData.length > 0) {
+        // Set flight type based on number of segments
+        const flightType = segmentsData.length > 2 ? 'multi_city' : (segmentsData.length === 2 ? 'round_trip' : 'one_way');
+        const flightTypeField = document.getElementById('flight_type');
+        if (flightTypeField) {
+            flightTypeField.value = flightType;
+            console.log(`✅ Set flight type: ${flightType}`);
+        }
+        
+        // Load each segment
+        segmentsData.forEach((segment, index) => {
+            if (index === 0) {
+                // First segment - populate existing form fields
+                console.log(`📝 Loading segment ${index + 1}:`, segment);
+                const fieldMappings = [
+                    { field: 'segments[0][airline]', value: segment.airline },
+                    { field: 'segments[0][flight_number]', value: segment.flight_number },
+                    { field: 'segments[0][departure_airport]', value: segment.departure_airport },
+                    { field: 'segments[0][arrival_airport]', value: segment.arrival_airport },
+                    { field: 'segments[0][flight_date]', value: segment.flight_date },
+                    { field: 'segments[0][departure_time]', value: segment.departure_time },
+                    { field: 'segments[0][arrival_time]', value: segment.arrival_time }
+                ];
+                
+                fieldMappings.forEach(mapping => {
+                    const field = document.getElementsByName(mapping.field)[0];
+                    if (field && mapping.value) {
+                        field.value = mapping.value;
+                        console.log(`✅ Set ${mapping.field} = ${mapping.value}`);
+                    }
+                });
+            } else {
+                // Additional segments - create new UI
+                console.log(`🚀 Creating UI for segment ${index + 1}:`, segment);
+                addFlightSegmentUI(segment, index);
+            }
+        });
+        
+        // Update flight segments display
+        updateFlightSegments();
+        
+        // Re-initialize autocomplete for all fields
+        initializeAutocompleteForNewFields();
+        
+        console.log(`✅ Successfully loaded ${segmentsData.length} flight segments from saved data`);
+    }
+    {% endif %}
+});
+
 </script>
 {% endblock %}
