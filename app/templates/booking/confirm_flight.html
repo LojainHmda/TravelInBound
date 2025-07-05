@@ -467,44 +467,88 @@ function populateFlightDetailsFromTicket(flightData) {
         return;
     }
 
-    console.log('Filling form with multi-segment flight data:', flightData);
+    console.log('Filling form with flight data:', flightData);
 
-    // Determine flight type based on segments analysis
+    // Set flight type
     const flightTypeSelect = document.getElementById('flight_type');
     let detectedFlightType = 'one_way';
 
     if (flightData.segments && flightData.segments.length > 0) {
         const segments = flightData.segments;
-
-        if (segments.length === 1) {
-            detectedFlightType = 'one_way';
-        } else if (segments.length === 2) {
-            // Check if it's a round trip (same origin/destination reversed)
-            const firstDeparture = segments[0].departure_code || segments[0].departure_airport;
-            const firstArrival = segments[0].arrival_code || segments[0].arrival_airport;
-            const secondDeparture = segments[1].departure_code || segments[1].departure_airport;
-            const secondArrival = segments[1].arrival_code || segments[1].arrival_airport;
-
-            if (firstDeparture === secondArrival && firstArrival === secondDeparture) {
-                detectedFlightType = 'round_trip';
-            } else {
-                detectedFlightType = 'multi_city';
-            }
-        } else {
+        if (segments.length === 2) {
+            detectedFlightType = 'round_trip';
+        } else if (segments.length > 2) {
             detectedFlightType = 'multi_city';
         }
     }
 
-    // Use provided flight type or detected type
     flightTypeSelect.value = flightData.flight_type || detectedFlightType;
-
-    // Update segments UI based on flight type
     updateFlightSegments();
 
-    // Wait for UI update then fill all segments
+    // Fill first segment with data
     setTimeout(() => {
-        fillAllSegments(flightData.segments || [flightData]);
-    }, 200);
+        if (flightData.segments && flightData.segments.length > 0) {
+            const firstSegment = flightData.segments[0];
+            
+            // Fill first segment fields
+            const airlineField = document.querySelector('input[name="segments[0][airline]"]');
+            const flightNumberField = document.querySelector('input[name="segments[0][flight_number]"]');
+            const depAirportField = document.querySelector('input[name="segments[0][departure_airport]"]');
+            const arrAirportField = document.querySelector('input[name="segments[0][arrival_airport]"]');
+            const flightDateField = document.querySelector('input[name="segments[0][flight_date]"]');
+            const depTimeField = document.querySelector('input[name="segments[0][departure_time]"]');
+            const arrTimeField = document.querySelector('input[name="segments[0][arrival_time]"]');
+
+            if (airlineField && firstSegment.airline) airlineField.value = firstSegment.airline;
+            if (flightNumberField && firstSegment.flight_number) flightNumberField.value = firstSegment.flight_number;
+            if (depAirportField && firstSegment.departure_airport) depAirportField.value = firstSegment.departure_airport;
+            if (arrAirportField && firstSegment.arrival_airport) arrAirportField.value = firstSegment.arrival_airport;
+            if (flightDateField && firstSegment.flight_date) flightDateField.value = firstSegment.flight_date;
+            if (depTimeField && firstSegment.departure_time) depTimeField.value = firstSegment.departure_time;
+            if (arrTimeField && firstSegment.arrival_time) arrTimeField.value = firstSegment.arrival_time;
+        }
+
+        // Fill common fields
+        if (flightData.pnr) {
+            const pnrField = document.querySelector('input[name="pnr"]');
+            if (pnrField) pnrField.value = flightData.pnr;
+        }
+
+        if (flightData.ticket_number) {
+            const ticketField = document.querySelector('input[name="ticket_number"]');
+            if (ticketField) ticketField.value = flightData.ticket_number;
+        }
+
+        if (flightData.travel_class) {
+            const classField = document.querySelector('select[name="travel_class"]');
+            if (classField) classField.value = flightData.travel_class;
+        }
+
+        // Fill passenger names
+        if (flightData.passenger_names && flightData.passenger_names.length > 0) {
+            const passengerContainer = document.getElementById('passengerNames');
+            if (passengerContainer) {
+                passengerContainer.innerHTML = '';
+
+                flightData.passenger_names.forEach((name, index) => {
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'input-group mb-2';
+                    inputGroup.innerHTML = `
+                        <span class="input-group-text">Passenger ${index + 1}</span>
+                        <input type="text" name="passenger_names[]" class="form-control" value="${name}" placeholder="Full name as in passport">
+                        ${index > 0 ? '<button type="button" class="btn btn-outline-danger remove-passenger"><i class="fas fa-times"></i></button>' : ''}
+                    `;
+                    passengerContainer.appendChild(inputGroup);
+                });
+
+                // Update passenger count
+                const adults = document.querySelector('input[name="adults"]');
+                if (adults) adults.value = flightData.passenger_names.length;
+            }
+        }
+
+        console.log('Form populated successfully');
+    }, 300);
 }
 
 function fillAllSegments(segments) {
