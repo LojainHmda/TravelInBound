@@ -606,30 +606,18 @@ def add_service_item(booking_id):
         has_invoice = booking.invoice_number is not None
         print(f"Booking has invoice: {has_invoice} - Invoice #: {booking.invoice_number}", file=sys.stderr)
         
-        # Generate a new invoice for the service item, separate from the booking's main invoice
+        # Set service status based on booking status, but DO NOT auto-invoice
         if booking.status == STATUS_IN_PROGRESS:
             # Set the new service item to IN_PROGRESS as well
             service_item.status = STATUS_IN_PROGRESS
             print(f"Set new service item to IN_PROGRESS status", file=sys.stderr)
-            
-            # Use existing invoice for now - we'll recalculate the total
-            if booking.invoice_number:
-                service_item.invoice_number = booking.invoice_number
-                service_item.invoice_date = booking.invoice_date
-                service_item.is_invoiced = True
-                print(f"Added service item to existing invoice #{booking.invoice_number}", file=sys.stderr)
-                flash(f'Service item added to invoice {booking.invoice_number}', 'success')
-            else:
-                # Generate a new invoice if one doesn't exist
-                invoice_number = booking.generate_invoice_number()
-                service_item.invoice_number = invoice_number
-                service_item.invoice_date = datetime.utcnow()
-                service_item.is_invoiced = True
-                print(f"Generated new invoice #{invoice_number} for service item", file=sys.stderr)
-                flash(f'New invoice {invoice_number} generated for service item', 'success')
-                
-            # Recalculate booking total
-            booking.calculate_total()
+        
+        # NEVER automatically mark as invoiced - only when user explicitly generates invoice
+        service_item.is_invoiced = False
+        print(f"Service item added without auto-invoicing", file=sys.stderr)
+        
+        # Recalculate booking total
+        booking.calculate_total()
         
         db.session.commit()
         
