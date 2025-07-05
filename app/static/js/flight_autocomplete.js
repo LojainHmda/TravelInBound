@@ -48,11 +48,15 @@ function setupAirlineAutocomplete(inputElement) {
         }
         
         try {
+            console.log('🔍 Airlines array check:', typeof airlines, airlines ? airlines.length : 'undefined');
+            
             // Filter airlines
             const filteredAirlines = airlines.filter(airline => 
                 airline.code.toLowerCase().includes(query) || 
                 airline.name.toLowerCase().includes(query)
             ).slice(0, 10);
+            
+            console.log('🎯 Filtered airlines for query "' + query + '":', filteredAirlines.length);
             
             if (filteredAirlines.length === 0) {
                 suggestionsContainer.style.display = 'none';
