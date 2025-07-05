@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 5, 2025: VOUCHER HEADER AND FOOTER UPDATES - Updated branding and contact information
+  - Changed header from gradient to solid orange-yellow (#FFD700) background with dark blue text
+  - Removed text shadow for cleaner appearance on solid background
+  - Enhanced footer with complete banking information: Arabi Travel Bank, Bank Of Palestine, Arab Bank account details
+  - Added comprehensive contact information: sales@arabtravel.ps, www.arabtravel.ps, +97022956640
+  - Included complete address: Alersal St, zakat Bld, Ramallah, P.O.BOX: 27
 - July 5, 2025: ENHANCED FLIGHT VOUCHER PASSENGER DISPLAY - Added passenger names and e-ticket numbers in bold below each flight leg
   - Enhanced AirlineVoucherGenerator to display passenger names prominently below each flight segment
   - Added e-ticket numbers in bold with yellow text on blue background for visibility
