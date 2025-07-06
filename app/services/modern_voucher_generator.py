@@ -160,9 +160,9 @@ class ModernVoucherGenerator:
         import os
         
         # Try to load the logo
-        logo_path = os.path.join('static', 'images', 'arabilogo.jpg')
+        logo_path = os.path.join('static', 'arab_travel_logo.png')
         if not os.path.exists(logo_path):
-            logo_path = 'arabilogo.jpg'  # Try root directory
+            logo_path = 'arab_travel_logo.png'  # Try root directory
         
         if os.path.exists(logo_path):
             # Create header with logo and text aligned

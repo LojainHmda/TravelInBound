@@ -279,9 +279,9 @@ class AirlineVoucherGenerator:
     <div class="voucher-container">
         <!-- Company Header with Arab Travel Group Branding -->
         <div class="company-header">
-            <img src="/static/arabilogo.jpg" alt="Arab Travel Group" class="company-logo">
+            <img src="/static/arab_travel_logo.png" alt="Arabi Travel" class="company-logo">
             <div class="company-info">
-                <h1 class="company-name">Arab Travel Group</h1>
+                <h1 class="company-name">ARABI TRAVEL</h1>
                 <p class="company-tagline">Your Gateway to Exceptional Travel Experiences</p>
             </div>
             <div style="width: 50px;"></div> <!-- Spacer for balance -->
