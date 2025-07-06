@@ -269,29 +269,36 @@ class AirlineVoucherGenerator:
             text-align: center;
             font-weight: bold;
             border: 1px solid #ddd;
-            font-size: 14px;
+            font-size: 12px;
+            font-family: 'Georgia', serif;
         }}
         .hotel-table td {{
             padding: 8px;
             border: 1px solid #ddd;
             text-align: left;
-            font-size: 14px;
+            font-size: 12px;
+            font-family: 'Georgia', serif;
         }}
         .hotel-name {{
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             color: #2E5A87;
+            font-family: 'Georgia', serif;
         }}
         .footer {{
             text-align: center;
             padding: 15px;
             background-color: #f8f9fa;
             border-top: 1px solid #ddd;
+            font-family: 'Georgia', serif;
+            font-size: 11px;
         }}
         .footer-title {{
             font-weight: bold;
             color: #2E5A87;
             margin-bottom: 5px;
+            font-family: 'Georgia', serif;
+            font-size: 12px;
         }}
         @media print {{
             body {{ background: white; padding: 0; }}
