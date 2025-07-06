@@ -750,13 +750,17 @@
                         </div>
                         <div class="btn-group">
                             {% if booking %}
-                                {% if booking.status == 'REQUEST' %}
+                                {% if not booking.invoice_number %}
                                     <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn btn-yellow btn-sm">
                                         <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
                                     </a>
-                                {% elif booking.invoice_number %}
-                                  
-                            
+                                {% else %}
+                                    <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-yellow btn-sm">
+                                        <i class="fas fa-file-invoice me-1"></i> View Invoice
+                                    </a>
+                                    <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}?override=true" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-redo me-1"></i> Override Invoice
+                                    </a>
                                 {% endif %}
                             {% else %}
                                 <span class="text-muted">Select a customer to set total amount</span>

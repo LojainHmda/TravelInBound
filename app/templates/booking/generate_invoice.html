@@ -4,10 +4,18 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <h2 class="fw-bold">
-            <i class="fas fa-file-invoice-dollar me-2"></i>Generate Invoice
+            <i class="fas fa-file-invoice-dollar me-2"></i>
+            {% if request.args.get('override') == 'true' %}
+                Override Invoice
+            {% else %}
+                Generate Invoice
+            {% endif %}
         </h2>
         <p class="text-muted">
             Booking #{{ booking.reference_number }} for {{ booking.requester.username }}
+            {% if request.args.get('override') == 'true' and booking.invoice_number %}
+                <br><span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Overriding existing invoice {{ booking.invoice_number }}</span>
+            {% endif %}
         </p>
     </div>
 </div>
@@ -21,6 +29,9 @@
             <div class="card-body">
                 <form method="POST" action="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}">
                     {{ form.hidden_tag() }}
+                    {% if request.args.get('override') == 'true' %}
+                        <input type="hidden" name="override" value="true">
+                    {% endif %}
                     
                     <div class="mb-4">
                         <div class="table-responsive">
