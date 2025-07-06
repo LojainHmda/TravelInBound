@@ -109,6 +109,13 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 6, 2025: INVOICE STATUS BADGE COLOR STANDARDIZATION - All invoice status badges now use company yellow/orange branding
+  - ✅ CONSISTENT BRANDING: All invoice status badges changed from grey to yellow/orange (#FFBF00) with black text
+  - ✅ SERVICE ITEMS TABLE: Fixed "Invoice Status: Invoiced" badges to use company colors instead of grey
+  - ✅ MAIN INVOICE INDICATOR: Updated "Invoiced - No new services allowed" badge to yellow/orange
+  - ✅ EMPTY STATE BADGE: Fixed "Invoice #" badge in empty service table to use yellow/orange
+  - ✅ VISUAL CONSISTENCY: All invoice-related status indicators now match Arab Travel Group branding colors
+  - Complete invoice protection system remains fully functional with backend validation and UI restrictions
 - July 6, 2025: INVOICE PROTECTION SYSTEM IMPLEMENTED - Complete restriction on adding services to invoiced bookings
   - ✅ BACKEND VALIDATION: Added server-side check in add_service_item route to prevent new services when booking.invoice_number exists
   - ✅ UI RESTRICTIONS: Hidden all "Quick Add" service buttons (flight, hotel, transport, visa, insurance) for invoiced bookings
@@ -116,7 +123,6 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ VISUAL INDICATORS: Added "Invoiced - No new services allowed" badge to show booking is locked
   - ✅ ERROR HANDLING: Flash message explains users need new booking or credit memo for changes
   - ✅ INVOICE INTEGRITY: Prevents accidental service additions that would invalidate existing invoices
-  - ✅ INVOICE STATUS BADGE: Updated badge color to grey (bg-secondary) per user preference for invoiced bookings
   - System now enforces strict separation between pre-invoice booking modifications and post-invoice credit memo workflow
 - July 6, 2025: SUPPLIER COST DASHBOARD DISCREPANCY IDENTIFIED - Found dashboard shows current month ($25,000) vs list shows all-time total ($27,833)
   - ✅ VERIFIED: Dashboard correctly filters by current month (July 2025): $7,000 + $18,000 = $25,000
