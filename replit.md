@@ -109,6 +109,15 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 6, 2025: CRITICAL INVOICE BUTTON LOGIC FIX - Fixed invoice generation button visibility to strictly rely on invoice status
+  - ✅ REMOVED BOOKING STATUS DEPENDENCY: Invoice generation button no longer incorrectly checks booking status (REQUEST)
+  - ✅ INVOICE STATUS ONLY: Button visibility now strictly based on whether booking.invoice_number exists
+  - ✅ MANUAL STATUS CHANGES SUPPORTED: Users can manually move booking to IN_PROGRESS without affecting invoice button
+  - ✅ CONFIRMATION LOGIC UPDATED: Removed booking status restrictions from service confirmation buttons
+  - ✅ WORKFLOW INDEPENDENCE: Invoice generation and booking status changes are now completely independent operations
+  - Fixed critical bug where manually changing booking status to IN_PROGRESS would hide invoice generation option
+  - Invoice button now shows "Generate Invoice" when no invoice exists, "View Invoice" when invoice exists
+  - Service confirmations no longer locked based on booking status, only restricted when already invoiced
 - July 6, 2025: ENHANCED VOUCHER TYPOGRAPHY AND LOGO PRESENTATION
   - ✅ ENLARGED LOGO: Increased logo size from 50px to 120px for better brand visibility
   - ✅ YELLOW/ORANGE FRAME FOR COMPANY NAME: "ARABI TRAVEL" now has striking yellow-orange gradient background with dark blue text and orange border
