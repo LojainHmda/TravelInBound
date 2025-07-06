@@ -72,12 +72,13 @@ class AirlineVoucherGenerator:
             border: 1px solid #ddd;
         }}
         .company-header {{
-            background: #2E5A87;
+            background: #ffffff;
             padding: 20px;
-            color: white;
+            color: #2c3e50;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            border-bottom: 3px solid #2E5A87;
         }}
         .company-logo {{
             height: 120px;
@@ -88,17 +89,23 @@ class AirlineVoucherGenerator:
             flex-grow: 1;
         }}
         .company-name {{
-            font-size: 23px;
-            font-weight: bold;
+            font-size: 26px;
+            font-weight: 600;
             margin: 0;
-            font-family: 'Georgia', serif;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             text-shadow: none;
+            color: #2c3e50;
         }}
         .company-tagline {{
-            font-size: 11px;
-            margin: 5px 0 0 0;
-            opacity: 0.9;
-            font-family: 'Georgia', serif;
+            font-size: 14px;
+            margin: 8px 0 0 0;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            padding: 6px 12px;
+            border-radius: 4px;
+            display: inline-block;
+            font-weight: 500;
         }}
         .section {{
             padding: 20px;
