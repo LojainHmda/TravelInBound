@@ -677,11 +677,9 @@ def update_booking_status(booking_id):
             flash('Cannot mark as CONFIRMED until all service items are confirmed', 'danger')
             return redirect(url_for('booking.details', booking_id=booking.id))
         
-        # If moving to IN_PROGRESS status, generate invoice number and update service items
-        if new_status == STATUS_IN_PROGRESS and old_status != STATUS_IN_PROGRESS:
-            if not booking.invoice_number:
-                booking.generate_invoice_number()
-                flash(f'Invoice {booking.invoice_number} generated', 'success')
+        # REMOVED AUTOMATIC INVOICE GENERATION - Invoice generation should be independent from status changes
+        # Users should manually generate invoices through the "Generate Invoice" button
+        # This ensures complete separation between booking status changes and invoicing
         
         # ALWAYS cascade status to service items when moving to IN_PROGRESS
         if new_status == STATUS_IN_PROGRESS:
@@ -1730,8 +1728,8 @@ def generate_invoice(booking_id):
             if not booking.invoice_number:
                 booking.generate_invoice_number()
             
-            # Update status to IN_PROGRESS
-            booking.status = STATUS_IN_PROGRESS
+            # DO NOT automatically change booking status - status changes should be independent
+            # booking.status = STATUS_IN_PROGRESS  # REMOVED - let users control status separately
             
             # Mark ALL service items as invoiced with the invoice details
             for item in booking.service_items:
