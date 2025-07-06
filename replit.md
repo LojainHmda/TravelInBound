@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 6, 2025: SUPPLIER COST DASHBOARD DISCREPANCY IDENTIFIED - Found dashboard shows current month ($25,000) vs list shows all-time total ($27,833)
+  - ✅ VERIFIED: Dashboard correctly filters by current month (July 2025): $7,000 + $18,000 = $25,000
+  - ✅ VERIFIED: Supplier costs list correctly shows all-time total: $27,833 (includes $2,833 from June 2025)
+  - ✅ CONFIRMED: No calculation error - dashboard and list serve different time scopes
+  - Dashboard shows current month supplier costs for monthly KPI tracking
+  - Supplier costs list shows comprehensive all-time expenses for full financial overview
 - July 6, 2025: CRITICAL INVOICE BUTTON LOGIC FIX - Fixed invoice generation button visibility to strictly rely on invoice status
   - ✅ REMOVED BOOKING STATUS DEPENDENCY: Invoice generation button no longer incorrectly checks booking status (REQUEST)
   - ✅ INVOICE STATUS ONLY: Button visibility now strictly based on whether booking.invoice_number exists
