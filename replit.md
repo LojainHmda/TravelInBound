@@ -115,6 +115,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ MODERN HEADER DESIGN: Updated company name font to modern Segoe UI with increased size (26px) and professional weight (600)
   - ✅ GREY BACKGROUND TAGLINE: Added grey background box for "Travel Voucher" text with rounded corners and proper padding
   - ✅ CLEAN WHITE HEADER: Changed header from blue to clean white background with blue bottom border for modern appearance
+  - ✅ RESTRUCTURED HOTEL SECTION: Hotel name and address now display as prominent header with details in clean table format below
   - ✅ REFINED FONT SIZES: Reduced text sizes by 1 point for better proportions (section titles: 15px, info text: 13px, passenger details: 12px)
   - ✅ FLIGHT DETAILS REFINEMENT: Reduced airport times to 16px, section labels to 12px, dates to 11px for elegant flight information display
   - ✅ HOTEL TABLE REFINEMENT: Reduced hotel table headers and data to 12px, hotel names to 14px, footer text to 11px for consistent elegant styling

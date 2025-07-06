@@ -269,33 +269,48 @@ class AirlineVoucherGenerator:
             font-size: 11px;
             font-family: 'Georgia', serif;
         }}
-        .hotel-table {{
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            border: 1px solid #ddd;
-        }}
-        .hotel-table th {{
+        .hotel-header {{
             background-color: #f8f9fa;
-            padding: 8px;
-            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2E5A87;
+        }}
+        .hotel-main-name {{
+            font-size: 18px;
             font-weight: bold;
-            border: 1px solid #ddd;
-            font-size: 12px;
+            color: #2E5A87;
+            margin-bottom: 5px;
             font-family: 'Georgia', serif;
         }}
-        .hotel-table td {{
-            padding: 8px;
+        .hotel-main-address {{
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 3px;
+            font-family: 'Georgia', serif;
+        }}
+        .hotel-main-phone {{
+            font-size: 12px;
+            color: #666;
+            font-family: 'Georgia', serif;
+        }}
+        .hotel-details-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-family: 'Georgia', serif;
+        }}
+        .hotel-details-table th, .hotel-details-table td {{
             border: 1px solid #ddd;
+            padding: 8px;
             text-align: left;
             font-size: 12px;
             font-family: 'Georgia', serif;
         }}
-        .hotel-name {{
+        .hotel-details-table th {{
+            background-color: #f5f5f5;
             font-weight: bold;
-            font-size: 14px;
-            color: #2E5A87;
-            font-family: 'Georgia', serif;
+            font-size: 12px;
         }}
         .footer {{
             text-align: center;
@@ -520,28 +535,27 @@ class AirlineVoucherGenerator:
             html_content += f"""
         <div class="section">
             <div class="section-title">Hotels</div>
-            <table class="hotel-table">
+            <div class="hotel-header">
+                <div class="hotel-main-name">{hotel_data.get('name', 'Hotel Name')}</div>
+                <div class="hotel-main-address">{hotel_data.get('address', 'Hotel Address')}</div>
+                <div class="hotel-main-phone">Phone: {hotel_data.get('phone', 'N/A')}</div>
+            </div>
+            <table class="hotel-details-table">
                 <thead>
                     <tr>
-                        <th>Hotel</th>
-                        <th>Address</th>
                         <th>Check-In</th>
                         <th>Check-Out</th>
                         <th>Nights</th>
-                        <th>Rooms</th>
                         <th>Room Type</th>
-                        <th>Board</th>
+                        <th>Board Basis</th>
                         <th>Lead Guest</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="hotel-name">{hotel_data.get('name', 'Hotel Name')}</span></td>
-                        <td>{hotel_data.get('address', 'Hotel Address')}<br>Phone: {hotel_data.get('phone', 'N/A')}</td>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
                         <td>{hotel_data.get('checkout_date', 'N/A')}</td>
                         <td>{hotel_data.get('nights', 'N/A')}</td>
-                        <td>1</td>
                         <td>{hotel_data.get('room_type', 'Standard Room')}</td>
                         <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
                         <td>{customer.first_name + ' ' + customer.last_name if customer else 'Guest'}</td>
