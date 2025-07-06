@@ -559,7 +559,7 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('nights', 'N/A')}</td>
                         <td>{hotel_data.get('room_type', 'Standard Room')}</td>
                         <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
-                        <td>{customer.first_name + ' ' + customer.last_name if customer else 'Guest'}</td>
+                        <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
                     </tr>
                 </tbody>
             </table>
@@ -774,7 +774,26 @@ class AirlineVoucherGenerator:
                     # Extract room information
                     if 'rooms' in parsed_data and parsed_data['rooms']:
                         rooms_data = parsed_data['rooms']
-                        if isinstance(rooms_data, dict):
+                        # Handle new room array format with lead passenger names
+                        if isinstance(rooms_data, list) and len(rooms_data) > 0:
+                            # Extract lead passenger names from room array
+                            lead_passengers = []
+                            for room in rooms_data:
+                                if 'lead_passenger' in room and room['lead_passenger']:
+                                    lead_passengers.append(room['lead_passenger'])
+                                # Also get room type from first room
+                                if 'room_type' in room and room['room_type']:
+                                    hotel_data['room_type'] = room['room_type']
+                                if 'board_basis' in room and room['board_basis']:
+                                    hotel_data['board_basis'] = room['board_basis']
+                            
+                            # Store lead passenger names for voucher display
+                            if lead_passengers:
+                                hotel_data['lead_passengers'] = lead_passengers
+                                # Use first lead passenger for the main display
+                                hotel_data['primary_guest'] = lead_passengers[0]
+                        elif isinstance(rooms_data, dict):
+                            # Handle legacy room format
                             # Convert string numbers to integers for comparison
                             single_count = int(rooms_data.get('single', 0))
                             double_count = int(rooms_data.get('double', 0))
