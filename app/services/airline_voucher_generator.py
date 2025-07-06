@@ -34,6 +34,11 @@ class AirlineVoucherGenerator:
         
         return hotels_data
     
+    def _get_logo_path(self):
+        """Get the correct logo path for PDF generation"""
+        logo_path = os.path.abspath('static/arab_travel_logo.png')
+        return f"file:///{logo_path}"
+    
     def generate_html(self):
         """Generate voucher HTML matching the exact template layout"""
         service_items = list(self.booking.service_items)
@@ -43,6 +48,7 @@ class AirlineVoucherGenerator:
         flight_data = self._extract_flight_data(service_items)
         hotel_data = self._extract_hotel_data(service_items)
         passenger_data = self._prepare_passenger_data(customer)
+        logo_url = self._get_logo_path()
         
         # Generate HTML exactly matching the template
         html_content = f"""<!DOCTYPE html>
@@ -279,7 +285,7 @@ class AirlineVoucherGenerator:
     <div class="voucher-container">
         <!-- Company Header with Arab Travel Group Branding -->
         <div class="company-header">
-            <img src="/static/arab_travel_logo.png" alt="Arabi Travel" class="company-logo">
+            <img src="{logo_url}" alt="Arabi Travel" class="company-logo">
             <div class="company-info">
                 <h1 class="company-name">ARABI TRAVEL</h1>
                 <p class="company-tagline">Your Gateway to Exceptional Travel Experiences</p>

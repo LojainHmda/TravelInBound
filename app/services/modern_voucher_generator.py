@@ -159,10 +159,10 @@ class ModernVoucherGenerator:
         from reportlab.lib.utils import ImageReader
         import os
         
-        # Try to load the logo
-        logo_path = os.path.join('static', 'arab_travel_logo.png')
+        # Try to load the logo with correct absolute path
+        logo_path = os.path.abspath('static/arab_travel_logo.png')
         if not os.path.exists(logo_path):
-            logo_path = 'arab_travel_logo.png'  # Try root directory
+            logo_path = os.path.abspath('arab_travel_logo.png')  # Try root directory
         
         if os.path.exists(logo_path):
             # Create header with logo and text aligned
