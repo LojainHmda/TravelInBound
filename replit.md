@@ -109,6 +109,14 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 6, 2025: INVOICE PROTECTION SYSTEM IMPLEMENTED - Complete restriction on adding services to invoiced bookings
+  - ✅ BACKEND VALIDATION: Added server-side check in add_service_item route to prevent new services when booking.invoice_number exists
+  - ✅ UI RESTRICTIONS: Hidden all "Quick Add" service buttons (flight, hotel, transport, visa, insurance) for invoiced bookings
+  - ✅ INFORMATIVE MESSAGING: Replaced "Create Request" button with clear invoice status notification when no services exist
+  - ✅ VISUAL INDICATORS: Added "Invoiced - No new services allowed" badge to show booking is locked
+  - ✅ ERROR HANDLING: Flash message explains users need new booking or credit memo for changes
+  - ✅ INVOICE INTEGRITY: Prevents accidental service additions that would invalidate existing invoices
+  - System now enforces strict separation between pre-invoice booking modifications and post-invoice credit memo workflow
 - July 6, 2025: SUPPLIER COST DASHBOARD DISCREPANCY IDENTIFIED - Found dashboard shows current month ($25,000) vs list shows all-time total ($27,833)
   - ✅ VERIFIED: Dashboard correctly filters by current month (July 2025): $7,000 + $18,000 = $25,000
   - ✅ VERIFIED: Supplier costs list correctly shows all-time total: $27,833 (includes $2,833 from June 2025)

@@ -574,6 +574,12 @@ def details(booking_id):
 def add_service_item(booking_id):
     """Add a service item to an existing booking"""
     booking = Booking.query.get_or_404(booking_id)
+    
+    # Check if booking is already invoiced - prevent adding new services
+    if booking.invoice_number:
+        flash('Cannot add new services to an invoiced booking. Please create a new booking or issue a credit memo for changes.', 'error')
+        return redirect(url_for('booking.details', booking_id=booking.id))
+    
     form = ServiceItemForm()
     
     if form.validate_on_submit():
