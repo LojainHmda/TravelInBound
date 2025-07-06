@@ -59,7 +59,7 @@ class AirlineVoucherGenerator:
     <title>Travel Voucher - {self.booking.reference_number}</title>
     <style>
         body {{
-            font-family: Arial, sans-serif;
+            font-family: 'Georgia', serif;
             margin: 0;
             padding: 20px;
             background-color: #f5f5f5;
@@ -80,7 +80,7 @@ class AirlineVoucherGenerator:
             justify-content: space-between;
         }}
         .company-logo {{
-            height: 50px;
+            height: 70px;
             width: auto;
         }}
         .company-info {{
@@ -88,36 +88,40 @@ class AirlineVoucherGenerator:
             flex-grow: 1;
         }}
         .company-name {{
-            font-size: 24px;
+            font-size: 23px;
             font-weight: bold;
             margin: 0;
+            font-family: 'Georgia', serif;
             text-shadow: none;
         }}
         .company-tagline {{
-            font-size: 12px;
+            font-size: 11px;
             margin: 5px 0 0 0;
             opacity: 0.9;
+            font-family: 'Georgia', serif;
         }}
         .section {{
             padding: 20px;
         }}
         .section-title {{
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             color: #2E5A87;
             margin-bottom: 15px;
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
+            font-family: 'Georgia', serif;
         }}
         .info-table {{
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            font-family: 'Georgia', serif;
         }}
         .info-table td {{
             padding: 8px 10px;
             border-bottom: 1px solid #eee;
-            font-size: 14px;
+            font-size: 13px;
         }}
         .info-table .label {{
             font-weight: bold;
@@ -157,25 +161,28 @@ class AirlineVoucherGenerator:
         }}
         .passenger-names {{
             color: #2E5A87;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 4px;
+            font-family: 'Georgia', serif;
         }}
         .pnr-number {{
             color: #2E5A87;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 4px;
             background-color: #F0F8FF;
             padding: 2px 6px;
             border-radius: 3px;
             display: inline-block;
+            font-family: 'Georgia', serif;
         }}
         .eticket-number {{
             color: #FFD700;
             background-color: #2E5A87;
             padding: 2px 6px;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 11px;
             display: inline-block;
+            font-family: 'Georgia', serif;
         }}
         .trip-header {{
             display: flex;

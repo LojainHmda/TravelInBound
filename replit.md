@@ -109,6 +109,12 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 6, 2025: ENHANCED VOUCHER TYPOGRAPHY AND LOGO PRESENTATION
+  - ✅ ENLARGED LOGO: Increased logo size from 50px to 70px for better brand visibility
+  - ✅ ELEGANT TYPOGRAPHY: Switched from Arial to Georgia serif font for more professional appearance
+  - ✅ REFINED FONT SIZES: Reduced text sizes by 1 point for better proportions (section titles: 15px, info text: 13px, passenger details: 12px)
+  - ✅ CONSISTENT FONT FAMILY: Applied Georgia serif throughout all voucher elements for unified elegant design
+  - ✅ PDF PATH RESOLUTION: Fixed logo display in PDF generation using absolute file paths for weasyprint compatibility
 - July 6, 2025: UPDATED ARAB TRAVEL LOGO ACROSS ALL VOUCHER SYSTEMS
   - ✅ LOGO REPLACEMENT: Updated all voucher templates to use new Arab Travel logo (arab_travel_logo.png)
   - ✅ AIRLINE VOUCHER GENERATOR: Updated company header to display "ARABI TRAVEL" with new logo
