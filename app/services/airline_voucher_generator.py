@@ -189,12 +189,14 @@ class AirlineVoucherGenerator:
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
-            font-size: 16px;
+            font-size: 14px;
             color: #333;
+            font-family: 'Georgia', serif;
         }}
         .airline-ref {{
             font-weight: bold;
             color: #666;
+            font-family: 'Georgia', serif;
         }}
         .flight-details {{
             display: flex;
@@ -217,26 +219,34 @@ class AirlineVoucherGenerator:
             font-weight: bold;
             color: #666;
             margin-bottom: 5px;
+            font-size: 12px;
+            font-family: 'Georgia', serif;
         }}
         .airport-time {{
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+            font-family: 'Georgia', serif;
         }}
         .flight-date {{
             color: #666;
             margin-bottom: 5px;
+            font-size: 11px;
+            font-family: 'Georgia', serif;
         }}
         .airport-code {{
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            font-family: 'Georgia', serif;
         }}
         .flight-type {{
             font-weight: bold;
             margin-bottom: 5px;
+            font-size: 13px;
+            font-family: 'Georgia', serif;
         }}
         .aircraft-icon {{
-            font-size: 20px;
+            font-size: 18px;
             margin: 10px 0;
         }}
         .baggage {{
@@ -244,7 +254,8 @@ class AirlineVoucherGenerator:
             color: white;
             padding: 5px 10px;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 11px;
+            font-family: 'Georgia', serif;
         }}
         .hotel-table {{
             width: 100%;
