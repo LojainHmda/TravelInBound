@@ -80,7 +80,7 @@ class AirlineVoucherGenerator:
             justify-content: space-between;
         }}
         .company-logo {{
-            height: 70px;
+            height: 120px;
             width: auto;
         }}
         .company-info {{

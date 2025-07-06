@@ -110,7 +110,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 
 ## Recent Changes
 - July 6, 2025: ENHANCED VOUCHER TYPOGRAPHY AND LOGO PRESENTATION
-  - ✅ ENLARGED LOGO: Increased logo size from 50px to 70px for better brand visibility
+  - ✅ ENLARGED LOGO: Increased logo size from 50px to 120px for better brand visibility
   - ✅ ELEGANT TYPOGRAPHY: Switched from Arial to Georgia serif font for more professional appearance
   - ✅ REFINED FONT SIZES: Reduced text sizes by 1 point for better proportions (section titles: 15px, info text: 13px, passenger details: 12px)
   - ✅ FLIGHT DETAILS REFINEMENT: Reduced airport times to 16px, section labels to 12px, dates to 11px for elegant flight information display

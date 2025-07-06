@@ -169,7 +169,7 @@ class ModernVoucherGenerator:
             from reportlab.platypus import Image
             
             # Create image with proper sizing
-            logo_img = Image(logo_path, width=1.2*inch, height=1.2*inch)
+            logo_img = Image(logo_path, width=2.0*inch, height=2.0*inch)
             
             header_data = [
                 [logo_img, 
