@@ -111,6 +111,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 ## Recent Changes
 - July 6, 2025: ENHANCED VOUCHER TYPOGRAPHY AND LOGO PRESENTATION
   - ✅ ENLARGED LOGO: Increased logo size from 50px to 120px for better brand visibility
+  - ✅ YELLOW/ORANGE FRAME FOR COMPANY NAME: "ARABI TRAVEL" now has striking yellow-orange gradient background with dark blue text and orange border
   - ✅ MODERN HEADER DESIGN: Updated company name font to modern Segoe UI with increased size (26px) and professional weight (600)
   - ✅ GREY BACKGROUND TAGLINE: Added grey background box for "Travel Voucher" text with rounded corners and proper padding
   - ✅ CLEAN WHITE HEADER: Changed header from blue to clean white background with blue bottom border for modern appearance

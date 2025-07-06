@@ -94,7 +94,12 @@ class AirlineVoucherGenerator:
             margin: 0;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
             text-shadow: none;
-            color: #2c3e50;
+            color: #2E5A87;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 2px solid #FF8C00;
         }}
         .company-tagline {{
             font-size: 14px;
