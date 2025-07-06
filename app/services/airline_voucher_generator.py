@@ -93,24 +93,24 @@ class AirlineVoucherGenerator:
             font-weight: 600;
             margin: 0;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            text-shadow: none;
             color: #2E5A87;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 8px 16px;
-            border-radius: 6px;
             display: inline-block;
-            border: 2px solid #FF8C00;
         }}
         .company-tagline {{
             font-size: 14px;
             margin: 8px 0 0 0;
             font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #6c757d;
-            padding: 6px 12px;
-            border-radius: 4px;
-            display: inline-block;
-            font-weight: 500;
+            color: #2E5A87;
+            font-weight: 600;
+            display: block;
+            text-align: center;
+        }}
+        .tagline-underline {{
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            margin: 5px auto 0 auto;
+            border-radius: 2px;
         }}
         .section {{
             padding: 20px;
@@ -285,7 +285,7 @@ class AirlineVoucherGenerator:
         }}
         .hotel-main-address {{
             font-size: 14px;
-            color: #666;
+            color: #2E5A87;
             margin-bottom: 3px;
             font-family: 'Georgia', serif;
         }}
@@ -340,7 +340,8 @@ class AirlineVoucherGenerator:
             <img src="{logo_url}" alt="Arabi Travel" class="company-logo">
             <div class="company-info">
                 <h1 class="company-name">ARABI TRAVEL</h1>
-                <p class="company-tagline">Your Gateway to Exceptional Travel Experiences</p>
+                <p class="company-tagline">Travel Voucher</p>
+                <div class="tagline-underline"></div>
             </div>
             <div style="width: 50px;"></div> <!-- Spacer for balance -->
         </div>

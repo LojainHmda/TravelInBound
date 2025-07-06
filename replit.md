@@ -120,6 +120,13 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ FLIGHT DETAILS REFINEMENT: Reduced airport times to 16px, section labels to 12px, dates to 11px for elegant flight information display
   - ✅ HOTEL TABLE REFINEMENT: Reduced hotel table headers and data to 12px, hotel names to 14px, footer text to 11px for consistent elegant styling
   - ✅ CONSISTENT FONT FAMILY: Applied Georgia serif throughout all voucher elements for unified elegant design
+  - ✅ REMOVED YELLOW FRAME: Removed yellow/orange background from "ARABI TRAVEL", now displays as clean dark blue text
+  - ✅ TRAVEL VOUCHER STYLING: Changed tagline to "Travel Voucher" in dark blue with yellow/orange horizontal line below
+  - ✅ HOTEL ADDRESS COLOR: Updated hotel address text to dark blue (#2E5A87) for better visual hierarchy
+  - ✅ REFINED FONT SIZES: Reduced text sizes by 1 point for better proportions (section titles: 15px, info text: 13px, passenger details: 12px)
+  - ✅ FLIGHT DETAILS REFINEMENT: Reduced airport times to 16px, section labels to 12px, dates to 11px for elegant flight information display
+  - ✅ HOTEL TABLE REFINEMENT: Reduced hotel table headers and data to 12px, hotel names to 14px, footer text to 11px for consistent elegant styling
+  - ✅ CONSISTENT FONT FAMILY: Applied Georgia serif throughout all voucher elements for unified elegant design
   - ✅ PDF PATH RESOLUTION: Fixed logo display in PDF generation using absolute file paths for weasyprint compatibility
 - July 6, 2025: UPDATED ARAB TRAVEL LOGO ACROSS ALL VOUCHER SYSTEMS
   - ✅ LOGO REPLACEMENT: Updated all voucher templates to use new Arab Travel logo (arab_travel_logo.png)
