@@ -1681,9 +1681,6 @@ def generate_invoice(booking_id):
     booking = Booking.query.get_or_404(booking_id)
     form = GenerateInvoiceForm()
     
-    # Check if this is an override request
-    is_override = request.args.get('override') == 'true' or request.form.get('override') == 'true'
-    
     # Pre-fill the form with the current total
     if request.method == 'GET':
         form.total_amount.data = booking.total_amount
@@ -1729,11 +1726,8 @@ def generate_invoice(booking_id):
             # Update the booking total
             booking.total_amount = new_total
             
-            # Generate invoice number if not already set, or if this is an override
-            if not booking.invoice_number or is_override:
-                if is_override and booking.invoice_number:
-                    print(f"Overriding existing invoice {booking.invoice_number}", file=sys.stderr)
-                    flash(f'Overriding existing invoice {booking.invoice_number}', 'warning')
+            # Generate invoice number if not already set
+            if not booking.invoice_number:
                 booking.generate_invoice_number()
             
             # Update status to IN_PROGRESS
@@ -1763,7 +1757,7 @@ def generate_invoice(booking_id):
                 # Otherwise go to invoice details page
                 return redirect(url_for('booking.invoice_details', booking_id=booking.id))
     
-    return render_template('booking/generate_invoice.html', form=form, booking=booking, is_override=is_override)
+    return render_template('booking/generate_invoice.html', form=form, booking=booking)
 
 @booking_bp.route('/<int:booking_id>/invoice', methods=['GET'])
 def invoice_details(booking_id):
