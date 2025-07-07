@@ -171,11 +171,20 @@ class AirlineVoucherGenerator:
             background-color: #fff;
             border-radius: 3px;
         }}
-        .trip-info {{
-            color: #2E5A87;
+        .passenger-trip-row {{
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }}
+        .trip-info-left {{
+            color: #000;
             font-size: 11px;
             margin-bottom: 3px;
             font-family: 'Georgia', serif;
+            flex: 1;
+        }}
+        .passenger-details-right {{
+            flex: 1;
         }}
         .passenger-names {{
             color: #2E5A87;
@@ -473,13 +482,19 @@ class AirlineVoucherGenerator:
                     segment_ticket_number = segment.get('ticket_number', '')
                     segment_pnr = segment.get('pnr', '')
                     
-                    # Build passenger and ticket info display with trip information
+                    # Build passenger and ticket info display with trip information on the left
                     passenger_ticket_info = ""
                     if segment_passengers or segment_ticket_number or segment_pnr:
                         passenger_ticket_info = '<div class="passenger-ticket-info">'
                         
-                        # Display trip information in dark blue
-                        passenger_ticket_info += f'<div class="trip-info"><strong>Trip {trip_number}</strong> ({dep_code} to {arr_code}), {airline} {flight_number}</div>'
+                        # Create a row with trip info on left and passenger details on right
+                        passenger_ticket_info += '<div class="passenger-trip-row">'
+                        
+                        # Left side: Trip information in black with full airport names
+                        passenger_ticket_info += f'<div class="trip-info-left"><strong>Trip {trip_number}</strong> ({departure_airport} to {arrival_airport}), {airline} {flight_number}</div>'
+                        
+                        # Right side: Passenger details
+                        passenger_ticket_info += '<div class="passenger-details-right">'
                         
                         # Display passenger names in bold
                         if segment_passengers:
@@ -494,7 +509,7 @@ class AirlineVoucherGenerator:
                         if segment_ticket_number:
                             passenger_ticket_info += f'<div class="eticket-number"><strong>E-Ticket: {segment_ticket_number}</strong></div>'
                         
-                        passenger_ticket_info += '</div>'
+                        passenger_ticket_info += '</div></div></div>'
                     
                     html_content += f"""
             <div class="flight-segment">
