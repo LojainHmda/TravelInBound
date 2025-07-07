@@ -188,16 +188,16 @@ class AirlineVoucherGenerator:
         }}
         .passenger-names {{
             color: #2E5A87;
-            font-size: 10px;
+            font-size: 8px;
             margin-bottom: 2px;
             font-family: 'Georgia', serif;
         }}
         .pnr-number {{
             color: #2E5A87;
-            font-size: 10px;
+            font-size: 8px;
             margin-bottom: 2px;
             background-color: #F0F8FF;
-            padding: 1px 4px;
+            padding: 1px 3px;
             border-radius: 2px;
             display: inline-block;
             font-family: 'Georgia', serif;
@@ -205,9 +205,9 @@ class AirlineVoucherGenerator:
         .eticket-number {{
             color: #FFD700;
             background-color: #2E5A87;
-            padding: 1px 4px;
+            padding: 1px 3px;
             border-radius: 2px;
-            font-size: 9px;
+            font-size: 8px;
             display: inline-block;
             font-family: 'Georgia', serif;
         }}
