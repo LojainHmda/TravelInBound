@@ -160,39 +160,39 @@ class AirlineVoucherGenerator:
         }}
         .flight-segment {{
             border: 1px solid #ddd;
-            margin: 10px 0;
-            padding: 15px;
+            margin: 5px 0;
+            padding: 8px;
             background-color: #f9f9f9;
         }}
         .passenger-ticket-info {{
-            margin-top: 12px;
-            padding: 8px 0;
+            margin-top: 6px;
+            padding: 4px 0;
             border-top: 1px solid #e0e0e0;
             background-color: #fff;
-            border-radius: 4px;
+            border-radius: 3px;
         }}
         .passenger-names {{
             color: #2E5A87;
-            font-size: 12px;
-            margin-bottom: 4px;
+            font-size: 10px;
+            margin-bottom: 2px;
             font-family: 'Georgia', serif;
         }}
         .pnr-number {{
             color: #2E5A87;
-            font-size: 12px;
-            margin-bottom: 4px;
+            font-size: 10px;
+            margin-bottom: 2px;
             background-color: #F0F8FF;
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 1px 4px;
+            border-radius: 2px;
             display: inline-block;
             font-family: 'Georgia', serif;
         }}
         .eticket-number {{
             color: #FFD700;
             background-color: #2E5A87;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 11px;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 9px;
             display: inline-block;
             font-family: 'Georgia', serif;
         }}
@@ -200,8 +200,8 @@ class AirlineVoucherGenerator:
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            font-size: 14px;
+            margin-bottom: 8px;
+            font-size: 13px;
             color: #333;
             font-family: 'Georgia', serif;
         }}
@@ -215,8 +215,8 @@ class AirlineVoucherGenerator:
             justify-content: space-between;
             align-items: center;
             background-color: white;
-            padding: 20px;
-            border-radius: 5px;
+            padding: 10px;
+            border-radius: 4px;
         }}
         .departure-section, .arrival-section {{
             flex: 1;
@@ -225,25 +225,25 @@ class AirlineVoucherGenerator:
         .flight-middle {{
             flex: 1;
             text-align: center;
-            padding: 0 20px;
+            padding: 0 10px;
         }}
         .section-label {{
             font-weight: bold;
             color: #666;
-            margin-bottom: 5px;
-            font-size: 12px;
+            margin-bottom: 3px;
+            font-size: 10px;
             font-family: 'Georgia', serif;
         }}
         .airport-time {{
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             font-family: 'Georgia', serif;
         }}
         .flight-date {{
             color: #666;
-            margin-bottom: 5px;
-            font-size: 11px;
+            margin-bottom: 3px;
+            font-size: 10px;
             font-family: 'Georgia', serif;
         }}
         .airport-code {{
