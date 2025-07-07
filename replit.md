@@ -125,8 +125,9 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ SIDE-BY-SIDE LAYOUT: Trip details on left, passenger/PNR/e-ticket info on right with flexbox layout
   - ✅ REMOVED AIRLINE REFERENCE: Eliminated redundant "Airline Ref" section for cleaner layout
   - ✅ IMPROVED DENSITY: Overall flight section now displays more information in less vertical space
-- July 6, 2025: INVOICE STATUS BADGE COLOR STANDARDIZATION - All invoice status badges now use company yellow/orange branding
-  - ✅ CONSISTENT BRANDING: All invoice status badges changed from grey to yellow/orange (#FFBF00) with black text
+- July 7, 2025: INVOICE STATUS BADGE COLOR STANDARDIZATION - All invoice status badges now use company yellow/orange branding
+  - ✅ CONSISTENT BRANDING: All invoice status badges changed from green/grey to yellow/orange (#FFBF00) with black text
+  - ✅ BOOKING DETAILS HEADER: Fixed main "Invoiced" badge from green (#28a745) to yellow/orange (#FFBF00)
   - ✅ SERVICE ITEMS TABLE: Fixed "Invoice Status: Invoiced" badges to use company colors instead of grey
   - ✅ MAIN INVOICE INDICATOR: Updated "Invoiced - No new services allowed" badge to yellow/orange
   - ✅ EMPTY STATE BADGE: Fixed "Invoice #" badge in empty service table to use yellow/orange
