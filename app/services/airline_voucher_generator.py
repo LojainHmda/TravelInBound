@@ -148,17 +148,17 @@ class AirlineVoucherGenerator:
         }}
         .passenger-table th {{
             background-color: #f8f9fa;
-            padding: 3px 5px;
+            padding: 4px 6px;
             text-align: left;
             font-weight: bold;
             border: 1px solid #ddd;
-            font-size: 8px;
+            font-size: 9px;
         }}
         .passenger-table td {{
-            padding: 2px 5px;
+            padding: 3px 6px;
             border: 1px solid #ddd;
             text-align: left;
-            font-size: 7px;
+            font-size: 9px;
         }}
         .flight-segment {{
             border: 1px solid #ddd;

@@ -117,7 +117,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ TIGHTER SPACING: Flight middle section padding reduced from 20px to 10px
   - ✅ SMALLER FONTS: Airport times reduced to 14px, flight dates to 10px, section labels to 10px
   - ✅ COMPACT PASSENGER INFO: Passenger names, PNR, and e-ticket numbers reduced to 8px font for maximum space efficiency
-  - ✅ MICRO PASSENGER TABLE: Passenger list table headers reduced to 8px, data to 7px with minimal padding for ultra-compact display
+  - ✅ COMPACT PASSENGER TABLE: Passenger list table optimized to 9px font with balanced padding for readable yet space-efficient display
   - ✅ TRIP INFO INTEGRATION: Moved trip information to left side of passenger details in horizontal layout
   - ✅ FULL AIRPORT NAMES: Trip information uses complete airport names (e.g., "Dubai Intl to Queen Alia Intl")
   - ✅ BLACK STYLING: Trip information displays in black color for better readability
