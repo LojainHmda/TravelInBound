@@ -152,13 +152,13 @@ class AirlineVoucherGenerator:
             text-align: left;
             font-weight: bold;
             border: 1px solid #ddd;
-            font-size: 9px;
+            font-size: 11px;
         }}
         .passenger-table td {{
             padding: 3px 6px;
             border: 1px solid #ddd;
             text-align: left;
-            font-size: 9px;
+            font-size: 11px;
         }}
         .flight-segment {{
             border: 1px solid #ddd;
