@@ -117,6 +117,9 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ TIGHTER SPACING: Flight middle section padding reduced from 20px to 10px
   - ✅ SMALLER FONTS: Airport times reduced to 14px, flight dates to 10px, section labels to 10px
   - ✅ COMPACT PASSENGER INFO: Passenger names, PNR, and e-ticket numbers reduced to smaller, tighter layout
+  - ✅ TRIP INFO INTEGRATION: Moved trip information (e.g., "Trip 1 (DXB to AMM), Emirates EK905") next to passenger details
+  - ✅ REMOVED AIRLINE REFERENCE: Eliminated redundant "Airline Ref" section for cleaner layout
+  - ✅ DARK BLUE STYLING: Trip information displays in dark blue (#2E5A87) for brand consistency
   - ✅ IMPROVED DENSITY: Overall flight section now displays more information in less vertical space
 - July 6, 2025: INVOICE STATUS BADGE COLOR STANDARDIZATION - All invoice status badges now use company yellow/orange branding
   - ✅ CONSISTENT BRANDING: All invoice status badges changed from grey to yellow/orange (#FFBF00) with black text

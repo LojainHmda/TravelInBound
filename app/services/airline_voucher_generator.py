@@ -171,6 +171,12 @@ class AirlineVoucherGenerator:
             background-color: #fff;
             border-radius: 3px;
         }}
+        .trip-info {{
+            color: #2E5A87;
+            font-size: 11px;
+            margin-bottom: 3px;
+            font-family: 'Georgia', serif;
+        }}
         .passenger-names {{
             color: #2E5A87;
             font-size: 10px;
@@ -196,20 +202,7 @@ class AirlineVoucherGenerator:
             display: inline-block;
             font-family: 'Georgia', serif;
         }}
-        .trip-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #333;
-            font-family: 'Georgia', serif;
-        }}
-        .airline-ref {{
-            font-weight: bold;
-            color: #666;
-            font-family: 'Georgia', serif;
-        }}
+
         .flight-details {{
             display: flex;
             justify-content: space-between;
@@ -480,10 +473,13 @@ class AirlineVoucherGenerator:
                     segment_ticket_number = segment.get('ticket_number', '')
                     segment_pnr = segment.get('pnr', '')
                     
-                    # Build passenger and ticket info display
+                    # Build passenger and ticket info display with trip information
                     passenger_ticket_info = ""
                     if segment_passengers or segment_ticket_number or segment_pnr:
                         passenger_ticket_info = '<div class="passenger-ticket-info">'
+                        
+                        # Display trip information in dark blue
+                        passenger_ticket_info += f'<div class="trip-info"><strong>Trip {trip_number}</strong> ({dep_code} to {arr_code}), {airline} {flight_number}</div>'
                         
                         # Display passenger names in bold
                         if segment_passengers:
@@ -502,10 +498,6 @@ class AirlineVoucherGenerator:
                     
                     html_content += f"""
             <div class="flight-segment">
-                <div class="trip-header">
-                    <strong>Trip {trip_number}</strong> ({departure_airport} to {arrival_airport}), {airline} {flight_number}
-                    <div class="airline-ref">Airline Ref : {airline.split()[0][:2].upper() if airline else ''}</div>
-                </div>
                 <div class="flight-details">
                     <div class="departure-section">
                         <div class="section-label">Departure</div>
