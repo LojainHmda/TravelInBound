@@ -118,7 +118,12 @@ def analyze_flight_ticket(image_data):
         PASSENGER & BOOKING INFO:
         - PNR/Booking reference (typically 5-6 alphanumeric characters)
         - All passenger names listed
-        - E-ticket numbers (13-digit numbers starting with airline code)
+        - **CRITICAL: E-ticket numbers** - Look carefully for ticket numbers, they may appear as:
+          * 13-digit numbers (e.g., 1572345678901)
+          * Numbers starting with airline code + digits (e.g., QR1234567890123)
+          * May be labeled as "Ticket Number", "E-Ticket", "TKT", or "Electronic Ticket"
+          * Usually one ticket number per passenger
+          * Often found near passenger names or in a separate ticket section
         - Travel class (Economy, Business, First)
         - Seat assignments if shown
 
@@ -155,6 +160,9 @@ def analyze_flight_ticket(image_data):
         - For connecting flights, identify the connection airport correctly
         - If round-trip, ensure both outbound AND return segments are captured
         - For multi-city, capture each city-to-city segment
+        - **TICKET NUMBERS ARE CRITICAL** - Look very carefully throughout the entire document for any numbers that could be ticket/e-ticket numbers
+        - Search in multiple locations: passenger details section, ticket summary, confirmation details, barcode areas
+        - If you find any 10+ digit numbers, include them in ticket_numbers array
         - If information is unclear, extract what you can confidently read
         """
 
