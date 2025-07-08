@@ -281,7 +281,7 @@ class AirlineVoucherGenerator:
             border-left: 4px solid #2E5A87;
         }}
         .hotel-main-name {{
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             color: #2E5A87;
             margin-bottom: 5px;
