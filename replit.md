@@ -109,16 +109,20 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 8, 2025: UNIFORM FONT SIZE STANDARDIZATION - Set all voucher text to consistent 10px font
+  - ✅ BOOKING HEADER: Booking information (ID, date, PNR, contact, email) standardized to 10px
+  - ✅ PASSENGER TABLE: Passenger list headers and data set to 10px for consistency
+  - ✅ FLIGHT DETAILS: Airport times, dates, codes, and flight types all set to 10px
+  - ✅ SECTION TITLES: All section headers standardized to 10px font
+  - ✅ PASSENGER INFO: Passenger names, PNR, and e-ticket numbers set to 10px
+  - ✅ BAGGAGE INFO: Baggage allowance text set to 10px
+  - ✅ UNIFORM DESIGN: Complete voucher now uses consistent 10px font across all elements
 - July 7, 2025: COMPACT FLIGHT SECTION DESIGN - Optimized flight voucher layout for space efficiency
   - ✅ REDUCED PADDING: Flight segment padding reduced from 15px to 8px for tighter layout
   - ✅ SMALLER MARGINS: Flight segment margins reduced from 10px to 5px for better space utilization
   - ✅ COMPACT HEADERS: Trip header margin reduced from 15px to 8px, font size from 14px to 13px
   - ✅ OPTIMIZED FLIGHT DETAILS: Flight details padding reduced from 20px to 10px
   - ✅ TIGHTER SPACING: Flight middle section padding reduced from 20px to 10px
-  - ✅ SMALLER FONTS: Airport times reduced to 11px, flight dates to 8px, airport codes to 9px for compact flight details
-  - ✅ LARGER BOOKING HEADER: Booking info (ID, date, PNR, contact) increased to 15px for better visibility
-  - ✅ COMPACT PASSENGER INFO: Passenger names, PNR, and e-ticket numbers reduced to 8px font for maximum space efficiency
-  - ✅ PASSENGER TABLE: Passenger list table set to 13px font with increased padding for better readability
   - ✅ TRIP INFO INTEGRATION: Moved trip information to left side of passenger details in horizontal layout
   - ✅ FULL AIRPORT NAMES: Trip information uses complete airport names (e.g., "Dubai Intl to Queen Alia Intl")
   - ✅ BLACK STYLING: Trip information displays in black color for better readability
