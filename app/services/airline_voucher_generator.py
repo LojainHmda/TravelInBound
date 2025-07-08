@@ -350,31 +350,13 @@ class AirlineVoucherGenerator:
             <div style="width: 50px;"></div> <!-- Spacer for balance -->
         </div>
         
-        <!-- Booking Information Section -->
-        <div class="section">
-            <div class="section-title">Booking Information</div>
-            <table class="info-table">
-                <tr>
-                    <td class="label">Booking ID</td>
-                    <td>{self.booking.reference_number}</td>
-                </tr>
-                <tr>
-                    <td class="label">Booking Date</td>
-                    <td>{self.booking.created_at.strftime('%d-%m-%Y (%A)') if self.booking.created_at else 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td class="label">GDS PNR</td>
-                    <td>XVSQ4V</td>
-                </tr>
-                <tr>
-                    <td class="label">Contact Tel</td>
-                    <td>{customer.phone if customer and customer.phone else '+97022956640'}</td>
-                </tr>
-                <tr>
-                    <td class="label">Email</td>
-                    <td>{customer.email if customer and customer.email else 'info@arabtravel.ps'}</td>
-                </tr>
-            </table>
+        <!-- Compact Booking Information Header -->
+        <div style="background-color: #f8f9fa; padding: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 8px; font-family: 'Georgia', serif; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <span><strong>ID:</strong> {self.booking.reference_number}</span>
+            <span><strong>Date:</strong> {self.booking.created_at.strftime('%d-%m-%Y') if self.booking.created_at else 'N/A'}</span>
+            <span><strong>PNR:</strong> XVSQ4V</span>
+            <span><strong>Tel:</strong> {customer.phone if customer and customer.phone else '+97022956640'}</span>
+            <span><strong>Email:</strong> {customer.email if customer and customer.email else 'info@arabtravel.ps'}</span>
         </div>
         
         <!-- Passenger List Section -->
