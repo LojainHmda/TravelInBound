@@ -109,6 +109,14 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 9, 2025: BOOKING HEADER FONT ADJUSTMENT - Increased booking header font for better readability
+  - ✅ HEADER FONT INCREASE: Increased booking header font from 8px to 9px for improved visibility
+  - ✅ BETTER READABILITY: ID, Date, PNR, Tel, Email now display one point larger
+  - ✅ BALANCED DESIGN: Maintains compact layout while improving text legibility
+- July 9, 2025: REDUCED HOTEL NAME FONT SIZE - Made hotel names more compact in vouchers
+  - ✅ HOTEL FONT REDUCTION: Reduced hotel name font from 17px to 11px for better space utilization
+  - ✅ COMPACT HOTEL DISPLAY: Hotel names like "Allium Bodrum Resort & Spa Bodrum" now display smaller
+  - ✅ IMPROVED VOUCHER LAYOUT: More space-efficient hotel section without compromising readability
 - July 8, 2025: COMPACT BOOKING HEADER DESIGN - Made booking information horizontal and smaller to save space
   - ✅ HORIZONTAL LAYOUT: Changed from vertical table to single horizontal line
   - ✅ SPACE EFFICIENT: Booking ID, date, PNR, phone, email all in one compact row

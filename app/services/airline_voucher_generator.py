@@ -281,7 +281,7 @@ class AirlineVoucherGenerator:
             border-left: 4px solid #2E5A87;
         }}
         .hotel-main-name {{
-            font-size: 17px;
+            font-size: 11px;
             font-weight: bold;
             color: #2E5A87;
             margin-bottom: 5px;
@@ -351,7 +351,7 @@ class AirlineVoucherGenerator:
         </div>
         
         <!-- Compact Booking Information Header -->
-        <div style="background-color: #f8f9fa; padding: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 8px; font-family: 'Georgia', serif; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="background-color: #f8f9fa; padding: 8px; border: 1px solid #ddd; margin-bottom: 10px; font-size: 9px; font-family: 'Georgia', serif; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
             <span><strong>ID:</strong> {self.booking.reference_number}</span>
             <span><strong>Date:</strong> {self.booking.created_at.strftime('%d-%m-%Y') if self.booking.created_at else 'N/A'}</span>
             <span><strong>PNR:</strong> XVSQ4V</span>
