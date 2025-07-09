@@ -318,11 +318,11 @@ class AirlineVoucherGenerator:
         }}
         .footer {{
             text-align: center;
-            padding: 15px;
+            padding: 8px;
             background-color: #f8f9fa;
             border-top: 1px solid #ddd;
             font-family: 'Georgia', serif;
-            font-size: 11px;
+            font-size: 10px;
         }}
         .footer-title {{
             font-weight: bold;
@@ -559,18 +559,11 @@ class AirlineVoucherGenerator:
         # Footer
         html_content += """
         <div class="footer">
-            <div class="footer-title">Banking Information</div>
-            <div style="margin-bottom: 10px;">
-                <strong>Arabi Travel Bank:</strong> Account USD = 9070-142464-510<br>
-                <strong>Bank Of Palestine:</strong> Ramallah Branch - 0458/2220908/001/3000/000<br>
-                <strong>Arab Bank:</strong> Acct. No.: 142464
+            <div style="margin-bottom: 5px; font-size: 10px;">
+                <strong>Banking:</strong> Arabi Travel Bank USD: 9070-142464-510 | Bank Of Palestine: 0458/2220908/001/3000/000 | Arab Bank: 142464
             </div>
-            <div class="footer-title">Contact Information</div>
-            <div>
-                <strong>Email:</strong> sales@arabtravel.ps<br>
-                <strong>Website:</strong> www.arabtravel.ps<br>
-                <strong>Phone:</strong> +97022956640<br>
-                <strong>Address:</strong> Alersal St, zakat Bld, Ramallah, P.O.BOX: 27
+            <div style="font-size: 10px;">
+                <strong>Contact:</strong> sales@arabtravel.ps | www.arabtravel.ps | +97022956640 | Alersal St, zakat Bld, Ramallah, P.O.BOX: 27
             </div>
         </div>
     </div>
