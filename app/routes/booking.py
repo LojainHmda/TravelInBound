@@ -1136,10 +1136,15 @@ def confirm_service(item_id):
                 'aircraft_type': segments[0]['aircraft_type'] if segments else '',
             }
             
-            # Get passenger names
+            # Get passenger names and ticket numbers
             passenger_names = request.form.getlist('passenger_names[]')
+            ticket_numbers = request.form.getlist('ticket_numbers[]')
+            
             if passenger_names:
                 flight_details['passenger_names'] = passenger_names
+            
+            if ticket_numbers:
+                flight_details['ticket_numbers'] = ticket_numbers
             
             print(f"Final flight details with {len(segments)} segments prepared for saving", file=sys.stderr)
             print(f"Flight details JSON length: {len(json.dumps(flight_details))}", file=sys.stderr)

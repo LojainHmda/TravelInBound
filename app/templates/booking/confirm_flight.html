@@ -200,27 +200,35 @@
                                 </div>
                             </div>
                             
-                            <!-- Passenger Names Section -->
+                            <!-- Passenger Names and Ticket Numbers Section -->
                             <div class="mb-3">
-                                <label class="form-label">Passenger Names</label>
+                                <label class="form-label">Passenger Names & Ticket Numbers</label>
                                 <div id="passengerNames">
                                     {% if confirmation_data is defined and confirmation_data.passenger_names is defined %}
                                         {% for name in confirmation_data.passenger_names %}
-                                        <div class="input-group mb-2">
-                                            <span class="input-group-text">Passenger {{ loop.index }}</span>
-                                            <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
-                                            {% if not loop.first %}
-                                            <button type="button" class="btn btn-outline-danger remove-passenger">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                            {% endif %}
+                                        <div class="passenger-row mb-2">
+                                            <div class="input-group">
+                                                <span class="input-group-text">Passenger {{ loop.index }}</span>
+                                                <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
+                                                <input type="text" name="ticket_numbers[]" class="form-control" 
+                                                       value="{{ confirmation_data.ticket_numbers[loop.index0] if confirmation_data.ticket_numbers and confirmation_data.ticket_numbers|length > loop.index0 else '' }}" 
+                                                       placeholder="Ticket/E-ticket number">
+                                                {% if not loop.first %}
+                                                <button type="button" class="btn btn-outline-danger remove-passenger">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                         {% endfor %}
                                     {% else %}
                                         <!-- Default single passenger field -->
-                                        <div class="input-group mb-2">
-                                            <span class="input-group-text">Passenger 1</span>
-                                            <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                                        <div class="passenger-row mb-2">
+                                            <div class="input-group">
+                                                <span class="input-group-text">Passenger 1</span>
+                                                <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
+                                                <input type="text" name="ticket_numbers[]" class="form-control" placeholder="Ticket/E-ticket number">
+                                            </div>
                                         </div>
                                     {% endif %}
                                 </div>

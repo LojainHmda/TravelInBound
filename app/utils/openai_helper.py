@@ -117,13 +117,16 @@ def analyze_flight_ticket(image_data):
 
         PASSENGER & BOOKING INFO:
         - PNR/Booking reference (typically 5-6 alphanumeric characters)
-        - All passenger names listed
-        - **CRITICAL: E-ticket numbers** - Look carefully for ticket numbers, they may appear as:
-          * 13-digit numbers (e.g., 1572345678901)
-          * Numbers starting with airline code + digits (e.g., QR1234567890123)
-          * May be labeled as "Ticket Number", "E-Ticket", "TKT", or "Electronic Ticket"
-          * Usually one ticket number per passenger
-          * Often found near passenger names or in a separate ticket section
+        - All passenger names listed in order
+        - **CRITICAL: E-ticket numbers** - Look VERY carefully for ticket numbers throughout the document:
+          * 13-digit numbers (e.g., 1572345678901, 2351234567890)
+          * Numbers starting with airline code + digits (e.g., QR1234567890123, EK9876543210987)
+          * May be labeled as "Ticket Number", "E-Ticket", "TKT", "Electronic Ticket", "Document Number"
+          * **SEQUENTIAL ASSIGNMENT**: Ticket numbers are usually assigned sequentially to passengers
+          * If you find multiple ticket numbers, match them to passengers in order (Passenger 1 gets first ticket, Passenger 2 gets second ticket, etc.)
+          * Search in ticket tables, passenger details, confirmation sections, and barcode areas
+          * Include ALL ticket numbers found - passengers typically have consecutive numbers
+          * If numbers are sequential (e.g., 1572345678901, 1572345678902), include all of them
         - Travel class (Economy, Business, First)
         - Seat assignments if shown
 
@@ -160,10 +163,15 @@ def analyze_flight_ticket(image_data):
         - For connecting flights, identify the connection airport correctly
         - If round-trip, ensure both outbound AND return segments are captured
         - For multi-city, capture each city-to-city segment
-        - **TICKET NUMBERS ARE CRITICAL** - Look very carefully throughout the entire document for any numbers that could be ticket/e-ticket numbers
-        - Search in multiple locations: passenger details section, ticket summary, confirmation details, barcode areas
-        - If you find any 10+ digit numbers, include them in ticket_numbers array
+        - **TICKET NUMBERS ARE THE TOP PRIORITY** - Look extremely carefully throughout the entire document:
+          * Search EVERYWHERE: passenger details, ticket summary, confirmation details, barcode areas, itinerary sections
+          * Look for ANY 10+ digit numbers that could be tickets (even if not explicitly labeled)
+          * Check for patterns like consecutive numbers (1572345678901, 1572345678902, 1572345678903)
+          * Include ALL ticket numbers found - do not skip any
+          * **CRITICAL**: Order ticket numbers to match passenger order (first ticket for first passenger, etc.)
+          * If you find ticket numbers but passenger names are unclear, still include all ticket numbers
         - If information is unclear, extract what you can confidently read
+        - Ticket number extraction is more important than other details - prioritize finding these numbers
         """
 
         logger.info(f"Sending request to OpenAI API with image of size {len(image_data)}")

@@ -582,7 +582,8 @@ class AirlineVoucherGenerator:
         # Initialize flight data with segments array
         flight_data = {
             'segments': [],
-            'passenger_names': []
+            'passenger_names': [],
+            'ticket_numbers': []
         }
         
         # Process ALL flight items and their confirmation documents
@@ -631,11 +632,12 @@ class AirlineVoucherGenerator:
                                 flight_data['segments'].append(single_segment)
 
                         
-                        # Collect passenger names ONLY for the current document/flight
+                        # Collect passenger names and ticket numbers ONLY for the current document/flight
                         # Don't mix passenger names between different flight confirmations
                         if 'passenger_names' in parsed_data and parsed_data['passenger_names']:
                             # For multi-segment flights, assign passengers to the current segments only
                             current_doc_passengers = parsed_data['passenger_names']
+                            current_doc_tickets = parsed_data.get('ticket_numbers', [])
                             segment_start_index = len(flight_data['segments']) - len(parsed_data.get('segments', [1]))
                             
                             # Assign passengers to segments from this document only
@@ -643,16 +645,19 @@ class AirlineVoucherGenerator:
                                 for i, segment in enumerate(parsed_data['segments']):
                                     segment_index = segment_start_index + i
                                     if segment_index < len(flight_data['segments']):
-                                        # Store passenger names for this specific segment
+                                        # Store passenger names and ticket numbers for this specific segment
                                         flight_data['segments'][segment_index]['passenger_names'] = current_doc_passengers
+                                        flight_data['segments'][segment_index]['ticket_numbers'] = current_doc_tickets
                             else:
                                 # Single flight - assign to the last segment
                                 if flight_data['segments']:
                                     flight_data['segments'][-1]['passenger_names'] = current_doc_passengers
+                                    flight_data['segments'][-1]['ticket_numbers'] = current_doc_tickets
                             
                             # Also keep global passenger list for backward compatibility
                             if not flight_data['passenger_names']:  # Only if empty
                                 flight_data['passenger_names'] = current_doc_passengers
+                                flight_data['ticket_numbers'] = current_doc_tickets
                         
                         # Store segment-specific data without mixing between flights
                         # Each segment should keep its own PNR, ticket number, etc.
@@ -943,7 +948,7 @@ class AirlineVoucherGenerator:
         return buffer
     
     def _prepare_passenger_data(self, customer):
-        """Prepare passenger data from ALL flight segments to show complete passenger list"""
+        """Prepare passenger data from ALL flight segments to show complete passenger list with ticket numbers"""
         passengers = []
         added_passengers = set()  # Track unique passengers to avoid duplicates
         
@@ -951,34 +956,42 @@ class AirlineVoucherGenerator:
         flight_data = self._extract_flight_data(self.booking.service_items)
         
         if flight_data and flight_data.get('segments'):
-            # Collect passenger names from ALL segments
+            # First, try to get passenger data from the most complete confirmation
+            best_passenger_names = []
+            best_ticket_numbers = []
+            
+            # Look for confirmations with both passenger names and ticket numbers
             for segment in flight_data['segments']:
                 if 'passenger_names' in segment and segment['passenger_names']:
-                    ticket_number = segment.get('ticket_number', '')
-                    for name in segment['passenger_names']:
-                        # Only add if not already added (avoid duplicates)
-                        if name not in added_passengers:
-                            passengers.append({
-                                'name': name,
-                                'type': 'Adult',
-                                'ticket_number': ticket_number
-                            })
-                            added_passengers.add(name)
+                    segment_passenger_names = segment['passenger_names']
+                    segment_ticket_numbers = segment.get('ticket_numbers', [])
+                    
+                    # Use this segment if it has more complete data
+                    if len(segment_passenger_names) > len(best_passenger_names):
+                        best_passenger_names = segment_passenger_names
+                        best_ticket_numbers = segment_ticket_numbers
             
-            # If we have passengers, return them
-            if passengers:
-                return passengers
+            # If no segment-specific data, try global flight data
+            if not best_passenger_names and flight_data.get('passenger_names'):
+                best_passenger_names = flight_data['passenger_names']
+                best_ticket_numbers = flight_data.get('ticket_numbers', [])
             
-            # Fallback to global passenger names if segments don't have specific ones
-            if flight_data.get('passenger_names'):
-                for name in flight_data['passenger_names']:
+            # Create passenger list with sequential ticket assignment
+            if best_passenger_names:
+                for i, name in enumerate(best_passenger_names):
                     if name not in added_passengers:
+                        # Get ticket number for this passenger (sequential assignment)
+                        ticket_number = ''
+                        if i < len(best_ticket_numbers) and best_ticket_numbers[i]:
+                            ticket_number = best_ticket_numbers[i]
+                        
                         passengers.append({
                             'name': name,
-                            'type': 'Adult', 
-                            'ticket_number': ''
+                            'type': 'Adult',
+                            'ticket_number': ticket_number
                         })
                         added_passengers.add(name)
+                
                 return passengers
         
         # Final fallback to customer data if no confirmation passenger data
