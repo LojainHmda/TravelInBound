@@ -461,14 +461,14 @@ class AirlineVoucherGenerator:
                         codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
                         arr_code = codes[0] if codes else arrival_airport[:3].upper()
                     
-                    # Get passenger names, e-ticket number, and PNR for this specific segment
+                    # Get passenger names, ticket numbers array, and PNR for this specific segment
                     segment_passengers = segment.get('passenger_names', [])
-                    segment_ticket_number = segment.get('ticket_number', '')
+                    segment_ticket_numbers = segment.get('ticket_numbers', [])
                     segment_pnr = segment.get('pnr', '')
                     
                     # Build passenger and ticket info display with trip information on the left
                     passenger_ticket_info = ""
-                    if segment_passengers or segment_ticket_number or segment_pnr:
+                    if segment_passengers or segment_ticket_numbers or segment_pnr:
                         passenger_ticket_info = '<div class="passenger-ticket-info">'
                         
                         # Create a row with trip info on left and passenger details on right
@@ -480,18 +480,20 @@ class AirlineVoucherGenerator:
                         # Right side: Passenger details
                         passenger_ticket_info += '<div class="passenger-details-right">'
                         
-                        # Display passenger names in bold
+                        # Display passengers with their individual ticket numbers lined up
                         if segment_passengers:
-                            passenger_list = ', '.join(segment_passengers)
-                            passenger_ticket_info += f'<div class="passenger-names"><strong>Passengers: {passenger_list}</strong></div>'
+                            passenger_ticket_info += '<div class="passenger-names"><strong>Passengers:</strong><br>'
+                            for i, passenger_name in enumerate(segment_passengers):
+                                # Get corresponding ticket number for this passenger
+                                ticket_number = ''
+                                if i < len(segment_ticket_numbers) and segment_ticket_numbers[i]:
+                                    ticket_number = f' (Ticket: {segment_ticket_numbers[i]})'
+                                passenger_ticket_info += f'• {passenger_name}{ticket_number}<br>'
+                            passenger_ticket_info += '</div>'
                         
                         # Display PNR in bold
                         if segment_pnr:
                             passenger_ticket_info += f'<div class="pnr-number"><strong>PNR: {segment_pnr}</strong></div>'
-                        
-                        # Display e-ticket number in bold
-                        if segment_ticket_number:
-                            passenger_ticket_info += f'<div class="eticket-number"><strong>E-Ticket: {segment_ticket_number}</strong></div>'
                         
                         passenger_ticket_info += '</div></div></div>'
                     
