@@ -3,7 +3,7 @@ import os
 import uuid
 from flask import (
     Blueprint, render_template, request, redirect, 
-    url_for, flash, jsonify, current_app
+    url_for, flash, jsonify, current_app, send_file
 )
 from werkzeug.utils import secure_filename
 from app import db
@@ -222,6 +222,27 @@ def delete_document(customer_id, document_id):
     
     flash('Document deleted successfully', 'success')
     return redirect(url_for('customer.view_customer', customer_id=customer_id))
+
+@customer_bp.route('/<int:customer_id>/document/<int:document_id>')
+def view_document(customer_id, document_id):
+    """Serve a customer document file"""
+    document = CustomerDocument.query.get_or_404(document_id)
+    
+    # Check if document belongs to the specified customer
+    if document.customer_id != customer_id:
+        flash('Document not found', 'danger')
+        return redirect(url_for('customer.view_customer', customer_id=customer_id))
+    
+    # Get the full file path
+    file_path = os.path.join(current_app.root_path, 'static', document.file_path)
+    
+    # Check if file exists
+    if not os.path.exists(file_path):
+        flash('Document file not found', 'danger')
+        return redirect(url_for('customer.view_customer', customer_id=customer_id))
+    
+    # Serve the file
+    return send_file(file_path)
 
 @customer_bp.route('/api/list')
 def api_list_customers():
