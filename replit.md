@@ -109,6 +109,23 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 20, 2025: ENHANCED TICKET SCANNER SEQUENTIAL MAPPING PRECISION
+  - ✅ IMPROVED AI PROMPTS: Enhanced OpenAI prompts to emphasize exact sequential mapping of ticket numbers to passengers  
+  - ✅ SEQUENTIAL MAPPING RULE: Added explicit rule that first ticket number → first passenger, second ticket → second passenger
+  - ✅ CONSECUTIVE ASSIGNMENT: When ticket numbers are consecutive (1762384500337, 1762384500338), they map to passengers in same order
+  - ✅ CLEAR EXAMPLES: Added detailed examples showing how John Smith gets ticket 123456, Jane Doe gets 123457, etc.
+  - ✅ PRIORITY INSTRUCTION: Made ticket number sequential assignment the top priority in document analysis
+  - System now ensures perfect 1:1 sequential mapping between passenger names and ticket numbers as they appear in documents
+- July 20, 2025: FIXED CUSTOMER DOCUMENT SYSTEM ISSUES
+  - ✅ SECURE DOCUMENT SERVING: Created secure route to serve customer documents with proper access validation
+  - ✅ CSRF PROTECTION: Fixed missing CSRF token in document delete forms preventing deletion errors
+  - ✅ UPLOADS DIRECTORY: Created proper directory structure for customer document storage
+  - ✅ BROKEN LINKS FIX: Updated customer view template to use secure document serving instead of broken static links
+- July 20, 2025: ADDED HOTEL VOUCHER CONFIRMATION NUMBER DISPLAY
+  - ✅ CONFIRMATION COLUMN: Added "Confirmation #" column to hotel details table in vouchers
+  - ✅ DATA EXTRACTION: Enhanced hotel data extraction to pull confirmation reference from booking documents
+  - ✅ SEQUENTIAL DISPLAY: Hotel table now shows Check-In, Check-Out, Nights, Room Type, Board Basis, Lead Guest, and Confirmation #
+  - ✅ DEFAULT HANDLING: Set "N/A" as default when no confirmation number found in hotel booking data
 - July 13, 2025: IMPLEMENTED TICKET NUMBER EXTRACTION AND SEQUENTIAL ASSIGNMENT SYSTEM
   - ✅ ENHANCED AI PROMPTS: Improved OpenAI prompts for comprehensive ticket number detection throughout documents
   - ✅ SEQUENTIAL ASSIGNMENT: Ticket numbers are now sequentially assigned to passengers (first ticket to first passenger, etc.)

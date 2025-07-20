@@ -122,15 +122,20 @@ def analyze_flight_ticket(image_data):
           * 13-digit numbers (e.g., 1572345678901, 2351234567890)
           * Numbers starting with airline code + digits (e.g., QR1234567890123, EK9876543210987)
           * May be labeled as "Ticket Number", "E-Ticket", "TKT", "Electronic Ticket", "Document Number"
-          * **SEQUENTIAL ASSIGNMENT**: Ticket numbers are usually assigned sequentially to passengers
-          * If you find multiple ticket numbers, match them to passengers in order (Passenger 1 gets first ticket, Passenger 2 gets second ticket, etc.)
-          * Search in ticket tables, passenger details, confirmation sections, and barcode areas
-          * Include ALL ticket numbers found - passengers typically have consecutive numbers
+          * **SEQUENTIAL MAPPING RULE**: Ticket numbers MUST be mapped to passengers in the EXACT SAME SEQUENCE:
+            - First ticket number found → First passenger name
+            - Second ticket number found → Second passenger name  
+            - Third ticket number found → Third passenger name, etc.
+          * When ticket numbers appear consecutively (e.g., 1762384500337, 1762384500338, 1762384500339), assign them to passengers in the same consecutive order
+          * Search in passenger tables, ticket details sections, confirmation areas, and barcode regions
+          * Include ALL ticket numbers found - each passenger gets one ticket number in sequence
+          * If passenger names are listed as: [John Smith, Jane Doe, Bob Wilson] and ticket numbers are [123456, 123457, 123458], then map them as: John→123456, Jane→123457, Bob→123458
           * If numbers are sequential (e.g., 1572345678901, 1572345678902), include all of them
         - Travel class (Economy, Business, First)
         - Seat assignments if shown
 
         OUTPUT FORMAT - JSON ONLY:
+        **CRITICAL**: passenger_names and ticket_numbers arrays MUST be in matching sequential order
         {
             "flight_type": "one_way|round_trip|multi_city",
             "segments": [
