@@ -543,6 +543,7 @@ class AirlineVoucherGenerator:
                         <th>Room Type</th>
                         <th>Board Basis</th>
                         <th>Lead Guest</th>
+                        <th>Confirmation #</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -553,6 +554,7 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('room_type', 'Standard Room')}</td>
                         <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
                         <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
+                        <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
                     </tr>
                 </tbody>
             </table>
@@ -714,7 +716,8 @@ class AirlineVoucherGenerator:
             'nights': (hotel.end_date - hotel.start_date).days if hotel.start_date and hotel.end_date else 1,
             'room_type': 'Standard Room',
             'meal_plan': 'Room Only',  # Will be overridden by confirmation data
-            'description': hotel.description or 'Hotel accommodation'
+            'description': hotel.description or 'Hotel accommodation',
+            'confirmation_reference': 'N/A'  # Will be overridden by confirmation data
         }
         
         print(f"DEBUG: Hotel description from ServiceItem: {hotel.description}")
@@ -805,6 +808,10 @@ class AirlineVoucherGenerator:
                     # Extract meal plan from confirmation
                     if 'meal_plan' in parsed_data and parsed_data['meal_plan']:
                         hotel_data['meal_plan'] = parsed_data['meal_plan']
+                    
+                    # Extract confirmation reference
+                    if 'confirmation_reference' in parsed_data and parsed_data['confirmation_reference']:
+                        hotel_data['confirmation_reference'] = parsed_data['confirmation_reference']
                                 
                 except (json.JSONDecodeError, TypeError) as e:
                     print(f"DEBUG: Failed to parse JSON from notes: {e}")
