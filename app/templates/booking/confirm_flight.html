@@ -848,76 +848,115 @@ function addFlightSegmentUI(segmentData, index) {
         return;
     }
     
-    // Create new segment HTML
+    const segmentLabel = index === 1 ? '(Return)' : `(Segment ${index + 1})`;
+    
+    // Create new segment HTML with passenger fields
     const segmentHTML = `
-        <div class="flight-segment card border-primary mb-3" style="border-width: 2px;">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-plane"></i> Flight Segment ${index + 1}</span>
-                <button type="button" class="btn btn-sm btn-outline-light" onclick="removeFlightSegment(${index})">
+        <div class="flight-segment mb-4" style="border: 2px solid #28a745; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-plane text-success me-2"></i>
+                    <h6 class="mb-0 text-success">✈ Flight Segment ${index + 1} ${segmentLabel}</h6>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFlightSegment(${index})">
                     <i class="fas fa-times"></i> Remove
                 </button>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Airline</label>
-                        <input type="text" name="segments[${index}][airline]" class="form-control airline-autocomplete" 
-                               value="${segmentData.airline || ''}" placeholder="Type airline code or name (e.g. QR, Qatar Airways)" required>
-                        <small class="form-text text-muted">Enter airline code (e.g. QR) or start typing name for suggestions</small>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Flight Number</label>
-                        <input type="text" name="segments[${index}][flight_number]" class="form-control" 
-                               value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405" required>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departure Airport</label>
+                    <input type="text" name="segments[${index}][departure_airport]" class="form-control airport-autocomplete" 
+                           value="${segmentData.departure_airport || ''}" placeholder="Enter airport code or name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Airport</label>
+                    <input type="text" name="segments[${index}][arrival_airport]" class="form-control airport-autocomplete" 
+                           value="${segmentData.arrival_airport || ''}" placeholder="Enter airport code or name">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Airline</label>
+                    <input type="text" name="segments[${index}][airline]" class="form-control airline-autocomplete" 
+                           value="${segmentData.airline || ''}" placeholder="Enter airline code or name">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Flight Number</label>
+                    <input type="text" name="segments[${index}][flight_number]" class="form-control" 
+                           value="${segmentData.flight_number || ''}" placeholder="e.g. QR 405">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="segments[${index}][flight_date]" class="form-control" 
+                           value="${segmentData.flight_date || ''}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" name="segments[${index}][departure_time]" class="form-control" 
+                           value="${segmentData.departure_time || ''}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" name="segments[${index}][arrival_time]" class="form-control" 
+                           value="${segmentData.arrival_time || ''}">
+                </div>
+            </div>
+
+            <!-- Passengers for this Segment -->
+            <div class="mb-3">
+                <label class="form-label">Passengers on this Flight</label>
+                <div id="segment-passengers-${index}">
+                    <div class="passenger-row mb-2">
+                        <div class="input-group">
+                            <span class="input-group-text">Passenger 1</span>
+                            <input type="text" name="segments[${index}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                            <input type="text" name="segments[${index}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
+                            <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="${index}">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Departure Airport</label>
-                        <input type="text" name="segments[${index}][departure_airport]" class="form-control airport-autocomplete" 
-                               value="${segmentData.departure_airport || ''}" placeholder="Type airport code or name (e.g. AMM, Queen Alia)" required>
-                        <small class="form-text text-muted">Enter airport code (e.g. AMM) or start typing name for suggestions</small>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Arrival Airport</label>
-                        <input type="text" name="segments[${index}][arrival_airport]" class="form-control airport-autocomplete" 
-                               value="${segmentData.arrival_airport || ''}" placeholder="Type airport code or name (e.g. DOH, Hamad)" required>
-                        <small class="form-text text-muted">Enter airport code (e.g. DOH) or start typing name for suggestions</small>
-                    </div>
+                <small class="text-muted">Add passengers traveling on this specific flight segment</small>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">PNR for this Segment</label>
+                    <input type="text" name="segments[${index}][pnr]" class="form-control" 
+                           value="${segmentData.pnr || ''}" placeholder="6-character booking reference">
                 </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Date</label>
-                        <input type="date" name="segments[${index}][flight_date]" class="form-control" 
-                               value="${segmentData.flight_date || ''}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Departure Time</label>
-                        <input type="time" name="segments[${index}][departure_time]" class="form-control" 
-                               value="${segmentData.departure_time || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Arrival Time</label>
-                        <input type="time" name="segments[${index}][arrival_time]" class="form-control" 
-                               value="${segmentData.arrival_time || ''}">
-                    </div>
+                <div class="col-md-6">
+                    <label class="form-label">Aircraft Type</label>
+                    <input type="text" name="segments[${index}][aircraft_type]" class="form-control" 
+                           placeholder="e.g., Boeing 777, Airbus A350">
                 </div>
             </div>
         </div>
     `;
     
-    // Add the new segment to the container
     flightSegmentsContainer.insertAdjacentHTML('beforeend', segmentHTML);
     
     // Initialize autocomplete for the new fields
-    initializeAutocompleteForNewFields();
+    const newSegment = flightSegmentsContainer.lastElementChild;
+    newSegment.querySelectorAll('.airline-autocomplete').forEach(input => {
+        setupAirlineAutocomplete(input);
+    });
+    newSegment.querySelectorAll('.airport-autocomplete').forEach(input => {
+        setupAirportAutocomplete(input);
+    });
     
-    // Update flight segments display
-    updateFlightSegments();
+    // Populate passengers for this new segment after UI is created
+    setTimeout(() => {
+        populateSegmentPassengers(segmentData, index);
+    }, 100);
     
-    console.log(`✅ Added flight segment ${index + 1} UI`);
+    console.log(`✅ Added flight segment ${index + 1} UI with passenger fields`);
 }
 
 function removeFlightSegment(index) {
@@ -989,6 +1028,18 @@ document.addEventListener('DOMContentLoaded', function() {
             passengerDiv.remove();
             updatePassengerNumbers();
         }
+        
+        // Handle segment-specific passenger buttons
+        if (e.target.classList.contains('add-segment-passenger') || e.target.parentNode.classList.contains('add-segment-passenger')) {
+            const button = e.target.closest('.add-segment-passenger');
+            const segmentIndex = button.getAttribute('data-segment');
+            addPassengerToSegment(segmentIndex);
+        }
+        
+        if (e.target.classList.contains('remove-segment-passenger') || e.target.parentNode.classList.contains('remove-segment-passenger')) {
+            const passengerRow = e.target.closest('.passenger-row');
+            passengerRow.remove();
+        }
     });
     
     function updatePassengerNumbers() {
@@ -997,6 +1048,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const span = div.querySelector('.input-group-text');
             span.textContent = `Passenger ${index + 1}`;
         });
+    }
+    
+    // Function to add passenger to specific segment
+    window.addPassengerToSegment = function(segmentIndex) {
+        console.log(`Adding passenger to segment ${segmentIndex}`);
+        
+        const passengerContainer = document.getElementById(`segment-passengers-${segmentIndex}`);
+        if (!passengerContainer) {
+            console.error(`Passenger container not found for segment ${segmentIndex}`);
+            return;
+        }
+        
+        const currentPassengers = passengerContainer.querySelectorAll('.passenger-row').length;
+        const passengerNumber = currentPassengers + 1;
+        
+        const passengerRow = document.createElement('div');
+        passengerRow.className = 'passenger-row mb-2';
+        passengerRow.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text">Passenger ${passengerNumber}</span>
+                <input type="text" name="segments[${segmentIndex}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                <input type="text" name="segments[${segmentIndex}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
+                <button type="button" class="btn btn-outline-danger remove-segment-passenger">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        `;
+        
+        passengerContainer.appendChild(passengerRow);
+        console.log(`✅ Added passenger ${passengerNumber} to segment ${segmentIndex}`);
     }
 });
 
