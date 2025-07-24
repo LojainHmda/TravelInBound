@@ -198,5 +198,140 @@ function showSuccessAlert(message) {
     }, 5000);
 }
 
-// Make function available globally for the scanning modal
+// Function to populate flight form from ticket scanner modal
+function populateFlightDetailsFromTicket(flightData) {
+    console.log('Populating flight form with extracted data:', flightData);
+    
+    // Clear existing segments and start fresh
+    const segmentsContainer = document.getElementById('flight-segments-container');
+    segmentsContainer.innerHTML = '';
+    
+    // Set flight type
+    if (flightData.flight_type) {
+        const flightTypeSelect = document.getElementById('flight_type');
+        if (flightTypeSelect) {
+            flightTypeSelect.value = flightData.flight_type;
+        }
+    }
+    
+    // Set booking reference/PNR
+    if (flightData.pnr || flightData.booking_reference) {
+        const pnrField = document.getElementById('booking_reference');
+        if (pnrField) {
+            pnrField.value = flightData.pnr || flightData.booking_reference;
+        }
+    }
+    
+    // Set travel class
+    if (flightData.travel_class) {
+        const travelClassSelect = document.querySelector('select[name="travel_class"]');
+        if (travelClassSelect) {
+            travelClassSelect.value = flightData.travel_class;
+        }
+    }
+    
+    // Set terminal
+    if (flightData.terminal) {
+        const terminalField = document.querySelector('input[name="terminal"]');
+        if (terminalField) {
+            terminalField.value = flightData.terminal;
+        }
+    }
+    
+    // Populate segments with segment-level passenger data
+    if (flightData.segments && flightData.segments.length > 0) {
+        flightData.segments.forEach((segment, index) => {
+            if (index === 0) {
+                // First segment - populate existing form fields
+                populateSegmentData(0, segment, flightData);
+            } else {
+                // Additional segments - create new segment forms
+                addFlightSegment();
+                populateSegmentData(index, segment, flightData);
+            }
+        });
+    } else {
+        // Single flight format - populate first segment
+        populateSegmentData(0, flightData, flightData);
+    }
+    
+    // Set passenger counts
+    if (flightData.passenger_count) {
+        const adultsField = document.querySelector('input[name="adults"]');
+        const childrenField = document.querySelector('input[name="children"]');
+        const infantsField = document.querySelector('input[name="infants"]');
+        
+        if (adultsField) adultsField.value = flightData.passenger_count.adults || 1;
+        if (childrenField) childrenField.value = flightData.passenger_count.children || 0;
+        if (infantsField) infantsField.value = flightData.passenger_count.infants || 0;
+    }
+    
+    showSuccessAlert('Flight details populated from ticket scan! Please review and confirm the information.');
+}
+
+function populateSegmentData(segmentIndex, segmentData, globalData) {
+    // Populate basic flight fields
+    const fields = [
+        { name: 'airline', value: segmentData.airline },
+        { name: 'flight_number', value: segmentData.flight_number },
+        { name: 'departure_airport', value: segmentData.departure_airport },
+        { name: 'arrival_airport', value: segmentData.arrival_airport },
+        { name: 'flight_date', value: segmentData.flight_date },
+        { name: 'departure_time', value: segmentData.departure_time },
+        { name: 'arrival_time', value: segmentData.arrival_time },
+        { name: 'duration', value: segmentData.duration },
+        { name: 'aircraft_type', value: segmentData.aircraft_type },
+        { name: 'connection_type', value: segmentData.connection_type },
+        { name: 'pnr', value: segmentData.pnr || globalData.pnr || globalData.booking_reference }
+    ];
+    
+    fields.forEach(field => {
+        if (field.value) {
+            const fieldElement = document.getElementById(`${field.name}-${segmentIndex}`) || 
+                               document.querySelector(`input[name="segments[${segmentIndex}][${field.name}]"]`);
+            if (fieldElement) {
+                fieldElement.value = field.value;
+            }
+        }
+    });
+    
+    // Populate segment-specific passenger data
+    const segmentPassengers = segmentData.passenger_names || globalData.passenger_names || [];
+    const segmentTickets = segmentData.ticket_numbers || globalData.ticket_numbers || [];
+    
+    if (segmentPassengers.length > 0) {
+        const passengerContainer = document.getElementById(`segment-passengers-${segmentIndex}`);
+        if (passengerContainer) {
+            // Clear existing passenger rows
+            passengerContainer.innerHTML = '';
+            
+            // Add passenger rows for this segment
+            segmentPassengers.forEach((passenger, pIndex) => {
+                const ticket = segmentTickets[pIndex] || '';
+                
+                const passengerRow = document.createElement('div');
+                passengerRow.className = 'passenger-row mb-2';
+                passengerRow.innerHTML = `
+                    <div class="input-group">
+                        <span class="input-group-text">Passenger ${pIndex + 1}</span>
+                        <input type="text" name="segments[${segmentIndex}][passenger_names][]" class="form-control" 
+                               value="${passenger}" placeholder="Full name as in passport">
+                        <input type="text" name="segments[${segmentIndex}][ticket_numbers][]" class="form-control" 
+                               value="${ticket}" placeholder="Ticket/E-ticket number">
+                        <button type="button" class="btn btn-outline-danger remove-segment-passenger">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                passengerContainer.appendChild(passengerRow);
+            });
+            
+            // Update remove button listeners
+            updateSegmentRemoveButtons();
+        }
+    }
+}
+
+// Make functions available globally for the scanning modal
 window.populateFlightForm = populateFlightForm;
+window.populateFlightDetailsFromTicket = populateFlightDetailsFromTicket;

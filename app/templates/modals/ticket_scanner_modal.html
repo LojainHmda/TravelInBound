@@ -52,15 +52,17 @@
                         </div>
                     </div>
                     
-                    <div class="row mb-3">
-                        <div class="col-12">
-                            <strong>Passenger(s):</strong> <span id="modal_passenger_names">-</span>
-                        </div>
-                    </div>
-
                     <!-- Flight Segments Container -->
                     <div id="modalFlightSegments">
                         <!-- Flight segments will be populated here -->
+                    </div>
+                    
+                    <!-- Passenger Details Section -->
+                    <div class="mt-4">
+                        <h6 class="text-primary"><i class="fas fa-users me-2"></i>Passenger Details</h6>
+                        <div id="modalPassengerDetails" class="border rounded p-3 bg-light">
+                            <!-- Passenger details will be populated here -->
+                        </div>
                     </div>
                 </div>
 
@@ -167,8 +169,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Populate common information
             document.getElementById('modal_flight_type').textContent = flightData.flight_type || 'Not detected';
             document.getElementById('modal_booking_reference').textContent = flightData.pnr || flightData.booking_reference || 'Not detected';
-            document.getElementById('modal_passenger_names').textContent = 
-                flightData.passenger_names && flightData.passenger_names.length ? flightData.passenger_names.join(', ') : 'Not detected';
             
             // Populate all flight segments
             const segmentsContainer = document.getElementById('modalFlightSegments');
@@ -176,6 +176,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (flightData.segments && flightData.segments.length > 0) {
                 flightData.segments.forEach((segment, index) => {
+                    // Get segment-specific passengers or use global passengers
+                    const segmentPassengers = segment.passenger_names || flightData.passenger_names || [];
+                    const segmentTickets = segment.ticket_numbers || flightData.ticket_numbers || [];
+                    const pnr = segment.pnr || flightData.pnr || flightData.booking_reference || 'N/A';
+                    
                     const segmentDiv = document.createElement('div');
                     segmentDiv.className = 'card mb-3';
                     segmentDiv.innerHTML = `
@@ -191,6 +196,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="col-md-6">
                                     <strong>Date:</strong> ${segment.flight_date || 'N/A'}<br>
                                     <strong>Time:</strong> ${segment.departure_time || 'N/A'} - ${segment.arrival_time || 'N/A'}
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <strong>PNR:</strong> ${pnr}<br>
+                                    <strong>Passengers:</strong> ${segmentPassengers.length > 0 ? segmentPassengers.join(', ') : 'Not detected'}<br>
+                                    ${segmentTickets.length > 0 ? `<strong>Ticket Numbers:</strong> ${segmentTickets.join(', ')}` : ''}
                                 </div>
                             </div>
                         </div>
@@ -216,10 +228,55 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <strong>Time:</strong> ${flightData.departure_time || flightData.flight_time || 'N/A'}
                             </div>
                         </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <strong>PNR:</strong> ${flightData.pnr || flightData.booking_reference || 'N/A'}<br>
+                                <strong>Passengers:</strong> ${flightData.passenger_names && flightData.passenger_names.length ? flightData.passenger_names.join(', ') : 'Not detected'}<br>
+                                ${flightData.ticket_numbers && flightData.ticket_numbers.length > 0 ? `<strong>Ticket Numbers:</strong> ${flightData.ticket_numbers.join(', ')}` : ''}
+                            </div>
+                        </div>
                     </div>
                 `;
                 segmentsContainer.appendChild(segmentDiv);
             }
+            
+            // Populate passenger details summary
+            const passengerDetailsContainer = document.getElementById('modalPassengerDetails');
+            let passengerSummary = '';
+            
+            if (flightData.segments && flightData.segments.length > 0) {
+                // Show segment-by-segment passenger assignments
+                flightData.segments.forEach((segment, index) => {
+                    const segmentPassengers = segment.passenger_names || flightData.passenger_names || [];
+                    const segmentTickets = segment.ticket_numbers || flightData.ticket_numbers || [];
+                    
+                    passengerSummary += `<div class="mb-2"><strong>Segment ${index + 1}:</strong> `;
+                    if (segmentPassengers.length > 0) {
+                        segmentPassengers.forEach((passenger, pIndex) => {
+                            const ticket = segmentTickets[pIndex] || 'No ticket';
+                            passengerSummary += `<span class="badge bg-primary me-1">${passenger} (${ticket})</span>`;
+                        });
+                    } else {
+                        passengerSummary += '<span class="text-muted">No passengers assigned</span>';
+                    }
+                    passengerSummary += '</div>';
+                });
+            } else {
+                // Single flight passenger display
+                const passengers = flightData.passenger_names || [];
+                const tickets = flightData.ticket_numbers || [];
+                
+                if (passengers.length > 0) {
+                    passengers.forEach((passenger, index) => {
+                        const ticket = tickets[index] || 'No ticket';
+                        passengerSummary += `<span class="badge bg-primary me-1">${passenger} (${ticket})</span>`;
+                    });
+                } else {
+                    passengerSummary = '<span class="text-muted">No passengers detected</span>';
+                }
+            }
+            
+            passengerDetailsContainer.innerHTML = passengerSummary;
             
             // Show the Use Flight Data and Scan Again buttons
             useTicketDataButton.style.display = 'block';
