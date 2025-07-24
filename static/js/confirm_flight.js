@@ -12,19 +12,22 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializePassengerManagement() {
-    const addPassengerBtn = document.getElementById('addPassenger');
-    const passengerContainer = document.getElementById('passengerNames');
+    // Initialize segment-specific passenger management
+    const addSegmentPassengerBtns = document.querySelectorAll('.add-segment-passenger');
     
-    if (addPassengerBtn) {
-        addPassengerBtn.addEventListener('click', addPassengerRow);
-    }
+    addSegmentPassengerBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const segmentIndex = this.getAttribute('data-segment');
+            addSegmentPassengerRow(segmentIndex);
+        });
+    });
     
     // Add event listeners for remove buttons
-    updateRemoveButtons();
+    updateSegmentRemoveButtons();
 }
 
-function addPassengerRow() {
-    const container = document.getElementById('passengerNames');
+function addSegmentPassengerRow(segmentIndex) {
+    const container = document.getElementById(`segment-passengers-${segmentIndex}`);
     const existingRows = container.querySelectorAll('.passenger-row');
     const newIndex = existingRows.length + 1;
     
@@ -33,31 +36,32 @@ function addPassengerRow() {
     newRow.innerHTML = `
         <div class="input-group">
             <span class="input-group-text">Passenger ${newIndex}</span>
-            <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
-            <input type="text" name="ticket_numbers[]" class="form-control" placeholder="Ticket/E-ticket number">
-            <button type="button" class="btn btn-outline-danger remove-passenger">
+            <input type="text" name="segments[${segmentIndex}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+            <input type="text" name="segments[${segmentIndex}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
+            <button type="button" class="btn btn-outline-danger remove-segment-passenger">
                 <i class="fas fa-times"></i>
             </button>
         </div>
     `;
     
     container.appendChild(newRow);
-    updateRemoveButtons();
+    updateSegmentRemoveButtons();
 }
 
-function updateRemoveButtons() {
-    const removeButtons = document.querySelectorAll('.remove-passenger');
+function updateSegmentRemoveButtons() {
+    const removeButtons = document.querySelectorAll('.remove-segment-passenger');
     removeButtons.forEach(button => {
         button.addEventListener('click', function() {
             const row = this.closest('.passenger-row');
+            const container = row.closest('[id^="segment-passengers-"]');
             row.remove();
-            updatePassengerNumbers();
+            updateSegmentPassengerNumbers(container);
         });
     });
 }
 
-function updatePassengerNumbers() {
-    const rows = document.querySelectorAll('.passenger-row');
+function updateSegmentPassengerNumbers(container) {
+    const rows = container.querySelectorAll('.passenger-row');
     rows.forEach((row, index) => {
         const label = row.querySelector('.input-group-text');
         if (label) {

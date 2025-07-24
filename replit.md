@@ -109,6 +109,15 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 24, 2025: IMPLEMENTED SEGMENT-LEVEL PASSENGER ASSIGNMENT SYSTEM
+  - ✅ FLIGHT FORM ENHANCEMENT: Added passenger and ticket number inputs to each flight segment instead of global assignment
+  - ✅ BACKEND PROCESSING: Updated flight confirmation backend to process passengers per segment (segments[0][passenger_names][], segments[0][ticket_numbers][])
+  - ✅ AI PROMPTS UPDATED: Enhanced OpenAI prompts to assign passengers and ticket numbers to specific flight segments
+  - ✅ VOUCHER COMPATIBILITY: Airline voucher generator already supports segment-level passenger display
+  - ✅ JAVASCRIPT MANAGEMENT: Updated confirm_flight.js for segment-specific passenger management with add/remove functionality
+  - ✅ BACKWARD COMPATIBILITY: Maintains support for global passenger assignment while prioritizing segment-level data
+  - ✅ USE CASE SUPPORT: Now handles complex scenarios like couples flying together to Dubai, one continuing alone to Istanbul
+  - System now properly handles different passenger combinations per flight segment for accurate travel documentation
 - July 20, 2025: ENHANCED TICKET SCANNER SEQUENTIAL MAPPING PRECISION
   - ✅ IMPROVED AI PROMPTS: Enhanced OpenAI prompts to emphasize exact sequential mapping of ticket numbers to passengers  
   - ✅ SEQUENTIAL MAPPING RULE: Added explicit rule that first ticket number → first passenger, second ticket → second passenger

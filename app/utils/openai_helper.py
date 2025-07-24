@@ -114,28 +114,42 @@ def analyze_flight_ticket(image_data):
         7. Arrival time (HH:MM in 24-hour format)
         8. Connection type ("direct", "connecting", "layover")
         9. Aircraft type if visible (e.g., "Boeing 777", "Airbus A350")
+        10. **PASSENGERS FOR THIS SEGMENT**: Names of passengers traveling on this specific flight
+        11. **TICKET NUMBERS FOR THIS SEGMENT**: Ticket numbers for passengers on this specific flight
+
+        SEGMENT-SPECIFIC PASSENGER ASSIGNMENT:
+        **CRITICAL**: Passengers and ticket numbers must be assigned to EACH FLIGHT SEGMENT separately.
+        Different passengers may travel on different flight segments. For example:
+        - Segment 1 (AMM→DXB): John Smith, Jane Smith (traveling together)  
+        - Segment 2 (DXB→IST): John Smith only (continuing alone)
+        
+        Look for passenger tables or lists that show which passengers are on which specific flights.
+        If a passenger table shows all passengers for all flights, assign them to each segment.
+        If document shows different passengers per segment, respect those assignments.
 
         PASSENGER & BOOKING INFO:
         - PNR/Booking reference (typically 5-6 alphanumeric characters)
-        - All passenger names listed in order
+        - Passenger names per flight segment (not just globally)
         - **CRITICAL: E-ticket numbers** - Look VERY carefully for ticket numbers throughout the document:
           * 13-digit numbers (e.g., 1572345678901, 2351234567890)
           * Numbers starting with airline code + digits (e.g., QR1234567890123, EK9876543210987)
           * May be labeled as "Ticket Number", "E-Ticket", "TKT", "Electronic Ticket", "Document Number"
-          * **SEQUENTIAL MAPPING RULE**: Ticket numbers MUST be mapped to passengers in the EXACT SAME SEQUENCE:
-            - First ticket number found → First passenger name
-            - Second ticket number found → Second passenger name  
-            - Third ticket number found → Third passenger name, etc.
-          * When ticket numbers appear consecutively (e.g., 1762384500337, 1762384500338, 1762384500339), assign them to passengers in the same consecutive order
-          * Search in passenger tables, ticket details sections, confirmation areas, and barcode regions
-          * Include ALL ticket numbers found - each passenger gets one ticket number in sequence
-          * If passenger names are listed as: [John Smith, Jane Doe, Bob Wilson] and ticket numbers are [123456, 123457, 123458], then map them as: John→123456, Jane→123457, Bob→123458
+          * **SEGMENT-LEVEL SEQUENTIAL MAPPING**: For EACH flight segment, ticket numbers MUST be mapped to passengers:
+            - Assign ticket numbers to passengers per flight segment, not globally
+            - Within each segment: First ticket → First passenger, Second ticket → Second passenger
+            - If a passenger travels on multiple segments, they get different ticket numbers for each segment
+            - When ticket numbers appear consecutively (e.g., 1762384500337, 1762384500338), assign them to passengers in that segment
+          * Search in passenger tables, flight-specific sections, segment details, and barcode regions
+          * Include ALL ticket numbers found and assign them to the correct flight segment
+          * Example: 
+            - Segment 1 passengers [John Smith, Jane Smith] → tickets [123456, 123457]
+            - Segment 2 passengers [John Smith] → tickets [789012]
           * If numbers are sequential (e.g., 1572345678901, 1572345678902), include all of them
         - Travel class (Economy, Business, First)
         - Seat assignments if shown
 
         OUTPUT FORMAT - JSON ONLY:
-        **CRITICAL**: passenger_names and ticket_numbers arrays MUST be in matching sequential order
+        **CRITICAL**: For each segment, passenger_names and ticket_numbers arrays MUST be in matching sequential order
         {
             "flight_type": "one_way|round_trip|multi_city",
             "segments": [
@@ -151,12 +165,12 @@ def analyze_flight_ticket(image_data):
                     "arrival_time": "16:45",
                     "duration": "2h 15m",
                     "connection_type": "connecting",
-                    "aircraft_type": "Boeing 777"
+                    "aircraft_type": "Boeing 777",
+                    "passenger_names": ["John Smith", "Jane Smith"],
+                    "ticket_numbers": ["1572345678901", "1572345678902"]
                 }
             ],
             "booking_reference": "ABC123",
-            "passenger_names": ["John Smith", "Jane Smith"],
-            "ticket_numbers": ["1572345678901", "1572345678902"],
             "travel_class": "Economy",
             "terminal": "Terminal 3",
             "baggage_allowance": "23kg",

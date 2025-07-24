@@ -139,6 +139,37 @@
                                                    value="{{ confirmation_data.arrival_time|default('') }}">
                                         </div>
                                     </div>
+
+                                    <!-- Passengers for this Segment -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Passengers on this Flight</label>
+                                        <div id="segment-passengers-0">
+                                            <div class="passenger-row mb-2">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Passenger 1</span>
+                                                    <input type="text" name="segments[0][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                                                    <input type="text" name="segments[0][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
+                                                    <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="0">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">Add passengers traveling on this specific flight segment</small>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">PNR for this Segment</label>
+                                            <input type="text" name="segments[0][pnr]" id="segment-pnr-0" class="form-control" 
+                                                   value="{{ confirmation_data.pnr|default('') }}" placeholder="6-character booking reference">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Aircraft Type</label>
+                                            <input type="text" name="segments[0][aircraft_type]" id="aircraft-type-0" class="form-control" 
+                                                   placeholder="e.g., Boeing 777, Airbus A350">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -182,9 +213,9 @@
                             </div>
                         </div>
 
-                        <!-- Passenger Information Section -->
+                        <!-- Passenger Count Section (Optional - for statistics) -->
                         <div class="mb-4">
-                            <h5 class="card-title text-primary">Passenger Information</h5>
+                            <h5 class="card-title text-primary">Passenger Count Summary</h5>
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Adults (12+ years)</label>
@@ -199,43 +230,7 @@
                                     <input type="number" name="infants" class="form-control" value="{{ confirmation_data.passenger_count.infants|default(0) }}" min="0">
                                 </div>
                             </div>
-                            
-                            <!-- Passenger Names and Ticket Numbers Section -->
-                            <div class="mb-3">
-                                <label class="form-label">Passenger Names & Ticket Numbers</label>
-                                <div id="passengerNames">
-                                    {% if confirmation_data is defined and confirmation_data.passenger_names is defined %}
-                                        {% for name in confirmation_data.passenger_names %}
-                                        <div class="passenger-row mb-2">
-                                            <div class="input-group">
-                                                <span class="input-group-text">Passenger {{ loop.index }}</span>
-                                                <input type="text" name="passenger_names[]" class="form-control" value="{{ name }}" placeholder="Full name as in passport">
-                                                <input type="text" name="ticket_numbers[]" class="form-control" 
-                                                       value="{{ confirmation_data.ticket_numbers[loop.index0] if confirmation_data.ticket_numbers and confirmation_data.ticket_numbers|length > loop.index0 else '' }}" 
-                                                       placeholder="Ticket/E-ticket number">
-                                                {% if not loop.first %}
-                                                <button type="button" class="btn btn-outline-danger remove-passenger">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <!-- Default single passenger field -->
-                                        <div class="passenger-row mb-2">
-                                            <div class="input-group">
-                                                <span class="input-group-text">Passenger 1</span>
-                                                <input type="text" name="passenger_names[]" class="form-control" placeholder="Full name as in passport">
-                                                <input type="text" name="ticket_numbers[]" class="form-control" placeholder="Ticket/E-ticket number">
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <button type="button" id="addPassenger" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-plus me-2"></i>Add Passenger
-                                </button>
-                            </div>
+                            <small class="text-muted">Note: Passenger names are assigned to specific flight segments above</small>
                         </div>
 
                         <!-- Cost Information -->

@@ -1064,6 +1064,10 @@ def confirm_service(item_id):
             
             # Process all segments from the form
             while f'segments[{segment_index}][airline]' in request.form:
+                # Get segment-specific passenger names and ticket numbers
+                segment_passenger_names = request.form.getlist(f'segments[{segment_index}][passenger_names][]')
+                segment_ticket_numbers = request.form.getlist(f'segments[{segment_index}][ticket_numbers][]')
+                
                 segment_data = {
                     'airline': request.form.get(f'segments[{segment_index}][airline]', ''),
                     'flight_number': request.form.get(f'segments[{segment_index}][flight_number]', ''),
@@ -1075,12 +1079,15 @@ def confirm_service(item_id):
                     'duration': request.form.get(f'segments[{segment_index}][duration]', ''),
                     'connection_type': request.form.get(f'segments[{segment_index}][connection_type]', ''),
                     'aircraft_type': request.form.get(f'segments[{segment_index}][aircraft_type]', ''),
+                    'pnr': request.form.get(f'segments[{segment_index}][pnr]', ''),
+                    'passenger_names': segment_passenger_names,
+                    'ticket_numbers': segment_ticket_numbers,
                 }
                 
                 # Only add segment if it has essential data
                 if segment_data['airline'] and segment_data['flight_number']:
                     segments.append(segment_data)
-                    print(f"Added segment {segment_index + 1}: {segment_data['airline']} {segment_data['flight_number']}", file=sys.stderr)
+                    print(f"Added segment {segment_index + 1}: {segment_data['airline']} {segment_data['flight_number']} with {len(segment_passenger_names)} passengers", file=sys.stderr)
                 
                 segment_index += 1
             
@@ -1136,15 +1143,39 @@ def confirm_service(item_id):
                 'aircraft_type': segments[0]['aircraft_type'] if segments else '',
             }
             
-            # Get passenger names and ticket numbers
-            passenger_names = request.form.getlist('passenger_names[]')
-            ticket_numbers = request.form.getlist('ticket_numbers[]')
+            # Get global passenger names and ticket numbers (for backward compatibility)
+            global_passenger_names = request.form.getlist('passenger_names[]')
+            global_ticket_numbers = request.form.getlist('ticket_numbers[]')
             
-            if passenger_names:
-                flight_details['passenger_names'] = passenger_names
-            
-            if ticket_numbers:
-                flight_details['ticket_numbers'] = ticket_numbers
+            # If global passengers provided but no segment-specific passengers, assign globally to all segments
+            if global_passenger_names and not any(seg.get('passenger_names') for seg in segments):
+                print("Assigning global passengers to all segments for backward compatibility", file=sys.stderr)
+                for segment in segments:
+                    segment['passenger_names'] = global_passenger_names
+                    segment['ticket_numbers'] = global_ticket_numbers
+                
+                flight_details['passenger_names'] = global_passenger_names
+                flight_details['ticket_numbers'] = global_ticket_numbers
+            else:
+                # Collect all unique passengers from all segments for global list
+                all_passengers = set()
+                all_tickets = []
+                
+                for segment in segments:
+                    seg_passengers = segment.get('passenger_names', [])
+                    seg_tickets = segment.get('ticket_numbers', [])
+                    
+                    for passenger in seg_passengers:
+                        if passenger and passenger not in all_passengers:
+                            all_passengers.add(passenger)
+                    
+                    for ticket in seg_tickets:
+                        if ticket and ticket not in all_tickets:
+                            all_tickets.append(ticket)
+                
+                flight_details['passenger_names'] = list(all_passengers)
+                flight_details['ticket_numbers'] = all_tickets
+                print(f"Collected {len(all_passengers)} unique passengers from all segments", file=sys.stderr)
             
             print(f"Final flight details with {len(segments)} segments prepared for saving", file=sys.stderr)
             print(f"Flight details JSON length: {len(json.dumps(flight_details))}", file=sys.stderr)
