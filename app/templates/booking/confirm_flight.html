@@ -536,10 +536,70 @@ function populateSegmentFields(segmentData, index) {
                 console.warn(`❌ Field not found or no data: ${mapping.field}`, segmentData[mapping.data]);
             }
         });
+        
+        // Populate segment-specific passengers for segment 0
+        populateSegmentPassengers(segmentData, 0);
+        
+        // Also populate PNR for this segment
+        const pnrField = document.getElementsByName('segments[0][pnr]')[0];
+        if (pnrField && segmentData.pnr) {
+            pnrField.value = segmentData.pnr;
+            console.log(`✅ Set segment PNR = ${segmentData.pnr}`);
+        }
     } else {
         // For additional segments, we need to create new segment UI
         addFlightSegmentUI(segmentData, index);
     }
+}
+
+function populateSegmentPassengers(segmentData, segmentIndex) {
+    console.log(`Populating passengers for segment ${segmentIndex}:`, segmentData);
+    
+    // Get or use passengers assigned to this segment
+    const passengers = segmentData.passenger_names || [];
+    const tickets = segmentData.ticket_numbers || [];
+    
+    if (passengers.length === 0) {
+        console.log(`No passengers found for segment ${segmentIndex}`);
+        return;
+    }
+    
+    const passengerContainer = document.getElementById(`segment-passengers-${segmentIndex}`);
+    if (!passengerContainer) {
+        console.error(`Passenger container not found for segment ${segmentIndex}`);
+        return;
+    }
+    
+    // Clear existing passenger rows
+    passengerContainer.innerHTML = '';
+    
+    // Add passengers for this segment
+    passengers.forEach((passenger, passengerIndex) => {
+        const ticket = tickets[passengerIndex] || '';
+        const passengerRow = document.createElement('div');
+        passengerRow.className = 'passenger-row mb-2';
+        passengerRow.innerHTML = `
+            <div class="input-group">
+                <span class="input-group-text">Passenger ${passengerIndex + 1}</span>
+                <input type="text" name="segments[${segmentIndex}][passenger_names][]" class="form-control" 
+                       value="${passenger}" placeholder="Full name as in passport">
+                <input type="text" name="segments[${segmentIndex}][ticket_numbers][]" class="form-control" 
+                       value="${ticket}" placeholder="Ticket/E-ticket number">
+                ${passengerIndex === 0 ? `
+                    <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="${segmentIndex}">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                ` : `
+                    <button type="button" class="btn btn-outline-danger remove-segment-passenger">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                `}
+            </div>
+        `;
+        passengerContainer.appendChild(passengerRow);
+    });
+    
+    console.log(`✅ Populated ${passengers.length} passengers for segment ${segmentIndex}`);
 }
 
 function addFlightSegmentUI(segmentData, index) {
@@ -603,6 +663,37 @@ function addFlightSegmentUI(segmentData, index) {
                        value="${segmentData.arrival_time || ''}">
             </div>
         </div>
+
+        <!-- Passengers for this Segment -->
+        <div class="mb-3">
+            <label class="form-label">Passengers on this Flight</label>
+            <div id="segment-passengers-${index}">
+                <div class="passenger-row mb-2">
+                    <div class="input-group">
+                        <span class="input-group-text">Passenger 1</span>
+                        <input type="text" name="segments[${index}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                        <input type="text" name="segments[${index}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
+                        <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="${index}">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted">Add passengers traveling on this specific flight segment</small>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">PNR for this Segment</label>
+                <input type="text" name="segments[${index}][pnr]" class="form-control" 
+                       value="${segmentData.pnr || ''}" placeholder="6-character booking reference">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Aircraft Type</label>
+                <input type="text" name="segments[${index}][aircraft_type]" class="form-control" 
+                       placeholder="e.g., Boeing 777, Airbus A350">
+            </div>
+        </div>
     </div>
     `;
     
@@ -616,6 +707,11 @@ function addFlightSegmentUI(segmentData, index) {
     newSegment.querySelectorAll('.airport-autocomplete').forEach(input => {
         setupAirportAutocomplete(input);
     });
+    
+    // Populate passengers for this new segment after UI is created
+    setTimeout(() => {
+        populateSegmentPassengers(segmentData, index);
+    }, 100);
 }
 
 function populateCommonFields(flightData) {
