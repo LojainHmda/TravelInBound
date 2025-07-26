@@ -185,6 +185,126 @@
     {% include 'modals/hotel_scanner_modal.html' %}
 </div>
 
+<script>
+// Define fillHotelForm function globally to ensure it's available
+window.fillHotelForm = function(data) {
+    // If data is not passed, use stored data
+    if (!data) {
+        data = window.hotelScanData;
+    }
+    
+    if (!data) {
+        console.log('No hotel scan data available');
+        return;
+    }
+    
+    console.log('Filling hotel form with data:', data);
+    
+    // Fill basic hotel information
+    const hotelNameInput = document.querySelector('input[name="hotel_name"]');
+    if (hotelNameInput && data.hotel_name) {
+        hotelNameInput.value = data.hotel_name;
+    }
+    
+    // Fill cost if available
+    const costInput = document.querySelector('input[name="cost"]');
+    if (costInput && data.total_cost) {
+        const numericCost = data.total_cost.replace(/[^\d.]/g, '');
+        if (numericCost) {
+            costInput.value = numericCost;
+        }
+    }
+    
+    // Clear existing rooms and create new ones based on scanned data
+    if (data.rooms && data.rooms.length > 0) {
+        const container = document.getElementById('hotelRoomsContainer');
+        container.innerHTML = '';
+        
+        data.rooms.forEach((room, index) => {
+            // Create room HTML
+            const roomHtml = `
+                <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-primary">🏨 Room ${index + 1}</h6>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" ${index === 0 ? 'style="display: none;"' : ''}>
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Room Count</label>
+                            <input type="number" name="rooms[${index}][room_count]" class="form-control" value="${room.room_count || 1}" min="1" max="10">
+                            <small class="text-muted">Rooms of this type</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Room Type</label>
+                            <select name="rooms[${index}][room_type]" class="form-control">
+                                <option value="">Select Room Type</option>
+                                <option value="Single Room" ${room.room_type === 'Single Room' ? 'selected' : ''}>Single Room</option>
+                                <option value="Double Room" ${room.room_type === 'Double Room' ? 'selected' : ''}>Double Room</option>
+                                <option value="Twin Room" ${room.room_type === 'Twin Room' ? 'selected' : ''}>Twin Room</option>
+                                <option value="Triple Room" ${room.room_type === 'Triple Room' ? 'selected' : ''}>Triple Room</option>
+                                <option value="Family Room" ${room.room_type === 'Family Room' ? 'selected' : ''}>Family Room</option>
+                                <option value="Suite" ${room.room_type === 'Suite' ? 'selected' : ''}>Suite</option>
+                                <option value="Junior Suite" ${room.room_type === 'Junior Suite' ? 'selected' : ''}>Junior Suite</option>
+                                <option value="Executive Suite" ${room.room_type === 'Executive Suite' ? 'selected' : ''}>Executive Suite</option>
+                                <option value="Presidential Suite" ${room.room_type === 'Presidential Suite' ? 'selected' : ''}>Presidential Suite</option>
+                                <option value="Connecting Rooms" ${room.room_type === 'Connecting Rooms' ? 'selected' : ''}>Connecting Rooms</option>
+                                <option value="Other" ${room.room_type === 'Other' ? 'selected' : ''}>Other</option>
+                                <option value="${room.room_type}" selected>${room.room_type}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Board Basis</label>
+                            <select name="rooms[${index}][board_basis]" class="form-control">
+                                <option value="Room Only" ${room.board_basis === 'Room Only' ? 'selected' : ''}>Room Only</option>
+                                <option value="Bed & Breakfast (BB)" ${room.board_basis === 'Bed & Breakfast (BB)' ? 'selected' : ''}>Bed & Breakfast (BB)</option>
+                                <option value="Half Board (HB)" ${room.board_basis === 'Half Board (HB)' ? 'selected' : ''}>Half Board (HB)</option>
+                                <option value="Full Board (FB)" ${room.board_basis === 'Full Board (FB)' ? 'selected' : ''}>Full Board (FB)</option>
+                                <option value="All Inclusive (AI)" ${room.board_basis === 'All Inclusive (AI)' || room.board_basis === 'All Inclusive' ? 'selected' : ''}>All Inclusive (AI)</option>
+                                <option value="Ultra All Inclusive" ${room.board_basis === 'Ultra All Inclusive' ? 'selected' : ''}>Ultra All Inclusive</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Check-in Date</label>
+                            <input type="date" name="rooms[${index}][checkin_date]" class="form-control" value="${room.checkin_date || data.checkin_date || ''}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Check-out Date</label>
+                            <input type="date" name="rooms[${index}][checkout_date]" class="form-control" value="${room.checkout_date || data.checkout_date || ''}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Adults</label>
+                            <input type="number" name="rooms[${index}][adults]" class="form-control" value="${room.adults || 2}" min="1" max="6">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Children</label>
+                            <input type="number" name="rooms[${index}][children]" class="form-control" value="${room.children || 0}" min="0" max="4">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Lead Passenger Name</label>
+                            <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" value="${room.lead_passenger || ''}" placeholder="Mr. YOUSEF">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', roomHtml);
+        });
+    }
+    
+    console.log('Hotel form filled successfully');
+};
+
+console.log('fillHotelForm function defined globally');
+</script>
+
 {% block service_script %}
 <script src="{{ url_for('static', filename='js/confirm_hotel.js') }}"></script>
 <script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
