@@ -61,6 +61,17 @@ function createRoomHtml(roomIndex) {
             </div>
             
             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Check-in Date</label>
+                    <input type="date" name="rooms[${roomIndex}][checkin_date]" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Check-out Date</label>
+                    <input type="date" name="rooms[${roomIndex}][checkout_date]" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Adults</label>
                     <input type="number" name="rooms[${roomIndex}][adults]" class="form-control" value="2" min="1" max="6">
@@ -277,15 +288,7 @@ window.fillHotelForm = function() {
         hotelNameInput.value = data.hotel_name;
     }
     
-    const checkinInput = document.querySelector('input[name="from_date"]');
-    if (checkinInput && data.checkin_date) {
-        checkinInput.value = data.checkin_date;
-    }
-    
-    const checkoutInput = document.querySelector('input[name="to_date"]');
-    if (checkoutInput && data.checkout_date) {
-        checkoutInput.value = data.checkout_date;
-    }
+    // Check-in and check-out dates are now at room level - handled in fillRoomData function
     
     // Fill cost if available
     const costInput = document.querySelector('input[name="cost"]');
@@ -379,6 +382,23 @@ function fillRoomData(roomIndex, roomData) {
         
         if (matchedBoard) {
             boardSelect.value = matchedBoard;
+        }
+    }
+    
+    // Fill check-in and check-out dates (use global dates if room-specific not available)
+    const checkinInput = document.querySelector(`input[name="rooms[${roomIndex}][checkin_date]"]`);
+    if (checkinInput) {
+        const checkinDate = roomData.checkin_date || window.hotelScanData?.checkin_date;
+        if (checkinDate) {
+            checkinInput.value = checkinDate;
+        }
+    }
+    
+    const checkoutInput = document.querySelector(`input[name="rooms[${roomIndex}][checkout_date]"]`);
+    if (checkoutInput) {
+        const checkoutDate = roomData.checkout_date || window.hotelScanData?.checkout_date;
+        if (checkoutDate) {
+            checkoutInput.value = checkoutDate;
         }
     }
     

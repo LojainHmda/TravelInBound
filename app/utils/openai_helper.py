@@ -385,6 +385,8 @@ def get_empty_hotel_result_template(error_message=None):
                 "room_count": 1,
                 "room_type": "",
                 "board_basis": "Room Only",
+                "checkin_date": "",
+                "checkout_date": "",
                 "adults": 2,
                 "children": 0,
                 "lead_passenger": ""
@@ -444,6 +446,8 @@ def analyze_hotel_voucher(image_data):
           * "Full Board" (if FB, full board, or all meals mentioned)
           * "All Inclusive" (if AI, ALL INCLUSIVE, ALL INCLSIVE, all inclusive, or similar mentioned)
           * "Ultra All Inclusive" (if ultra, premium all inclusive mentioned)
+        - Check-in date (in YYYY-MM-DD format)
+        - Check-out date (in YYYY-MM-DD format)  
         - Number of adults per room
         - Number of children per room
         - Lead passenger/guest name for that room
@@ -458,7 +462,7 @@ def analyze_hotel_voucher(image_data):
         - address
         - phone
         - room_count (total number of rooms as integer)
-        - rooms (array of room objects with keys: room_count, room_type, board_basis, adults, children, lead_passenger)
+        - rooms (array of room objects with keys: room_count, room_type, board_basis, checkin_date, checkout_date, adults, children, lead_passenger)
 
         Example for multiple rooms:
         {

@@ -50,18 +50,7 @@
             <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name|default('') }}" required>
         </div>
         
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Check-in Date</label>
-                <input type="date" name="from_date" class="form-control" required 
-                       value="{{ confirmation_data.from_date|default(service_item.start_date.strftime('%Y-%m-%d')) }}">
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Check-out Date</label>
-                <input type="date" name="to_date" class="form-control" required 
-                       value="{{ confirmation_data.to_date|default(service_item.end_date.strftime('%Y-%m-%d')) }}">
-            </div>
-        </div>
+        <!-- Check-in/check-out dates moved to room level -->
         
         <div class="mb-3">
             <label class="form-label">Meal Plan</label>
@@ -155,6 +144,17 @@
                                 <option value="All Inclusive (AI)">All Inclusive (AI)</option>
                                 <option value="Ultra All Inclusive">Ultra All Inclusive</option>
                             </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Check-in Date</label>
+                            <input type="date" name="rooms[0][checkin_date]" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Check-out Date</label>
+                            <input type="date" name="rooms[0][checkout_date]" class="form-control" required>
                         </div>
                     </div>
                     
