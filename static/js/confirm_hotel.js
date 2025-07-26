@@ -275,12 +275,17 @@ function displayHotelScanResults(data) {
 }
 
 // Make fillHotelForm globally accessible
-window.fillHotelForm = function() {
-    const data = window.hotelScanData;
+window.fillHotelForm = function(data) {
+    // If data is not passed, use stored data
     if (!data) {
-        console.log('fillHotelForm function not found - falling back to basic filling');
+        data = window.hotelScanData;
+    }
+    
+    if (!data) {
+        console.log('No hotel scan data available');
         return;
     }
+
     
     // Fill basic hotel information
     const hotelNameInput = document.querySelector('input[name="hotel_name"]');
