@@ -104,15 +104,6 @@
             </div>
         </div>
         
-        <div class="mb-3">
-            <label class="form-label">Number of Rooms</label>
-            <div class="input-group">
-                <input type="number" id="roomCount" name="room_count" class="form-control" value="1" min="1" max="10" onchange="updateRoomCount()">
-                <span class="input-group-text">rooms</span>
-            </div>
-            <small class="text-muted">Total number of rooms for this booking</small>
-        </div>
-        
         <div id="roomDetails">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="mt-3 mb-0">Room Configuration & Lead Passengers</h6>
@@ -132,7 +123,12 @@
                     </div>
                     
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label">Room Count</label>
+                            <input type="number" name="rooms[0][room_count]" class="form-control" value="1" min="1" max="10">
+                            <small class="text-muted">Rooms of this type</small>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label">Room Type</label>
                             <select name="rooms[0][room_type]" class="form-control">
                                 <option value="">Select Room Type</option>
@@ -149,7 +145,7 @@
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <label class="form-label">Board Basis</label>
                             <select name="rooms[0][board_basis]" class="form-control">
                                 <option value="Room Only">Room Only</option>

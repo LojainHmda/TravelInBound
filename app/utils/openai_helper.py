@@ -382,6 +382,7 @@ def get_empty_hotel_result_template(error_message=None):
         "room_count": 1,
         "rooms": [
             {
+                "room_count": 1,
                 "room_type": "",
                 "board_basis": "Room Only",
                 "adults": 2,
@@ -434,6 +435,7 @@ def analyze_hotel_voucher(image_data):
         2. Then extract room details for each room type, creating separate entries if multiple rooms of same type
         
         For each room, include:
+        - Room count: Number of rooms of this specific type (e.g., if "03 Dbl" then room_count=3)
         - Room type: Extract the EXACT room type name as written (e.g., "STD ROOM", "Urban Deluxe Twin Bed", "Dbl", "Standard Double Room", etc.)
         - Board basis: Look for meal plan information and standardize it:
           * "Room Only" (if no meals mentioned)
@@ -456,7 +458,7 @@ def analyze_hotel_voucher(image_data):
         - address
         - phone
         - room_count (total number of rooms as integer)
-        - rooms (array of room objects with keys: room_type, board_basis, adults, children, lead_passenger)
+        - rooms (array of room objects with keys: room_count, room_type, board_basis, adults, children, lead_passenger)
 
         Example for multiple rooms:
         {

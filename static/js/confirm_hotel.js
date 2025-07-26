@@ -29,7 +29,12 @@ function addHotelRoom() {
             </div>
             
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-3">
+                    <label class="form-label">Room Count</label>
+                    <input type="number" name="rooms[${newRoomIndex}][room_count]" class="form-control" value="1" min="1" max="10">
+                    <small class="text-muted">Rooms of this type</small>
+                </div>
+                <div class="col-md-4">
                     <label class="form-label">Room Type</label>
                     <select name="rooms[${newRoomIndex}][room_type]" class="form-control">
                         <option value="">Select Room Type</option>
@@ -46,7 +51,7 @@ function addHotelRoom() {
                         <option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <label class="form-label">Board Basis</label>
                     <select name="rooms[${newRoomIndex}][board_basis]" class="form-control">
                         <option value="Room Only">Room Only</option>
@@ -127,37 +132,7 @@ function updateRoomRemoveButtons() {
     });
 }
 
-function updateRoomCount() {
-    const roomCountInput = document.getElementById('roomCount');
-    const targetCount = parseInt(roomCountInput.value) || 1;
-    const container = document.getElementById('hotelRoomsContainer');
-    const currentCount = container.children.length;
-    
-    if (targetCount > currentCount) {
-        // Add rooms
-        for (let i = currentCount; i < targetCount; i++) {
-            addHotelRoom();
-        }
-    } else if (targetCount < currentCount) {
-        // Remove rooms from the end
-        for (let i = currentCount; i > targetCount; i--) {
-            const lastRoom = container.lastElementChild;
-            if (lastRoom) {
-                lastRoom.remove();
-            }
-        }
-        updateRoomNumbers();
-        updateRoomRemoveButtons();
-    }
-}
-
-function setRoomCount(count) {
-    const roomCountInput = document.getElementById('roomCount');
-    if (roomCountInput) {
-        roomCountInput.value = count;
-        updateRoomCount();
-    }
-}
+// Room count management functions removed - each room now has its own count field
 
 function initializeHotelScanning() {
     // Hotel scanning modal and AI functionality
@@ -296,12 +271,7 @@ function fillHotelForm() {
         }
     }
     
-    // Set room count first
-    if (data.room_count) {
-        setRoomCount(data.room_count);
-    } else if (data.rooms && data.rooms.length > 0) {
-        setRoomCount(data.rooms.length);
-    }
+    // No longer need to set total room count - each room has its own count field
     
     // Populate rooms with scanned data
     if (data.rooms && data.rooms.length > 0) {
@@ -320,6 +290,12 @@ function fillHotelForm() {
 }
 
 function fillRoomData(roomIndex, roomData) {
+    // Fill room count if available
+    const roomCountInput = document.querySelector(`input[name="rooms[${roomIndex}][room_count]"]`);
+    if (roomCountInput && roomData.room_count) {
+        roomCountInput.value = roomData.room_count;
+    }
+    
     // Fill room type - try to find exact match or closest match
     const roomTypeSelect = document.querySelector(`select[name="rooms[${roomIndex}][room_type]"]`);
     if (roomTypeSelect && roomData.room_type) {
