@@ -185,10 +185,21 @@
     {% include 'modals/hotel_scanner_modal.html' %}
 </div>
 
+<!-- Removed duplicate script - moved to service_script block -->
+
+{% block service_script %}
+<script src="{{ url_for('static', filename='js/confirm_hotel.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
+
+<!-- Force load the fillHotelForm function -->
 <script>
-// Define fillHotelForm function globally to ensure it's available
+console.log('Loading fillHotelForm override');
+// Define the function immediately when scripts load
 window.fillHotelForm = function(data) {
-    // If data is not passed, use stored data
+    console.log('fillHotelForm called with data:', data);
+    
+    // Use stored data if no data passed
     if (!data) {
         data = window.hotelScanData;
     }
@@ -198,12 +209,13 @@ window.fillHotelForm = function(data) {
         return;
     }
     
-    console.log('Filling hotel form with data:', data);
+    console.log('Processing hotel data:', data);
     
-    // Fill basic hotel information
+    // Fill hotel name
     const hotelNameInput = document.querySelector('input[name="hotel_name"]');
     if (hotelNameInput && data.hotel_name) {
         hotelNameInput.value = data.hotel_name;
+        console.log('Set hotel name:', data.hotel_name);
     }
     
     // Fill cost if available
@@ -215,13 +227,20 @@ window.fillHotelForm = function(data) {
         }
     }
     
-    // Clear existing rooms and create new ones based on scanned data
+    // Process rooms
     if (data.rooms && data.rooms.length > 0) {
         const container = document.getElementById('hotelRoomsContainer');
+        if (!container) {
+            console.error('hotelRoomsContainer not found');
+            return;
+        }
+        
         container.innerHTML = '';
+        console.log('Creating', data.rooms.length, 'room(s)');
         
         data.rooms.forEach((room, index) => {
-            // Create room HTML
+            console.log('Creating room', index + 1, 'with count:', room.room_count);
+            
             const roomHtml = `
                 <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -239,21 +258,7 @@ window.fillHotelForm = function(data) {
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Room Type</label>
-                            <select name="rooms[${index}][room_type]" class="form-control">
-                                <option value="">Select Room Type</option>
-                                <option value="Single Room" ${room.room_type === 'Single Room' ? 'selected' : ''}>Single Room</option>
-                                <option value="Double Room" ${room.room_type === 'Double Room' ? 'selected' : ''}>Double Room</option>
-                                <option value="Twin Room" ${room.room_type === 'Twin Room' ? 'selected' : ''}>Twin Room</option>
-                                <option value="Triple Room" ${room.room_type === 'Triple Room' ? 'selected' : ''}>Triple Room</option>
-                                <option value="Family Room" ${room.room_type === 'Family Room' ? 'selected' : ''}>Family Room</option>
-                                <option value="Suite" ${room.room_type === 'Suite' ? 'selected' : ''}>Suite</option>
-                                <option value="Junior Suite" ${room.room_type === 'Junior Suite' ? 'selected' : ''}>Junior Suite</option>
-                                <option value="Executive Suite" ${room.room_type === 'Executive Suite' ? 'selected' : ''}>Executive Suite</option>
-                                <option value="Presidential Suite" ${room.room_type === 'Presidential Suite' ? 'selected' : ''}>Presidential Suite</option>
-                                <option value="Connecting Rooms" ${room.room_type === 'Connecting Rooms' ? 'selected' : ''}>Connecting Rooms</option>
-                                <option value="Other" ${room.room_type === 'Other' ? 'selected' : ''}>Other</option>
-                                <option value="${room.room_type}" selected>${room.room_type}</option>
-                            </select>
+                            <input type="text" name="rooms[${index}][room_type]" class="form-control" value="${room.room_type || ''}" placeholder="e.g., STD ROOM">
                         </div>
                         <div class="col-md-5">
                             <label class="form-label">Board Basis</label>
@@ -302,11 +307,6 @@ window.fillHotelForm = function(data) {
     console.log('Hotel form filled successfully');
 };
 
-console.log('fillHotelForm function defined globally');
+console.log('fillHotelForm override loaded');
 </script>
-
-{% block service_script %}
-<script src="{{ url_for('static', filename='js/confirm_hotel.js') }}"></script>
-<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
-<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
 {% endblock %}
