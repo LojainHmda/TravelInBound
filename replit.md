@@ -117,6 +117,9 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ GUEST COUNT EXTRACTION: Enhanced detection of adult/children counts and lead passenger names per room
   - ✅ FORM INTEGRATION: Fixed hotel scanner modal integration with fillHotelForm function and proper data mapping
   - ✅ UI ENHANCEMENTS: Added "Ultra All Inclusive" option to both main meal plan and room-level board basis selectors
+  - ✅ ROOM COUNT LOGIC: Fixed AI to create ONE room entry with room_count=3 instead of 3 separate room entries
+  - ✅ IMPROVED FORM POPULATION: Enhanced JavaScript to properly create multiple room cards when AI detects multiple rooms
+  - ✅ INDIVIDUAL ROOM COUNTS: Added room count field adjacent to each room entry (not as total count)
   - System now successfully extracts complex hotel voucher data including misspelled meal plans and non-standard room types
 - July 26, 2025: COMPLETED PASSENGER TYPE IDENTIFICATION SYSTEM
   -  ✅ UI ENHANCEMENT: Added passenger type dropdown (Adult/Child/Infant) to all flight segment passenger input fields

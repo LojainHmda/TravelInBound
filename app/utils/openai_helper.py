@@ -504,8 +504,8 @@ IMPORTANT: If this is clearly a flight ticket or e-ticket instead of a hotel con
 {"error": "This appears to be a flight ticket, not a hotel confirmation. Please upload a hotel booking confirmation."}
 
 Otherwise, extract all the hotel details as requested, paying special attention to:
-- ROOM COUNT: Look for quantity indicators like "03 Dbl" (meaning 3 double rooms) and set room_count accordingly
-- If you see "03 Dbl" create 3 separate room entries, each with room_type "Double Room"
+- ROOM COUNT: Look for quantity indicators like "03 Dbl" (meaning 3 double rooms) and create ONE room entry with room_count=3
+- If you see "03 Dbl" create ONE room entry with room_count=3 and room_type "Double Room", NOT 3 separate entries
 - Multiple rooms if shown in a table format
 - Each room's lead passenger name (may be same person for multiple rooms)
 - Room types exactly as written (like "STD ROOM", "urban deluxe twin bed", "Dbl", "Standard Room")
@@ -518,7 +518,7 @@ Otherwise, extract all the hotel details as requested, paying special attention 
 - Guest counts (Adult, Child, Infant numbers) - distribute across rooms if total counts given
 - Total guest count may need to be divided across multiple rooms
 
-EXAMPLE: If you see "03 Dbl" with "6 adults, 1 child" total, create 3 room entries with 2 adults each, and put the 1 child in one of the rooms.
+EXAMPLE: If you see "03 Dbl" with "6 adults, 1 child" total, create ONE room entry with room_count=3, room_type="Double Room", adults=2, children=0 (average per room).
 """
 
         response = client.chat.completions.create(

@@ -14,15 +14,11 @@ function initializeHotelRoomManagement() {
     updateRoomRemoveButtons();
 }
 
-function addHotelRoom() {
-    const container = document.getElementById('hotelRoomsContainer');
-    const roomCount = container.children.length;
-    const newRoomIndex = roomCount;
-    
-    const newRoomHtml = `
+function createRoomHtml(roomIndex) {
+    return `
         <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mb-0 text-primary">🏨 Room ${roomCount + 1}</h6>
+                <h6 class="mb-0 text-primary">🏨 Room ${roomIndex + 1}</h6>
                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -31,12 +27,12 @@ function addHotelRoom() {
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label class="form-label">Room Count</label>
-                    <input type="number" name="rooms[${newRoomIndex}][room_count]" class="form-control" value="1" min="1" max="10">
+                    <input type="number" name="rooms[${roomIndex}][room_count]" class="form-control" value="1" min="1" max="10">
                     <small class="text-muted">Rooms of this type</small>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Room Type</label>
-                    <select name="rooms[${newRoomIndex}][room_type]" class="form-control">
+                    <select name="rooms[${roomIndex}][room_type]" class="form-control">
                         <option value="">Select Room Type</option>
                         <option value="Single Room">Single Room</option>
                         <option value="Double Room">Double Room</option>
@@ -53,7 +49,7 @@ function addHotelRoom() {
                 </div>
                 <div class="col-md-5">
                     <label class="form-label">Board Basis</label>
-                    <select name="rooms[${newRoomIndex}][board_basis]" class="form-control">
+                    <select name="rooms[${roomIndex}][board_basis]" class="form-control">
                         <option value="Room Only">Room Only</option>
                         <option value="Bed & Breakfast (BB)">Bed & Breakfast (BB)</option>
                         <option value="Half Board (HB)">Half Board (HB)</option>
@@ -67,19 +63,27 @@ function addHotelRoom() {
             <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="form-label">Adults</label>
-                    <input type="number" name="rooms[${newRoomIndex}][adults]" class="form-control" value="2" min="1" max="6">
+                    <input type="number" name="rooms[${roomIndex}][adults]" class="form-control" value="2" min="1" max="6">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Children</label>
-                    <input type="number" name="rooms[${newRoomIndex}][children]" class="form-control" value="0" min="0" max="4">
+                    <input type="number" name="rooms[${roomIndex}][children]" class="form-control" value="0" min="0" max="4">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Lead Passenger Name</label>
-                    <input type="text" name="rooms[${newRoomIndex}][lead_passenger]" class="form-control" placeholder="Mr. YOUSEF">
+                    <input type="text" name="rooms[${roomIndex}][lead_passenger]" class="form-control" placeholder="Mr. YOUSEF">
                 </div>
             </div>
         </div>
     `;
+}
+
+function addHotelRoom() {
+    const container = document.getElementById('hotelRoomsContainer');
+    const roomCount = container.children.length;
+    const newRoomIndex = roomCount;
+    
+    const newRoomHtml = createRoomHtml(newRoomIndex);
     
     container.insertAdjacentHTML('beforeend', newRoomHtml);
     updateRoomRemoveButtons();
@@ -271,13 +275,29 @@ function fillHotelForm() {
         }
     }
     
-    // No longer need to set total room count - each room has its own count field
-    
-    // Populate rooms with scanned data
+    // Clear existing rooms except the first one and add new ones based on scanned data
     if (data.rooms && data.rooms.length > 0) {
+        const container = document.getElementById('hotelRoomsContainer');
+        
+        // Clear all existing rooms
+        container.innerHTML = '';
+        
+        // Add rooms based on scanned data
         data.rooms.forEach((room, index) => {
-            fillRoomData(index, room);
+            if (index === 0) {
+                // Create first room
+                const firstRoomHtml = createRoomHtml(0);
+                container.insertAdjacentHTML('beforeend', firstRoomHtml);
+            } else {
+                // Add additional rooms
+                addHotelRoom();
+            }
+            
+            // Fill room data
+            setTimeout(() => fillRoomData(index, room), 100);
         });
+        
+        updateRoomRemoveButtons();
     }
 
     
