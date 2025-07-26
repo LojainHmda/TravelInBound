@@ -37,6 +37,11 @@ function addSegmentPassengerRow(segmentIndex) {
         <div class="input-group">
             <span class="input-group-text">Passenger ${newIndex}</span>
             <input type="text" name="segments[${segmentIndex}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+            <select name="segments[${segmentIndex}][passenger_types][]" class="form-select" style="max-width: 120px;">
+                <option value="Adult">Adult</option>
+                <option value="Child">Child</option>
+                <option value="Infant">Infant</option>
+            </select>
             <input type="text" name="segments[${segmentIndex}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
             <button type="button" class="btn btn-outline-danger remove-segment-passenger">
                 <i class="fas fa-times"></i>

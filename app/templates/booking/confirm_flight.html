@@ -148,6 +148,11 @@
                                                 <div class="input-group">
                                                     <span class="input-group-text">Passenger 1</span>
                                                     <input type="text" name="segments[0][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                                                    <select name="segments[0][passenger_types][]" class="form-select" style="max-width: 120px;">
+                                                        <option value="Adult">Adult</option>
+                                                        <option value="Child">Child</option>
+                                                        <option value="Infant">Infant</option>
+                                                    </select>
                                                     <input type="text" name="segments[0][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
                                                     <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="0">
                                                         <i class="fas fa-plus"></i>
@@ -680,6 +685,11 @@ function addFlightSegmentUI(segmentData, index) {
                     <div class="input-group">
                         <span class="input-group-text">Passenger 1</span>
                         <input type="text" name="segments[${index}][passenger_names][]" class="form-control" placeholder="Full name as in passport">
+                        <select name="segments[${index}][passenger_types][]" class="form-select" style="max-width: 120px;">
+                            <option value="Adult">Adult</option>
+                            <option value="Child">Child</option>
+                            <option value="Infant">Infant</option>
+                        </select>
                         <input type="text" name="segments[${index}][ticket_numbers][]" class="form-control" placeholder="Ticket/E-ticket number">
                         <button type="button" class="btn btn-outline-success add-segment-passenger" data-segment="${index}">
                             <i class="fas fa-plus"></i>
