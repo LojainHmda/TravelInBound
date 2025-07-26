@@ -195,11 +195,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Fill form with extracted data
     document.getElementById('fillHotelForm').addEventListener('click', function() {
-        // Use the enhanced form population function
-        if (typeof populateHotelFormFromScan === 'function') {
-            populateHotelFormFromScan(extractedData);
+        // Store data globally for the external JS file to access
+        window.hotelScanData = extractedData;
+        
+        // Use the enhanced form population function from confirm_hotel.js
+        if (typeof fillHotelForm === 'function') {
+            fillHotelForm();
         } else {
-            console.error('populateHotelFormFromScan function not found');
+            console.error('fillHotelForm function not found - falling back to basic filling');
             // Fallback to basic field filling
             if (extractedData.hotel_name) {
                 const hotelNameField = document.querySelector('input[name="hotel_name"]');
@@ -215,23 +218,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkoutField = document.querySelector('input[name="to_date"]');
                 if (checkoutField) checkoutField.value = extractedData.checkout_date;
             }
+            
+            // Close modal and show success message
+            const modalInstance = bootstrap.Modal.getInstance(modal);
+            modalInstance.hide();
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-success alert-dismissible fade show';
+            alertDiv.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                Hotel details filled successfully from scanned voucher!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const form = document.querySelector('form');
+            form.insertBefore(alertDiv, form.firstChild);
         }
-
-        // Close modal
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        modalInstance.hide();
-        
-        // Show success message
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-success alert-dismissible fade show';
-        alertDiv.innerHTML = `
-            <i class="fas fa-check-circle me-2"></i>
-            Hotel details filled successfully from scanned voucher!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const form = document.querySelector('form');
-        form.insertBefore(alertDiv, form.firstChild);
     });
 
     // Scan another voucher

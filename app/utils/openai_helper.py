@@ -429,7 +429,13 @@ def analyze_hotel_voucher(image_data):
         IMPORTANT: If multiple rooms are listed, extract each room separately with its details.
         For each room, include:
         - Room type: Extract the EXACT room type name as written (e.g., "Urban Deluxe Twin Bed", "Classic Room Single", "Standard Double Room", "Executive Suite", etc.)
-        - Board basis: Use the full descriptive format - "Room Only", "Bed & Breakfast (BB)", "Half Board (HB)", "Full Board (FB)", "All Inclusive (AI)", "Ultra All Inclusive"
+        - Board basis: Look for meal plan information and standardize it:
+          * "Room Only" (if no meals mentioned)
+          * "Bed & Breakfast" (if BB, breakfast, or similar mentioned)
+          * "Half Board" (if HB, half board, or dinner+breakfast mentioned)
+          * "Full Board" (if FB, full board, or all meals mentioned)
+          * "All Inclusive" (if AI, ALL INCLUSIVE, ALL INCLSIVE, all inclusive, or similar mentioned)
+          * "Ultra All Inclusive" (if ultra, premium all inclusive mentioned)
         - Number of adults (usually shown as a number)
         - Number of children (if specified, otherwise 0)
         - Lead passenger/guest name for that room (exact name as shown)
@@ -490,9 +496,16 @@ IMPORTANT: If this is clearly a flight ticket or e-ticket instead of a hotel con
 
 Otherwise, extract all the hotel details as requested, paying special attention to:
 - Multiple rooms if shown in a table format
-- Each room's lead passenger name
-- Room types (like "urban deluxe twin bed")
-- Board basis (BB = Bed & Breakfast, etc.)
+- Each room's lead passenger name  
+- Room types exactly as written (like "STD ROOM", "urban deluxe twin bed", "Dbl", "Standard Room")
+- Board basis - Look carefully for meal plan text that might be abbreviated or contain typos:
+  * "ALL INCLUSIVE", "ALL INCLSIVE", "AI", "All Inc", "All-Inclusive" → use "All Inclusive"
+  * "BB", "Breakfast", "B&B" → use "Bed & Breakfast"
+  * "HB", "Half Board" → use "Half Board"
+  * "FB", "Full Board" → use "Full Board"
+  * If no meal plan visible → use "Room Only"
+- Guest counts (Adult, Child, Infant numbers)
+- Check for room quantity indicators (like "03 Dbl" meaning 3 double rooms)
 """
 
         response = client.chat.completions.create(
