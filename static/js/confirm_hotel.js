@@ -263,9 +263,13 @@ function displayHotelScanResults(data) {
     window.hotelScanData = data;
 }
 
-function fillHotelForm() {
+// Make fillHotelForm globally accessible
+window.fillHotelForm = function() {
     const data = window.hotelScanData;
-    if (!data) return;
+    if (!data) {
+        console.log('fillHotelForm function not found - falling back to basic filling');
+        return;
+    }
     
     // Fill basic hotel information
     const hotelNameInput = document.querySelector('input[name="hotel_name"]');
@@ -322,7 +326,7 @@ function fillHotelForm() {
     
     // Show success message
     alert('Hotel details filled successfully from the voucher!');
-}
+};
 
 function fillRoomData(roomIndex, roomData) {
     // Fill room count if available
