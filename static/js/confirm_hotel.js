@@ -257,7 +257,7 @@ function displayHotelScanResults(data) {
                 <div class="mb-2 p-2 bg-light rounded">
                     <strong>Room ${index + 1}:</strong> ${room.room_type || 'N/A'}<br>
                     <small>
-                        <strong>Room Count:</strong> ${room.room_count || 1} rooms |
+                        <strong>🏨 Room Count:</strong> <span class="fw-bold text-primary">${room.room_count || 1} rooms</span> |
                         <strong>Board:</strong> ${room.board_basis || 'N/A'}<br>
                         <strong>Guests:</strong> ${room.adults || 0} adults, ${room.children || 0} children |
                         <strong>Lead Guest:</strong> ${room.lead_passenger || 'N/A'}
