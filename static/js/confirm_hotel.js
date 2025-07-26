@@ -272,6 +272,7 @@ function displayHotelScanResults(data) {
     
     // Store data for form filling
     window.hotelScanData = data;
+    console.log('Stored hotel scan data:', data);
 }
 
 // Make fillHotelForm globally accessible
