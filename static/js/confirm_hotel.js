@@ -138,6 +138,18 @@ function initializeHotelScanning() {
             analyzeHotelVoucher();
         });
     }
+    
+    // Ensure Fill Form button is properly connected
+    setTimeout(() => {
+        const fillButton = document.getElementById('fillHotelForm');
+        if (fillButton && !fillButton.hasListener) {
+            fillButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                fillHotelForm();
+            });
+            fillButton.hasListener = true;
+        }
+    }, 500);
 }
 
 function analyzeHotelVoucher() {
