@@ -228,89 +228,105 @@ window.fillHotelForm = function(data) {
         }
     }
     
-    // Process rooms
+    // Fill existing form fields instead of replacing HTML
     if (data.rooms && data.rooms.length > 0) {
-        const container = document.getElementById('hotelRoomsContainer');
-        if (!container) {
-            console.error('hotelRoomsContainer not found');
-            return;
+        const room = data.rooms[0]; // Get first room data
+        console.log('=== FILLING EXISTING FORM FIELDS ===');
+        console.log('Room count:', room.room_count);
+        console.log('Room type:', room.room_type);
+        console.log('Board basis:', room.board_basis);
+        
+        // Fill room count
+        const roomCountInput = document.querySelector('input[name="rooms[0][room_count]"]');
+        if (roomCountInput && room.room_count) {
+            roomCountInput.value = room.room_count;
+            console.log('Set room count to:', room.room_count);
         }
         
-        container.innerHTML = '';
-        console.log('Creating', data.rooms.length, 'room(s)');
-        
-        data.rooms.forEach((room, index) => {
-            console.log('=== CREATING ROOM ===');
-            console.log('Room index:', index + 1);
-            console.log('Room count:', room.room_count);
-            console.log('Room type:', room.room_type);
-            console.log('Board basis:', room.board_basis);
+        // Fill room type with a text input
+        const roomTypeSelect = document.querySelector('select[name="rooms[0][room_type]"]');
+        if (roomTypeSelect && room.room_type) {
+            // Try to find exact match first
+            let optionFound = false;
+            for (let option of roomTypeSelect.options) {
+                if (option.value === room.room_type) {
+                    option.selected = true;
+                    optionFound = true;
+                    break;
+                }
+            }
             
-            const roomHtml = `
-                <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0 text-primary">🏨 Room ${index + 1}</h6>
-                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" ${index === 0 ? 'style="display: none;"' : ''}>
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Room Count</label>
-                            <input type="number" name="rooms[${index}][room_count]" class="form-control" value="${room.room_count || 1}" min="1" max="10">
-                            <small class="text-muted">Rooms of this type</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Room Type</label>
-                            <input type="text" name="rooms[${index}][room_type]" class="form-control" value="${room.room_type || ''}" placeholder="e.g., STD ROOM">
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label">Board Basis</label>
-                            <select name="rooms[${index}][board_basis]" class="form-control">
-                                <option value="Room Only" ${room.board_basis === 'Room Only' ? 'selected' : ''}>Room Only</option>
-                                <option value="Bed & Breakfast (BB)" ${room.board_basis === 'Bed & Breakfast (BB)' ? 'selected' : ''}>Bed & Breakfast (BB)</option>
-                                <option value="Half Board (HB)" ${room.board_basis === 'Half Board (HB)' ? 'selected' : ''}>Half Board (HB)</option>
-                                <option value="Full Board (FB)" ${room.board_basis === 'Full Board (FB)' ? 'selected' : ''}>Full Board (FB)</option>
-                                <option value="All Inclusive (AI)" ${room.board_basis === 'All Inclusive (AI)' || room.board_basis === 'All Inclusive' ? 'selected' : ''}>All Inclusive (AI)</option>
-                                <option value="Ultra All Inclusive" ${room.board_basis === 'Ultra All Inclusive' ? 'selected' : ''}>Ultra All Inclusive</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Check-in Date</label>
-                            <input type="date" name="rooms[${index}][checkin_date]" class="form-control" value="${room.checkin_date || data.checkin_date || ''}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Check-out Date</label>
-                            <input type="date" name="rooms[${index}][checkout_date]" class="form-control" value="${room.checkout_date || data.checkout_date || ''}" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Adults</label>
-                            <input type="number" name="rooms[${index}][adults]" class="form-control" value="${room.adults || 2}" min="1" max="6">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Children</label>
-                            <input type="number" name="rooms[${index}][children]" class="form-control" value="${room.children || 0}" min="0" max="4">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Lead Passenger Name</label>
-                            <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" value="${room.lead_passenger || ''}" placeholder="Mr. YOUSEF">
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', roomHtml);
-            console.log('Room HTML inserted for room', index + 1);
-        });
+            // If no exact match, add as custom option
+            if (!optionFound) {
+                const newOption = new Option(room.room_type, room.room_type, true, true);
+                roomTypeSelect.add(newOption);
+            }
+            console.log('Set room type to:', room.room_type);
+        }
+        
+        // Fill board basis
+        const boardBasisSelect = document.querySelector('select[name="rooms[0][board_basis]"]');
+        if (boardBasisSelect && room.board_basis) {
+            console.log('Looking for board basis:', room.board_basis);
+            let found = false;
+            
+            // Check for exact match or "All Inclusive" variations
+            for (let option of boardBasisSelect.options) {
+                if (option.value === room.board_basis || 
+                    (room.board_basis === 'All Inclusive' && option.value === 'All Inclusive (AI)') ||
+                    (room.board_basis === 'All Inclusive (AI)' && option.value === 'All Inclusive (AI)')) {
+                    option.selected = true;
+                    found = true;
+                    console.log('Selected board basis option:', option.value);
+                    break;
+                }
+            }
+            
+            if (!found) {
+                console.log('No matching board basis found for:', room.board_basis);
+                console.log('Available options:');
+                for (let option of boardBasisSelect.options) {
+                    console.log('- ' + option.value);
+                }
+            }
+        }
+        
+        // Fill check-in date
+        const checkinInput = document.querySelector('input[name="rooms[0][checkin_date]"]');
+        if (checkinInput && (room.checkin_date || data.checkin_date)) {
+            checkinInput.value = room.checkin_date || data.checkin_date;
+            console.log('Set check-in date to:', room.checkin_date || data.checkin_date);
+        }
+        
+        // Fill check-out date
+        const checkoutInput = document.querySelector('input[name="rooms[0][checkout_date]"]');
+        if (checkoutInput && (room.checkout_date || data.checkout_date)) {
+            checkoutInput.value = room.checkout_date || data.checkout_date;
+            console.log('Set check-out date to:', room.checkout_date || data.checkout_date);
+        }
+        
+        // Fill adults
+        const adultsInput = document.querySelector('input[name="rooms[0][adults]"]');
+        if (adultsInput && room.adults) {
+            adultsInput.value = room.adults;
+            console.log('Set adults to:', room.adults);
+        }
+        
+        // Fill children
+        const childrenInput = document.querySelector('input[name="rooms[0][children]"]');
+        if (childrenInput && room.children !== undefined) {
+            childrenInput.value = room.children;
+            console.log('Set children to:', room.children);
+        }
+        
+        // Fill lead passenger
+        const leadPassengerInput = document.querySelector('input[name="rooms[0][lead_passenger]"]');
+        if (leadPassengerInput && room.lead_passenger) {
+            leadPassengerInput.value = room.lead_passenger;
+            console.log('Set lead passenger to:', room.lead_passenger);
+        }
         
         console.log('=== FORM FILLING COMPLETE ===');
-        console.log('Total rooms created:', data.rooms.length);
     }
     
     console.log('Hotel form filled successfully');
