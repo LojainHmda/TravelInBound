@@ -138,6 +138,23 @@ function updateRoomRemoveButtons() {
 
 // Room count management functions removed - each room now has its own count field
 
+function resetModalForNewScan() {
+    // Reset modal sections
+    document.getElementById('modalUploadSection').style.display = 'block';
+    document.getElementById('modalLoadingSection').style.display = 'none';
+    document.getElementById('modalResultsSection').style.display = 'none';
+    document.getElementById('modalErrorSection').style.display = 'none';
+    
+    // Clear file input
+    const fileInput = document.getElementById('modalHotelImage');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    
+    // Clear stored data
+    window.hotelScanData = null;
+}
+
 function initializeHotelScanning() {
     // Hotel scanning modal and AI functionality
     const modal = document.getElementById('hotelScannerModal');
@@ -229,8 +246,9 @@ function displayHotelScanResults(data) {
                 <div class="mb-2 p-2 bg-light rounded">
                     <strong>Room ${index + 1}:</strong> ${room.room_type || 'N/A'}<br>
                     <small>
-                        <strong>Board:</strong> ${room.board_basis || 'N/A'} |
-                        <strong>Guests:</strong> ${room.adults || 0} adults, ${room.children || 0} children<br>
+                        <strong>Room Count:</strong> ${room.room_count || 1} rooms |
+                        <strong>Board:</strong> ${room.board_basis || 'N/A'}<br>
+                        <strong>Guests:</strong> ${room.adults || 0} adults, ${room.children || 0} children |
                         <strong>Lead Guest:</strong> ${room.lead_passenger || 'N/A'}
                     </small>
                 </div>
@@ -298,7 +316,9 @@ function fillHotelForm() {
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('hotelScannerModal'));
-    modal.hide();
+    if (modal) {
+        modal.hide();
+    }
     
     // Show success message
     alert('Hotel details filled successfully from the voucher!');
