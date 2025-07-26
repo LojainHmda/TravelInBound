@@ -540,11 +540,12 @@ function populateSegmentFields(segmentData, index) {
         // Populate segment-specific passengers for segment 0
         populateSegmentPassengers(segmentData, 0);
         
-        // Also populate PNR for this segment
+        // Also populate PNR for this segment - try both pnr and booking_reference
         const pnrField = document.getElementsByName('segments[0][pnr]')[0];
-        if (pnrField && segmentData.pnr) {
-            pnrField.value = segmentData.pnr;
-            console.log(`✅ Set segment PNR = ${segmentData.pnr}`);
+        const pnrValue = segmentData.pnr || segmentData.booking_reference || '';
+        if (pnrField && pnrValue) {
+            pnrField.value = pnrValue;
+            console.log(`✅ Set segment PNR = ${pnrValue}`);
         }
     } else {
         // For additional segments, we need to create new segment UI
@@ -929,7 +930,7 @@ function addFlightSegmentUI(segmentData, index) {
                 <div class="col-md-6">
                     <label class="form-label">PNR for this Segment</label>
                     <input type="text" name="segments[${index}][pnr]" class="form-control" 
-                           value="${segmentData.pnr || ''}" placeholder="6-character booking reference">
+                           value="${segmentData.pnr || segmentData.booking_reference || ''}" placeholder="6-character booking reference">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Aircraft Type</label>

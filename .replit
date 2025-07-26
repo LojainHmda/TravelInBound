@@ -45,3 +45,6 @@ externalPort = 80
 [[ports]]
 localPort = 9000
 externalPort = 9000
+
+[agent]
+integrations = ["python_openai==1.0.0", "python_log_in_with_replit==1.0.0"]

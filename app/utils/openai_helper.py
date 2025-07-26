@@ -127,8 +127,15 @@ def analyze_flight_ticket(image_data):
         If a passenger table shows all passengers for all flights, assign them to each segment.
         If document shows different passengers per segment, respect those assignments.
 
-        PASSENGER & BOOKING INFO:
-        - PNR/Booking reference (typically 5-6 alphanumeric characters)
+        PASSENGER & BOOKING INFO - CRITICAL PNR EXTRACTION:
+        **HIGHEST PRIORITY**: Look VERY carefully for PNR/Booking Reference/Confirmation codes:
+        - **Search patterns**: PNR, PN, Booking Reference, Confirmation Code, Record Locator, Reservation Code
+        - **Format variations**: Usually 5-7 alphanumeric characters (e.g., "ABC123", "XVS04V", "PQRST1", "7G4HJ2")
+        - **Common locations**: Header sections, passenger details area, booking summary, confirmation details
+        - **Labels to look for**: "PNR:", "PN:", "Booking Ref:", "Confirmation:", "Record Locator:", "Reservation:"
+        - **Arabic/multilingual**: May appear in Arabic or other languages alongside English
+        - **CRITICAL**: Include PNR in BOTH the global booking_reference AND in each flight segment
+        - **Segment-specific PNRs**: Each flight segment may have its own PNR (especially for connecting flights)
         - Passenger names per flight segment (not just globally)
         - **CRITICAL: E-ticket numbers** - Look VERY carefully for ticket numbers throughout the document:
           * 13-digit numbers (e.g., 1572345678901, 2351234567890)
@@ -166,6 +173,7 @@ def analyze_flight_ticket(image_data):
                     "duration": "2h 15m",
                     "connection_type": "connecting",
                     "aircraft_type": "Boeing 777",
+                    "pnr": "XVS04V",
                     "passenger_names": ["John Smith", "Jane Smith"],
                     "ticket_numbers": ["1572345678901", "1572345678902"]
                 }
