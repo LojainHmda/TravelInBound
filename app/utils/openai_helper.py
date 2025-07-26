@@ -379,6 +379,7 @@ def get_empty_hotel_result_template(error_message=None):
         "nights": "",
         "address": "",
         "phone": "",
+        "room_count": 1,
         "rooms": [
             {
                 "room_type": "",
@@ -426,9 +427,14 @@ def analyze_hotel_voucher(image_data):
         8. Hotel address (if visible)
         9. Hotel phone number (if visible)
 
-        IMPORTANT: If multiple rooms are listed, extract each room separately with its details.
+        IMPORTANT: Pay attention to room quantity indicators like "03 Dbl" which means 3 double rooms.
+        
+        For room extraction:
+        1. First identify the TOTAL NUMBER of rooms from quantity indicators (like "03 Dbl" = 3 rooms)
+        2. Then extract room details for each room type, creating separate entries if multiple rooms of same type
+        
         For each room, include:
-        - Room type: Extract the EXACT room type name as written (e.g., "Urban Deluxe Twin Bed", "Classic Room Single", "Standard Double Room", "Executive Suite", etc.)
+        - Room type: Extract the EXACT room type name as written (e.g., "STD ROOM", "Urban Deluxe Twin Bed", "Dbl", "Standard Double Room", etc.)
         - Board basis: Look for meal plan information and standardize it:
           * "Room Only" (if no meals mentioned)
           * "Bed & Breakfast" (if BB, breakfast, or similar mentioned)
@@ -436,9 +442,9 @@ def analyze_hotel_voucher(image_data):
           * "Full Board" (if FB, full board, or all meals mentioned)
           * "All Inclusive" (if AI, ALL INCLUSIVE, ALL INCLSIVE, all inclusive, or similar mentioned)
           * "Ultra All Inclusive" (if ultra, premium all inclusive mentioned)
-        - Number of adults (usually shown as a number)
-        - Number of children (if specified, otherwise 0)
-        - Lead passenger/guest name for that room (exact name as shown)
+        - Number of adults per room
+        - Number of children per room
+        - Lead passenger/guest name for that room
 
         Return the results in JSON format with these exact keys:
         - hotel_name
@@ -449,6 +455,7 @@ def analyze_hotel_voucher(image_data):
         - nights
         - address
         - phone
+        - room_count (total number of rooms as integer)
         - rooms (array of room objects with keys: room_type, board_basis, adults, children, lead_passenger)
 
         Example for multiple rooms:
@@ -495,17 +502,21 @@ IMPORTANT: If this is clearly a flight ticket or e-ticket instead of a hotel con
 {"error": "This appears to be a flight ticket, not a hotel confirmation. Please upload a hotel booking confirmation."}
 
 Otherwise, extract all the hotel details as requested, paying special attention to:
+- ROOM COUNT: Look for quantity indicators like "03 Dbl" (meaning 3 double rooms) and set room_count accordingly
+- If you see "03 Dbl" create 3 separate room entries, each with room_type "Double Room"
 - Multiple rooms if shown in a table format
-- Each room's lead passenger name  
+- Each room's lead passenger name (may be same person for multiple rooms)
 - Room types exactly as written (like "STD ROOM", "urban deluxe twin bed", "Dbl", "Standard Room")
 - Board basis - Look carefully for meal plan text that might be abbreviated or contain typos:
   * "ALL INCLUSIVE", "ALL INCLSIVE", "AI", "All Inc", "All-Inclusive" → use "All Inclusive"
   * "BB", "Breakfast", "B&B" → use "Bed & Breakfast"
-  * "HB", "Half Board" → use "Half Board"
+  * "HB", "Half Board" → use "Half Board" 
   * "FB", "Full Board" → use "Full Board"
   * If no meal plan visible → use "Room Only"
-- Guest counts (Adult, Child, Infant numbers)
-- Check for room quantity indicators (like "03 Dbl" meaning 3 double rooms)
+- Guest counts (Adult, Child, Infant numbers) - distribute across rooms if total counts given
+- Total guest count may need to be divided across multiple rooms
+
+EXAMPLE: If you see "03 Dbl" with "6 adults, 1 child" total, create 3 room entries with 2 adults each, and put the 1 child in one of the rooms.
 """
 
         response = client.chat.completions.create(

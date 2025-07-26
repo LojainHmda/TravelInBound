@@ -127,6 +127,38 @@ function updateRoomRemoveButtons() {
     });
 }
 
+function updateRoomCount() {
+    const roomCountInput = document.getElementById('roomCount');
+    const targetCount = parseInt(roomCountInput.value) || 1;
+    const container = document.getElementById('hotelRoomsContainer');
+    const currentCount = container.children.length;
+    
+    if (targetCount > currentCount) {
+        // Add rooms
+        for (let i = currentCount; i < targetCount; i++) {
+            addHotelRoom();
+        }
+    } else if (targetCount < currentCount) {
+        // Remove rooms from the end
+        for (let i = currentCount; i > targetCount; i--) {
+            const lastRoom = container.lastElementChild;
+            if (lastRoom) {
+                lastRoom.remove();
+            }
+        }
+        updateRoomNumbers();
+        updateRoomRemoveButtons();
+    }
+}
+
+function setRoomCount(count) {
+    const roomCountInput = document.getElementById('roomCount');
+    if (roomCountInput) {
+        roomCountInput.value = count;
+        updateRoomCount();
+    }
+}
+
 function initializeHotelScanning() {
     // Hotel scanning modal and AI functionality
     const modal = document.getElementById('hotelScannerModal');
@@ -264,82 +296,20 @@ function fillHotelForm() {
         }
     }
     
-    // Clear existing rooms and populate with scanned data
+    // Set room count first
+    if (data.room_count) {
+        setRoomCount(data.room_count);
+    } else if (data.rooms && data.rooms.length > 0) {
+        setRoomCount(data.rooms.length);
+    }
+    
+    // Populate rooms with scanned data
     if (data.rooms && data.rooms.length > 0) {
-        const container = document.getElementById('hotelRoomsContainer');
-        container.innerHTML = ''; // Clear existing rooms
-        
         data.rooms.forEach((room, index) => {
-            // Add room using existing function
-            if (index === 0) {
-                // Create first room
-                const firstRoomHtml = `
-                    <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 text-primary">🏨 Room 1</h6>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" style="display: none;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Room Type</label>
-                                <select name="rooms[0][room_type]" class="form-control">
-                                    <option value="">Select Room Type</option>
-                                    <option value="Single Room">Single Room</option>
-                                    <option value="Double Room">Double Room</option>
-                                    <option value="Twin Room">Twin Room</option>
-                                    <option value="Triple Room">Triple Room</option>
-                                    <option value="Family Room">Family Room</option>
-                                    <option value="Suite">Suite</option>
-                                    <option value="Junior Suite">Junior Suite</option>
-                                    <option value="Executive Suite">Executive Suite</option>
-                                    <option value="Presidential Suite">Presidential Suite</option>
-                                    <option value="Connecting Rooms">Connecting Rooms</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Board Basis</label>
-                                <select name="rooms[0][board_basis]" class="form-control">
-                                    <option value="Room Only">Room Only</option>
-                                    <option value="Bed & Breakfast (BB)">Bed & Breakfast (BB)</option>
-                                    <option value="Half Board (HB)">Half Board (HB)</option>
-                                    <option value="Full Board (FB)">Full Board (FB)</option>
-                                    <option value="All Inclusive (AI)">All Inclusive (AI)</option>
-                                    <option value="Ultra All Inclusive">Ultra All Inclusive</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Adults</label>
-                                <input type="number" name="rooms[0][adults]" class="form-control" value="2" min="1" max="6">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Children</label>
-                                <input type="number" name="rooms[0][children]" class="form-control" value="0" min="0" max="4">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Lead Passenger Name</label>
-                                <input type="text" name="rooms[0][lead_passenger]" class="form-control" placeholder="Mr. YOUSEF">
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', firstRoomHtml);
-            } else {
-                addHotelRoom();
-            }
-            
-            // Fill room data
             fillRoomData(index, room);
         });
-        
-        updateRoomRemoveButtons();
     }
+
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('hotelScannerModal'));
