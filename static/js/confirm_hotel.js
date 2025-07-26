@@ -275,26 +275,21 @@ function fillHotelForm() {
         }
     }
     
-    // Clear existing rooms except the first one and add new ones based on scanned data
+    // Clear existing rooms and create new ones based on scanned data
     if (data.rooms && data.rooms.length > 0) {
         const container = document.getElementById('hotelRoomsContainer');
         
         // Clear all existing rooms
         container.innerHTML = '';
         
-        // Add rooms based on scanned data
+        // For each room type detected, create room cards
         data.rooms.forEach((room, index) => {
-            if (index === 0) {
-                // Create first room
-                const firstRoomHtml = createRoomHtml(0);
-                container.insertAdjacentHTML('beforeend', firstRoomHtml);
-            } else {
-                // Add additional rooms
-                addHotelRoom();
-            }
+            // Create room card
+            const roomHtml = createRoomHtml(index);
+            container.insertAdjacentHTML('beforeend', roomHtml);
             
-            // Fill room data
-            setTimeout(() => fillRoomData(index, room), 100);
+            // Fill room data immediately
+            fillRoomData(index, room);
         });
         
         updateRoomRemoveButtons();
