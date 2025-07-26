@@ -480,15 +480,22 @@ class AirlineVoucherGenerator:
                         # Right side: Passenger details
                         passenger_ticket_info += '<div class="passenger-details-right">'
                         
-                        # Display passengers with their individual ticket numbers lined up
+                        # Display passengers with their individual ticket numbers and types lined up
                         if segment_passengers:
                             passenger_ticket_info += '<div class="passenger-names"><strong>Passengers:</strong><br>'
+                            segment_passenger_types = segment.get('passenger_types', [])
                             for i, passenger_name in enumerate(segment_passengers):
                                 # Get corresponding ticket number for this passenger
                                 ticket_number = ''
                                 if i < len(segment_ticket_numbers) and segment_ticket_numbers[i]:
                                     ticket_number = f' (Ticket: {segment_ticket_numbers[i]})'
-                                passenger_ticket_info += f'• {passenger_name}{ticket_number}<br>'
+                                
+                                # Get passenger type (default to Adult if not provided)
+                                passenger_type = 'Adult'
+                                if i < len(segment_passenger_types) and segment_passenger_types[i]:
+                                    passenger_type = segment_passenger_types[i]
+                                
+                                passenger_ticket_info += f'• {passenger_name} ({passenger_type}){ticket_number}<br>'
                             passenger_ticket_info += '</div>'
                         
                         # Display PNR in bold
@@ -967,22 +974,26 @@ class AirlineVoucherGenerator:
         if flight_data and flight_data.get('segments'):
             # First, try to get passenger data from the most complete confirmation
             best_passenger_names = []
+            best_passenger_types = []
             best_ticket_numbers = []
             
             # Look for confirmations with both passenger names and ticket numbers
             for segment in flight_data['segments']:
                 if 'passenger_names' in segment and segment['passenger_names']:
                     segment_passenger_names = segment['passenger_names']
+                    segment_passenger_types = segment.get('passenger_types', [])
                     segment_ticket_numbers = segment.get('ticket_numbers', [])
                     
                     # Use this segment if it has more complete data
                     if len(segment_passenger_names) > len(best_passenger_names):
                         best_passenger_names = segment_passenger_names
+                        best_passenger_types = segment_passenger_types
                         best_ticket_numbers = segment_ticket_numbers
             
             # If no segment-specific data, try global flight data
             if not best_passenger_names and flight_data.get('passenger_names'):
                 best_passenger_names = flight_data['passenger_names']
+                best_passenger_types = flight_data.get('passenger_types', [])
                 best_ticket_numbers = flight_data.get('ticket_numbers', [])
             
             # Create passenger list with sequential ticket assignment
@@ -994,9 +1005,14 @@ class AirlineVoucherGenerator:
                         if i < len(best_ticket_numbers) and best_ticket_numbers[i]:
                             ticket_number = best_ticket_numbers[i]
                         
+                        # Get passenger type (default to Adult if not provided)
+                        passenger_type = 'Adult'
+                        if i < len(best_passenger_types) and best_passenger_types[i]:
+                            passenger_type = best_passenger_types[i]
+                        
                         passengers.append({
                             'name': name,
-                            'type': 'Adult',
+                            'type': passenger_type,
                             'ticket_number': ticket_number
                         })
                         added_passengers.add(name)

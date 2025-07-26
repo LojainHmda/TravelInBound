@@ -29,6 +29,7 @@ def get_empty_result_template(error_message=None):
         "arrival_time": "",
         "booking_reference": "",
         "passenger_names": [],
+        "passenger_types": [],
         "ticket_numbers": []
     }
 
@@ -115,7 +116,8 @@ def analyze_flight_ticket(image_data):
         8. Connection type ("direct", "connecting", "layover")
         9. Aircraft type if visible (e.g., "Boeing 777", "Airbus A350")
         10. **PASSENGERS FOR THIS SEGMENT**: Names of passengers traveling on this specific flight
-        11. **TICKET NUMBERS FOR THIS SEGMENT**: Ticket numbers for passengers on this specific flight
+        11. **PASSENGER TYPES FOR THIS SEGMENT**: Age classification for each passenger (Adult/Child/Infant)
+        12. **TICKET NUMBERS FOR THIS SEGMENT**: Ticket numbers for passengers on this specific flight
 
         SEGMENT-SPECIFIC PASSENGER ASSIGNMENT:
         **CRITICAL**: Passengers and ticket numbers must be assigned to EACH FLIGHT SEGMENT separately.
@@ -136,6 +138,12 @@ def analyze_flight_ticket(image_data):
         - **Arabic/multilingual**: May appear in Arabic or other languages alongside English
         - **CRITICAL**: Include PNR in BOTH the global booking_reference AND in each flight segment
         - **Segment-specific PNRs**: Each flight segment may have its own PNR (especially for connecting flights)
+        - **PASSENGER TYPES**: Identify passenger age categories for each passenger:
+          * **Adult**: Passengers 12+ years old, or if no age specified assume Adult
+          * **Child**: Passengers 2-11 years old, look for "CHD", "Child", age indicators
+          * **Infant**: Passengers under 2 years old, look for "INF", "Infant", "Baby"
+          * **Default**: If no age information found, classify as "Adult"
+          * **Sequential matching**: passenger_types array must match passenger_names order
         - Passenger names per flight segment (not just globally)
         - **CRITICAL: E-ticket numbers** - Look VERY carefully for ticket numbers throughout the document:
           * 13-digit numbers (e.g., 1572345678901, 2351234567890)
@@ -156,7 +164,7 @@ def analyze_flight_ticket(image_data):
         - Seat assignments if shown
 
         OUTPUT FORMAT - JSON ONLY:
-        **CRITICAL**: For each segment, passenger_names and ticket_numbers arrays MUST be in matching sequential order
+        **CRITICAL**: For each segment, passenger_names, passenger_types, and ticket_numbers arrays MUST be in matching sequential order
         {
             "flight_type": "one_way|round_trip|multi_city",
             "segments": [
@@ -174,8 +182,9 @@ def analyze_flight_ticket(image_data):
                     "connection_type": "connecting",
                     "aircraft_type": "Boeing 777",
                     "pnr": "XVS04V",
-                    "passenger_names": ["John Smith", "Jane Smith"],
-                    "ticket_numbers": ["1572345678901", "1572345678902"]
+                    "passenger_names": ["John Smith", "Jane Smith", "Baby Smith"],
+                    "passenger_types": ["Adult", "Adult", "Infant"],
+                    "ticket_numbers": ["1572345678901", "1572345678902", "1572345678903"]
                 }
             ],
             "booking_reference": "ABC123",
@@ -281,6 +290,7 @@ def analyze_flight_ticket(image_data):
                         "segments": segments,
                         "booking_reference": result.get("booking_reference", ""),
                         "passenger_names": result.get("passenger_names", []),
+                        "passenger_types": result.get("passenger_types", []),
                         "ticket_numbers": result.get("ticket_numbers", []),
                         "travel_class": "",
                         "terminal": "",
@@ -294,6 +304,7 @@ def analyze_flight_ticket(image_data):
                         "segments": [],
                         "booking_reference": "",
                         "passenger_names": [],
+                        "passenger_types": [],
                         "ticket_numbers": [],
                         "travel_class": "",
                         "terminal": "",

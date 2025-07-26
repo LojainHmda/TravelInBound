@@ -109,6 +109,14 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
 - **Error Handling**: Comprehensive logging and error tracking
 
 ## Recent Changes
+- July 26, 2025: COMPLETED PASSENGER TYPE IDENTIFICATION SYSTEM
+  -  ✅ UI ENHANCEMENT: Added passenger type dropdown (Adult/Child/Infant) to all flight segment passenger input fields
+  - ✅ BACKEND PROCESSING: Updated segments processing to handle passenger_types arrays from form submissions  
+  - ✅ AI INTEGRATION: Enhanced OpenAI prompts and data structures to extract and store passenger types from documents
+  - ✅ VOUCHER DISPLAY: Updated airline voucher generator to show passenger types in both segment lists and passenger table
+  - ✅ SEQUENTIAL MATCHING: Ensured passenger_names, passenger_types, and ticket_numbers arrays maintain matching order
+  -  ✅ BACKWARD COMPATIBILITY: Added default 'Adult' type for existing data and missing passenger type information
+  - System now supports complete passenger classification with age categories for accurate travel documentation
 - July 24, 2025: IMPLEMENTED SEGMENT-LEVEL PASSENGER ASSIGNMENT SYSTEM
   - ✅ FLIGHT FORM ENHANCEMENT: Added passenger and ticket number inputs to each flight segment instead of global assignment
   - ✅ BACKEND PROCESSING: Updated flight confirmation backend to process passengers per segment (segments[0][passenger_names][], segments[0][ticket_numbers][])

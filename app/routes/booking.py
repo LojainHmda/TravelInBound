@@ -1064,8 +1064,9 @@ def confirm_service(item_id):
             
             # Process all segments from the form
             while f'segments[{segment_index}][airline]' in request.form:
-                # Get segment-specific passenger names and ticket numbers
+                # Get segment-specific passenger names, types, and ticket numbers
                 segment_passenger_names = request.form.getlist(f'segments[{segment_index}][passenger_names][]')
+                segment_passenger_types = request.form.getlist(f'segments[{segment_index}][passenger_types][]')
                 segment_ticket_numbers = request.form.getlist(f'segments[{segment_index}][ticket_numbers][]')
                 
                 segment_data = {
@@ -1081,6 +1082,7 @@ def confirm_service(item_id):
                     'aircraft_type': request.form.get(f'segments[{segment_index}][aircraft_type]', ''),
                     'pnr': request.form.get(f'segments[{segment_index}][pnr]', ''),
                     'passenger_names': segment_passenger_names,
+                    'passenger_types': segment_passenger_types,
                     'ticket_numbers': segment_ticket_numbers,
                 }
                 
@@ -1143,37 +1145,55 @@ def confirm_service(item_id):
                 'aircraft_type': segments[0]['aircraft_type'] if segments else '',
             }
             
-            # Get global passenger names and ticket numbers (for backward compatibility)
+            # Get global passenger names, types, and ticket numbers (for backward compatibility)
             global_passenger_names = request.form.getlist('passenger_names[]')
+            global_passenger_types = request.form.getlist('passenger_types[]')
             global_ticket_numbers = request.form.getlist('ticket_numbers[]')
             
             # If global passengers provided but no segment-specific passengers, assign globally to all segments
             if global_passenger_names and not any(seg.get('passenger_names') for seg in segments):
                 print("Assigning global passengers to all segments for backward compatibility", file=sys.stderr)
+                # Ensure we have passenger types for all passengers (default to Adult if missing)
+                if len(global_passenger_types) < len(global_passenger_names):
+                    global_passenger_types.extend(['Adult'] * (len(global_passenger_names) - len(global_passenger_types)))
+                
                 for segment in segments:
                     segment['passenger_names'] = global_passenger_names
+                    segment['passenger_types'] = global_passenger_types
                     segment['ticket_numbers'] = global_ticket_numbers
                 
                 flight_details['passenger_names'] = global_passenger_names
+                flight_details['passenger_types'] = global_passenger_types
                 flight_details['ticket_numbers'] = global_ticket_numbers
             else:
                 # Collect all unique passengers from all segments for global list
                 all_passengers = set()
+                all_passenger_types = []
                 all_tickets = []
                 
                 for segment in segments:
                     seg_passengers = segment.get('passenger_names', [])
+                    seg_types = segment.get('passenger_types', [])
                     seg_tickets = segment.get('ticket_numbers', [])
                     
-                    for passenger in seg_passengers:
+                    # Ensure passenger types array matches passenger names length
+                    if len(seg_types) < len(seg_passengers):
+                        seg_types.extend(['Adult'] * (len(seg_passengers) - len(seg_types)))
+                        segment['passenger_types'] = seg_types
+                    
+                    for i, passenger in enumerate(seg_passengers):
                         if passenger and passenger not in all_passengers:
                             all_passengers.add(passenger)
+                            # Add corresponding passenger type (default to Adult if not provided)
+                            passenger_type = seg_types[i] if i < len(seg_types) else 'Adult'
+                            all_passenger_types.append(passenger_type)
                     
                     for ticket in seg_tickets:
                         if ticket and ticket not in all_tickets:
                             all_tickets.append(ticket)
                 
                 flight_details['passenger_names'] = list(all_passengers)
+                flight_details['passenger_types'] = all_passenger_types
                 flight_details['ticket_numbers'] = all_tickets
                 print(f"Collected {len(all_passengers)} unique passengers from all segments", file=sys.stderr)
             
