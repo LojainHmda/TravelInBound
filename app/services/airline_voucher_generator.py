@@ -420,7 +420,7 @@ class AirlineVoucherGenerator:
                     arr_code = ''
                     
                     # For departure airport
-                    if 'Queen Alia' in departure_airport:
+                    if 'Queen Alia' in departure_airport or 'Amman' in departure_airport:
                         dep_code = 'AMM'
                     elif 'Abu Dhabi' in departure_airport or 'Dhabi' in departure_airport:
                         dep_code = 'AUH'
@@ -434,6 +434,34 @@ class AirlineVoucherGenerator:
                         dep_code = 'IST'
                     elif 'London' in departure_airport:
                         dep_code = 'LHR'
+                    elif 'Antalya' in departure_airport:
+                        dep_code = 'AYT'
+                    elif 'Trabzon' in departure_airport:
+                        dep_code = 'TZX'
+                    elif 'Bodrum' in departure_airport:
+                        dep_code = 'BJV'
+                    elif 'Dalaman' in departure_airport:
+                        dep_code = 'DLM'
+                    elif 'Izmir' in departure_airport:
+                        dep_code = 'ADB'
+                    elif 'Ankara' in departure_airport:
+                        dep_code = 'ESB'
+                    elif 'Gaziantep' in departure_airport:
+                        dep_code = 'GZT'
+                    elif 'Kayseri' in departure_airport:
+                        dep_code = 'ASR'
+                    elif 'Adana' in departure_airport:
+                        dep_code = 'ADA'
+                    elif 'Riyadh' in departure_airport:
+                        dep_code = 'RUH'
+                    elif 'Jeddah' in departure_airport:
+                        dep_code = 'JED'
+                    elif 'Kuwait' in departure_airport:
+                        dep_code = 'KWI'
+                    elif 'Bahrain' in departure_airport:
+                        dep_code = 'BAH'
+                    elif 'Muscat' in departure_airport:
+                        dep_code = 'MCT'
                     else:
                         # Fallback: look for 3-letter uppercase codes in the text
                         import re
@@ -441,7 +469,7 @@ class AirlineVoucherGenerator:
                         dep_code = codes[0] if codes else departure_airport[:3].upper()
                     
                     # For arrival airport
-                    if 'Queen Alia' in arrival_airport:
+                    if 'Queen Alia' in arrival_airport or 'Amman' in arrival_airport:
                         arr_code = 'AMM'
                     elif 'Abu Dhabi' in arrival_airport or 'Dhabi' in arrival_airport:
                         arr_code = 'AUH'
@@ -455,6 +483,34 @@ class AirlineVoucherGenerator:
                         arr_code = 'IST'
                     elif 'London' in arrival_airport:
                         arr_code = 'LHR'
+                    elif 'Antalya' in arrival_airport:
+                        arr_code = 'AYT'
+                    elif 'Trabzon' in arrival_airport:
+                        arr_code = 'TZX'
+                    elif 'Bodrum' in arrival_airport:
+                        arr_code = 'BJV'
+                    elif 'Dalaman' in arrival_airport:
+                        arr_code = 'DLM'
+                    elif 'Izmir' in arrival_airport:
+                        arr_code = 'ADB'
+                    elif 'Ankara' in arrival_airport:
+                        arr_code = 'ESB'
+                    elif 'Gaziantep' in arrival_airport:
+                        arr_code = 'GZT'
+                    elif 'Kayseri' in arrival_airport:
+                        arr_code = 'ASR'
+                    elif 'Adana' in arrival_airport:
+                        arr_code = 'ADA'
+                    elif 'Riyadh' in arrival_airport:
+                        arr_code = 'RUH'
+                    elif 'Jeddah' in arrival_airport:
+                        arr_code = 'JED'
+                    elif 'Kuwait' in arrival_airport:
+                        arr_code = 'KWI'
+                    elif 'Bahrain' in arrival_airport:
+                        arr_code = 'BAH'
+                    elif 'Muscat' in arrival_airport:
+                        arr_code = 'MCT'
                     else:
                         # Fallback: look for 3-letter uppercase codes in the text
                         import re
