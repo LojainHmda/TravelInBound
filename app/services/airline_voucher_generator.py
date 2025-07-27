@@ -415,107 +415,81 @@ class AirlineVoucherGenerator:
                     departure_time = str(segment.get('departure_time', '')).strip()
                     arrival_time = str(segment.get('arrival_time', '')).strip()
                     
-                    # Get airport codes for display - extract 3-letter codes properly
-                    dep_code = ''
-                    arr_code = ''
-                    
-                    # For departure airport
-                    if 'Queen Alia' in departure_airport or 'Amman' in departure_airport:
-                        dep_code = 'AMM'
-                    elif 'Abu Dhabi' in departure_airport or 'Dhabi' in departure_airport:
-                        dep_code = 'AUH'
-                    elif 'Doha' in departure_airport or 'Hamad' in departure_airport:
-                        dep_code = 'DOH'
-                    elif 'Dubai' in departure_airport:
-                        dep_code = 'DXB'
-                    elif 'Cairo' in departure_airport:
-                        dep_code = 'CAI'
-                    elif 'Istanbul' in departure_airport:
-                        dep_code = 'IST'
-                    elif 'London' in departure_airport:
-                        dep_code = 'LHR'
-                    elif 'Antalya' in departure_airport:
-                        dep_code = 'AYT'
-                    elif 'Trabzon' in departure_airport:
-                        dep_code = 'TZX'
-                    elif 'Bodrum' in departure_airport:
-                        dep_code = 'BJV'
-                    elif 'Dalaman' in departure_airport:
-                        dep_code = 'DLM'
-                    elif 'Izmir' in departure_airport:
-                        dep_code = 'ADB'
-                    elif 'Ankara' in departure_airport:
-                        dep_code = 'ESB'
-                    elif 'Gaziantep' in departure_airport:
-                        dep_code = 'GZT'
-                    elif 'Kayseri' in departure_airport:
-                        dep_code = 'ASR'
-                    elif 'Adana' in departure_airport:
-                        dep_code = 'ADA'
-                    elif 'Riyadh' in departure_airport:
-                        dep_code = 'RUH'
-                    elif 'Jeddah' in departure_airport:
-                        dep_code = 'JED'
-                    elif 'Kuwait' in departure_airport:
-                        dep_code = 'KWI'
-                    elif 'Bahrain' in departure_airport:
-                        dep_code = 'BAH'
-                    elif 'Muscat' in departure_airport:
-                        dep_code = 'MCT'
-                    else:
-                        # Fallback: look for 3-letter uppercase codes in the text
+                    # Get airport codes for display - use comprehensive lookup
+                    def get_airport_code(airport_name):
+                        """Get proper IATA airport code from airport name"""
+                        airport_lower = airport_name.lower()
+                        
+                        # Comprehensive airport code mapping
+                        airport_mapping = {
+                            # Middle East
+                            'queen alia': 'AMM', 'amman': 'AMM',
+                            'abu dhabi': 'AUH', 'dhabi': 'AUH',
+                            'doha': 'DOH', 'hamad': 'DOH',
+                            'dubai': 'DXB',
+                            'riyadh': 'RUH',
+                            'jeddah': 'JED',
+                            'kuwait': 'KWI',
+                            'bahrain': 'BAH',
+                            'muscat': 'MCT',
+                            'cairo': 'CAI',
+                            
+                            # Turkey
+                            'antalya': 'AYT',
+                            'trabzon': 'TZX',
+                            'bodrum': 'BJV',
+                            'dalaman': 'DLM',
+                            'izmir': 'ADB',
+                            'ankara': 'ESB',
+                            'gaziantep': 'GZT',
+                            'kayseri': 'ASR',
+                            'adana': 'ADA',
+                            'istanbul': 'IST',
+                            'sabiha': 'SAW',
+                            
+                            # Europe
+                            'london': 'LHR',
+                            'paris': 'CDG',
+                            'amsterdam': 'AMS',
+                            'frankfurt': 'FRA',
+                            'rome': 'FCO',
+                            'barcelona': 'BCN',
+                            'madrid': 'MAD',
+                            'vienna': 'VIE',
+                            'zurich': 'ZUR',
+                            
+                            # Asia
+                            'bangkok': 'BKK',
+                            'singapore': 'SIN',
+                            'kuala lumpur': 'KUL',
+                            'hong kong': 'HKG',
+                            'manila': 'MNL',
+                            'jakarta': 'CGK',
+                            
+                            # Africa
+                            'casablanca': 'CMN',
+                            'tunis': 'TUN',
+                            'algiers': 'ALG',
+                            'addis ababa': 'ADD',
+                            'nairobi': 'NBO',
+                        }
+                        
+                        # Look for matches in the airport name
+                        for keyword, code in airport_mapping.items():
+                            if keyword in airport_lower:
+                                return code
+                        
+                        # Fallback: look for existing 3-letter codes in the text
                         import re
-                        codes = re.findall(r'\b[A-Z]{3}\b', departure_airport)
-                        dep_code = codes[0] if codes else departure_airport[:3].upper()
+                        codes = re.findall(r'\b[A-Z]{3}\b', airport_name)
+                        if codes:
+                            return codes[0]
+                        
+                        # Last resort: return first 3 letters (but this should rarely happen now)
+                        return airport_name[:3].upper()
                     
-                    # For arrival airport
-                    if 'Queen Alia' in arrival_airport or 'Amman' in arrival_airport:
-                        arr_code = 'AMM'
-                    elif 'Abu Dhabi' in arrival_airport or 'Dhabi' in arrival_airport:
-                        arr_code = 'AUH'
-                    elif 'Doha' in arrival_airport or 'Hamad' in arrival_airport:
-                        arr_code = 'DOH'
-                    elif 'Dubai' in arrival_airport:
-                        arr_code = 'DXB'
-                    elif 'Cairo' in arrival_airport:
-                        arr_code = 'CAI'
-                    elif 'Istanbul' in arrival_airport:
-                        arr_code = 'IST'
-                    elif 'London' in arrival_airport:
-                        arr_code = 'LHR'
-                    elif 'Antalya' in arrival_airport:
-                        arr_code = 'AYT'
-                    elif 'Trabzon' in arrival_airport:
-                        arr_code = 'TZX'
-                    elif 'Bodrum' in arrival_airport:
-                        arr_code = 'BJV'
-                    elif 'Dalaman' in arrival_airport:
-                        arr_code = 'DLM'
-                    elif 'Izmir' in arrival_airport:
-                        arr_code = 'ADB'
-                    elif 'Ankara' in arrival_airport:
-                        arr_code = 'ESB'
-                    elif 'Gaziantep' in arrival_airport:
-                        arr_code = 'GZT'
-                    elif 'Kayseri' in arrival_airport:
-                        arr_code = 'ASR'
-                    elif 'Adana' in arrival_airport:
-                        arr_code = 'ADA'
-                    elif 'Riyadh' in arrival_airport:
-                        arr_code = 'RUH'
-                    elif 'Jeddah' in arrival_airport:
-                        arr_code = 'JED'
-                    elif 'Kuwait' in arrival_airport:
-                        arr_code = 'KWI'
-                    elif 'Bahrain' in arrival_airport:
-                        arr_code = 'BAH'
-                    elif 'Muscat' in arrival_airport:
-                        arr_code = 'MCT'
-                    else:
-                        # Fallback: look for 3-letter uppercase codes in the text
-                        import re
-                        codes = re.findall(r'\b[A-Z]{3}\b', arrival_airport)
-                        arr_code = codes[0] if codes else arrival_airport[:3].upper()
+                    dep_code = get_airport_code(departure_airport)
+                    arr_code = get_airport_code(arrival_airport)
                     
                     # Get passenger names, ticket numbers array, and PNR for this specific segment
                     segment_passengers = segment.get('passenger_names', [])
