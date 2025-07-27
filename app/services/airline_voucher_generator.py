@@ -556,7 +556,12 @@ class AirlineVoucherGenerator:
                 <tbody>"""
             
             # Generate multiple hotel rows based on room_count or room data
+            print(f"DEBUG: Checking hotel voucher generation logic")
+            print(f"DEBUG: hotel_data contains room_counts: {'room_counts' in hotel_data}")
+            print(f"DEBUG: hotel_data contains total_room_count: {'total_room_count' in hotel_data}")
+            
             if 'room_counts' in hotel_data and hotel_data['room_counts']:
+                print(f"DEBUG: Using detailed room data with room_counts: {hotel_data['room_counts']}")
                 # Use detailed room data with individual room counts
                 for i, room_count in enumerate(hotel_data['room_counts']):
                     for room_num in range(room_count):
@@ -564,6 +569,7 @@ class AirlineVoucherGenerator:
                         board_basis = hotel_data['board_bases'][i] if i < len(hotel_data.get('board_bases', [])) else hotel_data.get('meal_plan', 'Room Only')
                         lead_passenger = hotel_data['lead_passengers'][i] if i < len(hotel_data.get('lead_passengers', [])) else (customer.first_name + ' ' + customer.last_name if customer else 'Guest')
                         
+                        print(f"DEBUG: Adding room row {room_num+1} of {room_count} for room type {i}")
                         html_content += f"""
                     <tr>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
@@ -575,8 +581,10 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
                     </tr>"""
             elif 'total_room_count' in hotel_data and hotel_data['total_room_count'] > 1:
+                print(f"DEBUG: Using total_room_count: {hotel_data['total_room_count']}")
                 # Generate multiple rows based on total room count
                 for room_num in range(hotel_data['total_room_count']):
+                    print(f"DEBUG: Adding room row {room_num+1} of {hotel_data['total_room_count']}")
                     html_content += f"""
                     <tr>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
@@ -588,6 +596,7 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
                     </tr>"""
             else:
+                print(f"DEBUG: Using default single room row")
                 # Default single room row
                 html_content += f"""
                     <tr>
@@ -782,6 +791,8 @@ class AirlineVoucherGenerator:
                     print(f"DEBUG: Successfully parsed JSON from notes")
                     print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
                     print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
+                    print(f"DEBUG: Room count in parsed_data: '{parsed_data.get('room_count', 'NOT FOUND')}'")
+                    print(f"DEBUG: Rooms data in parsed_data: '{parsed_data.get('rooms', 'NOT FOUND')}'")
                     
                     # Use real hotel name from confirmation
                     if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
@@ -846,6 +857,9 @@ class AirlineVoucherGenerator:
                             hotel_data['room_counts'] = room_counts
                             hotel_data['total_room_count'] = sum(room_counts)
                             
+                            print(f"DEBUG: Set room_counts: {room_counts}")
+                            print(f"DEBUG: Set total_room_count: {sum(room_counts)}")
+                            
                             # Use first lead passenger for the main display
                             if lead_passengers:
                                 hotel_data['primary_guest'] = lead_passengers[0]
@@ -881,6 +895,12 @@ class AirlineVoucherGenerator:
                         room_count = int(parsed_data['room_count'])
                         if room_count > 1:
                             hotel_data['total_room_count'] = room_count
+                            print(f"DEBUG: Set total_room_count from top-level: {room_count}")
+                    
+                    # Log final hotel_data for debugging
+                    print(f"DEBUG: Final hotel_data keys: {list(hotel_data.keys())}")
+                    print(f"DEBUG: Final total_room_count: {hotel_data.get('total_room_count', 'NOT SET')}")
+                    print(f"DEBUG: Final room_counts: {hotel_data.get('room_counts', 'NOT SET')}")
                                 
                 except (json.JSONDecodeError, TypeError) as e:
                     print(f"DEBUG: Failed to parse JSON from notes: {e}")
