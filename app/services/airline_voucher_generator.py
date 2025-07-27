@@ -919,14 +919,28 @@ class AirlineVoucherGenerator:
             try:
                 from datetime import datetime
                 checkin_str = hotel.get('checkin_date', 'N/A')
+                print(f"DEBUG: Hotel '{hotel.get('name', 'Unknown')}' has check-in date: '{checkin_str}'")
                 if checkin_str == 'N/A':
+                    print(f"DEBUG: Hotel '{hotel.get('name', 'Unknown')}' has no date, using datetime.min")
                     return datetime.min  # Put hotels without dates at the beginning
                 # Parse date format like "27-Jul-2025"
-                return datetime.strptime(checkin_str, "%d-%b-%Y")
-            except:
+                parsed_date = datetime.strptime(checkin_str, "%d-%b-%Y")
+                print(f"DEBUG: Hotel '{hotel.get('name', 'Unknown')}' parsed date: {parsed_date}")
+                return parsed_date
+            except Exception as e:
+                print(f"DEBUG: Hotel '{hotel.get('name', 'Unknown')}' date parsing failed: {e}, using datetime.min")
                 return datetime.min  # If parsing fails, put at beginning
         
+        print(f"DEBUG: Before sorting - hotels order:")
+        for i, hotel in enumerate(all_hotels):
+            print(f"DEBUG: Hotel {i+1}: '{hotel.get('name', 'Unknown')}' - {hotel.get('checkin_date', 'N/A')}")
+        
         all_hotels.sort(key=get_checkin_date)
+        
+        print(f"DEBUG: After sorting - hotels order:")
+        for i, hotel in enumerate(all_hotels):
+            print(f"DEBUG: Hotel {i+1}: '{hotel.get('name', 'Unknown')}' - {hotel.get('checkin_date', 'N/A')}")
+        
         print(f"DEBUG: Sorted {len(all_hotels)} hotels by check-in date")
         
         # Return all hotels or just the first one for backward compatibility
