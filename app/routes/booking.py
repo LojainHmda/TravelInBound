@@ -994,7 +994,11 @@ def confirm_service(item_id):
         if action == 'save_request':
             # Save as draft without validation - just save the data
             print("Saving as request (draft mode) - no validation required", file=sys.stderr)
-            # Keep current status, don't change to CONFIRMED
+            # Keep current status, don't change to CONFIRMED, but allow it to be confirmable later
+            # If service is already CONFIRMED, move it back to IN_PROGRESS so it can be confirmed again
+            if service_item.status == STATUS_CONFIRMED:
+                service_item.status = STATUS_IN_PROGRESS
+                print(f"Moving service item {service_item.id} from CONFIRMED back to IN_PROGRESS for re-confirmation", file=sys.stderr)
         elif action == 'confirm':
             # Full confirmation with validation
             print("Full confirmation mode - applying validation", file=sys.stderr)
@@ -1010,8 +1014,12 @@ def confirm_service(item_id):
             elif service_item.status == STATUS_REQUEST:
                 # Allow confirmation from REQUEST status too (for the checkbox flow)
                 service_item.status = STATUS_CONFIRMED
+            elif service_item.status == STATUS_CONFIRMED:
+                # Allow re-confirmation of already confirmed items
+                service_item.status = STATUS_CONFIRMED
+                print(f"Re-confirming already confirmed service item {service_item.id}", file=sys.stderr)
             else:
-                flash('Service item must be in REQUEST or IN_PROGRESS status before it can be confirmed.', 'danger')
+                flash('Service item must be in REQUEST, IN_PROGRESS, or CONFIRMED status before it can be confirmed.', 'danger')
                 return redirect(url_for('booking.details', booking_id=service_item.booking_id))
         
         # Check if a confirmation document already exists
