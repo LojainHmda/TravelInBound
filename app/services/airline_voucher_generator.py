@@ -533,7 +533,49 @@ class AirlineVoucherGenerator:
         
         # Hotels Section (if hotel data exists)
         if hotel_data:
-            html_content += f"""
+            # Check if we have multiple hotels
+            if 'multiple_hotels' in hotel_data:
+                print(f"DEBUG: Processing {hotel_data['hotel_count']} separate hotels")
+                hotels_list = hotel_data['multiple_hotels']
+                
+                # Generate section for each hotel separately
+                for hotel_index, single_hotel in enumerate(hotels_list):
+                    html_content += f"""
+        <div class="section">
+            <div class="section-title">Hotel {hotel_index + 1}</div>
+            <div class="hotel-header">
+                <div class="hotel-main-name">{single_hotel.get('name', 'Hotel Name')}</div>
+                <div class="hotel-main-address">{single_hotel.get('address', 'Hotel Address')}</div>
+                <div class="hotel-main-phone">Phone: {single_hotel.get('phone', 'N/A')}</div>
+            </div>
+            <table class="hotel-details-table">
+                <thead>
+                    <tr>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Nights</th>
+                        <th>Room Type</th>
+                        <th>Board Basis</th>
+                        <th>Lead Guest</th>
+                        <th>Confirmation #</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{single_hotel.get('checkin_date', 'N/A')}</td>
+                        <td>{single_hotel.get('checkout_date', 'N/A')}</td>
+                        <td>{single_hotel.get('nights', 'N/A')}</td>
+                        <td>{single_hotel.get('room_type', 'Standard Room')}</td>
+                        <td>{single_hotel.get('meal_plan', 'Room Only')}</td>
+                        <td>{single_hotel.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
+                        <td>{single_hotel.get('confirmation_reference', 'N/A')}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>"""
+            else:
+                # Single hotel - use existing logic but simplified
+                html_content += f"""
         <div class="section">
             <div class="section-title">Hotels</div>
             <div class="hotel-header">
@@ -553,39 +595,7 @@ class AirlineVoucherGenerator:
                         <th>Confirmation #</th>
                     </tr>
                 </thead>
-                <tbody>"""
-            
-            # Generate multiple hotel rows based on room_count or room data
-            print(f"DEBUG: Checking hotel voucher generation logic")
-            print(f"DEBUG: hotel_data contains room_counts: {'room_counts' in hotel_data}")
-            print(f"DEBUG: hotel_data contains total_room_count: {'total_room_count' in hotel_data}")
-            
-            if 'room_counts' in hotel_data and hotel_data['room_counts']:
-                print(f"DEBUG: Using detailed room data with room_counts: {hotel_data['room_counts']}")
-                # Use detailed room data with individual room counts
-                for i, room_count in enumerate(hotel_data['room_counts']):
-                    for room_num in range(room_count):
-                        room_type = hotel_data['room_types'][i] if i < len(hotel_data.get('room_types', [])) else hotel_data.get('room_type', 'Standard Room')
-                        board_basis = hotel_data['board_bases'][i] if i < len(hotel_data.get('board_bases', [])) else hotel_data.get('meal_plan', 'Room Only')
-                        lead_passenger = hotel_data['lead_passengers'][i] if i < len(hotel_data.get('lead_passengers', [])) else (customer.first_name + ' ' + customer.last_name if customer else 'Guest')
-                        
-                        print(f"DEBUG: Adding room row {room_num+1} of {room_count} for room type {i}")
-                        html_content += f"""
-                    <tr>
-                        <td>{hotel_data.get('checkin_date', 'N/A')}</td>
-                        <td>{hotel_data.get('checkout_date', 'N/A')}</td>
-                        <td>{hotel_data.get('nights', 'N/A')}</td>
-                        <td>{room_type}</td>
-                        <td>{board_basis}</td>
-                        <td>{lead_passenger}</td>
-                        <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
-                    </tr>"""
-            elif 'total_room_count' in hotel_data and hotel_data['total_room_count'] > 1:
-                print(f"DEBUG: Using total_room_count: {hotel_data['total_room_count']}")
-                # Generate multiple rows based on total room count
-                for room_num in range(hotel_data['total_room_count']):
-                    print(f"DEBUG: Adding room row {room_num+1} of {hotel_data['total_room_count']}")
-                    html_content += f"""
+                <tbody>
                     <tr>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
                         <td>{hotel_data.get('checkout_date', 'N/A')}</td>
@@ -594,22 +604,7 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
                         <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
                         <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
-                    </tr>"""
-            else:
-                print(f"DEBUG: Using default single room row")
-                # Default single room row
-                html_content += f"""
-                    <tr>
-                        <td>{hotel_data.get('checkin_date', 'N/A')}</td>
-                        <td>{hotel_data.get('checkout_date', 'N/A')}</td>
-                        <td>{hotel_data.get('nights', 'N/A')}</td>
-                        <td>{hotel_data.get('room_type', 'Standard Room')}</td>
-                        <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
-                        <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
-                        <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
-                    </tr>"""
-            
-            html_content += """
+                    </tr>
                 </tbody>
             </table>
         </div>"""
@@ -758,30 +753,32 @@ class AirlineVoucherGenerator:
         if not hotel_items:
             return None
         
-        hotel = hotel_items[0]
+        # Process ALL hotel items instead of just the first one
+        all_hotels = []
         
-        # Initialize with defaults - DO NOT use hotel.description as it may be wrong
-        hotel_data = {
-            'name': 'Hotel Accommodation',  # Will be overridden by confirmation data
-            'address': 'Hotel Address',
-            'phone': 'N/A',
-            'checkin_date': hotel.start_date.strftime("%d-%b-%Y") if hotel.start_date else "N/A",
-            'checkout_date': hotel.end_date.strftime("%d-%b-%Y") if hotel.end_date else "N/A",
-            'nights': (hotel.end_date - hotel.start_date).days if hotel.start_date and hotel.end_date else 1,
-            'room_type': 'Standard Room',
-            'meal_plan': 'Room Only',  # Will be overridden by confirmation data
-            'description': hotel.description or 'Hotel accommodation',
-            'confirmation_reference': 'N/A'  # Will be overridden by confirmation data
-        }
-        
-        print(f"DEBUG: Hotel description from ServiceItem: {hotel.description}")
-        print(f"DEBUG: Number of documents for hotel: {len(hotel.documents)}")
-        
-        # Extract real data from confirmation documents  
-        for document in hotel.documents:
-            print(f"DEBUG: Checking document ID {document.id}")
-            print(f"DEBUG: Document type: {document.document_type}")
-            print(f"DEBUG: Document notes length: {len(document.notes) if document.notes else 0}")
+        for hotel in hotel_items:
+            # Initialize with defaults for each hotel - DO NOT use hotel.description as it may be wrong
+            hotel_data = {
+                'name': 'Hotel Accommodation',  # Will be overridden by confirmation data
+                'address': 'Hotel Address',
+                'phone': 'N/A',
+                'checkin_date': hotel.start_date.strftime("%d-%b-%Y") if hotel.start_date else "N/A",
+                'checkout_date': hotel.end_date.strftime("%d-%b-%Y") if hotel.end_date else "N/A",
+                'nights': (hotel.end_date - hotel.start_date).days if hotel.start_date and hotel.end_date else 1,
+                'room_type': 'Standard Room',
+                'meal_plan': 'Room Only',  # Will be overridden by confirmation data
+                'description': hotel.description or 'Hotel accommodation',
+                'confirmation_reference': 'N/A'  # Will be overridden by confirmation data
+            }
+            
+            print(f"DEBUG: Hotel description from ServiceItem: {hotel.description}")
+            print(f"DEBUG: Number of documents for hotel: {len(hotel.documents)}")
+            
+            # Extract real data from confirmation documents  
+            for document in hotel.documents:
+                print(f"DEBUG: Checking document ID {document.id}")
+                print(f"DEBUG: Document type: {document.document_type}")
+                print(f"DEBUG: Document notes length: {len(document.notes) if document.notes else 0}")
             
             if document.document_type == 'CONFIRMATION' and document.notes:
                 try:
@@ -907,15 +904,21 @@ class AirlineVoucherGenerator:
                     # If not JSON, treat as plain text
                     pass
 
+            
+            # Get hotel contact info from database using the real hotel name
+            address, phone = self._get_hotel_contact_info(hotel_data['name'])
+            if address:
+                hotel_data['address'] = address
+            if phone:
+                hotel_data['phone'] = phone
+            
+            all_hotels.append(hotel_data)
         
-        # Get hotel contact info from database using the real hotel name
-        address, phone = self._get_hotel_contact_info(hotel_data['name'])
-        if address:
-            hotel_data['address'] = address
-        if phone:
-            hotel_data['phone'] = phone
-        
-        return hotel_data
+        # Return all hotels or just the first one for backward compatibility
+        if len(all_hotels) == 1:
+            return all_hotels[0]
+        else:
+            return {'multiple_hotels': all_hotels, 'hotel_count': len(all_hotels)}
     
     def _get_hotel_contact_info(self, hotel_name):
         """Look up hotel address and phone from CSV database"""
