@@ -914,6 +914,21 @@ class AirlineVoucherGenerator:
             
             all_hotels.append(hotel_data)
         
+        # Sort hotels by check-in date (ascending order)
+        def get_checkin_date(hotel):
+            try:
+                from datetime import datetime
+                checkin_str = hotel.get('checkin_date', 'N/A')
+                if checkin_str == 'N/A':
+                    return datetime.min  # Put hotels without dates at the beginning
+                # Parse date format like "27-Jul-2025"
+                return datetime.strptime(checkin_str, "%d-%b-%Y")
+            except:
+                return datetime.min  # If parsing fails, put at beginning
+        
+        all_hotels.sort(key=get_checkin_date)
+        print(f"DEBUG: Sorted {len(all_hotels)} hotels by check-in date")
+        
         # Return all hotels or just the first one for backward compatibility
         if len(all_hotels) == 1:
             return all_hotels[0]

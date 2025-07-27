@@ -115,6 +115,7 @@ TravelBookPro is a Flask-based web application designed for travel agencies to m
   - ✅ ELIMINATED ROOM COUNT DUPLICATION: No longer creates duplicate rows based on room_count - shows genuine hotel records only
   - ✅ SMART DETECTION: Automatically detects multiple hotel bookings vs single hotel scenarios
   - ✅ INDIVIDUAL HOTEL DATA: Each hotel shows its own name, address, phone, dates, room type, confirmation number
+  - ✅ DATE-ORDERED DISPLAY: Hotels automatically sorted by check-in date (ascending order) for chronological presentation
   - ✅ COMPREHENSIVE DEBUG LOGGING: Added detailed logging to track hotel data extraction and voucher generation
   - System now properly handles bookings with 2-3 different hotels as separate voucher sections instead of duplicating single hotel
 - July 26, 2025: COMPLETED ENHANCED HOTEL AI SCANNING AND MULTI-ROOM UI SYSTEM
