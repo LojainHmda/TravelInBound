@@ -553,7 +553,31 @@ class AirlineVoucherGenerator:
                         <th>Confirmation #</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody>"""
+            
+            # Generate multiple hotel rows based on room_count or room data
+            if 'room_counts' in hotel_data and hotel_data['room_counts']:
+                # Use detailed room data with individual room counts
+                for i, room_count in enumerate(hotel_data['room_counts']):
+                    for room_num in range(room_count):
+                        room_type = hotel_data['room_types'][i] if i < len(hotel_data.get('room_types', [])) else hotel_data.get('room_type', 'Standard Room')
+                        board_basis = hotel_data['board_bases'][i] if i < len(hotel_data.get('board_bases', [])) else hotel_data.get('meal_plan', 'Room Only')
+                        lead_passenger = hotel_data['lead_passengers'][i] if i < len(hotel_data.get('lead_passengers', [])) else (customer.first_name + ' ' + customer.last_name if customer else 'Guest')
+                        
+                        html_content += f"""
+                    <tr>
+                        <td>{hotel_data.get('checkin_date', 'N/A')}</td>
+                        <td>{hotel_data.get('checkout_date', 'N/A')}</td>
+                        <td>{hotel_data.get('nights', 'N/A')}</td>
+                        <td>{room_type}</td>
+                        <td>{board_basis}</td>
+                        <td>{lead_passenger}</td>
+                        <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
+                    </tr>"""
+            elif 'total_room_count' in hotel_data and hotel_data['total_room_count'] > 1:
+                # Generate multiple rows based on total room count
+                for room_num in range(hotel_data['total_room_count']):
+                    html_content += f"""
                     <tr>
                         <td>{hotel_data.get('checkin_date', 'N/A')}</td>
                         <td>{hotel_data.get('checkout_date', 'N/A')}</td>
@@ -562,7 +586,21 @@ class AirlineVoucherGenerator:
                         <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
                         <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
                         <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
-                    </tr>
+                    </tr>"""
+            else:
+                # Default single room row
+                html_content += f"""
+                    <tr>
+                        <td>{hotel_data.get('checkin_date', 'N/A')}</td>
+                        <td>{hotel_data.get('checkout_date', 'N/A')}</td>
+                        <td>{hotel_data.get('nights', 'N/A')}</td>
+                        <td>{hotel_data.get('room_type', 'Standard Room')}</td>
+                        <td>{hotel_data.get('meal_plan', 'Room Only')}</td>
+                        <td>{hotel_data.get('primary_guest', customer.first_name + ' ' + customer.last_name if customer else 'Guest')}</td>
+                        <td>{hotel_data.get('confirmation_reference', 'N/A')}</td>
+                    </tr>"""
+            
+            html_content += """
                 </tbody>
             </table>
         </div>"""
@@ -779,19 +817,37 @@ class AirlineVoucherGenerator:
                         if isinstance(rooms_data, list) and len(rooms_data) > 0:
                             # Extract lead passenger names from room array
                             lead_passengers = []
+                            room_types = []
+                            board_bases = []
+                            room_counts = []
+                            
                             for room in rooms_data:
                                 if 'lead_passenger' in room and room['lead_passenger']:
                                     lead_passengers.append(room['lead_passenger'])
-                                # Also get room type from first room
+                                # Get room type and board basis for each room
                                 if 'room_type' in room and room['room_type']:
-                                    hotel_data['room_type'] = room['room_type']
+                                    room_types.append(room['room_type'])
+                                    # Set the first room type as main room type for backward compatibility
+                                    if 'room_type' not in hotel_data:
+                                        hotel_data['room_type'] = room['room_type']
                                 if 'board_basis' in room and room['board_basis']:
-                                    hotel_data['board_basis'] = room['board_basis']
+                                    board_bases.append(room['board_basis'])
+                                    # Set the first board basis as main meal plan for backward compatibility
+                                    if 'meal_plan' not in hotel_data:
+                                        hotel_data['meal_plan'] = room['board_basis']
+                                # Get room count for each room entry
+                                room_count = room.get('room_count', 1)
+                                room_counts.append(room_count)
                             
-                            # Store lead passenger names for voucher display
+                            # Store detailed room information for voucher display
+                            hotel_data['lead_passengers'] = lead_passengers
+                            hotel_data['room_types'] = room_types  
+                            hotel_data['board_bases'] = board_bases
+                            hotel_data['room_counts'] = room_counts
+                            hotel_data['total_room_count'] = sum(room_counts)
+                            
+                            # Use first lead passenger for the main display
                             if lead_passengers:
-                                hotel_data['lead_passengers'] = lead_passengers
-                                # Use first lead passenger for the main display
                                 hotel_data['primary_guest'] = lead_passengers[0]
                         elif isinstance(rooms_data, dict):
                             # Handle legacy room format
@@ -819,6 +875,12 @@ class AirlineVoucherGenerator:
                     # Extract confirmation reference
                     if 'confirmation_reference' in parsed_data and parsed_data['confirmation_reference']:
                         hotel_data['confirmation_reference'] = parsed_data['confirmation_reference']
+                    
+                    # Extract room_count from top-level data 
+                    if 'room_count' in parsed_data and parsed_data['room_count']:
+                        room_count = int(parsed_data['room_count'])
+                        if room_count > 1:
+                            hotel_data['total_room_count'] = room_count
                                 
                 except (json.JSONDecodeError, TypeError) as e:
                     print(f"DEBUG: Failed to parse JSON from notes: {e}")
