@@ -544,7 +544,11 @@ EXAMPLE: If you see "03 Dbl" with "6 adults, 1 child" total, create ONE room ent
             temperature=0.1
         )
 
-        content = response.choices[0].message.content.strip()
+        content = response.choices[0].message.content
+        if content:
+            content = content.strip()
+        else:
+            content = ""
         logger.info(f"OpenAI response for hotel voucher: {content}")
 
         # Try to parse JSON from the response
