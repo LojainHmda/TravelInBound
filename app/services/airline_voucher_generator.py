@@ -742,7 +742,40 @@ class AirlineVoucherGenerator:
         if flight_data['passenger_names']:
             flight_data['passenger_names'] = list(dict.fromkeys(flight_data['passenger_names']))
         
-
+        # Sort flight segments by flight date (ascending order)
+        if flight_data['segments']:
+            def get_flight_date(segment):
+                try:
+                    from datetime import datetime
+                    flight_date_str = segment.get('flight_date', '')
+                    print(f"DEBUG: Flight {segment.get('airline', '')} {segment.get('flight_number', '')} has date: '{flight_date_str}'")
+                    if not flight_date_str:
+                        print(f"DEBUG: Flight {segment.get('airline', '')} {segment.get('flight_number', '')} has no date, using datetime.min")
+                        return datetime.min  # Put flights without dates at the beginning
+                    # Parse date format like "2025-07-27" or "27-Jul-2025"
+                    if '-' in flight_date_str and len(flight_date_str.split('-')[0]) == 4:
+                        # Format: "2025-07-27"
+                        parsed_date = datetime.strptime(flight_date_str, "%Y-%m-%d")
+                    else:
+                        # Format: "27-Jul-2025"
+                        parsed_date = datetime.strptime(flight_date_str, "%d-%b-%Y")
+                    print(f"DEBUG: Flight {segment.get('airline', '')} {segment.get('flight_number', '')} parsed date: {parsed_date}")
+                    return parsed_date
+                except Exception as e:
+                    print(f"DEBUG: Flight {segment.get('airline', '')} {segment.get('flight_number', '')} date parsing failed: {e}, using datetime.min")
+                    return datetime.min  # If parsing fails, put at beginning
+            
+            print(f"DEBUG: Before sorting - flight segments order:")
+            for i, segment in enumerate(flight_data['segments']):
+                print(f"DEBUG: Flight {i+1}: {segment.get('airline', '')} {segment.get('flight_number', '')} - {segment.get('flight_date', 'N/A')}")
+            
+            flight_data['segments'].sort(key=get_flight_date)
+            
+            print(f"DEBUG: After sorting - flight segments order:")
+            for i, segment in enumerate(flight_data['segments']):
+                print(f"DEBUG: Flight {i+1}: {segment.get('airline', '')} {segment.get('flight_number', '')} - {segment.get('flight_date', 'N/A')}")
+            
+            print(f"DEBUG: Sorted {len(flight_data['segments'])} flight segments by date")
         
         return flight_data if flight_data['segments'] else None
     
