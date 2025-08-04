@@ -420,31 +420,25 @@
             </main>
             
             <!-- Footer -->
-            <footer class="bg-dark text-light py-4 mt-auto">
+            <footer class="py-4 mt-auto" style="background-color: white; border-top: 1px solid #ddd;">
                 <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h5 style="color: #FFD700;">TravelBookPro</h5>
-                            <p style="color: #FFD700;">Your professional travel booking management solution</p>
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            <img src="{{ url_for('static', filename='arabilogo.jpg') }}" alt="Arab Travel Group" style="height: 60px; max-width: 150px; object-fit: contain;">
                         </div>
-                        <div class="col-md-4">
-                            <h5 style="color: #FFD700;">Quick Links</h5>
-                            <ul class="list-unstyled">
-                                <li><a href="{{ url_for('main.index') }}" style="color: #FFD700; text-decoration: none;">Home</a></li>
-                                <li><a href="{{ url_for('booking.new_booking') }}" style="color: #FFD700; text-decoration: none;">New Booking</a></li>
-                                <li><a href="{{ url_for('main.dashboard') }}" style="color: #FFD700; text-decoration: none;">Dashboard</a></li>
-                            </ul>
+                        <div class="col-md-6 text-center">
+                            <h5 style="color: #000080; margin-bottom: 5px;">Arab Travel Group</h5>
+                            <p style="color: #000080; margin-bottom: 5px; font-size: 14px;">Your trusted partner in professional travel services</p>
                         </div>
-                        <div class="col-md-4">
-                            <h5 style="color: #FFD700;">Contact</h5>
-                            <address style="color: #FFD700;">
-                                <i class="fas fa-envelope me-2"></i> info@travelbookpro.com<br>
-                                <i class="fas fa-phone me-2"></i> +1 (555) 123-4567
+                        <div class="col-md-3 text-center">
+                            <address style="color: #000080; font-size: 13px; margin-bottom: 0;">
+                                <i class="fas fa-envelope me-2"></i> info@arabtravel.com<br>
+                                <i class="fas fa-phone me-2"></i> +962 6 XXX-XXXX
                             </address>
                         </div>
                     </div>
                     <div class="text-center mt-3">
-                        <p style="color: #FFD700;">&copy; 2025 TravelBookPro. All rights reserved.</p>
+                        <p style="color: #000080; margin-bottom: 0; font-size: 12px;">&copy; 2025 Arab Travel Group. All rights reserved.</p>
                     </div>
                 </div>
             </footer>
