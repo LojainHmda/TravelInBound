@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Tour Voucher - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.voucher-header {
+    background: linear-gradient(135deg, #0d6efd 0%, #17a2b8 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+.voucher-section {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background: #fafafa;
+}
+.service-item {
+    border-left: 4px solid #0d6efd;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: white;
+    border-radius: 0 5px 5px 0;
+}
+.service-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+}
+@media print {
+    .no-print { display: none !important; }
+    .voucher-header { background: #0d6efd !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row no-print mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Request
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Voucher
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voucher Header -->
+    <div class="voucher-header text-center">
+        <h1 class="mb-2">TOUR VOUCHER</h1>
+        <h3>{{ request.request_number }}</h3>
+        <p class="mb-1"><strong>Arab Travel Group</strong> - Inbound Tour Operator</p>
+        <p class="mb-0">Professional Tour Services</p>
+    </div>
+
+    <!-- Guest Information -->
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-users text-primary"></i> Guest Information</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Agent:</strong> {{ request.agent }}</p>
+                <p><strong>Contact:</strong> {{ request.contact_name }}</p>
+                <p><strong>Reference:</strong> {{ request.agent_ref or 'N/A' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Nationality:</strong> {{ request.nationality }}</p>
+                <p><strong>Number of Passengers:</strong> {{ request.pax }}</p>
+                <p><strong>Tour Duration:</strong> {{ request.no_of_days }} days</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tour Dates -->
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-calendar text-success"></i> Tour Dates</h4>
+        <div class="row text-center">
+            <div class="col-md-6">
+                <div class="p-3 bg-white rounded">
+                    <h5 class="text-success">Arrival</h5>
+                    <h3>{{ request.from_date.strftime('%d') }}</h3>
+                    <p class="mb-0">{{ request.from_date.strftime('%B %Y') }}</p>
+                    <small class="text-muted">{{ request.from_date.strftime('%A') }}</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-white rounded">
+                    <h5 class="text-danger">Departure</h5>
+                    <h3>{{ request.to_date.strftime('%d') }}</h3>
+                    <p class="mb-0">{{ request.to_date.strftime('%B %Y') }}</p>
+                    <small class="text-muted">{{ request.to_date.strftime('%A') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Itinerary -->
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-route text-warning"></i> Detailed Itinerary</h4>
+        {% for row in request.itinerary_rows %}
+        <div class="service-item">
+            <div class="d-flex align-items-start">
+                <div class="service-icon bg-primary">
+                    <span class="fw-bold">{{ loop.index }}</span>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">{{ row.date.strftime('%A, %d %B %Y') }}</h6>
+                            <p class="mb-2">{{ row.description }}</p>
+                            <div class="small">
+                                {% if row.flag_hotel %}<span class="badge bg-primary me-1">Hotel</span>{% endif %}
+                                {% if row.flag_transport %}<span class="badge bg-info me-1">Transport</span>{% endif %}
+                                {% if row.flag_meal %}<span class="badge bg-warning me-1">Meal</span>{% endif %}
+                                {% if row.flag_guide %}<span class="badge bg-success me-1">Guide</span>{% endif %}
+                                {% if row.flag_airport %}<span class="badge bg-danger me-1">Airport</span>{% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">Day {{ loop.index }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Services Summary -->
+    {% if request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-concierge-bell text-info"></i> Confirmed Services</h4>
+        
+        <!-- Hotels -->
+        {% if request.inbound_hotels %}
+        <div class="mb-4">
+            <h5><i class="fas fa-bed text-primary"></i> Accommodation</h5>
+            {% for hotel in request.inbound_hotels %}
+            <div class="border rounded p-3 mb-2 bg-white">
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>{{ hotel.hotel_name or 'Hotel (TBD)' }}</strong>
+                        <p class="mb-1 text-muted">{{ hotel.location or 'Location TBD' }}</p>
+                        <small>{{ hotel.room_type or 'Standard Room' }} | {{ hotel.meal_plan }} | {{ hotel.nights }} night(s)</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div><strong>Check-in:</strong> {{ hotel.check_in_date.strftime('%d %b') }}</div>
+                        <div><strong>Check-out:</strong> {{ hotel.check_out_date.strftime('%d %b') }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Transport -->
+        {% if request.inbound_transports %}
+        <div class="mb-4">
+            <h5><i class="fas fa-car text-info"></i> Transportation</h5>
+            {% for transport in request.inbound_transports %}
+            <div class="border rounded p-3 mb-2 bg-white">
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>{{ transport.vehicle_type or 'Vehicle (TBD)' }}</strong>
+                        {% if transport.is_airport_transfer %}
+                        <span class="badge bg-warning text-dark ms-2">Airport Transfer</span>
+                        {% endif %}
+                        <p class="mb-1 text-muted">{{ transport.pickup_location or 'Pickup TBD' }} → {{ transport.dropoff_location or 'Drop-off TBD' }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div><strong>Date:</strong> {{ transport.date.strftime('%d %b') }}</div>
+                        {% if transport.pickup_time %}
+                        <div><strong>Time:</strong> {{ transport.pickup_time.strftime('%H:%M') }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Meals -->
+        {% if request.inbound_meals %}
+        <div class="mb-4">
+            <h5><i class="fas fa-utensils text-warning"></i> Meals</h5>
+            {% for meal in request.inbound_meals %}
+            <div class="border rounded p-3 mb-2 bg-white">
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>{{ meal.meal_type or 'Meal' }}</strong>
+                        <p class="mb-1 text-muted">{{ meal.restaurant or 'Restaurant TBD' }}</p>
+                        <small>{{ meal.location or 'Location TBD' }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div><strong>Date:</strong> {{ meal.date.strftime('%d %b') }}</div>
+                        {% if meal.meal_time %}
+                        <div><strong>Time:</strong> {{ meal.meal_time.strftime('%H:%M') }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Guides -->
+        {% if request.inbound_guides %}
+        <div class="mb-4">
+            <h5><i class="fas fa-user-tie text-success"></i> Guide Services</h5>
+            {% for guide in request.inbound_guides %}
+            <div class="border rounded p-3 mb-2 bg-white">
+                <div class="row">
+                    <div class="col-md-8">
+                        <strong>{{ guide.service_type or 'Guide Service' }}</strong>
+                        <p class="mb-1 text-muted">{{ guide.guide_name or 'Guide TBD' }} | {{ guide.language or 'English' }}</p>
+                        <small>{{ guide.meeting_point or 'Meeting point TBD' }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div><strong>Date:</strong> {{ guide.date.strftime('%d %b') }}</div>
+                        {% if guide.meeting_time %}
+                        <div><strong>Time:</strong> {{ guide.meeting_time.strftime('%H:%M') }}</div>
+                        {% endif %}
+                        {% if guide.duration_hours %}
+                        <div><strong>Duration:</strong> {{ guide.duration_hours }} hrs</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Special Notes -->
+    {% if request.special_note %}
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-sticky-note text-secondary"></i> Special Instructions</h4>
+        <div class="bg-white p-3 rounded">
+            {{ request.special_note }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Emergency Contact -->
+    <div class="voucher-section">
+        <h4 class="mb-3"><i class="fas fa-phone text-danger"></i> Emergency Contact</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="bg-white p-3 rounded">
+                    <strong>Arab Travel Group</strong><br>
+                    24/7 Emergency Hotline<br>
+                    Phone: +971 XX XXX XXXX<br>
+                    Email: emergency@arabtravelgroup.com
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="bg-white p-3 rounded">
+                    <strong>Tour Reference:</strong> {{ request.request_number }}<br>
+                    <strong>Status:</strong> <span class="badge badge-{{ request.status.lower() }}">{{ request.status }}</span><br>
+                    <strong>Total Value:</strong> {{ "%.2f"|format(request.total_amount) }} {{ request.total_currency }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 pt-4 border-top">
+        <p class="text-muted mb-1"><strong>Thank you for choosing Arab Travel Group</strong></p>
+        <p class="text-muted mb-0">We wish you a wonderful and memorable tour experience!</p>
+        <small class="text-muted">Generated on {{ request.updated_at.strftime('%d %B %Y at %H:%M') }}</small>
+    </div>
+</div>
+{% endblock %}

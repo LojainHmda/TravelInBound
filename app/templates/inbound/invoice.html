@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.invoice-header {
+    border-bottom: 3px solid #0d6efd;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+.invoice-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+.total-row {
+    font-weight: bold;
+    font-size: 1.1rem;
+    background-color: #e3f2fd;
+}
+@media print {
+    .no-print { display: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row no-print mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Request
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="fas fa-print"></i> Print Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="invoice-header">
+        <div class="row">
+            <div class="col-md-6">
+                <h1 class="mb-1">INVOICE</h1>
+                <p class="text-muted mb-0">{{ request.request_number }}</p>
+                <p class="text-muted">Date: {{ request.created_at.strftime('%d %B %Y') }}</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <h4>Arab Travel Group</h4>
+                <p class="mb-0">Inbound Tour Operator</p>
+                <small class="text-muted">Professional Tour Services</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h5>Bill To:</h5>
+            <div class="border p-3 rounded">
+                <strong>{{ request.agent }}</strong><br>
+                Contact: {{ request.contact_name }}<br>
+                Reference: {{ request.agent_ref or 'N/A' }}<br>
+                Nationality: {{ request.nationality }}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h5>Tour Details:</h5>
+            <div class="border p-3 rounded">
+                <strong>Dates:</strong> {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }}<br>
+                <strong>Duration:</strong> {{ request.no_of_days }} days<br>
+                <strong>Passengers:</strong> {{ request.pax }} pax<br>
+                <strong>Status:</strong> <span class="badge badge-{{ request.status.lower() }}">{{ request.status }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itinerary Items -->
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered invoice-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Unit Cost</th>
+                    <th>Cost Unit</th>
+                    <th>Quantity</th>
+                    <th class="text-end">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set total_amount = 0 %}
+                {% for row in request.itinerary_rows %}
+                    {% set row_total = row.calculate_row_cost(request.pax) %}
+                    {% set total_amount = total_amount + row_total %}
+                    <tr>
+                        <td>{{ row.date.strftime('%d %b') }}</td>
+                        <td>
+                            {{ row.description }}
+                            <div class="small text-muted">
+                                {% if row.flag_hotel %}<span class="badge bg-primary">Hotel</span>{% endif %}
+                                {% if row.flag_transport %}<span class="badge bg-info">Transport</span>{% endif %}
+                                {% if row.flag_meal %}<span class="badge bg-warning">Meal</span>{% endif %}
+                                {% if row.flag_guide %}<span class="badge bg-success">Guide</span>{% endif %}
+                                {% if row.flag_airport %}<span class="badge bg-danger">Airport</span>{% endif %}
+                            </div>
+                        </td>
+                        <td>{{ "%.2f"|format(row.base_cost) }} {{ row.currency }}</td>
+                        <td>{{ row.cost_unit.replace('_', ' ').title() }}</td>
+                        <td>{% if row.cost_unit == 'PER_PERSON' %}{{ request.pax }}{% else %}1{% endif %}</td>
+                        <td class="text-end">{{ "%.2f"|format(row_total) }} {{ row.currency }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="total-row">
+                    <td colspan="5" class="text-end"><strong>Total Tour Cost:</strong></td>
+                    <td class="text-end"><strong>{{ "%.2f"|format(total_amount) }} {{ request.total_currency }}</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Service Breakdown -->
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Service Summary:</h5>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><i class="fas fa-bed text-primary"></i> Hotels</span>
+                    <span>{{ request.inbound_hotels|length }} services</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><i class="fas fa-car text-info"></i> Transport</span>
+                    <span>{{ request.inbound_transports|length }} services</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><i class="fas fa-utensils text-warning"></i> Meals</span>
+                    <span>{{ request.inbound_meals|length }} services</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><i class="fas fa-user-tie text-success"></i> Guides</span>
+                    <span>{{ request.inbound_guides|length }} services</span>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h5>Payment Terms:</h5>
+            <div class="border p-3 rounded">
+                <p class="mb-1"><strong>Payment Due:</strong> 30 days from invoice date</p>
+                <p class="mb-1"><strong>Currency:</strong> {{ request.total_currency }}</p>
+                <p class="mb-0"><strong>Amount Due:</strong> {{ "%.2f"|format(total_amount) }} {{ request.total_currency }}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if request.special_note %}
+    <div class="mt-4">
+        <h5>Special Notes:</h5>
+        <div class="border p-3 rounded bg-light">
+            {{ request.special_note }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-5 pt-4 border-top">
+        <p class="text-muted mb-0">Thank you for choosing Arab Travel Group</p>
+        <small class="text-muted">Professional inbound tour operator services</small>
+    </div>
+</div>
+{% endblock %}

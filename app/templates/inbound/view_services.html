@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Services - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.service-card {
+    border-left: 4px solid #0d6efd;
+    transition: all 0.3s ease;
+}
+.service-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.status-badge {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+}
+.cost-highlight {
+    font-weight: 600;
+    color: #198754;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-list"></i> Services - {{ request.request_number }}</h2>
+            <div class="text-muted">
+                {{ request.agent }} | {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }} 
+                | {{ request.pax }} pax
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-edit"></i> Edit Request
+            </a>
+            <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Hotels -->
+        <div class="col-12">
+            <div class="card service-card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bed"></i> Hotels ({{ request.inbound_hotels|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.inbound_hotels %}
+                        <div class="row">
+                            {% for hotel in request.inbound_hotels %}
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6>{{ hotel.hotel_name or 'TBD Hotel' }}</h6>
+                                            <small class="text-muted">{{ hotel.location or 'Location TBD' }}</small>
+                                        </div>
+                                        <span class="badge badge-{{ hotel.status.lower() }} status-badge">{{ hotel.status }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div><strong>Check-in:</strong> {{ hotel.check_in_date.strftime('%d %b %Y') }}</div>
+                                        <div><strong>Check-out:</strong> {{ hotel.check_out_date.strftime('%d %b %Y') }}</div>
+                                        <div><strong>Nights:</strong> {{ hotel.nights }}</div>
+                                        <div><strong>Room Type:</strong> {{ hotel.room_type or 'TBD' }}</div>
+                                        <div><strong>Meal Plan:</strong> {{ hotel.meal_plan }}</div>
+                                        <div class="cost-highlight"><strong>Total Cost:</strong> {{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center py-3">
+                            <i class="fas fa-bed fa-2x mb-2"></i>
+                            <p>No hotel services generated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Transport -->
+        <div class="col-12">
+            <div class="card service-card mb-4" style="border-left-color: #17a2b8;">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-car"></i> Transport ({{ request.inbound_transports|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.inbound_transports %}
+                        <div class="row">
+                            {% for transport in request.inbound_transports %}
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6>{{ transport.vehicle_type or 'TBD Vehicle' }}</h6>
+                                            <small class="text-muted">{{ transport.date.strftime('%d %b %Y') }}</small>
+                                        </div>
+                                        <span class="badge badge-{{ transport.status.lower() }} status-badge">{{ transport.status }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div><strong>Pickup:</strong> {{ transport.pickup_location or 'TBD' }}</div>
+                                        <div><strong>Drop-off:</strong> {{ transport.dropoff_location or 'TBD' }}</div>
+                                        {% if transport.pickup_time %}
+                                        <div><strong>Time:</strong> {{ transport.pickup_time.strftime('%H:%M') }}</div>
+                                        {% endif %}
+                                        {% if transport.is_airport_transfer %}
+                                        <div><span class="badge bg-warning text-dark">Airport Transfer</span></div>
+                                        {% endif %}
+                                        <div class="cost-highlight"><strong>Cost:</strong> {{ "%.2f"|format(transport.cost) }} {{ transport.currency }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center py-3">
+                            <i class="fas fa-car fa-2x mb-2"></i>
+                            <p>No transport services generated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Meals -->
+        <div class="col-12">
+            <div class="card service-card mb-4" style="border-left-color: #ffc107;">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-utensils"></i> Meals ({{ request.inbound_meals|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.inbound_meals %}
+                        <div class="row">
+                            {% for meal in request.inbound_meals %}
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6>{{ meal.meal_type or 'TBD Meal' }}</h6>
+                                            <small class="text-muted">{{ meal.date.strftime('%d %b %Y') }}</small>
+                                        </div>
+                                        <span class="badge badge-{{ meal.status.lower() }} status-badge">{{ meal.status }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div><strong>Restaurant:</strong> {{ meal.restaurant or 'TBD' }}</div>
+                                        <div><strong>Location:</strong> {{ meal.location or 'TBD' }}</div>
+                                        {% if meal.meal_time %}
+                                        <div><strong>Time:</strong> {{ meal.meal_time.strftime('%H:%M') }}</div>
+                                        {% endif %}
+                                        <div class="cost-highlight"><strong>Total Cost:</strong> {{ "%.2f"|format(meal.total_cost) }} {{ meal.currency }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center py-3">
+                            <i class="fas fa-utensils fa-2x mb-2"></i>
+                            <p>No meal services generated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Guides -->
+        <div class="col-12">
+            <div class="card service-card mb-4" style="border-left-color: #28a745;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-user-tie"></i> Guide Services ({{ request.inbound_guides|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.inbound_guides %}
+                        <div class="row">
+                            {% for guide in request.inbound_guides %}
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6>{{ guide.service_type or 'Guide Service' }}</h6>
+                                            <small class="text-muted">{{ guide.date.strftime('%d %b %Y') }}</small>
+                                        </div>
+                                        <span class="badge badge-{{ guide.status.lower() }} status-badge">{{ guide.status }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div><strong>Guide:</strong> {{ guide.guide_name or 'TBD' }}</div>
+                                        <div><strong>Language:</strong> {{ guide.language or 'English' }}</div>
+                                        {% if guide.duration_hours %}
+                                        <div><strong>Duration:</strong> {{ guide.duration_hours }} hours</div>
+                                        {% endif %}
+                                        <div><strong>Meeting Point:</strong> {{ guide.meeting_point or 'TBD' }}</div>
+                                        {% if guide.meeting_time %}
+                                        <div><strong>Time:</strong> {{ guide.meeting_time.strftime('%H:%M') }}</div>
+                                        {% endif %}
+                                        <div class="cost-highlight"><strong>Cost:</strong> {{ "%.2f"|format(guide.cost) }} {{ guide.currency }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-muted text-center py-3">
+                            <i class="fas fa-user-tie fa-2x mb-2"></i>
+                            <p>No guide services generated yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Footer -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <h4 class="text-primary">{{ request.inbound_hotels|length }}</h4>
+                            <small class="text-muted">Hotels</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-info">{{ request.inbound_transports|length }}</h4>
+                            <small class="text-muted">Transport</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">{{ request.inbound_meals|length }}</h4>
+                            <small class="text-muted">Meals</small>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">{{ request.inbound_guides|length }}</h4>
+                            <small class="text-muted">Guides</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
