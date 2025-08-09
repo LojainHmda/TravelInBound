@@ -32,6 +32,10 @@
     font-size: 1.1rem;
     color: #198754;
 }
+.badge-request { background-color: #6c757d !important; }
+.badge-booked { background-color: #0d6efd !important; }
+.badge-in-progress { background-color: #fd7e14 !important; }
+.badge-confirmed { background-color: #198754 !important; }
 </style>
 {% endblock %}
 
@@ -119,50 +123,109 @@
             </div>
         </div>
 
-        <!-- Pricing Summary -->
+        <!-- Tour Summary -->
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Pricing Summary</h5>
+                    <h5 class="card-title mb-0">Tour Summary</h5>
                 </div>
-                <div class="card-body pricing-summary">
-                    <div id="pricingSummary">
-                        <!-- Daily totals will be loaded here -->
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between grand-total">
-                        <span>Tour Total:</span>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between grand-total mb-3">
+                        <span><i class="fas fa-money-bill-wave"></i> Total Cost:</span>
                         <span id="grandTotal">0.00 USD</span>
+                    </div>
+                    
+                    <!-- Status Actions -->
+                    <div class="mb-3">
+                        <label class="form-label">Request Status</label>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge badge-{{ request.status.lower() }} text-white px-3 py-2">
+                                {{ request.status }}
+                            </span>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-success btn-sm" onclick="updateStatus('BOOKED')" 
+                                        {% if request.status == 'BOOKED' or request.status == 'IN-PROGRESS' or request.status == 'CONFIRMED' %}disabled{% endif %}>
+                                    <i class="fas fa-check"></i> Book
+                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateStatus('IN-PROGRESS')"
+                                        {% if request.status == 'REQUEST' or request.status == 'CONFIRMED' %}disabled{% endif %}>
+                                    <i class="fas fa-play"></i> Start
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="updateStatus('CONFIRMED')"
+                                        {% if request.status == 'REQUEST' %}disabled{% endif %}>
+                                    <i class="fas fa-certificate"></i> Confirm
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Service Sections Status -->
+            <!-- Service Counts -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Service Sections</h5>
+                    <h5 class="card-title mb-0">Service Components</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-2">
-                        <i class="fas fa-bed text-primary"></i>
-                        <span class="ms-2">Hotels: <span id="hotelCount">0</span></span>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="fas fa-bed text-primary me-2"></i>
+                                <small><strong id="hotelCount">0</strong> Hotels</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="fas fa-car text-info me-2"></i>
+                                <small><strong id="transportCount">0</strong> Transport</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="fas fa-utensils text-warning me-2"></i>
+                                <small><strong id="mealCount">0</strong> Meals</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="fas fa-user-tie text-success me-2"></i>
+                                <small><strong id="guideCount">0</strong> Guides</small>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center p-2 bg-light rounded">
+                                <i class="fas fa-plane text-danger me-2"></i>
+                                <small><strong id="airportCount">0</strong> Airport Services</small>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-2">
-                        <i class="fas fa-car text-info"></i>
-                        <span class="ms-2">Transport: <span id="transportCount">0</span></span>
+                    
+                    <!-- Service Management Buttons -->
+                    <div class="mt-3 d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="generateServices()">
+                            <i class="fas fa-magic"></i> Generate Services
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="viewAllServices()">
+                            <i class="fas fa-list"></i> View All Services
+                        </button>
                     </div>
-                    <div class="mb-2">
-                        <i class="fas fa-utensils text-warning"></i>
-                        <span class="ms-2">Meals: <span id="mealCount">0</span></span>
-                    </div>
-                    <div class="mb-2">
-                        <i class="fas fa-user-tie text-success"></i>
-                        <span class="ms-2">Guides: <span id="guideCount">0</span></span>
-                    </div>
-                    <div>
-                        <i class="fas fa-plane text-danger"></i>
-                        <span class="ms-2">Airport: <span id="airportCount">0</span></span>
-                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Actions</h5>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <button type="button" class="btn btn-outline-warning" onclick="createInvoice()"
+                            {% if request.status == 'REQUEST' %}disabled{% endif %}>
+                        <i class="fas fa-file-invoice"></i> Generate Invoice
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="exportVoucher()"
+                            {% if request.status == 'REQUEST' or request.status == 'BOOKED' %}disabled{% endif %}>
+                        <i class="fas fa-file-pdf"></i> Export Voucher
+                    </button>
                 </div>
             </div>
         </div>
@@ -378,34 +441,12 @@ async function saveItinerary() {
 }
 
 function updatePricingSummary() {
-    // Group by date for daily totals
-    const dailyTotals = {};
+    // Calculate grand total
     let grandTotal = 0;
     
     itineraryData.forEach(row => {
-        const dateKey = row.date;
-        if (!dailyTotals[dateKey]) {
-            dailyTotals[dateKey] = 0;
-        }
-        dailyTotals[dateKey] += row.row_cost || 0;
         grandTotal += row.row_cost || 0;
     });
-    
-    // Render daily totals
-    const summaryDiv = document.getElementById('pricingSummary');
-    let summaryHTML = '';
-    
-    Object.keys(dailyTotals).sort().forEach(date => {
-        const total = dailyTotals[date];
-        summaryHTML += `
-            <div class="d-flex justify-content-between daily-total">
-                <span>${new Date(date).toLocaleDateString()}</span>
-                <span>${total.toFixed(2)} USD</span>
-            </div>
-        `;
-    });
-    
-    summaryDiv.innerHTML = summaryHTML || '<div class="text-muted">No items</div>';
     
     // Update grand total
     document.getElementById('grandTotal').textContent = `${grandTotal.toFixed(2)} USD`;
@@ -432,6 +473,60 @@ function updatePricingSummary() {
     document.getElementById('mealCount').textContent = counts.meal;
     document.getElementById('guideCount').textContent = counts.guide;
     document.getElementById('airportCount').textContent = counts.airport;
+}
+
+// Status management functions
+async function updateStatus(newStatus) {
+    if (confirm(`Change status to ${newStatus}?`)) {
+        try {
+            const response = await fetch(`/inbound/api/${requestId}/update-status`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: newStatus})
+            });
+            
+            if (response.ok) {
+                location.reload(); // Refresh to update status display
+            } else {
+                alert('Error updating status');
+            }
+        } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Error updating status');
+        }
+    }
+}
+
+// Service management functions
+function generateServices() {
+    if (confirm('This will generate service records based on itinerary flags. Continue?')) {
+        fetch(`/inbound/api/${requestId}/generate-services`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        }).then(response => {
+            if (response.ok) {
+                alert('Services generated successfully!');
+                updatePricingSummary(); // Refresh counts
+            } else {
+                alert('Error generating services');
+            }
+        }).catch(error => {
+            console.error('Error generating services:', error);
+            alert('Error generating services');
+        });
+    }
+}
+
+function viewAllServices() {
+    window.open(`/inbound/${requestId}/services`, '_blank');
+}
+
+function createInvoice() {
+    window.open(`/inbound/${requestId}/invoice`, '_blank');
+}
+
+function exportVoucher() {
+    window.open(`/inbound/${requestId}/voucher`, '_blank');
 }
 </script>
 {% endblock %}

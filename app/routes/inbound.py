@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
 from flask_login import current_user, login_required
 from datetime import datetime, timedelta
 import json
@@ -321,3 +321,85 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(guide)
+
+@inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
+@login_required
+def api_update_status(request_id):
+    """Update request status"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    new_status = data.get('status')
+    
+    if new_status not in [STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED]:
+        return jsonify({'error': 'Invalid status'}), 400
+    
+    request_obj.status = new_status
+    db.session.commit()
+    
+    return jsonify({'success': True, 'status': new_status})
+
+@inbound_bp.route('/api/<int:request_id>/generate-services', methods=['POST'])
+@login_required
+def api_generate_services(request_id):
+    """Generate all service records based on itinerary flags"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Clear existing auto-generated services
+    InboundHotel.query.filter_by(request_id=request_id).delete()
+    InboundTransport.query.filter_by(request_id=request_id).delete()
+    InboundMeal.query.filter_by(request_id=request_id).delete()
+    InboundGuide.query.filter_by(request_id=request_id).delete()
+    
+    # Generate services for each itinerary row
+    for row in request_obj.itinerary_rows:
+        _auto_generate_services(request_obj, row)
+    
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+@inbound_bp.route('/<int:request_id>/services')
+@login_required
+def view_services(request_id):
+    """View all services for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    return render_template('inbound/view_services.html', request=request_obj)
+
+@inbound_bp.route('/<int:request_id>/invoice')
+@login_required
+def generate_invoice(request_id):
+    """Generate invoice for the request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    if request_obj.status == STATUS_REQUEST:
+        abort(400, 'Cannot generate invoice for request status')
+    
+    return render_template('inbound/invoice.html', request=request_obj)
+
+@inbound_bp.route('/<int:request_id>/voucher')
+@login_required
+def generate_voucher(request_id):
+    """Generate voucher for the request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    if request_obj.status in [STATUS_REQUEST, STATUS_BOOKED]:
+        abort(400, 'Cannot generate voucher until confirmed')
+    
+    return render_template('inbound/voucher.html', request=request_obj)
