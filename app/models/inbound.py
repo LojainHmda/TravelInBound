@@ -17,6 +17,9 @@ class InboundRequest(db.Model):
     """Main inbound tour operator request with itinerary-first approach"""
     __tablename__ = 'inbound_request'
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     id = db.Column(db.Integer, primary_key=True)
     request_number = db.Column(db.String(20), unique=True, nullable=False)  # INB-YYYYMM-####
     
@@ -99,6 +102,9 @@ class ItineraryRow(db.Model):
     """Individual itinerary items with service flags and costing"""
     __tablename__ = 'itinerary_row'
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     
@@ -136,6 +142,9 @@ class InboundHotel(db.Model):
     """Hotel services generated from itinerary flags"""
     __tablename__ = 'inbound_hotel'
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)  # Link to generating itinerary
@@ -169,6 +178,9 @@ class InboundTransport(db.Model):
     """Transport services generated from itinerary flags"""
     __tablename__ = 'inbound_transport'
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)
@@ -200,6 +212,9 @@ class InboundMeal(db.Model):
     """Meal services generated from itinerary flags"""
     __tablename__ = 'inbound_meal'
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)
@@ -230,6 +245,9 @@ class InboundMeal(db.Model):
 class InboundGuide(db.Model):
     """Guide services generated from itinerary flags (M&G)"""
     __tablename__ = 'inbound_guide'
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
     
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
