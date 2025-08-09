@@ -17,11 +17,14 @@ Preferred communication style: Simple, everyday language.
   - Auto request number generation (INB-YYYYMM-####)
   - Dynamic pricing with Per Person/Per Group cost units
   - Itinerary table with service flags (Hotel, M&G/Guide, Transport, Meal, Airport)
-  - Service auto-generation based on flags with intelligent defaults
+  - Service auto-generation creates normal ServiceItem records linked to Booking
   - Blueprint routing: /inbound/* for all inbound operations
   - Forms and templates for comprehensive itinerary management
   - JavaScript modules for real-time itinerary editing and service management
-- **Status**: Core functionality implemented, ready for testing
+  - Integration with normal booking workflow (/booking/124 format)
+  - New service types: SERVICE_RESTAURANT and SERVICE_GUIDE for inbound operations
+- **Workflow**: Generate itinerary → Generate Services & Open Booking → Use normal confirmation flow
+- **Status**: Fully integrated with existing booking system, ready for testing
 
 ## System Architecture
 

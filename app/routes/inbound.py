@@ -9,6 +9,7 @@ from app.models.inbound import (
     InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
 from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
 from app.forms.inbound import (
     InboundRequestForm, ItineraryRowForm, InboundHotelForm, 
     InboundTransportForm, InboundMealForm, InboundGuideForm
@@ -345,36 +346,134 @@ def api_update_status(request_id):
 @inbound_bp.route('/api/<int:request_id>/generate-services', methods=['POST'])
 @login_required
 def api_generate_services(request_id):
-    """Generate all service records based on itinerary flags"""
-    request_obj = InboundRequest.query.get_or_404(request_id)
-    
-    if request_obj.user_id != current_user.id:
-        return jsonify({'error': 'Access denied'}), 403
-    
-    # Clear existing auto-generated services
-    InboundHotel.query.filter_by(request_id=request_id).delete()
-    InboundTransport.query.filter_by(request_id=request_id).delete()
-    InboundMeal.query.filter_by(request_id=request_id).delete()
-    InboundGuide.query.filter_by(request_id=request_id).delete()
-    
-    # Generate services for each itinerary row
-    for row in request_obj.itinerary_rows:
-        _auto_generate_services(request_obj, row)
-    
-    db.session.commit()
-    
-    return jsonify({'success': True})
+    """Generate services and create normal booking"""
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        if request_obj.user_id != current_user.id:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Import the necessary models
+        from app.models.booking import Booking
+        from app.models.service import ServiceItem, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
+        from app.models.customer import Customer
+        
+        # Create or get booking record
+        if request_obj.booking_id:
+            booking = Booking.query.get(request_obj.booking_id)
+            if not booking:
+                booking = None
+        else:
+            booking = None
+            
+        if not booking:
+            # Find or create customer
+            customer = Customer.query.filter_by(name=request_obj.contact_name).first()
+            if not customer:
+                customer = Customer(
+                    name=request_obj.contact_name,
+                    phone="TBD",
+                    email="tbd@example.com",
+                    nationality=request_obj.nationality
+                )
+                db.session.add(customer)
+                db.session.flush()
+            
+            # Create new booking
+            booking = Booking(
+                reference_number=request_obj.request_number,
+                user_id=request_obj.user_id,
+                customer_id=customer.id,
+                status=request_obj.status,
+                total_amount=request_obj.total_amount
+            )
+            db.session.add(booking)
+            db.session.flush()
+            
+            # Link booking to inbound request
+            request_obj.booking_id = booking.id
+        
+        # Clear existing service items
+        ServiceItem.query.filter_by(booking_id=booking.id).delete()
+        
+        services_created = 0
+        
+        # Generate ServiceItem records based on itinerary flags
+        for row in request_obj.itinerary_rows:
+            row_cost = row.calculate_row_cost(request_obj.pax)
+            
+            # Hotel service
+            if row.flag_hotel:
+                service_item = ServiceItem(
+                    booking_id=booking.id,
+                    service_type=SERVICE_HOTEL,
+                    start_date=row.date,
+                    end_date=row.date + timedelta(days=1),
+                    description=f"Hotel accommodation - {row.description}",
+                    amount=row_cost,
+                    status=STATUS_REQUEST
+                )
+                db.session.add(service_item)
+                services_created += 1
+            
+            # Transport service
+            if row.flag_transport:
+                service_item = ServiceItem(
+                    booking_id=booking.id,
+                    service_type=SERVICE_TRANSPORT,
+                    start_date=row.date,
+                    end_date=row.date,
+                    description=f"Transport service - {row.description}",
+                    amount=row_cost,
+                    status=STATUS_REQUEST
+                )
+                db.session.add(service_item)
+                services_created += 1
+            
+            # Restaurant/Meal service
+            if row.flag_meal:
+                service_item = ServiceItem(
+                    booking_id=booking.id,
+                    service_type=SERVICE_RESTAURANT,
+                    start_date=row.date,
+                    end_date=row.date,
+                    description=f"Restaurant meal - {row.description}",
+                    amount=row_cost,
+                    status=STATUS_REQUEST
+                )
+                db.session.add(service_item)
+                services_created += 1
+            
+            # Guide service
+            if row.flag_guide:
+                service_item = ServiceItem(
+                    booking_id=booking.id,
+                    service_type=SERVICE_GUIDE,
+                    start_date=row.date,
+                    end_date=row.date,
+                    description=f"Tour guide service - {row.description}",
+                    amount=row_cost,
+                    status=STATUS_REQUEST
+                )
+                db.session.add(service_item)
+                services_created += 1
+        
+        # Update booking total
+        booking.calculate_total()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f"Generated {services_created} services",
+            'booking_id': booking.id,
+            'redirect_url': url_for('booking.booking_details', booking_id=booking.id)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@inbound_bp.route('/<int:request_id>/services')
-@login_required
-def view_services(request_id):
-    """View all services for a request"""
-    request_obj = InboundRequest.query.get_or_404(request_id)
-    
-    if request_obj.user_id != current_user.id:
-        abort(403)
-    
-    return render_template('inbound/view_services.html', request=request_obj)
+# Removed view_services route - no longer needed since we redirect to normal booking page
 
 @inbound_bp.route('/<int:request_id>/invoice')
 @login_required

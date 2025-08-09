@@ -14,6 +14,8 @@ SERVICE_HOTEL = 'HOTEL'
 SERVICE_TRANSPORT = 'TRANSPORT'
 SERVICE_VISA = 'VISA'
 SERVICE_INSURANCE = 'INSURANCE'
+SERVICE_RESTAURANT = 'RESTAURANT'  # For inbound meal services
+SERVICE_GUIDE = 'GUIDE'  # For inbound guide services
 
 class ServiceItem(db.Model):
     """Service items for bookings"""

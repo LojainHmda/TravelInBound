@@ -39,6 +39,7 @@ class InboundRequest(db.Model):
     # Status and tracking
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=True)  # Link to normal booking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
