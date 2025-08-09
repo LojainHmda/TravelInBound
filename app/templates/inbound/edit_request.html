@@ -174,19 +174,22 @@ const requestId = {{ request.id }};
 const paxCount = {{ request.pax }};
 let itineraryData = [];
 
-// Include the external JS modules
-let itineraryManager;
-
-/**
- * ItineraryManager class - simplified version for inline use
- * Full version is in /static/js/itinerary.js
- */
+// Event listeners setup
+document.addEventListener('DOMContentLoaded', function() {
+    loadItinerary();
     
-    // Event listeners
-    document.getElementById('generateByDays').addEventListener('click', generateByDays);
-    document.getElementById('generateBySections').addEventListener('click', generateBySections);
-    document.getElementById('addRow').addEventListener('click', addRow);
-    document.getElementById('saveItinerary').addEventListener('click', saveItinerary);
+    // Event listeners with null checks
+    const generateByDaysBtn = document.getElementById('generateByDays');
+    if (generateByDaysBtn) generateByDaysBtn.addEventListener('click', generateByDays);
+    
+    const generateBySectionsBtn = document.getElementById('generateBySections');
+    if (generateBySectionsBtn) generateBySectionsBtn.addEventListener('click', generateBySections);
+    
+    const addRowBtn = document.getElementById('addRow');
+    if (addRowBtn) addRowBtn.addEventListener('click', addRow);
+    
+    const saveItineraryBtn = document.getElementById('saveItinerary');
+    if (saveItineraryBtn) saveItineraryBtn.addEventListener('click', saveItinerary);
 });
 
 async function loadItinerary() {
@@ -201,10 +204,7 @@ async function loadItinerary() {
     }
 }
 
-// Initialize the itinerary manager
-document.addEventListener('DOMContentLoaded', function() {
-    itineraryManager = new ItineraryManager(requestId, paxCount);
-});
+
 
 function renderItineraryTable() {
     const tbody = document.getElementById('itineraryBody');
