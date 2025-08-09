@@ -1,0 +1,130 @@
+# Replit Implementation Brief — Inbound Tour Operator Flavor (Branch of TravelBookPro)
+
+This brief provides clear instructions for Replit on **what to reuse** from the existing TravelBookPro app and **what to add or change** for the inbound tour operator version. Retain current technologies (Bootstrap, jQuery, Tailwind) and folder structure where possible.
+
+---
+
+## 1. High-Level Changes
+
+* Introduce a **New Booking Screen** as the main entry point for inbound tours.
+* Replace “Flights/Visa/etc.” as the primary drivers with an **Itinerary-first** model featuring **service flags** (Hotel, M\&G/Guide, Transport, Meal, Airport Pick & Drop).
+* Service flags automatically **generate linked records** in respective sections (Inbound Hotel, Transport, Meals, Guide, Airport Transfer).
+* Implement **Auto Request Numbers** (e.g., `INB-YYYYMM-####`).
+* Pricing set at the itinerary-row level (**Per Person** or **Per Group**), rolling up to day totals and a final tour total.
+
+---
+
+## 2. Components to Reuse
+
+* **UI/UX:** Keep breadcrumb navigation, toolbar buttons, and collapsible sections.
+* **Sections:** Reuse and rename as needed: `inboundHotelSection`, `transportSection`, `mealsSection`, `guideSection`, `flightBookingSection` (optional for international tickets), `pricingSummarySection`.
+* **Totals & Pricing:** Continue using `PrcieCalculation.js` (typo preserved for compatibility) and extend to handle itinerary costs.
+* **CRUD Base:** Reuse `InboundMasterCrud.js` and `InboundDetailsCRUD.js` for AJAX calls, row serialization, and save-section handling.
+
+---
+
+## 3. New Booking Screen — Itinerary with Service Flags
+
+### Header Fields
+
+* Auto-generated **Request No** (read-only)
+* **From Date**, **To Date**, **No. of Days** (calculated but editable)
+* **Agent**, **Contact Name**, **Agent Ref**, **Nationality**, **Pax**, **Special Note**
+
+### Itinerary Table
+
+Columns: `Date`, `Itinerary Description`, `Base Cost`, `Cost Unit` (Per Person/Per Group), `Currency` (USD/EUR/JOD), service flags: `Hotel`, `M&G`, `Transport`, `Meal`, `Airport`.
+
+### Generators
+
+* **Generate by Days**: One itinerary row per day between From and To Dates.
+* **Generate by Sections**: Group rows by service type.
+
+### Costing
+
+* **Row Cost** = `Base Cost × (Cost Unit == Per Person ? Pax : 1)`
+* Daily totals and final tour totals displayed in `pricingSummarySection`.
+
+---
+
+## 4. Service Auto-Generation Rules
+
+When a flag is checked:
+
+* **Hotel** → Append to Inbound Hotel section with appropriate date range, meal plan, and cost.
+* **M\&G (Guide)** → Add to Guide section with language, duration, and cost.
+* **Transport** → Add to Transport section with date, vehicle type, locations, and cost.
+* **Meal** → Add to Meals section with date range, restaurant, meal type, and cost.
+* **Airport** → Add to Transport section as an airport transfer.
+
+**Inheritance:** Service rows inherit date, pax, and currency from the itinerary row unless locked (Status ≥ Confirmed).
+
+---
+
+## 5. Data Contracts (Front-End JSON)
+
+**Request**, **ItineraryRow**, and **ServiceItem** JSON structures are defined to ensure consistency across the system.
+
+---
+
+## 6. Proposed Front-End Modules
+
+* **`itinerary.js`**: Generates itineraries, recalculates totals, listens for flag changes.
+* **`services.js`**: Syncs itinerary changes with service sections, manages locking.
+* **`pricing.js`**: Extends `PrcieCalculation.js` to include itinerary totals.
+* **`storage.js`**: Handles saving/loading of request data.
+
+---
+
+## 7. Back-End Integration
+
+Add or extend API endpoints to handle inbound-specific data:
+
+* `POST /api/inbound/request`
+* `POST /api/inbound/itinerary`
+* `POST /api/inbound/services`
+* `POST /api/inbound/quote`
+* `POST /api/inbound/confirm`
+
+---
+
+## 8. UI Behaviors & Edge Cases
+
+* Enforce date range constraints.
+* Prompt to propagate pax or currency changes.
+* Lock confirmed services from being overwritten.
+* Maintain merge logic for consecutive hotel/transport records.
+* Display itinerary, section totals, and grand total in `pricingSummarySection`.
+
+---
+
+## 9. Numbering & Defaults
+
+* Request Number: `INB-YYYYMM-####`
+* Default guide language from nationality.
+* Default vehicle type based on pax size.
+* Default currency from request.
+
+---
+
+## 10. Acceptance Criteria
+
+Ensure itinerary generation, service auto-creation, cost calculations, saving/loading, and voucher generation meet functional requirements.
+
+---
+
+## 11. Task List
+
+Outlined tasks for implementing new modules, extending existing scripts, and updating UI elements.
+
+---
+
+## 12. Nice-to-Have (Phase 1.1)
+
+Optional features like quick-pick templates, supplier lookups, and PDF exports.
+
+---
+
+## 13. Handover Notes
+
+Maintain existing file references, ensure new modules are idempotent, and document service row creation with source itinerary indices.
