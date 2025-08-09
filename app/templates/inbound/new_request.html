@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}New Inbound Tour Request{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-plus"></i> New Inbound Tour Request</h2>
+        <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Requests
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Request Information</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <!-- Travel Dates -->
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.from_date.label(class="form-label") }}
+                            {{ form.from_date(class="form-control") }}
+                            {% if form.from_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.from_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.to_date.label(class="form-label") }}
+                            {{ form.to_date(class="form-control") }}
+                            {% if form.to_date.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.to_date.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.no_of_days.label(class="form-label") }}
+                            {{ form.no_of_days(class="form-control", readonly=true) }}
+                            <small class="text-muted">Calculated automatically</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Client Information -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.agent.label(class="form-label") }}
+                            {{ form.agent(class="form-control") }}
+                            {% if form.agent.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.agent.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.contact_name.label(class="form-label") }}
+                            {{ form.contact_name(class="form-control") }}
+                            {% if form.contact_name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.contact_name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.agent_ref.label(class="form-label") }}
+                            {{ form.agent_ref(class="form-control") }}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.nationality.label(class="form-label") }}
+                            {{ form.nationality(class="form-select") }}
+                            {% if form.nationality.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.nationality.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            {{ form.pax.label(class="form-label") }}
+                            {{ form.pax(class="form-control", min="1") }}
+                            {% if form.pax.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.pax.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form.special_note.label(class="form-label") }}
+                    {{ form.special_note(class="form-control", rows="3") }}
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('inbound.index') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Request
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fromDate = document.getElementById('from_date');
+    const toDate = document.getElementById('to_date');
+    const noDays = document.getElementById('no_of_days');
+    
+    function calculateDays() {
+        if (fromDate.value && toDate.value) {
+            const from = new Date(fromDate.value);
+            const to = new Date(toDate.value);
+            const diffTime = Math.abs(to - from);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end days
+            noDays.value = diffDays;
+        }
+    }
+    
+    fromDate.addEventListener('change', calculateDays);
+    toDate.addEventListener('change', calculateDays);
+    
+    // Calculate on load if values exist
+    calculateDays();
+});
+</script>
+{% endblock %}

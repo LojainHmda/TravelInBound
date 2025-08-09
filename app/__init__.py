@@ -119,6 +119,10 @@ def create_app():
         from app.routes.tools import tools_bp
         app.register_blueprint(tools_bp)
         
+        # Register inbound tour operator blueprint
+        from app.routes.inbound import inbound_bp
+        app.register_blueprint(inbound_bp)
+        
         # Set up login manager
         from app.models import User
         @login_manager.user_loader

@@ -6,6 +6,23 @@ TravelBookPro is a Flask-based web application for travel agencies, managing boo
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (August 2025)
+
+### Inbound Tour Operator System Implementation
+- **Date**: August 9, 2025
+- **Feature**: Complete inbound tour operator module with itinerary-first booking approach
+- **Components Added**:
+  - New models: InboundRequest, ItineraryRow, InboundHotel, InboundTransport, InboundMeal, InboundGuide
+  - Service flag system for auto-generation of linked service records
+  - Auto request number generation (INB-YYYYMM-####)
+  - Dynamic pricing with Per Person/Per Group cost units
+  - Itinerary table with service flags (Hotel, M&G/Guide, Transport, Meal, Airport)
+  - Service auto-generation based on flags with intelligent defaults
+  - Blueprint routing: /inbound/* for all inbound operations
+  - Forms and templates for comprehensive itinerary management
+  - JavaScript modules for real-time itinerary editing and service management
+- **Status**: Core functionality implemented, ready for testing
+
 ## System Architecture
 
 ### Backend

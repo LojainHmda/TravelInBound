@@ -32,3 +32,17 @@ from app.models.finance import (
     RECURRENCE_NONE, RECURRENCE_DAILY, RECURRENCE_WEEKLY, RECURRENCE_MONTHLY,
     RECURRENCE_QUARTERLY, RECURRENCE_YEARLY
 )
+
+# Import inbound models
+from app.models.inbound import (
+    InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
+    InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
+    SERVICE_FLAG_HOTEL, SERVICE_FLAG_GUIDE, SERVICE_FLAG_TRANSPORT, 
+    SERVICE_FLAG_MEAL, SERVICE_FLAG_AIRPORT
+)
+from app.models.inbound import (
+    InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
+    InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
+    SERVICE_FLAG_HOTEL, SERVICE_FLAG_GUIDE, SERVICE_FLAG_TRANSPORT, 
+    SERVICE_FLAG_MEAL, SERVICE_FLAG_AIRPORT
+)

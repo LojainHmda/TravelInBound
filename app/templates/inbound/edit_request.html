@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Inbound Request - {{ request.request_number }}{% endblock %}
+
+{% block styles %}
+<style>
+.itinerary-table th, .itinerary-table td {
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+.service-flag {
+    width: 20px;
+    height: 20px;
+}
+.cost-input {
+    width: 100px;
+}
+.description-input {
+    min-width: 200px;
+}
+.pricing-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+}
+.daily-total {
+    font-weight: 600;
+    color: #0d6efd;
+}
+.grand-total {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #198754;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-edit"></i> {{ request.request_number }}</h2>
+            <div class="text-muted">
+                {{ request.agent }} | {{ request.contact_name }} | 
+                {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }} 
+                ({{ request.no_of_days }} days) | {{ request.pax }} pax
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-eye"></i> View
+            </a>
+            <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Itinerary Section -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Itinerary with Service Flags</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="generateByDays">
+                            <i class="fas fa-calendar-alt"></i> Generate by Days
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="generateBySections">
+                            <i class="fas fa-layer-group"></i> Generate by Sections
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped itinerary-table" id="itineraryTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Itinerary Description</th>
+                                    <th>Base Cost</th>
+                                    <th>Cost Unit</th>
+                                    <th>Currency</th>
+                                    <th title="Hotel">
+                                        <i class="fas fa-bed"></i>
+                                    </th>
+                                    <th title="Meet & Greet/Guide">
+                                        <i class="fas fa-user-tie"></i>
+                                    </th>
+                                    <th title="Transport">
+                                        <i class="fas fa-car"></i>
+                                    </th>
+                                    <th title="Meal">
+                                        <i class="fas fa-utensils"></i>
+                                    </th>
+                                    <th title="Airport">
+                                        <i class="fas fa-plane"></i>
+                                    </th>
+                                    <th>Row Cost</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itineraryBody">
+                                <!-- Rows will be loaded dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-success" id="addRow">
+                            <i class="fas fa-plus"></i> Add Row
+                        </button>
+                        <button type="button" class="btn btn-primary" id="saveItinerary">
+                            <i class="fas fa-save"></i> Save Itinerary
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Summary -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pricing Summary</h5>
+                </div>
+                <div class="card-body pricing-summary">
+                    <div id="pricingSummary">
+                        <!-- Daily totals will be loaded here -->
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between grand-total">
+                        <span>Tour Total:</span>
+                        <span id="grandTotal">0.00 USD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Sections Status -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Sections</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <i class="fas fa-bed text-primary"></i>
+                        <span class="ms-2">Hotels: <span id="hotelCount">0</span></span>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-car text-info"></i>
+                        <span class="ms-2">Transport: <span id="transportCount">0</span></span>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-utensils text-warning"></i>
+                        <span class="ms-2">Meals: <span id="mealCount">0</span></span>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-user-tie text-success"></i>
+                        <span class="ms-2">Guides: <span id="guideCount">0</span></span>
+                    </div>
+                    <div>
+                        <i class="fas fa-plane text-danger"></i>
+                        <span class="ms-2">Airport: <span id="airportCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const requestId = {{ request.id }};
+const paxCount = {{ request.pax }};
+let itineraryData = [];
+
+// Include the external JS modules
+let itineraryManager;
+
+/**
+ * ItineraryManager class - simplified version for inline use
+ * Full version is in /static/js/itinerary.js
+ */
+    
+    // Event listeners
+    document.getElementById('generateByDays').addEventListener('click', generateByDays);
+    document.getElementById('generateBySections').addEventListener('click', generateBySections);
+    document.getElementById('addRow').addEventListener('click', addRow);
+    document.getElementById('saveItinerary').addEventListener('click', saveItinerary);
+});
+
+async function loadItinerary() {
+    try {
+        const response = await fetch(`/inbound/api/${requestId}/itinerary`);
+        const data = await response.json();
+        itineraryData = data.rows;
+        renderItineraryTable();
+        updatePricingSummary();
+    } catch (error) {
+        console.error('Error loading itinerary:', error);
+    }
+}
+
+// Initialize the itinerary manager
+document.addEventListener('DOMContentLoaded', function() {
+    itineraryManager = new ItineraryManager(requestId, paxCount);
+});
+
+function renderItineraryTable() {
+    const tbody = document.getElementById('itineraryBody');
+    tbody.innerHTML = '';
+    
+    itineraryData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <input type="date" class="form-control form-control-sm" 
+                       value="${row.date}" onchange="updateRow(${index}, 'date', this.value)">
+            </td>
+            <td>
+                <textarea class="form-control form-control-sm description-input" 
+                          onchange="updateRow(${index}, 'description', this.value)">${row.description}</textarea>
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm cost-input" 
+                       value="${row.base_cost || 0}" step="0.01" min="0"
+                       onchange="updateRow(${index}, 'base_cost', parseFloat(this.value) || 0)">
+            </td>
+            <td>
+                <select class="form-select form-select-sm" onchange="updateRow(${index}, 'cost_unit', this.value)">
+                    <option value="PER_PERSON" ${row.cost_unit === 'PER_PERSON' ? 'selected' : ''}>Per Person</option>
+                    <option value="PER_GROUP" ${row.cost_unit === 'PER_GROUP' ? 'selected' : ''}>Per Group</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-select form-select-sm" onchange="updateRow(${index}, 'currency', this.value)">
+                    <option value="USD" ${row.currency === 'USD' ? 'selected' : ''}>USD</option>
+                    <option value="EUR" ${row.currency === 'EUR' ? 'selected' : ''}>EUR</option>
+                    <option value="JOD" ${row.currency === 'JOD' ? 'selected' : ''}>JOD</option>
+                </select>
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input service-flag" 
+                       ${row.flag_hotel ? 'checked' : ''} 
+                       onchange="updateRow(${index}, 'flag_hotel', this.checked)">
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input service-flag" 
+                       ${row.flag_guide ? 'checked' : ''} 
+                       onchange="updateRow(${index}, 'flag_guide', this.checked)">
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input service-flag" 
+                       ${row.flag_transport ? 'checked' : ''} 
+                       onchange="updateRow(${index}, 'flag_transport', this.checked)">
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input service-flag" 
+                       ${row.flag_meal ? 'checked' : ''} 
+                       onchange="updateRow(${index}, 'flag_meal', this.checked)">
+            </td>
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input service-flag" 
+                       ${row.flag_airport ? 'checked' : ''} 
+                       onchange="updateRow(${index}, 'flag_airport', this.checked)">
+            </td>
+            <td class="fw-bold">${(row.row_cost || 0).toFixed(2)} ${row.currency}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeRow(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updateRow(index, field, value) {
+    itineraryData[index][field] = value;
+    
+    // Recalculate row cost
+    const row = itineraryData[index];
+    if (row.cost_unit === 'PER_PERSON') {
+        row.row_cost = (row.base_cost || 0) * paxCount;
+    } else {
+        row.row_cost = row.base_cost || 0;
+    }
+    
+    // Re-render the specific row cost
+    const tbody = document.getElementById('itineraryBody');
+    const rowElement = tbody.children[index];
+    const costCell = rowElement.children[10]; // Row cost column
+    costCell.innerHTML = `${(row.row_cost || 0).toFixed(2)} ${row.currency}`;
+    
+    updatePricingSummary();
+}
+
+function addRow() {
+    const newRow = {
+        id: null,
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        base_cost: 0,
+        cost_unit: 'PER_PERSON',
+        currency: 'USD',
+        flag_hotel: false,
+        flag_guide: false,
+        flag_transport: false,
+        flag_meal: false,
+        flag_airport: false,
+        row_cost: 0
+    };
+    
+    itineraryData.push(newRow);
+    renderItineraryTable();
+    updatePricingSummary();
+}
+
+function removeRow(index) {
+    itineraryData.splice(index, 1);
+    renderItineraryTable();
+    updatePricingSummary();
+}
+
+async function generateByDays() {
+    if (confirm('This will replace all existing itinerary rows. Continue?')) {
+        try {
+            const response = await fetch(`/inbound/api/${requestId}/generate-days`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            if (response.ok) {
+                await loadItinerary();
+            }
+        } catch (error) {
+            console.error('Error generating by days:', error);
+        }
+    }
+}
+
+async function generateBySections() {
+    if (confirm('This will replace all existing itinerary rows. Continue?')) {
+        try {
+            const response = await fetch(`/inbound/api/${requestId}/generate-sections`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'}
+            });
+            
+            if (response.ok) {
+                await loadItinerary();
+            }
+        } catch (error) {
+            console.error('Error generating by sections:', error);
+        }
+    }
+}
+
+async function saveItinerary() {
+    try {
+        const response = await fetch(`/inbound/api/${requestId}/itinerary`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({rows: itineraryData})
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            alert('Itinerary saved successfully!');
+            await loadItinerary(); // Reload to get updated IDs and service counts
+        } else {
+            alert('Error saving itinerary: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error saving itinerary:', error);
+        alert('Error saving itinerary');
+    }
+}
+
+function updatePricingSummary() {
+    // Group by date for daily totals
+    const dailyTotals = {};
+    let grandTotal = 0;
+    
+    itineraryData.forEach(row => {
+        const dateKey = row.date;
+        if (!dailyTotals[dateKey]) {
+            dailyTotals[dateKey] = 0;
+        }
+        dailyTotals[dateKey] += row.row_cost || 0;
+        grandTotal += row.row_cost || 0;
+    });
+    
+    // Render daily totals
+    const summaryDiv = document.getElementById('pricingSummary');
+    let summaryHTML = '';
+    
+    Object.keys(dailyTotals).sort().forEach(date => {
+        const total = dailyTotals[date];
+        summaryHTML += `
+            <div class="d-flex justify-content-between daily-total">
+                <span>${new Date(date).toLocaleDateString()}</span>
+                <span>${total.toFixed(2)} USD</span>
+            </div>
+        `;
+    });
+    
+    summaryDiv.innerHTML = summaryHTML || '<div class="text-muted">No items</div>';
+    
+    // Update grand total
+    document.getElementById('grandTotal').textContent = `${grandTotal.toFixed(2)} USD`;
+    
+    // Update service counts
+    const counts = {
+        hotel: 0,
+        transport: 0,
+        meal: 0,
+        guide: 0,
+        airport: 0
+    };
+    
+    itineraryData.forEach(row => {
+        if (row.flag_hotel) counts.hotel++;
+        if (row.flag_transport) counts.transport++;
+        if (row.flag_meal) counts.meal++;
+        if (row.flag_guide) counts.guide++;
+        if (row.flag_airport) counts.airport++;
+    });
+    
+    document.getElementById('hotelCount').textContent = counts.hotel;
+    document.getElementById('transportCount').textContent = counts.transport;
+    document.getElementById('mealCount').textContent = counts.meal;
+    document.getElementById('guideCount').textContent = counts.guide;
+    document.getElementById('airportCount').textContent = counts.airport;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}View Inbound Request - {{ request.request_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-eye"></i> {{ request.request_number }}</h2>
+            <div class="text-muted">
+                Created on {{ request.created_at.strftime('%d %b %Y at %H:%M') }}
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-primary me-2">
+                <i class="fas fa-edit"></i> Edit
+            </a>
+            <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Request Information -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Request Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Request Number:</strong><br>
+                            <span class="text-primary">{{ request.request_number }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Status:</strong><br>
+                            {% if request.status == 'REQUEST' %}
+                                <span class="badge bg-warning">Request</span>
+                            {% elif request.status == 'BOOKED' %}
+                                <span class="badge bg-info">Booked</span>
+                            {% elif request.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-primary">In Progress</span>
+                            {% elif request.status == 'CONFIRMED' %}
+                                <span class="badge bg-success">Confirmed</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Agent:</strong><br>
+                            {{ request.agent }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Contact Name:</strong><br>
+                            {{ request.contact_name }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Agent Reference:</strong><br>
+                            {{ request.agent_ref or '-' }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Nationality:</strong><br>
+                            {{ request.nationality }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Travel Dates:</strong><br>
+                            {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Duration & Pax:</strong><br>
+                            {{ request.no_of_days }} days | {{ request.pax }} pax
+                        </div>
+                    </div>
+
+                    {% if request.special_note %}
+                    <div class="mb-3">
+                        <strong>Special Notes:</strong><br>
+                        <div class="bg-light p-2 rounded">{{ request.special_note }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Summary -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Pricing Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <div class="h4 text-primary mb-1">{{ request.itinerary_rows|length }}</div>
+                                <small class="text-muted">Itinerary Items</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <div class="h4 text-success mb-1">{{ "%.2f"|format(request.total_amount) }}</div>
+                                <small class="text-muted">{{ request.total_currency }}</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-3">
+                                <div class="h4 text-info mb-1">{{ "%.2f"|format(request.total_amount / request.pax if request.pax > 0 else 0) }}</div>
+                                <small class="text-muted">Per Person</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Service Summary -->
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <i class="fas fa-bed text-primary"></i>
+                                <span class="ms-2">Hotels: {{ request.inbound_hotels|length }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-car text-info"></i>
+                                <span class="ms-2">Transport: {{ request.inbound_transports|length }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-2">
+                                <i class="fas fa-utensils text-warning"></i>
+                                <span class="ms-2">Meals: {{ request.inbound_meals|length }}</span>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-user-tie text-success"></i>
+                                <span class="ms-2">Guides: {{ request.inbound_guides|length }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itinerary Details -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Itinerary Details</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.itinerary_rows %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Cost</th>
+                                    <th>Unit</th>
+                                    <th>Service Flags</th>
+                                    <th>Row Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in request.itinerary_rows %}
+                                <tr>
+                                    <td>{{ row.date.strftime('%d %b %Y') }}</td>
+                                    <td>{{ row.description }}</td>
+                                    <td>{{ "%.2f"|format(row.base_cost) }} {{ row.currency }}</td>
+                                    <td>
+                                        {% if row.cost_unit == 'PER_PERSON' %}
+                                            <span class="badge bg-primary">Per Person</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Per Group</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if row.flag_hotel %}
+                                            <i class="fas fa-bed text-primary" title="Hotel"></i>
+                                        {% endif %}
+                                        {% if row.flag_guide %}
+                                            <i class="fas fa-user-tie text-success" title="Guide"></i>
+                                        {% endif %}
+                                        {% if row.flag_transport %}
+                                            <i class="fas fa-car text-info" title="Transport"></i>
+                                        {% endif %}
+                                        {% if row.flag_meal %}
+                                            <i class="fas fa-utensils text-warning" title="Meal"></i>
+                                        {% endif %}
+                                        {% if row.flag_airport %}
+                                            <i class="fas fa-plane text-danger" title="Airport"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">
+                                        {% if row.cost_unit == 'PER_PERSON' %}
+                                            {{ "%.2f"|format(row.base_cost * request.pax) }}
+                                        {% else %}
+                                            {{ "%.2f"|format(row.base_cost) }}
+                                        {% endif %}
+                                        {{ row.currency }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                    <td class="fw-bold">{{ "%.2f"|format(request.total_amount) }} {{ request.total_currency }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-list fa-3x mb-3"></i>
+                        <h5>No Itinerary Items</h5>
+                        <p>No itinerary has been created for this request yet.</p>
+                        <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Itinerary
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Details Tabs -->
+    {% if request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Generated Services</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="servicesTabs" role="tablist">
+                        {% if request.inbound_hotels %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab">
+                                <i class="fas fa-bed"></i> Hotels ({{ request.inbound_hotels|length }})
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if request.inbound_transports %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab">
+                                <i class="fas fa-car"></i> Transport ({{ request.inbound_transports|length }})
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if request.inbound_meals %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="meals-tab" data-bs-toggle="tab" data-bs-target="#meals" type="button" role="tab">
+                                <i class="fas fa-utensils"></i> Meals ({{ request.inbound_meals|length }})
+                            </button>
+                        </li>
+                        {% endif %}
+                        {% if request.inbound_guides %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="guides-tab" data-bs-toggle="tab" data-bs-target="#guides" type="button" role="tab">
+                                <i class="fas fa-user-tie"></i> Guides ({{ request.inbound_guides|length }})
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <div class="tab-content mt-3" id="servicesTabContent">
+                        {% if request.inbound_hotels %}
+                        <div class="tab-pane fade show active" id="hotels" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Hotel</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Nights</th>
+                                            <th>Room Type</th>
+                                            <th>Meal Plan</th>
+                                            <th>Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for hotel in request.inbound_hotels %}
+                                        <tr>
+                                            <td>{{ hotel.hotel_name or '-' }}</td>
+                                            <td>{{ hotel.check_in_date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ hotel.check_out_date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ hotel.nights }}</td>
+                                            <td>{{ hotel.room_type or '-' }}</td>
+                                            <td>{{ hotel.meal_plan }}</td>
+                                            <td>{{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if request.inbound_transports %}
+                        <div class="tab-pane fade" id="transport" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Vehicle</th>
+                                            <th>Pickup</th>
+                                            <th>Dropoff</th>
+                                            <th>Time</th>
+                                            <th>Type</th>
+                                            <th>Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for transport in request.inbound_transports %}
+                                        <tr>
+                                            <td>{{ transport.date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ transport.vehicle_type or '-' }}</td>
+                                            <td>{{ transport.pickup_location or '-' }}</td>
+                                            <td>{{ transport.dropoff_location or '-' }}</td>
+                                            <td>{{ transport.pickup_time.strftime('%H:%M') if transport.pickup_time else '-' }}</td>
+                                            <td>
+                                                {% if transport.is_airport_transfer %}
+                                                    <span class="badge bg-danger">Airport</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">Regular</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ "%.2f"|format(transport.cost) }} {{ transport.currency }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if request.inbound_meals %}
+                        <div class="tab-pane fade" id="meals" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Meal Type</th>
+                                            <th>Restaurant</th>
+                                            <th>Location</th>
+                                            <th>Time</th>
+                                            <th>Per Person</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for meal in request.inbound_meals %}
+                                        <tr>
+                                            <td>{{ meal.date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ meal.meal_type or '-' }}</td>
+                                            <td>{{ meal.restaurant or '-' }}</td>
+                                            <td>{{ meal.location or '-' }}</td>
+                                            <td>{{ meal.meal_time.strftime('%H:%M') if meal.meal_time else '-' }}</td>
+                                            <td>{{ "%.2f"|format(meal.cost_per_person) }} {{ meal.currency }}</td>
+                                            <td>{{ "%.2f"|format(meal.total_cost) }} {{ meal.currency }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if request.inbound_guides %}
+                        <div class="tab-pane fade" id="guides" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Guide</th>
+                                            <th>Language</th>
+                                            <th>Service Type</th>
+                                            <th>Duration</th>
+                                            <th>Meeting Point</th>
+                                            <th>Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for guide in request.inbound_guides %}
+                                        <tr>
+                                            <td>{{ guide.date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ guide.guide_name or '-' }}</td>
+                                            <td>{{ guide.language or '-' }}</td>
+                                            <td>{{ guide.service_type or '-' }}</td>
+                                            <td>{{ guide.duration_hours or '-' }} hrs</td>
+                                            <td>{{ guide.meeting_point or '-' }}</td>
+                                            <td>{{ "%.2f"|format(guide.cost) }} {{ guide.currency }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
