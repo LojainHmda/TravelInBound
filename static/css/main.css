@@ -47,13 +47,11 @@ body {
 
 /* Hero Section */
 .hero-section {
-    padding: 5rem 0;
-    background-color: white !important;
+    padding: 2rem 0;
+    background: transparent !important;
     position: relative;
-    border-radius: 0.5rem;
     overflow: hidden;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-bg {
