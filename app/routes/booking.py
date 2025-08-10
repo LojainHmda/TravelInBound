@@ -1783,6 +1783,10 @@ def confirm_service(item_id):
         legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'VISA']
     elif service_item.service_type == 'INSURANCE':
         legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'INSURANCE']
+    elif service_item.service_type == 'RESTAURANT':
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'RESTAURANT']
+    elif service_item.service_type == 'GUIDE':
+        legacy_suppliers = [s for s in all_suppliers if s.supplier_type == 'GUIDE']
     else:
         legacy_suppliers = []
     
