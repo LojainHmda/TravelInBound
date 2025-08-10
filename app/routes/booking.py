@@ -1612,6 +1612,33 @@ def confirm_service(item_id):
             'emergency_contact': '',
             'special_conditions': ''
         })
+    elif service_item.service_type == 'RESTAURANT':
+        confirmation_data.update({
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'restaurant_name': '',
+            'meal_type': '',
+            'dietary_restrictions': '',
+            'pax': 1,
+            'special_notes': '',
+            'reservation_time': '',
+            'contact_phone': ''
+        })
+    elif service_item.service_type == 'GUIDE':
+        confirmation_data.update({
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'guide_name': '',
+            'language': '',
+            'guide_license': '',
+            'guide_phone': '',
+            'service_type': '',
+            'meeting_location': '',
+            'tour_itinerary': '',
+            'guide_report': '',
+            'start_time': '',
+            'duration_hours': ''
+        })
     
     import sys
     print(f"Default confirmation_data for {service_item.service_type}: {confirmation_data}", file=sys.stderr)
@@ -2105,6 +2132,10 @@ def service_item_details_api(item_id):
         form_template = 'booking/forms/confirm_visa_form.html'
     elif service_item.service_type == 'INSURANCE':
         form_template = 'booking/forms/confirm_insurance_form.html'
+    elif service_item.service_type == 'RESTAURANT':
+        form_template = 'booking/forms/confirm_restaurant_form.html'
+    elif service_item.service_type == 'GUIDE':
+        form_template = 'booking/forms/confirm_guide_form.html'
     else:
         form_template = 'booking/forms/confirm_generic_form.html'
     

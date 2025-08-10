@@ -4,8 +4,8 @@ from wtforms.validators import DataRequired, Optional, Length
 
 from app.models import (
     SERVICE_FLIGHT, SERVICE_HOTEL, SERVICE_TRANSPORT, 
-    SERVICE_VISA, SERVICE_INSURANCE, STATUS_REQUEST, 
-    STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
+    SERVICE_VISA, SERVICE_INSURANCE, SERVICE_RESTAURANT, SERVICE_GUIDE,
+    STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_COMPLETED
 )
 
 class BookingRequestForm(FlaskForm):
@@ -22,7 +22,9 @@ class BookingRequestForm(FlaskForm):
         (SERVICE_HOTEL, 'Hotel'),
         (SERVICE_TRANSPORT, 'Transport'),
         (SERVICE_VISA, 'Visa'),
-        (SERVICE_INSURANCE, 'Insurance')
+        (SERVICE_INSURANCE, 'Insurance'),
+        (SERVICE_RESTAURANT, 'Restaurant/Meal'),
+        (SERVICE_GUIDE, 'Guide')
     ])
     
     from_date = DateField('From Date', validators=[DataRequired()])
@@ -60,7 +62,9 @@ class ServiceItemForm(FlaskForm):
         (SERVICE_HOTEL, 'Hotel'),
         (SERVICE_TRANSPORT, 'Transport'),
         (SERVICE_VISA, 'Visa'),
-        (SERVICE_INSURANCE, 'Insurance')
+        (SERVICE_INSURANCE, 'Insurance'),
+        (SERVICE_RESTAURANT, 'Restaurant/Meal'),
+        (SERVICE_GUIDE, 'Guide')
     ], validators=[DataRequired()])
     
     start_date = DateField('Start Date', validators=[DataRequired()])

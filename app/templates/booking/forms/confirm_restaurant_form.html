@@ -1,0 +1,73 @@
+{% extends 'booking/forms/confirm_base_form.html' %}
+
+{% block supplier_options %}
+<option value="Direct">Direct Restaurant</option>
+<option value="OpenTable">OpenTable</option>
+<option value="Resy">Resy</option>
+<option value="Hotel Restaurant">Hotel Restaurant</option>
+<option value="Local Partner">Local Partner</option>
+<option value="Other">Other</option>
+{% endblock %}
+
+{% block form_fields %}
+<!-- Restaurant Details -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">From Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" name="from_date" required value="{{ confirmation_data.get('from_date', '') }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">To Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control" name="to_date" required value="{{ confirmation_data.get('to_date', '') }}">
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <label class="form-label">Restaurant Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" name="restaurant_name" required value="{{ confirmation_data.get('restaurant_name', '') }}" placeholder="Enter restaurant name">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Meal Type <span class="text-danger">*</span></label>
+        <select class="form-control" name="meal_type" required>
+            <option value="">Select Meal Type</option>
+            <option value="Breakfast" {% if confirmation_data.get('meal_type') == 'Breakfast' %}selected{% endif %}>Breakfast</option>
+            <option value="Lunch" {% if confirmation_data.get('meal_type') == 'Lunch' %}selected{% endif %}>Lunch</option>
+            <option value="Dinner" {% if confirmation_data.get('meal_type') == 'Dinner' %}selected{% endif %}>Dinner</option>
+            <option value="Brunch" {% if confirmation_data.get('meal_type') == 'Brunch' %}selected{% endif %}>Brunch</option>
+            <option value="Snack" {% if confirmation_data.get('meal_type') == 'Snack' %}selected{% endif %}>Snack</option>
+        </select>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-8">
+        <label class="form-label">Dietary Restrictions</label>
+        <input type="text" class="form-control" name="dietary_restrictions" value="{{ confirmation_data.get('dietary_restrictions', '') }}" placeholder="e.g., Vegetarian, Halal, Gluten-free, Allergies">
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Pax <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" name="pax" required min="1" value="{{ confirmation_data.get('pax', '') }}" placeholder="Number of people">
+    </div>
+</div>
+
+<!-- Additional Information -->
+<div class="row mb-3">
+    <div class="col-md-12">
+        <label class="form-label">Special Requests / Notes</label>
+        <textarea class="form-control" name="special_notes" rows="3" placeholder="Any special requests, seating preferences, celebration details, etc.">{{ confirmation_data.get('special_notes', '') }}</textarea>
+    </div>
+</div>
+
+<!-- Reservation Details -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Reservation Time</label>
+        <input type="time" class="form-control" name="reservation_time" value="{{ confirmation_data.get('reservation_time', '') }}">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Contact Phone</label>
+        <input type="text" class="form-control" name="contact_phone" value="{{ confirmation_data.get('contact_phone', '') }}" placeholder="Restaurant contact number">
+    </div>
+</div>
+{% endblock %}
