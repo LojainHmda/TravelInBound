@@ -479,7 +479,7 @@ def api_generate_services(request_id):
             'success': True,
             'message': f"Generated {services_created} services",
             'booking_id': booking.id,
-            'redirect_url': url_for('booking.booking_details', booking_id=booking.id)
+            'redirect_url': url_for('booking.details', booking_id=booking.id)
         })
         
     except Exception as e:
