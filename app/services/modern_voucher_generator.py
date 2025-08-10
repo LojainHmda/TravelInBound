@@ -173,7 +173,7 @@ class ModernVoucherGenerator:
             
             header_data = [
                 [logo_img, 
-                 Paragraph("ARABI TRAVEL<br/>TRAVEL VOUCHER", self.styles['CompanyHeader'])]
+                 Paragraph("WINDOWS OF JORDAN<br/>TRAVEL VOUCHER", self.styles['CompanyHeader'])]
             ]
             
             header_table = Table(header_data, colWidths=[1.5*inch, 4.5*inch])
@@ -189,7 +189,7 @@ class ModernVoucherGenerator:
             content.append(header_table)
         else:
             # Fallback without logo
-            content.append(Paragraph("ARABI TRAVEL", self.styles['CompanyHeader']))
+            content.append(Paragraph("WINDOWS OF JORDAN", self.styles['CompanyHeader']))
             content.append(Paragraph("TRAVEL VOUCHER", self.styles['VoucherTitle']))
         
         content.append(Spacer(1, 0.3*inch))

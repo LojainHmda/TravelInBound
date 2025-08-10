@@ -105,14 +105,15 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Customer</label>
-                        <select class="form-control" name="customer_id">
-                            <option value="">Select Customer</option>
-                            {% for customer in customers %}
-                            <option value="{{ customer.id }}" {% if request.customer_id == customer.id %}selected{% endif %}>
-                                {{ customer.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
+                        <div class="input-group">
+                            <input type="hidden" name="customer_id" id="selectedCustomerId" value="{{ request.customer_id or '' }}">
+                            <input type="text" class="form-control" id="selectedCustomerDisplay" 
+                                   value="{{ request.customer.name if request.customer else 'No customer selected' }}" 
+                                   readonly style="background-color: #f8f9fa;">
+                            <button type="button" class="btn btn-outline-primary" onclick="openCustomerSelectionModal(handleCustomerSelection)">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="row mt-3">
@@ -509,6 +510,13 @@ function renderItineraryTable() {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Handle customer selection
+function handleCustomerSelection(customer) {
+    document.getElementById('selectedCustomerId').value = customer.id;
+    document.getElementById('selectedCustomerDisplay').value = customer.name;
+    showAlert(`Customer "${customer.name}" selected successfully!`, 'success');
 }
 
 function updateRow(index, field, value) {

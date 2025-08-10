@@ -1,12 +1,13 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #444444; /* Dark Gray */
+    --primary-color: #000000; /* Black */
     --secondary-color: #FFBF00; /* Yellow */
     --light-color: #ffffff; /* White */
     --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;
-    --border-color: #555555;
-    --background-color: #333333; /* Dark Gray Background */
+    --border-color: #333333;
+    --background-color: #f8f9fa; /* Light Background */
+    --sidebar-bg: #000000; /* Black Sidebar */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */
