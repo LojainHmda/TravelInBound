@@ -4,22 +4,68 @@
 
 {% block styles %}
 <style>
+/* Global Page Styling */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.container-fluid {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 30px;
+    margin: 2rem auto;
+    max-width: 1400px;
+    padding: 3rem 2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Section Headers */
+.section-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    position: relative;
+}
+
+.section-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+    font-size: 1.25rem;
+    color: #64748b;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Enhanced Service Cards */
 .service-card {
     border: none;
-    border-radius: 20px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    height: 350px;
+    border-radius: 24px;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    height: 380px;
     overflow: hidden;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
     text-align: center;
-    padding: 2.5rem 2rem;
+    padding: 3rem 2rem;
     position: relative;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .service-card::before {
@@ -29,14 +75,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
-    border-radius: 20px;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+    border-radius: 24px;
     z-index: 1;
 }
 
 .service-card:hover {
-    transform: translateY(-15px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(-20px) scale(1.03);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
 }
 
 .service-card.private-transfers {
@@ -60,87 +106,174 @@
 }
 
 .service-icon {
-    font-size: 5rem;
-    margin-bottom: 1.5rem;
+    font-size: 5.5rem;
+    margin-bottom: 2rem;
     opacity: 1;
     z-index: 2;
     position: relative;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.3));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
 }
 
 .service-title {
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 1rem;
     line-height: 1.3;
     z-index: 2;
     position: relative;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .service-description {
-    font-size: 1rem;
+    font-size: 1.1rem;
     opacity: 0.95;
-    line-height: 1.5;
+    line-height: 1.6;
     z-index: 2;
     position: relative;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Modern Stats Cards */
 .stats-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
     text-align: center;
-    border-left: 4px solid #FFBF00;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stats-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.stats-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.12);
 }
 
 .stats-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #2c3e50;
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
 }
 
 .stats-label {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
+    color: #64748b;
+    font-size: 1.1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.section-title {
-    color: #2c3e50;
-    font-weight: bold;
-    margin-bottom: 2rem;
+/* Enhanced Feature Cards */
+.feature-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    text-align: center;
+    height: 100%;
+    transition: all 0.4s ease;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
 .feature-icon {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    margin: 0 auto 1rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-size: 2.5rem;
+    margin: 0 auto 2rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    color: white;
 }
 
-.feature-card {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
+.feature-card h5 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.feature-card p {
+    color: #64748b;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Quick Actions Enhancement */
+.quick-actions {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    margin-top: 4rem;
     text-align: center;
-    height: 100%;
-    transition: all 0.3s ease;
-    border: 1px solid #e1e5e9;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+.btn-modern {
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 0.5rem;
 }
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Animation Classes */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
 </style>
 {% endblock %}
 
@@ -148,15 +281,13 @@
 <div class="container-fluid">
     <!-- Service Cards Section -->
     <div class="container">
-        <div class="row mb-5">
-            <div class="col-12 text-center">
-                <h2 class="section-title">Our Premium Services</h2>
-                <p class="lead text-muted">Comprehensive inbound tour solutions for unforgettable Jordan experiences</p>
-            </div>
+        <div class="section-header fade-in">
+            <h2 class="section-title">Premium Travel Services</h2>
+            <p class="section-subtitle">Discover Jordan through our comprehensive inbound tour solutions crafted for unforgettable experiences</p>
         </div>
 
-        <div class="row g-5 mb-5">
-            <div class="col-lg-3 col-md-6">
+        <div class="row g-5 mb-6">
+            <div class="col-lg-3 col-md-6 fade-in delay-1">
                 <div class="service-card private-transfers" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                     <div class="service-icon">
                         <i class="fas fa-car-side"></i>
@@ -164,141 +295,165 @@
                     <div>
                         <div class="service-title">Private Transfers</div>
                         <div class="service-description">
-                            Comfortable and reliable transportation with professional drivers to any destination across Jordan
+                            Luxury transportation with professional drivers to any destination across the Hashemite Kingdom
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 fade-in delay-2">
                 <div class="service-card private-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                     <div class="service-icon">
                         <i class="fas fa-map-marked-alt"></i>
                     </div>
                     <div>
-                        <div class="service-title">Private Tours & Packages</div>
+                        <div class="service-title">Curated Tour Packages</div>
                         <div class="service-description">
-                            Personalized guided tours showcasing Jordan's ancient wonders and hidden gems
+                            Expertly designed journeys showcasing Jordan's archaeological treasures and natural wonders
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 fade-in delay-3">
                 <div class="service-card jerusalem-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                     <div class="service-icon">
                         <i class="fas fa-mosque"></i>
                     </div>
                     <div>
-                        <div class="service-title">Jerusalem From Amman</div>
+                        <div class="service-title">Holy Land Pilgrimages</div>
                         <div class="service-description">
-                            Sacred pilgrimage to the Holy Land with seamless border crossing and expert guidance
+                            Sacred journeys to Jerusalem with seamless border arrangements and spiritual guidance
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-3 col-md-6 fade-in delay-4">
                 <div class="service-card vehicle-rental" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                     <div class="service-icon">
                         <i class="fas fa-user-clock"></i>
                     </div>
                     <div>
-                        <div class="service-title">Vehicle With Driver Per Hour</div>
+                        <div class="service-title">Hourly Chauffeur Service</div>
                         <div class="service-description">
-                            Flexible hourly vehicle rental with experienced drivers for ultimate travel freedom
+                            Premium vehicle rental with dedicated drivers for ultimate flexibility and comfort
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Stats Section -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
+        <!-- Enhanced Stats Section -->
+        <div class="section-header fade-in">
+            <h3 class="section-title" style="font-size: 2.5rem;">Excellence in Numbers</h3>
+            <p class="section-subtitle">Our commitment to outstanding service reflected in measurable results</p>
+        </div>
+
+        <div class="row g-4 mb-6">
+            <div class="col-md-3 fade-in delay-1">
                 <div class="stats-card">
-                    <div class="stats-number">500+</div>
+                    <div class="stats-number">1,200+</div>
                     <div class="stats-label">Tours Completed</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 fade-in delay-2">
                 <div class="stats-card">
-                    <div class="stats-number">50+</div>
+                    <div class="stats-number">85+</div>
                     <div class="stats-label">Partner Hotels</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 fade-in delay-3">
                 <div class="stats-card">
-                    <div class="stats-number">98%</div>
-                    <div class="stats-label">Customer Satisfaction</div>
+                    <div class="stats-number">99.2%</div>
+                    <div class="stats-label">Client Satisfaction</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3 fade-in delay-4">
                 <div class="stats-card">
                     <div class="stats-number">24/7</div>
-                    <div class="stats-label">Support Available</div>
+                    <div class="stats-label">Dedicated Support</div>
                 </div>
             </div>
         </div>
 
-        <!-- Features Section -->
-        <div class="row mb-5">
-            <div class="col-12 text-center">
-                <h3 class="section-title">Why Choose Windows of Jordan</h3>
-                <p class="lead text-muted">Professional inbound tour management with cutting-edge technology</p>
-            </div>
+        <!-- Enhanced Features Section -->
+        <div class="section-header fade-in">
+            <h3 class="section-title" style="font-size: 2.5rem;">Why Choose Windows of Jordan</h3>
+            <p class="section-subtitle">Advanced technology meets traditional hospitality for exceptional travel experiences</p>
         </div>
 
-        <div class="row g-4 mb-5">
-            <div class="col-lg-4 col-md-6">
+        <div class="row g-5 mb-6">
+            <div class="col-lg-4 col-md-6 fade-in delay-1">
                 <div class="feature-card">
                     <div class="feature-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-route" style="color: white;"></i>
+                        <i class="fas fa-route"></i>
                     </div>
-                    <h5>Itinerary Builder</h5>
-                    <p class="text-muted">Create detailed day-by-day itineraries with automatic service generation and cost calculation.</p>
+                    <h5>Intelligent Itinerary Builder</h5>
+                    <p>AI-powered itinerary creation with real-time pricing, automatic service generation, and dynamic optimization.</p>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6">
+            <div class="col-lg-4 col-md-6 fade-in delay-2">
                 <div class="feature-card">
                     <div class="feature-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <i class="fas fa-mobile-alt" style="color: white;"></i>
+                        <i class="fas fa-mobile-alt"></i>
                     </div>
-                    <h5>Real-Time Updates</h5>
-                    <p class="text-muted">Instant notifications and live tracking of tour progress with mobile-responsive design.</p>
+                    <h5>Real-Time Connectivity</h5>
+                    <p>Live tracking, instant notifications, and seamless communication throughout your Jordan adventure.</p>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6">
+            <div class="col-lg-4 col-md-6 fade-in delay-3">
                 <div class="feature-card">
                     <div class="feature-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <i class="fas fa-chart-bar" style="color: white;"></i>
+                        <i class="fas fa-chart-line"></i>
                     </div>
-                    <h5>Analytics Dashboard</h5>
-                    <p class="text-muted">Comprehensive reporting and analytics to optimize your tour operations and revenue.</p>
+                    <h5>Advanced Analytics</h5>
+                    <p>Comprehensive insights and data-driven optimization to enhance operational efficiency and revenue growth.</p>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions Section -->
-        <div class="row">
-            <div class="col-12 text-center">
-                <h3 class="section-title">Quick Actions</h3>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="{{ url_for('inbound.new_request') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-plus me-2"></i>Create New Tour
-                    </a>
-                    <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-success">
-                        <i class="fas fa-list me-2"></i>Manage Tours
-                    </a>
-                    <a href="{{ url_for('main.find_bookings') }}" class="btn btn-outline-info">
-                        <i class="fas fa-search me-2"></i>Search Bookings
-                    </a>
-                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-warning">
-                        <i class="fas fa-chart-line me-2"></i>View Dashboard
-                    </a>
-                </div>
+        <!-- Modern Quick Actions Section -->
+        <div class="quick-actions fade-in">
+            <h3 class="section-title" style="font-size: 2.5rem; margin-bottom: 2rem;">Start Your Journey</h3>
+            <div class="d-flex justify-content-center gap-4 flex-wrap">
+                <a href="{{ url_for('inbound.new_request') }}" class="btn btn-modern" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <i class="fas fa-plus me-2"></i>Create New Tour
+                </a>
+                <a href="{{ url_for('inbound.index') }}" class="btn btn-modern" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <i class="fas fa-list me-2"></i>Manage Tours
+                </a>
+                <a href="{{ url_for('main.find_bookings') }}" class="btn btn-modern" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <i class="fas fa-search me-2"></i>Search Bookings
+                </a>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-modern" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+                    <i class="fas fa-chart-line me-2"></i>Analytics Dashboard
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Add smooth scroll animations
+document.addEventListener('DOMContentLoaded', function() {
+    const fadeElements = document.querySelectorAll('.fade-in');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    fadeElements.forEach(element => {
+        observer.observe(element);
+    });
+});
+</script>
 {% endblock %}
