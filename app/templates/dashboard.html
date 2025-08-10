@@ -4,38 +4,55 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Dashboard1</h1>
+    <h1 class="mb-4 brand-text"><i class="fas fa-tachometer-alt me-3"></i>Windows of <span style="color: #87c442; font-weight: 700;">Jordan</span> Dashboard</h1>
 
+    <!-- Windows of Jordan Style Dashboard Cards -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3">
-            <div class="card" style="background-color: white; color: #000080; border: 1px solid #E0E0E0; cursor: pointer;" onclick="filterBookings('REQUEST')">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-clipboard-list me-2" style="color: #FFC107;"></i>Requests</h5>
-                    <p class="card-text display-4">{{ request_count }}</p>
+            <div class="card card-service" style="cursor: pointer; background: linear-gradient(135deg, #f39c12, #e67e22);" onclick="filterBookings('REQUEST')">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Requests</h5>
+                    <p class="card-text display-4 fw-bold">{{ request_count }}</p>
+                    <small class="text-light">New booking requests</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card" style="background-color: white; color: #000080; border: 1px solid #E0E0E0; cursor: pointer;" onclick="filterBookings('BOOKED')">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-calendar-check me-2" style="color: #FFC107;"></i>Booked</h5>
-                    <p class="card-text display-4">{{ booked_count }}</p>
+            <div class="card card-transport" style="cursor: pointer; background: linear-gradient(135deg, #4a90e2, #357abd);" onclick="filterBookings('BOOKED')">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar-check" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Booked</h5>
+                    <p class="card-text display-4 fw-bold">{{ booked_count }}</p>
+                    <small class="text-light">Confirmed bookings</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card" style="background-color: white; color: #000080; border: 1px solid #E0E0E0; cursor: pointer;" onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-spinner me-2" style="color: #FFC107;"></i>In Progress</h5>
-                    <p class="card-text display-4">{{ in_progress_count }}</p>
+            <div class="card card-destination" style="cursor: pointer; background: linear-gradient(135deg, #e74c3c, #c0392b);" onclick="filterBookings('IN_PROGRESS')">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-cogs" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">In Progress</h5>
+                    <p class="card-text display-4 fw-bold">{{ in_progress_count }}</p>
+                    <small class="text-light">Services being arranged</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3">
-            <div class="card" style="background-color: white; color: #000080; border: 1px solid #E0E0E0; cursor: pointer;" onclick="filterBookings('COMPLETED')">
-                <div class="card-body">
-                    <h5 class="card-title"><i class="fas fa-check-circle me-2" style="color: #FFC107;"></i>Completed</h5>
-                    <p class="card-text display-4">{{ completed_count }}</p>
+            <div class="card card-guide" style="cursor: pointer; background: linear-gradient(135deg, #27ae60, #219653);" onclick="filterBookings('COMPLETED')">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-check-circle" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Completed</h5>
+                    <p class="card-text display-4 fw-bold">{{ completed_count }}</p>
+                    <small class="text-light">Successfully completed</small>
                 </div>
             </div>
         </div>
