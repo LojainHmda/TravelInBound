@@ -74,7 +74,11 @@ def edit_request(id):
         flash('Access denied.', 'error')
         return redirect(url_for('inbound.index'))
     
-    return render_template('inbound/edit_request.html', request=request_obj)
+    # Get all customers for selection dropdown
+    from app.models.customer import Customer
+    customers = Customer.query.all()
+    
+    return render_template('inbound/edit_request.html', request=request_obj, customers=customers)
 
 @inbound_bp.route('/<int:id>/view')
 @login_required
@@ -328,6 +332,43 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(guide)
+
+@inbound_bp.route('/api/<int:request_id>/update-master-details', methods=['POST'])
+@login_required
+def api_update_master_details(request_id):
+    """Update master details"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    
+    # Update master details
+    request_obj.agent = data.get('agent', request_obj.agent)
+    request_obj.contact_name = data.get('contact_name', request_obj.contact_name)
+    request_obj.agent_ref = data.get('agent_ref', request_obj.agent_ref)
+    request_obj.nationality = data.get('nationality', request_obj.nationality)
+    request_obj.pax = data.get('pax', request_obj.pax)
+    request_obj.special_note = data.get('special_note', request_obj.special_note)
+    request_obj.customer_id = data.get('customer_id') if data.get('customer_id') else None
+    
+    # Handle date updates
+    if data.get('from_date'):
+        request_obj.from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
+    if data.get('to_date'):
+        request_obj.to_date = datetime.strptime(data.get('to_date'), '%Y-%m-%d').date()
+    
+    # Recalculate days
+    request_obj.calculate_days()
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True, 
+        'no_of_days': request_obj.no_of_days,
+        'message': 'Master details updated successfully'
+    })
 
 @inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
 @login_required

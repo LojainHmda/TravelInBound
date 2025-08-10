@@ -45,19 +45,83 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2><i class="fas fa-edit"></i> {{ request.request_number }}</h2>
-            <div class="text-muted">
-                {{ request.agent }} | {{ request.contact_name }} | 
-                {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }} 
-                ({{ request.no_of_days }} days) | {{ request.pax }} pax
-            </div>
+            <span class="badge badge-{{ request.status.lower() }} text-white">{{ request.status.title() }}</span>
         </div>
         <div>
+            <button type="button" class="btn btn-primary me-2" onclick="saveAllChanges()">
+                <i class="fas fa-save"></i> Save All Changes
+            </button>
             <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-outline-primary me-2">
                 <i class="fas fa-eye"></i> View
             </a>
             <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
+        </div>
+    </div>
+
+    <!-- Master Details Section - Editable -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Master Details</h5>
+        </div>
+        <div class="card-body">
+            <form id="masterDetailsForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">Agent <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="agent" value="{{ request.agent }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Contact Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="contact_name" value="{{ request.contact_name }}" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Agent Reference</label>
+                        <input type="text" class="form-control" name="agent_ref" value="{{ request.agent_ref or '' }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Nationality</label>
+                        <input type="text" class="form-control" name="nationality" value="{{ request.nationality or '' }}">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <label class="form-label">From Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="from_date" value="{{ request.from_date.strftime('%Y-%m-%d') }}" required onchange="calculateDays()">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" name="to_date" value="{{ request.to_date.strftime('%Y-%m-%d') }}" required onchange="calculateDays()">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Number of Days</label>
+                        <input type="text" class="form-control" id="no_of_days" value="{{ request.no_of_days }}" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Pax <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Customer</label>
+                        <select class="form-control" name="customer_id">
+                            <option value="">Select Customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}" {% if request.customer_id == customer.id %}selected{% endif %}>
+                                {{ customer.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <label class="form-label">Special Notes</label>
+                        <textarea class="form-control" name="special_note" rows="2">{{ request.special_note or '' }}</textarea>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -231,7 +295,7 @@
 
 <script>
 const requestId = {{ request.id }};
-const paxCount = {{ request.pax }};
+let paxCount = {{ request.pax }};
 let itineraryData = [];
 
 // Event listeners setup
@@ -251,6 +315,118 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveItineraryBtn = document.getElementById('saveItinerary');
     if (saveItineraryBtn) saveItineraryBtn.addEventListener('click', saveItinerary);
 });
+
+// Calculate days when dates change
+function calculateDays() {
+    const fromDate = document.querySelector('input[name="from_date"]').value;
+    const toDate = document.querySelector('input[name="to_date"]').value;
+    
+    if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        const diffTime = Math.abs(to - from);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        document.getElementById('no_of_days').value = diffDays;
+    }
+}
+
+// Save all changes (master details + itinerary)
+async function saveAllChanges() {
+    try {
+        // Show loading state
+        const btn = document.querySelector('button[onclick="saveAllChanges()"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+        
+        // Save master details first
+        await saveMasterDetails();
+        
+        // Then save itinerary
+        await saveItinerary();
+        
+        // Show success message
+        showAlert('All changes saved successfully!', 'success');
+        
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+    } catch (error) {
+        console.error('Error saving changes:', error);
+        showAlert('Error saving changes. Please try again.', 'error');
+        
+        // Restore button
+        const btn = document.querySelector('button[onclick="saveAllChanges()"]');
+        btn.innerHTML = '<i class="fas fa-save"></i> Save All Changes';
+        btn.disabled = false;
+    }
+}
+
+// Save master details
+async function saveMasterDetails() {
+    const form = document.getElementById('masterDetailsForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        agent: formData.get('agent'),
+        contact_name: formData.get('contact_name'),
+        agent_ref: formData.get('agent_ref'),
+        nationality: formData.get('nationality'),
+        from_date: formData.get('from_date'),
+        to_date: formData.get('to_date'),
+        pax: parseInt(formData.get('pax')),
+        customer_id: formData.get('customer_id') || null,
+        special_note: formData.get('special_note')
+    };
+    
+    const response = await fetch(`/inbound/api/${requestId}/update-master-details`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+        throw new Error(result.error || 'Failed to save master details');
+    }
+    
+    // Update global pax count for calculations
+    paxCount = data.pax;
+    
+    // Update calculated days if changed
+    if (result.no_of_days) {
+        document.getElementById('no_of_days').value = result.no_of_days;
+    }
+    
+    return result;
+}
+
+// Show alert messages
+function showAlert(message, type = 'info') {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Insert at top of container
+    const container = document.querySelector('.container-fluid');
+    const firstCard = container.querySelector('.card');
+    firstCard.insertAdjacentHTML('beforebegin', alertHtml);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            alert.remove();
+        }
+    }, 5000);
+}
 
 async function loadItinerary() {
     try {

@@ -9,7 +9,7 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes (August 2025)
 
 ### Inbound Tour Operator System Implementation
-- **Date**: August 9, 2025
+- **Date**: August 9-10, 2025
 - **Feature**: Complete inbound tour operator module with itinerary-first booking approach
 - **Components Added**:
   - New models: InboundRequest, ItineraryRow, InboundHotel, InboundTransport, InboundMeal, InboundGuide
@@ -24,7 +24,14 @@ Preferred communication style: Simple, everyday language.
   - Integration with normal booking workflow (/booking/124 format)
   - New service types: SERVICE_RESTAURANT and SERVICE_GUIDE for inbound operations
 - **Workflow**: Generate itinerary → Generate Services & Open Booking → Use normal confirmation flow
-- **Status**: Fully integrated with existing booking system, ready for testing
+- **Latest Updates (Aug 10)**:
+  - **Unified Edit Interface**: Combined master details and itinerary on single page for better UX
+  - **Real-time Master Details Editing**: Agent, contact, dates, pax, customer selection all editable inline
+  - **Auto Date Calculation**: Dynamic calculation of number of days when dates change
+  - **Single Save Operation**: "Save All Changes" button updates both master details and itinerary
+  - **Customer Integration**: Customer selection dropdown integrated into master details form
+  - **Enhanced User Experience**: Eliminated need for separate navigation between master and itinerary sections
+- **Status**: Unified interface implemented with comprehensive master details editing
 
 ## System Architecture
 
