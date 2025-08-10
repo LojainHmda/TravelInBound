@@ -48,24 +48,16 @@ body {
 /* Hero Section */
 .hero-section {
     padding: 5rem 0;
-    background-color: var(--primary-color);
+    background-color: white !important;
     position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
     margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('https://images.unsplash.com/photo-1530789253388-582c481c54b0');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.3;
-    z-index: 1;
+    display: none !important;
 }
 
 .hero-content {
