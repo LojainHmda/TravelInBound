@@ -45,24 +45,7 @@ body {
     border-color: var(--primary-color) !important;
 }
 
-/* Hero Section */
-.hero-section {
-    padding: 2rem 0;
-    background: transparent !important;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 2rem;
-}
 
-.hero-bg {
-    display: none !important;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-    padding: 2rem;
-}
 
 /* Service Cards */
 .service-card {
