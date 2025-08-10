@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Windows of Jordan - Travel Management System</title>
+    <title>Travel Booking Management System</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -12,130 +12,16 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=2) }}">
+    <!-- Button Theme CSS (loads last to override other styles) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css', v=1) }}">
     <!-- Quick Actions FAB CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-actions.css', v=1) }}">
     <!-- AI Chat CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-chat.css', v=1) }}">
     
     <style>
-    /* COMPLETE Windows of Jordan Theme - All Embedded */
-    :root {
-        --primary-color: #4a90e2; /* Vibrant Blue */
-        --secondary-color: #87c442; /* Jordan Green */
-        --accent-color: #e74c3c; /* Jordan Red */
-        --warning-color: #f39c12; /* Orange */
-        --transport-color: #4a90e2;
-        --guide-color: #27ae60;
-        --destination-color: #e74c3c;
-        --service-color: #f39c12;
-        --text-dark: #2c3e50;
-        --text-brand: #87c442;
-        --background-color: #f8f9fa;
-        --card-background: #ffffff;
-        --sidebar-bg: #2c3e50;
-    }
-    
-    /* General Body */
-    body {
-        font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
-        color: var(--text-dark);
-        background-color: var(--background-color);
-        display: flex;
-        min-height: 100vh;
-        flex-direction: column;
-    }
-    
-    /* App Container */
-    .app-container {
-        display: flex;
-        flex: 1;
-        margin-top: 0;
-    }
-    
-    /* Cards - Windows of Jordan Style */
-    .card {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        background-color: var(--card-background);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    }
-    
-    /* Dashboard Card Overrides - Direct styling */
-    .col-md-3:nth-child(1) .card {
-        background: linear-gradient(135deg, #f39c12, #e67e22) !important;
-        color: white !important;
-    }
-    .col-md-3:nth-child(2) .card {
-        background: linear-gradient(135deg, #4a90e2, #357abd) !important;
-        color: white !important;
-    }
-    .col-md-3:nth-child(3) .card {
-        background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-        color: white !important;
-    }
-    .col-md-3:nth-child(4) .card {
-        background: linear-gradient(135deg, #27ae60, #219653) !important;
-        color: white !important;
-    }
-    
-    /* Buttons */
-    .btn {
-        border-radius: 10px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        border: none;
-        padding: 10px 20px;
-    }
-    
-    .btn-primary {
-        background: linear-gradient(135deg, #4a90e2, #357abd);
-        color: white;
-        border: none;
-    }
-    
-    .btn-primary:hover, .btn-primary:focus {
-        background: linear-gradient(135deg, #357abd, #2c5aa0);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-        color: white;
-    }
-    
-    .btn-success {
-        background: linear-gradient(135deg, #27ae60, #219653);
-        color: white;
-    }
-    
-    .btn-danger {
-        background: linear-gradient(135deg, #e74c3c, #c0392b);
-        color: white;
-    }
-    
-    .btn-warning {
-        background: linear-gradient(135deg, #f39c12, #e67e22);
-        color: white;
-    }
-    
-    /* Brand Text */
-    .brand-text, .navbar-brand, .hero-title {
-        color: var(--text-dark);
-        font-weight: 600;
-    }
-    
-    .brand-text span {
-        color: var(--text-brand);
-    }
-    
-    h1, h2, h3, h4, h5, h6 {
-        color: var(--text-dark);
-        font-weight: 600;
-    }
-    </style>
         /* Burger Menu Button */
         .burger-toggle-container {
             position: fixed;
@@ -180,15 +66,10 @@
         }
         
         .logo-text {
-            color: #87c442;
+            color: #FFBF00;
             font-weight: bold;
             font-size: 1.5rem;
             margin: 0;
-        }
-        
-        /* Windows of Jordan Header */
-        .main-header {
-            background: linear-gradient(135deg, #2c3e50, #34495e) !important;
         }
         
         .user-info {
@@ -328,7 +209,7 @@
         .sidebar-nav a:hover, .sidebar-nav a.active {
             background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            border-left-color: #87c442;
+            border-left-color: #FFBF00;
         }
         
         .sidebar-nav a i {
@@ -511,15 +392,9 @@
             <div class="sidebar-footer">
                 <div class="text-center">
                     <a href="{{ url_for('main.index') }}" class="sidebar-brand">
-                        <div class="mb-2">
-                            <i class="fas fa-square" style="color: #f39c12; font-size: 0.8rem;"></i>
-                            <i class="fas fa-square" style="color: #27ae60; font-size: 0.8rem;"></i>
-                            <i class="fas fa-square" style="color: #e74c3c; font-size: 0.8rem;"></i>
-                            <i class="fas fa-square" style="color: #4a90e2; font-size: 0.8rem;"></i>
-                        </div>
-                        <div style="color: white; font-weight: bold; font-size: 1rem;">Windows of</div>
-                        <div style="color: #87c442; font-weight: 700; font-size: 1.2rem; margin-top: 2px;">Jordan</div>
-                        <div style="color: rgba(255, 255, 255, 0.7); font-size: 0.7rem; margin-top: 3px;">Planning memories to be shared</div>
+                        <i class="fas fa-plane-departure" style="color: #FFBF00; font-size: 2rem;"></i>
+                        <div style="color: #FFBF00; font-weight: bold; font-size: 0.9rem; margin-top: 5px;">Travel Booking Pro</div>
+                        <div style="color: rgba(255, 191, 0, 0.8); font-size: 0.7rem;">Arab Office for Travel</div>
                     </a>
                 </div>
             </div>

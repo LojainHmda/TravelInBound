@@ -1,32 +1,18 @@
-/* Windows of Jordan Theme - Vibrant Colors */
+/* Main Color Variables */
 :root {
-    /* Primary Brand Colors */
-    --primary-color: #4a90e2; /* Vibrant Blue */
-    --secondary-color: #87c442; /* Jordan Green */
-    --accent-color: #e74c3c; /* Jordan Red */
-    --warning-color: #f39c12; /* Orange */
-    
-    /* Card Colors - inspired by Windows of Jordan */
-    --transport-color: #4a90e2; /* Blue for transportation */
-    --guide-color: #27ae60; /* Green for tours/guides */
-    --destination-color: #e74c3c; /* Red for destinations */
-    --service-color: #f39c12; /* Orange for services */
-    
-    /* Text and Background */
-    --light-color: #ffffff;
-    --text-dark: #2c3e50;
+    --primary-color: #444444; /* Dark Gray */
+    --secondary-color: #FFBF00; /* Yellow */
+    --light-color: #ffffff; /* White */
+    --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;
-    --text-brand: #87c442; /* Jordan Green for brand text */
-    --border-color: #dee2e6;
-    --background-color: #f8f9fa; /* Light gray background */
-    --card-background: #ffffff;
+    --border-color: #555555;
+    --background-color: #333333; /* Dark Gray Background */
     
-    /* Status Colors - Windows of Jordan inspired */
-    --status-request: #f39c12; /* Orange */
-    --status-booked: #4a90e2; /* Blue */
-    --status-in-progress: #e67e22; /* Darker Orange */
-    --status-confirmed: #27ae60; /* Green */
-    --status-completed: #27ae60; /* Green */
+    /* Status Colors */
+    --status-request: #FFBF00; /* Yellow */
+    --status-booked: #FFBF00; /* Yellow */
+    --status-in-progress: #FFBF00; /* Yellow */
+    --status-completed: #FFBF00; /* Yellow */
 }
 
 /* General Styles */
@@ -34,175 +20,6 @@ body {
     font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
     color: var(--text-dark);
     background-color: var(--background-color);
-}
-
-/* Brand Text - Jordan Green */
-.brand-text, .navbar-brand, .hero-title {
-    color: var(--text-brand) !important;
-    font-weight: 600;
-}
-
-/* Card Styles - Windows of Jordan Theme */
-.card {
-    border: none;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    background-color: var(--card-background);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Service Type Cards */
-.card-transport {
-    background: linear-gradient(135deg, var(--transport-color), #357abd);
-    color: white;
-}
-
-.card-guide, .card-tour {
-    background: linear-gradient(135deg, var(--guide-color), #219653);
-    color: white;
-}
-
-.card-destination, .card-hotel {
-    background: linear-gradient(135deg, var(--destination-color), #c0392b);
-    color: white;
-}
-
-.card-service, .card-restaurant {
-    background: linear-gradient(135deg, var(--service-color), #e67e22);
-    color: white;
-}
-
-/* Windows of Jordan Button Theme */
-.btn {
-    border-radius: 10px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    border: none;
-    padding: 10px 20px;
-}
-
-/* Primary buttons - Jordan Blue */
-.btn-primary {
-    background: linear-gradient(135deg, #4a90e2, #357abd) !important;
-    color: white !important;
-    border: none !important;
-}
-
-.btn-primary:hover, .btn-primary:focus {
-    background: linear-gradient(135deg, #357abd, #2c5aa0) !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-}
-
-/* Success buttons - Jordan Green */
-.btn-success {
-    background: linear-gradient(135deg, #27ae60, #219653) !important;
-    color: white !important;
-}
-
-.btn-success:hover {
-    background: linear-gradient(135deg, #219653, #1e8449) !important;
-    transform: translateY(-2px);
-}
-
-/* Danger buttons - Jordan Red */  
-.btn-danger {
-    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
-    color: white !important;
-}
-
-.btn-danger:hover {
-    background: linear-gradient(135deg, #c0392b, #a93226) !important;
-    transform: translateY(-2px);
-}
-
-/* Warning buttons - Orange */
-.btn-warning {
-    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
-    color: white !important;
-}
-
-.btn-warning:hover {
-    background: linear-gradient(135deg, #e67e22, #d35400) !important;
-    transform: translateY(-2px);
-}
-
-/* Outline buttons */
-.btn-outline-primary {
-    border: 2px solid #4a90e2 !important;
-    color: #4a90e2 !important;
-    background: transparent !important;
-}
-
-.btn-outline-primary:hover {
-    background: #4a90e2 !important;
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-.btn-outline-secondary {
-    border: 2px solid #87c442 !important;
-    color: #87c442 !important;
-    background: transparent !important;
-}
-
-.btn-outline-secondary:hover {
-    background: #87c442 !important;
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Status Badges - Windows of Jordan Colors */
-.badge {
-    border-radius: 20px;
-    font-weight: 500;
-    padding: 8px 12px;
-}
-
-.badge-request {
-    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
-    color: white !important;
-}
-
-.badge-booked {
-    background: linear-gradient(135deg, #4a90e2, #357abd) !important;
-    color: white !important;
-}
-
-.badge-in-progress {
-    background: linear-gradient(135deg, #e67e22, #d35400) !important;
-    color: white !important;
-}
-
-.badge-confirmed, .badge-completed {
-    background: linear-gradient(135deg, #27ae60, #219653) !important;
-    color: white !important;
-}
-
-/* Service Type Badges */
-.service-badge-transport {
-    background: var(--transport-color) !important;
-    color: white;
-}
-
-.service-badge-guide {
-    background: var(--guide-color) !important;
-    color: white;
-}
-
-.service-badge-hotel {
-    background: var(--destination-color) !important;
-    color: white;
-}
-
-.service-badge-restaurant {
-    background: var(--service-color) !important;
-    color: white;
 }
 
 .bg-primary {
