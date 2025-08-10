@@ -60,16 +60,8 @@
                     <!-- Customer Selection -->
                     <div class="col-md-12">
                         <div class="mb-3">
-                            <label class="form-label">Customer</label>
-                            <div class="input-group">
-                                <input type="hidden" name="customer" id="selectedCustomerId" value="">
-                                <input type="text" class="form-control" id="selectedCustomerDisplay" 
-                                       value="No customer selected" 
-                                       readonly style="background-color: #f8f9fa;">
-                                <button type="button" class="btn btn-outline-primary" onclick="openCustomerSelectionModal(handleCustomerSelection)">
-                                    <i class="fas fa-search"></i> Select Customer
-                                </button>
-                            </div>
+                            {{ form.customer.label(class="form-label") }}
+                            {{ form.customer(class="form-control") }}
                             {% if form.customer.errors %}
                                 <div class="text-danger">
                                     {% for error in form.customer.errors %}
@@ -184,15 +176,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Calculate on load if values exist
     calculateDays();
 });
-
-// Customer selection handling
-function handleCustomerSelection(customer) {
-    document.getElementById('selectedCustomerId').value = customer.id;
-    document.getElementById('selectedCustomerDisplay').value = customer.name;
-}
 </script>
-
-<!-- Include Customer Selection Modal -->
-{% include 'components/customer_selection_modal.html' %}
-
 {% endblock %}

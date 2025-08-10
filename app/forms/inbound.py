@@ -12,7 +12,7 @@ class InboundRequestForm(FlaskForm):
     no_of_days = IntegerField('No. of Days', validators=[Optional(), NumberRange(min=1)])
     
     # Client information
-    customer = IntegerField('Select Customer', validators=[DataRequired()])
+    customer = SelectField('Select Customer', validators=[DataRequired()])
     agent = StringField('Agent', validators=[DataRequired()])
     contact_name = StringField('Contact Name', validators=[DataRequired()])
     agent_ref = StringField('Agent Ref', validators=[Optional()])

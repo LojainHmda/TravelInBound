@@ -1,13 +1,12 @@
 /* Main Color Variables */
 :root {
-    --primary-color: #000000; /* Black */
+    --primary-color: #444444; /* Dark Gray */
     --secondary-color: #FFBF00; /* Yellow */
     --light-color: #ffffff; /* White */
     --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;
-    --border-color: #333333;
-    --background-color: #f8f9fa; /* Light Background */
-    --sidebar-bg: #000000; /* Black Sidebar */
+    --border-color: #555555;
+    --background-color: #333333; /* Dark Gray Background */
     
     /* Status Colors */
     --status-request: #FFBF00; /* Yellow */
@@ -48,16 +47,24 @@ body {
 /* Hero Section */
 .hero-section {
     padding: 5rem 0;
-    background-color: white !important;
+    background-color: var(--primary-color);
     position: relative;
     border-radius: 0.5rem;
     overflow: hidden;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-bg {
-    display: none !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://images.unsplash.com/photo-1530789253388-582c481c54b0');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.3;
+    z-index: 1;
 }
 
 .hero-content {

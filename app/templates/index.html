@@ -1,292 +1,135 @@
-{% extends "base.html" %}
-
-{% block title %}Windows of Jordan - Inbound Tour Operator{% endblock %}
-
-{% block styles %}
-<style>
-.service-card {
-    border: none;
-    border-radius: 15px;
-    transition: all 0.3s ease;
-    height: 280px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2rem;
-}
-
-.service-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-.service-card.private-transfers {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-}
-
-.service-card.private-tours {
-    background: linear-gradient(135deg, #27ae60, #229954);
-    color: white;
-}
-
-.service-card.jerusalem-tours {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-}
-
-.service-card.vehicle-rental {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
-}
-
-.service-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-    opacity: 0.9;
-}
-
-.service-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    line-height: 1.2;
-}
-
-.service-description {
-    font-size: 1rem;
-    opacity: 0.9;
-    line-height: 1.4;
-}
-
-.hero-section {
-    background: white;
-    color: #2c3e50;
-    padding: 4rem 0;
-    margin-bottom: 3rem;
-    border-radius: 15px;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 1rem;
-}
-
-.logo-icons {
-    display: flex;
-    gap: 8px;
-}
-
-.logo-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-}
-
-.logo-icon.sun {
-    background-color: #f39c12;
-    color: white;
-}
-
-.logo-icon.leaf {
-    background-color: #27ae60;
-    color: white;
-}
-
-.logo-icon.building {
-    background-color: #e74c3c;
-    color: white;
-}
-
-.logo-icon.water {
-    background-color: #3498db;
-    color: white;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
-}
-
-.stats-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    border-left: 4px solid #FFBF00;
-}
-
-.stats-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-.stats-label {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-}
-
-.section-title {
-    color: #2c3e50;
-    font-weight: bold;
-    margin-bottom: 2rem;
-}
-</style>
-{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="hero-content text-center">
-            <div class="logo-container">
-                <div class="logo-icons">
-                    <div class="logo-icon sun"><i class="fas fa-sun"></i></div>
-                    <div class="logo-icon leaf"><i class="fas fa-leaf"></i></div>
-                    <div class="logo-icon building"><i class="fas fa-building"></i></div>
-                    <div class="logo-icon water"><i class="fas fa-water"></i></div>
-                </div>
-                <div>
-                    <h1 class="display-4 fw-bold mb-1" style="color: #2c3e50;">Windows of Jordan</h1>
-                    <p class="text-muted mb-0" style="font-size: 1.1rem;">Planning memories to be shared</p>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center gap-3 mt-4">
-                <a href="{{ url_for('inbound.new_request') }}" class="btn btn-warning btn-lg text-dark fw-bold">
-                    <i class="fas fa-plus me-2"></i>New Tour Request
-                </a>
-                <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-dark btn-lg">
-                    <i class="fas fa-list me-2"></i>View All Tours
-                </a>
-            </div>
+<div class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="container hero-content text-center">
+        <h1 class="display-4 fw-bold mb-4 professional-title">Professional Travel Booking Management</h1>
+        <p class="lead mb-4" style="color: #000000;">Streamline your travel arrangements with our comprehensive booking and service tracking system</p>
+        <div class="mt-5">
+            <a href="{{ url_for('booking.new_booking_detail') }}" class="btn btn-lg btn-yellow me-3">
+                <i class="fas fa-plus-circle me-2"></i>Create New Booking
+            </a>
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-lg btn-outline-dark">
+                <i class="fas fa-tachometer-alt me-2"></i>View Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-md-12 text-center">
+            <h2 class="fw-bold mb-4">Comprehensive Travel Booking Management</h2>
+            <p class="lead text-muted">Track and manage every aspect of your travel service requests in one place</p>
         </div>
     </div>
 
-    <!-- Service Cards Section -->
-    <div class="container">
-        <div class="row mb-5">
-            <div class="col-12 text-center">
-                <h2 class="section-title">Our Premium Services</h2>
-                <p class="lead text-muted">Comprehensive inbound tour solutions for unforgettable Jordan experiences</p>
-            </div>
-        </div>
-
-        <div class="row g-4 mb-5">
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card private-transfers" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                    <div class="service-icon" style="color: #3498db;">
-                        <i class="fas fa-car"></i>
+    <div class="row mb-5">
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-plane"></i>
                     </div>
-                    <div class="service-title">Private Transfers</div>
-                    <div class="service-description">
-                        Comfortable and reliable transportation to your destination
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card private-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                    <div class="service-icon" style="color: #27ae60;">
-                        <i class="fas fa-route"></i>
-                    </div>
-                    <div class="service-title">Private Tours & Packages</div>
-                    <div class="service-description">
-                        Personalized guided tours of Jordan's highlights
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card jerusalem-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                    <div class="service-icon" style="color: #e74c3c;">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    <div class="service-title">Jerusalem From Amman</div>
-                    <div class="service-description">
-                        Sacred journey to the Holy Land from Jordan
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-3 col-md-6">
-                <div class="service-card vehicle-rental" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                    <div class="service-icon" style="color: #f39c12;">
-                        <i class="fas fa-key"></i>
-                    </div>
-                    <div class="service-title">Vehicle With Driver Per Hour</div>
-                    <div class="service-description">
-                        Flexible hourly vehicle rental with professional driver
-                    </div>
+                    <h4 class="card-title">Flight Bookings</h4>
+                    <p class="card-text">Arrange domestic and international flights with comprehensive itinerary tracking</p>
                 </div>
             </div>
         </div>
-
-        <!-- Quick Stats Section -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">500+</div>
-                    <div class="stats-label">Tours Completed</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">50+</div>
-                    <div class="stats-label">Partner Hotels</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">98%</div>
-                    <div class="stats-label">Customer Satisfaction</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stats-card">
-                    <div class="stats-number">24/7</div>
-                    <div class="stats-label">Support Available</div>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-hotel"></i>
+                    </div>
+                    <h4 class="card-title">Hotel Accommodations</h4>
+                    <p class="card-text">Book rooms at partner hotels worldwide with special corporate rates</p>
                 </div>
             </div>
         </div>
-
-        <!-- Quick Actions Section -->
-        <div class="row">
-            <div class="col-12 text-center">
-                <h3 class="section-title">Quick Actions</h3>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="{{ url_for('inbound.new_request') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-plus me-2"></i>Create New Tour
-                    </a>
-                    <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-success">
-                        <i class="fas fa-list me-2"></i>Manage Tours
-                    </a>
-                    <a href="{{ url_for('main.find_bookings') }}" class="btn btn-outline-info">
-                        <i class="fas fa-search me-2"></i>Search Bookings
-                    </a>
-                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-warning">
-                        <i class="fas fa-chart-line me-2"></i>View Dashboard
-                    </a>
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-taxi"></i>
+                    </div>
+                    <h4 class="card-title">Transport Services</h4>
+                    <p class="card-text">Arrange airport transfers, car rentals, and other ground transportation options</p>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="row mb-5">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-passport"></i>
+                    </div>
+                    <h4 class="card-title">Visa Processing</h4>
+                    <p class="card-text">Handle visa applications and documentation for international travel</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 service-card">
+                <div class="card-body text-center">
+                    <div class="service-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h4 class="card-title">Travel Insurance</h4>
+                    <p class="card-text">Provide comprehensive travel insurance coverage for all trips</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if bookings %}
+    <div class="row mt-5">
+        <div class="col-md-12">
+            <h3 class="mb-4">Recent Booking Requests</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Reference</th>
+                            <th>Customer</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Services</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.reference_number }}</td>
+                            <td>{{ booking.requester.username }}</td>
+                            <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="badge status-{{ booking.status.lower() }}">
+                                    {{ booking.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% for item in booking.service_items %}
+                                <span class="badge bg-light text-dark me-1">{{ item.service_type }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

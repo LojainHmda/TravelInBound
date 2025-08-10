@@ -44,10 +44,8 @@ with app.app_context():
 # Register blueprints
 from app.routes.voucher import voucher_bp
 from app.routes.booking import booking_bp
-from app.routes.api import api_bp
 app.register_blueprint(voucher_bp)
 app.register_blueprint(booking_bp, url_prefix='/booking')
-app.register_blueprint(api_bp)
 
 # Import main routes after app is configured
 from routes import *
