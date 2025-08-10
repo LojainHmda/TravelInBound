@@ -143,10 +143,19 @@
 </style>
 
 <script>
-let allCustomers = [];
-let filteredCustomers = [];
-let selectedCustomerId = null;
-let currentFilter = 'all';
+// Check if variables already exist to prevent redeclaration
+if (typeof allCustomers === 'undefined') {
+    var allCustomers = [];
+}
+if (typeof filteredCustomers === 'undefined') {
+    var filteredCustomers = [];
+}
+if (typeof selectedCustomerId === 'undefined') {
+    var selectedCustomerId = null;
+}
+if (typeof currentFilter === 'undefined') {
+    var currentFilter = 'all';
+}
 
 // Customer selection modal functions
 function openCustomerSelectionModal(callback) {
