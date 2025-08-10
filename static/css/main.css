@@ -1,64 +1,40 @@
-/* Modern White-Based Color Scheme */
+/* Main Color Variables */
 :root {
-    --primary-color: #2563eb; /* Clean Blue */
-    --secondary-color: #059669; /* Fresh Green */
-    --accent-color: #7c3aed; /* Purple Accent */
-    --light-color: #ffffff; /* Pure White */
-    --text-dark: #1f2937; /* Charcoal Gray */
-    --text-light: #6b7280; /* Medium Gray */
-    --text-muted: #9ca3af; /* Light Gray */
-    --border-color: #e5e7eb; /* Light Border */
-    --background-color: #ffffff; /* White Background */
-    --background-light: #f9fafb; /* Very Light Gray */
-    --background-card: #ffffff; /* White Cards */
+    --primary-color: #000000; /* Black */
+    --secondary-color: #FFBF00; /* Yellow */
+    --light-color: #ffffff; /* White */
+    --text-dark: #000000; /* Black */
+    --text-light: #f8f9fa;
+    --border-color: #333333;
+    --background-color: #f8f9fa; /* Light Background */
+    --sidebar-bg: #000000; /* Black Sidebar */
     
-    /* Status Colors - Modern & Vibrant */
-    --status-request: #f59e0b; /* Amber */
-    --status-booked: #2563eb; /* Blue */
-    --status-in-progress: #7c3aed; /* Purple */
-    --status-completed: #059669; /* Green */
-    --status-cancelled: #dc2626; /* Red */
-    
-    /* Interactive Colors */
-    --hover-bg: #f3f4f6; /* Light Hover */
-    --active-bg: #e5e7eb; /* Active State */
-    --focus-ring: #3b82f6; /* Focus Ring */
-    
-    /* Shadow & Depth */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    /* Status Colors */
+    --status-request: #FFBF00; /* Yellow */
+    --status-booked: #FFBF00; /* Yellow */
+    --status-in-progress: #FFBF00; /* Yellow */
+    --status-completed: #FFBF00; /* Yellow */
 }
 
 /* General Styles */
 body {
-    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
     color: var(--text-dark);
-    background-color: var(--background-light);
-    line-height: 1.6;
-    font-weight: 400;
+    background-color: var(--background-color);
 }
 
-/* Updated Primary Styles */
 .bg-primary {
     background-color: var(--primary-color) !important;
-    color: white !important;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
-    color: white;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover, .btn-primary:focus {
-    background-color: #1d4ed8;
-    border-color: #1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background-color: #0a2d5e;
+    border-color: #0a2d5e;
 }
 
 .text-primary {
@@ -69,78 +45,19 @@ body {
     border-color: var(--primary-color) !important;
 }
 
-/* Modern Card Styles */
-.card {
-    background-color: var(--background-card);
-    border: 1px solid var(--border-color);
-    border-radius: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    transition: all 0.2s ease;
-}
-
-.card:hover {
-    box-shadow: var(--shadow-md);
-}
-
-.card-header {
-    background-color: var(--background-light);
-    border-bottom: 1px solid var(--border-color);
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-    padding: 1rem 1.25rem;
-}
-
-.card-body {
-    padding: 1.25rem;
-}
-
-/* Modern Button Variants */
-.btn-outline-primary {
-    color: var(--primary-color);
-    border-color: var(--primary-color);
-    background-color: transparent;
-    font-weight: 500;
-}
-
-.btn-outline-primary:hover {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-    color: white;
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    border-color: var(--secondary-color);
-    color: white;
-    font-weight: 500;
-}
-
-.btn-secondary:hover {
-    background-color: #047857;
-    border-color: #047857;
-}
-
-/* Modern Hero Section */
+/* Hero Section */
 .hero-section {
-    padding: 4rem 0;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+    padding: 5rem 0;
+    background-color: white !important;
     position: relative;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     overflow: hidden;
     margin-bottom: 2rem;
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('https://images.unsplash.com/photo-1530789253388-582c481c54b0');
-    background-size: cover;
-    background-position: center;
-    opacity: 0.3;
-    z-index: 1;
+    display: none !important;
 }
 
 .hero-content {
@@ -188,37 +105,25 @@ body {
     margin-bottom: 1.5rem;
 }
 
-/* Modern Status Badges */
-.badge {
-    font-weight: 500;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-}
-
-.badge.status-request, .badge.badge-request {
+/* Status Badges */
+.badge.status-request {
     background-color: var(--status-request);
-    color: white;
+    color: black;
 }
 
-.badge.status-booked, .badge.badge-booked {
+.badge.status-booked {
     background-color: var(--status-booked);
-    color: white;
+    color: black;
 }
 
-.badge.status-in-progress, .badge.badge-in-progress {
+.badge.status-in-progress {
     background-color: var(--status-in-progress);
-    color: white;
+    color: black;
 }
 
-.badge.status-completed, .badge.badge-completed, .badge.badge-confirmed {
+.badge.status-completed {
     background-color: var(--status-completed);
-    color: white;
-}
-
-.badge.status-cancelled, .badge.badge-cancelled {
-    background-color: var(--status-cancelled);
-    color: white;
+    color: black;
 }
 
 /* Service Option Selection */
@@ -470,122 +375,6 @@ body {
     display: block;
 }
 
-/* Modern Form Styles */
-.form-control {
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-    background-color: var(--background-color);
-}
-
-.form-control:focus {
-    border-color: var(--focus-ring);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    outline: none;
-}
-
-.form-label {
-    font-weight: 500;
-    color: var(--text-dark);
-    margin-bottom: 0.5rem;
-}
-
-.form-select {
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    background-color: var(--background-color);
-    transition: all 0.2s ease;
-}
-
-.form-select:focus {
-    border-color: var(--focus-ring);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Modern Table Styles */
-.table {
-    background-color: var(--background-card);
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-}
-
-.table th {
-    background-color: var(--background-light);
-    border: none;
-    font-weight: 600;
-    color: var(--text-dark);
-    padding: 1rem;
-}
-
-.table td {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    padding: 1rem;
-    vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-    background-color: var(--hover-bg);
-}
-
-/* Alert Styles */
-.alert {
-    border-radius: 0.75rem;
-    border: 1px solid;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
-}
-
-.alert-success {
-    background-color: #ecfdf5;
-    border-color: #059669;
-    color: #065f46;
-}
-
-.alert-danger {
-    background-color: #fef2f2;
-    border-color: #dc2626;
-    color: #991b1b;
-}
-
-.alert-warning {
-    background-color: #fffbeb;
-    border-color: #f59e0b;
-    color: #92400e;
-}
-
-.alert-info {
-    background-color: #eff6ff;
-    border-color: #2563eb;
-    color: #1e40af;
-}
-
-/* Navigation Bar Styles */
-.navbar {
-    background-color: var(--background-card) !important;
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
-}
-
-.navbar-brand {
-    color: var(--primary-color) !important;
-    font-weight: 600;
-}
-
-.navbar-nav .nav-link {
-    color: var(--text-dark) !important;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.navbar-nav .nav-link:hover {
-    color: var(--primary-color) !important;
-}
-
 /* Media Queries */
 @media (max-width: 768px) {
     .hero-section {
@@ -610,9 +399,5 @@ body {
     .stat-card-icon {
         margin-right: 0;
         margin-bottom: 0.5rem;
-    }
-    
-    .card {
-        margin-bottom: 1rem;
     }
 }

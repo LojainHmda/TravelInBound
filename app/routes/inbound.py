@@ -31,10 +31,7 @@ def new_request():
     """Create new inbound request with itinerary"""
     form = InboundRequestForm()
     
-    # Get all customers for selection dropdown
-    from app.models.customer import Customer
-    customers = Customer.query.all()
-    form.customer.choices = [(customer.id, customer.name) for customer in customers]
+    # No need to populate customer choices since we use modal
     
     if form.validate_on_submit():
         # Create new request
