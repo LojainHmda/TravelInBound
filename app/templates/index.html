@@ -26,23 +26,27 @@
 }
 
 .service-card.private-transfers {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
+    background: white;
+    color: #3498db;
+    border: 2px solid #3498db;
 }
 
 .service-card.private-tours {
-    background: linear-gradient(135deg, #27ae60, #229954);
-    color: white;
+    background: white;
+    color: #27ae60;
+    border: 2px solid #27ae60;
 }
 
 .service-card.jerusalem-tours {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
+    background: white;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
 }
 
 .service-card.vehicle-rental {
-    background: linear-gradient(135deg, #f39c12, #e67e22);
-    color: white;
+    background: white;
+    color: #f39c12;
+    border: 2px solid #f39c12;
 }
 
 .service-icon {
@@ -164,7 +168,7 @@
             <div class="row g-4 mb-5 justify-content-center">
                 <div class="col-lg-3 col-md-6">
                     <div class="service-card private-transfers" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                        <div class="service-icon" style="color: white;">
+                        <div class="service-icon">
                             <i class="fas fa-car"></i>
                         </div>
                         <div class="service-title">Private Transfers</div>
@@ -176,7 +180,7 @@
 
                 <div class="col-lg-3 col-md-6">
                     <div class="service-card private-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                        <div class="service-icon" style="color: white;">
+                        <div class="service-icon">
                             <i class="fas fa-route"></i>
                         </div>
                         <div class="service-title">Private Tours & Packages</div>
@@ -188,7 +192,7 @@
 
                 <div class="col-lg-3 col-md-6">
                     <div class="service-card jerusalem-tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                        <div class="service-icon" style="color: white;">
+                        <div class="service-icon">
                             <i class="fas fa-building"></i>
                         </div>
                         <div class="service-title">Jerusalem From Amman</div>
@@ -200,7 +204,7 @@
 
                 <div class="col-lg-3 col-md-6">
                     <div class="service-card vehicle-rental" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                        <div class="service-icon" style="color: white;">
+                        <div class="service-icon">
                             <i class="fas fa-key"></i>
                         </div>
                         <div class="service-title">Vehicle With Driver Per Hour</div>
