@@ -13,15 +13,83 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=2) }}">
-    <!-- Button Theme CSS (loads last to override other styles) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css', v=1) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=100) }}?cache-bust=1754787999">
     <!-- Quick Actions FAB CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-actions.css', v=1) }}">
     <!-- AI Chat CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-chat.css', v=1) }}">
     
     <style>
+    /* Windows of Jordan Theme Override - Force Cache Refresh */
+    :root {
+        --primary-color: #4a90e2 !important; /* Vibrant Blue */
+        --secondary-color: #87c442 !important; /* Jordan Green */
+        --accent-color: #e74c3c !important; /* Jordan Red */
+        --warning-color: #f39c12 !important; /* Orange */
+        --transport-color: #4a90e2 !important; /* Blue for transportation */
+        --guide-color: #27ae60 !important; /* Green for tours/guides */
+        --destination-color: #e74c3c !important; /* Red for destinations */
+        --service-color: #f39c12 !important; /* Orange for services */
+        --text-dark: #2c3e50 !important;
+        --text-brand: #87c442 !important; /* Jordan Green for brand text */
+        --background-color: #f8f9fa !important; /* Light gray background */
+        --card-background: #ffffff !important;
+        --status-request: #f39c12 !important; /* Orange */
+        --status-booked: #4a90e2 !important; /* Blue */
+        --status-in-progress: #e67e22 !important; /* Darker Orange */
+        --status-confirmed: #27ae60 !important; /* Green */
+        --status-completed: #27ae60 !important; /* Green */
+    }
+    
+    /* Force Dashboard Card Colors */
+    .card:nth-child(1) .card {
+        background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+        color: white !important;
+    }
+    .card:nth-child(2) .card {
+        background: linear-gradient(135deg, #4a90e2, #357abd) !important;
+        color: white !important;
+    }
+    .card:nth-child(3) .card {
+        background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+        color: white !important;
+    }
+    .card:nth-child(4) .card {
+        background: linear-gradient(135deg, #27ae60, #219653) !important;
+        color: white !important;
+    }
+    
+    /* Windows of Jordan Button Theme Override */
+    .btn {
+        border-radius: 10px !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        border: none !important;
+        padding: 10px 20px !important;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #4a90e2, #357abd) !important;
+        color: white !important;
+        border: none !important;
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+        background: linear-gradient(135deg, #357abd, #2c5aa0) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3) !important;
+    }
+    
+    /* Brand Text Override */
+    .brand-text, .navbar-brand, .hero-title, h1 {
+        color: #2c3e50 !important;
+        font-weight: 600 !important;
+    }
+    
+    .brand-text span {
+        color: #87c442 !important;
+    }
+    </style>
         /* Burger Menu Button */
         .burger-toggle-container {
             position: fixed;
