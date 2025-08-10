@@ -57,6 +57,23 @@
                 </div>
 
                 <div class="row">
+                    <!-- Customer Selection -->
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            {{ form.customer.label(class="form-label") }}
+                            {{ form.customer(class="form-control") }}
+                            {% if form.customer.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.customer.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
                     <!-- Client Information -->
                     <div class="col-md-6">
                         <div class="mb-3">

@@ -31,6 +31,11 @@ def new_request():
     """Create new inbound request with itinerary"""
     form = InboundRequestForm()
     
+    # Get all customers for selection dropdown
+    from app.models.customer import Customer
+    customers = Customer.query.all()
+    form.customer.choices = [(customer.id, customer.name) for customer in customers]
+    
     if form.validate_on_submit():
         # Create new request
         request_obj = InboundRequest(
@@ -43,7 +48,8 @@ def new_request():
             nationality=form.nationality.data,
             pax=form.pax.data,
             special_note=form.special_note.data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            customer_id=form.customer.data
         )
         
         # Calculate days
@@ -367,17 +373,24 @@ def api_generate_services(request_id):
             booking = None
             
         if not booking:
-            # Find or create customer
-            customer = Customer.query.filter_by(name=request_obj.contact_name).first()
-            if not customer:
-                customer = Customer(
-                    name=request_obj.contact_name,
-                    phone="TBD",
-                    email="tbd@example.com",
-                    nationality=request_obj.nationality
-                )
-                db.session.add(customer)
-                db.session.flush()
+            # Use the customer from the inbound request if available
+            # For existing requests without customer_id, try to find by contact name
+            customer_id = getattr(request_obj, 'customer_id', None)
+            if customer_id:
+                customer = Customer.query.get(customer_id)
+            else:
+                # Fallback: find or create customer by contact name
+                customer = Customer.query.filter_by(first_name=request_obj.contact_name).first()
+                if not customer:
+                    customer = Customer(
+                        first_name=request_obj.contact_name,
+                        last_name="",
+                        phone="TBD",
+                        email="tbd@example.com",
+                        nationality=request_obj.nationality
+                    )
+                    db.session.add(customer)
+                    db.session.flush()
             
             # Create new booking
             booking = Booking(
