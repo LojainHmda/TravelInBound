@@ -12,82 +12,128 @@
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css', v=100) }}?cache-bust=1754787999">
     <!-- Quick Actions FAB CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-actions.css', v=1) }}">
     <!-- AI Chat CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-chat.css', v=1) }}">
     
     <style>
-    /* Windows of Jordan Theme Override - Force Cache Refresh */
+    /* COMPLETE Windows of Jordan Theme - All Embedded */
     :root {
-        --primary-color: #4a90e2 !important; /* Vibrant Blue */
-        --secondary-color: #87c442 !important; /* Jordan Green */
-        --accent-color: #e74c3c !important; /* Jordan Red */
-        --warning-color: #f39c12 !important; /* Orange */
-        --transport-color: #4a90e2 !important; /* Blue for transportation */
-        --guide-color: #27ae60 !important; /* Green for tours/guides */
-        --destination-color: #e74c3c !important; /* Red for destinations */
-        --service-color: #f39c12 !important; /* Orange for services */
-        --text-dark: #2c3e50 !important;
-        --text-brand: #87c442 !important; /* Jordan Green for brand text */
-        --background-color: #f8f9fa !important; /* Light gray background */
-        --card-background: #ffffff !important;
-        --status-request: #f39c12 !important; /* Orange */
-        --status-booked: #4a90e2 !important; /* Blue */
-        --status-in-progress: #e67e22 !important; /* Darker Orange */
-        --status-confirmed: #27ae60 !important; /* Green */
-        --status-completed: #27ae60 !important; /* Green */
+        --primary-color: #4a90e2; /* Vibrant Blue */
+        --secondary-color: #87c442; /* Jordan Green */
+        --accent-color: #e74c3c; /* Jordan Red */
+        --warning-color: #f39c12; /* Orange */
+        --transport-color: #4a90e2;
+        --guide-color: #27ae60;
+        --destination-color: #e74c3c;
+        --service-color: #f39c12;
+        --text-dark: #2c3e50;
+        --text-brand: #87c442;
+        --background-color: #f8f9fa;
+        --card-background: #ffffff;
+        --sidebar-bg: #2c3e50;
     }
     
-    /* Force Dashboard Card Colors */
-    .card:nth-child(1) .card {
+    /* General Body */
+    body {
+        font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+        color: var(--text-dark);
+        background-color: var(--background-color);
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+    }
+    
+    /* App Container */
+    .app-container {
+        display: flex;
+        flex: 1;
+        margin-top: 0;
+    }
+    
+    /* Cards - Windows of Jordan Style */
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        background-color: var(--card-background);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Dashboard Card Overrides - Direct styling */
+    .col-md-3:nth-child(1) .card {
         background: linear-gradient(135deg, #f39c12, #e67e22) !important;
         color: white !important;
     }
-    .card:nth-child(2) .card {
+    .col-md-3:nth-child(2) .card {
         background: linear-gradient(135deg, #4a90e2, #357abd) !important;
         color: white !important;
     }
-    .card:nth-child(3) .card {
+    .col-md-3:nth-child(3) .card {
         background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
         color: white !important;
     }
-    .card:nth-child(4) .card {
+    .col-md-3:nth-child(4) .card {
         background: linear-gradient(135deg, #27ae60, #219653) !important;
         color: white !important;
     }
     
-    /* Windows of Jordan Button Theme Override */
+    /* Buttons */
     .btn {
-        border-radius: 10px !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
-        border: none !important;
-        padding: 10px 20px !important;
+        border-radius: 10px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        padding: 10px 20px;
     }
     
     .btn-primary {
-        background: linear-gradient(135deg, #4a90e2, #357abd) !important;
-        color: white !important;
-        border: none !important;
+        background: linear-gradient(135deg, #4a90e2, #357abd);
+        color: white;
+        border: none;
     }
     
     .btn-primary:hover, .btn-primary:focus {
-        background: linear-gradient(135deg, #357abd, #2c5aa0) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3) !important;
+        background: linear-gradient(135deg, #357abd, #2c5aa0);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+        color: white;
     }
     
-    /* Brand Text Override */
-    .brand-text, .navbar-brand, .hero-title, h1 {
-        color: #2c3e50 !important;
-        font-weight: 600 !important;
+    .btn-success {
+        background: linear-gradient(135deg, #27ae60, #219653);
+        color: white;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        color: white;
+    }
+    
+    /* Brand Text */
+    .brand-text, .navbar-brand, .hero-title {
+        color: var(--text-dark);
+        font-weight: 600;
     }
     
     .brand-text span {
-        color: #87c442 !important;
+        color: var(--text-brand);
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-dark);
+        font-weight: 600;
     }
     </style>
         /* Burger Menu Button */
