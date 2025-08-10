@@ -1344,6 +1344,57 @@ def confirm_service(item_id):
             }
             
             document.notes = json.dumps(insurance_details)
+            
+        elif service_item.service_type == 'RESTAURANT':
+            restaurant_details = {
+                'restaurant_name': request.form.get('restaurant_name', ''),
+                'meal_type': request.form.get('meal_type', ''),
+                'from_date': request.form.get('from_date', ''),
+                'to_date': request.form.get('to_date', ''),
+                'reservation_time': request.form.get('reservation_time', ''),
+                'pax': request.form.get('pax', ''),
+                'dietary_restrictions': request.form.get('dietary_restrictions', ''),
+                'contact_phone': request.form.get('contact_phone', ''),
+                'special_notes': request.form.get('special_notes', ''),
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
+            }
+            
+            document.notes = json.dumps(restaurant_details)
+            
+        elif service_item.service_type == 'GUIDE':
+            guide_details = {
+                'guide_name': request.form.get('guide_name', ''),
+                'language': request.form.get('language', ''),
+                'from_date': request.form.get('from_date', ''),
+                'to_date': request.form.get('to_date', ''),
+                'start_time': request.form.get('start_time', ''),
+                'duration_hours': request.form.get('duration_hours', ''),
+                'guide_license': request.form.get('guide_license', ''),
+                'guide_phone': request.form.get('guide_phone', ''),
+                'service_type': request.form.get('service_type', ''),
+                'meeting_location': request.form.get('meeting_location', ''),
+                'tour_itinerary': request.form.get('tour_itinerary', ''),
+                'guide_report': request.form.get('guide_report', ''),
+                'supplier': supplier_code,
+                'supplier_id': supplier_object.id if supplier_object else None,
+                'supplier_name': supplier_object.name if supplier_object else 'Unknown Supplier',
+                # Add cost tracking fields
+                'cost_amount': cost_amount,
+                'cost_currency': cost_currency,
+                'payment_due_date': payment_due_date,
+                'is_paid': is_paid,
+                'notes': form_notes
+            }
+            
+            document.notes = json.dumps(guide_details)
         
         # Save changes
         import sys
@@ -1759,6 +1810,10 @@ def confirm_service(item_id):
         template = 'booking/confirm_visa.html'
     elif service_item.service_type == 'INSURANCE':
         template = 'booking/confirm_insurance.html'
+    elif service_item.service_type == 'RESTAURANT':
+        template = 'booking/confirm_restaurant.html'
+    elif service_item.service_type == 'GUIDE':
+        template = 'booking/confirm_guide.html'
     else:
         # Generic confirmation form
         template = 'booking/confirm_generic.html'
@@ -2108,6 +2163,33 @@ def service_item_details_api(item_id):
             'deductible': '',
             'emergency_contact': '',
             'special_conditions': ''
+        })
+    elif service_item.service_type == 'RESTAURANT':
+        confirmation_data.update({
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'restaurant_name': '',
+            'meal_type': '',
+            'dietary_restrictions': '',
+            'pax': 1,
+            'special_notes': '',
+            'reservation_time': '',
+            'contact_phone': ''
+        })
+    elif service_item.service_type == 'GUIDE':
+        confirmation_data.update({
+            'from_date': service_item.start_date.strftime('%Y-%m-%d'),
+            'to_date': service_item.end_date.strftime('%Y-%m-%d'),
+            'guide_name': '',
+            'language': '',
+            'guide_license': '',
+            'guide_phone': '',
+            'service_type': '',
+            'meeting_location': '',
+            'tour_itinerary': '',
+            'guide_report': '',
+            'start_time': '',
+            'duration_hours': ''
         })
     
     if confirmation_doc:

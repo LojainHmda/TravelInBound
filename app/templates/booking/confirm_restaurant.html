@@ -1,0 +1,85 @@
+{% extends "booking/confirmation_base.html" %}
+
+{% block confirmation_title %}Restaurant/Meal Service Confirmation{% endblock %}
+
+{% block service_icon %}
+    <i class="fas fa-utensils text-warning"></i>
+{% endblock %}
+
+{% block confirmation_form %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="restaurant_name" class="form-label">Restaurant Name</label>
+                <input type="text" class="form-control" id="restaurant_name" name="restaurant_name" 
+                       value="{{ confirmation_data.restaurant_name or '' }}" required>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="meal_type" class="form-label">Meal Type</label>
+                <select class="form-select" id="meal_type" name="meal_type" required>
+                    <option value="">Select meal type</option>
+                    <option value="Breakfast" {{ 'selected' if confirmation_data.meal_type == 'Breakfast' }}>Breakfast</option>
+                    <option value="Lunch" {{ 'selected' if confirmation_data.meal_type == 'Lunch' }}>Lunch</option>
+                    <option value="Dinner" {{ 'selected' if confirmation_data.meal_type == 'Dinner' }}>Dinner</option>
+                    <option value="Snack" {{ 'selected' if confirmation_data.meal_type == 'Snack' }}>Snack</option>
+                    <option value="Full Day" {{ 'selected' if confirmation_data.meal_type == 'Full Day' }}>Full Day</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="from_date" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="from_date" name="from_date" 
+                       value="{{ confirmation_data.from_date or service_item.start_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="to_date" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="to_date" name="to_date" 
+                       value="{{ confirmation_data.to_date or service_item.end_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="reservation_time" class="form-label">Reservation Time</label>
+                <input type="time" class="form-control" id="reservation_time" name="reservation_time" 
+                       value="{{ confirmation_data.reservation_time or '' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="pax" class="form-label">Number of Pax</label>
+                <input type="number" class="form-control" id="pax" name="pax" min="1" 
+                       value="{{ confirmation_data.pax or 1 }}" required>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="contact_phone" class="form-label">Restaurant Contact</label>
+                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" 
+                       value="{{ confirmation_data.contact_phone or '' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="dietary_restrictions" class="form-label">Dietary Restrictions</label>
+        <textarea class="form-control" id="dietary_restrictions" name="dietary_restrictions" rows="3" 
+                  placeholder="Any special dietary requirements or allergies">{{ confirmation_data.dietary_restrictions or '' }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="special_notes" class="form-label">Special Requests</label>
+        <textarea class="form-control" id="special_notes" name="special_notes" rows="3" 
+                  placeholder="Any special requests or notes">{{ confirmation_data.special_notes or '' }}</textarea>
+    </div>
+{% endblock %}

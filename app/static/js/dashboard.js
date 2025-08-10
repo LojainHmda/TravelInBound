@@ -214,7 +214,9 @@ function createDetailsHTML(booking) {
             'HOTEL': 'fa-hotel',
             'TRANSPORT': 'fa-taxi',
             'VISA': 'fa-passport',
-            'INSURANCE': 'fa-shield-alt'
+            'INSURANCE': 'fa-shield-alt',
+            'RESTAURANT': 'fa-utensils',
+            'GUIDE': 'fa-user-tie'
         };
         return icons[type] || 'fa-briefcase';
     }

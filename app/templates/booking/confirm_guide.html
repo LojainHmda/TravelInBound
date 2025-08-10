@@ -1,0 +1,111 @@
+{% extends "booking/confirmation_base.html" %}
+
+{% block confirmation_title %}Guide Service Confirmation{% endblock %}
+
+{% block service_icon %}
+    <i class="fas fa-user-tie text-info"></i>
+{% endblock %}
+
+{% block confirmation_form %}
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="guide_name" class="form-label">Guide Name</label>
+                <input type="text" class="form-control" id="guide_name" name="guide_name" 
+                       value="{{ confirmation_data.guide_name or '' }}" required>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="language" class="form-label">Language</label>
+                <input type="text" class="form-control" id="language" name="language" 
+                       value="{{ confirmation_data.language or '' }}" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="from_date" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="from_date" name="from_date" 
+                       value="{{ confirmation_data.from_date or service_item.start_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="to_date" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="to_date" name="to_date" 
+                       value="{{ confirmation_data.to_date or service_item.end_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="start_time" class="form-label">Start Time</label>
+                <input type="time" class="form-control" id="start_time" name="start_time" 
+                       value="{{ confirmation_data.start_time or '' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="guide_license" class="form-label">Guide License/ID</label>
+                <input type="text" class="form-control" id="guide_license" name="guide_license" 
+                       value="{{ confirmation_data.guide_license or '' }}">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="guide_phone" class="form-label">Guide Phone</label>
+                <input type="tel" class="form-control" id="guide_phone" name="guide_phone" 
+                       value="{{ confirmation_data.guide_phone or '' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="service_type" class="form-label">Service Type</label>
+                <select class="form-select" id="service_type" name="service_type">
+                    <option value="">Select service type</option>
+                    <option value="City Tour" {{ 'selected' if confirmation_data.service_type == 'City Tour' }}>City Tour</option>
+                    <option value="Historical Tour" {{ 'selected' if confirmation_data.service_type == 'Historical Tour' }}>Historical Tour</option>
+                    <option value="Nature Tour" {{ 'selected' if confirmation_data.service_type == 'Nature Tour' }}>Nature Tour</option>
+                    <option value="Cultural Tour" {{ 'selected' if confirmation_data.service_type == 'Cultural Tour' }}>Cultural Tour</option>
+                    <option value="Shopping Tour" {{ 'selected' if confirmation_data.service_type == 'Shopping Tour' }}>Shopping Tour</option>
+                    <option value="Meet & Greet" {{ 'selected' if confirmation_data.service_type == 'Meet & Greet' }}>Meet & Greet</option>
+                    <option value="Airport Transfer Guide" {{ 'selected' if confirmation_data.service_type == 'Airport Transfer Guide' }}>Airport Transfer Guide</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="duration_hours" class="form-label">Duration (Hours)</label>
+                <input type="number" class="form-control" id="duration_hours" name="duration_hours" 
+                       value="{{ confirmation_data.duration_hours or '' }}" step="0.5" min="0.5">
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label for="meeting_location" class="form-label">Meeting Location</label>
+        <input type="text" class="form-control" id="meeting_location" name="meeting_location" 
+               value="{{ confirmation_data.meeting_location or '' }}" 
+               placeholder="Where will the guide meet the clients?">
+    </div>
+
+    <div class="mb-3">
+        <label for="tour_itinerary" class="form-label">Tour Itinerary</label>
+        <textarea class="form-control" id="tour_itinerary" name="tour_itinerary" rows="4" 
+                  placeholder="Detailed tour itinerary and activities">{{ confirmation_data.tour_itinerary or '' }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="guide_report" class="form-label">Guide Report/Notes</label>
+        <textarea class="form-control" id="guide_report" name="guide_report" rows="3" 
+                  placeholder="Special instructions or notes for the guide">{{ confirmation_data.guide_report or '' }}</textarea>
+    </div>
+{% endblock %}
