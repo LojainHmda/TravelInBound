@@ -31,21 +31,24 @@
         }
         
         .burger-menu-btn {
-            background-color: #000000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
+            border-radius: 12px;
+            padding: 10px 14px;
             font-size: 1.25rem;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
         }
         
         .burger-menu-btn:hover {
-            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         
         /* Header bar with logo */
@@ -100,6 +103,8 @@
             display: flex;
             min-height: 100vh;
             flex-direction: column;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
         
         .app-container {
@@ -110,7 +115,7 @@
         
         #sidebar {
             width: 260px;
-            background: linear-gradient(180deg, #2d3748 0%, #1a1a1a 100%);
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             color: #fff;
             position: fixed;
             left: 0;
@@ -118,9 +123,10 @@
             bottom: 0;
             z-index: 1050;
             transition: transform 0.3s ease;
-            box-shadow: 3px 0 15px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
             transform: translateX(0);
-            border-right: 2px solid #4a5568;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
         
         #sidebar.collapsed {
@@ -206,23 +212,44 @@
         }
         
         .sidebar-nav a {
-            padding: 10px 15px;
-            color: rgba(255, 255, 255, 0.85);
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
             display: block;
-            transition: all 0.3s;
-            border-left: 4px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 8px;
+            margin: 4px 12px;
+            position: relative;
+            overflow: hidden;
         }
         
         .sidebar-nav .submenu a {
-            padding: 6px 10px;
+            padding: 8px 16px;
             font-size: 0.9rem;
+            margin: 2px 20px;
+        }
+        
+        .sidebar-nav a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        
+        .sidebar-nav a:hover::before, .sidebar-nav a.active::before {
+            opacity: 1;
         }
         
         .sidebar-nav a:hover, .sidebar-nav a.active {
-            background-color: rgba(255, 255, 255, 0.1);
             color: white;
-            border-left-color: #FFBF00;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
         .sidebar-nav a i {
@@ -425,7 +452,7 @@
             <!-- Main navigation is now in the top navbar -->
             
             <!-- Main Content -->
-            <main class="container-fluid my-4">
+            <main class="my-4" style="padding: 0;">
                 {% block content %}{% endblock %}
             </main>
             
