@@ -18,14 +18,45 @@ def supplier_redirect(supplier_id):
 @main_bp.route('/')
 @login_required
 def index():
-    """Home page showing recent bookings"""
+    """Home page showing recent inbound requests and workflow indicators"""
     try:
-        recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(5).all()
+        from app.models.inbound import InboundRequest
+        from sqlalchemy import func
+        
+        # Get recent inbound requests for the current user
+        recent_requests = InboundRequest.query.filter_by(user_id=current_user.id)\
+            .order_by(InboundRequest.created_at.desc()).limit(8).all()
+        
+        # Get status counts for workflow indicators
+        status_counts = db.session.query(
+            InboundRequest.status,
+            func.count(InboundRequest.id)
+        ).filter_by(user_id=current_user.id).group_by(InboundRequest.status).all()
+        
+        # Convert to dictionary for easy access
+        counts = {status: count for status, count in status_counts}
+        workflow_counts = {
+            'REQUEST': counts.get(STATUS_REQUEST, 0),
+            'BOOKED': counts.get(STATUS_BOOKED, 0),
+            'IN_PROGRESS': counts.get(STATUS_IN_PROGRESS, 0),
+            'CONFIRMED': counts.get(STATUS_CONFIRMED, 0)
+        }
+        
+        # Get total amount for current user's requests
+        total_amount = db.session.query(func.sum(InboundRequest.total_amount))\
+            .filter_by(user_id=current_user.id).scalar() or 0
+            
     except Exception as e:
         # Handle database connection issues gracefully
         print(f"Database query error: {e}")
-        recent_bookings = []
-    return render_template('index.html', bookings=recent_bookings)
+        recent_requests = []
+        workflow_counts = {'REQUEST': 0, 'BOOKED': 0, 'IN_PROGRESS': 0, 'CONFIRMED': 0}
+        total_amount = 0
+        
+    return render_template('index.html', 
+                         recent_requests=recent_requests,
+                         workflow_counts=workflow_counts,
+                         total_amount=total_amount)
 
 @main_bp.route('/dashboard')
 @login_required

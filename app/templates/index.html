@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Windows of Jordan - Premium Travel Services{% endblock %}
+{% block title %}Windows of Jordan - Dashboard{% endblock %}
 
 {% block styles %}
 <style>
-/* Clean Modern Reset */
+/* Modern Dashboard Styles */
 * {
     margin: 0;
     padding: 0;
@@ -13,372 +13,552 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
     line-height: 1.6;
-    color: #333;
-    background: #fafafa;
 }
 
-/* Simple Hero */
-.hero {
-    background: white;
-    padding: 6rem 2rem 4rem;
-    text-align: center;
-}
-
-.hero-container {
-    max-width: 800px;
+.dashboard-container {
+    max-width: 1400px;
     margin: 0 auto;
+    padding: 2rem;
 }
 
-.hero-title {
-    font-size: 3rem;
-    font-weight: 600;
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 3rem;
     color: #2d3748;
-    margin-bottom: 1rem;
 }
 
-.hero-subtitle {
-    font-size: 1.2rem;
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
     color: #718096;
-    margin-bottom: 2.5rem;
 }
 
-.hero-buttons {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.btn {
-    padding: 0.875rem 1.75rem;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-primary {
-    background: #4a5568;
-    color: white;
-    border: 1px solid #4a5568;
-}
-
-.btn-primary:hover {
-    background: #2d3748;
-    transform: translateY(-1px);
-}
-
-.btn-secondary {
-    background: white;
-    color: #4a5568;
-    border: 1px solid #e2e8f0;
-}
-
-.btn-secondary:hover {
-    background: #f7fafc;
-    border-color: #4a5568;
-}
-
-/* Compact Service Cards */
-.services {
-    padding: 4rem 2rem;
-    background: white;
-}
-
-.services-container {
-    max-width: 1000px;
-    margin: 0 auto;
-}
-
-.services-header {
-    text-align: center;
+/* Workflow Indicator - Vertical */
+.workflow-section {
     margin-bottom: 3rem;
 }
 
-.services-title {
-    font-size: 2rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 0.5rem;
+.workflow-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
-.services-subtitle {
-    color: #718096;
-    font-size: 1rem;
-}
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1.5rem;
-}
-
-/* Simple Card Design */
-.service-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 2rem 1.5rem;
-    text-align: center;
-    transition: all 0.2s ease;
-    cursor: pointer;
+.workflow-step {
     position: relative;
+    text-align: center;
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem 1rem;
+    min-width: 160px;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
 }
 
-.service-card:hover {
-    border-color: #cbd5e0;
+.workflow-step:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.service-icon {
+.workflow-step::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -1rem;
+    width: 0;
+    height: 0;
+    border-left: 8px solid #e2e8f0;
+    border-top: 8px solid transparent;
+    border-bottom: 8px solid transparent;
+    transform: translateY(-50%);
+}
+
+.workflow-step:last-child::after {
+    display: none;
+}
+
+.workflow-icon {
     width: 48px;
     height: 48px;
-    background: #f7fafc;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.25rem;
+    margin: 0 auto 0.75rem;
     font-size: 1.25rem;
-    color: #4a5568;
-    border: 1px solid #e2e8f0;
-}
-
-.service-card.transfers .service-icon {
-    background: #edf2f7;
-    color: #4a5568;
-}
-
-.service-card.tours .service-icon {
-    background: #fed7d7;
-    color: #c53030;
-}
-
-.service-card.jerusalem .service-icon {
-    background: #bee3f8;
-    color: #2b6cb0;
-}
-
-.service-card.rental .service-icon {
-    background: #c6f6d5;
-    color: #38a169;
-}
-
-.service-title {
-    font-size: 1.125rem;
+    color: white;
     font-weight: 600;
-    color: #2d3748;
-    margin-bottom: 0.75rem;
 }
 
-.service-description {
-    color: #718096;
-    font-size: 0.9rem;
-    line-height: 1.5;
+.workflow-step.request .workflow-icon {
+    background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
 }
 
-/* Simple Stats */
-.stats {
-    padding: 3rem 2rem;
-    background: #f7fafc;
+.workflow-step.booked .workflow-icon {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
 }
 
-.stats-container {
-    max-width: 600px;
-    margin: 0 auto;
+.workflow-step.progress .workflow-icon {
+    background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
 }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    text-align: center;
+.workflow-step.confirmed .workflow-icon {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
 }
 
-.stat-item {
-    padding: 1rem;
-}
-
-.stat-number {
-    font-size: 1.75rem;
+.workflow-label {
+    font-size: 0.875rem;
     font-weight: 600;
     color: #4a5568;
     margin-bottom: 0.25rem;
 }
 
-.stat-label {
-    color: #718096;
-    font-size: 0.875rem;
-    font-weight: 500;
+.workflow-count {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
 }
 
-/* Simple CTA */
-.cta {
-    padding: 4rem 2rem;
-    background: white;
-    text-align: center;
+/* Request Cards Grid */
+.requests-section {
+    margin-bottom: 3rem;
 }
 
-.cta-container {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.cta-title {
-    font-size: 1.75rem;
+.section-title {
+    font-size: 1.5rem;
     font-weight: 600;
     color: #2d3748;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: #667eea;
+}
+
+.requests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Beveled Cards */
+.request-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    
+    /* Bevel Effect */
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.request-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 12px 30px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.request-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 1rem;
 }
 
-.cta-text {
-    color: #718096;
-    margin-bottom: 2rem;
-}
-
-.cta-buttons {
+.request-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
-    gap: 1rem;
+    align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
+    font-size: 1rem;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-/* Responsive */
+.request-number {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.request-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.request-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.request-detail {
+    font-size: 0.875rem;
+    color: #718096;
+}
+
+.request-detail strong {
+    color: #4a5568;
+}
+
+.request-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.request-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status-request {
+    background: rgba(237, 137, 54, 0.1);
+    color: #dd6b20;
+}
+
+.status-booked {
+    background: rgba(66, 153, 225, 0.1);
+    color: #3182ce;
+}
+
+.status-progress {
+    background: rgba(159, 122, 234, 0.1);
+    color: #805ad5;
+}
+
+.status-confirmed {
+    background: rgba(72, 187, 120, 0.1);
+    color: #38a169;
+}
+
+.request-amount {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+/* Summary Cards */
+.summary-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.25rem;
+    color: white;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.summary-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.summary-label {
+    font-size: 0.875rem;
+    color: #718096;
+    font-weight: 500;
+}
+
+/* Action Buttons */
+.action-section {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.75rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    margin: 0 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background: #f7fafc;
+    transform: translateY(-2px);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: #718096;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .hero-title {
-        font-size: 2.25rem;
+    .dashboard-container {
+        padding: 1rem;
     }
     
-    .services-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .hero-buttons,
-    .cta-buttons {
+    .workflow-container {
         flex-direction: column;
         align-items: center;
     }
     
-    .btn {
-        width: 100%;
-        max-width: 280px;
-        justify-content: center;
+    .workflow-step::after {
+        display: none;
+    }
+    
+    .requests-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .request-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .summary-section {
+        grid-template-columns: 1fr;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero">
-    <div class="hero-container">
-        <h1 class="hero-title">Windows of Jordan</h1>
-        <p class="hero-subtitle">Premium inbound travel services for unforgettable Jordan experiences</p>
-        
-        <div class="hero-buttons">
-            <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                Start Planning
-            </a>
-            <a href="{{ url_for('inbound.index') }}" class="btn btn-secondary">
-                <i class="fas fa-eye"></i>
-                View Tours
-            </a>
-        </div>
+<div class="dashboard-container">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Windows of Jordan</h1>
+        <p class="dashboard-subtitle">Inbound Tour Operations Dashboard</p>
     </div>
-</section>
 
-<!-- Services Section -->
-<section class="services">
-    <div class="services-container">
-        <div class="services-header">
-            <h2 class="services-title">Our Services</h2>
-            <p class="services-subtitle">Professional travel solutions for every need</p>
-        </div>
-        
-        <div class="services-grid">
-            <div class="service-card transfers" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                <div class="service-icon">
-                    <i class="fas fa-car"></i>
-                </div>
-                <h3 class="service-title">Private Transfers</h3>
-                <p class="service-description">Professional transportation with experienced drivers</p>
+    <!-- Workflow Indicator -->
+    <div class="workflow-section">
+        <div class="workflow-container">
+            <div class="workflow-step request">
+                <div class="workflow-icon">{{ workflow_counts.REQUEST }}</div>
+                <div class="workflow-label">Requests</div>
+                <div class="workflow-count">New</div>
             </div>
             
-            <div class="service-card tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                <div class="service-icon">
-                    <i class="fas fa-map-marked-alt"></i>
-                </div>
-                <h3 class="service-title">Guided Tours</h3>
-                <p class="service-description">Expert-led explorations of Jordan's highlights</p>
+            <div class="workflow-step booked">
+                <div class="workflow-icon">{{ workflow_counts.BOOKED }}</div>
+                <div class="workflow-label">Booked</div>
+                <div class="workflow-count">Confirmed</div>
             </div>
             
-            <div class="service-card jerusalem" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                <div class="service-icon">
-                    <i class="fas fa-mosque"></i>
-                </div>
-                <h3 class="service-title">Jerusalem Trips</h3>
-                <p class="service-description">Sacred journeys with border arrangements</p>
+            <div class="workflow-step progress">
+                <div class="workflow-icon">{{ workflow_counts.IN_PROGRESS }}</div>
+                <div class="workflow-label">In Progress</div>
+                <div class="workflow-count">Active</div>
             </div>
             
-            <div class="service-card rental" onclick="location.href='{{ url_for('inbound.new_request') }}'">
-                <div class="service-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h3 class="service-title">Hourly Rentals</h3>
-                <p class="service-description">Flexible vehicle rental with drivers</p>
+            <div class="workflow-step confirmed">
+                <div class="workflow-icon">{{ workflow_counts.CONFIRMED }}</div>
+                <div class="workflow-label">Completed</div>
+                <div class="workflow-count">Finished</div>
             </div>
         </div>
     </div>
-</section>
 
-<!-- Stats Section -->
-<section class="stats">
-    <div class="stats-container">
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-number">1,200+</div>
-                <div class="stat-label">Happy Customers</div>
+    <!-- Summary Cards -->
+    <div class="summary-section">
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fas fa-dollar-sign"></i>
             </div>
-            <div class="stat-item">
-                <div class="stat-number">150+</div>
-                <div class="stat-label">Tour Options</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">99%</div>
-                <div class="stat-label">Satisfaction</div>
-            </div>
+            <div class="summary-value">${{ "%.2f"|format(total_amount) }}</div>
+            <div class="summary-label">Total Revenue</div>
         </div>
-    </div>
-</section>
-
-<!-- CTA Section -->
-<section class="cta">
-    <div class="cta-container">
-        <h2 class="cta-title">Ready to Explore Jordan?</h2>
-        <p class="cta-text">Start planning your perfect Jordan experience today</p>
         
-        <div class="cta-buttons">
-            <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
-                <i class="fas fa-calendar-plus"></i>
-                Create Itinerary
-            </a>
-            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-chart-bar"></i>
-                Dashboard
-            </a>
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="summary-value">{{ recent_requests|length }}</div>
+            <div class="summary-label">Recent Requests</div>
+        </div>
+        
+        <div class="summary-card">
+            <div class="summary-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="summary-value">{{ workflow_counts.REQUEST + workflow_counts.BOOKED + workflow_counts.IN_PROGRESS + workflow_counts.CONFIRMED }}</div>
+            <div class="summary-label">Total Active</div>
         </div>
     </div>
-</section>
+
+    <!-- Recent Requests -->
+    <div class="requests-section">
+        <h2 class="section-title">
+            <i class="fas fa-list-alt"></i>
+            Recent Inbound Requests
+        </h2>
+        
+        {% if recent_requests %}
+            <div class="requests-grid">
+                {% for request in recent_requests %}
+                <div class="request-card" onclick="location.href='{{ url_for('inbound.edit_request', request_id=request.id) }}'">
+                    <div class="request-header">
+                        <div class="request-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <div class="request-number">{{ request.request_number }}</div>
+                    </div>
+                    
+                    <div class="request-title">{{ request.agent }}</div>
+                    
+                    <div class="request-details">
+                        <div class="request-detail">
+                            <strong>Contact:</strong> {{ request.contact_name }}
+                        </div>
+                        <div class="request-detail">
+                            <strong>Pax:</strong> {{ request.pax }}
+                        </div>
+                        <div class="request-detail">
+                            <strong>From:</strong> {{ request.from_date.strftime('%Y-%m-%d') if request.from_date }}
+                        </div>
+                        <div class="request-detail">
+                            <strong>To:</strong> {{ request.to_date.strftime('%Y-%m-%d') if request.to_date }}
+                        </div>
+                        <div class="request-detail">
+                            <strong>Days:</strong> {{ request.no_of_days }}
+                        </div>
+                        <div class="request-detail">
+                            <strong>Nationality:</strong> {{ request.nationality }}
+                        </div>
+                    </div>
+                    
+                    <div class="request-footer">
+                        <div class="request-status status-{{ request.status.lower().replace('_', '-') }}">
+                            {{ request.status.replace('_', ' ') }}
+                        </div>
+                        <div class="request-amount">
+                            ${{ "%.2f"|format(request.total_amount) if request.total_amount else "0.00" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>No Recent Requests</h3>
+                <p>Start creating inbound tour requests to see them here</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-section">
+        <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Create New Request
+        </a>
+        
+        <a href="{{ url_for('inbound.index') }}" class="btn btn-secondary">
+            <i class="fas fa-list"></i>
+            View All Requests
+        </a>
+        
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+            <i class="fas fa-chart-bar"></i>
+            System Dashboard
+        </a>
+    </div>
+</div>
 {% endblock %}
