@@ -1,59 +1,226 @@
 {% extends 'base.html' %}
 
-{% block title %}Finance Dashboard - TravelBookPro{% endblock %}
+{% block title %}Finance Dashboard - Windows of Jordan{% endblock %}
 
 {% block styles %}
 {{ super() }}
 <style>
-    .metric-card {
-        transition: all 0.3s ease;
-    }
-    
-    .metric-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    }
-    
-    .trend-up {
-        color: #198754;
-    }
-    
-    .trend-down {
-        color: #dc3545;
-    }
-    
-    .trend-icon {
-        font-size: 0.9rem;
-    }
+/* Modern Finance Dashboard Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.dashboard-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin-top: 0.5rem;
+}
+
+.filter-group {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+
+.filter-select {
+    background: white;
+    border: none;
+    color: #334155;
+    padding: 0.625rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-modern {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0.25rem;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+    color: #764ba2;
+}
+
+.btn-modern.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-modern.secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: white;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--metric-gradient);
+}
+
+.metric-card.revenue {
+    --metric-gradient: linear-gradient(135deg, #10b981, #059669);
+}
+
+.metric-card.expenses {
+    --metric-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.metric-card.profit {
+    --metric-gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.metric-card.margin {
+    --metric-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.metric-label {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.metric-change.positive {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+}
+
+.metric-change.negative {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #991b1b;
+}
+
+.metric-change.neutral {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #6b7280;
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #f0f4f8, #e2e8f0);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1.5rem;
+}
+
+.trend-icon {
+    font-size: 0.875rem;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="dashboard-container">
     <!-- Finance Dashboard Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Finance Dashboard</h1>
-        <div class="d-flex align-items-center">
-            <form class="me-3" id="monthSelectForm" method="GET">
-                <div class="input-group">
-                    <select class="form-select form-select-sm" id="monthSelect" name="month" onchange="this.form.submit()">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div>
+                <h1 class="dashboard-title">Finance Dashboard</h1>
+                <p class="dashboard-subtitle">Monitor your financial performance and metrics</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <form class="filter-group" id="monthSelectForm" method="GET">
+                    <select class="filter-select" id="monthSelect" name="month" onchange="this.form.submit()">
                         <option value="current" {% if selected_month == 'current' %}selected{% endif %}>Current Month</option>
                         <option value="-1" {% if selected_month == '-1' %}selected{% endif %}>Last Month</option>
                         <option value="-2" {% if selected_month == '-2' %}selected{% endif %}>2 Months Ago</option>
                         <option value="-3" {% if selected_month == '-3' %}selected{% endif %}>3 Months Ago</option>
                         <option value="all" {% if selected_month == 'all' %}selected{% endif %}>All Time</option>
                     </select>
-                    <button class="btn btn-sm btn-outline-secondary" type="submit">
-                        <i class="fas fa-filter"></i>
-                    </button>
-                </div>
-            </form>
-            <div>
-                <a href="{{ url_for('finance.expenses') }}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-list me-1"></i> View Expenses
+                </form>
+                <a href="{{ url_for('finance.expenses') }}" class="btn-modern">
+                    <i class="fas fa-list"></i> View Expenses
                 </a>
-                <a href="{{ url_for('finance.reports') }}" class="btn btn-outline-primary btn-sm">
-                    <i class="fas fa-chart-bar me-1"></i> Financial Reports
+                <a href="{{ url_for('finance.reports') }}" class="btn-modern secondary">
+                    <i class="fas fa-chart-bar"></i> Reports
                 </a>
             </div>
         </div>

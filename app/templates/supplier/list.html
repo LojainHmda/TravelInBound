@@ -1,51 +1,300 @@
 {% extends 'base.html' %}
 
-{% block title %}Suppliers{% endblock %}
+{% block title %}Suppliers - Windows of Jordan{% endblock %}
+
+{% block styles %}
+<style>
+/* Modern Supplier Page Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-text h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.header-text p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.btn-add {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 0.875rem 1.75rem;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+    color: #764ba2;
+}
+
+.search-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.table-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.table-header {
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.table-title i {
+    color: #667eea;
+}
+
+.form-modern {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.form-label-modern {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.form-control-modern {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.form-control-modern:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-search {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.modern-table {
+    width: 100%;
+    border-spacing: 0;
+}
+
+.modern-table thead {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+}
+
+.modern-table thead th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.modern-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.modern-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+.modern-table tbody td {
+    padding: 1.25rem 1.5rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.supplier-name {
+    font-weight: 700;
+    color: #1e293b;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.supplier-name:hover {
+    color: #667eea;
+}
+
+.badge-code {
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    color: #475569;
+    padding: 0.375rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.balance-positive {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.balance-paid {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.btn-action {
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #667eea;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin: 0 0.25rem;
+}
+
+.btn-action:hover {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
+}
+
+.btn-action.secondary {
+    color: #64748b;
+}
+
+.btn-action.info {
+    color: #0891b2;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-lg-8">
-            <h1 class="mb-3"><i class="fas fa-building me-2"></i>Suppliers</h1>
-            <p class="lead">Manage your suppliers and view their statement of accounts</p>
-        </div>
-        <div class="col-lg-4 text-end">
-            <a href="/finance/new-supplier" class="btn btn-primary">
-                <i class="fas fa-plus-circle me-1"></i> Add New Supplier
+<div class="page-container">
+    <div class="page-header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1><i class="fas fa-building"></i> Suppliers</h1>
+                <p>Manage your suppliers and view their statement of accounts</p>
+            </div>
+            <a href="/finance/new-supplier" class="btn-add">
+                <i class="fas fa-plus-circle"></i> Add New Supplier
             </a>
         </div>
     </div>
 
     <!-- Search Form -->
-    <div class="card mb-4 shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search Suppliers</h5>
+    <div class="search-card">
+        <div class="table-header">
+            <h5 class="table-title"><i class="fas fa-search"></i> Search Suppliers</h5>
         </div>
-        <div class="card-body">
-            <form method="GET" action="{{ url_for('supplier.list_suppliers') }}" class="row g-3">
-                <div class="col-md-4">
-                    <label for="query" class="form-label">Search</label>
-                    <input type="text" id="query" name="query" class="form-control" value="{{ query }}" placeholder="Name, code, email...">
+        <div style="padding: 1.5rem;">
+            <form method="GET" action="{{ url_for('supplier.list_suppliers') }}" class="form-modern">
+                <div>
+                    <label for="query" class="form-label-modern">Search</label>
+                    <input type="text" id="query" name="query" class="form-control-modern" value="{{ query }}" placeholder="Name, code, email...">
                 </div>
-                <div class="col-md-3">
-                    <label for="country" class="form-label">Country</label>
-                    <select id="country" name="country" class="form-select">
+                <div>
+                    <label for="country" class="form-label-modern">Country</label>
+                    <select id="country" name="country" class="form-control-modern">
                         {% for choice in form.country.choices %}
                         <option value="{{ choice[0] }}" {% if country == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="supplier_type" class="form-label">Supplier Type</label>
-                    <select id="supplier_type" name="supplier_type" class="form-select">
+                <div>
+                    <label for="supplier_type" class="form-label-modern">Supplier Type</label>
+                    <select id="supplier_type" name="supplier_type" class="form-control-modern">
                         {% for choice in form.supplier_type.choices %}
                         <option value="{{ choice[0] }}" {% if supplier_type == choice[0] %}selected{% endif %}>{{ choice[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search me-1"></i> Search
+                <div>
+                    <button type="submit" class="btn-search">
+                        <i class="fas fa-search"></i> Search
                     </button>
                 </div>
             </form>
@@ -53,75 +302,74 @@
     </div>
 
     <!-- Suppliers List -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h5 class="mb-0"><i class="fas fa-list me-2"></i>Suppliers List</h5>
+    <div class="table-card">
+        <div class="table-header">
+            <h5 class="table-title"><i class="fas fa-list"></i> Suppliers List</h5>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Code</th>
-                            <th>Contact</th>
-                            <th>Country</th>
-                            <th>Outstanding Balance</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for supplier in suppliers %}
-                        <tr>
-                            <td>
-                                <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="text-decoration-none">
-                                    {{ supplier.name }}
-                                </a>
-                            </td>
-                            <td><span class="badge bg-secondary">{{ supplier.code }}</span></td>
-                            <td>
-                                {% if supplier.email %}
-                                <small><i class="fas fa-envelope me-1"></i>{{ supplier.email }}</small><br>
-                                {% endif %}
-                                {% if supplier.phone %}
-                                <small><i class="fas fa-phone me-1"></i>{{ supplier.phone }}</small>
-                                {% endif %}
-                            </td>
-                            <td>{{ supplier.country }}</td>
-                            <td>
-                                {% set balance = supplier.unpaid_balance %}
-                                {% if balance > 0 %}
-                                <span class="text-danger fw-bold">${{ "%.2f"|format(balance) }}</span>
-                                {% else %}
-                                <span class="text-success">Paid</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ url_for('supplier.edit_supplier', supplier_id=supplier.id) }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{{ url_for('supplier.supplier_statements') }}" class="btn btn-sm btn-outline-info">
-                                    <i class="fas fa-file-invoice-dollar"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <p class="text-muted mb-0">No suppliers found.</p>
-                                <a href="/finance/new-supplier" class="btn btn-sm btn-primary mt-2">
-                                    <i class="fas fa-plus-circle me-1"></i> Add New Supplier
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Contact</th>
+                        <th>Country</th>
+                        <th>Outstanding Balance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="supplier-name">
+                                {{ supplier.name }}
+                            </a>
+                        </td>
+                        <td><span class="badge-code">{{ supplier.code }}</span></td>
+                        <td>
+                            {% if supplier.email %}
+                            <small style="color: #64748b;"><i class="fas fa-envelope me-1"></i>{{ supplier.email }}</small><br>
+                            {% endif %}
+                            {% if supplier.phone %}
+                            <small style="color: #64748b;"><i class="fas fa-phone me-1"></i>{{ supplier.phone }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ supplier.country }}</td>
+                        <td>
+                            {% set balance = supplier.unpaid_balance %}
+                            {% if balance > 0 %}
+                            <span class="balance-positive">${{ "%.2f"|format(balance) }}</span>
+                            {% else %}
+                            <span class="balance-paid">✓ Paid</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('supplier.view_supplier', supplier_id=supplier.id) }}" class="btn-action">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('supplier.edit_supplier', supplier_id=supplier.id) }}" class="btn-action secondary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{{ url_for('supplier.supplier_statements') }}" class="btn-action info">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 3rem;">
+                            <p style="color: #94a3b8; margin-bottom: 1rem;">No suppliers found.</p>
+                            <a href="/finance/new-supplier" class="btn-add" style="display: inline-flex;">
+                                <i class="fas fa-plus-circle"></i> Add New Supplier
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

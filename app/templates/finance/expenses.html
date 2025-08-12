@@ -1,19 +1,160 @@
 {% extends 'base.html' %}
 
-{% block title %}Expense Management - TravelBookPro{% endblock %}
+{% block title %}Expense Management - Windows of Jordan{% endblock %}
+
+{% block styles %}
+<style>
+/* Modern Expense Page Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.expense-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.expense-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.expense-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.btn-modern {
+    background: white;
+    color: #667eea;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+    color: #764ba2;
+}
+
+.btn-modern.secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-modern.secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.filter-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.card-header-modern {
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 2px solid #e2e8f0;
+    margin: -2rem -2rem 1.5rem -2rem;
+    border-radius: 16px 16px 0 0;
+}
+
+.card-title-modern {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.summary-item {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    transition: transform 0.3s ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-4px);
+}
+
+.summary-label {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.summary-value.total {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.summary-value.paid {
+    color: #10b981;
+}
+
+.summary-value.unpaid {
+    color: #ef4444;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="expense-container">
     <!-- Page Heading -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Expense Management</h1>
-        <div>
-            <a href="{{ url_for('finance.index') }}" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
-            </a>
-            <a href="{{ url_for('finance.new_expense') }}" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus me-1"></i> New Expense
-            </a>
+    <div class="expense-header">
+        <div class="header-content">
+            <h1 class="expense-title">Expense Management</h1>
+            <div>
+                <a href="{{ url_for('finance.index') }}" class="btn-modern secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+                <a href="{{ url_for('finance.new_expense') }}" class="btn-modern">
+                    <i class="fas fa-plus"></i> New Expense
+                </a>
+            </div>
         </div>
     </div>
 
