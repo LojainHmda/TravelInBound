@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Windows of Jordan - Premium Travel Experiences{% endblock %}
+{% block title %}Windows of Jordan - Premium Travel Services{% endblock %}
 
 {% block styles %}
 <style>
-/* Modern Reset */
+/* Clean Modern Reset */
 * {
     margin: 0;
     padding: 0;
@@ -12,435 +12,267 @@
 }
 
 body {
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.6;
-    color: #2d3748;
-    background: #ffffff;
-    overflow-x: hidden;
+    color: #333;
+    background: #fafafa;
 }
 
-/* Hero Section - Minimalist */
+/* Simple Hero */
 .hero {
-    min-height: 85vh;
-    background: linear-gradient(180deg, #f7fafc 0%, #edf2f7 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    padding: 2rem 0;
-}
-
-.hero-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
+    background: white;
+    padding: 6rem 2rem 4rem;
     text-align: center;
 }
 
-.hero-badge {
-    display: inline-block;
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
-    padding: 0.75rem 1.5rem;
-    border-radius: 50px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
-    border: 1px solid rgba(102, 126, 234, 0.2);
+.hero-container {
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .hero-title {
-    font-size: 4.5rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.025em;
-    line-height: 1.1;
+    font-size: 3rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 1rem;
 }
 
 .hero-subtitle {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     color: #718096;
-    margin-bottom: 3rem;
-    max-width: 700px;
-    margin-left: auto;
-    margin-right: auto;
-    font-weight: 400;
+    margin-bottom: 2.5rem;
 }
 
-.hero-actions {
+.hero-buttons {
     display: flex;
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 4rem;
 }
 
 .btn {
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-weight: 600;
+    padding: 0.875rem 1.75rem;
+    border-radius: 8px;
     text-decoration: none;
+    font-weight: 500;
     transition: all 0.2s ease;
-    font-size: 1rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
 }
 
 .btn-primary {
-    background: #667eea;
+    background: #4a5568;
     color: white;
-    border: 1px solid #667eea;
+    border: 1px solid #4a5568;
 }
 
 .btn-primary:hover {
-    background: #5a67d8;
+    background: #2d3748;
     transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
 .btn-secondary {
     background: white;
-    color: #667eea;
+    color: #4a5568;
     border: 1px solid #e2e8f0;
 }
 
 .btn-secondary:hover {
     background: #f7fafc;
-    border-color: #667eea;
-    transform: translateY(-1px);
+    border-color: #4a5568;
 }
 
-.hero-preview {
+/* Compact Service Cards */
+.services {
+    padding: 4rem 2rem;
     background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
-    max-width: 800px;
+}
+
+.services-container {
+    max-width: 1000px;
     margin: 0 auto;
 }
 
-.preview-stats {
+.services-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.services-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.services-subtitle {
+    color: #718096;
+    font-size: 1rem;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Simple Card Design */
+.service-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.service-card:hover {
+    border-color: #cbd5e0;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.service-icon {
+    width: 48px;
+    height: 48px;
+    background: #f7fafc;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 1.25rem;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+.service-card.transfers .service-icon {
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.service-card.tours .service-icon {
+    background: #fed7d7;
+    color: #c53030;
+}
+
+.service-card.jerusalem .service-icon {
+    background: #bee3f8;
+    color: #2b6cb0;
+}
+
+.service-card.rental .service-icon {
+    background: #c6f6d5;
+    color: #38a169;
+}
+
+.service-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.75rem;
+}
+
+.service-description {
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Simple Stats */
+.stats {
+    padding: 3rem 2rem;
+    background: #f7fafc;
+}
+
+.stats-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
     text-align: center;
 }
 
-.preview-stat {
+.stat-item {
     padding: 1rem;
 }
 
-.preview-number {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #667eea;
-    margin-bottom: 0.5rem;
-}
-
-.preview-label {
-    color: #718096;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* Services Section - Clean Grid */
-.services {
-    padding: 6rem 0;
-    background: white;
-}
-
-.services-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.services-header {
-    text-align: center;
-    margin-bottom: 4rem;
-}
-
-.services-title {
-    font-size: 2.75rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 1rem;
-    letter-spacing: -0.025em;
-}
-
-.services-subtitle {
-    font-size: 1.2rem;
-    color: #718096;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-}
-
-.service-card {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 2.5rem 2rem;
-    text-align: center;
-    transition: all 0.2s ease;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-}
-
-.service-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: var(--accent-color);
-}
-
-.service-card:hover {
-    border-color: var(--accent-color);
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-}
-
-.service-card.transfers {
-    --accent-color: #667eea;
-}
-
-.service-card.tours {
-    --accent-color: #ed8936;
-}
-
-.service-card.jerusalem {
-    --accent-color: #38b2ac;
-}
-
-.service-card.rental {
-    --accent-color: #48bb78;
-}
-
-.service-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    background: var(--accent-color);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 1.5rem;
-}
-
-.service-title {
-    font-size: 1.25rem;
+.stat-number {
+    font-size: 1.75rem;
     font-weight: 600;
-    color: #1a202c;
-    margin-bottom: 1rem;
-}
-
-.service-description {
-    color: #718096;
-    line-height: 1.6;
-    font-size: 0.95rem;
-}
-
-/* Features Section - Side by Side */
-.features {
-    padding: 6rem 0;
-    background: #f7fafc;
-}
-
-.features-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.features-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6rem;
-    align-items: center;
-}
-
-.features-text h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.025em;
-}
-
-.features-text p {
-    font-size: 1.1rem;
-    color: #718096;
-    margin-bottom: 2rem;
-    line-height: 1.7;
-}
-
-.features-list {
-    list-style: none;
-    margin-bottom: 2rem;
-}
-
-.features-list li {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1rem;
     color: #4a5568;
-}
-
-.features-list li::before {
-    content: '✓';
-    background: #48bb78;
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem;
-    font-size: 0.8rem;
-    font-weight: bold;
-}
-
-.features-visual {
-    background: white;
-    border-radius: 20px;
-    padding: 3rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
-}
-
-.feature-cards {
-    display: grid;
-    gap: 1.5rem;
-}
-
-.feature-mini-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    background: #f7fafc;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-.feature-mini-icon {
-    width: 40px;
-    height: 40px;
-    background: #667eea;
-    color: white;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-}
-
-.feature-mini-content h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a202c;
     margin-bottom: 0.25rem;
 }
 
-.feature-mini-content p {
+.stat-label {
     color: #718096;
-    font-size: 0.9rem;
-    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
-/* CTA Section - Simple */
+/* Simple CTA */
 .cta {
-    padding: 6rem 0;
+    padding: 4rem 2rem;
     background: white;
     text-align: center;
 }
 
 .cta-container {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0 auto;
-    padding: 0 2rem;
 }
 
-.cta h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #1a202c;
+.cta-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2d3748;
     margin-bottom: 1rem;
 }
 
-.cta p {
-    font-size: 1.1rem;
+.cta-text {
     color: #718096;
-    margin-bottom: 2.5rem;
+    margin-bottom: 2rem;
 }
 
-.cta-actions {
+.cta-buttons {
     display: flex;
     gap: 1rem;
     justify-content: center;
     flex-wrap: wrap;
 }
 
-/* Animations */
-.fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease;
-}
-
-.fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .hero-title {
-        font-size: 3rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.2rem;
-    }
-    
-    .preview-stats {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        font-size: 2.25rem;
     }
     
     .services-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
     
-    .features-content {
+    .stats-grid {
         grid-template-columns: 1fr;
-        gap: 3rem;
+        gap: 1rem;
     }
     
-    .hero-actions,
-    .cta-actions {
+    .hero-buttons,
+    .cta-buttons {
         flex-direction: column;
         align-items: center;
     }
     
     .btn {
         width: 100%;
-        max-width: 300px;
+        max-width: 280px;
         justify-content: center;
     }
 }
@@ -451,42 +283,18 @@ body {
 <!-- Hero Section -->
 <section class="hero">
     <div class="hero-container">
-        <div class="hero-badge">
-            Premium Inbound Tours
-        </div>
-        
         <h1 class="hero-title">Windows of Jordan</h1>
+        <p class="hero-subtitle">Premium inbound travel services for unforgettable Jordan experiences</p>
         
-        <p class="hero-subtitle">
-            Experience the authentic beauty of Jordan through expertly crafted tours and premium travel services
-        </p>
-        
-        <div class="hero-actions">
+        <div class="hero-buttons">
             <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
-                <i class="fas fa-calendar-plus"></i>
-                Plan Your Journey
+                <i class="fas fa-plus"></i>
+                Start Planning
             </a>
             <a href="{{ url_for('inbound.index') }}" class="btn btn-secondary">
                 <i class="fas fa-eye"></i>
-                Browse Tours
+                View Tours
             </a>
-        </div>
-        
-        <div class="hero-preview">
-            <div class="preview-stats">
-                <div class="preview-stat">
-                    <div class="preview-number">1,200+</div>
-                    <div class="preview-label">Happy Travelers</div>
-                </div>
-                <div class="preview-stat">
-                    <div class="preview-number">150+</div>
-                    <div class="preview-label">Tour Packages</div>
-                </div>
-                <div class="preview-stat">
-                    <div class="preview-number">99%</div>
-                    <div class="preview-label">Satisfaction</div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -494,121 +302,62 @@ body {
 <!-- Services Section -->
 <section class="services">
     <div class="services-container">
-        <div class="services-header fade-in">
+        <div class="services-header">
             <h2 class="services-title">Our Services</h2>
-            <p class="services-subtitle">Everything you need for an unforgettable Jordan experience</p>
+            <p class="services-subtitle">Professional travel solutions for every need</p>
         </div>
         
         <div class="services-grid">
-            <div class="service-card transfers fade-in" onclick="location.href='{{ url_for('inbound.new_request') }}'">
+            <div class="service-card transfers" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                 <div class="service-icon">
-                    <i class="fas fa-car-side"></i>
+                    <i class="fas fa-car"></i>
                 </div>
                 <h3 class="service-title">Private Transfers</h3>
-                <p class="service-description">
-                    Professional transportation services with experienced drivers and modern vehicles
-                </p>
+                <p class="service-description">Professional transportation with experienced drivers</p>
             </div>
             
-            <div class="service-card tours fade-in" onclick="location.href='{{ url_for('inbound.new_request') }}'">
+            <div class="service-card tours" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                 <div class="service-icon">
                     <i class="fas fa-map-marked-alt"></i>
                 </div>
                 <h3 class="service-title">Guided Tours</h3>
-                <p class="service-description">
-                    Expert-led explorations of Jordan's historical sites and natural wonders
-                </p>
+                <p class="service-description">Expert-led explorations of Jordan's highlights</p>
             </div>
             
-            <div class="service-card jerusalem fade-in" onclick="location.href='{{ url_for('inbound.new_request') }}'">
+            <div class="service-card jerusalem" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                 <div class="service-icon">
                     <i class="fas fa-mosque"></i>
                 </div>
                 <h3 class="service-title">Jerusalem Trips</h3>
-                <p class="service-description">
-                    Sacred journeys to the Holy Land with seamless border crossing arrangements
-                </p>
+                <p class="service-description">Sacred journeys with border arrangements</p>
             </div>
             
-            <div class="service-card rental fade-in" onclick="location.href='{{ url_for('inbound.new_request') }}'">
+            <div class="service-card rental" onclick="location.href='{{ url_for('inbound.new_request') }}'">
                 <div class="service-icon">
                     <i class="fas fa-clock"></i>
                 </div>
                 <h3 class="service-title">Hourly Rentals</h3>
-                <p class="service-description">
-                    Flexible vehicle rental with professional drivers for custom itineraries
-                </p>
+                <p class="service-description">Flexible vehicle rental with drivers</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features Section -->
-<section class="features">
-    <div class="features-container">
-        <div class="features-content">
-            <div class="features-text fade-in">
-                <h2>Why Choose Windows of Jordan</h2>
-                <p>
-                    We combine local expertise with international standards to deliver exceptional travel experiences throughout the Hashemite Kingdom.
-                </p>
-                
-                <ul class="features-list">
-                    <li>Licensed professional guides and drivers</li>
-                    <li>24/7 customer support and assistance</li>
-                    <li>Fully insured vehicles and services</li>
-                    <li>Customizable itineraries and packages</li>
-                    <li>Competitive pricing with no hidden fees</li>
-                </ul>
-                
-                <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
-                    <i class="fas fa-arrow-right"></i>
-                    Get Started
-                </a>
+<!-- Stats Section -->
+<section class="stats">
+    <div class="stats-container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">1,200+</div>
+                <div class="stat-label">Happy Customers</div>
             </div>
-            
-            <div class="features-visual fade-in">
-                <div class="feature-cards">
-                    <div class="feature-mini-card">
-                        <div class="feature-mini-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div class="feature-mini-content">
-                            <h4>Safe & Secure</h4>
-                            <p>Fully licensed and insured</p>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-mini-card">
-                        <div class="feature-mini-icon">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <div class="feature-mini-content">
-                            <h4>24/7 Support</h4>
-                            <p>Always here when you need us</p>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-mini-card">
-                        <div class="feature-mini-icon">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <div class="feature-mini-content">
-                            <h4>Expert Guides</h4>
-                            <p>Local knowledge and expertise</p>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-mini-card">
-                        <div class="feature-mini-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="feature-mini-content">
-                            <h4>Easy Booking</h4>
-                            <p>Simple online reservation</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-item">
+                <div class="stat-number">150+</div>
+                <div class="stat-label">Tour Options</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">99%</div>
+                <div class="stat-label">Satisfaction</div>
             </div>
         </div>
     </div>
@@ -616,42 +365,20 @@ body {
 
 <!-- CTA Section -->
 <section class="cta">
-    <div class="cta-container fade-in">
-        <h2>Ready to Explore Jordan?</h2>
-        <p>Start planning your perfect Jordan adventure today with our expert team</p>
+    <div class="cta-container">
+        <h2 class="cta-title">Ready to Explore Jordan?</h2>
+        <p class="cta-text">Start planning your perfect Jordan experience today</p>
         
-        <div class="cta-actions">
+        <div class="cta-buttons">
             <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
+                <i class="fas fa-calendar-plus"></i>
                 Create Itinerary
             </a>
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
                 <i class="fas fa-chart-bar"></i>
-                View Dashboard
+                Dashboard
             </a>
         </div>
     </div>
 </section>
-
-<script>
-// Smooth scroll animations
-document.addEventListener('DOMContentLoaded', function() {
-    const fadeElements = document.querySelectorAll('.fade-in');
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    });
-    
-    fadeElements.forEach(element => {
-        observer.observe(element);
-    });
-});
-</script>
 {% endblock %}
