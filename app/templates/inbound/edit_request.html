@@ -4,6 +4,141 @@
 
 {% block styles %}
 <style>
+/* Modern Premium Design Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.container-fluid {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Styles */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+}
+
+.page-header h2 {
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Card Styles */
+.card {
+    background: white;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    border-bottom: 2px solid #e2e8f0;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-title {
+    color: #1e293b;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Form Styles */
+.form-label {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.625rem 0.875rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-outline-primary {
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #64748b;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-secondary:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+/* Itinerary Table Specific Styles */
 .itinerary-table th, .itinerary-table td {
     vertical-align: middle;
     font-size: 0.9rem;
@@ -36,13 +171,60 @@
 .badge-booked { background-color: #0d6efd !important; }
 .badge-in-progress { background-color: #fd7e14 !important; }
 .badge-confirmed { background-color: #198754 !important; }
+
+/* Service Components Section */
+.service-components {
+    background: linear-gradient(135deg, #f0f4f8, #ffffff);
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid #e2e8f0;
+}
+
+.service-components h6 {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.service-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.625rem 1.125rem;
+    margin: 0.25rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.service-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #667eea;
+}
+
+.service-item i {
+    margin-right: 0.625rem;
+    font-size: 1.125rem;
+}
+
+.service-count {
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-right: 0.375rem;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="page-header">
         <div>
             <h2><i class="fas fa-edit"></i> {{ request.request_number }}</h2>
             <span class="badge badge-{{ request.status.lower() }} text-white">{{ request.status.title() }}</span>
@@ -120,6 +302,33 @@
                     <div class="col-12">
                         <label class="form-label">Special Notes</label>
                         <textarea class="form-control" name="special_note" rows="2">{{ request.special_note or '' }}</textarea>
+                    </div>
+                </div>
+                
+                <!-- Service Components Summary -->
+                <div class="service-components mt-3">
+                    <h6 class="text-muted mb-2">Service Components</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="service-item">
+                            <i class="fas fa-bed text-primary"></i>
+                            <span class="service-count" id="hotelCount">0</span> Hotels
+                        </div>
+                        <div class="service-item">
+                            <i class="fas fa-user-tie text-success"></i>
+                            <span class="service-count" id="guideCount">0</span> Guides
+                        </div>
+                        <div class="service-item">
+                            <i class="fas fa-car text-info"></i>
+                            <span class="service-count" id="transportCount">0</span> Transport
+                        </div>
+                        <div class="service-item">
+                            <i class="fas fa-utensils text-warning"></i>
+                            <span class="service-count" id="mealCount">0</span> Meals
+                        </div>
+                        <div class="service-item">
+                            <i class="fas fa-plane text-danger"></i>
+                            <span class="service-count" id="airportCount">0</span> Airport
+                        </div>
                     </div>
                 </div>
             </form>
@@ -226,47 +435,13 @@
                 </div>
             </div>
 
-            <!-- Service Counts -->
+            <!-- Service Management -->
             <div class="card mt-3">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Service Components</h5>
+                    <h5 class="card-title mb-0">Service Management</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="d-flex align-items-center p-2 bg-light rounded">
-                                <i class="fas fa-bed text-primary me-2"></i>
-                                <small><strong id="hotelCount">0</strong> Hotels</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center p-2 bg-light rounded">
-                                <i class="fas fa-car text-info me-2"></i>
-                                <small><strong id="transportCount">0</strong> Transport</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center p-2 bg-light rounded">
-                                <i class="fas fa-utensils text-warning me-2"></i>
-                                <small><strong id="mealCount">0</strong> Meals</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="d-flex align-items-center p-2 bg-light rounded">
-                                <i class="fas fa-user-tie text-success me-2"></i>
-                                <small><strong id="guideCount">0</strong> Guides</small>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="d-flex align-items-center p-2 bg-light rounded">
-                                <i class="fas fa-plane text-danger me-2"></i>
-                                <small><strong id="airportCount">0</strong> Airport Services</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Service Management Buttons -->
-                    <div class="mt-3 d-grid gap-2">
+                    <div class="d-grid gap-2">
                         <button type="button" class="btn btn-primary btn-sm" onclick="generateServices()">
                             <i class="fas fa-magic"></i> Generate Services & Open Booking
                         </button>
