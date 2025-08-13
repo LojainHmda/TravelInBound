@@ -573,8 +573,17 @@ def generate_voucher(request_id):
     # if request_obj.status in [STATUS_REQUEST, STATUS_BOOKED]:
     #     abort(400, 'Cannot generate voucher until confirmed')
     
+    # Get layout preference from query parameter (default to vertical)
+    layout = request.args.get('layout', 'vertical')
+    
+    # Choose template based on layout
+    if layout == 'horizontal':
+        template = 'inbound/voucher_timeline_horizontal.html'
+    else:
+        template = 'inbound/voucher_timeline.html'
+    
     # Render the timeline template
-    html = render_template('inbound/voucher_timeline.html', 
+    html = render_template(template, 
                           request=request_obj,
                           now=datetime.now())
     

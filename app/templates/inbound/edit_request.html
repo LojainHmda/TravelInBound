@@ -380,9 +380,19 @@ body {
                     <h5 class="card-title mb-0">Actions</h5>
                 </div>
                 <div class="card-body">
-                    <button type="button" class="btn btn-outline-success" onclick="exportVoucher()">
-                        <i class="fas fa-file-pdf"></i> Generate Timeline Voucher (PDF)
-                    </button>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-success dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-pdf"></i> Generate Timeline Voucher (PDF)
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="exportVoucher('vertical'); return false;">
+                                <i class="fas fa-arrows-alt-v"></i> Vertical Timeline Layout
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="exportVoucher('horizontal'); return false;">
+                                <i class="fas fa-arrows-alt-h"></i> Horizontal Timeline Layout
+                            </a></li>
+                        </ul>
+                    </div>
                     <span class="text-muted ms-3">
                         <i class="fas fa-info-circle"></i> Creates a visual timeline of your tour itinerary
                     </span>
@@ -868,8 +878,8 @@ function createInvoice() {
     window.open(`/inbound/${requestId}/invoice`, '_blank');
 }
 
-function exportVoucher() {
-    window.open(`/inbound/${requestId}/voucher`, '_blank');
+function exportVoucher(layout = 'vertical') {
+    window.open(`/inbound/${requestId}/voucher?layout=${layout}`, '_blank');
 }
 
 // Customer selection functions

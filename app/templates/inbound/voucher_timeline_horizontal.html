@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Itinerary - {{ request.request_number }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #ffffff;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+        }
+        
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .header h1 svg {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            fill: #ca8a04;
+        }
+        
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .header-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-item label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .header-item span {
+            font-size: 16px;
+            display: block;
+        }
+        
+        /* Guest Information */
+        .guest-info {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #ca8a04;
+        }
+        
+        .guest-info h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .guest-info h2 svg {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            fill: #1e3a8a;
+        }
+        
+        .guest-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .guest-detail {
+            display: flex;
+            align-items: center;
+        }
+        
+        .guest-detail strong {
+            margin-right: 10px;
+            color: #555;
+        }
+        
+        /* Horizontal Timeline */
+        .timeline-horizontal {
+            margin: 40px 0;
+            padding: 30px 0;
+            overflow-x: auto;
+        }
+        
+        .timeline-track {
+            display: flex;
+            position: relative;
+            min-width: fit-content;
+            padding: 0 20px;
+        }
+        
+        .timeline-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #1e3a8a 0%, #312e81 100%);
+            z-index: 0;
+        }
+        
+        .day-column {
+            flex: 1;
+            min-width: 200px;
+            max-width: 250px;
+            padding: 0 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .day-circle {
+            width: 60px;
+            height: 60px;
+            background: #ca8a04;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 10px rgba(202, 138, 4, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .day-label {
+            text-align: center;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .day-events {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 250px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .event-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .event-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .event-type {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #1e3a8a, #312e81);
+            color: white;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .event-type svg {
+            width: 14px;
+            height: 14px;
+            margin-right: 5px;
+            fill: white;
+        }
+        
+        .event-description {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+        
+        .event-cost {
+            font-size: 12px;
+            color: #ca8a04;
+            font-weight: bold;
+        }
+        
+        /* Total Section */
+        .total-section {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .total-section h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .total-amount {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .contact-info {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .contact-info p {
+            margin-bottom: 5px;
+        }
+        
+        @media print {
+            .header {
+                background: #1e3a8a !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .day-circle {
+                background: #ca8a04 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .timeline-horizontal {
+                overflow-x: visible;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Tour Itinerary
+            </h1>
+            <div class="header-info">
+                <div class="header-item">
+                    <label>Request Number</label>
+                    <span>{{ request.request_number }}</span>
+                </div>
+                <div class="header-item">
+                    <label>Travel Dates</label>
+                    <span>{{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}</span>
+                </div>
+                <div class="header-item">
+                    <label>Duration</label>
+                    <span>{{ request.no_of_days }} Days</span>
+                </div>
+                <div class="header-item">
+                    <label>Number of Guests</label>
+                    <span>{{ request.pax }} Persons</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guest Information -->
+        <div class="guest-info">
+            <h2>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                Guest Information
+            </h2>
+            <div class="guest-details">
+                <div class="guest-detail">
+                    <strong>Agent:</strong> {{ request.agent }}
+                </div>
+                <div class="guest-detail">
+                    <strong>Contact:</strong> {{ request.contact_name }}
+                </div>
+                <div class="guest-detail">
+                    <strong>Nationality:</strong> {{ request.nationality }}
+                </div>
+                {% if request.customer %}
+                <div class="guest-detail">
+                    <strong>Customer:</strong> {{ request.customer.name }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Horizontal Timeline -->
+        <div class="timeline-horizontal">
+            <div class="timeline-track">
+                {% set days_dict = {} %}
+                {% for row in request.itinerary_rows %}
+                    {% set day_key = row.date.strftime('%Y-%m-%d') %}
+                    {% if day_key not in days_dict %}
+                        {% set _ = days_dict.update({day_key: []}) %}
+                    {% endif %}
+                    {% set _ = days_dict[day_key].append(row) %}
+                {% endfor %}
+                
+                {% for date_key in days_dict.keys()|sort %}
+                    {% set day_rows = days_dict[date_key] %}
+                    {% set day_date = day_rows[0].date %}
+                    {% set day_num = loop.index %}
+                    
+                    <div class="day-column">
+                        <div class="day-circle">{{ day_num }}</div>
+                        <div class="day-label">
+                            Day {{ day_num }}<br>
+                            <small>{{ day_date.strftime('%d %b') }}</small>
+                        </div>
+                        <div class="day-events">
+                            {% for row in day_rows %}
+                                <div class="event-item">
+                                    {% if row.flag_hotel %}
+                                        <div class="event-type">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                            </svg>
+                                            Hotel
+                                        </div>
+                                    {% elif row.flag_transport %}
+                                        <div class="event-type">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                            </svg>
+                                            Transport
+                                        </div>
+                                    {% elif row.flag_meal %}
+                                        <div class="event-type">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+                                            </svg>
+                                            Meal
+                                        </div>
+                                    {% elif row.flag_guide %}
+                                        <div class="event-type">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                            </svg>
+                                            Guide
+                                        </div>
+                                    {% elif row.flag_airport %}
+                                        <div class="event-type">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                            </svg>
+                                            Airport
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="event-description">
+                                        {{ row.description }}
+                                    </div>
+                                    
+                                    {% if row.base_cost %}
+                                        <div class="event-cost">
+                                            {{ row.currency }} {{ "%.2f"|format(row.calculate_row_cost(request.pax)) }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Total Section -->
+        <div class="total-section">
+            <h3>Total Tour Cost</h3>
+            <div class="total-amount">
+                {{ request.total_currency }} {{ "%.2f"|format(request.total_amount or 0) }}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="contact-info">
+                <p><strong>Windows of Jordan</strong></p>
+                <p>Your Premium Travel Partner</p>
+                <p>For inquiries, please contact your travel agent</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
