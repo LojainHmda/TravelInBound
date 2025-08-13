@@ -25,12 +25,12 @@
         
         /* Header Section */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
             color: white;
             padding: 30px;
             border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .header h1 {
@@ -66,11 +66,11 @@
         
         /* Guest Information */
         .guest-info {
-            background: #f8f9fa;
+            background: #f9fafb;
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
-            border-left: 4px solid #ffd93d;
+            border-left: 4px solid #9ca3af;
         }
         
         .guest-info h2 {
@@ -81,10 +81,11 @@
             align-items: center;
         }
         
-        .guest-info h2::before {
-            content: "👥";
+        .guest-info h2 svg {
+            width: 24px;
+            height: 24px;
             margin-right: 10px;
-            font-size: 24px;
+            fill: #6b7280;
         }
         
         .guest-details {
@@ -124,15 +125,16 @@
         }
         
         .day-header {
-            background: linear-gradient(135deg, #ffd93d 0%, #ffb700 100%);
-            color: #333;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
             padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(255, 183, 0, 0.3);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            border: 1px solid #e5e7eb;
         }
         
         .day-header h3 {
@@ -159,8 +161,8 @@
             left: -20px;
             top: 0;
             bottom: 0;
-            width: 3px;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            width: 2px;
+            background: #d1d5db;
         }
         
         .timeline-event {
@@ -188,28 +190,28 @@
         }
         
         .timeline-event.hotel::before {
-            border-color: #3b82f6;
-            background: #3b82f6;
+            border-color: #6b7280;
+            background: #6b7280;
         }
         
         .timeline-event.transport::before {
-            border-color: #10b981;
-            background: #10b981;
+            border-color: #6b7280;
+            background: #6b7280;
         }
         
         .timeline-event.meal::before {
-            border-color: #f59e0b;
-            background: #f59e0b;
+            border-color: #6b7280;
+            background: #6b7280;
         }
         
         .timeline-event.guide::before {
-            border-color: #8b5cf6;
-            background: #8b5cf6;
+            border-color: #6b7280;
+            background: #6b7280;
         }
         
         .timeline-event.airport::before {
-            border-color: #ef4444;
-            background: #ef4444;
+            border-color: #6b7280;
+            background: #6b7280;
         }
         
         .event-header {
@@ -231,23 +233,23 @@
         }
         
         .event-icon.hotel {
-            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
         }
         
         .event-icon.transport {
-            background: linear-gradient(135deg, #10b981, #34d399);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
         }
         
         .event-icon.meal {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
         }
         
         .event-icon.guide {
-            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
         }
         
         .event-icon.airport {
-            background: linear-gradient(135deg, #ef4444, #f87171);
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
         }
         
         .event-title {
@@ -291,7 +293,7 @@
         }
         
         .total-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -317,22 +319,27 @@
             margin-bottom: 5px;
         }
         
-        /* Icons */
-        .icon-bed::before { content: "🛏️"; }
-        .icon-car::before { content: "🚗"; }
-        .icon-meal::before { content: "🍽️"; }
-        .icon-guide::before { content: "👨‍🏫"; }
-        .icon-plane::before { content: "✈️"; }
+        /* Icon styling */
+        .event-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+        
+        /* Remove color from cost */
+        .event-cost {
+            color: #374151 !important;
+        }
         
         @media print {
             .header {
-                background: #667eea !important;
+                background: #6b7280 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
             
             .day-header {
-                background: #ffd93d !important;
+                background: #f3f4f6 !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
@@ -365,7 +372,12 @@
     
     <!-- Guest Information -->
     <div class="guest-info">
-        <h2>Guest Information</h2>
+        <h2>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            Guest Information
+        </h2>
         <div class="guest-details">
             <div class="guest-detail">
                 <span>Agent:</span>
@@ -434,29 +446,44 @@
                         {% if row.flag_hotel %}
                             {% set event_classes = event_classes + ['hotel'] %}
                             {% set icon_class = 'hotel' %}
-                            {% set icon = '🛏️' %}
                         {% elif row.flag_transport %}
                             {% set event_classes = event_classes + ['transport'] %}
                             {% set icon_class = 'transport' %}
-                            {% set icon = '🚗' %}
                         {% elif row.flag_meal %}
                             {% set event_classes = event_classes + ['meal'] %}
                             {% set icon_class = 'meal' %}
-                            {% set icon = '🍽️' %}
                         {% elif row.flag_guide %}
                             {% set event_classes = event_classes + ['guide'] %}
                             {% set icon_class = 'guide' %}
-                            {% set icon = '👨‍🏫' %}
                         {% elif row.flag_airport %}
                             {% set event_classes = event_classes + ['airport'] %}
                             {% set icon_class = 'airport' %}
-                            {% set icon = '✈️' %}
                         {% endif %}
                         
                         <div class="timeline-event {{ event_classes|join(' ') }}">
                             <div class="event-header">
                                 <div class="event-icon {{ icon_class }}">
-                                    {{ icon }}
+                                    {% if row.flag_hotel %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                    </svg>
+                                    {% elif row.flag_transport %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                    </svg>
+                                    {% elif row.flag_meal %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+                                    </svg>
+                                    {% elif row.flag_guide %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                    {% elif row.flag_airport %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                    </svg>
+                                    {% endif %}
                                 </div>
                                 <div class="event-title">
                                     <h4>{{ row.description or 'Activity' }}</h4>
