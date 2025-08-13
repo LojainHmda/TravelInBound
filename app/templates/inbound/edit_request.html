@@ -385,13 +385,20 @@ body {
                         </table>
                     </div>
                     
-                    <div class="mt-3">
-                        <button type="button" class="btn btn-success" id="addRow">
-                            <i class="fas fa-plus"></i> Add Row
-                        </button>
-                        <button type="button" class="btn btn-primary" id="saveItinerary">
-                            <i class="fas fa-save"></i> Save Itinerary
-                        </button>
+                    <div class="mt-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <button type="button" class="btn btn-success" id="addRow">
+                                <i class="fas fa-plus"></i> Add Row
+                            </button>
+                            <button type="button" class="btn btn-primary" id="saveItinerary">
+                                <i class="fas fa-save"></i> Save Itinerary
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-warning" onclick="generateServices()">
+                                <i class="fas fa-magic"></i> Generate Services & Open Booking
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -399,22 +406,8 @@ body {
 
         <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Service Management (moved to top) -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Service Management</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-warning" onclick="generateServices()">
-                            <i class="fas fa-magic"></i> Generate Services & Open Booking
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Tour Summary -->
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Tour Summary</h5>
                 </div>
