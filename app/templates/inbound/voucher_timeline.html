@@ -463,7 +463,9 @@
                             </div>
                             <div class="service-details">
                                 {% for row in rows %}
-                                    <div class="service-description">{{ row.description or 'Details to be confirmed' }}</div>
+                                    {% if row.description and row.description != '' %}
+                                        <div class="service-description">{{ row.description }}</div>
+                                    {% endif %}
                                 {% endfor %}
                                 {% set total_cost = rows|sum(attribute='base_cost') or 0 %}
                                 {% if total_cost > 0 %}
