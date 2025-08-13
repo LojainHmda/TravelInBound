@@ -10,15 +10,21 @@ Preferred communication style: Simple, everyday language.
 
 ### Visual Timeline Voucher for Inbound Tours
 - **Date**: August 13, 2025
-- **Feature**: Creative PDF timeline voucher generation for tour itineraries
+- **Feature**: Creative PDF timeline voucher generation for tour itineraries with dual layout options
 - **Components Added**:
-  - New template: `voucher_timeline.html` with visual day-by-day timeline
-  - Color-coded service icons (Hotel, Transport, Meal, Guide, Airport)
-  - Gradient headers and modern design matching system theme
-  - PDF generation using WeasyPrint library
+  - New templates: `voucher_timeline.html` (vertical) and `voucher_timeline_horizontal.html` (landscape)
+  - Dropdown menu to select between vertical and horizontal timeline layouts
+  - SVG icons replacing emojis for better print quality (Hotel, Transport, Meal, Guide, Airport)
+  - PDF generation using WeasyPrint library with landscape mode for horizontal layout
   - Professional tour itinerary layout with cost breakdown
-- **Visual Elements**: Purple/blue gradient headers, golden accents, service-specific color coding
-- **Status**: Implemented and ready for testing
+  - Bold fonts throughout for improved readability
+- **Visual Elements**: Yellow (#fbbf24) headers with dark text, black icons, service descriptions displayed with each icon
+- **Latest Updates**: 
+  - Changed from grey/white color scheme to yellow with dark text for better contrast
+  - Added spacing for descriptions next to each service icon
+  - Made all fonts bold for print readability
+  - Horizontal layout set to landscape format
+- **Status**: Implemented with both layout options available via dropdown menu
 
 ## Recent Changes (August 2025)
 
