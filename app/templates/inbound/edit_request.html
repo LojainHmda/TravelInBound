@@ -397,9 +397,24 @@ body {
             </div>
         </div>
 
-        <!-- Tour Summary -->
+        <!-- Right Column -->
         <div class="col-lg-4">
+            <!-- Service Management (moved to top) -->
             <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-warning" onclick="generateServices()">
+                            <i class="fas fa-magic"></i> Generate Services & Open Booking
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tour Summary -->
+            <div class="card mt-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Tour Summary</h5>
                 </div>
@@ -434,20 +449,6 @@ body {
                     </div>
                 </div>
             </div>
-
-            <!-- Service Management -->
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Service Management</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="generateServices()">
-                            <i class="fas fa-magic"></i> Generate Services & Open Booking
-                        </button>
-                    </div>
-                </div>
-            </div>
             
             <!-- Quick Actions -->
             <div class="card mt-3">
@@ -455,13 +456,9 @@ body {
                     <h5 class="card-title mb-0">Actions</h5>
                 </div>
                 <div class="card-body d-grid gap-2">
-                    <button type="button" class="btn btn-outline-warning" onclick="createInvoice()"
-                            {% if request.status == 'REQUEST' %}disabled{% endif %}>
-                        <i class="fas fa-file-invoice"></i> Generate Invoice
-                    </button>
                     <button type="button" class="btn btn-outline-success" onclick="exportVoucher()"
                             {% if request.status == 'REQUEST' or request.status == 'BOOKED' %}disabled{% endif %}>
-                        <i class="fas fa-file-pdf"></i> Export Voucher
+                        <i class="fas fa-file-pdf"></i> Generate Voucher
                     </button>
                 </div>
             </div>
