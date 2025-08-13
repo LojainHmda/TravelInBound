@@ -893,66 +893,56 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
-            const customerItems = document.querySelectorAll('.customer-item');
+            const customerRows = document.querySelectorAll('#customerTable tbody tr');
             let foundCount = 0;
             
-            customerItems.forEach(item => {
-                const card = item.querySelector('.customer-card');
-                const name = card.dataset.customerName.toLowerCase();
-                const email = card.dataset.customerEmail.toLowerCase();
-                
-                if (name.includes(searchTerm) || email.includes(searchTerm)) {
-                    item.style.display = '';
-                    foundCount++;
-                } else {
-                    item.style.display = 'none';
+            customerRows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length > 0) {
+                    const name = cells[0].textContent.toLowerCase();
+                    const email = cells[1].textContent.toLowerCase();
+                    const phone = cells[2].textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm)) {
+                        row.style.display = '';
+                        foundCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
                 }
             });
             
             // Show/hide no results message
             const noResults = document.getElementById('noCustomersFound');
             if (noResults) {
-                noResults.style.display = foundCount === 0 ? 'block' : 'none';
+                noResults.classList.toggle('d-none', foundCount > 0);
             }
         });
     }
     
-    // Customer selection radio buttons
-    const customerRadios = document.querySelectorAll('.customer-select');
-    const selectBtn = document.getElementById('selectCustomerBtn');
-    
-    customerRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            if (selectBtn) {
-                selectBtn.disabled = false;
+    // Handle select customer buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('select-customer') || e.target.closest('.select-customer')) {
+            const button = e.target.classList.contains('select-customer') ? e.target : e.target.closest('.select-customer');
+            const customerId = button.dataset.customerId;
+            const customerName = button.dataset.customerName;
+            
+            // Call the stored callback function
+            if (window.customerSelectionCallback) {
+                window.customerSelectionCallback(customerId, customerName);
             }
-        });
-    });
-    
-    // Select customer button
-    if (selectBtn) {
-        selectBtn.addEventListener('click', function() {
-            const selectedRadio = document.querySelector('.customer-select:checked');
-            if (selectedRadio) {
-                const card = selectedRadio.closest('.customer-card');
-                const customerId = card.dataset.customerId;
-                const customerName = card.dataset.customerName;
-                
-                // Call the stored callback function
-                if (window.customerSelectionCallback) {
-                    window.customerSelectionCallback(customerId, customerName);
-                }
-                
-                // Close the modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+            
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+            if (modal) {
                 modal.hide();
             }
-        });
-    }
+        }
+    });
 });
 </script>
 
 <!-- Include Customer Selection Modal -->
-{% include 'customer_selection_modal.html' %}
+{% include 'booking/customer_selection_modal.html' %}
 
 {% endblock %}
