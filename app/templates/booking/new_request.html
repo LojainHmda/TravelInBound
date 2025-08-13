@@ -1,8 +1,61 @@
 {% extends 'base.html' %}
 
+{% block title %}New Booking Request{% endblock %}
+
 {% block styles %}
 {{ super() }}
 <style>
+/* Modern Style Matching Inbound */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Purple Gradient Header */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Golden Primary Buttons */
+.btn-primary-action {
+    background: linear-gradient(135deg, #ffd93d 0%, #ffb700 100%);
+    color: #6b4423;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 3px 10px rgba(255, 183, 0, 0.3);
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 183, 0, 0.4);
+    background: linear-gradient(135deg, #ffde59 0%, #ffc61a 100%);
+    color: #5a3a1f;
+}
+
 /* Progress Flow Bar Styling */
 .progress-flow {
     position: relative;
