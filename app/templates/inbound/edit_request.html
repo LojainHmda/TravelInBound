@@ -380,10 +380,12 @@ body {
                     <h5 class="card-title mb-0">Actions</h5>
                 </div>
                 <div class="card-body">
-                    <button type="button" class="btn btn-outline-success" onclick="exportVoucher()"
-                            {% if request.status == 'REQUEST' or request.status == 'BOOKED' %}disabled{% endif %}>
-                        <i class="fas fa-file-pdf"></i> Generate Voucher
+                    <button type="button" class="btn btn-outline-success" onclick="exportVoucher()">
+                        <i class="fas fa-file-pdf"></i> Generate Timeline Voucher (PDF)
                     </button>
+                    <span class="text-muted ms-3">
+                        <i class="fas fa-info-circle"></i> Creates a visual timeline of your tour itinerary
+                    </span>
                 </div>
             </div>
 

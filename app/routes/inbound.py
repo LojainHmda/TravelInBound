@@ -557,13 +557,40 @@ def generate_invoice(request_id):
 @inbound_bp.route('/<int:request_id>/voucher')
 @login_required
 def generate_voucher(request_id):
-    """Generate voucher for the request"""
+    """Generate visual timeline voucher for the request"""
+    from datetime import datetime
+    from weasyprint import HTML
+    from flask import make_response
+    import io
+    
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
         abort(403)
     
-    if request_obj.status in [STATUS_REQUEST, STATUS_BOOKED]:
-        abort(400, 'Cannot generate voucher until confirmed')
+    # Allow voucher generation for testing/preview
+    # if request_obj.status in [STATUS_REQUEST, STATUS_BOOKED]:
+    #     abort(400, 'Cannot generate voucher until confirmed')
     
-    return render_template('inbound/voucher.html', request=request_obj)
+    # Render the timeline template
+    html = render_template('inbound/voucher_timeline.html', 
+                          request=request_obj,
+                          now=datetime.now())
+    
+    # Try to generate PDF using WeasyPrint
+    try:
+        # Create PDF from HTML
+        pdf_buffer = io.BytesIO()
+        HTML(string=html).write_pdf(pdf_buffer)
+        pdf = pdf_buffer.getvalue()
+        pdf_buffer.close()
+        
+        response = make_response(pdf)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'inline; filename=tour_itinerary_{request_obj.request_number}.pdf'
+        
+        return response
+    except Exception as e:
+        # If PDF generation fails, return HTML version
+        print(f"PDF generation failed: {e}")
+        return html

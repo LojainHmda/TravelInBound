@@ -8,6 +8,20 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### Visual Timeline Voucher for Inbound Tours
+- **Date**: August 13, 2025
+- **Feature**: Creative PDF timeline voucher generation for tour itineraries
+- **Components Added**:
+  - New template: `voucher_timeline.html` with visual day-by-day timeline
+  - Color-coded service icons (Hotel, Transport, Meal, Guide, Airport)
+  - Gradient headers and modern design matching system theme
+  - PDF generation using WeasyPrint library
+  - Professional tour itinerary layout with cost breakdown
+- **Visual Elements**: Purple/blue gradient headers, golden accents, service-specific color coding
+- **Status**: Implemented and ready for testing
+
+## Recent Changes (August 2025)
+
 ### Inbound Tour Operator System Implementation
 - **Date**: August 9-10, 2025
 - **Feature**: Complete inbound tour operator module with itinerary-first booking approach
