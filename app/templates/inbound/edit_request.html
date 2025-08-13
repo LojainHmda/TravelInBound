@@ -338,6 +338,43 @@ body {
     <div class="row">
         <!-- Main Itinerary Section -->
         <div class="col-lg-8">
+            <!-- Tour Summary (moved above itinerary) -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <span class="me-3"><i class="fas fa-money-bill-wave"></i> <strong>Total Cost:</strong></span>
+                                <span id="grandTotalDisplay" class="h5 mb-0 text-success">0.00 USD</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <span class="me-3"><strong>Request Status:</strong></span>
+                                <span class="badge badge-{{ request.status.lower() }} text-white px-3 py-2">
+                                    {{ request.status }}
+                                </span>
+                                <div class="btn-group btn-group-sm ms-3">
+                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="updateStatus('BOOKED')" 
+                                            {% if request.status == 'BOOKED' or request.status == 'IN-PROGRESS' or request.status == 'CONFIRMED' %}disabled{% endif %}>
+                                        <i class="fas fa-check"></i> Book
+                                    </button>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateStatus('IN-PROGRESS')"
+                                            {% if request.status == 'REQUEST' or request.status == 'CONFIRMED' %}disabled{% endif %}>
+                                        <i class="fas fa-play"></i> Start
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning btn-sm" onclick="updateStatus('CONFIRMED')"
+                                            {% if request.status == 'REQUEST' %}disabled{% endif %}>
+                                        <i class="fas fa-certificate"></i> Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Itinerary Table -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Itinerary with Service Flags</h5>
@@ -406,45 +443,8 @@ body {
 
         <!-- Right Column -->
         <div class="col-lg-4">
-            <!-- Tour Summary -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Tour Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between grand-total mb-3">
-                        <span><i class="fas fa-money-bill-wave"></i> Total Cost:</span>
-                        <span id="grandTotal">0.00 USD</span>
-                    </div>
-                    
-                    <!-- Status Actions -->
-                    <div class="mb-3">
-                        <label class="form-label">Request Status</label>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge badge-{{ request.status.lower() }} text-white px-3 py-2">
-                                {{ request.status }}
-                            </span>
-                            <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-success btn-sm" onclick="updateStatus('BOOKED')" 
-                                        {% if request.status == 'BOOKED' or request.status == 'IN-PROGRESS' or request.status == 'CONFIRMED' %}disabled{% endif %}>
-                                    <i class="fas fa-check"></i> Book
-                                </button>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateStatus('IN-PROGRESS')"
-                                        {% if request.status == 'REQUEST' or request.status == 'CONFIRMED' %}disabled{% endif %}>
-                                    <i class="fas fa-play"></i> Start
-                                </button>
-                                <button type="button" class="btn btn-outline-warning btn-sm" onclick="updateStatus('CONFIRMED')"
-                                        {% if request.status == 'REQUEST' %}disabled{% endif %}>
-                                    <i class="fas fa-certificate"></i> Confirm
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- Quick Actions -->
-            <div class="card mt-3">
+            <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Actions</h5>
                 </div>
@@ -795,7 +795,7 @@ function updatePricingSummary() {
     });
     
     // Update grand total
-    document.getElementById('grandTotal').textContent = `${grandTotal.toFixed(2)} USD`;
+    document.getElementById('grandTotalDisplay').textContent = `${grandTotal.toFixed(2)} USD`;
     
     // Update service counts
     const counts = {
