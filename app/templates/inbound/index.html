@@ -2,93 +2,96 @@
 
 {% block title %}Inbound Tour Requests - Windows of Jordan{% endblock %}
 
-{% block styles %}
+{% block content %}
 <style>
-/* Modern Inbound Tours Styles */
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-
-.page-container {
+/* Page Container */
+.inbound-container {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.page-header {
+/* Header Section */
+.inbound-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 20px;
-    padding: 2.5rem;
-    margin-bottom: 2rem;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
     color: white;
-    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.page-title {
-    font-size: 2.5rem;
-    font-weight: 800;
+.inbound-header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 15px;
 }
 
-.btn-primary-modern {
+.btn-new-request {
     background: white;
     color: #667eea;
     border: none;
-    padding: 0.875rem 1.75rem;
-    border-radius: 12px;
+    padding: 12px 24px;
+    border-radius: 10px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
-.btn-primary-modern:hover {
+.btn-new-request:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+    background: #f8f9fa;
     color: #764ba2;
 }
 
-/* Filter Card Styles */
-.filter-card {
+/* Filter Section */
+.filter-section {
     background: white;
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .filter-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: 20px;
     align-items: end;
 }
 
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
 .filter-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #64748b;
+    color: #495057;
     font-weight: 600;
-    font-size: 0.875rem;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
 }
 
 .filter-group input,
 .filter-group select {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    border: 2px solid #e2e8f0;
+    padding: 10px 15px;
+    border: 2px solid #e9ecef;
     border-radius: 8px;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+    background: white;
 }
 
 .filter-group input:focus,
@@ -98,218 +101,229 @@ body {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.btn-filter {
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-search {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 0.625rem 1.25rem;
+    padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.btn-filter:hover {
+.btn-search:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
 .btn-reset {
     background: white;
-    color: #64748b;
-    border: 2px solid #e2e8f0;
-    padding: 0.625rem 1.25rem;
+    color: #6c757d;
+    border: 2px solid #dee2e6;
+    padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-reset:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: #f8f9fa;
+    border-color: #adb5bd;
 }
 
-/* Table Card Container */
-.table-card {
+/* Table Section */
+.table-section {
     background: white;
-    border-radius: 16px;
+    border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    margin-top: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.table-responsive {
-    overflow-x: auto;
-    padding: 0;
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-/* Modern Table Styles */
-table.modern-table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    border-spacing: 0 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif !important;
-    table-layout: auto !important;
-    background: white;
+.requests-table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-table.modern-table thead {
-    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+.requests-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #dee2e6;
 }
 
-table.modern-table thead tr {
-    border-bottom: 2px solid #e2e8f0 !important;
+.requests-table tbody tr {
+    border-bottom: 1px solid #f1f3f5;
+    transition: all 0.3s;
 }
 
-table.modern-table thead th {
-    padding: 1rem !important;
-    text-align: left !important;
-    font-weight: 700 !important;
-    font-size: 0.85rem !important;
-    color: #475569 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    vertical-align: middle !important;
-    border: none !important;
+.requests-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.03);
 }
 
-table.modern-table tbody tr {
-    transition: all 0.2s ease !important;
-    background: white !important;
-}
-
-table.modern-table tbody tr:nth-child(even) {
-    background: #fafbfc !important;
-}
-
-table.modern-table tbody tr:hover {
-    background: linear-gradient(to right, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08)) !important;
-}
-
-table.modern-table tbody td {
-    padding: 0.875rem !important;
-    color: #334155 !important;
-    font-size: 0.9rem !important;
-    vertical-align: middle !important;
-    border-top: 1px solid #f1f5f9 !important;
-    border-bottom: none !important;
-}
-
-table.modern-table tbody tr:first-child td {
-    border-top: none !important;
+.requests-table td {
+    padding: 15px;
+    color: #495057;
+    font-size: 0.95rem;
 }
 
 .request-number {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 1rem;
+    font-weight: 600;
+    color: #212529;
+    display: block;
 }
 
 .request-date {
-    color: #94a3b8;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 3px;
 }
 
+/* Status Badges */
 .status-badge {
     display: inline-block;
-    padding: 0.375rem 0.875rem;
+    padding: 5px 12px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.5px;
 }
 
-.status-badge.request {
-    background: linear-gradient(135deg, #fef3c7, #fde68a);
-    color: #92400e;
+.status-request {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    color: #856404;
 }
 
-.status-badge.booked {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    color: #1e3a8a;
+.status-booked {
+    background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%);
+    color: #004085;
 }
 
-.status-badge.in-progress {
-    background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-    color: #581c87;
+.status-in-progress {
+    background: linear-gradient(135deg, #e7e5ff 0%, #d4d0ff 100%);
+    color: #5a32a3;
 }
 
-.status-badge.confirmed {
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    color: #065f46;
+.status-confirmed {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
 }
 
-.btn-action {
-    background: white;
-    border: 2px solid #e2e8f0;
-    color: #667eea;
-    padding: 0.375rem 0.625rem;
-    border-radius: 8px;
+/* Pax and Days Badges */
+.badge-light {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
     font-weight: 600;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin: 0 0.125rem;
-    text-decoration: none;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-view, .btn-edit {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    transition: all 0.3s;
+    text-decoration: none;
+    border: 2px solid #e9ecef;
+    background: white;
 }
 
-.btn-action:hover {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+.btn-view {
+    color: #17a2b8;
+}
+
+.btn-view:hover {
+    background: #17a2b8;
     color: white;
-    border-color: transparent;
+    border-color: #17a2b8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.btn-action i {
-    font-size: 0.875rem;
+.btn-edit {
+    color: #6c757d;
 }
 
+.btn-edit:hover {
+    background: #6c757d;
+    color: white;
+    border-color: #6c757d;
+    transform: translateY(-2px);
+}
+
+/* Empty State */
 .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .empty-icon {
     font-size: 4rem;
-    color: #cbd5e1;
-    margin-bottom: 1rem;
+    color: #dee2e6;
+    margin-bottom: 20px;
 }
 
 .empty-title {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
+    color: #212529;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .empty-text {
-    color: #64748b;
-    margin-bottom: 2rem;
+    color: #6c757d;
+    margin-bottom: 30px;
 }
 </style>
-{% endblock %}
 
-{% block content %}
-<div class="page-container">
-    <div class="page-header">
-        <h1 class="page-title">
-            <i class="fas fa-map-marked-alt"></i> Inbound Tour Requests
+<div class="inbound-container">
+    <!-- Header -->
+    <div class="inbound-header">
+        <h1>
+            <i class="fas fa-map-marked-alt"></i>
+            Inbound Tour Requests
         </h1>
-        <a href="{{ url_for('inbound.new_request') }}" class="btn-primary-modern">
-            <i class="fas fa-plus"></i> New Inbound Request
+        <a href="{{ url_for('inbound.new_request') }}" class="btn-new-request">
+            <i class="fas fa-plus"></i>
+            New Inbound Request
         </a>
     </div>
 
     <!-- Filter Section -->
-    <div class="filter-card">
+    <div class="filter-section">
         <form method="GET" action="{{ url_for('inbound.index') }}" class="filter-form">
             <div class="filter-group">
                 <label>Request Number</label>
@@ -342,104 +356,98 @@ table.modern-table tbody tr:first-child td {
                 </select>
             </div>
             <div class="filter-group">
-                <button type="submit" class="btn-filter">
-                    <i class="fas fa-search"></i> Search
-                </button>
-                <button type="button" class="btn-reset" onclick="clearFilters()">
-                    <i class="fas fa-undo"></i> Reset
-                </button>
+                <div class="filter-buttons">
+                    <button type="submit" class="btn-search">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button type="button" class="btn-reset" onclick="window.location.href='{{ url_for('inbound.index') }}'">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
+    <!-- Table Section -->
     {% if requests %}
-    <div class="table-card">
-        <div class="table-responsive">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Request No.</th>
-                        <th>Agent</th>
-                        <th>Contact</th>
-                        <th>Nationality</th>
-                        <th>Pax</th>
-                        <th>Travel Dates</th>
-                        <th>Days</th>
-                        <th>Status</th>
-                        <th>Total</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in requests %}
-                    <tr>
-                        <td>
-                            <div class="request-number">{{ request.request_number }}</div>
-                            <div class="request-date">{{ request.created_at.strftime('%d %b %Y') }}</div>
-                        </td>
-                        <td>{{ request.agent or 'TBA' }}</td>
-                        <td>{{ request.contact_name or 'TBA' }}</td>
-                        <td>{{ request.nationality or 'TBA' }}</td>
-                        <td style="text-align: center;"><span class="badge bg-light text-dark">{{ request.pax }}</span></td>
-                        <td>
-                            {{ request.from_date.strftime('%d %b') }} - 
-                            {{ request.to_date.strftime('%d %b %Y') }}
-                        </td>
-                        <td style="text-align: center;"><span class="badge bg-light text-dark">{{ request.no_of_days }} days</span></td>
-                        <td>
-                            {% if request.status == 'REQUEST' %}
-                                <span class="status-badge request">Request</span>
-                            {% elif request.status == 'BOOKED' %}
-                                <span class="status-badge booked">Booked</span>
-                            {% elif request.status == 'IN_PROGRESS' %}
-                                <span class="status-badge in-progress">In Progress</span>
-                            {% elif request.status == 'CONFIRMED' %}
-                                <span class="status-badge confirmed">Confirmed</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if request.total_amount > 0 %}
-                                <strong>${{ "%.2f"|format(request.total_amount) }}</strong>
-                                <small class="text-muted">{{ request.total_currency }}</small>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
-                        <td>
+    <div class="table-section">
+        <table class="requests-table">
+            <thead>
+                <tr>
+                    <th>Request No.</th>
+                    <th>Agent</th>
+                    <th>Contact</th>
+                    <th>Nationality</th>
+                    <th>Pax</th>
+                    <th>Travel Dates</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr>
+                    <td>
+                        <span class="request-number">{{ request.request_number }}</span>
+                        <span class="request-date">{{ request.created_at.strftime('%d %b %Y') }}</span>
+                    </td>
+                    <td>{{ request.agent or 'TBA' }}</td>
+                    <td>{{ request.contact_name or 'TBA' }}</td>
+                    <td>{{ request.nationality or 'TBA' }}</td>
+                    <td><span class="badge-light">{{ request.pax }}</span></td>
+                    <td>
+                        {{ request.from_date.strftime('%d %b') }} - 
+                        {{ request.to_date.strftime('%d %b %Y') }}
+                    </td>
+                    <td><span class="badge-light">{{ request.no_of_days }} days</span></td>
+                    <td>
+                        {% if request.status == 'REQUEST' %}
+                            <span class="status-badge status-request">Request</span>
+                        {% elif request.status == 'BOOKED' %}
+                            <span class="status-badge status-booked">Booked</span>
+                        {% elif request.status == 'IN_PROGRESS' %}
+                            <span class="status-badge status-in-progress">In Progress</span>
+                        {% elif request.status == 'CONFIRMED' %}
+                            <span class="status-badge status-confirmed">Confirmed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if request.total_amount > 0 %}
+                            <strong>${{ "%.2f"|format(request.total_amount) }}</strong>
+                        {% else %}
+                            <span style="color: #6c757d;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
                             <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                               class="btn-action" title="View">
+                               class="btn-view" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ url_for('inbound.edit_request', id=request.id) }}" 
-                               class="btn-action" title="Edit">
+                               class="btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% else %}
-    <div class="table-card">
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="fas fa-map-marked-alt"></i>
-            </div>
-            <h4 class="empty-title">No Inbound Requests</h4>
-            <p class="empty-text">Start by creating your first inbound tour request.</p>
-            <a href="{{ url_for('inbound.new_request') }}" class="btn-primary-modern">
-                <i class="fas fa-plus"></i> Create New Request
-            </a>
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-map-marked-alt"></i>
         </div>
+        <h3 class="empty-title">No Inbound Requests</h3>
+        <p class="empty-text">Start by creating your first inbound tour request.</p>
+        <a href="{{ url_for('inbound.new_request') }}" class="btn-new-request">
+            <i class="fas fa-plus"></i> Create New Request
+        </a>
     </div>
     {% endif %}
 </div>
-
-<script>
-function clearFilters() {
-    window.location.href = "{{ url_for('inbound.index') }}";
-}
-</script>
 {% endblock %}
