@@ -126,27 +126,29 @@
         }
         
         .day-header {
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-            color: white;
+            background: #fbbf24;
+            color: #333;
             padding: 15px 20px;
             border-radius: 10px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            font-weight: bold;
         }
         
         .day-header h3 {
             font-size: 20px;
-            font-weight: 600;
+            font-weight: bold;
             display: flex;
             align-items: center;
+            color: #333;
         }
         
         .day-header .date {
             font-size: 14px;
-            opacity: 0.9;
+            color: #333;
+            font-weight: bold;
         }
         
         /* Timeline Events */
@@ -445,34 +447,43 @@
                         {% set icon_class = '' %}
                         {% set icon = '' %}
                         
-                        {% if row.flag_hotel %}
-                            {% set event_classes = event_classes + ['hotel'] %}
-                            {% set icon_class = 'hotel' %}
-                        {% elif row.flag_transport %}
-                            {% set event_classes = event_classes + ['transport'] %}
-                            {% set icon_class = 'transport' %}
-                        {% elif row.flag_meal %}
-                            {% set event_classes = event_classes + ['meal'] %}
-                            {% set icon_class = 'meal' %}
-                        {% elif row.flag_guide %}
-                            {% set event_classes = event_classes + ['guide'] %}
-                            {% set icon_class = 'guide' %}
-                        {% elif row.flag_airport %}
-                            {% set event_classes = event_classes + ['airport'] %}
-                            {% set icon_class = 'airport' %}
-                        {% endif %}
-                        
-                        <div class="timeline-event {{ event_classes|join(' ') }}">
+                        <div class="timeline-event">
                             <div class="event-header">
-                                <div class="event-icon {{ icon_class }}">
-                                    {% if row.flag_hotel %}
+                                {% if row.flag_hotel %}
+                                <div class="event-icon hotel">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
                                     </svg>
-                                    {% elif row.flag_transport %}
+                                </div>
+                                {% endif %}
+                                {% if row.flag_transport %}
+                                <div class="event-icon transport">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
                                     </svg>
+                                </div>
+                                {% endif %}
+                                {% if row.flag_meal %}
+                                <div class="event-icon meal">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+                                    </svg>
+                                </div>
+                                {% endif %}
+                                {% if row.flag_guide %}
+                                <div class="event-icon guide">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                </div>
+                                {% endif %}
+                                {% if row.flag_airport %}
+                                <div class="event-icon airport">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                    </svg>
+                                </div>
+                                {% endif %}
                                     {% elif row.flag_meal %}
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>

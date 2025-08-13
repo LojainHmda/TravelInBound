@@ -20,11 +20,12 @@ Preferred communication style: Simple, everyday language.
   - Bold fonts throughout for improved readability
 - **Visual Elements**: Yellow (#fbbf24) headers with dark text, black icons, service descriptions displayed with each icon
 - **Latest Updates**: 
-  - Changed from grey/white color scheme to yellow with dark text for better contrast
-  - Added spacing for descriptions next to each service icon
-  - Made all fonts bold for print readability
-  - Horizontal layout set to landscape format
-- **Status**: Implemented with both layout options available via dropdown menu
+  - **Fixed multiple icons display**: Both layouts now show all service icons when multiple services exist on same day
+  - **Removed grey boxes**: All grey backgrounds replaced with yellow (#fbbf24) and dark text for readability
+  - **Compact day circles**: Horizontal layout uses smaller (40x40px) yellow circles with black text
+  - **Simplified design**: Icons display in yellow badges with black text, no additional decorative boxes
+  - **Vertical voucher**: Fixed to display multiple service icons per day like horizontal layout
+- **Status**: Fully implemented with both layouts supporting multiple icons per day
 
 ## Recent Changes (August 2025)
 
