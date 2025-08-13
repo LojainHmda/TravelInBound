@@ -459,7 +459,7 @@
                                     {{ icon }}
                                 </div>
                                 <div class="event-title">
-                                    <h4>{{ row.base_cost_description or 'Activity' }}</h4>
+                                    <h4>{{ row.description or 'Activity' }}</h4>
                                     <div class="event-type">
                                         {% if row.flag_hotel %}Hotel Accommodation{% endif %}
                                         {% if row.flag_transport %}Transportation{% endif %}
@@ -468,14 +468,15 @@
                                         {% if row.flag_airport %}Airport Transfer{% endif %}
                                     </div>
                                 </div>
-                                {% if row.row_cost %}
+                                {% set row_cost = row.calculate_row_cost(request.pax) %}
+                                {% if row_cost %}
                                 <div class="event-cost">
-                                    ${{ "%.2f"|format(row.row_cost) }}
+                                    ${{ "%.2f"|format(row_cost) }}
                                 </div>
                                 {% endif %}
                             </div>
                             <div class="event-description">
-                                {{ row.itinerary_description or 'Details to be confirmed' }}
+                                {{ row.description or 'Details to be confirmed' }}
                             </div>
                         </div>
                     {% endfor %}
@@ -489,8 +490,8 @@
         <div class="total-section">
             <h3>Total Tour Cost</h3>
             <div class="total-amount">
-                {% set total = request.itinerary_rows|sum(attribute='row_cost') %}
-                ${{ "%.2f"|format(total) }} {{ row.currency if request.itinerary_rows else 'USD' }}
+                {% set total = request.total_amount %}
+                ${{ "%.2f"|format(total) }} {{ request.total_currency or 'USD' }}
             </div>
         </div>
         

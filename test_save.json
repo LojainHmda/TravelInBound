@@ -1,0 +1,22 @@
+{
+  "rows": [
+    {
+      "date": "2025-01-01",
+      "description": "Day 1 - Airport pickup and hotel check-in",
+      "base_cost": 150,
+      "cost_unit": "PER_GROUP",
+      "currency": "USD",
+      "flag_hotel": true,
+      "flag_airport": true
+    },
+    {
+      "date": "2025-01-02",
+      "description": "Day 2 - City tour with guide",
+      "base_cost": 100,
+      "cost_unit": "PER_PERSON",
+      "currency": "USD",
+      "flag_guide": true,
+      "flag_transport": true
+    }
+  ]
+}

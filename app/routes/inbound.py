@@ -9,7 +9,8 @@ from app.models.inbound import (
     InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
 from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
-from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
+from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
+from app.models.booking import Booking
 from app.forms.inbound import (
     InboundRequestForm, ItineraryRowForm, InboundHotelForm, 
     InboundTransportForm, InboundMealForm, InboundGuideForm
