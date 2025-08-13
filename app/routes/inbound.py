@@ -58,8 +58,9 @@ def new_request():
         request_number=InboundRequest.generate_request_number(),
         from_date=datetime.now().date(),
         to_date=(datetime.now() + timedelta(days=3)).date(),
-        agent='',
-        contact_name='',
+        agent='TBA',  # Default value
+        contact_name='TBA',  # Default value
+        nationality='TBA',  # Default value to avoid null constraint
         pax=1,
         user_id=current_user.id,
         status=STATUS_REQUEST

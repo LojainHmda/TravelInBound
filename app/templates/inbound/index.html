@@ -320,85 +320,83 @@ body {
     </div>
 
     {% if requests %}
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Request No.</th>
-                            <th>Agent</th>
-                            <th>Contact</th>
-                            <th>Nationality</th>
-                            <th>Pax</th>
-                            <th>Travel Dates</th>
-                            <th>Days</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for request in requests %}
-                        <tr>
-                            <td>
-                                <strong>{{ request.request_number }}</strong>
-                                <br>
-                                <small class="text-muted">{{ request.created_at.strftime('%d %b %Y') }}</small>
-                            </td>
-                            <td>{{ request.agent }}</td>
-                            <td>{{ request.contact_name }}</td>
-                            <td>{{ request.nationality }}</td>
-                            <td>{{ request.pax }}</td>
-                            <td>
-                                {{ request.from_date.strftime('%d %b') }} - 
-                                {{ request.to_date.strftime('%d %b %Y') }}
-                            </td>
-                            <td>{{ request.no_of_days }}</td>
-                            <td>
-                                {% if request.status == 'REQUEST' %}
-                                    <span class="badge bg-warning">Request</span>
-                                {% elif request.status == 'BOOKED' %}
-                                    <span class="badge bg-info">Booked</span>
-                                {% elif request.status == 'IN_PROGRESS' %}
-                                    <span class="badge bg-primary">In Progress</span>
-                                {% elif request.status == 'CONFIRMED' %}
-                                    <span class="badge bg-success">Confirmed</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if request.total_amount > 0 %}
-                                    {{ "%.2f"|format(request.total_amount) }} {{ request.total_currency }}
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                                       class="btn btn-outline-primary" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ url_for('inbound.edit_request', id=request.id) }}" 
-                                       class="btn btn-outline-secondary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Request No.</th>
+                        <th>Agent</th>
+                        <th>Contact</th>
+                        <th>Nationality</th>
+                        <th>Pax</th>
+                        <th>Travel Dates</th>
+                        <th>Days</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests %}
+                    <tr>
+                        <td>
+                            <div class="request-number">{{ request.request_number }}</div>
+                            <div class="request-date">{{ request.created_at.strftime('%d %b %Y') }}</div>
+                        </td>
+                        <td>{{ request.agent }}</td>
+                        <td>{{ request.contact_name }}</td>
+                        <td>{{ request.nationality }}</td>
+                        <td><span class="badge bg-light text-dark">{{ request.pax }}</span></td>
+                        <td>
+                            {{ request.from_date.strftime('%d %b') }} - 
+                            {{ request.to_date.strftime('%d %b %Y') }}
+                        </td>
+                        <td><span class="badge bg-light text-dark">{{ request.no_of_days }} days</span></td>
+                        <td>
+                            {% if request.status == 'REQUEST' %}
+                                <span class="status-badge request">Request</span>
+                            {% elif request.status == 'BOOKED' %}
+                                <span class="status-badge booked">Booked</span>
+                            {% elif request.status == 'IN_PROGRESS' %}
+                                <span class="status-badge in-progress">In Progress</span>
+                            {% elif request.status == 'CONFIRMED' %}
+                                <span class="status-badge confirmed">Confirmed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if request.total_amount > 0 %}
+                                <strong>${{ "%.2f"|format(request.total_amount) }}</strong>
+                                <small class="text-muted">{{ request.total_currency }}</small>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
+                               class="btn-action" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('inbound.edit_request', id=request.id) }}" 
+                               class="btn-action" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
     {% else %}
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
-            <h4>No Inbound Requests</h4>
-            <p class="text-muted">Start by creating your first inbound tour request.</p>
-            <a href="{{ url_for('inbound.new_request') }}" class="btn btn-primary">
+    <div class="table-card">
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <h4 class="empty-title">No Inbound Requests</h4>
+            <p class="empty-text">Start by creating your first inbound tour request.</p>
+            <a href="{{ url_for('inbound.new_request') }}" class="btn-primary-modern">
                 <i class="fas fa-plus"></i> Create New Request
             </a>
         </div>
