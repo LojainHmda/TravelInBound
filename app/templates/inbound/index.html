@@ -57,6 +57,79 @@ body {
     color: #764ba2;
 }
 
+/* Filter Card Styles */
+.filter-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-reset {
+    background: white;
+    color: #64748b;
+    border: 2px solid #e2e8f0;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-reset:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
 .table-card {
     background: white;
     border-radius: 16px;
@@ -202,6 +275,50 @@ body {
         </a>
     </div>
 
+    <!-- Filter Section -->
+    <div class="filter-card">
+        <form method="GET" action="{{ url_for('inbound.index') }}" class="filter-form">
+            <div class="filter-group">
+                <label>Request Number</label>
+                <input type="text" name="request_number" placeholder="e.g., INB-202501-0001" 
+                       value="{{ request.args.get('request_number', '') }}">
+            </div>
+            <div class="filter-group">
+                <label>Agent</label>
+                <input type="text" name="agent" placeholder="Agent name" 
+                       value="{{ request.args.get('agent', '') }}">
+            </div>
+            <div class="filter-group">
+                <label>Date From</label>
+                <input type="date" name="date_from" 
+                       value="{{ request.args.get('date_from', '') }}">
+            </div>
+            <div class="filter-group">
+                <label>Date To</label>
+                <input type="date" name="date_to" 
+                       value="{{ request.args.get('date_to', '') }}">
+            </div>
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">All Status</option>
+                    <option value="REQUEST" {% if request.args.get('status') == 'REQUEST' %}selected{% endif %}>Request</option>
+                    <option value="BOOKED" {% if request.args.get('status') == 'BOOKED' %}selected{% endif %}>Booked</option>
+                    <option value="IN_PROGRESS" {% if request.args.get('status') == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                    <option value="CONFIRMED" {% if request.args.get('status') == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button type="button" class="btn-reset" onclick="clearFilters()">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+        </form>
+    </div>
+
     {% if requests %}
     <div class="card">
         <div class="card-body">
@@ -288,4 +405,10 @@ body {
     </div>
     {% endif %}
 </div>
+
+<script>
+function clearFilters() {
+    window.location.href = "{{ url_for('inbound.index') }}";
+}
+</script>
 {% endblock %}

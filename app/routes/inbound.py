@@ -21,44 +21,57 @@ inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 @inbound_bp.route('/')
 @login_required
 def index():
-    """List all inbound requests"""
-    requests = InboundRequest.query.filter_by(user_id=current_user.id).order_by(InboundRequest.created_at.desc()).all()
+    """List all inbound requests with filtering"""
+    query = InboundRequest.query.filter_by(user_id=current_user.id)
+    
+    # Apply filters
+    request_number = request.args.get('request_number', '')
+    if request_number:
+        query = query.filter(InboundRequest.request_number.contains(request_number))
+    
+    agent = request.args.get('agent', '')
+    if agent:
+        query = query.filter(InboundRequest.agent.contains(agent))
+    
+    date_from = request.args.get('date_from', '')
+    if date_from:
+        query = query.filter(InboundRequest.from_date >= datetime.strptime(date_from, '%Y-%m-%d'))
+    
+    date_to = request.args.get('date_to', '')
+    if date_to:
+        query = query.filter(InboundRequest.to_date <= datetime.strptime(date_to, '%Y-%m-%d'))
+    
+    status = request.args.get('status', '')
+    if status:
+        query = query.filter(InboundRequest.status == status)
+    
+    # Order by most recent
+    requests = query.order_by(InboundRequest.created_at.desc()).all()
     return render_template('inbound/index.html', requests=requests)
 
-@inbound_bp.route('/new', methods=['GET', 'POST'])
+@inbound_bp.route('/new')
 @login_required
 def new_request():
-    """Create new inbound request with itinerary"""
-    form = InboundRequestForm()
+    """Create new inbound request and go directly to itinerary creation"""
+    # Create a new request with default values
+    request_obj = InboundRequest(
+        request_number=InboundRequest.generate_request_number(),
+        from_date=datetime.now().date(),
+        to_date=(datetime.now() + timedelta(days=3)).date(),
+        agent='',
+        contact_name='',
+        pax=1,
+        user_id=current_user.id,
+        status=STATUS_REQUEST
+    )
+    request_obj.calculate_days()
     
-    # No need to populate customer choices since we use modal
+    db.session.add(request_obj)
+    db.session.commit()
     
-    if form.validate_on_submit():
-        # Create new request
-        request_obj = InboundRequest(
-            request_number=InboundRequest.generate_request_number(),
-            from_date=form.from_date.data,
-            to_date=form.to_date.data,
-            agent=form.agent.data,
-            contact_name=form.contact_name.data,
-            agent_ref=form.agent_ref.data,
-            nationality=form.nationality.data,
-            pax=form.pax.data,
-            special_note=form.special_note.data,
-            user_id=current_user.id,
-            customer_id=form.customer.data
-        )
-        
-        # Calculate days
-        request_obj.calculate_days()
-        
-        db.session.add(request_obj)
-        db.session.commit()
-        
-        flash(f'Inbound request {request_obj.request_number} created successfully!', 'success')
-        return redirect(url_for('inbound.edit_request', id=request_obj.id))
-    
-    return render_template('inbound/new_request.html', form=form)
+    # Redirect to edit page which has the full itinerary interface
+    flash(f'New inbound request {request_obj.request_number} created. Please fill in the details.', 'info')
+    return redirect(url_for('inbound.edit_request', id=request_obj.id))
 
 @inbound_bp.route('/<int:id>/edit')
 @login_required
