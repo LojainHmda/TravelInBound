@@ -869,5 +869,90 @@ function createInvoice() {
 function exportVoucher() {
     window.open(`/inbound/${requestId}/voucher`, '_blank');
 }
+
+// Customer selection functions
+function openCustomerSelectionModal(callback) {
+    // Store the callback function globally
+    window.customerSelectionCallback = callback;
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+    modal.show();
+}
+
+function handleCustomerSelection(customerId, customerName) {
+    // Update the hidden input and display
+    document.getElementById('selectedCustomerId').value = customerId;
+    document.getElementById('selectedCustomerDisplay').value = customerName || 'No customer selected';
+}
+
+// Initialize customer modal functionality when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Customer search functionality
+    const searchInput = document.getElementById('customerSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const customerItems = document.querySelectorAll('.customer-item');
+            let foundCount = 0;
+            
+            customerItems.forEach(item => {
+                const card = item.querySelector('.customer-card');
+                const name = card.dataset.customerName.toLowerCase();
+                const email = card.dataset.customerEmail.toLowerCase();
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    item.style.display = '';
+                    foundCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show/hide no results message
+            const noResults = document.getElementById('noCustomersFound');
+            if (noResults) {
+                noResults.style.display = foundCount === 0 ? 'block' : 'none';
+            }
+        });
+    }
+    
+    // Customer selection radio buttons
+    const customerRadios = document.querySelectorAll('.customer-select');
+    const selectBtn = document.getElementById('selectCustomerBtn');
+    
+    customerRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (selectBtn) {
+                selectBtn.disabled = false;
+            }
+        });
+    });
+    
+    // Select customer button
+    if (selectBtn) {
+        selectBtn.addEventListener('click', function() {
+            const selectedRadio = document.querySelector('.customer-select:checked');
+            if (selectedRadio) {
+                const card = selectedRadio.closest('.customer-card');
+                const customerId = card.dataset.customerId;
+                const customerName = card.dataset.customerName;
+                
+                // Call the stored callback function
+                if (window.customerSelectionCallback) {
+                    window.customerSelectionCallback(customerId, customerName);
+                }
+                
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+                modal.hide();
+            }
+        });
+    }
+});
 </script>
+
+<!-- Include Customer Selection Modal -->
+{% include 'customer_selection_modal.html' %}
+
 {% endblock %}
