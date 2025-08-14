@@ -1,121 +1,165 @@
 {% extends 'base.html' %}
 
-{% block title %}Requests Dashboard{% endblock %}
+{% block title %}Dashboard - Windows of Jordan{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-2">
-    <!-- Header -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <h4 class="text-dark"><i class="fas fa-tachometer-alt me-2"></i>Booking Status Dashboard</h4>
-            <hr>
+<div class="container-fluid">
+    <!-- Hero Welcome Section -->
+    <div class="hero-section mb-5">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="welcome-content">
+                    <h1 class="hero-title">Welcome to Windows of Jordan</h1>
+                    <p class="hero-subtitle">Your premium travel management dashboard</p>
+                    <p class="hero-description">Monitor bookings, track confirmations, and manage your travel operations with ease.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 text-end">
+                <div class="hero-stats">
+                    <div class="quick-stat">
+                        <i class="fas fa-globe-americas"></i>
+                        <span>Premium Travel Experiences</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- Quick Actions Bar -->
 
-
-    <!-- Dashboard Stats -->
-    <div class="row mb-4 px-2">
+    <!-- Modern Dashboard Stats -->
+    <div class="row mb-5">
         <!-- Requests Widget -->
-        <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('REQUEST')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small fw-bold mb-1">Requests</h6>
-                            <h3 class="fw-bold mb-0">{{ request_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-white p-2 shadow-sm">
-                            <i class="fas fa-clipboard-list" style="color: #FF8C00;"></i>
-                        </div>
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="modern-stat-card requests-card" onclick="filterBookings('REQUEST')">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-clipboard-list"></i>
                     </div>
+                    <div class="stat-number">{{ request_count }}</div>
+                </div>
+                <div class="stat-card-body">
+                    <h5>New Requests</h5>
+                    <p>Pending review and processing</p>
+                </div>
+                <div class="stat-card-footer">
+                    <i class="fas fa-arrow-right"></i>
                 </div>
             </div>
         </div>
         
-        <!-- In Progress Widget (Replaces Booked) -->
-        <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card"
-                 style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;"
-                 onclick="filterBookings('IN_PROGRESS')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small fw-bold mb-1">In Progress</h6>
-                            <h3 class="fw-bold mb-0">{{ in_progress_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-white p-2 shadow-sm">
-                            <i class="fas fa-cogs" style="color: #FF8C00;"></i>
-                        </div>
+        <!-- In Progress Widget -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="modern-stat-card progress-card" onclick="filterBookings('IN_PROGRESS')">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
                     </div>
+                    <div class="stat-number">{{ in_progress_count }}</div>
+                </div>
+                <div class="stat-card-body">
+                    <h5>In Progress</h5>
+                    <p>Currently being processed</p>
+                </div>
+                <div class="stat-card-footer">
+                    <i class="fas fa-arrow-right"></i>
                 </div>
             </div>
         </div>
         
-        <!-- This is now a duplicate - removing it -->
-        
-        <!-- Confirmed Widget (replaces Fulfilled) -->
-        <div class="col-md-3 px-2">
-            <div class="card shadow-sm dashboard-card" style="background-color: #f2f2f2; color: #333333; cursor: pointer; border-radius: 5px; overflow: hidden; border: none;" onclick="filterBookings('CONFIRMED')">
-                <div class="card-body py-3 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="card-title small fw-bold mb-1">Confirmed</h6>
-                            <h3 class="fw-bold mb-0">{{ confirmed_count }}</h3>
-                        </div>
-                        <div class="dashboard-icon rounded-circle bg-light p-2 shadow-sm">
-                            <i class="fas fa-check-circle" style="color: #FF8C00;"></i>
-                        </div>
+        <!-- Confirmed Widget -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="modern-stat-card confirmed-card" onclick="filterBookings('CONFIRMED')">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
+                    <div class="stat-number">{{ confirmed_count }}</div>
+                </div>
+                <div class="stat-card-body">
+                    <h5>Confirmed</h5>
+                    <p>Successfully confirmed bookings</p>
+                </div>
+                <div class="stat-card-footer">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Widget -->
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="modern-stat-card total-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">{{ request_count + in_progress_count + confirmed_count }}</div>
+                </div>
+                <div class="stat-card-body">
+                    <h5>Total Active</h5>
+                    <p>All active bookings</p>
+                </div>
+                <div class="stat-card-footer">
+                    <i class="fas fa-arrow-right"></i>
                 </div>
             </div>
         </div>
     </div>
     
-    <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #f2f2f2; color: #333333;">
-            <h5 class="mb-0" id="bookingTableTitle"><i class="fas fa-list-alt me-2" style="color: #FF8C00;"></i>Recent Bookings</h5>
-            <button id="resetFilterBtn" class="btn btn-sm" onclick="filterBookings('')" style="display: none; background-color: white; color: #000080; border: none;">
-                <i class="fas fa-times me-1"></i>Clear Filter
+    <!-- Modern Bookings Table -->
+    <div class="modern-table-container mb-5">
+        <div class="table-header">
+            <div class="table-title">
+                <h4 id="bookingTableTitle"><i class="fas fa-list-alt me-3"></i>Recent Bookings</h4>
+                <p class="table-subtitle">Overview of your latest booking activities</p>
+            </div>
+            <button id="resetFilterBtn" class="modern-btn secondary" onclick="filterBookings('')" style="display: none;">
+                <i class="fas fa-times me-2"></i>Clear Filter
             </button>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="bookingTable">
-                    <thead>
-                        <tr>
-                            <th>Reference</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for booking in recent_bookings %}
-                        <tr>
-                            <td>{{ booking.reference_number }}</td>
-                            <td>
-                                <span class="badge" style="background-color: #F2F2F2; color: #000080; display: inline-block; min-width: 80px; text-align: center; font-size: 0.75rem; padding: 0.3rem 0.6rem; border: 1px solid #000080;">
-                                    {{ booking.status }}
-                                </span>
-                            </td>
-                            <td>{{ booking.created_at.strftime('%d %b %Y') }}</td>
-                            <td>${{ booking.total_amount }}</td>
-                            <td>
-                                <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-sm" style="background-color: white; color: #000080; border: 1px solid #000080;">
-                                    <i class="fas fa-eye" style="color: #FF8C00;"></i> View
-                                </a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="text-center">No bookings found</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="modern-table-wrapper">
+            <table class="modern-table" id="bookingTable">
+                <thead>
+                    <tr>
+                        <th>Reference Number</th>
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Total Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr class="table-row">
+                        <td class="reference-cell">
+                            <div class="reference-content">
+                                <span class="reference-number">{{ booking.reference_number }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="modern-badge status-{{ booking.status.lower().replace('_', '-') }}">
+                                {{ booking.status }}
+                            </span>
+                        </td>
+                        <td class="date-cell">{{ booking.created_at.strftime('%d %b %Y') }}</td>
+                        <td class="amount-cell">${{ "%.2f"|format(booking.total_amount) }}</td>
+                        <td>
+                            <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="modern-btn primary small">
+                                <i class="fas fa-eye me-1"></i> View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="empty-state">
+                            <div class="empty-content">
+                                <i class="fas fa-inbox"></i>
+                                <p>No bookings found</p>
+                                <small>New bookings will appear here</small>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -162,54 +206,431 @@
 {% block head %}
 {{ super() }}
 <style>
-    .process-step {
-        flex: 1;
-        max-width: 200px;
+    /* Modern Dashboard Styles */
+    .container-fluid {
+        padding: 2rem 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+    }
+    
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #7c3aed 100%);
+        border-radius: 20px;
+        padding: 3rem;
+        color: white;
         position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(30, 58, 138, 0.3);
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.5" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.1;
+    }
+    
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #FFBF00, #FFA500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-description {
+        font-size: 1.1rem;
+        opacity: 0.8;
+        line-height: 1.6;
+    }
+    
+    .quick-stat {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .quick-stat i {
+        font-size: 2rem;
+        color: #FFBF00;
+    }
+    
+    .quick-stat span {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    /* Modern Stat Cards */
+    .modern-stat-card {
+        background: white;
+        border-radius: 20px;
+        padding: 0;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .modern-stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2rem 2rem 1rem 2rem;
+        position: relative;
+    }
+    
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0.2), transparent);
+        border-radius: 18px;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        line-height: 1;
+    }
+    
+    .stat-card-body {
+        padding: 0 2rem 1.5rem 2rem;
+    }
+    
+    .stat-card-body h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-card-body p {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin: 0;
+    }
+    
+    .stat-card-footer {
+        padding: 1rem 2rem;
+        background: rgba(0, 0, 0, 0.02);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        text-align: right;
+    }
+    
+    .stat-card-footer i {
+        color: #9ca3af;
         transition: all 0.3s ease;
     }
     
-    .process-icon {
+    .modern-stat-card:hover .stat-card-footer i {
+        color: #FFBF00;
+        transform: translateX(5px);
+    }
+    
+    /* Card Color Variations */
+    .requests-card .stat-icon {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    .progress-card .stat-icon {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    
+    .confirmed-card .stat-icon {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    
+    .total-card .stat-icon {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+    
+    /* Modern Table Styles */
+    .modern-table-container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        padding: 2rem 2rem 1rem 2rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .table-title h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .table-subtitle {
+        color: #6b7280;
+        margin: 0.5rem 0 0 0;
+        font-size: 0.9rem;
+    }
+    
+    .modern-table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .modern-table thead th {
+        background: #f8fafc;
+        color: #374151;
+        font-weight: 600;
+        padding: 1.5rem 2rem;
+        text-align: left;
+        border-bottom: 2px solid #e5e7eb;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .modern-table tbody tr {
+        transition: all 0.2s ease;
+    }
+    
+    .modern-table tbody tr:hover {
+        background: rgba(255, 191, 0, 0.05);
+    }
+    
+    .modern-table tbody td {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+    }
+    
+    .reference-content .reference-number {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 0.95rem;
+    }
+    
+    .date-cell {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .amount-cell {
+        font-weight: 600;
+        color: #059669;
+        font-size: 1rem;
+    }
+    
+    /* Modern Badges */
+    .modern-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border: none;
+    }
+    
+    .status-request {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        color: #1e40af;
+    }
+    
+    .status-in-progress {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+    }
+    
+    .status-confirmed {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
+    }
+    
+    /* Modern Buttons */
+    .modern-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
         transition: all 0.3s ease;
+        font-size: 0.9rem;
     }
     
-    .process-step:hover .process-icon {
-        transform: scale(1.1);
+    .modern-btn.primary {
+        background: linear-gradient(135deg, #FFBF00 0%, #FFA500 100%);
+        color: white;
     }
     
-    .process-line {
-        position: relative;
+    .modern-btn.primary:hover {
+        background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 191, 0, 0.3);
     }
     
-    .process-line.active {
-        background-color: var(--bs-orange) !important;
+    .modern-btn.secondary {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
     }
     
-    .process-step.active .process-icon {
-        box-shadow: 0 0 15px rgba(255, 153, 0, 0.7);
-        border: 2px solid var(--bs-orange);
+    .modern-btn.secondary:hover {
+        background: #e5e7eb;
+        transform: translateY(-1px);
     }
     
-    .badge.count-badge {
-        min-width: 30px;
+    .modern-btn.small {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem !important;
+    }
+    
+    .empty-content {
+        color: #6b7280;
+    }
+    
+    .empty-content i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-content p {
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0 0 0.5rem 0;
+    }
+    
+    .empty-content small {
+        font-size: 0.9rem;
+        color: #9ca3af;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .container-fluid {
+            padding: 1.5rem 1rem;
+        }
     }
     
     @media (max-width: 768px) {
-        .process-timeline {
+        .hero-section {
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .quick-stat {
+            margin-top: 2rem;
+            justify-content: center;
+        }
+        
+        .stat-card-header {
+            padding: 1.5rem 1.5rem 1rem 1.5rem;
+        }
+        
+        .stat-card-body {
+            padding: 0 1.5rem 1rem 1.5rem;
+        }
+        
+        .table-header {
+            padding: 1.5rem;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
+            gap: 1rem;
         }
         
-        .process-step {
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: none;
+        .modern-table thead th {
+            padding: 1rem;
         }
         
-        .process-line {
-            width: 3px;
-            height: 30px !important;
-            margin: 10px 0 !important;
+        .modern-table tbody td {
+            padding: 1rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .modern-table thead th,
+        .modern-table tbody td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.8rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
         }
     }
 </style>
