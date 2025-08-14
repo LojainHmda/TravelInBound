@@ -313,20 +313,21 @@
             padding: 15px 20px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .sidebar-brand {
-            color: white;
+        #close-sidebar {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 1.2rem;
-            font-weight: bold;
-            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.3s ease;
         }
         
-        .sidebar-brand:hover {
-            color: white;
-            text-decoration: none;
+        #close-sidebar:hover {
+            color: #FFBF00;
         }
         
         .sidebar-nav {
@@ -560,9 +561,6 @@
         <!-- Mobile Sidebar -->
         <nav id="sidebar">
             <div class="sidebar-header">
-                <a href="{{ url_for('main.index') }}" class="sidebar-brand">
-                    <i class="fas fa-plane-departure"></i> TravelBookPro
-                </a>
                 <button id="close-sidebar" aria-label="Close Menu">
                     <i class="fas fa-times"></i>
                 </button>
