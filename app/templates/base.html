@@ -238,33 +238,28 @@
             border-color: #FFBF00;
         }
         
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            .main-nav {
-                display: none;
-            }
-            
-            .mobile-menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 40px;
-                height: 40px;
-                background: rgba(255, 191, 0, 0.1);
-                border: 1px solid #FFBF00;
-                border-radius: 8px;
-                color: #FFBF00;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-            
-            .mobile-menu-toggle:hover {
-                background: rgba(255, 191, 0, 0.2);
-            }
+        /* Mobile Menu Toggle - Always visible for easier navigation */
+        .mobile-menu-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 191, 0, 0.1);
+            border: 1px solid #FFBF00;
+            border-radius: 8px;
+            color: #FFBF00;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
         
-        @media (min-width: 769px) {
-            .mobile-menu-toggle {
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 191, 0, 0.2);
+        }
+        
+        /* Hide main nav on smaller screens */
+        @media (max-width: 768px) {
+            .main-nav {
                 display: none;
             }
         }
