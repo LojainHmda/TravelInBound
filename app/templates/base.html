@@ -259,69 +259,126 @@
             background: rgba(255, 191, 0, 0.2);
         }
         
-        /* Mobile Menu System */
-        .mobile-nav {
-            display: none;
-            position: absolute;
-            top: 100%;
+        /* Modern Side Navigation */
+        .side-nav {
+            position: fixed;
+            top: 70px;
             left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            border-top: 2px solid #FFBF00;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            z-index: 1059;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
+            width: 260px;
+            height: calc(100vh - 70px);
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1040;
+            overflow-y: auto;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
         }
         
-        .mobile-nav.show {
-            display: block;
-            max-height: 500px;
+        .side-nav-menu {
+            padding: 20px 0;
         }
         
-        .mobile-nav-item {
+        .nav-section {
+            margin-bottom: 24px;
+        }
+        
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 0 20px 12px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 12px;
         }
         
-        .mobile-nav-item:last-child {
-            border-bottom: none;
-        }
-        
-        .mobile-nav-link {
+        .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
+            gap: 14px;
+            padding: 12px 20px;
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 191, 0, 0.1);
+            color: #FFBF00;
+            border-left-color: #FFBF00;
+            transform: translateX(4px);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(255, 191, 0, 0.15) 0%, rgba(255, 165, 0, 0.15) 100%);
+            color: #FFBF00;
+            border-left-color: #FFBF00;
+            font-weight: 600;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .nav-text {
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
             transition: all 0.3s ease;
         }
         
-        .mobile-nav-link:hover {
+        .sidebar-toggle:hover {
             background: rgba(255, 191, 0, 0.1);
             color: #FFBF00;
         }
         
-        .mobile-nav-link i {
-            width: 20px;
-            text-align: center;
-            color: #FFBF00;
-        }
-        
-        /* Hide main nav and show mobile elements on smaller screens */
+        /* Mobile Responsive Styles */
         @media (max-width: 768px) {
-            .main-nav {
-                display: none;
+            .side-nav {
+                transform: translateX(-100%);
             }
             
-            .top-navbar {
-                position: relative;
+            .side-nav.show {
+                transform: translateX(0);
+            }
+            
+            .app-container {
+                margin-left: 0;
+            }
+            
+            .sidebar-toggle {
+                display: block;
+            }
+            
+            #sidebar-overlay.show {
+                display: block;
+                position: fixed;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 1035;
             }
         }
         
         @media (min-width: 769px) {
-            .mobile-nav {
+            .sidebar-toggle {
                 display: none !important;
             }
         }
@@ -337,6 +394,8 @@
         
         .app-container {
             min-height: calc(100vh - 70px);
+            margin-left: 260px; /* Account for sidebar width */
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
 
@@ -466,86 +525,26 @@
     <!-- Top Navigation Bar -->
     <nav class="top-navbar">
         <div class="navbar-container">
-            <!-- Logo Section -->
-            <a href="{{ url_for('main.index') }}" class="navbar-brand">
-                <div class="logo-icon">
-                    <i class="fas fa-plane-departure"></i>
-                </div>
-                <div>
-                    <div class="logo-text">TravelBookPro</div>
-                    <div class="logo-tagline">Windows of Jordan</div>
-                </div>
-            </a>
+            <!-- Mobile Sidebar Toggle and Logo Section -->
+            <div class="navbar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <a href="{{ url_for('main.index') }}" class="navbar-brand">
+                    <div class="logo-icon">
+                        <i class="fas fa-plane-departure"></i>
+                    </div>
+                    <div>
+                        <div class="logo-text">TravelBookPro</div>
+                        <div class="logo-tagline">Windows of Jordan</div>
+                    </div>
+                </a>
+            </div>
             
-            <!-- Main Navigation -->
-            <div class="main-nav">
-                <div class="nav-item">
-                    <a href="{{ url_for('main.index') }}" class="nav-link {% if request.path == url_for('main.index') %}active{% endif %}">
-                        <i class="fas fa-home"></i>
-                        Home
-                    </a>
-                </div>
-                
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle">
-                        <i class="fas fa-suitcase-rolling"></i>
-                        Tours & Booking
-                    </a>
-                    <div class="dropdown-menu">
-                        <a href="{{ url_for('inbound.index') }}" class="dropdown-item">
-                            <i class="fas fa-map-marked-alt"></i>
-                            Inbound Tours
-                        </a>
-                        <a href="{{ url_for('booking.new_booking_detail') }}" class="dropdown-item">
-                            <i class="fas fa-plus-circle"></i>
-                            New Booking
-                        </a>
-                        <a href="{{ url_for('main.find_bookings') }}" class="dropdown-item">
-                            <i class="fas fa-search"></i>
-                            Search & History
-                        </a>
-                        <a href="{{ url_for('main.operations_dashboard') }}" class="dropdown-item">
-                            <i class="fas fa-plane"></i>
-                            Travel Operations
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle">
-                        <i class="fas fa-users"></i>
-                        Management
-                    </a>
-                    <div class="dropdown-menu">
-                        <a href="{{ url_for('customer.list_customers') }}" class="dropdown-item">
-                            <i class="fas fa-users"></i>
-                            Customers
-                        </a>
-                        <a href="{{ url_for('finance.list_suppliers') }}" class="dropdown-item">
-                            <i class="fas fa-building"></i>
-                            Suppliers
-                        </a>
-                        {% if current_user.is_authenticated and current_user.can_access_finance() %}
-                        <a href="{{ url_for('finance.index') }}" class="dropdown-item">
-                            <i class="fas fa-money-bill-wave"></i>
-                            Finance
-                        </a>
-                        {% endif %}
-                        {% if current_user.is_authenticated and current_user.is_admin() %}
-                        <a href="{{ url_for('auth.admin_users') }}" class="dropdown-item">
-                            <i class="fas fa-users-cog"></i>
-                            User Management
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="nav-item">
-                    <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.path == url_for('main.dashboard') %}active{% endif %}">
-                        <i class="fas fa-chart-line"></i>
-                        Dashboard
-                    </a>
-                </div>
+            <!-- Page Title or Breadcrumb -->
+            <div class="navbar-center">
+                <span class="page-title">{% block page_title %}Travel Management System{% endblock %}</span>
             </div>
             
             <!-- User Section -->
@@ -562,11 +561,6 @@
                         <span>{{ current_user.username }}</span>
                     {% endif %}
                 </div>
-                
-                <!-- Mobile Menu Toggle -->
-                <button class="mobile-menu-toggle" id="mobile-menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
                 
                 <a href="{{ url_for('auth.logout') }}" class="logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
@@ -644,6 +638,75 @@
         </div>
     </nav>
     
+    <!-- Modern Side Navigation -->
+    <nav class="side-nav" id="sidebar">
+        <div class="side-nav-menu">
+            <!-- Dashboard -->
+            <div class="nav-section">
+                <a href="{{ url_for('main.index') }}" class="nav-item {% if request.path == url_for('main.index') %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+            </div>
+            
+            <!-- Tours & Booking Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">Tours & Booking</div>
+                <a href="{{ url_for('inbound.index') }}" class="nav-item {% if '/inbound/' in request.path %}active{% endif %}">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span class="nav-text">Inbound Tours</span>
+                </a>
+                <a href="{{ url_for('booking.new_booking_detail') }}" class="nav-item {% if request.path == url_for('booking.new_booking_detail') %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i>
+                    <span class="nav-text">New Booking</span>
+                </a>
+                <a href="{{ url_for('main.find_bookings') }}" class="nav-item {% if request.path == url_for('main.find_bookings') %}active{% endif %}">
+                    <i class="fas fa-search"></i>
+                    <span class="nav-text">Search & History</span>
+                </a>
+                <a href="{{ url_for('main.operations_dashboard') }}" class="nav-item {% if request.path == url_for('main.operations_dashboard') %}active{% endif %}">
+                    <i class="fas fa-plane"></i>
+                    <span class="nav-text">Travel Operations</span>
+                </a>
+            </div>
+            
+            <!-- Management Section -->
+            <div class="nav-section">
+                <div class="nav-section-title">Management</div>
+                <a href="{{ url_for('customer.list_customers') }}" class="nav-item {% if request.path == url_for('customer.list_customers') %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span class="nav-text">Customers</span>
+                </a>
+                <a href="{{ url_for('finance.list_suppliers') }}" class="nav-item {% if request.path == url_for('finance.list_suppliers') %}active{% endif %}">
+                    <i class="fas fa-building"></i>
+                    <span class="nav-text">Suppliers</span>
+                </a>
+            </div>
+            
+            <!-- Finance Section -->
+            {% if current_user.is_authenticated and current_user.can_access_finance() %}
+            <div class="nav-section">
+                <div class="nav-section-title">Finance</div>
+                <a href="{{ url_for('finance.index') }}" class="nav-item {% if '/finance/' in request.path %}active{% endif %}">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span class="nav-text">Finance Dashboard</span>
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Administration Section -->
+            {% if current_user.is_authenticated and current_user.is_admin() %}
+            <div class="nav-section">
+                <div class="nav-section-title">Administration</div>
+                <a href="{{ url_for('auth.admin_users') }}" class="nav-item {% if request.path == url_for('auth.admin_users') %}active{% endif %}">
+                    <i class="fas fa-users-cog"></i>
+                    <span class="nav-text">User Management</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </nav>
+
     <div class="app-container">
         <!-- Main Content Area -->
         <div id="content">
@@ -732,39 +795,44 @@
                 }
             });
             
-            // Mobile navigation functionality
-            const mobileToggle = document.getElementById('mobile-menu-toggle');
-            const mobileNav = document.getElementById('mobile-nav');
+            // Modern sidebar functionality
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
             
-            if (mobileToggle && mobileNav) {
-                mobileToggle.addEventListener('click', function(e) {
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function(e) {
                     e.preventDefault();
-                    mobileNav.classList.toggle('show');
-                    console.log('Mobile menu toggled:', mobileNav.classList.contains('show'));
+                    sidebar.classList.toggle('show');
+                    overlay.classList.toggle('show');
+                    console.log('Sidebar toggled:', sidebar.classList.contains('show'));
                 });
             }
             
-            // Close mobile nav when clicking on links
-            const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-            mobileNavLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (mobileNav) {
-                        mobileNav.classList.remove('show');
+            // Close sidebar when clicking on overlay
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                });
+            }
+            
+            // Close sidebar when clicking on nav links (mobile only)
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('show');
+                        overlay.classList.remove('show');
                     }
                 });
             });
             
-            // Close mobile nav when window is resized to desktop
+            // Close sidebar when window is resized to desktop
             window.addEventListener('resize', function() {
-                if (window.innerWidth > 768 && mobileNav) {
-                    mobileNav.classList.remove('show');
-                }
-            });
-            
-            // Close mobile nav when clicking outside
-            document.addEventListener('click', function(e) {
-                if (mobileNav && !e.target.closest('.top-navbar') && !e.target.closest('.mobile-nav')) {
-                    mobileNav.classList.remove('show');
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
                 }
             });
             document.querySelectorAll('.sidebar-nav a').forEach(link => {
