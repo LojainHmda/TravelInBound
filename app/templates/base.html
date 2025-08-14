@@ -156,6 +156,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1060;
             margin-top: 8px;
+            padding: 8px 0;
         }
         
         .dropdown.show .dropdown-menu {
@@ -684,7 +685,8 @@
             dropdownToggles.forEach(toggle => {
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const dropdown = this.parentElement;
+                    e.stopPropagation();
+                    const dropdown = this.closest('.dropdown');
                     
                     // Close all other dropdowns
                     document.querySelectorAll('.dropdown.show').forEach(openDropdown => {
@@ -695,6 +697,8 @@
                     
                     // Toggle current dropdown
                     dropdown.classList.toggle('show');
+                    
+                    console.log('Dropdown clicked:', dropdown.classList.contains('show'));
                 });
             });
             
