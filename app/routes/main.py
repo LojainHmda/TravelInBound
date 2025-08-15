@@ -61,54 +61,131 @@ def index():
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
-    """Dashboard showing booking statistics and status - OPTIMIZED"""
-    # PERFORMANCE FIX: Use efficient single queries with proper limits
-    from sqlalchemy import func
+    """Advanced Analytics Dashboard - Windows of Jordan Travel Operations"""
+    from sqlalchemy import func, extract
+    from datetime import datetime, timedelta
+    from decimal import Decimal
     
-    # Get counts for various statuses in a single query
-    status_counts = db.session.query(
-        Booking.status,
-        func.count(Booking.id)
-    ).group_by(Booking.status).all()
+    # Calculate date ranges for analytics
+    today = datetime.now().date()
+    current_month_start = today.replace(day=1)
+    last_month_start = (current_month_start - timedelta(days=1)).replace(day=1)
+    last_month_end = current_month_start - timedelta(days=1)
     
-    # Convert to dictionary for easy access
-    counts = {status: count for status, count in status_counts}
-    request_count = counts.get(STATUS_REQUEST, 0)
-    in_progress_count = counts.get(STATUS_IN_PROGRESS, 0)
-    confirmed_count = counts.get(STATUS_CONFIRMED, 0)
-    booked_count = 0  # Still pass 0 for template compatibility
+    # 1. REVENUE ANALYTICS
+    # Total revenue from confirmed bookings this month
+    current_month_revenue = db.session.query(func.sum(Booking.total_amount)).filter(
+        Booking.status.in_([STATUS_CONFIRMED, STATUS_BOOKED]),
+        Booking.created_at >= current_month_start
+    ).scalar() or Decimal('0')
     
-    # PERFORMANCE FIX: Limit recent bookings to reasonable number
-    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(10).all()
+    # Last month revenue for comparison
+    last_month_revenue = db.session.query(func.sum(Booking.total_amount)).filter(
+        Booking.status.in_([STATUS_CONFIRMED, STATUS_BOOKED]),
+        Booking.created_at >= last_month_start,
+        Booking.created_at <= last_month_end
+    ).scalar() or Decimal('0')
     
-    # PERFORMANCE FIX: Get service items efficiently with single query
-    service_items = db.session.query(
+    # Calculate revenue growth percentage
+    revenue_growth = 0
+    if last_month_revenue > 0:
+        revenue_growth = float(((current_month_revenue - last_month_revenue) / last_month_revenue) * 100)
+    
+    # 2. BOOKING STATISTICS
+    # Active bookings in pipeline
+    active_bookings = db.session.query(func.count(Booking.id)).filter(
+        Booking.status.in_([STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_BOOKED])
+    ).scalar() or 0
+    
+    # Monthly booking trends
+    monthly_bookings = db.session.query(func.count(Booking.id)).filter(
+        Booking.created_at >= current_month_start
+    ).scalar() or 0
+    
+    last_month_bookings = db.session.query(func.count(Booking.id)).filter(
+        Booking.created_at >= last_month_start,
+        Booking.created_at <= last_month_end
+    ).scalar() or 0
+    
+    booking_growth = 0
+    if last_month_bookings > 0:
+        booking_growth = float(((monthly_bookings - last_month_bookings) / last_month_bookings) * 100)
+    
+    # 3. OPERATIONAL METRICS
+    # Services pending confirmation
+    pending_services = db.session.query(func.count(ServiceItem.id)).filter(
+        ServiceItem.status == STATUS_IN_PROGRESS
+    ).scalar() or 0
+    
+    # Customer satisfaction metric (based on confirmed vs cancelled)
+    total_processed = db.session.query(func.count(Booking.id)).filter(
+        Booking.status.in_([STATUS_CONFIRMED, 'CANCELLED'])
+    ).scalar() or 1
+    
+    confirmed_bookings = db.session.query(func.count(Booking.id)).filter(
+        Booking.status == STATUS_CONFIRMED
+    ).scalar() or 0
+    
+    success_rate = int((confirmed_bookings / total_processed) * 100) if total_processed > 0 else 0
+    
+    # 4. SERVICE TYPE BREAKDOWN
+    service_breakdown = db.session.query(
         ServiceItem.service_type,
-        ServiceItem.id,
-        ServiceItem.description,
-        ServiceItem.created_at,
-        ServiceItem.status
-    ).order_by(ServiceItem.created_at.desc()).limit(25).all()
+        func.count(ServiceItem.id)
+    ).group_by(ServiceItem.service_type).all()
     
-    # Group service items by type (more efficient than 5 separate queries)
-    flight_items = [item for item in service_items if item.service_type == 'FLIGHT'][:5]
-    hotel_items = [item for item in service_items if item.service_type == 'HOTEL'][:5]
-    transport_items = [item for item in service_items if item.service_type == 'TRANSPORT'][:5]
-    visa_items = [item for item in service_items if item.service_type == 'VISA'][:5]
-    insurance_items = [item for item in service_items if item.service_type == 'INSURANCE'][:5]
+    # 5. RECENT ACTIVITY
+    recent_bookings = Booking.query.order_by(Booking.created_at.desc()).limit(8).all()
+    
+    # 6. WEEKLY TRENDS (last 4 weeks)
+    weekly_data = []
+    for i in range(4):
+        week_start = today - timedelta(weeks=i+1)
+        week_end = today - timedelta(weeks=i)
+        week_bookings = db.session.query(func.count(Booking.id)).filter(
+            Booking.created_at >= week_start,
+            Booking.created_at < week_end
+        ).scalar() or 0
+        weekly_data.append({
+            'week': f'Week {4-i}',
+            'bookings': week_bookings
+        })
+    
+    # 7. TOP PERFORMING SERVICES
+    top_services = db.session.query(
+        ServiceItem.service_type,
+        func.count(ServiceItem.id).label('count'),
+        func.sum(ServiceItem.amount).label('revenue')
+    ).filter(
+        ServiceItem.created_at >= current_month_start
+    ).group_by(ServiceItem.service_type).order_by(func.count(ServiceItem.id).desc()).all()
     
     return render_template(
         'dashboard_redesigned.html',
-        request_count=request_count,
-        booked_count=booked_count,
-        in_progress_count=in_progress_count,
-        confirmed_count=confirmed_count,
+        # Revenue metrics
+        current_month_revenue=float(current_month_revenue),
+        revenue_growth=revenue_growth,
+        
+        # Booking metrics  
+        active_bookings=active_bookings,
+        monthly_bookings=monthly_bookings,
+        booking_growth=booking_growth,
+        
+        # Operational metrics
+        pending_services=pending_services,
+        success_rate=success_rate,
+        
+        # Activity data
         recent_bookings=recent_bookings,
-        flight_items=flight_items,
-        hotel_items=hotel_items,
-        transport_items=transport_items,
-        visa_items=visa_items,
-        insurance_items=insurance_items
+        service_breakdown=service_breakdown,
+        weekly_data=weekly_data,
+        top_services=top_services,
+        
+        # Legacy compatibility
+        request_count=active_bookings,
+        booked_count=confirmed_bookings,
+        in_progress_count=pending_services,
+        confirmed_count=confirmed_bookings
     )
 
 @main_bp.route('/operations')

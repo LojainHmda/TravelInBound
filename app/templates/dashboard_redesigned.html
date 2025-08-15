@@ -27,78 +27,90 @@
 
     <!-- Modern Dashboard Stats -->
     <div class="row mb-5">
-        <!-- Requests Widget -->
+        <!-- Revenue Analytics Widget -->
         <div class="col-lg-3 col-md-6 mb-4">
             <div class="modern-stat-card requests-card" onclick="filterBookings('REQUEST')">
                 <div class="stat-card-header">
                     <div class="stat-icon">
-                        <i class="fas fa-clipboard-list"></i>
+                        <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <div class="stat-number">{{ request_count }}</div>
+                    <div class="stat-number">${{ "{:,.0f}".format(current_month_revenue) }}</div>
                 </div>
                 <div class="stat-card-body">
-                    <h5>New Requests</h5>
-                    <p>Pending review and processing</p>
+                    <h5>Monthly Revenue</h5>
+                    <p>Current month earnings</p>
+                    {% if revenue_growth != 0 %}
+                    <small class="growth-indicator {% if revenue_growth > 0 %}text-success{% else %}text-danger{% endif %}">
+                        <i class="fas fa-{% if revenue_growth > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                        {{ "{:.1f}".format(abs(revenue_growth)) }}% vs last month
+                    </small>
+                    {% endif %}
                 </div>
                 <div class="stat-card-footer">
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-chart-line"></i>
                 </div>
             </div>
         </div>
         
-        <!-- In Progress Widget -->
+        <!-- Active Bookings Widget -->
         <div class="col-lg-3 col-md-6 mb-4">
             <div class="modern-stat-card progress-card" onclick="filterBookings('IN_PROGRESS')">
                 <div class="stat-card-header">
                     <div class="stat-icon">
-                        <i class="fas fa-tasks"></i>
+                        <i class="fas fa-calendar-check"></i>
                     </div>
-                    <div class="stat-number">{{ in_progress_count }}</div>
+                    <div class="stat-number">{{ active_bookings }}</div>
                 </div>
                 <div class="stat-card-body">
-                    <h5>In Progress</h5>
-                    <p>Currently being processed</p>
+                    <h5>Active Bookings</h5>
+                    <p>In pipeline this month</p>
+                    {% if booking_growth != 0 %}
+                    <small class="growth-indicator {% if booking_growth > 0 %}text-success{% else %}text-danger{% endif %}">
+                        <i class="fas fa-{% if booking_growth > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
+                        {{ "{:.1f}".format(abs(booking_growth)) }}% vs last month
+                    </small>
+                    {% endif %}
                 </div>
                 <div class="stat-card-footer">
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-tasks"></i>
                 </div>
             </div>
         </div>
         
-        <!-- Confirmed Widget -->
+        <!-- Pending Services Widget -->
         <div class="col-lg-3 col-md-6 mb-4">
             <div class="modern-stat-card confirmed-card" onclick="filterBookings('CONFIRMED')">
                 <div class="stat-card-header">
                     <div class="stat-icon">
-                        <i class="fas fa-check-circle"></i>
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <div class="stat-number">{{ confirmed_count }}</div>
+                    <div class="stat-number">{{ pending_services }}</div>
                 </div>
                 <div class="stat-card-body">
-                    <h5>Confirmed</h5>
-                    <p>Successfully confirmed bookings</p>
+                    <h5>Pending Services</h5>
+                    <p>Awaiting confirmation</p>
                 </div>
                 <div class="stat-card-footer">
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-hourglass-half"></i>
                 </div>
             </div>
         </div>
         
-        <!-- Total Widget -->
+        <!-- Success Rate Widget -->
         <div class="col-lg-3 col-md-6 mb-4">
             <div class="modern-stat-card total-card">
                 <div class="stat-card-header">
                     <div class="stat-icon">
-                        <i class="fas fa-chart-line"></i>
+                        <i class="fas fa-star"></i>
                     </div>
-                    <div class="stat-number">{{ request_count + in_progress_count + confirmed_count }}</div>
+                    <div class="stat-number">{{ success_rate }}%</div>
                 </div>
                 <div class="stat-card-body">
-                    <h5>Total Active</h5>
-                    <p>All active bookings</p>
+                    <h5>Success Rate</h5>
+                    <p>Confirmed bookings ratio</p>
                 </div>
                 <div class="stat-card-footer">
-                    <i class="fas fa-arrow-right"></i>
+                    <i class="fas fa-trophy"></i>
                 </div>
             </div>
         </div>
