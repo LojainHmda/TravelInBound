@@ -42,69 +42,55 @@
     </div>
 </div>
 
+<!-- Hotel Basic Information -->
 <div class="row mb-4">
-    <div class="col-md-6">
-        <h5>Hotel Information</h5>
-        <div class="mb-3">
-            <label class="form-label">Hotel Name</label>
-            <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name|default('') }}" required>
-        </div>
-        
-        <!-- Check-in/check-out dates moved to room level -->
-        
-        <div class="mb-3">
-            <label class="form-label">Meal Plan</label>
-            <select name="meal_plan" class="form-select">
-                <option value="Room Only" {% if confirmation_data.meal_plan == 'Room Only' %}selected{% endif %}>Room Only</option>
-                <option value="Breakfast" {% if confirmation_data.meal_plan == 'Breakfast' %}selected{% endif %}>Breakfast</option>
-                <option value="Half Board" {% if confirmation_data.meal_plan == 'Half Board' %}selected{% endif %}>Half Board</option>
-                <option value="Full Board" {% if confirmation_data.meal_plan == 'Full Board' %}selected{% endif %}>Full Board</option>
-                <option value="All Inclusive" {% if confirmation_data.meal_plan == 'All Inclusive' %}selected{% endif %}>All Inclusive</option>
-                <option value="Ultra All Inclusive" {% if confirmation_data.meal_plan == 'Ultra All Inclusive' %}selected{% endif %}>Ultra All Inclusive</option>
+    <div class="col-md-4">
+        <label class="form-label">Hotel Name</label>
+        <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name|default('') }}" required>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select name="status" class="form-select">
+            <option value="confirmed" {% if confirmation_data.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+            <option value="pending" {% if confirmation_data.status == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="on_request" {% if confirmation_data.status == 'on_request' %}selected{% endif %}>On Request</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Cost</label>
+        <div class="input-group">
+            <input type="number" name="cost" step="0.01" class="form-control" value="{{ confirmation_data.cost|default(service_item.amount) }}">
+            <select name="currency" class="form-select" style="max-width: 100px;">
+                <option value="USD" {% if confirmation_data.currency == 'USD' %}selected{% endif %}>USD</option>
+                <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
             </select>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label">Special Notes</label>
-            <textarea name="special_notes" class="form-control" rows="2">{{ confirmation_data.special_notes|default('') }}</textarea>
         </div>
     </div>
-    
-    <div class="col-md-6">
-        <h5>Room Information</h5>
-        <div class="mb-3">
-            <label class="form-label">Status</label>
-            <select name="status" class="form-select">
-                <option value="confirmed" {% if confirmation_data.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
-                <option value="pending" {% if confirmation_data.status == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="on_request" {% if confirmation_data.status == 'on_request' %}selected{% endif %}>On Request</option>
-            </select>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label">Cost</label>
-            <div class="input-group">
-                <input type="number" name="cost" step="0.01" class="form-control" value="{{ confirmation_data.cost|default(service_item.amount) }}">
-                <select name="currency" class="form-select" style="max-width: 100px;">
-                    <option value="USD" {% if confirmation_data.currency == 'USD' %}selected{% endif %}>USD</option>
-                    <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
-                    <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
-                </select>
-            </div>
-        </div>
-        
-        <div id="roomDetails">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="mt-3 mb-0">Room Configuration & Lead Passengers</h6>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addHotelRoom()">
-                    <i class="fas fa-plus me-1"></i>Add Room
-                </button>
-            </div>
-            
-            <div id="hotelRoomsContainer">
-                <!-- Dynamic room generation will be handled by JavaScript -->
-                <!-- Rooms will be populated based on room data from itinerary -->
-            </div>
+    <div class="col-md-2">
+        <label class="form-label">&nbsp;</label>
+        <button type="button" class="btn btn-outline-primary w-100" onclick="addHotelRoom()">
+            <i class="fas fa-plus me-1"></i>Add Room
+        </button>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Special Notes</label>
+    <textarea name="special_notes" class="form-control" rows="2">{{ confirmation_data.special_notes|default('') }}</textarea>
+</div>
+
+<!-- Centered Room Configuration Section -->
+<div class="text-center mb-3">
+    <h5 class="text-primary">Room Configuration & Lead Passengers</h5>
+</div>
+
+<div id="hotelRoomsContainer" class="d-flex justify-content-center">
+    <div style="width: 100%; max-width: 1000px;">
+        <!-- Dynamic room generation will be handled by JavaScript -->
+        <!-- Rooms will be populated based on room data from itinerary -->
+    </div>
+</div>
             
             <!-- Hidden data for JavaScript to process room distribution -->
             <script type="text/javascript">
@@ -138,7 +124,7 @@
                                         roomType: roomTypeMapping[type],
                                         adults: adults,
                                         children: 0,
-                                        leadPassenger: `Mr. YOUSEF${roomCounter}`,
+                                        leadPassenger: `Passenger ${roomCounter}`,
                                         checkIn: '{{ service_item.start_date.strftime("%Y-%m-%d") }}',
                                         checkOut: '{{ service_item.end_date.strftime("%Y-%m-%d") }}'
                                     });
@@ -156,85 +142,86 @@
                         roomType: 'Single Room',
                         adults: 1,
                         children: 0,
-                        leadPassenger: 'Mr. YOUSEF',
+                        leadPassenger: 'Passenger 1',
                         checkIn: '{{ service_item.start_date.strftime("%Y-%m-%d") }}',
                         checkOut: '{{ service_item.end_date.strftime("%Y-%m-%d") }}'
                     }];
                 }
                 
-                // Generate room HTML and insert
-                const container = document.getElementById('hotelRoomsContainer');
+                // Generate tabular room HTML and insert
+                const container = document.getElementById('hotelRoomsContainer').firstElementChild;
+                
+                // Create table header
+                let tableHtml = `
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>Room #</th>
+                                    <th>Room Category</th>
+                                    <th>Hotel Room Option</th>
+                                    <th>Check-in</th>
+                                    <th>Check-out</th>
+                                    <th>Adults</th>
+                                    <th>Children</th>
+                                    <th>Lead Passenger</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                // Add room rows
                 roomData.forEach((room, index) => {
-                    const roomHtml = `
-                        <div class="hotel-room-card mb-3" style="border: 2px solid #007bff; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 text-primary">🏨 Room ${room.roomNumber}</h6>
+                    tableHtml += `
+                        <tr>
+                            <td>
+                                <strong class="text-primary">Room ${room.roomNumber}</strong>
+                            </td>
+                            <td>
+                                <select name="rooms[${index}][room_category]" class="form-control">
+                                    <option value="${room.roomType}" selected>${room.roomType}</option>
+                                    <option value="Single Room">Single</option>
+                                    <option value="Double Room">Double</option>
+                                    <option value="Triple Room">Triple</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="rooms[${index}][hotel_room_option]" class="form-control" 
+                                       placeholder="Premium, Premier Sea View" value="">
+                            </td>
+                            <td>
+                                <input type="date" name="rooms[${index}][check_in]" class="form-control" value="${room.checkIn}">
+                            </td>
+                            <td>
+                                <input type="date" name="rooms[${index}][check_out]" class="form-control" value="${room.checkOut}">
+                            </td>
+                            <td>
+                                <input type="number" name="rooms[${index}][adults]" class="form-control" value="${room.adults}" min="1" max="8">
+                            </td>
+                            <td>
+                                <input type="number" name="rooms[${index}][children]" class="form-control" value="${room.children}" min="0" max="8">
+                            </td>
+                            <td>
+                                <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" value="${room.leadPassenger}">
+                            </td>
+                            <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" ${index === 0 ? 'style="display: none;"' : ''}>
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Room Count</label>
-                                    <input type="number" name="rooms[${index}][room_count]" class="form-control" value="1" min="1" max="10">
-                                    <small class="text-muted">Rooms of this type</small>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Room Type</label>
-                                    <select name="rooms[${index}][room_type]" class="form-control">
-                                        <option value="${room.roomType}" selected>${room.roomType}</option>
-                                        <option value="Single Room">Single Room</option>
-                                        <option value="Double Room">Double Room</option>
-                                        <option value="Twin Room">Twin Room</option>
-                                        <option value="Triple Room">Triple Room</option>
-                                        <option value="Family Room">Family Room</option>
-                                        <option value="Suite">Suite</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="form-label">Board Basis</label>
-                                    <select name="rooms[${index}][board_basis]" class="form-control">
-                                        <option value="Room Only" selected>Room Only</option>
-                                        <option value="Bed & Breakfast (BB)">Bed & Breakfast (BB)</option>
-                                        <option value="Half Board (HB)">Half Board (HB)</option>
-                                        <option value="Full Board (FB)">Full Board (FB)</option>
-                                        <option value="All Inclusive (AI)">All Inclusive (AI)</option>
-                                        <option value="Ultra All Inclusive">Ultra All Inclusive</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Check-in Date</label>
-                                    <input type="date" name="rooms[${index}][check_in]" class="form-control" value="${room.checkIn}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Check-out Date</label>
-                                    <input type="date" name="rooms[${index}][check_out]" class="form-control" value="${room.checkOut}">
-                                </div>
-                            </div>
-                            
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Adults</label>
-                                    <input type="number" name="rooms[${index}][adults]" class="form-control" value="${room.adults}" min="1" max="8">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Children</label>
-                                    <input type="number" name="rooms[${index}][children]" class="form-control" value="${room.children}" min="0" max="8">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Lead Passenger Name</label>
-                                    <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" value="${room.leadPassenger}">
-                                </div>
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     `;
-                    container.insertAdjacentHTML('beforeend', roomHtml);
                 });
+                
+                tableHtml += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                container.innerHTML = tableHtml;
             });
             </script>
                     
