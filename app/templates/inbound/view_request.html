@@ -13,6 +13,21 @@
             </div>
         </div>
         <div>
+            <!-- Voucher Generation Buttons -->
+            <div class="btn-group me-2" role="group">
+                <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="fas fa-file-pdf"></i> Generate Voucher
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('inbound.generate_voucher', request_id=request.id, layout='vertical') }}" target="_blank">
+                        <i class="fas fa-file-alt"></i> Vertical Timeline
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('inbound.generate_voucher', request_id=request.id, layout='horizontal') }}" target="_blank">
+                        <i class="fas fa-file"></i> Horizontal Timeline
+                    </a></li>
+                </ul>
+            </div>
+            
             <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-primary me-2">
                 <i class="fas fa-edit"></i> Edit
             </a>
