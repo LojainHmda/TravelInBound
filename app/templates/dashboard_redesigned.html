@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container-fluid">
+    <div class="dashboard-wrapper">
     <!-- Hero Welcome Section -->
     <div class="hero-section mb-5">
         <div class="row align-items-center">
@@ -39,12 +40,7 @@
                 <div class="stat-card-body">
                     <h5>Monthly Revenue</h5>
                     <p>Current month earnings</p>
-                    {% if revenue_growth != 0 %}
-                    <small class="growth-indicator {% if revenue_growth > 0 %}text-success{% else %}text-danger{% endif %}">
-                        <i class="fas fa-{% if revenue_growth > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
-                        {{ "{:.1f}".format(abs(revenue_growth)) }}% vs last month
-                    </small>
-                    {% endif %}
+
                 </div>
                 <div class="stat-card-footer">
                     <i class="fas fa-chart-line"></i>
@@ -64,12 +60,7 @@
                 <div class="stat-card-body">
                     <h5>Active Bookings</h5>
                     <p>In pipeline this month</p>
-                    {% if booking_growth != 0 %}
-                    <small class="growth-indicator {% if booking_growth > 0 %}text-success{% else %}text-danger{% endif %}">
-                        <i class="fas fa-{% if booking_growth > 0 %}arrow-up{% else %}arrow-down{% endif %}"></i>
-                        {{ "{:.1f}".format(abs(booking_growth)) }}% vs last month
-                    </small>
-                    {% endif %}
+
                 </div>
                 <div class="stat-card-footer">
                     <i class="fas fa-tasks"></i>
@@ -187,6 +178,7 @@
     </div>
     
 
+    </div>
 </div>
 
 <!-- Booking Detail Modal -->
@@ -223,6 +215,24 @@
         padding: 2rem 1.5rem;
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         min-height: 100vh;
+        width: 100%;
+        max-width: none;
+        overflow-x: auto;
+    }
+    
+    /* Responsive Grid System */
+    .row {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+        min-width: 1200px; /* Ensure minimum width for proper layout */
+    }
+    
+    /* Main Content Wrapper */
+    .dashboard-wrapper {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
     }
     
     /* Hero Section */
@@ -404,6 +414,13 @@
         border-radius: 20px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         overflow: hidden;
+        width: 100%;
+    }
+    
+    .modern-table-wrapper {
+        overflow-x: auto;
+        width: 100%;
+        max-width: 100%;
     }
     
     .table-header {
@@ -432,6 +449,7 @@
     }
     
     .modern-table {
+        min-width: 800px;
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
