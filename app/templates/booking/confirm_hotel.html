@@ -69,9 +69,9 @@
     </div>
     <div class="col-md-2">
         <label class="form-label">&nbsp;</label>
-        <button type="button" class="btn btn-outline-primary w-100" onclick="addHotelRoom()">
-            <i class="fas fa-plus me-1"></i>Add Room
-        </button>
+        <div class="d-grid">
+            <small class="text-muted mb-1">Use table below</small>
+        </div>
     </div>
 </div>
 
@@ -218,79 +218,79 @@
                 tableHtml += `
                             </tbody>
                         </table>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="addRoomToTable()">
+                                <i class="fas fa-plus me-1"></i>Add Room
+                            </button>
+                        </div>
                     </div>
                 `;
                 
                 container.innerHTML = tableHtml;
+                
+                // Global room counter for new rooms
+                window.roomCounter = roomData.length;
             });
-            </script>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Room Count</label>
-                            <input type="number" name="rooms[0][room_count]" class="form-control" value="1" min="1" max="10">
-                            <small class="text-muted">Rooms of this type</small>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Room Type</label>
-                            <select name="rooms[0][room_type]" class="form-control">
-                                <option value="">Select Room Type</option>
-                                <option value="Single Room">Single Room</option>
-                                <option value="Double Room">Double Room</option>
-                                <option value="Twin Room">Twin Room</option>
-                                <option value="Triple Room">Triple Room</option>
-                                <option value="Family Room">Family Room</option>
-                                <option value="Suite">Suite</option>
-                                <option value="Junior Suite">Junior Suite</option>
-                                <option value="Executive Suite">Executive Suite</option>
-                                <option value="Presidential Suite">Presidential Suite</option>
-                                <option value="Connecting Rooms">Connecting Rooms</option>
+            
+            // Function to add room to table
+            window.addRoomToTable = function() {
+                window.roomCounter = window.roomCounter || 1;
+                window.roomCounter++;
+                
+                const tbody = document.querySelector('#hotelRoomsContainer tbody');
+                if (!tbody) return;
+                
+                const newRowHtml = `
+                    <tr>
+                        <td>
+                            <strong class="text-primary">Room ${window.roomCounter}</strong>
+                        </td>
+                        <td>
+                            <select name="rooms[${window.roomCounter-1}][room_category]" class="form-control">
+                                <option value="Single Room">Single</option>
+                                <option value="Double Room" selected>Double</option>
+                                <option value="Triple Room">Triple</option>
                                 <option value="Other">Other</option>
                             </select>
-                        </div>
-                        <div class="col-md-5">
-                            <label class="form-label">Board Basis</label>
-                            <select name="rooms[0][board_basis]" class="form-control">
-                                <option value="Room Only">Room Only</option>
-                                <option value="Bed & Breakfast (BB)">Bed & Breakfast (BB)</option>
-                                <option value="Half Board (HB)">Half Board (HB)</option>
-                                <option value="Full Board (FB)">Full Board (FB)</option>
-                                <option value="All Inclusive (AI)">All Inclusive (AI)</option>
-                                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Check-in Date</label>
-                            <input type="date" name="rooms[0][checkin_date]" class="form-control" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Check-out Date</label>
-                            <input type="date" name="rooms[0][checkout_date]" class="form-control" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Adults</label>
-                            <input type="number" name="rooms[0][adults]" class="form-control" value="2" min="1" max="6">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Children</label>
-                            <input type="number" name="rooms[0][children]" class="form-control" value="0" min="0" max="4">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Lead Passenger Name</label>
-                            <input type="text" name="rooms[0][lead_passenger]" class="form-control" placeholder="Mr. YOUSEF">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${window.roomCounter-1}][hotel_room_option]" class="form-control" 
+                                   placeholder="Premium, Premier Sea View" value="">
+                        </td>
+                        <td>
+                            <input type="date" name="rooms[${window.roomCounter-1}][check_in]" class="form-control" value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">
+                        </td>
+                        <td>
+                            <input type="date" name="rooms[${window.roomCounter-1}][check_out]" class="form-control" value="{{ service_item.end_date.strftime('%Y-%m-%d') }}">
+                        </td>
+                        <td>
+                            <input type="number" name="rooms[${window.roomCounter-1}][adults]" class="form-control" value="2" min="1" max="8">
+                        </td>
+                        <td>
+                            <input type="number" name="rooms[${window.roomCounter-1}][children]" class="form-control" value="0" min="0" max="8">
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${window.roomCounter-1}][lead_passenger]" class="form-control" value="Passenger ${window.roomCounter}">
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                
+                tbody.insertAdjacentHTML('beforeend', newRowHtml);
+            };
+            
+            // Function to remove room from table
+            window.removeHotelRoom = function(button) {
+                const row = button.closest('tr');
+                if (row) {
+                    row.remove();
+                }
+            };
+            </script>
 {% endblock %}
 
 <!-- Hotel Scanner Modal Container -->
