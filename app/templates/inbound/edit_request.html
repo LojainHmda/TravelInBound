@@ -218,6 +218,72 @@ body {
     -webkit-text-fill-color: transparent;
     margin-right: 0.375rem;
 }
+
+/* Hotel Room Distribution Styles */
+.hotel-service-container {
+    position: relative;
+    min-width: 120px;
+}
+
+.room-distribution {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: white;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-top: 5px;
+    min-width: 140px;
+}
+
+.room-type-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.room-type-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #667eea;
+    width: 45px;
+    margin: 0;
+    text-align: left;
+}
+
+.room-input {
+    width: 60px !important;
+    height: 28px !important;
+    font-size: 0.75rem;
+    padding: 2px 6px !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.room-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+@media (max-width: 768px) {
+    .room-distribution {
+        position: relative;
+        transform: none;
+        left: auto;
+        margin-top: 10px;
+        width: 100%;
+    }
+}
 </style>
 {% endblock %}
 
@@ -651,9 +717,39 @@ function renderItineraryTable() {
                 </select>
             </td>
             <td class="text-center">
-                <input type="checkbox" class="form-check-input service-flag" 
-                       ${row.flag_hotel ? 'checked' : ''} 
-                       onchange="updateRow(${index}, 'flag_hotel', this.checked)">
+                <div class="hotel-service-container">
+                    <input type="checkbox" class="form-check-input service-flag" 
+                           ${row.flag_hotel ? 'checked' : ''} 
+                           onchange="toggleHotelDistribution(${index}, this.checked)" id="hotel_${index}">
+                    <div class="room-distribution ${row.flag_hotel ? '' : 'd-none'}" id="room_dist_${index}">
+                        <div class="room-type-inputs mt-2">
+                            <div class="room-type-row">
+                                <label class="room-label">SNGL:</label>
+                                <input type="number" class="form-control form-control-sm room-input" 
+                                       value="${row.hotel_single_rooms || 0}" min="0" max="20"
+                                       onchange="updateRoomDistribution(${index}, 'hotel_single_rooms', this.value)">
+                            </div>
+                            <div class="room-type-row">
+                                <label class="room-label">DBL:</label>
+                                <input type="number" class="form-control form-control-sm room-input" 
+                                       value="${row.hotel_double_rooms || 0}" min="0" max="20"
+                                       onchange="updateRoomDistribution(${index}, 'hotel_double_rooms', this.value)">
+                            </div>
+                            <div class="room-type-row">
+                                <label class="room-label">TRIPL:</label>
+                                <input type="number" class="form-control form-control-sm room-input" 
+                                       value="${row.hotel_triple_rooms || 0}" min="0" max="20"
+                                       onchange="updateRoomDistribution(${index}, 'hotel_triple_rooms', this.value)">
+                            </div>
+                            <div class="room-type-row">
+                                <label class="room-label">OTHER:</label>
+                                <input type="number" class="form-control form-control-sm room-input" 
+                                       value="${row.hotel_other_rooms || 0}" min="0" max="20"
+                                       onchange="updateRoomDistribution(${index}, 'hotel_other_rooms', this.value)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </td>
             <td class="text-center">
                 <input type="checkbox" class="form-check-input service-flag" 
@@ -703,6 +799,35 @@ function updateRow(index, field, value) {
     } else {
         row.row_cost = row.base_cost || 0;
     }
+}
+
+function toggleHotelDistribution(index, checked) {
+    // Update the hotel flag
+    updateRow(index, 'flag_hotel', checked);
+    
+    // Show/hide room distribution inputs
+    const roomDistDiv = document.getElementById(`room_dist_${index}`);
+    if (roomDistDiv) {
+        if (checked) {
+            roomDistDiv.classList.remove('d-none');
+        } else {
+            roomDistDiv.classList.add('d-none');
+            // Reset room counts when hotel is unchecked
+            updateRoomDistribution(index, 'hotel_single_rooms', 0);
+            updateRoomDistribution(index, 'hotel_double_rooms', 0);
+            updateRoomDistribution(index, 'hotel_triple_rooms', 0);
+            updateRoomDistribution(index, 'hotel_other_rooms', 0);
+        }
+    }
+    
+    // Update pricing and re-render to show changes
+    updatePricingSummary();
+}
+
+function updateRoomDistribution(index, field, value) {
+    const numValue = parseInt(value) || 0;
+    itineraryData[index][field] = numValue;
+}
     
     // Re-render the specific row cost
     const tbody = document.getElementById('itineraryBody');
@@ -726,6 +851,10 @@ function addRow() {
         flag_transport: false,
         flag_meal: false,
         flag_airport: false,
+        hotel_single_rooms: 0,
+        hotel_double_rooms: 0,
+        hotel_triple_rooms: 0,
+        hotel_other_rooms: 0,
         row_cost: 0
     };
     

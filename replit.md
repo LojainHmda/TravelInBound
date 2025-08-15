@@ -59,6 +59,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### Hotel Room Distribution Enhancement
+- **Date**: August 15, 2025
+- **Feature**: Expanded hotel service with room type distribution functionality
+- **Components Added**:
+  - Database columns: hotel_single_rooms, hotel_double_rooms, hotel_triple_rooms, hotel_other_rooms in ItineraryRow table
+  - Dynamic room distribution UI that expands when hotel checkbox is selected
+  - Professional styling with blue theme matching Windows of Jordan branding
+  - JavaScript integration for real-time room count updates
+  - Backend save/load functionality for room distribution data
+- **Visual Elements**: Dropdown interface with SNGL/DBL/TRIPL/OTHER labels, compact number inputs
+- **Flow**: Room counts from itinerary automatically populate hotel confirmation pages
+- **Status**: Fully implemented with database persistence and responsive UI
+
 ### Inbound Tour Operator System Implementation
 - **Date**: August 9-10, 2025
 - **Feature**: Complete inbound tour operator module with itinerary-first booking approach

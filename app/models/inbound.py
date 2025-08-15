@@ -84,7 +84,10 @@ class InboundRequest(db.Model):
     def calculate_total(self):
         """Calculate total amount from all itinerary rows"""
         total = 0.0
-        for row in self.itinerary_rows:
+        # Use query instead of relationship to avoid SQLAlchemy iteration error
+        from app.models.inbound import ItineraryRow
+        rows = ItineraryRow.query.filter_by(request_id=self.id).all()
+        for row in rows:
             if row.cost_unit == COST_UNIT_PER_PERSON:
                 total += (row.base_cost or 0) * self.pax
             else:  # PER_GROUP
@@ -125,6 +128,12 @@ class ItineraryRow(db.Model):
     flag_transport = db.Column(db.Boolean, default=False)
     flag_meal = db.Column(db.Boolean, default=False)
     flag_airport = db.Column(db.Boolean, default=False)
+    
+    # Hotel room distribution (when flag_hotel is True)
+    hotel_single_rooms = db.Column(db.Integer, default=0)
+    hotel_double_rooms = db.Column(db.Integer, default=0)
+    hotel_triple_rooms = db.Column(db.Integer, default=0)
+    hotel_other_rooms = db.Column(db.Integer, default=0)
     
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

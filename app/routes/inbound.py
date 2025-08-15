@@ -162,7 +162,11 @@ def api_save_itinerary(request_id):
             flag_guide=row_data.get('flag_guide', False),
             flag_transport=row_data.get('flag_transport', False),
             flag_meal=row_data.get('flag_meal', False),
-            flag_airport=row_data.get('flag_airport', False)
+            flag_airport=row_data.get('flag_airport', False),
+            hotel_single_rooms=int(row_data.get('hotel_single_rooms', 0)),
+            hotel_double_rooms=int(row_data.get('hotel_double_rooms', 0)),
+            hotel_triple_rooms=int(row_data.get('hotel_triple_rooms', 0)),
+            hotel_other_rooms=int(row_data.get('hotel_other_rooms', 0))
         )
         db.session.add(row)
         db.session.flush()  # Get the ID
