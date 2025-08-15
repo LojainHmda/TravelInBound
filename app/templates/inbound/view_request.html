@@ -15,14 +15,14 @@
         <div>
             <!-- Voucher Generation Buttons -->
             <div class="btn-group me-2" role="group">
-                <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown">
+                <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-file-pdf"></i> Generate Voucher
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ url_for('inbound.generate_voucher', request_id=request.id, layout='vertical') }}" target="_blank">
+                    <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=vertical" target="_blank">
                         <i class="fas fa-file-alt"></i> Vertical Timeline
                     </a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('inbound.generate_voucher', request_id=request.id, layout='horizontal') }}" target="_blank">
+                    <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=horizontal" target="_blank">
                         <i class="fas fa-file"></i> Horizontal Timeline
                     </a></li>
                 </ul>
@@ -435,4 +435,15 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// Initialize Bootstrap dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all dropdowns
+    var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+    var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl);
+    });
+});
+</script>
 {% endblock %}
