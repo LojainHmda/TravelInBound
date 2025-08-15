@@ -359,6 +359,11 @@ body {
     font-weight: 600;
 }
 
+.room-summary-text {
+    color: #495057 !important;
+    font-weight: 500;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .room-type-card {
@@ -820,10 +825,15 @@ function showAlert(message, type = 'info') {
         </div>
     `;
     
-    // Insert at top of container
+    // Insert at top of container with safety check
     const container = document.querySelector('.container-fluid');
-    const firstCard = container.querySelector('.card');
-    firstCard.insertAdjacentHTML('beforebegin', alertHtml);
+    const firstCard = container ? container.querySelector('.card') : null;
+    
+    if (firstCard) {
+        firstCard.insertAdjacentHTML('beforebegin', alertHtml);
+    } else if (container) {
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+    }
     
     // Auto dismiss after 5 seconds
     setTimeout(() => {
@@ -891,7 +901,7 @@ function renderItineraryTable() {
                             '<i class="fas fa-cog"></i> Rooms' +
                         '</button>' +
                         '<div class="room-summary mt-1" id="room_summary_' + index + '">' +
-                            '<small class="text-primary">' +
+                            '<small class="room-summary-text">' +
                                 '<b>S:</b>' + (row.hotel_single_rooms || 0) + ' <b>D:</b>' + (row.hotel_double_rooms || 0) + ' ' +
                                 '<b>T:</b>' + (row.hotel_triple_rooms || 0) + ' <b>O:</b>' + (row.hotel_other_rooms || 0) +
                             '</small>' +
