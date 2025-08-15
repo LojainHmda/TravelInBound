@@ -421,9 +421,8 @@ def api_generate_services(request_id):
             return jsonify({'error': 'Access denied'}), 403
         
         # Import the necessary models
-        from app.models.booking import Booking
-        from app.models.service import ServiceItem, SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
-        from app.models.customer import Customer
+        from app.models import Booking, ServiceItem, Customer
+        from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
         
         # Create or get booking record
         if request_obj.booking_id:
@@ -443,24 +442,22 @@ def api_generate_services(request_id):
                 # Fallback: find or create customer by contact name
                 customer = Customer.query.filter_by(first_name=request_obj.contact_name).first()
                 if not customer:
-                    customer = Customer(
-                        first_name=request_obj.contact_name,
-                        last_name="",
-                        phone="TBD",
-                        email="tbd@example.com",
-                        nationality=request_obj.nationality
-                    )
+                    customer = Customer()
+                    customer.first_name = request_obj.contact_name
+                    customer.last_name = ""
+                    customer.phone = "TBD"
+                    customer.email = "tbd@example.com"
+                    customer.nationality = request_obj.nationality
                     db.session.add(customer)
                     db.session.flush()
             
             # Create new booking
-            booking = Booking(
-                reference_number=request_obj.request_number,
-                user_id=request_obj.user_id,
-                customer_id=customer.id,
-                status=request_obj.status,
-                total_amount=request_obj.total_amount
-            )
+            booking = Booking()
+            booking.reference_number = request_obj.request_number
+            booking.user_id = request_obj.user_id
+            booking.customer_id = customer.id
+            booking.status = request_obj.status
+            booking.total_amount = request_obj.total_amount
             db.session.add(booking)
             db.session.flush()
             
@@ -476,59 +473,58 @@ def api_generate_services(request_id):
         for row in request_obj.itinerary_rows:
             row_cost = row.calculate_row_cost(request_obj.pax)
             
-            # Hotel service
+            # Hotel service - include room distribution data
             if row.flag_hotel:
-                service_item = ServiceItem(
-                    booking_id=booking.id,
-                    service_type=SERVICE_HOTEL,
-                    start_date=row.date,
-                    end_date=row.date + timedelta(days=1),
-                    description=f"Hotel accommodation - {row.description}",
-                    amount=row_cost,
-                    status=STATUS_REQUEST
-                )
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_HOTEL
+                service_item.start_date = row.date
+                service_item.end_date = row.date + timedelta(days=1)
+                service_item.description = f"Hotel accommodation - {row.description}"
+                service_item.amount = row_cost
+                service_item.status = STATUS_REQUEST
+                # Store room distribution data in the description for now
+                room_summary = f"S:{row.hotel_single_rooms or 0} D:{row.hotel_double_rooms or 0} T:{row.hotel_triple_rooms or 0} O:{row.hotel_other_rooms or 0}"
+                service_item.description = f"Hotel accommodation - {row.description} | Rooms: {room_summary}"
                 db.session.add(service_item)
                 services_created += 1
             
             # Transport service
             if row.flag_transport:
-                service_item = ServiceItem(
-                    booking_id=booking.id,
-                    service_type=SERVICE_TRANSPORT,
-                    start_date=row.date,
-                    end_date=row.date,
-                    description=f"Transport service - {row.description}",
-                    amount=row_cost,
-                    status=STATUS_REQUEST
-                )
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_TRANSPORT
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Transport service - {row.description}"
+                service_item.amount = row_cost
+                service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
             
             # Restaurant/Meal service
             if row.flag_meal:
-                service_item = ServiceItem(
-                    booking_id=booking.id,
-                    service_type=SERVICE_RESTAURANT,
-                    start_date=row.date,
-                    end_date=row.date,
-                    description=f"Restaurant meal - {row.description}",
-                    amount=row_cost,
-                    status=STATUS_REQUEST
-                )
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_RESTAURANT
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Restaurant meal - {row.description}"
+                service_item.amount = row_cost
+                service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
             
             # Guide service
             if row.flag_guide:
-                service_item = ServiceItem(
-                    booking_id=booking.id,
-                    service_type=SERVICE_GUIDE,
-                    start_date=row.date,
-                    end_date=row.date,
-                    description=f"Tour guide service - {row.description}",
-                    amount=row_cost,
-                    status=STATUS_REQUEST
-                )
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_GUIDE
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Tour guide service - {row.description}"
+                service_item.amount = row_cost
+                service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
         
