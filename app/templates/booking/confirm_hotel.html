@@ -151,19 +151,21 @@
                 // Generate tabular room HTML and insert
                 const container = document.getElementById('hotelRoomsContainer').firstElementChild;
                 
-                // Create table header with expanded layout and different color
+                // Create table header with expanded layout and dietary information
                 let tableHtml = `
                     <div class="table-responsive" style="width: 100%; overflow-x: auto;">
-                        <table class="table table-bordered table-hover" style="min-width: 1400px; width: 100%;">
+                        <table class="table table-bordered table-hover" style="min-width: 1800px; width: 100%;">
                             <thead style="background-color: #1e3a8a; color: white;">
                                 <tr>
-                                    <th style="min-width: 80px;">Room #</th>
-                                    <th style="min-width: 140px;">Room Category</th>
-                                    <th style="min-width: 180px;">Hotel Room Option</th>
-                                    <th style="min-width: 120px;">Check-in</th>
-                                    <th style="min-width: 120px;">Check-out</th>
-                                    <th style="min-width: 80px;">Adults</th>
-                                    <th style="min-width: 90px;">Children</th>
+                                    <th style="min-width: 70px;">Room #</th>
+                                    <th style="min-width: 130px;">Room Category</th>
+                                    <th style="min-width: 170px;">Hotel Room Option</th>
+                                    <th style="min-width: 150px;">Board Basis / Meals</th>
+                                    <th style="min-width: 140px;">Dietary Requirements</th>
+                                    <th style="min-width: 110px;">Check-in</th>
+                                    <th style="min-width: 110px;">Check-out</th>
+                                    <th style="min-width: 70px;">Adults</th>
+                                    <th style="min-width: 80px;">Children</th>
                                     <th style="min-width: 200px;">Lead Passenger Name</th>
                                     <th style="min-width: 80px;">Action</th>
                                 </tr>
@@ -190,6 +192,20 @@
                             <td>
                                 <input type="text" name="rooms[${index}][hotel_room_option]" class="form-control" 
                                        placeholder="Premium, Premier Sea View" value="">
+                            </td>
+                            <td>
+                                <select name="rooms[${index}][board_basis]" class="form-control">
+                                    <option value="Room Only">Room Only</option>
+                                    <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
+                                    <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                                    <option value="Full Board">Full Board (All Meals)</option>
+                                    <option value="All Inclusive">All Inclusive</option>
+                                    <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" 
+                                       placeholder="Vegetarian, Halal, Gluten-free" value="">
                             </td>
                             <td>
                                 <input type="date" name="rooms[${index}][check_in]" class="form-control" value="${room.checkIn}">
@@ -257,6 +273,20 @@
                         <td>
                             <input type="text" name="rooms[${window.roomCounter-1}][hotel_room_option]" class="form-control" 
                                    placeholder="Premium, Premier Sea View" value="">
+                        </td>
+                        <td>
+                            <select name="rooms[${window.roomCounter-1}][board_basis]" class="form-control">
+                                <option value="Room Only">Room Only</option>
+                                <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
+                                <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                                <option value="Full Board">Full Board (All Meals)</option>
+                                <option value="All Inclusive">All Inclusive</option>
+                                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${window.roomCounter-1}][dietary_requirements]" class="form-control" 
+                                   placeholder="Vegetarian, Halal, Gluten-free" value="">
                         </td>
                         <td>
                             <input type="date" name="rooms[${window.roomCounter-1}][check_in]" class="form-control" value="{{ service_item.start_date.strftime('%Y-%m-%d') }}">

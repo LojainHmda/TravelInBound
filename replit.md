@@ -59,18 +59,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
-### Hotel Room Distribution Enhancement
+### Hotel Room Distribution Enhancement with Dietary Information
 - **Date**: August 15, 2025
-- **Feature**: Expanded hotel service with room type distribution functionality
+- **Feature**: Expanded hotel service with room type distribution and dietary requirements functionality
 - **Components Added**:
   - Database columns: hotel_single_rooms, hotel_double_rooms, hotel_triple_rooms, hotel_other_rooms in ItineraryRow table
   - Dynamic room distribution UI that expands when hotel checkbox is selected
-  - Professional styling with blue theme matching Windows of Jordan branding
-  - JavaScript integration for real-time room count updates
-  - Backend save/load functionality for room distribution data
-- **Visual Elements**: Dropdown interface with SNGL/DBL/TRIPL/OTHER labels, compact number inputs
-- **Flow**: Room counts from itinerary automatically populate hotel confirmation pages
-- **Status**: Fully implemented with database persistence and responsive UI
+  - Professional dark blue header styling with white text for better contrast
+  - Room table expanded to 1800px minimum width with horizontal scrolling
+  - Added Board Basis dropdown (Room Only, B&B, Half Board, Full Board, All Inclusive, Ultra All Inclusive)
+  - Added Dietary Requirements field for special meal needs (Vegetarian, Halal, Gluten-free, etc.)
+  - JavaScript integration for real-time room count updates and "Add Room" functionality
+  - Backend save/load functionality for room distribution and dietary data
+- **Visual Elements**: Expanded table with 11 columns, optimized column widths, 200px Lead Passenger field
+- **Flow**: Room counts from itinerary automatically populate hotel confirmation pages with dietary options
+- **Status**: Fully implemented with comprehensive room and meal management capabilities
 
 ### Inbound Tour Operator System Implementation
 - **Date**: August 9-10, 2025
