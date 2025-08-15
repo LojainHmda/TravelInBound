@@ -610,3 +610,45 @@ def generate_voucher(request_id):
         # Return HTML with error info for debugging
         error_html = f"<h1>Voucher Generation Error</h1><p>Error: {str(e)}</p><hr>{html}"
         return error_html
+
+@inbound_bp.route('/api/<int:request_id>/create-booking', methods=['POST'])
+@login_required
+def api_create_booking(request_id):
+    """Create a booking from an inbound request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Check if booking already exists by looking for existing services
+    if request_obj.booking_id:
+        booking = Booking.query.get(request_obj.booking_id)
+        if booking:
+            return jsonify({
+                'success': True,
+                'message': 'Booking already exists',
+                'booking_url': url_for('booking.details', booking_id=booking.id)
+            })
+    
+    try:
+        # Use the existing generate services function logic
+        result = api_generate_services(request_id)
+        result_data = result.get_json()
+        
+        if result_data.get('success'):
+            return jsonify({
+                'success': True,
+                'message': 'Booking created successfully',
+                'booking_url': result_data.get('redirect_url')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': result_data.get('error', 'Failed to create booking')
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error creating booking: {str(e)}'
+        }), 500
