@@ -609,6 +609,11 @@ def generate_voucher(request_id):
         
         return response
     except Exception as e:
-        # If PDF generation fails, return HTML version
+        # If PDF generation fails, return HTML version for debugging
         print(f"PDF generation failed: {e}")
-        return html
+        import traceback
+        traceback.print_exc()
+        
+        # Return HTML with error info for debugging
+        error_html = f"<h1>Voucher Generation Error</h1><p>Error: {str(e)}</p><hr>{html}"
+        return error_html
