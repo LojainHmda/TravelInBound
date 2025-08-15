@@ -729,6 +729,11 @@
             const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
             
             dropdownToggles.forEach(toggle => {
+                // Skip if this is a Bootstrap dropdown (has data-bs-toggle)
+                if (toggle.getAttribute('data-bs-toggle') === 'dropdown') {
+                    return; // Let Bootstrap handle it
+                }
+                
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
