@@ -141,6 +141,30 @@
             transform: rotate(180deg);
         }
         
+        /* Button group dropdown support */
+        .btn-group {
+            position: relative;
+        }
+        
+        .btn-group .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            display: none;
+            min-width: 160px;
+            padding: 5px 0;
+            margin: 2px 0 0;
+            background-color: #fff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+        }
+        
+        .btn-group.show .dropdown-menu {
+            display: block;
+        }
+        
         .dropdown-menu {
             position: absolute;
             top: 100%;
@@ -687,10 +711,15 @@
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    const dropdown = this.closest('.dropdown');
+                    const dropdown = this.closest('.dropdown') || this.closest('.btn-group');
+                    
+                    if (!dropdown) {
+                        console.warn('Dropdown element not found for toggle:', this);
+                        return;
+                    }
                     
                     // Close all other dropdowns
-                    document.querySelectorAll('.dropdown.show').forEach(openDropdown => {
+                    document.querySelectorAll('.dropdown.show, .btn-group.show').forEach(openDropdown => {
                         if (openDropdown !== dropdown) {
                             openDropdown.classList.remove('show');
                         }
@@ -705,8 +734,8 @@
             
             // Close dropdowns when clicking outside
             document.addEventListener('click', function(e) {
-                if (!e.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown.show').forEach(dropdown => {
+                if (!e.target.closest('.dropdown') && !e.target.closest('.btn-group')) {
+                    document.querySelectorAll('.dropdown.show, .btn-group.show').forEach(dropdown => {
                         dropdown.classList.remove('show');
                     });
                 }
