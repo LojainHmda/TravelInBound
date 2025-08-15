@@ -18,7 +18,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f1f5f9;
+            background: white;
             color: #333;
             line-height: 1.6;
             font-weight: bold;
@@ -28,16 +28,41 @@
         .header {
             background: #fbbf24;
             color: #333;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         .header h1 {
-            font-size: 24px;
+            font-size: 32px;
             margin-bottom: 10px;
             font-weight: 600;
+        }
+        
+        .header-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .header-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+        
+        .header-item label {
+            font-size: 12px;
+            opacity: 0.9;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .header-item strong {
+            font-size: 16px;
+            display: block;
         }
         
         /* Guest Information */
@@ -96,46 +121,116 @@
         
         /* Day Container */
         .day-container {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             page-break-inside: avoid;
         }
         
-        .day-number {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
+        .day-header {
             background: #fbbf24;
             color: #333;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             font-weight: bold;
-            font-size: 18px;
-            margin: 0 auto 15px auto;
         }
         
-        .day-date {
-            text-align: center;
-            font-size: 16px;
+        .day-header h3 {
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
             color: #333;
-            margin-bottom: 15px;
+        }
+        
+        .day-header .date {
+            font-size: 14px;
+            color: #333;
             font-weight: bold;
         }
         
-        /* Service List */
-        .services-list {
-            text-align: center;
+        /* Timeline Events */
+        .timeline-events {
+            margin-left: 40px;
+            position: relative;
+        }
+        
+        .timeline-events::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #fbbf24;
+        }
+        
+        .timeline-event {
+            position: relative;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .timeline-event::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #fbbf24;
+            z-index: 1;
+        }
+        
+        .service-content {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .service-icons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
         }
         
         .service-item {
-            padding: 8px 0;
-            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fbbf24;
             color: #333;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
         }
         
-        .service-item:last-child {
-            border-bottom: none;
+        .service-details {
+            flex: 1;
+        }
+        
+        .service-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: normal;
+        }
+        
+        .service-cost {
+            color: #374151;
+            font-weight: bold;
+            font-size: 16px;
         }
         
         .timeline-event.hotel::before {
@@ -277,8 +372,26 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>Tour Itinerary</h1>
-        <p>{{ request.request_number }} | {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }} | {{ request.no_of_days }} Days</p>
+        <h1>
+            <svg viewBox="0 0 24 24" width="32" height="32" style="margin-right: 10px;">
+                <path d="M9.5 3V6H7A2 2 0 0 0 5 8V20A2 2 0 0 0 7 22H17A2 2 0 0 0 19 20V8A2 2 0 0 0 17 6H14.5V3A1.5 1.5 0 0 0 13 1.5H11A1.5 1.5 0 0 0 9.5 3M11 3H13V6H11V3M7 8H17V20H7V8M9 10V12H15V10H9M9 14V16H13V14H9" fill="#333"/>
+            </svg>
+            Tour Itinerary
+        </h1>
+        <div class="header-info">
+            <div class="header-item">
+                <label>Reference Number</label>
+                <strong>{{ request.request_number }}</strong>
+            </div>
+            <div class="header-item">
+                <label>Tour Duration</label>
+                <strong>{{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}</strong>
+            </div>
+            <div class="header-item">
+                <label>Total Days</label>
+                <strong>{{ request.no_of_days }} Days</strong>
+            </div>
+        </div>
     </div>
     
     <!-- Guest Information -->
@@ -339,31 +452,75 @@
             {% set first_row = rows[0] %}
             
             <div class="day-container">
-                <div class="day-number">{{ loop.index }}</div>
-                <div class="day-date">
-                    {% if date_key != 'unscheduled' %}
-                        {{ first_row.date.strftime('%A, %d %B %Y') }}
-                    {% endif %}
+                <div class="day-header">
+                    <h3>
+                        Day {{ loop.index }}
+                        {% if date_key != 'unscheduled' %}
+                            <span class="date"> - {{ first_row.date.strftime('%A, %d %B %Y') }}</span>
+                        {% endif %}
+                    </h3>
                 </div>
                 
-                <div class="services-list">
-                    {% for row in rows %}
-                        {% if row.flag_hotel %}
-                        <div class="service-item">Hotel Accommodation</div>
-                        {% endif %}
-                        {% if row.flag_transport %}
-                        <div class="service-item">Transportation</div>
-                        {% endif %}
-                        {% if row.flag_meal %}
-                        <div class="service-item">Meal Service</div>
-                        {% endif %}
-                        {% if row.flag_guide %}
-                        <div class="service-item">Guide Service</div>
-                        {% endif %}
-                        {% if row.flag_airport %}
-                        <div class="service-item">Airport Transfer</div>
-                        {% endif %}
-                    {% endfor %}
+                <div class="timeline-events">
+                    <div class="timeline-event">
+                        <div class="service-content">
+                            <div class="service-icons">
+                                {% for row in rows %}
+                                    {% if row.flag_hotel %}
+                                    <div class="service-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24">
+                                            <path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/>
+                                        </svg>
+                                        <span class="service-name">Hotel</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if row.flag_transport %}
+                                    <div class="service-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24">
+                                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+                                        </svg>
+                                        <span class="service-name">Transport</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if row.flag_meal %}
+                                    <div class="service-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24">
+                                            <path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/>
+                                        </svg>
+                                        <span class="service-name">Meal</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if row.flag_guide %}
+                                    <div class="service-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                        <span class="service-name">Guide</span>
+                                    </div>
+                                    {% endif %}
+                                    {% if row.flag_airport %}
+                                    <div class="service-item">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24">
+                                            <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                        </svg>
+                                        <span class="service-name">Airport</span>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="service-details">
+                                {% for row in rows %}
+                                    {% if row.description and row.description != '' %}
+                                        <div class="service-description">{{ row.description }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% set total_cost = rows|sum(attribute='base_cost') or 0 %}
+                                {% if total_cost > 0 %}
+                                <div class="service-cost">${{ "%.2f"|format(total_cost * request.pax) }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         {% endfor %}
