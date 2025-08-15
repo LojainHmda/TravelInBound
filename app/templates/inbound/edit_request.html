@@ -827,14 +827,8 @@ function toggleHotelDistribution(index, checked) {
 function updateRoomDistribution(index, field, value) {
     const numValue = parseInt(value) || 0;
     itineraryData[index][field] = numValue;
-}
     
-    // Re-render the specific row cost
-    const tbody = document.getElementById('itineraryBody');
-    const rowElement = tbody.children[index];
-    const costCell = rowElement.children[10]; // Row cost column
-    costCell.innerHTML = `${(row.row_cost || 0).toFixed(2)} ${row.currency}`;
-    
+    // Update pricing and re-render to show changes
     updatePricingSummary();
 }
 

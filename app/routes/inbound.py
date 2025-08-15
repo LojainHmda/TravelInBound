@@ -129,6 +129,10 @@ def api_get_itinerary(request_id):
             'flag_transport': row.flag_transport,
             'flag_meal': row.flag_meal,
             'flag_airport': row.flag_airport,
+            'hotel_single_rooms': getattr(row, 'hotel_single_rooms', 0),
+            'hotel_double_rooms': getattr(row, 'hotel_double_rooms', 0),
+            'hotel_triple_rooms': getattr(row, 'hotel_triple_rooms', 0),
+            'hotel_other_rooms': getattr(row, 'hotel_other_rooms', 0),
             'row_cost': row.calculate_row_cost(request_obj.pax)
         })
     
