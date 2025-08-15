@@ -151,21 +151,21 @@
                 // Generate tabular room HTML and insert
                 const container = document.getElementById('hotelRoomsContainer').firstElementChild;
                 
-                // Create table header
+                // Create table header with expanded layout and different color
                 let tableHtml = `
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead class="table-primary">
+                    <div class="table-responsive" style="width: 100%; overflow-x: auto;">
+                        <table class="table table-bordered table-hover" style="min-width: 1400px; width: 100%;">
+                            <thead style="background-color: #1e3a8a; color: white;">
                                 <tr>
-                                    <th>Room #</th>
-                                    <th>Room Category</th>
-                                    <th>Hotel Room Option</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Adults</th>
-                                    <th>Children</th>
-                                    <th>Lead Passenger</th>
-                                    <th>Action</th>
+                                    <th style="min-width: 80px;">Room #</th>
+                                    <th style="min-width: 140px;">Room Category</th>
+                                    <th style="min-width: 180px;">Hotel Room Option</th>
+                                    <th style="min-width: 120px;">Check-in</th>
+                                    <th style="min-width: 120px;">Check-out</th>
+                                    <th style="min-width: 80px;">Adults</th>
+                                    <th style="min-width: 90px;">Children</th>
+                                    <th style="min-width: 200px;">Lead Passenger Name</th>
+                                    <th style="min-width: 80px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -204,7 +204,8 @@
                                 <input type="number" name="rooms[${index}][children]" class="form-control" value="${room.children}" min="0" max="8">
                             </td>
                             <td>
-                                <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" value="${room.leadPassenger}">
+                                <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" 
+                                       value="${room.leadPassenger}" style="min-width: 180px;">
                             </td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)" ${index === 0 ? 'style="display: none;"' : ''}>
@@ -270,7 +271,8 @@
                             <input type="number" name="rooms[${window.roomCounter-1}][children]" class="form-control" value="0" min="0" max="8">
                         </td>
                         <td>
-                            <input type="text" name="rooms[${window.roomCounter-1}][lead_passenger]" class="form-control" value="Passenger ${window.roomCounter}">
+                            <input type="text" name="rooms[${window.roomCounter-1}][lead_passenger]" class="form-control" 
+                                   value="Passenger ${window.roomCounter}" style="min-width: 180px;">
                         </td>
                         <td>
                             <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelRoom(this)">
