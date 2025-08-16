@@ -63,13 +63,17 @@
         .logo-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #efdea4 0%, #e6d192 100%);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: #000;
+        }
+        
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            object-fit: cover;
         }
         
         .logo-text {
@@ -492,10 +496,9 @@
             <!-- Logo Section -->
             <a href="{{ url_for('main.index') }}" class="navbar-brand">
                 <div class="logo-icon">
-                    <i class="fas fa-plane-departure"></i>
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo">
                 </div>
                 <div>
-                    <div class="logo-text">TravelBookPro</div>
                     <div class="logo-tagline">Windows of Jordan</div>
                 </div>
             </a>
