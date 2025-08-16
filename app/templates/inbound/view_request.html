@@ -1300,14 +1300,29 @@ body {
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                                     {% if row.flag_hotel %}
-                                                        <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
-                                                              onclick="openRoomDistributionModal({{ loop.index0 }})" 
-                                                              style="cursor: pointer;">
-                                                            <i class="fas fa-bed"></i> Hotel
+                                                        <div class="hotel-badge-container">
+                                                            <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
+                                                                  onclick="openRoomDistributionModal({{ loop.index0 }})" 
+                                                                  style="cursor: pointer;">
+                                                                <i class="fas fa-bed"></i> Hotel
+                                                            </span>
                                                             {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
-                                                                ({{ (row.hotel_single_rooms or 0) + (row.hotel_double_rooms or 0) + (row.hotel_triple_rooms or 0) + (row.hotel_other_rooms or 0) }}r)
+                                                                <div class="room-distribution-display">
+                                                                    {% if row.hotel_single_rooms and row.hotel_single_rooms > 0 %}
+                                                                        <span class="room-type-badge">S{{ row.hotel_single_rooms }}</span>
+                                                                    {% endif %}
+                                                                    {% if row.hotel_double_rooms and row.hotel_double_rooms > 0 %}
+                                                                        <span class="room-type-badge">D{{ row.hotel_double_rooms }}</span>
+                                                                    {% endif %}
+                                                                    {% if row.hotel_triple_rooms and row.hotel_triple_rooms > 0 %}
+                                                                        <span class="room-type-badge">T{{ row.hotel_triple_rooms }}</span>
+                                                                    {% endif %}
+                                                                    {% if row.hotel_other_rooms and row.hotel_other_rooms > 0 %}
+                                                                        <span class="room-type-badge">O{{ row.hotel_other_rooms }}</span>
+                                                                    {% endif %}
+                                                                </div>
                                                             {% endif %}
-                                                        </span>
+                                                        </div>
                                                     {% endif %}
                                                     {% if row.flag_guide %}
                                                         <span class="badge bg-success" data-service="guide">
@@ -2014,16 +2029,8 @@ function saveRoomDistribution() {
         document.getElementById('modalTriple').textContent = triple;
         document.getElementById('modalOther').textContent = other;
         
-        // Update service badge display if hotel is already shown
-        const hotelBadge = document.querySelector(`[data-row-index="${rowIndex}"] .badge[data-service="hotel"]`);
-        if (hotelBadge) {
-            const totalRooms = single + double + triple + other;
-            const icon = hotelBadge.querySelector('i').outerHTML;
-            hotelBadge.innerHTML = `${icon} Hotel${totalRooms > 0 ? ` (${totalRooms}r)` : ''}`;
-            // Ensure the click handler is maintained
-            hotelBadge.style.cursor = 'pointer';
-            hotelBadge.onclick = function() { openRoomDistributionModal(rowIndex); };
-        }
+        // Update room distribution display if hotel is already shown
+        updateRoomDisplay(rowIndex, single, double, triple, other);
     }
     
     // Close modal and show service modal if it was opened from there
@@ -2619,10 +2626,6 @@ function addServiceToRow(rowIndex, serviceType) {
 }
 
 function createServiceBadge(serviceType, rowIndex) {
-    const span = document.createElement('span');
-    span.classList.add('badge', 'me-1');
-    span.dataset.service = serviceType;
-    
     const serviceConfig = {
         hotel: { class: 'bg-danger', icon: 'bed', text: 'Hotel', clickable: true },
         guide: { class: 'bg-success', icon: 'user-tie', text: 'Guide' },
@@ -2632,18 +2635,68 @@ function createServiceBadge(serviceType, rowIndex) {
     };
     
     const config = serviceConfig[serviceType];
-    if (!config) return span;
+    if (!config) return null;
     
-    span.className = `badge ${config.class} me-1`;
-    if (config.clickable) {
-        span.className += ' clickable-hotel-badge';
+    if (serviceType === 'hotel') {
+        // Create hotel badge container with room distribution
+        const container = document.createElement('div');
+        container.className = 'hotel-badge-container me-1';
+        
+        const span = document.createElement('span');
+        span.className = `badge ${config.class} clickable-hotel-badge`;
+        span.dataset.service = serviceType;
         span.style.cursor = 'pointer';
         span.onclick = () => openRoomDistributionModal(rowIndex);
+        span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+        
+        const roomDisplay = document.createElement('div');
+        roomDisplay.className = 'room-distribution-display';
+        roomDisplay.id = `room-display-${rowIndex}`;
+        
+        container.appendChild(span);
+        container.appendChild(roomDisplay);
+        
+        return container;
+    } else {
+        // Regular service badge
+        const span = document.createElement('span');
+        span.className = `badge ${config.class} me-1`;
+        span.dataset.service = serviceType;
+        span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+        return span;
     }
+}
+
+function updateRoomDisplay(rowIndex, single, double, triple, other) {
+    const roomDisplay = document.getElementById(`room-display-${rowIndex}`);
+    if (!roomDisplay) return;
     
-    span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+    roomDisplay.innerHTML = '';
     
-    return span;
+    if (single > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'room-type-badge';
+        badge.textContent = `S${single}`;
+        roomDisplay.appendChild(badge);
+    }
+    if (double > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'room-type-badge';
+        badge.textContent = `D${double}`;
+        roomDisplay.appendChild(badge);
+    }
+    if (triple > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'room-type-badge';
+        badge.textContent = `T${triple}`;
+        roomDisplay.appendChild(badge);
+    }
+    if (other > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'room-type-badge';
+        badge.textContent = `O${other}`;
+        roomDisplay.appendChild(badge);
+    }
 }
 
 </script>
@@ -2667,6 +2720,37 @@ function createServiceBadge(serviceType, rowIndex) {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
+}
+
+/* Hotel Badge Container and Room Distribution */
+.hotel-badge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+}
+
+.room-distribution-display {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.room-type-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    line-height: 1.2;
+    display: inline-block;
+}
+
+.room-type-badge:first-letter {
+    color: #6c757d;
+    font-weight: 700;
 }
 </style>
 
