@@ -1300,11 +1300,14 @@ body {
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                                     {% if row.flag_hotel %}
-                                                        <div class="hotel-badge-container">
+                                                        <div class="hotel-badge-container service-badge-removable" data-service="hotel">
                                                             <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
                                                                   onclick="openRoomDistributionModal({{ loop.index0 }})" 
                                                                   style="cursor: pointer;">
                                                                 <i class="fas fa-bed"></i> Hotel
+                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')">
+                                                                    <i class="fas fa-times"></i>
+                                                                </button>
                                                             </span>
                                                             {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
                                                                 <div class="room-distribution-display">
@@ -1325,23 +1328,35 @@ body {
                                                         </div>
                                                     {% endif %}
                                                     {% if row.flag_guide %}
-                                                        <span class="badge bg-success" data-service="guide">
+                                                        <span class="badge bg-success service-badge-removable" data-service="guide">
                                                             <i class="fas fa-user-tie"></i> Guide
+                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'guide')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
                                                         </span>
                                                     {% endif %}
                                                     {% if row.flag_transport %}
-                                                        <span class="badge bg-info" data-service="transport">
+                                                        <span class="badge bg-info service-badge-removable" data-service="transport">
                                                             <i class="fas fa-car"></i> Transport
+                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'transport')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
                                                         </span>
                                                     {% endif %}
                                                     {% if row.flag_meal %}
-                                                        <span class="badge bg-warning text-dark" data-service="meal">
+                                                        <span class="badge bg-warning text-dark service-badge-removable" data-service="meal">
                                                             <i class="fas fa-utensils"></i> Meal
+                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'meal')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
                                                         </span>
                                                     {% endif %}
                                                     {% if row.flag_airport %}
-                                                        <span class="badge bg-secondary" data-service="airport">
+                                                        <span class="badge bg-secondary service-badge-removable" data-service="airport">
                                                             <i class="fas fa-plane"></i> Airport
+                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'airport')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
                                                         </span>
                                                     {% endif %}
                                                 </div>
@@ -2640,14 +2655,26 @@ function createServiceBadge(serviceType, rowIndex) {
     if (serviceType === 'hotel') {
         // Create hotel badge container with room distribution
         const container = document.createElement('div');
-        container.className = 'hotel-badge-container me-1';
+        container.className = 'hotel-badge-container me-1 service-badge-removable';
+        container.dataset.service = serviceType;
         
         const span = document.createElement('span');
         span.className = `badge ${config.class} clickable-hotel-badge`;
         span.dataset.service = serviceType;
         span.style.cursor = 'pointer';
         span.onclick = () => openRoomDistributionModal(rowIndex);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-remove-service';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeService(rowIndex, serviceType);
+        };
+        
         span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+        span.appendChild(removeBtn);
         
         const roomDisplay = document.createElement('div');
         roomDisplay.className = 'room-distribution-display';
@@ -2658,11 +2685,20 @@ function createServiceBadge(serviceType, rowIndex) {
         
         return container;
     } else {
-        // Regular service badge
+        // Regular service badge with remove button
         const span = document.createElement('span');
-        span.className = `badge ${config.class} me-1`;
+        span.className = `badge ${config.class} me-1 service-badge-removable`;
         span.dataset.service = serviceType;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn-remove-service';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = () => removeService(rowIndex, serviceType);
+        
         span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+        span.appendChild(removeBtn);
+        
         return span;
     }
 }
@@ -2697,6 +2733,57 @@ function updateRoomDisplay(rowIndex, single, double, triple, other) {
         badge.textContent = `O${other}`;
         roomDisplay.appendChild(badge);
     }
+}
+
+// Remove service function
+function removeService(rowIndex, serviceType) {
+    // Update the hidden input for this service
+    const flagInput = document.querySelector(`input[name="flag_${serviceType}_${rowIndex}"]`);
+    if (flagInput) {
+        flagInput.value = '';
+    }
+    
+    // Remove the visual badge
+    const serviceContainer = document.querySelector(`tr[data-row-index="${rowIndex}"] .d-flex.flex-wrap`);
+    if (serviceContainer) {
+        if (serviceType === 'hotel') {
+            // Remove hotel container and clear room data
+            const hotelContainer = serviceContainer.querySelector('.hotel-badge-container');
+            if (hotelContainer) {
+                // Clear room inputs
+                const singleInput = document.getElementById(`single_${rowIndex}_input`);
+                const doubleInput = document.getElementById(`double_${rowIndex}_input`);
+                const tripleInput = document.getElementById(`triple_${rowIndex}_input`);
+                const otherInput = document.getElementById(`other_${rowIndex}_input`);
+                
+                if (singleInput) singleInput.value = '0';
+                if (doubleInput) doubleInput.value = '0';
+                if (tripleInput) tripleInput.value = '0';
+                if (otherInput) otherInput.value = '0';
+                
+                // Remove with animation
+                hotelContainer.style.transition = 'all 0.3s ease';
+                hotelContainer.style.opacity = '0';
+                hotelContainer.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    hotelContainer.remove();
+                }, 300);
+            }
+        } else {
+            // Remove regular service badge
+            const serviceBadge = serviceContainer.querySelector(`[data-service="${serviceType}"]`);
+            if (serviceBadge) {
+                serviceBadge.style.transition = 'all 0.3s ease';
+                serviceBadge.style.opacity = '0';
+                serviceBadge.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    serviceBadge.remove();
+                }, 300);
+            }
+        }
+    }
+    
+    showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} service removed`, 'success');
 }
 
 </script>
@@ -2751,6 +2838,48 @@ function updateRoomDisplay(rowIndex, single, double, triple, other) {
 .room-type-badge:first-letter {
     color: #6c757d;
     font-weight: 700;
+}
+
+/* Service Badge Remove Functionality */
+.service-badge-removable {
+    position: relative;
+}
+
+.service-badge-removable:hover .btn-remove-service {
+    opacity: 1;
+    visibility: visible;
+}
+
+.btn-remove-service {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #dc3545;
+    border: 1px solid white;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.btn-remove-service:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.hotel-badge-container .btn-remove-service {
+    top: -6px;
+    right: -6px;
 }
 </style>
 
