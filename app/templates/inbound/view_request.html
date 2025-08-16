@@ -2061,7 +2061,6 @@ function saveRoomDistribution() {
 // Service Selection Modal functionality
 let currentServiceRowIndex = -1;
 let serviceModal = null;
-let draggedService = null;
 
 // Initialize service modal when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -2566,77 +2565,241 @@ function showNotification(message, type) {
     }, 5000);
 }
 
-// Drag and Drop Functions
+// Add missing functions for buttons
+function generateDays() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    
+    if (!startDate || !endDate) {
+        showNotification('Please select both start and end dates', 'error');
+        return;
+    }
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+        showNotification('End date must be after start date', 'error');
+        return;
+    }
+    
+    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    
+    if (days > 30) {
+        showNotification('Cannot generate more than 30 days at once', 'error');
+        return;
+    }
+    
+    // Generate itinerary rows
+    fetch(`/inbound/${document.querySelector('input[name="request_id"]').value}/generate_days`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            days: days
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Generated ${days} days successfully!`, 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showNotification(data.message || 'Error generating days', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error generating days', 'error');
+    });
+}
+
+function saveChanges() {
+    document.getElementById('itineraryForm').submit();
+}
+
+function toggleItineraryEditMode() {
+    // This function enables itinerary editing
+    const editSection = document.querySelector('.itinerary-edit-section');
+    const viewSection = document.querySelector('.itinerary-view-section');
+    
+    if (editSection) {
+        editSection.style.display = 'block';
+    }
+    if (viewSection) {
+        viewSection.style.display = 'none';
+    }
+    
+    // Or trigger add itinerary if none exists
+    const addItineraryBtn = document.querySelector('button[onclick="toggleItineraryEditMode()"]');
+    if (addItineraryBtn) {
+        // Redirect to add itinerary
+        const requestId = document.querySelector('input[name="request_id"]').value;
+        window.location.href = `/inbound/${requestId}/edit`;
+    }
+}
+
+function toggleEditMode() {
+    // Toggle between edit and view mode
+    const editForms = document.querySelectorAll('.edit-form');
+    const viewSections = document.querySelectorAll('.view-section');
+    
+    editForms.forEach(form => {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    viewSections.forEach(section => {
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    });
+}
+
+function addItineraryRow() {
+    // Add new itinerary row
+    const tbody = document.querySelector('#itineraryForm tbody');
+    const rowCount = tbody.querySelectorAll('tr').length;
+    
+    // Create new row
+    const newRow = document.createElement('tr');
+    newRow.dataset.rowIndex = rowCount;
+    newRow.innerHTML = `
+        <td>
+            <input type="date" class="form-control form-control-sm" name="date_${rowCount}" required>
+        </td>
+        <td>
+            <textarea class="form-control form-control-sm" name="location_${rowCount}" rows="2" required></textarea>
+        </td>
+        <td>
+            <select class="form-select form-select-sm" name="cost_unit_${rowCount}">
+                <option value="PER_PERSON">Per Person</option>
+                <option value="PER_GROUP">Per Group</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm" name="base_cost_${rowCount}" step="0.01" min="0" required>
+        </td>
+        <td>
+            <select class="form-control form-control-sm" name="currency_${rowCount}">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="JOD">JOD</option>
+            </select>
+        </td>
+        <td>
+            <div class="d-flex flex-wrap gap-1 mb-2 service-drop-zone" 
+                 ondragover="handleDragOver(event)" 
+                 ondragleave="handleDragLeave(event)" 
+                 ondrop="handleDrop(event)">
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="total-cost-display">0.00 USD</span>
+                <button type="button" class="btn btn-xs btn-outline-primary" 
+                        onclick="openServiceSelectionModal(${rowCount})" 
+                        title="Add/Manage Services">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </td>
+    `;
+    
+    // Add drag and drop event listeners
+    newRow.addEventListener('dragover', handleDragOver);
+    newRow.addEventListener('dragleave', handleDragLeave);
+    newRow.addEventListener('drop', handleDrop);
+    
+    tbody.appendChild(newRow);
+    showNotification('New day added', 'success');
+}
+
+function cancelItineraryEdit() {
+    // Cancel editing and reload
+    window.location.reload();
+}
+
+// Drag and Drop Functions - consolidated from duplicates
 let draggedService = null;
 
 function handleDragStart(event) {
-    draggedService = event.target.dataset.service;
-    event.target.classList.add('drag-ghost');
-    event.dataTransfer.effectAllowed = 'move';
+    draggedService = event.target.getAttribute('data-service') || event.target.closest('.service-drag-item').getAttribute('data-service');
+    event.dataTransfer.effectAllowed = 'copy';
+    event.target.style.opacity = '0.7';
+}
+
+function handleDragEnd(event) {
+    event.target.style.opacity = '1';
+    draggedService = null;
 }
 
 function handleDragOver(event) {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-    event.currentTarget.classList.add('itinerary-row-drag-over');
+    event.dataTransfer.dropEffect = 'copy';
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    if (dropZone) {
+        dropZone.style.backgroundColor = '#e3f2fd';
+        dropZone.style.border = '2px solid #2196f3';
+    }
+    row.style.backgroundColor = '#f0f8ff';
 }
 
 function handleDragLeave(event) {
-    event.currentTarget.classList.remove('itinerary-row-drag-over');
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    if (dropZone) {
+        dropZone.style.backgroundColor = '';
+        dropZone.style.border = '';
+    }
+    row.style.backgroundColor = '';
 }
 
 function handleDrop(event) {
     event.preventDefault();
-    event.currentTarget.classList.remove('itinerary-row-drag-over');
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    if (dropZone) {
+        dropZone.style.backgroundColor = '';
+        dropZone.style.border = '';
+    }
+    row.style.backgroundColor = '';
     
     if (!draggedService) return;
     
-    const row = event.currentTarget;
-    const rowIndex = row.dataset.rowIndex;
+    const rowIndex = parseInt(row.dataset.rowIndex);
     
-    // Add service to this row
+    // Add the service to this row
     addServiceToRow(rowIndex, draggedService);
     
-    // Reset drag state
+    // Reset dragged service
     draggedService = null;
-    document.querySelectorAll('.drag-ghost').forEach(el => {
-        el.classList.remove('drag-ghost');
-    });
 }
 
+// Add service to specific row
 function addServiceToRow(rowIndex, serviceType) {
-    // Update the hidden input for this service
+    // Update flag input
     const flagInput = document.querySelector(`input[name="flag_${serviceType}_${rowIndex}"]`);
     if (flagInput) {
         flagInput.value = '1';
     }
     
-    // Update the visual display
+    // Add visual badge
     const serviceContainer = document.querySelector(`tr[data-row-index="${rowIndex}"] .d-flex.flex-wrap`);
     if (serviceContainer) {
         // Check if service already exists
-        const existingBadge = serviceContainer.querySelector(`[data-service="${serviceType}"]`);
-        if (existingBadge) {
-            // Service already exists, just highlight briefly
-            existingBadge.style.animation = 'pulse 0.5s ease-in-out';
-            setTimeout(() => {
-                existingBadge.style.animation = '';
-            }, 500);
+        const existingService = serviceContainer.querySelector(`[data-service="${serviceType}"]`);
+        if (existingService) {
+            showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} service already added to this day`, 'warning');
             return;
         }
         
-        // Create new service badge
-        const badge = createServiceBadge(serviceType, rowIndex);
-        serviceContainer.appendChild(badge);
-        
-        // Show success animation
-        badge.style.opacity = '0';
-        badge.style.transform = 'scale(0.5)';
-        setTimeout(() => {
-            badge.style.transition = 'all 0.3s ease';
-            badge.style.opacity = '1';
-            badge.style.transform = 'scale(1)';
-        }, 50);
+        // Create and add new service badge
+        const newBadge = createServiceBadge(serviceType, rowIndex);
+        if (newBadge) {
+            serviceContainer.appendChild(newBadge);
+            showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} service added`, 'success');
+        }
     }
 }
 
