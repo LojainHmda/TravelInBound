@@ -424,109 +424,12 @@ body {
     margin-left: 0.5rem;
 }
 
-/* Beautiful Service Drag Bar */
-.service-drag-bar {
-    background: linear-gradient(145deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    border-radius: 20px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-    overflow: hidden;
+/* Hotel Badge Clickable Style */
+.clickable-hotel-badge:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
 }
-
-.service-drag-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-}
-
-.service-drag-title {
-    color: white;
-    font-weight: 700;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-}
-
-.service-drag-icons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
-    gap: 1.25rem;
-    max-width: 500px;
-}
-
-.service-drag-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0.75rem;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 16px;
-    cursor: grab;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    min-width: 80px;
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    position: relative;
-    overflow: hidden;
-}
-
-.service-drag-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transition: left 0.6s;
-}
-
-.service-drag-item:hover::before {
-    left: 100%;
-}
-
-.service-drag-item:hover {
-    background: white;
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-}
-
-.service-drag-item:active {
-    cursor: grabbing;
-    transform: translateY(-2px) scale(0.98);
-}
-
-.service-drag-item i {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.service-drag-item:hover i {
-    transform: scale(1.2);
-}
-
-.service-drag-item span {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.service-drag-item[data-service="hotel"] i { color: #ef4444; }
-.service-drag-item[data-service="guide"] i { color: #10b981; }
-.service-drag-item[data-service="transport"] i { color: #06b6d4; }
-.service-drag-item[data-service="meal"] i { color: #f59e0b; }
-.service-drag-item[data-service="airport"] i { color: #8b5cf6; }
 
 /* Beautiful Compact Table */
 .itinerary-table-compact {
@@ -1236,35 +1139,6 @@ body {
 
                     <!-- Edit Mode Itinerary -->
                     <div id="itineraryEditMode" class="edit-mode-hidden">
-                        <!-- Service Drag Bar -->
-                        <div class="service-drag-bar mb-3">
-                            <div class="service-drag-title">
-                                <i class="fas fa-hand-paper me-2"></i>Drag services to days or use "Add Service" buttons:
-                            </div>
-                            <div class="service-drag-icons">
-                                <div class="service-drag-item" draggable="true" data-service="hotel" ondragstart="handleDragStart(event)">
-                                    <i class="fas fa-bed"></i>
-                                    <span>Hotel</span>
-                                </div>
-                                <div class="service-drag-item" draggable="true" data-service="guide" ondragstart="handleDragStart(event)">
-                                    <i class="fas fa-user-tie"></i>
-                                    <span>Guide</span>
-                                </div>
-                                <div class="service-drag-item" draggable="true" data-service="transport" ondragstart="handleDragStart(event)">
-                                    <i class="fas fa-car"></i>
-                                    <span>Transport</span>
-                                </div>
-                                <div class="service-drag-item" draggable="true" data-service="meal" ondragstart="handleDragStart(event)">
-                                    <i class="fas fa-utensils"></i>
-                                    <span>Meal</span>
-                                </div>
-                                <div class="service-drag-item" draggable="true" data-service="airport" ondragstart="handleDragStart(event)">
-                                    <i class="fas fa-plane"></i>
-                                    <span>Airport</span>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="table-responsive">
                             <form id="itineraryForm" onsubmit="saveItinerary(event)">
                                 <table class="table table-striped">
@@ -1280,8 +1154,7 @@ body {
                                     </thead>
                                     <tbody id="itineraryTableBody">
                                         {% for row in request.itinerary_rows %}
-                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" 
-                                            ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}">
                                             <td>
                                                 {{ row.date.strftime('%d %b %Y') }}
                                                 <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
@@ -1319,10 +1192,12 @@ body {
                                                     <option value="PER_GROUP" {{ 'selected' if row.cost_unit == 'PER_GROUP' else '' }}>Per Group</option>
                                                 </select>
                                             </td>
-                                            <td class="service-drop-zone" data-row-index="{{ loop.index0 }}">
+                                            <td>
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                                     {% if row.flag_hotel %}
-                                                        <span class="badge bg-danger" data-service="hotel">
+                                                        <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
+                                                              onclick="openRoomDistributionModal({{ loop.index0 }})" 
+                                                              style="cursor: pointer;">
                                                             <i class="fas fa-bed"></i> Hotel
                                                             {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
                                                                 ({{ (row.hotel_single_rooms or 0) + (row.hotel_double_rooms or 0) + (row.hotel_triple_rooms or 0) + (row.hotel_other_rooms or 0) }}r)
@@ -1350,11 +1225,6 @@ body {
                                                         </span>
                                                     {% endif %}
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" 
-                                                        onclick="openServiceSelectionModal({{ loop.index0 }})" 
-                                                        title="Add/Manage Services">
-                                                    <i class="fas fa-plus"></i> Add Service
-                                                </button>
                                                 <!-- Hidden inputs for form submission -->
                                                 <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{{ '1' if row.flag_hotel else '' }}">
                                                 <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{{ '1' if row.flag_guide else '' }}">
@@ -1368,12 +1238,21 @@ body {
                                                 <input type="hidden" id="other_{{ loop.index0 }}_input" value="{{ row.hotel_other_rooms or 0 }}">
                                             </td>
                                             <td class="fw-bold">
-                                                {% if row.cost_unit == 'PER_PERSON' %}
-                                                    {{ "%.2f"|format(row.base_cost * request.pax) }}
-                                                {% else %}
-                                                    {{ "%.2f"|format(row.base_cost) }}
-                                                {% endif %}
-                                                {{ row.currency }}
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        {% if row.cost_unit == 'PER_PERSON' %}
+                                                            {{ "%.2f"|format(row.base_cost * request.pax) }}
+                                                        {% else %}
+                                                            {{ "%.2f"|format(row.base_cost) }}
+                                                        {% endif %}
+                                                        {{ row.currency }}
+                                                    </span>
+                                                    <button type="button" class="btn btn-xs btn-outline-primary ms-2" 
+                                                            onclick="openServiceSelectionModal({{ loop.index0 }})" 
+                                                            title="Add/Manage Services">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -2000,6 +1879,9 @@ function saveRoomDistribution() {
             const totalRooms = single + double + triple + other;
             const icon = hotelBadge.querySelector('i').outerHTML;
             hotelBadge.innerHTML = `${icon} Hotel${totalRooms > 0 ? ` (${totalRooms}r)` : ''}`;
+            // Ensure the click handler is maintained
+            hotelBadge.style.cursor = 'pointer';
+            hotelBadge.onclick = function() { openRoomDistributionModal(rowIndex); };
         }
     }
     
@@ -2104,7 +1986,7 @@ function addServiceBadgeDirect(container, service, rowIndex) {
     
     // Set badge classes based on service type
     const badgeClasses = {
-        hotel: 'badge bg-danger',
+        hotel: 'badge bg-danger clickable-hotel-badge',
         guide: 'badge bg-success',
         transport: 'badge bg-info',
         meal: 'badge bg-warning text-dark',
@@ -2113,8 +1995,10 @@ function addServiceBadgeDirect(container, service, rowIndex) {
     
     badge.className = badgeClasses[service] || 'badge bg-primary';
     
-    // Add room summary for hotel
+    // Add special handling for hotel
     if (service === 'hotel') {
+        badge.style.cursor = 'pointer';
+        badge.onclick = function() { openRoomDistributionModal(rowIndex); };
         badgeContent += ' (0r)';
     }
     
@@ -2246,7 +2130,7 @@ function addServiceBadge(container, service, rowIndex) {
     
     // Set badge classes based on service type
     const badgeClasses = {
-        hotel: 'badge bg-danger',
+        hotel: 'badge bg-danger clickable-hotel-badge',
         guide: 'badge bg-success',
         transport: 'badge bg-info',
         meal: 'badge bg-warning text-dark',
@@ -2255,8 +2139,11 @@ function addServiceBadge(container, service, rowIndex) {
     
     badge.className = badgeClasses[service] || 'badge bg-primary';
     
-    // Add room summary for hotel
+    // Add special handling for hotel
     if (service === 'hotel') {
+        badge.style.cursor = 'pointer';
+        badge.onclick = function() { openRoomDistributionModal(rowIndex); };
+        
         const single = document.getElementById(`single_${rowIndex}_input`)?.value || 0;
         const double = document.getElementById(`double_${rowIndex}_input`)?.value || 0;
         const triple = document.getElementById(`triple_${rowIndex}_input`)?.value || 0;

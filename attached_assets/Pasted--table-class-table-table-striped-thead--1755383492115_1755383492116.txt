@@ -1,0 +1,117 @@
+<table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Cost</th>
+                                    <th>Unit</th>
+                                    <th>Service Flags</th>
+                                    <th>Row Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                <tr>
+                                    <td>16 Aug 2025</td>
+                                    <td>Day 1 - Saturday, August 16</td>
+                                    <td>0.00 USD</td>
+                                    <td>
+                                        
+                                            <span class="badge bg-primary">Per Person</span>
+                                        
+                                    </td>
+                                    <td>
+                                        
+                                        
+                                        
+                                        
+                                        
+                                    </td>
+                                    <td class="fw-bold">
+                                        
+                                            0.00
+                                        
+                                        USD
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td>17 Aug 2025</td>
+                                    <td>Day 2 - Sunday, August 17</td>
+                                    <td>0.00 USD</td>
+                                    <td>
+                                        
+                                            <span class="badge bg-primary">Per Person</span>
+                                        
+                                    </td>
+                                    <td>
+                                        
+                                        
+                                        
+                                        
+                                        
+                                    </td>
+                                    <td class="fw-bold">
+                                        
+                                            0.00
+                                        
+                                        USD
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td>18 Aug 2025</td>
+                                    <td>Day 3 - Monday, August 18</td>
+                                    <td>0.00 USD</td>
+                                    <td>
+                                        
+                                            <span class="badge bg-primary">Per Person</span>
+                                        
+                                    </td>
+                                    <td>
+                                        
+                                        
+                                        
+                                        
+                                        
+                                    </td>
+                                    <td class="fw-bold">
+                                        
+                                            0.00
+                                        
+                                        USD
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td>19 Aug 2025</td>
+                                    <td>Day 4 - Tuesday, August 19</td>
+                                    <td>0.00 USD</td>
+                                    <td>
+                                        
+                                            <span class="badge bg-primary">Per Person</span>
+                                        
+                                    </td>
+                                    <td>
+                                        
+                                        
+                                        
+                                        
+                                        
+                                    </td>
+                                    <td class="fw-bold">
+                                        
+                                            0.00
+                                        
+                                        USD
+                                    </td>
+                                </tr>
+                                
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <td colspan="5" class="text-end"><strong>Total:</strong></td>
+                                    <td class="fw-bold">0.00 USD</td>
+                                </tr>
+                            </tfoot>
+                        </table>
