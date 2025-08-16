@@ -258,6 +258,171 @@ body {
     font-size: 0.75rem;
     padding: 0;
 }
+
+/* Modern Grid Styles */
+.service-toolbar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.service-toolbar-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.service-icons-bar {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.service-icon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    min-width: 80px;
+}
+
+.service-icon-item:hover {
+    border-color: #007bff;
+    background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+}
+
+.service-icon-item:active {
+    cursor: grabbing;
+}
+
+.service-icon-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.service-icon-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.service-icon-item[data-service="hotel"] i { color: #dc3545; }
+.service-icon-item[data-service="guide"] i { color: #28a745; }
+.service-icon-item[data-service="transport"] i { color: #17a2b8; }
+.service-icon-item[data-service="meal"] i { color: #ffc107; }
+.service-icon-item[data-service="airport"] i { color: #6f42c1; }
+
+/* Modern Table Styles */
+.itinerary-table-modern {
+    width: 100%;
+    min-width: 1000px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.itinerary-table-modern thead th {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    color: white;
+    font-weight: 700;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    font-size: 0.8rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.itinerary-row-modern {
+    border-bottom: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+}
+
+.itinerary-row-modern:hover {
+    background: linear-gradient(135deg, #f8f9fa, #fff);
+}
+
+.itinerary-row-modern.drag-over {
+    background: linear-gradient(135deg, #e3f2fd, #f0f8ff);
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.itinerary-row-modern td {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+}
+
+.date-input-modern, .description-input-modern, .cost-input-modern {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    padding: 0.375rem 0.5rem;
+}
+
+.currency-select-modern, .unit-select-modern {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+.services-cell {
+    background: #f8f9fa;
+}
+
+.service-badges-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.5rem;
+    border: 2px dashed #dee2e6;
+    border-radius: 6px;
+    align-items: center;
+}
+
+.service-badges-container.drag-over {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.service-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: relative;
+}
+
+.service-badge-hotel { background: #fff5f5; color: #dc3545; border: 1px solid #f5c6cb; }
+.service-badge-guide { background: #f0fff4; color: #28a745; border: 1px solid #c3e6cb; }
+.service-badge-transport { background: #e8f4f8; color: #17a2b8; border: 1px solid #b6e3f2; }
+.service-badge-meal { background: #fffbf0; color: #ffc107; border: 1px solid #ffeaa7; }
+.service-badge-airport { background: #f8f0ff; color: #6f42c1; border: 1px solid #e2d9f3; }
+
+.room-summary-inline {
+    font-size: 0.65rem;
+    color: #6c757d;
+    margin-left: 0.5rem;
+}
 </style>
 {% endblock %}
 
@@ -570,123 +735,142 @@ body {
 
                     <!-- Edit Mode Itinerary -->
                     <div id="itineraryEditMode" class="edit-mode-hidden">
+                        <!-- Service Icons Toolbar -->
+                        <div class="service-toolbar mb-3">
+                            <div class="service-toolbar-title">Drag services to days:</div>
+                            <div class="service-icons-bar">
+                                <div class="service-icon-item" draggable="true" data-service="hotel" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-bed"></i>
+                                    <span>Hotel</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="guide" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>Guide</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="transport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-car"></i>
+                                    <span>Transport</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="meal" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-utensils"></i>
+                                    <span>Meal</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="airport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-plane"></i>
+                                    <span>Airport</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive" style="overflow-x: auto;">
                             <form id="itineraryForm" onsubmit="saveItinerary(event)">
-                                <table class="itinerary-table">
+                                <table class="itinerary-table-modern">
                                     <thead>
                                         <tr>
                                             <th style="width: 130px;">Date</th>
-                                            <th style="width: 200px; min-width: 180px;">Description</th>
-                                            <th style="width: 90px;">Base Cost</th>
-                                            <th style="width: 80px;">Currency</th>
-                                            <th style="width: 100px;">Cost Unit</th>
-                                            <th style="width: 60px;">Hotel</th>
-                                            <th style="width: 60px;">Guide</th>
-                                            <th style="width: 60px;">Transport</th>
-                                            <th style="width: 60px;">Meal</th>
-                                            <th style="width: 60px;">Airport</th>
-                                            <th style="width: 100px;">Total</th>
+                                            <th style="width: 250px;">Description</th>
+                                            <th style="width: 90px;">Cost</th>
+                                            <th style="width: 80px;">Unit</th>
+                                            <th style="width: 300px;">Service Flags</th>
+                                            <th style="width: 100px;">Row Total</th>
                                             <th style="width: 60px;">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="itineraryTableBody">
                                         {% for row in request.itinerary_rows %}
-                                        <tr data-row-id="{{ row.id }}">
-                                            <td>
-                                                <input type="date" class="form-control date-input" 
+                                        <tr class="itinerary-row-modern" data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
+                                            <td class="date-cell">
+                                                <input type="date" class="form-control date-input-modern" 
                                                        name="date[]" 
                                                        value="{{ row.date.strftime('%Y-%m-%d') }}" 
                                                        onchange="updateRowTotal(this.closest('tr'))" 
                                                        required>
                                             </td>
-                                            <td>
-                                                <input type="text" class="form-control description-input" 
+                                            <td class="description-cell">
+                                                <input type="text" class="form-control description-input-modern" 
                                                        name="description[]" 
                                                        value="{{ row.description }}" 
                                                        placeholder="Enter description" 
                                                        required>
                                             </td>
-                                            <td>
-                                                <input type="number" class="form-control cost-input" 
+                                            <td class="cost-cell">
+                                                <input type="number" class="form-control cost-input-modern" 
                                                        name="base_cost[]" 
                                                        value="{{ row.base_cost }}" 
                                                        step="0.01" 
                                                        min="0" 
                                                        onchange="updateRowTotal(this.closest('tr'))" 
                                                        required>
-                                            </td>
-                                            <td>
-                                                <select class="form-select" name="currency[]" style="width: 80px; font-size: 0.75rem;">
+                                                <select class="form-select currency-select-modern" name="currency[]">
                                                     <option value="USD" {{ 'selected' if row.currency == 'USD' else '' }}>USD</option>
                                                     <option value="EUR" {{ 'selected' if row.currency == 'EUR' else '' }}>EUR</option>
                                                     <option value="JOD" {{ 'selected' if row.currency == 'JOD' else '' }}>JOD</option>
                                                     <option value="GBP" {{ 'selected' if row.currency == 'GBP' else '' }}>GBP</option>
                                                 </select>
                                             </td>
-                                            <td>
-                                                <select class="form-select" name="cost_unit[]" style="width: 100px; font-size: 0.75rem;" onchange="updateRowTotal(this.closest('tr'))">
+                                            <td class="unit-cell">
+                                                <select class="form-select unit-select-modern" name="cost_unit[]" onchange="updateRowTotal(this.closest('tr'))">
                                                     <option value="PER_PERSON" {{ 'selected' if row.cost_unit == 'PER_PERSON' else '' }}>Per Person</option>
                                                     <option value="PER_GROUP" {{ 'selected' if row.cost_unit == 'PER_GROUP' else '' }}>Per Group</option>
                                                 </select>
                                             </td>
-                                            <td class="text-center">
-                                                <div class="hotel-service-container">
-                                                    <input type="checkbox" class="service-flag" 
-                                                           name="flag_hotel_{{ loop.index0 }}" 
-                                                           value="1"
-                                                           onchange="toggleHotelRooms({{ loop.index0 }}, this.checked)"
-                                                           id="hotel_{{ loop.index0 }}"
-                                                           {{ 'checked' if row.flag_hotel else '' }}>
-                                                    <div class="hotel-room-controls" id="hotel_controls_{{ loop.index0 }}" style="{{ 'display: block;' if row.flag_hotel else 'display: none;' }}">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" 
-                                                                onclick="openRoomDistributionModal({{ loop.index0 }})" 
-                                                                title="Configure room distribution">
-                                                            <i class="fas fa-cog"></i> Rooms
-                                                        </button>
-                                                        <div class="room-summary mt-1" id="room_summary_{{ loop.index0 }}">
-                                                            <small class="room-summary-text">
-                                                                <b>S:</b><span id="single_{{ loop.index0 }}">{{ row.hotel_single_rooms or 0 }}</span> 
-                                                                <b>D:</b><span id="double_{{ loop.index0 }}">{{ row.hotel_double_rooms or 0 }}</span> 
-                                                                <b>T:</b><span id="triple_{{ loop.index0 }}">{{ row.hotel_triple_rooms or 0 }}</span> 
-                                                                <b>O:</b><span id="other_{{ loop.index0 }}">{{ row.hotel_other_rooms or 0 }}</span>
-                                                            </small>
-                                                        </div>
-                                                    </div>
+                                            <td class="services-cell">
+                                                <div class="service-badges-container" data-row-index="{{ loop.index0 }}">
+                                                    {% if row.flag_hotel %}
+                                                        <span class="service-badge service-badge-hotel" data-service="hotel">
+                                                            <i class="fas fa-bed"></i>
+                                                            <button type="button" class="btn btn-xs btn-outline-primary ms-1" 
+                                                                    onclick="openRoomDistributionModal({{ loop.index0 }})" 
+                                                                    title="Configure rooms">
+                                                                <i class="fas fa-cog"></i>
+                                                            </button>
+                                                            <div class="room-summary-inline">
+                                                                S:<span id="single_{{ loop.index0 }}">{{ row.hotel_single_rooms or 0 }}</span>
+                                                                D:<span id="double_{{ loop.index0 }}">{{ row.hotel_double_rooms or 0 }}</span>
+                                                                T:<span id="triple_{{ loop.index0 }}">{{ row.hotel_triple_rooms or 0 }}</span>
+                                                                O:<span id="other_{{ loop.index0 }}">{{ row.hotel_other_rooms or 0 }}</span>
+                                                            </div>
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if row.flag_guide %}
+                                                        <span class="service-badge service-badge-guide" data-service="guide">
+                                                            <i class="fas fa-user-tie"></i>
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if row.flag_transport %}
+                                                        <span class="service-badge service-badge-transport" data-service="transport">
+                                                            <i class="fas fa-car"></i>
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if row.flag_meal %}
+                                                        <span class="service-badge service-badge-meal" data-service="meal">
+                                                            <i class="fas fa-utensils"></i>
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if row.flag_airport %}
+                                                        <span class="service-badge service-badge-airport" data-service="airport">
+                                                            <i class="fas fa-plane"></i>
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                <!-- Hidden inputs for form submission -->
+                                                <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{{ '1' if row.flag_hotel else '' }}">
+                                                <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{{ '1' if row.flag_guide else '' }}">
+                                                <input type="hidden" name="flag_transport_{{ loop.index0 }}" value="{{ '1' if row.flag_transport else '' }}">
+                                                <input type="hidden" name="flag_meal_{{ loop.index0 }}" value="{{ '1' if row.flag_meal else '' }}">
+                                                <input type="hidden" name="flag_airport_{{ loop.index0 }}" value="{{ '1' if row.flag_airport else '' }}">
+                                            </td>
+                                            <td class="total-cell">
+                                                <div class="row-total fw-bold">
+                                                    {% if row.cost_unit == 'PER_PERSON' %}
+                                                        {{ "%.2f"|format(row.base_cost * request.pax) }}
+                                                    {% else %}
+                                                        {{ "%.2f"|format(row.base_cost) }}
+                                                    {% endif %}
+                                                    {{ row.currency }}
                                                 </div>
                                             </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" class="service-flag" 
-                                                       name="flag_guide_{{ loop.index0 }}" 
-                                                       value="1"
-                                                       {{ 'checked' if row.flag_guide else '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" class="service-flag" 
-                                                       name="flag_transport_{{ loop.index0 }}" 
-                                                       value="1"
-                                                       {{ 'checked' if row.flag_transport else '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" class="service-flag" 
-                                                       name="flag_meal_{{ loop.index0 }}" 
-                                                       value="1"
-                                                       {{ 'checked' if row.flag_meal else '' }}>
-                                            </td>
-                                            <td class="text-center">
-                                                <input type="checkbox" class="service-flag" 
-                                                       name="flag_airport_{{ loop.index0 }}" 
-                                                       value="1"
-                                                       {{ 'checked' if row.flag_airport else '' }}>
-                                            </td>
-                                            <td class="row-total fw-bold">
-                                                {% if row.cost_unit == 'PER_PERSON' %}
-                                                    {{ "%.2f"|format(row.base_cost * request.pax) }}
-                                                {% else %}
-                                                    {{ "%.2f"|format(row.base_cost) }}
-                                                {% endif %}
-                                                {{ row.currency }}
-                                            </td>
-                                            <td class="text-center">
+                                            <td class="actions-cell">
                                                 <button type="button" class="btn btn-sm btn-danger" 
                                                         onclick="removeItineraryRow(this)" 
                                                         title="Remove Row">
@@ -1218,6 +1402,139 @@ function saveRoomDistribution() {
     // Show success message
     showNotification('Room distribution updated successfully!', 'success');
 }
+
+// Drag and Drop functionality
+let draggedService = null;
+
+function handleDragStart(event) {
+    draggedService = event.target.getAttribute('data-service');
+    event.dataTransfer.effectAllowed = 'copy';
+    event.target.style.opacity = '0.5';
+}
+
+function handleDragEnd(event) {
+    event.target.style.opacity = '1';
+    draggedService = null;
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    const row = event.currentTarget;
+    row.classList.add('drag-over');
+}
+
+function handleDragLeave(event) {
+    const row = event.currentTarget;
+    row.classList.remove('drag-over');
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    const row = event.currentTarget;
+    row.classList.remove('drag-over');
+    
+    if (!draggedService) return;
+    
+    const rowIndex = row.getAttribute('data-row-index');
+    const servicesContainer = row.querySelector('.service-badges-container');
+    
+    // Check if service already exists
+    const existingBadge = servicesContainer.querySelector(`[data-service="${draggedService}"]`);
+    if (existingBadge) {
+        showNotification('Service already exists for this day', 'warning');
+        return;
+    }
+    
+    // Add service badge
+    addServiceBadge(servicesContainer, draggedService, rowIndex);
+    
+    // Update hidden input
+    updateServiceInput(rowIndex, draggedService, true);
+    
+    showNotification(`${capitalizeFirst(draggedService)} service added to day`, 'success');
+}
+
+function addServiceBadge(container, service, rowIndex) {
+    const badge = document.createElement('span');
+    badge.className = `service-badge service-badge-${service}`;
+    badge.setAttribute('data-service', service);
+    
+    const icon = getServiceIcon(service);
+    let badgeContent = `<i class="${icon}"></i>`;
+    
+    // Add special controls for hotel service
+    if (service === 'hotel') {
+        badgeContent += `
+            <button type="button" class="btn btn-xs btn-outline-primary ms-1" 
+                    onclick="openRoomDistributionModal(${rowIndex})" 
+                    title="Configure rooms">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="room-summary-inline">
+                S:<span id="single_${rowIndex}">0</span>
+                D:<span id="double_${rowIndex}">0</span>
+                T:<span id="triple_${rowIndex}">0</span>
+                O:<span id="other_${rowIndex}">0</span>
+            </div>
+        `;
+    }
+    
+    // Add remove button
+    badgeContent += `<button type="button" class="btn btn-xs btn-outline-danger ms-1" 
+                            onclick="removeService(${rowIndex}, '${service}')" 
+                            title="Remove service">
+                        <i class="fas fa-times"></i>
+                     </button>`;
+    
+    badge.innerHTML = badgeContent;
+    container.appendChild(badge);
+}
+
+function removeService(rowIndex, service) {
+    const container = document.querySelector(`[data-row-index="${rowIndex}"] .service-badges-container`);
+    const badge = container.querySelector(`[data-service="${service}"]`);
+    if (badge) {
+        badge.remove();
+        updateServiceInput(rowIndex, service, false);
+        showNotification(`${capitalizeFirst(service)} service removed`, 'info');
+    }
+}
+
+function updateServiceInput(rowIndex, service, isActive) {
+    const input = document.querySelector(`input[name="flag_${service}_${rowIndex}"]`);
+    if (input) {
+        input.value = isActive ? '1' : '';
+    }
+}
+
+function getServiceIcon(service) {
+    const icons = {
+        hotel: 'fas fa-bed',
+        guide: 'fas fa-user-tie',
+        transport: 'fas fa-car',
+        meal: 'fas fa-utensils',
+        airport: 'fas fa-plane'
+    };
+    return icons[service] || 'fas fa-question';
+}
+
+function capitalizeFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Add event listeners when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add drag end listeners to service icons
+    document.querySelectorAll('.service-icon-item').forEach(item => {
+        item.addEventListener('dragend', handleDragEnd);
+    });
+    
+    // Add drag leave listeners to rows
+    document.querySelectorAll('.itinerary-row-modern').forEach(row => {
+        row.addEventListener('dragleave', handleDragLeave);
+    });
+});
 
 // Calculate Days Function
 function calculateDays() {
