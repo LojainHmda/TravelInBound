@@ -142,6 +142,50 @@ def api_update_request(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+# API Route for saving itinerary
+@inbound_bp.route('/api/<int:request_id>/save-itinerary', methods=['POST'])
+@login_required
+def api_save_itinerary(request_id):
+    """Save itinerary data for inbound request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        rows_data = data.get('rows', [])
+        
+        # Clear existing itinerary rows
+        ItineraryRow.query.filter_by(request_id=request_id).delete()
+        
+        # Add new rows
+        for i, row_data in enumerate(rows_data):
+            row = ItineraryRow(
+                request_id=request_id,
+                date=datetime.strptime(row_data['date'], '%Y-%m-%d').date(),
+                description=row_data['description'],
+                base_cost=row_data['base_cost'],
+                currency=row_data['currency'],
+                cost_unit=row_data['cost_unit'],
+                flag_hotel=row_data.get('flag_hotel', False),
+                flag_guide=row_data.get('flag_guide', False),
+                flag_transport=row_data.get('flag_transport', False),
+                flag_meal=row_data.get('flag_meal', False),
+                flag_airport=row_data.get('flag_airport', False)
+            )
+            db.session.add(row)
+        
+        # Recalculate totals
+        request_obj.calculate_total()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 # API Routes for AJAX operations
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['GET'])
 @login_required
@@ -177,8 +221,8 @@ def api_get_itinerary(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['POST'])
 @login_required
-def api_save_itinerary(request_id):
-    """Save itinerary rows for a request"""
+def api_save_itinerary_original(request_id):
+    """Save itinerary rows for a request (original version)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:

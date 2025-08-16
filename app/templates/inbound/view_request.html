@@ -146,6 +146,12 @@ body {
     color: #8b7355;
     border: 2px solid #8b7355;
 }
+
+.btn-warning:hover {
+    background: #e6d192;
+    color: #6b5a42;
+    transform: translateY(-2px);
+}
 </style>
 {% endblock %}
 
@@ -188,6 +194,11 @@ body {
             <button type="button" class="btn btn-primary me-2" onclick="toggleEditMode()">
                 <i class="fas fa-edit"></i> <span id="editModeText">Edit</span>
             </button>
+            {% if request.itinerary_rows %}
+            <button type="button" class="btn btn-warning me-2" onclick="toggleItineraryEditMode()">
+                <i class="fas fa-table"></i> <span id="itineraryEditModeText">Edit Itinerary</span>
+            </button>
+            {% endif %}
             <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
@@ -450,12 +461,141 @@ body {
                             </tfoot>
                         </table>
                     </div>
+
+                    <!-- Edit Mode Itinerary -->
+                    <div id="itineraryEditMode" class="edit-mode-hidden">
+                        <div class="table-responsive" style="overflow-x: auto;">
+                            <form id="itineraryForm" onsubmit="saveItinerary(event)">
+                                <table class="itinerary-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 130px;">Date</th>
+                                            <th style="width: 200px; min-width: 180px;">Description</th>
+                                            <th style="width: 90px;">Base Cost</th>
+                                            <th style="width: 80px;">Currency</th>
+                                            <th style="width: 100px;">Cost Unit</th>
+                                            <th style="width: 60px;">Hotel</th>
+                                            <th style="width: 60px;">Guide</th>
+                                            <th style="width: 60px;">Transport</th>
+                                            <th style="width: 60px;">Meal</th>
+                                            <th style="width: 60px;">Airport</th>
+                                            <th style="width: 100px;">Total</th>
+                                            <th style="width: 60px;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itineraryTableBody">
+                                        {% for row in request.itinerary_rows %}
+                                        <tr data-row-id="{{ row.id }}">
+                                            <td>
+                                                <input type="date" class="form-control date-input" 
+                                                       name="date[]" 
+                                                       value="{{ row.date.strftime('%Y-%m-%d') }}" 
+                                                       onchange="updateRowTotal(this.closest('tr'))" 
+                                                       required>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control description-input" 
+                                                       name="description[]" 
+                                                       value="{{ row.description }}" 
+                                                       placeholder="Enter description" 
+                                                       required>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control cost-input" 
+                                                       name="base_cost[]" 
+                                                       value="{{ row.base_cost }}" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       onchange="updateRowTotal(this.closest('tr'))" 
+                                                       required>
+                                            </td>
+                                            <td>
+                                                <select class="form-select" name="currency[]" style="width: 80px; font-size: 0.75rem;">
+                                                    <option value="USD" {{ 'selected' if row.currency == 'USD' else '' }}>USD</option>
+                                                    <option value="EUR" {{ 'selected' if row.currency == 'EUR' else '' }}>EUR</option>
+                                                    <option value="JOD" {{ 'selected' if row.currency == 'JOD' else '' }}>JOD</option>
+                                                    <option value="GBP" {{ 'selected' if row.currency == 'GBP' else '' }}>GBP</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select" name="cost_unit[]" style="width: 100px; font-size: 0.75rem;" onchange="updateRowTotal(this.closest('tr'))">
+                                                    <option value="PER_PERSON" {{ 'selected' if row.cost_unit == 'PER_PERSON' else '' }}>Per Person</option>
+                                                    <option value="PER_GROUP" {{ 'selected' if row.cost_unit == 'PER_GROUP' else '' }}>Per Group</option>
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="service-flag" 
+                                                       name="flag_hotel_{{ loop.index0 }}" 
+                                                       value="1"
+                                                       {{ 'checked' if row.flag_hotel else '' }}>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="service-flag" 
+                                                       name="flag_guide_{{ loop.index0 }}" 
+                                                       value="1"
+                                                       {{ 'checked' if row.flag_guide else '' }}>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="service-flag" 
+                                                       name="flag_transport_{{ loop.index0 }}" 
+                                                       value="1"
+                                                       {{ 'checked' if row.flag_transport else '' }}>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="service-flag" 
+                                                       name="flag_meal_{{ loop.index0 }}" 
+                                                       value="1"
+                                                       {{ 'checked' if row.flag_meal else '' }}>
+                                            </td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="service-flag" 
+                                                       name="flag_airport_{{ loop.index0 }}" 
+                                                       value="1"
+                                                       {{ 'checked' if row.flag_airport else '' }}>
+                                            </td>
+                                            <td class="row-total fw-bold">
+                                                {% if row.cost_unit == 'PER_PERSON' %}
+                                                    {{ "%.2f"|format(row.base_cost * request.pax) }}
+                                                {% else %}
+                                                    {{ "%.2f"|format(row.base_cost) }}
+                                                {% endif %}
+                                                {{ row.currency }}
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger" 
+                                                        onclick="removeItineraryRow(this)" 
+                                                        title="Remove Row">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="12" class="text-center">
+                                                <button type="button" class="btn btn-info btn-sm me-2" onclick="addItineraryRow()">
+                                                    <i class="fas fa-plus"></i> Add Day
+                                                </button>
+                                                <button type="submit" class="btn btn-success btn-sm me-2">
+                                                    <i class="fas fa-save"></i> Save Itinerary
+                                                </button>
+                                                <button type="button" class="btn btn-secondary btn-sm" onclick="cancelItineraryEdit()">
+                                                    <i class="fas fa-times"></i> Cancel
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
                     {% else %}
                     <div class="text-center py-5 text-muted">
                         <i class="fas fa-list fa-3x mb-3"></i>
                         <h5>No Itinerary Items</h5>
                         <p>No itinerary has been created for this request yet.</p>
-                        <button type="button" class="btn btn-primary" onclick="toggleEditMode()">
+                        <button type="button" class="btn btn-primary" onclick="toggleItineraryEditMode()">
                             <i class="fas fa-plus"></i> Add Itinerary
                         </button>
                     </div>
@@ -801,6 +941,193 @@ function calculateDays() {
         // Display calculated days (you can add a display element if needed)
         console.log('Calculated days:', days);
     }
+}
+
+// Toggle Itinerary Edit Mode Function
+let isItineraryEditMode = false;
+
+function toggleItineraryEditMode() {
+    isItineraryEditMode = !isItineraryEditMode;
+    
+    if (isItineraryEditMode) {
+        // Show itinerary edit mode, hide itinerary view mode
+        document.getElementById('itineraryViewMode').classList.add('edit-mode-hidden');
+        document.getElementById('itineraryEditMode').classList.remove('edit-mode-hidden');
+        document.getElementById('itineraryEditModeText').textContent = 'Cancel Itinerary Edit';
+    } else {
+        // Show itinerary view mode, hide itinerary edit mode
+        document.getElementById('itineraryViewMode').classList.remove('edit-mode-hidden');
+        document.getElementById('itineraryEditMode').classList.add('edit-mode-hidden');
+        document.getElementById('itineraryEditModeText').textContent = 'Edit Itinerary';
+    }
+}
+
+// Cancel Itinerary Edit Function
+function cancelItineraryEdit() {
+    // Reset form to original values
+    const form = document.getElementById('itineraryForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Toggle back to view mode
+    toggleItineraryEditMode();
+}
+
+// Add Itinerary Row Function
+function addItineraryRow() {
+    const tbody = document.getElementById('itineraryTableBody');
+    const rowCount = tbody.children.length;
+    
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <input type="date" class="form-control date-input" 
+                   name="date[]" 
+                   onchange="updateRowTotal(this.closest('tr'))" 
+                   required>
+        </td>
+        <td>
+            <input type="text" class="form-control description-input" 
+                   name="description[]" 
+                   placeholder="Enter description" 
+                   required>
+        </td>
+        <td>
+            <input type="number" class="form-control cost-input" 
+                   name="base_cost[]" 
+                   value="0.00" 
+                   step="0.01" 
+                   min="0" 
+                   onchange="updateRowTotal(this.closest('tr'))" 
+                   required>
+        </td>
+        <td>
+            <select class="form-select" name="currency[]" style="width: 80px; font-size: 0.75rem;">
+                <option value="USD" selected>USD</option>
+                <option value="EUR">EUR</option>
+                <option value="JOD">JOD</option>
+                <option value="GBP">GBP</option>
+            </select>
+        </td>
+        <td>
+            <select class="form-select" name="cost_unit[]" style="width: 100px; font-size: 0.75rem;" onchange="updateRowTotal(this.closest('tr'))">
+                <option value="PER_PERSON" selected>Per Person</option>
+                <option value="PER_GROUP">Per Group</option>
+            </select>
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="service-flag" name="flag_hotel_${rowCount}" value="1">
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="service-flag" name="flag_guide_${rowCount}" value="1">
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="service-flag" name="flag_transport_${rowCount}" value="1">
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="service-flag" name="flag_meal_${rowCount}" value="1">
+        </td>
+        <td class="text-center">
+            <input type="checkbox" class="service-flag" name="flag_airport_${rowCount}" value="1">
+        </td>
+        <td class="row-total fw-bold">0.00 USD</td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-danger" 
+                    onclick="removeItineraryRow(this)" 
+                    title="Remove Row">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(newRow);
+}
+
+// Remove Itinerary Row Function
+function removeItineraryRow(button) {
+    const row = button.closest('tr');
+    if (confirm('Are you sure you want to remove this itinerary row?')) {
+        row.remove();
+    }
+}
+
+// Update Row Total Function
+function updateRowTotal(row) {
+    const baseCostInput = row.querySelector('input[name="base_cost[]"]');
+    const costUnitSelect = row.querySelector('select[name="cost_unit[]"]');
+    const currencySelect = row.querySelector('select[name="currency[]"]');
+    const totalCell = row.querySelector('.row-total');
+    
+    const baseCost = parseFloat(baseCostInput.value) || 0;
+    const costUnit = costUnitSelect.value;
+    const currency = currencySelect.value;
+    const pax = {{ request.pax }};
+    
+    let total = baseCost;
+    if (costUnit === 'PER_PERSON') {
+        total = baseCost * pax;
+    }
+    
+    totalCell.textContent = `${total.toFixed(2)} ${currency}`;
+}
+
+// Save Itinerary Function
+function saveItinerary(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Collect itinerary data
+    const rows = [];
+    const dates = formData.getAll('date[]');
+    const descriptions = formData.getAll('description[]');
+    const baseCosts = formData.getAll('base_cost[]');
+    const currencies = formData.getAll('currency[]');
+    const costUnits = formData.getAll('cost_unit[]');
+    
+    for (let i = 0; i < dates.length; i++) {
+        const rowData = {
+            date: dates[i],
+            description: descriptions[i],
+            base_cost: parseFloat(baseCosts[i]),
+            currency: currencies[i],
+            cost_unit: costUnits[i],
+            flag_hotel: formData.get(`flag_hotel_${i}`) ? true : false,
+            flag_guide: formData.get(`flag_guide_${i}`) ? true : false,
+            flag_transport: formData.get(`flag_transport_${i}`) ? true : false,
+            flag_meal: formData.get(`flag_meal_${i}`) ? true : false,
+            flag_airport: formData.get(`flag_airport_${i}`) ? true : false
+        };
+        rows.push(rowData);
+    }
+    
+    // Send update request
+    fetch('/inbound/api/{{ request.id }}/save-itinerary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({rows: rows})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Itinerary saved successfully!', 'success');
+            // Reload page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving itinerary', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving itinerary', 'error');
+    });
 }
 
 // Show Notification Function
