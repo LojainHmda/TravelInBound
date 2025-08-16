@@ -71,9 +71,9 @@ def new_request():
     db.session.add(request_obj)
     db.session.commit()
     
-    # Redirect to edit page which has the full itinerary interface
+    # Redirect to view page which now has unified edit functionality
     flash(f'New inbound request {request_obj.request_number} created. Please fill in the details.', 'info')
-    return redirect(url_for('inbound.edit_request', id=request_obj.id))
+    return redirect(url_for('inbound.view_request', id=request_obj.id))
 
 @inbound_bp.route('/<int:id>/edit')
 @login_required
@@ -94,13 +94,53 @@ def edit_request(id):
 
 @inbound_bp.route('/<int:id>/view')
 def view_request(id):
-    """View inbound request details"""
+    """View inbound request details with unified edit functionality"""
     request_obj = InboundRequest.query.get_or_404(id)
     
     # Temporarily disabled ownership check for testing
     # Ownership validation removed for voucher access
     
     return render_template('inbound/view_request.html', request=request_obj)
+
+# API Route for updating request details
+@inbound_bp.route('/api/<int:request_id>/update', methods=['POST'])
+@login_required
+def api_update_request(request_id):
+    """Update inbound request master details"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        
+        # Update master details
+        request_obj.agent = data.get('agent', request_obj.agent)
+        request_obj.contact_name = data.get('contact_name', request_obj.contact_name)
+        request_obj.agent_ref = data.get('agent_ref', request_obj.agent_ref)
+        request_obj.nationality = data.get('nationality', request_obj.nationality)
+        request_obj.pax = int(data.get('pax', request_obj.pax))
+        request_obj.special_note = data.get('special_note', request_obj.special_note)
+        
+        # Update dates
+        from_date_str = data.get('from_date')
+        to_date_str = data.get('to_date')
+        if from_date_str:
+            request_obj.from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        if to_date_str:
+            request_obj.to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        
+        # Recalculate days if dates changed
+        if from_date_str or to_date_str:
+            request_obj.calculate_days()
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Request updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # API Routes for AJAX operations
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['GET'])

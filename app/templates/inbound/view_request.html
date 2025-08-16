@@ -2,6 +2,153 @@
 
 {% block title %}View Inbound Request - {{ request.request_number }}{% endblock %}
 
+{% block styles %}
+<style>
+/* Modern Premium Design Styles */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.container-fluid {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Edit Mode Toggle Styles */
+.edit-mode-hidden {
+    display: none !important;
+}
+
+.edit-mode-shown {
+    display: block !important;
+}
+
+/* Form Styles */
+.form-label {
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.625rem 0.875rem;
+    transition: all 0.3s ease;
+    background: white;
+    font-size: 0.875rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+/* Itinerary Table Styles */
+.itinerary-table {
+    width: 100%;
+    min-width: 1800px;
+    font-size: 0.85rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.itinerary-table thead th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 700;
+    padding: 1rem 0.75rem;
+    text-align: center;
+    font-size: 0.8rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border: none;
+}
+
+.itinerary-table tbody td {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.itinerary-table tbody tr:hover {
+    background: linear-gradient(135deg, #f8fafc, #fff);
+}
+
+.service-flag {
+    width: 20px;
+    height: 20px;
+    transform: scale(1.2);
+}
+
+.cost-input {
+    width: 90px;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+}
+
+.description-input {
+    min-width: 180px;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+}
+
+.date-input {
+    width: 130px;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.5rem;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary {
+    background: #efdea4;
+    color: #8b7355;
+    border: 2px solid #8b7355;
+}
+
+.btn-primary:hover {
+    background: #e6d192;
+    color: #6b5a42;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    color: white;
+}
+
+.btn-warning {
+    background: #efdea4;
+    color: #8b7355;
+    border: 2px solid #8b7355;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid">
     <!-- Header -->
@@ -38,9 +185,9 @@
                 <i class="fas fa-plus-circle"></i> Create Booking
             </button>
             
-            <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-primary me-2">
-                <i class="fas fa-edit"></i> Edit
-            </a>
+            <button type="button" class="btn btn-primary me-2" onclick="toggleEditMode()">
+                <i class="fas fa-edit"></i> <span id="editModeText">Edit</span>
+            </button>
             <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
@@ -55,64 +202,121 @@
                     <h5 class="card-title mb-0">Request Information</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Request Number:</strong><br>
-                            <span class="text-primary">{{ request.request_number }}</span>
+                    <!-- View Mode -->
+                    <div id="viewMode">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Request Number:</strong><br>
+                                <span class="text-primary">{{ request.request_number }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>Status:</strong><br>
+                                {% if request.status == 'REQUEST' %}
+                                    <span class="badge bg-warning">Request</span>
+                                {% elif request.status == 'BOOKED' %}
+                                    <span class="badge bg-info">Booked</span>
+                                {% elif request.status == 'IN_PROGRESS' %}
+                                    <span class="badge bg-primary">In Progress</span>
+                                {% elif request.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Status:</strong><br>
-                            {% if request.status == 'REQUEST' %}
-                                <span class="badge bg-warning">Request</span>
-                            {% elif request.status == 'BOOKED' %}
-                                <span class="badge bg-info">Booked</span>
-                            {% elif request.status == 'IN_PROGRESS' %}
-                                <span class="badge bg-primary">In Progress</span>
-                            {% elif request.status == 'CONFIRMED' %}
-                                <span class="badge bg-success">Confirmed</span>
-                            {% endif %}
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Agent:</strong><br>
+                                {{ request.agent }}
+                            </div>
+                            <div class="col-6">
+                                <strong>Contact Name:</strong><br>
+                                {{ request.contact_name }}
+                            </div>
                         </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Agent Reference:</strong><br>
+                                {{ request.agent_ref or '-' }}
+                            </div>
+                            <div class="col-6">
+                                <strong>Nationality:</strong><br>
+                                {{ request.nationality }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Travel Dates:</strong><br>
+                                {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
+                            </div>
+                            <div class="col-6">
+                                <strong>Duration & Pax:</strong><br>
+                                {{ request.no_of_days }} days | {{ request.pax }} pax
+                            </div>
+                        </div>
+
+                        {% if request.special_note %}
+                        <div class="mb-3">
+                            <strong>Special Notes:</strong><br>
+                            <div class="bg-light p-2 rounded">{{ request.special_note }}</div>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Agent:</strong><br>
-                            {{ request.agent }}
+                    <!-- Edit Mode -->
+                    <form id="editMode" class="edit-mode-hidden" onsubmit="saveChanges(event)">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Agent</label>
+                                <input type="text" class="form-control" name="agent" value="{{ request.agent }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Contact Name</label>
+                                <input type="text" class="form-control" name="contact_name" value="{{ request.contact_name }}" required>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Contact Name:</strong><br>
-                            {{ request.contact_name }}
-                        </div>
-                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Agent Reference:</strong><br>
-                            {{ request.agent_ref or '-' }}
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Agent Reference</label>
+                                <input type="text" class="form-control" name="agent_ref" value="{{ request.agent_ref or '' }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Nationality</label>
+                                <input type="text" class="form-control" name="nationality" value="{{ request.nationality }}" required>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Nationality:</strong><br>
-                            {{ request.nationality }}
-                        </div>
-                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Travel Dates:</strong><br>
-                            {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
+                        <div class="row mb-3">
+                            <div class="col-4">
+                                <label class="form-label">From Date</label>
+                                <input type="date" class="form-control" name="from_date" value="{{ request.from_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">To Date</label>
+                                <input type="date" class="form-control" name="to_date" value="{{ request.to_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Pax</label>
+                                <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <strong>Duration & Pax:</strong><br>
-                            {{ request.no_of_days }} days | {{ request.pax }} pax
-                        </div>
-                    </div>
 
-                    {% if request.special_note %}
-                    <div class="mb-3">
-                        <strong>Special Notes:</strong><br>
-                        <div class="bg-light p-2 rounded">{{ request.special_note }}</div>
-                    </div>
-                    {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label">Special Notes</label>
+                            <textarea class="form-control" name="special_note" rows="3">{{ request.special_note or '' }}</textarea>
+                        </div>
+
+                        <div id="editModeButtons" class="d-flex gap-2 edit-mode-hidden">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -184,7 +388,8 @@
                 </div>
                 <div class="card-body">
                     {% if request.itinerary_rows %}
-                    <div class="table-responsive">
+                    <!-- View Mode Itinerary -->
+                    <div id="itineraryViewMode" class="table-responsive">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
@@ -250,9 +455,9 @@
                         <i class="fas fa-list fa-3x mb-3"></i>
                         <h5>No Itinerary Items</h5>
                         <p>No itinerary has been created for this request yet.</p>
-                        <a href="{{ url_for('inbound.edit_request', id=request.id) }}" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary" onclick="toggleEditMode()">
                             <i class="fas fa-plus"></i> Add Itinerary
-                        </a>
+                        </button>
                     </div>
                     {% endif %}
                 </div>
@@ -509,6 +714,93 @@ function createBooking() {
         console.error('Error:', error);
         showNotification('Error creating booking', 'error');
     });
+}
+
+// Toggle Edit Mode Function
+let isEditMode = false;
+
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    
+    if (isEditMode) {
+        // Show edit mode, hide view mode
+        document.getElementById('viewMode').classList.add('edit-mode-hidden');
+        document.getElementById('editMode').classList.remove('edit-mode-hidden');
+        document.getElementById('editModeButtons').classList.remove('edit-mode-hidden');
+        document.getElementById('editModeText').textContent = 'Cancel';
+    } else {
+        // Show view mode, hide edit mode
+        document.getElementById('viewMode').classList.remove('edit-mode-hidden');
+        document.getElementById('editMode').classList.add('edit-mode-hidden');
+        document.getElementById('editModeButtons').classList.add('edit-mode-hidden');
+        document.getElementById('editModeText').textContent = 'Edit';
+    }
+}
+
+// Cancel Edit Function
+function cancelEdit() {
+    // Reset form to original values
+    const form = document.getElementById('editMode');
+    form.reset();
+    
+    // Toggle back to view mode
+    toggleEditMode();
+}
+
+// Save Changes Function
+function saveChanges(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    // Convert FormData to JSON
+    const data = {};
+    formData.forEach((value, key) => {
+        data[key] = value;
+    });
+    
+    // Send update request
+    fetch('/inbound/api/{{ request.id }}/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Changes saved successfully!', 'success');
+            // Reload page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving changes', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving changes', 'error');
+    });
+}
+
+// Calculate Days Function
+function calculateDays() {
+    const fromDate = document.querySelector('input[name="from_date"]').value;
+    const toDate = document.querySelector('input[name="to_date"]').value;
+    
+    if (fromDate && toDate) {
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        const timeDiff = to.getTime() - from.getTime();
+        const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        
+        // Display calculated days (you can add a display element if needed)
+        console.log('Calculated days:', days);
+    }
 }
 
 // Show Notification Function
