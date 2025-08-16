@@ -431,6 +431,145 @@ body {
     transition: all 0.2s ease;
 }
 
+/* Compact Service Selection Bar */
+.service-selection-bar {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.service-bar-title {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.service-icons-horizontal {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.service-icon-item {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 0.75rem;
+    cursor: grab;
+    transition: all 0.3s ease;
+    min-width: 70px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.service-icon-item:hover {
+    background: white;
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.service-icon-item:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.service-icon-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.service-icon-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.service-icon-item[data-service="hotel"] i { color: #ef4444; }
+.service-icon-item[data-service="guide"] i { color: #10b981; }
+.service-icon-item[data-service="transport"] i { color: #06b6d4; }
+.service-icon-item[data-service="meal"] i { color: #f59e0b; }
+.service-icon-item[data-service="airport"] i { color: #8b5cf6; }
+
+/* Service Selection Modal Grid */
+.service-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    padding: 0.5rem;
+}
+
+.service-option {
+    position: relative;
+    text-align: center;
+}
+
+.service-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.service-option-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+}
+
+.service-option-label:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    transform: translateY(-2px);
+}
+
+.service-option input:checked + .service-option-label {
+    border-color: #3b82f6;
+    background: #dbeafe;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.service-option-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.hotel-icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.guide-icon { background: linear-gradient(135deg, #10b981, #059669); }
+.transport-icon { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.meal-icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.airport-icon { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.service-option-label span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
 /* Beautiful Compact Table */
 .itinerary-table-compact {
     width: 100%;
@@ -1076,6 +1215,34 @@ body {
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
+                        <!-- Compact Service Selection Bar -->
+                        <div class="service-selection-bar mb-3">
+                            <div class="service-bar-title">
+                                <i class="fas fa-hand-paper me-2"></i>Drag services to rows:
+                            </div>
+                            <div class="service-icons-horizontal">
+                                <div class="service-icon-item" draggable="true" data-service="hotel" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-bed"></i>
+                                    <span>Hotel</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="guide" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>Guide</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="transport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-car"></i>
+                                    <span>Transport</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="meal" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-utensils"></i>
+                                    <span>Meal</span>
+                                </div>
+                                <div class="service-icon-item" draggable="true" data-service="airport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-plane"></i>
+                                    <span>Airport</span>
+                                </div>
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <form id="itineraryForm" onsubmit="saveItinerary(event)">
                                 <table class="table table-striped">
@@ -1091,7 +1258,8 @@ body {
                                     </thead>
                                     <tbody id="itineraryTableBody">
                                         {% for row in request.itinerary_rows %}
-                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}">
+                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" 
+                                            ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
                                             <td>
                                                 {{ row.date.strftime('%d %b %Y') }}
                                                 <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
@@ -1429,24 +1597,60 @@ body {
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="service-options">
-                    <div class="service-option mb-3" data-service="hotel">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="serviceHotel" onchange="toggleHotelControls()">
-                            <label class="form-check-label" for="serviceHotel">
-                                <i class="fas fa-bed text-danger me-2"></i>
-                                Hotel
-                            </label>
-                        </div>
-                        <div class="hotel-controls d-none mt-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="openRoomDistributionFromService()">
-                                <i class="fas fa-cog me-1"></i> Configure Rooms
-                            </button>
-                            <div class="room-summary-small mt-1">
-                                <small class="text-muted">
-                                    Rooms: S:<span id="modalSingle">0</span> D:<span id="modalDouble">0</span> 
-                                    T:<span id="modalTriple">0</span> O:<span id="modalOther">0</span>
-                                </small>
+                <div class="service-selection-grid">
+                    <div class="service-option">
+                        <input class="form-check-input" type="checkbox" id="serviceHotel">
+                        <label class="service-option-label" for="serviceHotel">
+                            <div class="service-option-icon hotel-icon">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                            <span>Hotel</span>
+                        </label>
+                    </div>
+                    <div class="service-option">
+                        <input class="form-check-input" type="checkbox" id="serviceGuide">
+                        <label class="service-option-label" for="serviceGuide">
+                            <div class="service-option-icon guide-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <span>Guide</span>
+                        </label>
+                    </div>
+                    <div class="service-option">
+                        <input class="form-check-input" type="checkbox" id="serviceTransport">
+                        <label class="service-option-label" for="serviceTransport">
+                            <div class="service-option-icon transport-icon">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <span>Transport</span>
+                        </label>
+                    </div>
+                    <div class="service-option">
+                        <input class="form-check-input" type="checkbox" id="serviceMeal">
+                        <label class="service-option-label" for="serviceMeal">
+                            <div class="service-option-icon meal-icon">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <span>Meal</span>
+                        </label>
+                    </div>
+                    <div class="service-option">
+                        <input class="form-check-input" type="checkbox" id="serviceAirport">
+                        <label class="service-option-label" for="serviceAirport">
+                            <div class="service-option-icon airport-icon">
+                                <i class="fas fa-plane"></i>
+                            </div>
+                            <span>Airport</span>
+                        </label>
+                    </div>
+                </div>
+                <!-- Hotel Configuration Section -->
+                <div id="hotelControls" class="mt-3 d-none">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Hotel selected!</strong> Click the hotel badge in the table to configure rooms.
+                    </div>
+                </div>
                             </div>
                         </div>
                     </div>
@@ -2339,5 +2543,131 @@ function showNotification(message, type) {
         }
     }, 5000);
 }
+
+// Drag and Drop Functions
+let draggedService = null;
+
+function handleDragStart(event) {
+    draggedService = event.target.dataset.service;
+    event.target.classList.add('drag-ghost');
+    event.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    event.currentTarget.classList.add('itinerary-row-drag-over');
+}
+
+function handleDragLeave(event) {
+    event.currentTarget.classList.remove('itinerary-row-drag-over');
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('itinerary-row-drag-over');
+    
+    if (!draggedService) return;
+    
+    const row = event.currentTarget;
+    const rowIndex = row.dataset.rowIndex;
+    
+    // Add service to this row
+    addServiceToRow(rowIndex, draggedService);
+    
+    // Reset drag state
+    draggedService = null;
+    document.querySelectorAll('.drag-ghost').forEach(el => {
+        el.classList.remove('drag-ghost');
+    });
+}
+
+function addServiceToRow(rowIndex, serviceType) {
+    // Update the hidden input for this service
+    const flagInput = document.querySelector(`input[name="flag_${serviceType}_${rowIndex}"]`);
+    if (flagInput) {
+        flagInput.value = '1';
+    }
+    
+    // Update the visual display
+    const serviceContainer = document.querySelector(`tr[data-row-index="${rowIndex}"] .d-flex.flex-wrap`);
+    if (serviceContainer) {
+        // Check if service already exists
+        const existingBadge = serviceContainer.querySelector(`[data-service="${serviceType}"]`);
+        if (existingBadge) {
+            // Service already exists, just highlight briefly
+            existingBadge.style.animation = 'pulse 0.5s ease-in-out';
+            setTimeout(() => {
+                existingBadge.style.animation = '';
+            }, 500);
+            return;
+        }
+        
+        // Create new service badge
+        const badge = createServiceBadge(serviceType, rowIndex);
+        serviceContainer.appendChild(badge);
+        
+        // Show success animation
+        badge.style.opacity = '0';
+        badge.style.transform = 'scale(0.5)';
+        setTimeout(() => {
+            badge.style.transition = 'all 0.3s ease';
+            badge.style.opacity = '1';
+            badge.style.transform = 'scale(1)';
+        }, 50);
+    }
+}
+
+function createServiceBadge(serviceType, rowIndex) {
+    const span = document.createElement('span');
+    span.classList.add('badge', 'me-1');
+    span.dataset.service = serviceType;
+    
+    const serviceConfig = {
+        hotel: { class: 'bg-danger', icon: 'bed', text: 'Hotel', clickable: true },
+        guide: { class: 'bg-success', icon: 'user-tie', text: 'Guide' },
+        transport: { class: 'bg-info', icon: 'car', text: 'Transport' },
+        meal: { class: 'bg-warning text-dark', icon: 'utensils', text: 'Meal' },
+        airport: { class: 'bg-secondary', icon: 'plane', text: 'Airport' }
+    };
+    
+    const config = serviceConfig[serviceType];
+    if (!config) return span;
+    
+    span.className = `badge ${config.class} me-1`;
+    if (config.clickable) {
+        span.className += ' clickable-hotel-badge';
+        span.style.cursor = 'pointer';
+        span.onclick = () => openRoomDistributionModal(rowIndex);
+    }
+    
+    span.innerHTML = `<i class="fas fa-${config.icon}"></i> ${config.text}`;
+    
+    return span;
+}
+
 </script>
+
+<!-- Add drag and drop CSS -->
+<style>
+/* Drag and Drop Styling */
+.itinerary-row-drag-over {
+    background-color: rgba(251, 191, 36, 0.2) !important;
+    border-left: 4px solid #fbbf24 !important;
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+
+.drag-ghost {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+</style>
+
 {% endblock %}
