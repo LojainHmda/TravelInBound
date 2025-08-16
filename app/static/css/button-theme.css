@@ -1,4 +1,4 @@
-/* Custom Button Theme - Yellow (#FFBF00) */
+/* Custom Button Theme - Beige (#efdea4) */
 
 .btn {
     border-radius: 5px;
@@ -6,7 +6,7 @@
     transition: all 0.3s ease;
 }
 
-/* Primary yellow theme for all buttons */
+/* Primary beige theme for all buttons */
 .btn-primary, 
 .btn-secondary, 
 .btn-success, 
@@ -17,8 +17,8 @@
 .action-button,
 .btn-danger,
 .btn-dark-blue {
-    background-color: #FFBF00 !important; 
-    border-color: #FFBF00 !important;
+    background-color: #efdea4 !important; 
+    border-color: #efdea4 !important;
     color: #000000 !important;
 }
 
@@ -42,8 +42,8 @@
 .action-button:focus,
 .btn-danger:focus,
 .btn-dark-blue:focus {
-    background-color: #E6AC00 !important;
-    border-color: #E6AC00 !important;
+    background-color: #e6d192 !important;
+    border-color: #e6d192 !important;
     color: #000000 !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -58,8 +58,8 @@
 .btn-outline-dark,
 .btn-outline-light {
     background-color: transparent !important;
-    border-color: #FFBF00 !important;
-    color: #FFBF00 !important;
+    border-color: #efdea4 !important;
+    color: #8b7355 !important;
 }
 
 .btn-outline-primary:hover,
@@ -70,6 +70,6 @@
 .btn-outline-danger:hover,
 .btn-outline-dark:hover,
 .btn-outline-light:hover {
-    background-color: #FFBF00 !important;
+    background-color: #efdea4 !important;
     color: #000000 !important;
 }

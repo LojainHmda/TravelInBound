@@ -1,7 +1,7 @@
 /* Main Color Variables */
 :root {
     --primary-color: #000000; /* Black */
-    --secondary-color: #FFBF00; /* Yellow */
+    --secondary-color: #efdea4; /* Beige */
     --light-color: #ffffff; /* White */
     --text-dark: #000000; /* Black */
     --text-light: #f8f9fa;
@@ -10,10 +10,10 @@
     --sidebar-bg: #2d3748; /* Charcoal Dimmed Black Sidebar */
     
     /* Status Colors */
-    --status-request: #FFBF00; /* Yellow */
-    --status-booked: #FFBF00; /* Yellow */
-    --status-in-progress: #FFBF00; /* Yellow */
-    --status-completed: #FFBF00; /* Yellow */
+    --status-request: #efdea4; /* Beige */
+    --status-booked: #efdea4; /* Beige */
+    --status-in-progress: #efdea4; /* Beige */
+    --status-completed: #efdea4; /* Beige */
 }
 
 /* General Styles */
@@ -71,7 +71,7 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: #FFBF00;;
+    background-color: #efdea4;
     display: flex;
     align-items: center;
     justify-content: center;
