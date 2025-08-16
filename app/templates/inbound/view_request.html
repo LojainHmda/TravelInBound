@@ -152,6 +152,112 @@ body {
     color: #6b5a42;
     transform: translateY(-2px);
 }
+
+/* Hotel Room Distribution Styles */
+.hotel-service-container {
+    position: relative;
+    min-width: 90px;
+}
+
+.room-summary {
+    font-size: 0.7rem;
+    line-height: 1.2;
+    max-width: 80px;
+    word-break: break-all;
+}
+
+/* Room Distribution Modal Styles */
+.room-modal-content {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.room-modal-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-bottom: none;
+}
+
+.room-type-card-compact {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+    height: 85px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.room-type-card-compact:hover {
+    border-color: #FFBF00;
+    background: linear-gradient(135deg, #fff8e1, #fffbf0);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(255, 191, 0, 0.2);
+}
+
+.room-icon-title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.room-icon-title i {
+    font-size: 1rem;
+    color: #667eea;
+}
+
+.room-icon-title span {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #495057;
+    line-height: 1;
+}
+
+.room-input-compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.btn-room-adjust {
+    background: linear-gradient(135deg, #FFBF00, #FF8C00);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-room-adjust:hover {
+    background: linear-gradient(135deg, #FF8C00, #FF6B00);
+    transform: scale(1.1);
+}
+
+.room-count-compact {
+    width: 35px !important;
+    height: 24px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 0;
+}
 </style>
 {% endblock %}
 
@@ -524,10 +630,29 @@ body {
                                                 </select>
                                             </td>
                                             <td class="text-center">
-                                                <input type="checkbox" class="service-flag" 
-                                                       name="flag_hotel_{{ loop.index0 }}" 
-                                                       value="1"
-                                                       {{ 'checked' if row.flag_hotel else '' }}>
+                                                <div class="hotel-service-container">
+                                                    <input type="checkbox" class="service-flag" 
+                                                           name="flag_hotel_{{ loop.index0 }}" 
+                                                           value="1"
+                                                           onchange="toggleHotelRooms({{ loop.index0 }}, this.checked)"
+                                                           id="hotel_{{ loop.index0 }}"
+                                                           {{ 'checked' if row.flag_hotel else '' }}>
+                                                    <div class="hotel-room-controls" id="hotel_controls_{{ loop.index0 }}" style="{{ 'display: block;' if row.flag_hotel else 'display: none;' }}">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary mt-1" 
+                                                                onclick="openRoomDistributionModal({{ loop.index0 }})" 
+                                                                title="Configure room distribution">
+                                                            <i class="fas fa-cog"></i> Rooms
+                                                        </button>
+                                                        <div class="room-summary mt-1" id="room_summary_{{ loop.index0 }}">
+                                                            <small class="room-summary-text">
+                                                                <b>S:</b><span id="single_{{ loop.index0 }}">{{ row.hotel_single_rooms or 0 }}</span> 
+                                                                <b>D:</b><span id="double_{{ loop.index0 }}">{{ row.hotel_double_rooms or 0 }}</span> 
+                                                                <b>T:</b><span id="triple_{{ loop.index0 }}">{{ row.hotel_triple_rooms or 0 }}</span> 
+                                                                <b>O:</b><span id="other_{{ loop.index0 }}">{{ row.hotel_other_rooms or 0 }}</span>
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <input type="checkbox" class="service-flag" 
@@ -791,6 +916,89 @@ body {
     {% endif %}
 </div>
 
+<!-- Room Distribution Modal -->
+<div class="modal fade" id="roomDistributionModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content room-modal-content">
+            <div class="modal-header room-modal-header">
+                <h6 class="modal-title mb-0">
+                    <i class="fas fa-bed me-2"></i> Room Distribution
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="room-type-card-compact">
+                            <div class="room-icon-title">
+                                <i class="fas fa-user"></i>
+                                <span>Single</span>
+                            </div>
+                            <div class="room-input-compact">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('single', -1)">−</button>
+                                <input type="number" class="room-count-compact" id="singleRooms" min="0" max="20" value="0">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('single', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="room-type-card-compact">
+                            <div class="room-icon-title">
+                                <i class="fas fa-users"></i>
+                                <span>Double</span>
+                            </div>
+                            <div class="room-input-compact">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('double', -1)">−</button>
+                                <input type="number" class="room-count-compact" id="doubleRooms" min="0" max="20" value="0">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('double', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="room-type-card-compact">
+                            <div class="room-icon-title">
+                                <i class="fas fa-bed"></i>
+                                <span>Triple</span>
+                            </div>
+                            <div class="room-input-compact">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('triple', -1)">−</button>
+                                <input type="number" class="room-count-compact" id="tripleRooms" min="0" max="20" value="0">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('triple', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="room-type-card-compact">
+                            <div class="room-icon-title">
+                                <i class="fas fa-home"></i>
+                                <span>Other</span>
+                            </div>
+                            <div class="room-input-compact">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('other', -1)">−</button>
+                                <input type="number" class="room-count-compact" id="otherRooms" min="0" max="20" value="0">
+                                <button type="button" class="btn-room-adjust" onclick="adjustRoomCount('other', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">Total Rooms: </small>
+                        <span class="fw-bold" id="totalRoomsDisplay">0</span>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary btn-sm me-2" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="saveRoomDistribution()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Initialize Bootstrap dropdowns
 document.addEventListener('DOMContentLoaded', function() {
@@ -925,6 +1133,90 @@ function saveChanges(event) {
         console.error('Error:', error);
         showNotification('Error saving changes', 'error');
     });
+}
+
+// Room distribution modal variables
+let currentRoomRowIndex = -1;
+let roomModal = null;
+
+// Initialize room modal when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    roomModal = new bootstrap.Modal(document.getElementById('roomDistributionModal'));
+});
+
+// Toggle hotel room controls
+function toggleHotelRooms(index, checked) {
+    const controls = document.getElementById(`hotel_controls_${index}`);
+    if (controls) {
+        controls.style.display = checked ? 'block' : 'none';
+    }
+}
+
+// Open room distribution modal
+function openRoomDistributionModal(index) {
+    currentRoomRowIndex = index;
+    
+    // Get current room values from the summary display
+    const single = parseInt(document.getElementById(`single_${index}`)?.textContent) || 0;
+    const double = parseInt(document.getElementById(`double_${index}`)?.textContent) || 0;
+    const triple = parseInt(document.getElementById(`triple_${index}`)?.textContent) || 0;
+    const other = parseInt(document.getElementById(`other_${index}`)?.textContent) || 0;
+    
+    // Populate modal inputs
+    document.getElementById('singleRooms').value = single;
+    document.getElementById('doubleRooms').value = double;
+    document.getElementById('tripleRooms').value = triple;
+    document.getElementById('otherRooms').value = other;
+    
+    // Update total display
+    updateTotalRoomsDisplay();
+    
+    // Show modal
+    roomModal.show();
+}
+
+// Adjust room count
+function adjustRoomCount(roomType, adjustment) {
+    const inputId = roomType + 'Rooms';
+    const input = document.getElementById(inputId);
+    const currentValue = parseInt(input.value) || 0;
+    const newValue = Math.max(0, Math.min(20, currentValue + adjustment));
+    
+    input.value = newValue;
+    updateTotalRoomsDisplay();
+}
+
+// Update total rooms display
+function updateTotalRoomsDisplay() {
+    const single = parseInt(document.getElementById('singleRooms').value) || 0;
+    const double = parseInt(document.getElementById('doubleRooms').value) || 0;
+    const triple = parseInt(document.getElementById('tripleRooms').value) || 0;
+    const other = parseInt(document.getElementById('otherRooms').value) || 0;
+    
+    const total = single + double + triple + other;
+    document.getElementById('totalRoomsDisplay').textContent = total;
+}
+
+// Save room distribution
+function saveRoomDistribution() {
+    const single = parseInt(document.getElementById('singleRooms').value) || 0;
+    const double = parseInt(document.getElementById('doubleRooms').value) || 0;
+    const triple = parseInt(document.getElementById('tripleRooms').value) || 0;
+    const other = parseInt(document.getElementById('otherRooms').value) || 0;
+    
+    // Update the summary display
+    if (currentRoomRowIndex >= 0) {
+        document.getElementById(`single_${currentRoomRowIndex}`).textContent = single;
+        document.getElementById(`double_${currentRoomRowIndex}`).textContent = double;
+        document.getElementById(`triple_${currentRoomRowIndex}`).textContent = triple;
+        document.getElementById(`other_${currentRoomRowIndex}`).textContent = other;
+    }
+    
+    // Close modal
+    roomModal.hide();
+    
+    // Show success message
+    showNotification('Room distribution updated successfully!', 'success');
 }
 
 // Calculate Days Function
@@ -1098,7 +1390,11 @@ function saveItinerary(event) {
             flag_guide: formData.get(`flag_guide_${i}`) ? true : false,
             flag_transport: formData.get(`flag_transport_${i}`) ? true : false,
             flag_meal: formData.get(`flag_meal_${i}`) ? true : false,
-            flag_airport: formData.get(`flag_airport_${i}`) ? true : false
+            flag_airport: formData.get(`flag_airport_${i}`) ? true : false,
+            hotel_single_rooms: parseInt(document.getElementById(`single_${i}`)?.textContent) || 0,
+            hotel_double_rooms: parseInt(document.getElementById(`double_${i}`)?.textContent) || 0,
+            hotel_triple_rooms: parseInt(document.getElementById(`triple_${i}`)?.textContent) || 0,
+            hotel_other_rooms: parseInt(document.getElementById(`other_${i}`)?.textContent) || 0
         };
         rows.push(rowData);
     }
