@@ -424,132 +424,252 @@ body {
     margin-left: 0.5rem;
 }
 
-/* Clean Table Styles */
-.itinerary-table-clean {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+/* Service Drag Bar Styles */
+.service-drag-bar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
 }
 
-.itinerary-table-clean thead th {
-    background: #f8f9fa;
-    color: #495057;
+.service-drag-title {
+    color: white;
     font-weight: 600;
-    padding: 1rem;
-    text-align: left;
-    border-bottom: 2px solid #e9ecef;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
 }
 
-.itinerary-row-clean {
+.service-drag-icons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.service-drag-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    min-width: 70px;
+    backdrop-filter: blur(10px);
+}
+
+.service-drag-item:hover {
+    background: white;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.service-drag-item:active {
+    cursor: grabbing;
+    transform: scale(0.95);
+}
+
+.service-drag-item i {
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.service-drag-item span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #495057;
+}
+
+.service-drag-item[data-service="hotel"] i { color: #dc3545; }
+.service-drag-item[data-service="guide"] i { color: #28a745; }
+.service-drag-item[data-service="transport"] i { color: #17a2b8; }
+.service-drag-item[data-service="meal"] i { color: #ffc107; }
+.service-drag-item[data-service="airport"] i { color: #6f42c1; }
+
+/* Compact Table Styles */
+.itinerary-table-compact {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e6ed;
+}
+
+.itinerary-table-compact thead th {
+    background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+    color: white;
+    font-weight: 700;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+    border-bottom: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.itinerary-row-compact {
     border-bottom: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+    background: white;
 }
 
-.itinerary-row-clean:nth-child(even) {
-    background-color: #f8f9fa;
+.itinerary-row-compact:nth-child(even) {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
-.itinerary-row-clean:hover {
-    background-color: #e3f2fd;
+.itinerary-row-compact:hover {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.1);
 }
 
-.itinerary-row-clean td {
-    padding: 1rem;
-    vertical-align: top;
+.itinerary-row-compact.drag-over {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-color: #ffc107;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.2);
+}
+
+.itinerary-row-compact td {
+    padding: 0.6rem 0.4rem;
+    vertical-align: middle;
     border-right: 1px solid #e9ecef;
+    font-size: 0.85rem;
 }
 
-.itinerary-row-clean td:last-child {
+.itinerary-row-compact td:last-child {
     border-right: none;
 }
 
-.description-input-clean {
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    padding: 0.375rem 0.5rem;
+.date-cell-compact {
+    text-align: center;
+    font-weight: 600;
+    color: #495057;
+}
+
+.date-display {
+    font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.description-input-compact {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.4rem;
     width: 100%;
 }
 
-.cost-input-clean {
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    padding: 0.375rem 0.5rem;
+.cost-input-compact {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.4rem;
     width: 100%;
     margin-bottom: 0.25rem;
 }
 
-.currency-select-clean {
-    border: 1px solid #e9ecef;
-    border-radius: 4px;
-    font-size: 0.75rem;
+.currency-select-compact {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.25rem;
     width: 100%;
 }
 
-.badge-unit {
+.badge-unit-compact {
     background: #007bff;
     color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
-.services-cell-clean {
-    min-width: 200px;
+.services-cell-compact {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 
-.service-flags-display {
+.service-drop-zone {
+    min-height: 45px;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    transition: all 0.2s ease;
+}
+
+.service-drop-zone.drag-over {
+    border-color: #007bff;
+    background: #e3f2fd;
+    border-style: solid;
+}
+
+.service-flags-compact {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    gap: 0.25rem;
+    flex-grow: 1;
 }
 
-.service-flag-clean {
+.service-flag-compact {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.service-flag-hotel { background: #fff5f5; color: #dc3545; }
-.service-flag-guide { background: #f0fff4; color: #28a745; }
-.service-flag-transport { background: #e8f4f8; color: #17a2b8; }
-.service-flag-meal { background: #fffbf0; color: #e67e22; }
-.service-flag-airport { background: #f8f0ff; color: #6f42c1; }
-
-.add-service-btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-}
-
-.row-total-clean {
+    gap: 0.15rem;
+    padding: 0.15rem 0.35rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
     font-weight: 600;
-    font-size: 0.9rem;
-    color: #495057;
+    cursor: pointer;
 }
 
-.total-row {
-    background: #d4edda !important;
+.service-flag-hotel { background: #ffe6e6; color: #dc3545; }
+.service-flag-guide { background: #e6ffe6; color: #28a745; }
+.service-flag-transport { background: #e6f4f8; color: #17a2b8; }
+.service-flag-meal { background: #fff8e6; color: #e67e22; }
+.service-flag-airport { background: #f0e6ff; color: #6f42c1; }
+
+.add-service-btn-compact {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.3rem;
+    border-radius: 4px;
+    font-weight: 600;
+    align-self: flex-start;
+}
+
+.row-total-compact {
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #495057;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.total-row-compact {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
     font-weight: bold;
 }
 
-.total-row td {
-    padding: 1.25rem 1rem;
-    border-top: 2px solid #28a745;
+.total-row-compact td {
+    padding: 0.8rem 0.5rem;
+    border-top: 3px solid #28a745;
 }
 
-.total-amount {
+.total-amount-compact {
     color: #28a745;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.actions-row-compact td {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-top: 2px solid #dee2e6;
 }
 
 /* Service Selection Modal Styles */
@@ -890,48 +1010,80 @@ body {
 
                     <!-- Edit Mode Itinerary -->
                     <div id="itineraryEditMode" class="edit-mode-hidden">
+                        <!-- Service Drag Bar -->
+                        <div class="service-drag-bar mb-3">
+                            <div class="service-drag-title">
+                                <i class="fas fa-hand-paper me-2"></i>Drag services to days or use "Add Service" buttons:
+                            </div>
+                            <div class="service-drag-icons">
+                                <div class="service-drag-item" draggable="true" data-service="hotel" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-bed"></i>
+                                    <span>Hotel</span>
+                                </div>
+                                <div class="service-drag-item" draggable="true" data-service="guide" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-user-tie"></i>
+                                    <span>Guide</span>
+                                </div>
+                                <div class="service-drag-item" draggable="true" data-service="transport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-car"></i>
+                                    <span>Transport</span>
+                                </div>
+                                <div class="service-drag-item" draggable="true" data-service="meal" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-utensils"></i>
+                                    <span>Meal</span>
+                                </div>
+                                <div class="service-drag-item" draggable="true" data-service="airport" ondragstart="handleDragStart(event)">
+                                    <i class="fas fa-plane"></i>
+                                    <span>Airport</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="table-responsive" style="overflow-x: auto;">
                             <form id="itineraryForm" onsubmit="saveItinerary(event)">
-                                <table class="itinerary-table-clean">
+                                <table class="itinerary-table-compact">
                                     <thead>
                                         <tr>
-                                            <th>Date</th>
-                                            <th>Description</th>
-                                            <th>Cost</th>
-                                            <th>Unit</th>
-                                            <th>Service Flags</th>
-                                            <th>Row Total</th>
+                                            <th style="width: 110px;">Date</th>
+                                            <th style="min-width: 200px;">Description</th>
+                                            <th style="width: 80px;">Cost</th>
+                                            <th style="width: 80px;">Unit</th>
+                                            <th style="width: 260px;">Service Flags</th>
+                                            <th style="width: 90px;">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody id="itineraryTableBody">
                                         {% for row in request.itinerary_rows %}
-                                        <tr class="itinerary-row-clean" data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}">
-                                            <td>{{ row.date.strftime('%d %b %Y') }}</td>
-                                            <td>
-                                                <input type="text" class="form-control description-input-clean" 
+                                        <tr class="itinerary-row-compact" data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" 
+                                            ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                            <td class="date-cell-compact">
+                                                <div class="date-display">{{ row.date.strftime('%d %b %Y') }}</div>
+                                                <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
+                                            </td>
+                                            <td class="description-cell-compact">
+                                                <input type="text" class="form-control description-input-compact" 
                                                        name="description[]" 
                                                        value="{{ row.description }}" 
                                                        placeholder="Enter description" 
                                                        required>
-                                                <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
                                             </td>
-                                            <td>
-                                                <input type="number" class="form-control cost-input-clean" 
+                                            <td class="cost-cell-compact">
+                                                <input type="number" class="form-control cost-input-compact" 
                                                        name="base_cost[]" 
                                                        value="{{ row.base_cost }}" 
                                                        step="0.01" 
                                                        min="0" 
                                                        onchange="updateRowTotal(this.closest('tr'))" 
                                                        required>
-                                                <select class="form-select currency-select-clean mt-1" name="currency[]">
+                                                <select class="form-select currency-select-compact" name="currency[]">
                                                     <option value="USD" {{ 'selected' if row.currency == 'USD' else '' }}>USD</option>
                                                     <option value="EUR" {{ 'selected' if row.currency == 'EUR' else '' }}>EUR</option>
                                                     <option value="JOD" {{ 'selected' if row.currency == 'JOD' else '' }}>JOD</option>
                                                     <option value="GBP" {{ 'selected' if row.currency == 'GBP' else '' }}>GBP</option>
                                                 </select>
                                             </td>
-                                            <td>
-                                                <span class="badge badge-unit">
+                                            <td class="unit-cell-compact">
+                                                <span class="badge badge-unit-compact">
                                                     {{ 'Per Person' if row.cost_unit == 'PER_PERSON' else 'Per Group' }}
                                                 </span>
                                                 <select class="form-select d-none" name="cost_unit[]" onchange="updateRowTotal(this.closest('tr'))">
@@ -939,42 +1091,44 @@ body {
                                                     <option value="PER_GROUP" {{ 'selected' if row.cost_unit == 'PER_GROUP' else '' }}>Per Group</option>
                                                 </select>
                                             </td>
-                                            <td class="services-cell-clean">
-                                                <div class="service-flags-display" data-row-index="{{ loop.index0 }}">
-                                                    {% if row.flag_hotel %}
-                                                        <span class="service-flag-clean service-flag-hotel">
-                                                            <i class="fas fa-bed"></i>
-                                                            {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
-                                                                <small class="ms-1">(S:{{ row.hotel_single_rooms or 0 }} D:{{ row.hotel_double_rooms or 0 }} T:{{ row.hotel_triple_rooms or 0 }} O:{{ row.hotel_other_rooms or 0 }})</small>
-                                                            {% endif %}
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_guide %}
-                                                        <span class="service-flag-clean service-flag-guide">
-                                                            <i class="fas fa-user-tie"></i>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_transport %}
-                                                        <span class="service-flag-clean service-flag-transport">
-                                                            <i class="fas fa-car"></i>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_meal %}
-                                                        <span class="service-flag-clean service-flag-meal">
-                                                            <i class="fas fa-utensils"></i>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_airport %}
-                                                        <span class="service-flag-clean service-flag-airport">
-                                                            <i class="fas fa-plane"></i>
-                                                        </span>
-                                                    {% endif %}
+                                            <td class="services-cell-compact">
+                                                <div class="service-drop-zone" data-row-index="{{ loop.index0 }}">
+                                                    <div class="service-flags-compact">
+                                                        {% if row.flag_hotel %}
+                                                            <span class="service-flag-compact service-flag-hotel">
+                                                                <i class="fas fa-bed"></i>
+                                                                {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
+                                                                    <small>({{ (row.hotel_single_rooms or 0) + (row.hotel_double_rooms or 0) + (row.hotel_triple_rooms or 0) + (row.hotel_other_rooms or 0) }}r)</small>
+                                                                {% endif %}
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if row.flag_guide %}
+                                                            <span class="service-flag-compact service-flag-guide">
+                                                                <i class="fas fa-user-tie"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if row.flag_transport %}
+                                                            <span class="service-flag-compact service-flag-transport">
+                                                                <i class="fas fa-car"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if row.flag_meal %}
+                                                            <span class="service-flag-compact service-flag-meal">
+                                                                <i class="fas fa-utensils"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                        {% if row.flag_airport %}
+                                                            <span class="service-flag-compact service-flag-airport">
+                                                                <i class="fas fa-plane"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <button type="button" class="btn btn-xs btn-outline-success add-service-btn-compact" 
+                                                            onclick="openServiceSelectionModal({{ loop.index0 }})" 
+                                                            title="Add/Manage Services">
+                                                        <i class="fas fa-plus"></i> Add
+                                                    </button>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-outline-primary add-service-btn mt-1" 
-                                                        onclick="openServiceSelectionModal({{ loop.index0 }})" 
-                                                        title="Add/Manage Services">
-                                                    <i class="fas fa-plus"></i> Add Service
-                                                </button>
                                                 <!-- Hidden inputs for form submission -->
                                                 <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{{ '1' if row.flag_hotel else '' }}">
                                                 <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{{ '1' if row.flag_guide else '' }}">
@@ -987,36 +1141,37 @@ body {
                                                 <input type="hidden" id="triple_{{ loop.index0 }}_input" value="{{ row.hotel_triple_rooms or 0 }}">
                                                 <input type="hidden" id="other_{{ loop.index0 }}_input" value="{{ row.hotel_other_rooms or 0 }}">
                                             </td>
-                                            <td class="text-end">
-                                                <div class="row-total-clean">
+                                            <td class="total-cell-compact">
+                                                <div class="row-total-compact">
                                                     {% if row.cost_unit == 'PER_PERSON' %}
                                                         {{ "%.2f"|format(row.base_cost * request.pax) }}
                                                     {% else %}
                                                         {{ "%.2f"|format(row.base_cost) }}
                                                     {% endif %}
-                                                    {{ row.currency }}
+                                                    <br><small class="text-muted">{{ row.currency }}</small>
                                                 </div>
                                             </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
                                     <tfoot>
-                                        <tr class="total-row">
-                                            <td colspan="5" class="text-end fw-bold">Total:</td>
-                                            <td class="text-end fw-bold total-amount">
-                                                {{ "%.2f"|format(request.total_amount) }} {{ request.total_currency }}
+                                        <tr class="total-row-compact">
+                                            <td colspan="5" class="text-end fw-bold fs-6">Total:</td>
+                                            <td class="text-center fw-bold total-amount-compact">
+                                                {{ "%.2f"|format(request.total_amount) }}<br>
+                                                <small class="text-success">{{ request.total_currency }}</small>
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-3">
-                                                <button type="button" class="btn btn-info btn-sm me-2" onclick="addItineraryRow()">
-                                                    <i class="fas fa-plus"></i> Add Day
+                                        <tr class="actions-row-compact">
+                                            <td colspan="6" class="text-center py-2">
+                                                <button type="button" class="btn btn-sm btn-info me-2" onclick="addItineraryRow()">
+                                                    <i class="fas fa-plus me-1"></i>Add Day
                                                 </button>
-                                                <button type="submit" class="btn btn-success btn-sm me-2">
-                                                    <i class="fas fa-save"></i> Save Itinerary
+                                                <button type="submit" class="btn btn-sm btn-success me-2">
+                                                    <i class="fas fa-save me-1"></i>Save Changes
                                                 </button>
-                                                <button type="button" class="btn btn-secondary btn-sm" onclick="cancelItineraryEdit()">
-                                                    <i class="fas fa-times"></i> Cancel
+                                                <button type="button" class="btn btn-sm btn-secondary" onclick="cancelItineraryEdit()">
+                                                    <i class="fas fa-times me-1"></i>Cancel
                                                 </button>
                                             </td>
                                         </tr>
@@ -1638,11 +1793,105 @@ function saveRoomDistribution() {
 // Service Selection Modal functionality
 let currentServiceRowIndex = -1;
 let serviceModal = null;
+let draggedService = null;
 
 // Initialize service modal when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
+    
+    // Add drag event listeners
+    document.querySelectorAll('.service-drag-item').forEach(item => {
+        item.addEventListener('dragend', handleDragEnd);
+    });
 });
+
+// Drag and Drop functionality
+function handleDragStart(event) {
+    draggedService = event.target.getAttribute('data-service') || event.target.closest('.service-drag-item').getAttribute('data-service');
+    event.dataTransfer.effectAllowed = 'copy';
+    event.target.style.opacity = '0.7';
+}
+
+function handleDragEnd(event) {
+    event.target.style.opacity = '1';
+    draggedService = null;
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'copy';
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    if (dropZone) {
+        dropZone.classList.add('drag-over');
+    }
+    row.classList.add('drag-over');
+}
+
+function handleDragLeave(event) {
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-over');
+    }
+    row.classList.remove('drag-over');
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    const row = event.currentTarget;
+    const dropZone = row.querySelector('.service-drop-zone');
+    
+    if (dropZone) {
+        dropZone.classList.remove('drag-over');
+    }
+    row.classList.remove('drag-over');
+    
+    if (!draggedService) return;
+    
+    const rowIndex = row.getAttribute('data-row-index');
+    const flagsContainer = row.querySelector('.service-flags-compact');
+    
+    // Check if service already exists
+    const existingFlag = flagsContainer.querySelector(`[data-service="${draggedService}"]`);
+    if (existingFlag) {
+        showNotification('Service already exists for this day', 'warning');
+        return;
+    }
+    
+    // Add service flag
+    addServiceFlagDirect(flagsContainer, draggedService, rowIndex);
+    
+    // Update hidden input
+    updateServiceInput(rowIndex, draggedService, true);
+    
+    showNotification(`${capitalizeFirst(draggedService)} service added to day`, 'success');
+}
+
+// Add service flag directly (for drag and drop)
+function addServiceFlagDirect(container, service, rowIndex) {
+    const flag = document.createElement('span');
+    flag.className = `service-flag-compact service-flag-${service}`;
+    flag.setAttribute('data-service', service);
+    
+    const icon = getServiceIcon(service);
+    let flagContent = `<i class="${icon}"></i>`;
+    
+    // Add room summary for hotel
+    if (service === 'hotel') {
+        flagContent += `<small>(0r)</small>`;
+    }
+    
+    flag.innerHTML = flagContent;
+    container.appendChild(flag);
+}
+
+function updateServiceInput(rowIndex, service, isActive) {
+    const input = document.querySelector(`input[name="flag_${service}_${rowIndex}"]`);
+    if (input) {
+        input.value = isActive ? '1' : '';
+    }
+}
 
 // Open service selection modal
 function openServiceSelectionModal(rowIndex) {
