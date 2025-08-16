@@ -2567,8 +2567,16 @@ function showNotification(message, type) {
 
 // Add missing functions for buttons
 function generateDays() {
-    const startDate = document.getElementById('start_date').value;
-    const endDate = document.getElementById('end_date').value;
+    const startDateEl = document.getElementById('start_date') || document.querySelector('input[name="start_date"]');
+    const endDateEl = document.getElementById('end_date') || document.querySelector('input[name="end_date"]');
+    
+    if (!startDateEl || !endDateEl) {
+        showNotification('Date input elements not found', 'error');
+        return;
+    }
+    
+    const startDate = startDateEl.value;
+    const endDate = endDateEl.value;
     
     if (!startDate || !endDate) {
         showNotification('Please select both start and end dates', 'error');
@@ -2590,8 +2598,17 @@ function generateDays() {
         return;
     }
     
+    // Get request ID
+    const requestIdEl = document.querySelector('input[name="request_id"]') || document.querySelector('[data-request-id]');
+    const requestId = requestIdEl ? (requestIdEl.value || requestIdEl.dataset.requestId) : window.location.pathname.match(/\/inbound\/(\d+)/)?.[1];
+    
+    if (!requestId) {
+        showNotification('Unable to identify request ID', 'error');
+        return;
+    }
+    
     // Generate itinerary rows
-    fetch(`/inbound/${document.querySelector('input[name="request_id"]').value}/generate_days`, {
+    fetch(`/inbound/${requestId}/generate_days`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
