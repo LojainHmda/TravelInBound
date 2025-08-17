@@ -96,6 +96,7 @@ def index():
     return render_template('simple_login.html')
 
 @app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])  # Allow POST to root URL for login form
 def login():
     if request.method == 'POST':
         username = request.form['username']
