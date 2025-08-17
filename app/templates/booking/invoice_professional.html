@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice #{{ booking.invoice_number }}</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 0.5in;
+            }
+            body {
+                font-family: Arial, sans-serif;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+        }
+        
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        
+        .company-info {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .company-info h1 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .company-info p {
+            margin: 2px 0;
+            font-size: 11px;
+        }
+        
+        .license-info {
+            flex: 0 0 200px;
+            text-align: left;
+            font-size: 10px;
+        }
+        
+        .license-info div {
+            margin-bottom: 3px;
+        }
+        
+        .invoice-title {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .invoice-title h2 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+            text-decoration: underline;
+        }
+        
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-number {
+            text-align: left;
+        }
+        
+        .invoice-date {
+            text-align: right;
+        }
+        
+        .customer-info {
+            margin-bottom: 30px;
+        }
+        
+        .customer-info h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .services-table th,
+        .services-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        
+        .services-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .services-table .amount-col {
+            text-align: right;
+            width: 100px;
+        }
+        
+        .services-table .qty-col {
+            text-align: center;
+            width: 60px;
+        }
+        
+        .services-table .total-col {
+            text-align: right;
+            width: 120px;
+        }
+        
+        .totals-section {
+            float: right;
+            width: 300px;
+            margin-bottom: 30px;
+        }
+        
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .totals-table td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #ccc;
+        }
+        
+        .totals-table .label {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .totals-table .amount {
+            text-align: right;
+            width: 100px;
+        }
+        
+        .totals-table .final-total {
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .payment-terms {
+            clear: both;
+            margin-top: 40px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .payment-terms p {
+            margin: 5px 0;
+            text-align: center;
+        }
+        
+        .bank-details {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .bank-details p {
+            margin: 2px 0;
+        }
+        
+        .no-print {
+            display: block;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+        
+        .controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .form-check {
+            display: inline-block;
+            margin-right: 20px;
+        }
+        
+        .form-check input {
+            margin-right: 5px;
+        }
+        
+        .hide-unit-prices .amount-col,
+        .hide-unit-prices .qty-col {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Controls (hidden in print) -->
+    <div class="controls no-print">
+        <div class="form-check">
+            <input type="checkbox" id="showUnitPrices" checked onchange="toggleUnitPrices()">
+            <label for="showUnitPrices">Show unit prices</label>
+        </div>
+        <div class="form-check">
+            <input type="number" id="overrideTotal" placeholder="Override total" step="0.01" onchange="updateTotal()">
+            <label for="overrideTotal">Override total amount</label>
+        </div>
+        <button class="btn btn-primary" onclick="window.print()">Print Invoice</button>
+        <a href="{{ url_for('booking.details', booking_id=booking.id) }}" class="btn btn-secondary">Back to Booking</a>
+    </div>
+
+    <!-- Invoice Content -->
+    <div class="invoice-header">
+        <div class="license-info">
+            <div><strong>License #</strong> 3453</div>
+            <div><strong>Company ID#</strong> 200120113</div>
+            <div><strong>Tax #</strong> 129228648</div>
+        </div>
+        
+        <div class="company-info">
+            <h1>Windows of Jordan Tours & Travel</h1>
+            <p>Amman - Jordan</p>
+            <p>Prince Mhd Street</p>
+            <p>Building 247 5th floor</p>
+            <p>Email: accounting@windowsofjordan.com</p>
+            <p>Cell: +962799661007</p>
+            <p>Tel: +96264619402</p>
+        </div>
+        
+        <div style="flex: 0 0 200px;"></div> <!-- Spacer for symmetry -->
+    </div>
+    
+    <div class="invoice-title">
+        <h2>Invoice</h2>
+    </div>
+    
+    <div class="invoice-details">
+        <div class="invoice-number">
+            <strong>Invoice No.</strong> {{ booking.invoice_number or 'Not Generated' }}
+        </div>
+        <div class="invoice-date">
+            <strong>Issue Date:</strong> {{ booking.invoice_date.strftime('%d/%b/%y') if booking.invoice_date else 'Not Set' }}
+        </div>
+    </div>
+    
+    <div class="customer-info">
+        <strong>Addressed to:</strong>
+        {% if booking.customer %}
+            {{ booking.customer.name }}
+            {% if booking.customer.company_name %} - {{ booking.customer.company_name }}{% endif %}
+        {% else %}
+            {{ booking.requester.username if booking.requester else 'Unknown Customer' }}
+        {% endif %}
+        <br>
+        <strong>Pax #:</strong> {{ booking.pax_count or 1 }}
+    </div>
+    
+    <table class="services-table" id="servicesTable">
+        <thead>
+            <tr>
+                <th>Service Date</th>
+                <th>Description</th>
+                <th class="amount-col">Price</th>
+                <th class="qty-col">No.</th>
+                <th class="total-col">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in booking.service_items %}
+            <tr>
+                <td>{{ item.start_date.strftime('%d-%b') if item.start_date else 'TBD' }}</td>
+                <td>{{ item.description or item.service_type }}</td>
+                <td class="amount-col">{{ booking.total_currency or 'USD' }} {{ "%.2f"|format(item.amount or 0) }}</td>
+                <td class="qty-col">{{ booking.pax_count or 1 }}</td>
+                <td class="total-col">{{ booking.total_currency or 'USD' }} {{ "%.2f"|format((item.amount or 0) * (booking.pax_count or 1)) }}</td>
+            </tr>
+            {% endfor %}
+            
+            {% if not booking.service_items %}
+            <tr>
+                <td colspan="5" style="text-align: center; font-style: italic;">No services added yet</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    
+    <div class="totals-section">
+        <table class="totals-table">
+            <tr>
+                <td class="label">Total</td>
+                <td class="amount" id="totalAmount">{{ booking.total_currency or 'USD' }} {{ "%.2f"|format(booking.total_amount or 0) }}</td>
+            </tr>
+            <tr>
+                <td class="label">Advance</td>
+                <td class="amount">{{ booking.total_currency or 'USD' }} 0.00</td>
+            </tr>
+            <tr class="final-total">
+                <td class="label">Net Due( {{ booking.total_currency or 'US$' }})</td>
+                <td class="amount" id="netDue">{{ booking.total_currency or 'USD' }} {{ "%.2f"|format(booking.total_amount or 0) }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="payment-terms">
+        <p><strong>**All Charges and commissions applied by Banks for transfers are to be paid by the payee</strong></p>
+        <p><strong>A surcharge of 2.5% will be added to total if payment is done by Credit\Debit Cards</strong></p>
+    </div>
+    
+    <div class="bank-details">
+        <p><strong>ACCOUNT NAME: WINDOWS OF JORDAN TOURS</strong></p>
+        <p><strong>BANK: JORDAN AHLI BANK</strong></p>
+        <p><strong>BRANCH: Queen Rania Street Branch</strong></p>
+        <p><strong>ADDRESS: Sport City Circle</strong></p>
+        <p><strong>P.O BOX: 19285 Shmeisani ZIP CODE: 11196</strong></p>
+        <p><strong>FAX: 96265699742</strong></p>
+        <p><strong>SWIFT CODE: JONBJOAXXXX</strong></p>
+        <p><strong>ACCOUNT # (USD): 53-02-301015-681581-02</strong></p>
+        <p><strong>IBAN: JO61 JONB 0530 0002 3010 1568 1581 02</strong></p>
+        <p><strong>PURPOSE CODE: 404</strong></p>
+    </div>
+
+    <script>
+        function toggleUnitPrices() {
+            const checkbox = document.getElementById('showUnitPrices');
+            const table = document.getElementById('servicesTable');
+            
+            if (checkbox.checked) {
+                table.classList.remove('hide-unit-prices');
+            } else {
+                table.classList.add('hide-unit-prices');
+            }
+        }
+        
+        function updateTotal() {
+            const overrideInput = document.getElementById('overrideTotal');
+            const totalElement = document.getElementById('totalAmount');
+            const netDueElement = document.getElementById('netDue');
+            
+            if (overrideInput.value && parseFloat(overrideInput.value) > 0) {
+                const newTotal = parseFloat(overrideInput.value);
+                const currency = '{{ booking.total_currency or "USD" }}';
+                totalElement.textContent = currency + ' ' + newTotal.toFixed(2);
+                netDueElement.textContent = currency + ' ' + newTotal.toFixed(2);
+            } else {
+                // Reset to original total
+                const originalTotal = {{ booking.total_amount or 0 }};
+                const currency = '{{ booking.total_currency or "USD" }}';
+                totalElement.textContent = currency + ' ' + originalTotal.toFixed(2);
+                netDueElement.textContent = currency + ' ' + originalTotal.toFixed(2);
+            }
+        }
+    </script>
+</body>
+</html>

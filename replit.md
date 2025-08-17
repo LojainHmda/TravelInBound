@@ -38,6 +38,24 @@ Preferred communication style: Simple, everyday language.
 - **Mobile Design**: Collapsible sidebar with clean close button, overlay for better UX
 - **Status**: Fully implemented with responsive design and interactive dropdown functionality
 
+### Professional Windows of Jordan Invoice System
+- **Date**: August 17, 2025
+- **Feature**: Professional invoice template matching company's official format with Windows of Jordan branding
+- **Components Added**:
+  - New template: `invoice_professional.html` with authentic Windows of Jordan header and company details
+  - Professional layout with license info, company ID, and tax number display
+  - Line items table with service date, description, unit price, quantity, and total columns
+  - Banking details section with Jordan Ahli Bank information and IBAN
+  - Interactive controls for showing/hiding unit prices and overriding total amounts
+  - Print-optimized styling with proper A4 formatting
+- **Visual Elements**: Black and white professional design, company header with contact details, structured table format
+- **Interactive Features**: 
+  - Toggle unit prices visibility checkbox
+  - Override total amount input field
+  - Print button with proper print media styles
+  - Professional invoice numbering and date formatting
+- **Status**: Fully implemented with authentic company branding and banking details
+
 ### Visual Timeline Voucher for Inbound Tours
 - **Date**: August 13, 2025 (Updated August 17, 2025)
 - **Feature**: Creative PDF timeline voucher generation for tour itineraries with dual layout options

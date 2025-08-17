@@ -1936,6 +1936,24 @@ def invoice_details(booking_id):
     print(f"Rendering invoice template with invoice #{booking.invoice_number}", file=sys.stderr)
     return render_template('booking/invoice_details.html', booking=booking)
 
+@booking_bp.route('/<int:booking_id>/invoice/professional', methods=['GET'])
+def professional_invoice(booking_id):
+    """View professional Windows of Jordan invoice"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # If no invoice yet, redirect to generate page
+    if not booking.invoice_number:
+        flash('No invoice generated yet. Please generate an invoice first.', 'warning')
+        return redirect(url_for('booking.generate_invoice', booking_id=booking.id))
+    
+    # Ensure we have an invoice date
+    if not booking.invoice_date:
+        from datetime import datetime
+        booking.invoice_date = datetime.utcnow()
+        db.session.commit()
+    
+    return render_template('booking/invoice_professional.html', booking=booking)
+
 @booking_bp.route('/<int:booking_id>/add_payment', methods=['GET', 'POST'])
 def add_payment(booking_id):
     """Process a payment for a booking"""

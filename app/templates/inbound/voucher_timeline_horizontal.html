@@ -124,19 +124,18 @@
         }
 
         .timeline-track {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 40px;
+            width: 100%;
             position: relative;
             padding: 0 20px;
         }
-
+        
         .timeline-row {
             display: flex;
-            justify-content: flex-start;
+            justify-content: space-between;
             position: relative;
             width: 100%;
             margin-bottom: 40px;
+            gap: 20px;
         }
 
         .timeline-row:last-child {
@@ -161,10 +160,10 @@
         }
 
         .day-column {
-            width: 25%;
+            flex: 1;
             min-width: 200px;
-            max-width: 250px;
-            padding: 0 15px;
+            max-width: 280px;
+            padding: 0 10px;
             position: relative;
             z-index: 1;
         }
@@ -408,26 +407,26 @@
                     {% endif %}
                     {% set _ = days_dict[day_key].append(row) %}
                 {% endfor %}
-
+                
                 {% set sorted_dates = days_dict.keys()|sort|list %}
                 {% set days_per_row = 4 %}
                 {% set total_days = sorted_dates|length %}
                 {% set rows_needed = ((total_days - 1) // days_per_row) + 1 %}
-
+                
                 {% for row_num in range(rows_needed) %}
                     <div class="timeline-row">
                         {% set start_idx = row_num * days_per_row %}
                         {% set end_idx = [start_idx + days_per_row, total_days]|min %}
-
+                        
                         {% for idx in range(start_idx, end_idx) %}
                             {% set date_key = sorted_dates[idx] %}
                             {% set day_rows = days_dict[date_key] %}
                             {% set day_date = day_rows[0].date %}
                             {% set day_num = idx + 1 %}
-
+                            
                             <div class="day-column">
                                 <div class="day-circle">{{ day_num }}</div>
-
+                                
                                 <div class="day-info-box">
                                     <h3>Day {{ day_num }} - {{ day_date.strftime('%A, %B %d') }}</h3>
                                 </div>
@@ -462,29 +461,9 @@
                                         </svg>
                                         {% endif %}
                                     </div>
-
+                                    
                                     <div class="event-description">
-                                        {% if row.description %}
-                                            {{ row.description }}
-                                        {% else %}
-                                            {% set services = [] %}
-                                            {% if row.flag_hotel %}
-                                                {% set _ = services.append("Hotel accommodation") %}
-                                            {% endif %}
-                                            {% if row.flag_transport %}
-                                                {% set _ = services.append("Transportation") %}
-                                            {% endif %}
-                                            {% if row.flag_meal %}
-                                                {% set _ = services.append("Meal service") %}
-                                            {% endif %}
-                                            {% if row.flag_guide %}
-                                                {% set _ = services.append("Tour guide service") %}
-                                            {% endif %}
-                                            {% if row.flag_airport %}
-                                                {% set _ = services.append("Airport transfer") %}
-                                            {% endif %}
-                                            {{ services|join(", ") if services else "Tour services" }}
-                                        {% endif %}
+                                        {{ row.description|e }}
                                     </div>
                                 </div>
                             {% endfor %}

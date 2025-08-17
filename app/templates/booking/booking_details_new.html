@@ -514,6 +514,9 @@ body {
                             <p class="mb-0" style="color: #000000;"><strong>Invoice Status:</strong> 
                                 {% if booking.invoice_number %}
                                     <span class="badge" style="background-color: #FFBF00; color: black;">Invoiced ({{ booking.invoice_number }})</span>
+                                    <a href="{{ url_for('booking.professional_invoice', booking_id=booking.id) }}" class="btn btn-sm ms-2" style="background-color: #28a745; color: white;" target="_blank">
+                                        <i class="fas fa-file-pdf me-1"></i> View Professional Invoice
+                                    </a>
                                 {% else %}
                                     <span class="badge" style="background-color: #ffc107; color: black;">Not Invoiced</span>
                                 {% endif %}
@@ -539,7 +542,11 @@ body {
 
                 {% if booking and not booking.invoice_number %}
                 <a href="{{ url_for('booking.generate_invoice', booking_id=booking.id) }}" class="btn action-arrow-button">
-                    <i class="fas fa-file-invoice-dollar me-1"></i> Add Payment
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
+                </a>
+                {% elif booking and booking.invoice_number %}
+                <a href="{{ url_for('booking.professional_invoice', booking_id=booking.id) }}" class="btn action-arrow-button" target="_blank">
+                    <i class="fas fa-file-pdf me-1"></i> View Invoice
                 </a>
                 {% endif %}
 
