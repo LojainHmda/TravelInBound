@@ -76,23 +76,49 @@ class ServiceConfigManager {
         const titleElement = document.getElementById('serviceTypeTitle');
         if (titleElement) {
             titleElement.textContent = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+            console.log('Updated title to:', titleElement.textContent);
+        } else {
+            console.error('Title element not found');
         }
         
         // Hide all service config sections
         document.querySelectorAll('.service-config-section').forEach(section => {
             section.classList.add('d-none');
+            console.log('Hidden section:', section.id);
         });
         
         // Show the relevant service config section
         const configSection = document.getElementById(serviceType + 'ServiceConfig');
         if (configSection) {
             configSection.classList.remove('d-none');
+            console.log('Showing section:', configSection.id);
+        } else {
+            console.error('Config section not found:', serviceType + 'ServiceConfig');
+        }
+        
+        // Check modal element exists
+        const modalElement = document.getElementById('serviceConfigModal');
+        if (modalElement) {
+            console.log('Modal element found, classes:', modalElement.className);
+        } else {
+            console.error('Modal element not found');
         }
         
         // Show modal
         if (this.serviceConfigModal) {
             this.serviceConfigModal.show();
             console.log('Modal shown for service:', serviceType);
+            
+            // Check if modal is actually visible after a short delay
+            setTimeout(() => {
+                const modalBackdrop = document.querySelector('.modal-backdrop');
+                const modalDialog = document.querySelector('#serviceConfigModal .modal-dialog');
+                console.log('Modal backdrop exists:', !!modalBackdrop);
+                console.log('Modal dialog exists:', !!modalDialog);
+                if (modalDialog) {
+                    console.log('Modal dialog visible:', modalDialog.offsetHeight > 0);
+                }
+            }, 100);
         } else {
             console.error('Modal not initialized');
         }
