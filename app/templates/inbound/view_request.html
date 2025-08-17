@@ -3521,7 +3521,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <tr>
                                                     <td><strong class="text-primary">Room 1</strong></td>
                                                     <td>
-                                                        <select name="rooms[0][room_category]" class="form-control">
+                                                        <select name="rooms[0][room_category]" class="form-control" onchange="updateRoomDistribution()">
                                                             <option value="Single Room" selected>Single</option>
                                                             <option value="Double Room">Double</option>
                                                             <option value="Triple Room">Triple</option>
@@ -3571,6 +3571,37 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <button type="button" class="btn btn-outline-primary" onclick="addHotelRoomToTable()">
                                                 <i class="fas fa-plus me-1"></i>Add Room
                                             </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Room Distribution Summary -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header py-2" style="background-color: #1f2937; color: white;">
+                                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Single Rooms</label>
+                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="0" readonly>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Double Rooms</label>
+                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" readonly>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Triple Rooms</label>
+                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" readonly>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Other Rooms</label>
+                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" readonly>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4339,6 +4370,43 @@ function initializeHotelAutocomplete() {
     if (hotelNameInput && typeof setupHotelAutocomplete === 'function') {
         setupHotelAutocomplete(hotelNameInput);
     }
+}
+
+// Update room distribution summary based on room categories selected
+function updateRoomDistribution() {
+    const tbody = document.getElementById('hotelRoomsTableBody');
+    if (!tbody) return;
+    
+    let singleRooms = 0;
+    let doubleRooms = 0;
+    let tripleRooms = 0;
+    let otherRooms = 0;
+    
+    // Count room types
+    const roomSelects = tbody.querySelectorAll('select[name*="room_category"]');
+    roomSelects.forEach(select => {
+        const value = select.value;
+        if (value === 'Single Room') {
+            singleRooms++;
+        } else if (value === 'Double Room') {
+            doubleRooms++;
+        } else if (value === 'Triple Room') {
+            tripleRooms++;
+        } else if (value === 'Other') {
+            otherRooms++;
+        }
+    });
+    
+    // Update the distribution summary inputs
+    const singleInput = document.getElementById('hotelSingleRooms');
+    const doubleInput = document.getElementById('hotelDoubleRooms');
+    const tripleInput = document.getElementById('hotelTripleRooms');
+    const otherInput = document.getElementById('hotelOtherRooms');
+    
+    if (singleInput) singleInput.value = singleRooms;
+    if (doubleInput) doubleInput.value = doubleRooms;
+    if (tripleInput) tripleInput.value = tripleRooms;
+    if (otherInput) otherInput.value = otherRooms;
 }
 </script>
 
