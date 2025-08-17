@@ -4,6 +4,7 @@ Airline-style voucher generator matching the exact template provided
 
 import os
 import csv
+import json
 import logging
 from datetime import datetime
 from io import BytesIO
@@ -776,7 +777,6 @@ class AirlineVoucherGenerator:
         if flight_data['segments']:
             def get_flight_date(segment):
                 try:
-                    from datetime import datetime
                     flight_date_str = segment.get('flight_date', '')
                     print(f"DEBUG: Flight {segment.get('airline', '')} {segment.get('flight_number', '')} has date: '{flight_date_str}'")
                     if not flight_date_str:
@@ -842,130 +842,127 @@ class AirlineVoucherGenerator:
                 print(f"DEBUG: Checking document ID {document.id}")
                 print(f"DEBUG: Document type: {document.document_type}")
                 print(f"DEBUG: Document notes length: {len(document.notes) if document.notes else 0}")
-            
-            if document.document_type == 'CONFIRMATION' and document.notes:
-                try:
-                    # Parse JSON notes for confirmation details (this is where the real data is!)
-                    import json
-                    parsed_data = json.loads(document.notes)
-                    print(f"DEBUG: Successfully parsed JSON from notes")
-                    print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
-                    print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
-                    print(f"DEBUG: Room count in parsed_data: '{parsed_data.get('room_count', 'NOT FOUND')}'")
-                    print(f"DEBUG: Rooms data in parsed_data: '{parsed_data.get('rooms', 'NOT FOUND')}'")
-                    
-                    # Use real hotel name from confirmation
-                    if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
-                        hotel_data['name'] = parsed_data['hotel_name']
-                        print(f"DEBUG: Set hotel name to: '{hotel_data['name']}'")
+                
+                if document.document_type == 'CONFIRMATION' and document.notes:
+                    try:
+                        # Parse JSON notes for confirmation details (this is where the real data is!)
+                        parsed_data = json.loads(document.notes)
+                        print(f"DEBUG: Successfully parsed JSON from notes")
+                        print(f"DEBUG: Parsed data keys: {list(parsed_data.keys())}")
+                        print(f"DEBUG: Hotel name in parsed_data: '{parsed_data.get('hotel_name', 'NOT FOUND')}'")
+                        print(f"DEBUG: Room count in parsed_data: '{parsed_data.get('room_count', 'NOT FOUND')}'")
+                        print(f"DEBUG: Rooms data in parsed_data: '{parsed_data.get('rooms', 'NOT FOUND')}'")
                         
-                    # Use real dates from confirmation
-                    if 'from_date' in parsed_data and parsed_data['from_date']:
-                        try:
-                            from datetime import datetime
-                            from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
-                            hotel_data['checkin_date'] = from_date.strftime("%d-%b-%Y")
-                        except:
-                            hotel_data['checkin_date'] = parsed_data['from_date']
-                    
-                    if 'to_date' in parsed_data and parsed_data['to_date']:
-                        try:
-                            from datetime import datetime
-                            to_date = datetime.strptime(parsed_data['to_date'], '%Y-%m-%d')
-                            hotel_data['checkout_date'] = to_date.strftime("%d-%b-%Y")
+                        # Use real hotel name from confirmation
+                        if 'hotel_name' in parsed_data and parsed_data['hotel_name']:
+                            hotel_data['name'] = parsed_data['hotel_name']
+                            print(f"DEBUG: Set hotel name to: '{hotel_data['name']}'")
                             
-                            # Calculate real nights from confirmation dates
-                            if 'from_date' in parsed_data:
+                        # Use real dates from confirmation
+                        if 'from_date' in parsed_data and parsed_data['from_date']:
+                            try:
                                 from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
-                                hotel_data['nights'] = (to_date - from_date).days
-                        except:
-                            hotel_data['checkout_date'] = parsed_data['to_date']
-                    
-                    # Extract room information
-                    if 'rooms' in parsed_data and parsed_data['rooms']:
-                        rooms_data = parsed_data['rooms']
-                        # Handle new room array format with lead passenger names
-                        if isinstance(rooms_data, list) and len(rooms_data) > 0:
-                            # Extract lead passenger names from room array
-                            lead_passengers = []
-                            room_types = []
-                            board_bases = []
-                            room_counts = []
-                            
-                            for room in rooms_data:
-                                if 'lead_passenger' in room and room['lead_passenger']:
-                                    lead_passengers.append(room['lead_passenger'])
-                                # Get room type and board basis for each room
-                                if 'room_type' in room and room['room_type']:
-                                    room_types.append(room['room_type'])
-                                    # Set the first room type as main room type for backward compatibility
-                                    if 'room_type' not in hotel_data:
-                                        hotel_data['room_type'] = room['room_type']
-                                if 'board_basis' in room and room['board_basis']:
-                                    board_bases.append(room['board_basis'])
-                                    # Set the first board basis as main meal plan for backward compatibility
-                                    if 'meal_plan' not in hotel_data:
-                                        hotel_data['meal_plan'] = room['board_basis']
-                                # Get room count for each room entry
-                                room_count = room.get('room_count', 1)
-                                room_counts.append(room_count)
-                            
-                            # Store detailed room information for voucher display
-                            hotel_data['lead_passengers'] = lead_passengers
-                            hotel_data['room_types'] = room_types  
-                            hotel_data['board_bases'] = board_bases
-                            hotel_data['room_counts'] = room_counts
-                            hotel_data['total_room_count'] = sum(room_counts)
-                            
-                            print(f"DEBUG: Set room_counts: {room_counts}")
-                            print(f"DEBUG: Set total_room_count: {sum(room_counts)}")
-                            
-                            # Use first lead passenger for the main display
-                            if lead_passengers:
-                                hotel_data['primary_guest'] = lead_passengers[0]
-                        elif isinstance(rooms_data, dict):
-                            # Handle legacy room format
-                            # Convert string numbers to integers for comparison
-                            single_count = int(rooms_data.get('single', 0))
-                            double_count = int(rooms_data.get('double', 0))
-                            twin_count = int(rooms_data.get('twin', 0))
-                            triple_count = int(rooms_data.get('triple', 0))
-                            
-                            if single_count > 0:
-                                hotel_data['room_type'] = 'Single Room'
-                            elif double_count > 0:
-                                hotel_data['room_type'] = 'Double Room'
-                            elif twin_count > 0:
-                                hotel_data['room_type'] = 'Twin Room'
-                            elif triple_count > 0:
-                                hotel_data['room_type'] = 'Triple Room'
-                            elif rooms_data.get('other'):
-                                hotel_data['room_type'] = rooms_data['other']
-                    
-                    # Extract meal plan from confirmation
-                    if 'meal_plan' in parsed_data and parsed_data['meal_plan']:
-                        hotel_data['meal_plan'] = parsed_data['meal_plan']
-                    
-                    # Extract confirmation reference
-                    if 'confirmation_reference' in parsed_data and parsed_data['confirmation_reference']:
-                        hotel_data['confirmation_reference'] = parsed_data['confirmation_reference']
-                    
-                    # Extract room_count from top-level data 
-                    if 'room_count' in parsed_data and parsed_data['room_count']:
-                        room_count = int(parsed_data['room_count'])
-                        if room_count > 1:
-                            hotel_data['total_room_count'] = room_count
-                            print(f"DEBUG: Set total_room_count from top-level: {room_count}")
-                    
-                    # Log final hotel_data for debugging
-                    print(f"DEBUG: Final hotel_data keys: {list(hotel_data.keys())}")
-                    print(f"DEBUG: Final total_room_count: {hotel_data.get('total_room_count', 'NOT SET')}")
-                    print(f"DEBUG: Final room_counts: {hotel_data.get('room_counts', 'NOT SET')}")
+                                hotel_data['checkin_date'] = from_date.strftime("%d-%b-%Y")
+                            except:
+                                hotel_data['checkin_date'] = parsed_data['from_date']
+                        
+                        if 'to_date' in parsed_data and parsed_data['to_date']:
+                            try:
+                                to_date = datetime.strptime(parsed_data['to_date'], '%Y-%m-%d')
+                                hotel_data['checkout_date'] = to_date.strftime("%d-%b-%Y")
                                 
-                except (json.JSONDecodeError, TypeError) as e:
-                    print(f"DEBUG: Failed to parse JSON from notes: {e}")
-                    # If not JSON, treat as plain text
-                    pass
+                                # Calculate real nights from confirmation dates
+                                if 'from_date' in parsed_data:
+                                    from_date = datetime.strptime(parsed_data['from_date'], '%Y-%m-%d')
+                                    hotel_data['nights'] = (to_date - from_date).days
+                            except:
+                                hotel_data['checkout_date'] = parsed_data['to_date']
+                        
+                        # Extract room information
+                        if 'rooms' in parsed_data and parsed_data['rooms']:
+                            rooms_data = parsed_data['rooms']
+                            # Handle new room array format with lead passenger names
+                            if isinstance(rooms_data, list) and len(rooms_data) > 0:
+                                # Extract lead passenger names from room array
+                                lead_passengers = []
+                                room_types = []
+                                board_bases = []
+                                room_counts = []
+                                
+                                for room in rooms_data:
+                                    if 'lead_passenger' in room and room['lead_passenger']:
+                                        lead_passengers.append(room['lead_passenger'])
+                                    # Get room type and board basis for each room
+                                    if 'room_type' in room and room['room_type']:
+                                        room_types.append(room['room_type'])
+                                        # Set the first room type as main room type for backward compatibility
+                                        if 'room_type' not in hotel_data:
+                                            hotel_data['room_type'] = room['room_type']
+                                    if 'board_basis' in room and room['board_basis']:
+                                        board_bases.append(room['board_basis'])
+                                        # Set the first board basis as main meal plan for backward compatibility
+                                        if 'meal_plan' not in hotel_data:
+                                            hotel_data['meal_plan'] = room['board_basis']
+                                    # Get room count for each room entry
+                                    room_count = room.get('room_count', 1)
+                                    room_counts.append(room_count)
+                                
+                                # Store detailed room information for voucher display
+                                hotel_data['lead_passengers'] = lead_passengers
+                                hotel_data['room_types'] = room_types  
+                                hotel_data['board_bases'] = board_bases
+                                hotel_data['room_counts'] = room_counts
+                                hotel_data['total_room_count'] = sum(room_counts)
+                                
+                                print(f"DEBUG: Set room_counts: {room_counts}")
+                                print(f"DEBUG: Set total_room_count: {sum(room_counts)}")
+                                
+                                # Use first lead passenger for the main display
+                                if lead_passengers:
+                                    hotel_data['primary_guest'] = lead_passengers[0]
+                            elif isinstance(rooms_data, dict):
+                                # Handle legacy room format
+                                # Convert string numbers to integers for comparison
+                                single_count = int(rooms_data.get('single', 0))
+                                double_count = int(rooms_data.get('double', 0))
+                                twin_count = int(rooms_data.get('twin', 0))
+                                triple_count = int(rooms_data.get('triple', 0))
+                                
+                                if single_count > 0:
+                                    hotel_data['room_type'] = 'Single Room'
+                                elif double_count > 0:
+                                    hotel_data['room_type'] = 'Double Room'
+                                elif twin_count > 0:
+                                    hotel_data['room_type'] = 'Twin Room'
+                                elif triple_count > 0:
+                                    hotel_data['room_type'] = 'Triple Room'
+                                elif rooms_data.get('other'):
+                                    hotel_data['room_type'] = rooms_data['other']
+                        
+                        # Extract meal plan from confirmation
+                        if 'meal_plan' in parsed_data and parsed_data['meal_plan']:
+                            hotel_data['meal_plan'] = parsed_data['meal_plan']
+                        
+                        # Extract confirmation reference
+                        if 'confirmation_reference' in parsed_data and parsed_data['confirmation_reference']:
+                            hotel_data['confirmation_reference'] = parsed_data['confirmation_reference']
+                        
+                        # Extract room_count from top-level data 
+                        if 'room_count' in parsed_data and parsed_data['room_count']:
+                            room_count = int(parsed_data['room_count'])
+                            if room_count > 1:
+                                hotel_data['total_room_count'] = room_count
+                                print(f"DEBUG: Set total_room_count from top-level: {room_count}")
+                        
+                        # Log final hotel_data for debugging
+                        print(f"DEBUG: Final hotel_data keys: {list(hotel_data.keys())}")
+                        print(f"DEBUG: Final total_room_count: {hotel_data.get('total_room_count', 'NOT SET')}")
+                        print(f"DEBUG: Final room_counts: {hotel_data.get('room_counts', 'NOT SET')}")
+                                    
+                    except (json.JSONDecodeError, TypeError) as e:
+                        print(f"DEBUG: Failed to parse JSON from notes: {e}")
+                        # If not JSON, treat as plain text
+                        pass
 
             
             # Get hotel contact info from database using the real hotel name
@@ -980,7 +977,6 @@ class AirlineVoucherGenerator:
         # Sort hotels by check-in date (ascending order)
         def get_checkin_date(hotel):
             try:
-                from datetime import datetime
                 checkin_str = hotel.get('checkin_date', 'N/A')
                 print(f"DEBUG: Hotel '{hotel.get('name', 'Unknown')}' has check-in date: '{checkin_str}'")
                 if checkin_str == 'N/A':
