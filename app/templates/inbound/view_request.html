@@ -1267,6 +1267,55 @@ body {
         </div>
     </div>
 
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="action-buttons-bar">
+                <!-- Search Button -->
+                <button type="button" class="action-btn action-btn-search">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                
+                <!-- Generate Voucher Dropdown -->
+                <div class="dropdown d-inline-block">
+                    <button type="button" class="action-btn action-btn-voucher dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-file-pdf"></i> Generate Voucher
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=vertical" target="_blank">
+                            <i class="fas fa-arrows-alt-v"></i> Vertical Timeline
+                        </a></li>
+                        <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=horizontal" target="_blank">
+                            <i class="fas fa-arrows-alt-h"></i> Horizontal Timeline
+                        </a></li>
+                    </ul>
+                </div>
+                
+                <!-- Generate Days Button -->
+                <button type="button" class="action-btn action-btn-generate" onclick="generateByDays()">
+                    <i class="fas fa-calendar-plus"></i> Generate Days
+                </button>
+                
+                <!-- Create Booking Button -->
+                <button type="button" class="action-btn action-btn-booking" onclick="createBooking()">
+                    <i class="fas fa-plus-circle"></i> Create Booking
+                </button>
+                
+                <!-- Edit Button -->
+                <button type="button" class="action-btn action-btn-edit" onclick="toggleEditMode()">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                
+                <!-- Edit Itinerary Button -->
+                {% if request.itinerary_rows %}
+                <button type="button" class="action-btn action-btn-itinerary" onclick="toggleItineraryEditMode()">
+                    <i class="fas fa-table"></i> <span id="itineraryEditModeText">Edit Itinerary</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Itinerary Details -->
     <div class="row mt-4">
         <div class="col-12">
@@ -3135,6 +3184,70 @@ function removeService(rowIndex, serviceType) {
     top: -6px;
     right: -6px;
 }
+
+/* Yellow Action Buttons Styling */
+.action-buttons-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #1f2937;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    text-decoration: none;
+}
+
+.action-btn:hover {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    color: #1f2937;
+}
+
+.action-btn:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.action-btn i {
+    font-size: 1rem;
+    margin-right: 6px;
+}
+
+/* Dropdown styling for action buttons */
+.action-buttons-bar .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+.action-buttons-bar .dropdown-item {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.action-buttons-bar .dropdown-item:hover {
+    background: #fef3c7;
+    color: #1f2937;
+}
 </style>
 
 <script>
@@ -3202,7 +3315,7 @@ function saveItinerary(event) {
         headers['X-CSRFToken'] = csrfToken.getAttribute('content');
     }
     
-    fetch(`/inbound/${requestId}/api/save-itinerary`, {
+    fetch(`/inbound/api/${requestId}/save-itinerary`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({ rows: rows })
