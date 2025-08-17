@@ -3780,7 +3780,8 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<script>
+<!-- Service Configuration JavaScript -->
+<script type="text/javascript">
 // Global variables
 var selectedRows = [];
 var currentServiceType = '';
@@ -4470,6 +4471,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize room distribution
     setTimeout(updateRoomDistribution, 1000);
 });
+
+// Ensure functions are globally available
+window.showServiceConfigModal = showServiceConfigModal;
+window.selectRow = selectRow;  
+window.applyServiceToDateRange = applyServiceToDateRange;
 </script>
 
 <!-- Include Hotel Autocomplete JavaScript -->
