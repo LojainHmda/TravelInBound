@@ -59,7 +59,7 @@ def new_request():
         request_number=InboundRequest.generate_request_number(),
         from_date=datetime.now().date(),
         to_date=(datetime.now() + timedelta(days=3)).date(),
-        agent='TBA',  # Default value
+        customer_type='AGENCY',  # Default customer type
         contact_name='TBA',  # Default value
         nationality='TBA',  # Default value to avoid null constraint
         pax=1,
@@ -116,7 +116,8 @@ def api_update_request(request_id):
         data = request.get_json()
         
         # Update master details
-        request_obj.agent = data.get('agent', request_obj.agent)
+        request_obj.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        request_obj.customer_type = data.get('customer_type', request_obj.customer_type)
         request_obj.contact_name = data.get('contact_name', request_obj.contact_name)
         request_obj.agent_ref = data.get('agent_ref', request_obj.agent_ref)
         request_obj.nationality = data.get('nationality', request_obj.nationality)

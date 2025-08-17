@@ -29,7 +29,7 @@ class InboundRequest(db.Model):
     no_of_days = db.Column(db.Integer, nullable=False)
     
     # Client information
-    agent = db.Column(db.String(100), nullable=False)
+    customer_type = db.Column(db.String(20), nullable=False, default='AGENCY')  # AGENCY, GROUP, COMPANY, CORPORATE
     contact_name = db.Column(db.String(100), nullable=False)
     agent_ref = db.Column(db.String(50), nullable=True)
     nationality = db.Column(db.String(50), nullable=False)

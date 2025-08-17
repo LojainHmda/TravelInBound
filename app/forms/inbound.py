@@ -13,7 +13,9 @@ class InboundRequestForm(FlaskForm):
     
     # Client information
     customer = IntegerField('Select Customer', validators=[DataRequired()])
-    agent = StringField('Agent', validators=[DataRequired()])
+    customer_type = SelectField('Customer Type', 
+                               choices=[('AGENCY', 'Agency'), ('GROUP', 'Group'), ('COMPANY', 'Company'), ('CORPORATE', 'Corporate')],
+                               validators=[DataRequired()])
     contact_name = StringField('Contact Name', validators=[DataRequired()])
     agent_ref = StringField('Agent Ref', validators=[Optional()])
     nationality = SelectField('Nationality', choices=[(nat, nat) for nat in NATIONALITIES], validators=[DataRequired()])

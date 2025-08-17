@@ -592,3 +592,39 @@ def test_download():
     """Serve the test download page"""
     from flask import send_from_directory
     return send_from_directory('.', 'test_download.html')
+
+@app.route('/api/customers/search')
+@login_required
+def api_customers_search():
+    """API endpoint to search customers for picker modal"""
+    from app.models.customer import Customer
+    
+    search_term = request.args.get('q', '').strip()
+    
+    query = Customer.query
+    
+    if search_term:
+        # Search in name, email, phone, or company name
+        search_filter = db.or_(
+            Customer.first_name.ilike(f'%{search_term}%'),
+            Customer.last_name.ilike(f'%{search_term}%'),
+            Customer.email.ilike(f'%{search_term}%'),
+            Customer.phone.ilike(f'%{search_term}%'),
+            Customer.company_name.ilike(f'%{search_term}%')
+        )
+        query = query.filter(search_filter)
+    
+    customers = query.order_by(Customer.first_name).limit(50).all()
+    
+    result = []
+    for customer in customers:
+        result.append({
+            'id': customer.id,
+            'name': customer.name,
+            'email': customer.email,
+            'phone': customer.phone,
+            'company_name': customer.company_name,
+            'customer_type': customer.customer_type or 'Individual'
+        })
+    
+    return jsonify(result)
