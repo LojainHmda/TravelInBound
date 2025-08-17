@@ -3960,9 +3960,10 @@ function generateHotelRoomTable() {
         roomData.push({
             roomNumber: roomCounter++,
             roomType: 'Other Room',
-            adults: 1,
+            adults: 4,
             children: 0
         });
+    }
     }
     
     // Generate table HTML
@@ -4388,6 +4389,63 @@ function initializeHotelAutocomplete() {
     if (hotelNameInput && typeof setupHotelAutocomplete === 'function') {
         setupHotelAutocomplete(hotelNameInput);
     }
+}
+
+// Show service configuration modal
+function showServiceConfigModal(serviceType) {
+    currentServiceType = serviceType;
+    
+    // Hide all config sections
+    document.querySelectorAll('.service-config-section').forEach(section => {
+        section.classList.add('d-none');
+    });
+    
+    // Show the relevant service config section
+    document.getElementById(serviceType + 'ServiceConfig').classList.remove('d-none');
+    
+    // Initialize dates for hotel service
+    if (serviceType === 'hotel') {
+        const fromDate = document.getElementById('serviceFromDate').value;
+        const toDate = document.getElementById('serviceToDate').value;
+        
+        // Set default check-in and check-out dates
+        const checkinInput = document.getElementById('hotelDefaultCheckin');
+        const checkoutInput = document.getElementById('hotelDefaultCheckout');
+        
+        if (checkinInput && fromDate) {
+            checkinInput.value = fromDate;
+        }
+        if (checkoutInput && toDate) {
+            checkoutInput.value = toDate;
+        }
+        
+        // Initialize remove button visibility
+        updateRemoveButtonsVisibility();
+        
+        // Initialize hotel autocomplete
+        setTimeout(() => {
+            initializeHotelAutocomplete();
+        }, 500);
+    }
+    
+    // Show modal
+    serviceConfigModal.show();
+}
+
+// Select row function
+function selectRow(element) {
+    element.classList.toggle('selected');
+    
+    const rowIndex = parseInt(element.getAttribute('data-row-index'));
+    const selectedIndex = selectedRows.indexOf(rowIndex);
+    
+    if (selectedIndex > -1) {
+        selectedRows.splice(selectedIndex, 1);
+    } else {
+        selectedRows.push(rowIndex);
+    }
+    
+    console.log('Selected rows:', selectedRows);
 }
 
 // Update room distribution summary based on room categories selected
