@@ -283,45 +283,46 @@ body {
 
 .service-icon-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding: 0.75rem 1rem;
-    background: white;
-    border: 2px solid #e9ecef;
-    border-radius: 8px;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%);
+    border: none;
+    border-radius: 12px;
     cursor: grab;
     transition: all 0.2s ease;
-    min-width: 80px;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
+    margin-right: 8px;
 }
 
 .service-icon-item:hover {
-    border-color: #007bff;
-    background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+    background: linear-gradient(135deg, #ff7700 0%, #ff6600 100%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
 }
 
 .service-icon-item:active {
     cursor: grabbing;
+    transform: scale(0.95);
 }
 
 .service-icon-item i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
-    color: #495057;
+    font-size: 1.2rem;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .service-icon-item span {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #6c757d;
+    display: none; /* Hide text labels to match the image */
 }
 
-.service-icon-item[data-service="hotel"] i { color: #dc3545; }
-.service-icon-item[data-service="guide"] i { color: #28a745; }
-.service-icon-item[data-service="transport"] i { color: #17a2b8; }
-.service-icon-item[data-service="meal"] i { color: #ffc107; }
-.service-icon-item[data-service="airport"] i { color: #6f42c1; }
+/* All icons use white color on orange background */
+.service-icon-item[data-service="hotel"] i { color: white; }
+.service-icon-item[data-service="guide"] i { color: white; }
+.service-icon-item[data-service="transport"] i { color: white; }
+.service-icon-item[data-service="meal"] i { color: white; }
+.service-icon-item[data-service="airport"] i { color: white; }
 
 /* Modern Table Styles */
 .itinerary-table-modern {
@@ -433,11 +434,11 @@ body {
 
 /* Compact Service Selection Bar */
 .service-selection-bar {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
     border-radius: 12px;
     padding: 1rem;
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.2);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
 }
 
 .service-bar-title {
@@ -457,24 +458,24 @@ body {
 }
 
 .service-icon-item {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 10px;
-    padding: 0.75rem;
-    cursor: grab;
-    transition: all 0.3s ease;
-    min-width: 70px;
-    text-align: center;
-    border: 2px solid rgba(255, 255, 255, 0.6);
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
+    margin-right: 8px;
 }
 
 .service-icon-item:hover {
-    background: white;
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ff7700 0%, #ff6600 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4);
 }
 
 .service-icon-item:active {
@@ -483,23 +484,21 @@ body {
 }
 
 .service-icon-item i {
-    font-size: 1.25rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .service-icon-item span {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #374151;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    display: none; /* Hide text labels to match the image */
 }
 
-.service-icon-item[data-service="hotel"] i { color: #ef4444; }
-.service-icon-item[data-service="guide"] i { color: #10b981; }
-.service-icon-item[data-service="transport"] i { color: #06b6d4; }
-.service-icon-item[data-service="meal"] i { color: #f59e0b; }
-.service-icon-item[data-service="airport"] i { color: #8b5cf6; }
+/* All icons use white color on orange background */
+.service-icon-item[data-service="hotel"] i { color: white; }
+.service-icon-item[data-service="guide"] i { color: white; }
+.service-icon-item[data-service="transport"] i { color: white; }
+.service-icon-item[data-service="meal"] i { color: white; }
+.service-icon-item[data-service="airport"] i { color: white; }
 
 /* Service Selection Modal Grid */
 .service-selection-grid {
