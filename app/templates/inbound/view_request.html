@@ -1044,41 +1044,8 @@ body {
             </div>
         </div>
         <div>
-            <!-- Voucher Generation Buttons -->
-            <div class="dropdown me-2">
-                <button type="button" class="btn btn-warning dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-file-pdf"></i> Generate Voucher
-                </button>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=vertical" target="_blank">
-                        <i class="fas fa-file-alt"></i> Vertical Timeline
-                    </a></li>
-                    <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=horizontal" target="_blank">
-                        <i class="fas fa-file"></i> Horizontal Timeline
-                    </a></li>
-                </ul>
-            </div>
-            
-            <!-- Generate Days Button -->
-            <button type="button" class="btn btn-info me-2" onclick="generateDays()">
-                <i class="fas fa-calendar-plus"></i> Generate Days
-            </button>
-            
-            <!-- Create Booking Button -->
-            <button type="button" class="btn btn-success me-2" onclick="createBooking()">
-                <i class="fas fa-plus-circle"></i> Create Booking
-            </button>
-            
-            <button type="button" class="btn btn-primary me-2" onclick="toggleEditMode()">
-                <i class="fas fa-edit"></i> <span id="editModeText">Edit</span>
-            </button>
-            {% if request.itinerary_rows %}
-            <button type="button" class="btn btn-warning me-2" onclick="toggleItineraryEditMode()">
-                <i class="fas fa-table"></i> <span id="itineraryEditModeText">Edit Itinerary</span>
-            </button>
-            {% endif %}
             <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back
+                <i class="fas fa-arrow-left"></i> Back to List
             </a>
         </div>
     </div>
