@@ -3137,4 +3137,91 @@ function removeService(rowIndex, serviceType) {
 }
 </style>
 
+<script>
+// Save itinerary function to collect all form data and send as JSON
+function saveItinerary(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('itineraryForm');
+    const formData = new FormData(form);
+    
+    // Collect all itinerary rows
+    const rows = [];
+    const tableRows = document.querySelectorAll('#itineraryForm table tbody tr');
+    
+    tableRows.forEach((tr, index) => {
+        const dateInput = tr.querySelector('input[name="date[]"]');
+        const descInput = tr.querySelector('textarea[name="description[]"]');
+        const costInput = tr.querySelector('input[name="base_cost[]"]');
+        const currencySelect = tr.querySelector('select[name="currency[]"]');
+        const costUnitSelect = tr.querySelector('select[name="cost_unit[]"]');
+        
+        // Get service flags
+        const flagHotel = tr.querySelector('input[name="flag_hotel_' + index + '"]');
+        const flagGuide = tr.querySelector('input[name="flag_guide_' + index + '"]');
+        const flagTransport = tr.querySelector('input[name="flag_transport_' + index + '"]');
+        const flagMeal = tr.querySelector('input[name="flag_meal_' + index + '"]');
+        const flagAirport = tr.querySelector('input[name="flag_airport_' + index + '"]');
+        
+        // Get room data
+        const singleRooms = tr.querySelector('input[name="hotel_single_rooms[]"]') || document.getElementById('single_' + index + '_input');
+        const doubleRooms = tr.querySelector('input[name="hotel_double_rooms[]"]') || document.getElementById('double_' + index + '_input');
+        const tripleRooms = tr.querySelector('input[name="hotel_triple_rooms[]"]') || document.getElementById('triple_' + index + '_input');
+        const otherRooms = tr.querySelector('input[name="hotel_other_rooms[]"]') || document.getElementById('other_' + index + '_input');
+        
+        if (dateInput && descInput && costInput) {
+            const rowData = {
+                date: dateInput.value,
+                description: descInput.value,
+                base_cost: parseFloat(costInput.value) || 0,
+                currency: currencySelect ? currencySelect.value : 'USD',
+                cost_unit: costUnitSelect ? costUnitSelect.value : 'PER_PERSON',
+                flag_hotel: flagHotel ? (flagHotel.value === '1') : false,
+                flag_guide: flagGuide ? (flagGuide.value === '1') : false,
+                flag_transport: flagTransport ? (flagTransport.value === '1') : false,
+                flag_meal: flagMeal ? (flagMeal.value === '1') : false,
+                flag_airport: flagAirport ? (flagAirport.value === '1') : false,
+                hotel_single_rooms: singleRooms ? parseInt(singleRooms.value) || 0 : 0,
+                hotel_double_rooms: doubleRooms ? parseInt(doubleRooms.value) || 0 : 0,
+                hotel_triple_rooms: tripleRooms ? parseInt(tripleRooms.value) || 0 : 0,
+                hotel_other_rooms: otherRooms ? parseInt(otherRooms.value) || 0 : 0
+            };
+            rows.push(rowData);
+        }
+    });
+    
+    // Send JSON data to API
+    const requestId = {{ request.id }};
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Add CSRF token if available
+    const csrfToken = document.querySelector('meta[name=csrf-token]');
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken.getAttribute('content');
+    }
+    
+    fetch(`/inbound/${requestId}/api/save-itinerary`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ rows: rows })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Itinerary saved successfully!', 'success');
+            // Refresh the page to show updated data
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error saving itinerary: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving itinerary: ' + error.message, 'error');
+    });
+}
+</script>
+
 {% endblock %}
