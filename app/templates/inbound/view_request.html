@@ -4115,7 +4115,8 @@ function renumberRoomRows() {
 
 // Apply service to selected date range
 function applyServiceToDateRange() {
-    if (selectedRows.length === 0) {
+    // For hotel service, we don't require row selection - we apply to the date range
+    if (currentServiceType !== 'hotel' && selectedRows.length === 0) {
         alert('Please select at least one date from your itinerary by clicking on the rows.');
         return;
     }
@@ -4189,22 +4190,44 @@ function applyServiceToDateRange() {
         };
     }
     
-    // Apply the service to selected rows
-    selectedRows.forEach(rowIndex => {
-        addServiceToRow(rowIndex, currentServiceType, serviceData);
-    });
+    // For hotel service, apply to all days in the date range
+    if (currentServiceType === 'hotel') {
+        const fromDate = new Date(document.getElementById('serviceFromDate').value);
+        const toDate = new Date(document.getElementById('serviceToDate').value);
+        
+        // Find all rows within the date range
+        const rows = document.querySelectorAll('.itinerary-row');
+        let appliedCount = 0;
+        
+        rows.forEach((row, index) => {
+            const rowDateStr = row.getAttribute('data-date');
+            if (rowDateStr) {
+                const rowDate = new Date(rowDateStr);
+                if (rowDate >= fromDate && rowDate <= toDate) {
+                    addServiceToRow(index, currentServiceType, serviceData);
+                    appliedCount++;
+                }
+            }
+        });
+        
+        alert(`Hotel service added to ${appliedCount} day(s) successfully!`);
+    } else {
+        // Apply the service to selected rows for other services
+        selectedRows.forEach(rowIndex => {
+            addServiceToRow(rowIndex, currentServiceType, serviceData);
+        });
+        
+        alert(`${currentServiceType.charAt(0).toUpperCase() + currentServiceType.slice(1)} service added to ${selectedRows.length} day(s) successfully!`);
+        
+        // Clear selections
+        selectedRows = [];
+        document.querySelectorAll('.itinerary-row').forEach(row => {
+            row.classList.remove('selected');
+        });
+    }
     
     // Close modal
     serviceConfigModal.hide();
-    
-    // Show success message
-    alert(`${currentServiceType.charAt(0).toUpperCase() + currentServiceType.slice(1)} service added to ${selectedRows.length} day(s) successfully!`);
-    
-    // Clear selections
-    selectedRows = [];
-    document.querySelectorAll('.itinerary-row').forEach(row => {
-        row.classList.remove('selected');
-    });
 }
 
 // Add service to specific row
