@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 - **Status**: Fully implemented with responsive design and interactive dropdown functionality
 
 ### Visual Timeline Voucher for Inbound Tours
-- **Date**: August 13, 2025
+- **Date**: August 13, 2025 (Updated August 17, 2025)
 - **Feature**: Creative PDF timeline voucher generation for tour itineraries with dual layout options
 - **Components Added**:
   - New templates: `voucher_timeline.html` (vertical) and `voucher_timeline_horizontal.html` (landscape)
@@ -48,14 +48,15 @@ Preferred communication style: Simple, everyday language.
   - PDF generation using WeasyPrint library with landscape mode for horizontal layout
   - Professional tour itinerary layout with cost breakdown
   - Bold fonts throughout for improved readability
-- **Visual Elements**: Yellow (#fbbf24) headers with dark text, black icons, service descriptions displayed with each icon
+- **Visual Elements**: Yellow (#fbbf24) headers with dark text, service icons in light grey (#e5e7eb) boxes
 - **Latest Updates**: 
   - **Fixed multiple icons display**: Both layouts now show all service icons when multiple services exist on same day
   - **Removed grey boxes**: All grey backgrounds replaced with yellow (#fbbf24) and dark text for readability
   - **Compact day circles**: Horizontal layout uses smaller (40x40px) yellow circles with black text
-  - **Simplified design**: Icons display in yellow badges with black text, no additional decorative boxes
-  - **Vertical voucher**: Fixed to display multiple service icons per day like horizontal layout
-- **Status**: Fully implemented with both layouts supporting multiple icons per day
+  - **Horizontal Layout Optimization (Aug 17, 2025)**: Changed to 4-column grid layout to prevent overflow, light grey service boxes (#e5e7eb), removed duplicate dates
+  - **Grid Layout**: Horizontal timeline now uses CSS Grid with 4 days per row for better spacing and page fitting
+  - **Service Icons Styling**: Changed from yellow to light grey (#e5e7eb) background with dark grey (#374151) text and icons
+- **Status**: Fully implemented with optimized horizontal layout for better print formatting
 
 ## Recent Changes (August 2025)
 

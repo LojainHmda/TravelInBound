@@ -125,9 +125,10 @@
         }
         
         .timeline-track {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
             position: relative;
-            min-width: fit-content;
             padding: 0 20px;
         }
         
@@ -135,20 +136,18 @@
             content: '';
             position: absolute;
             top: 50%;
-            left: 40px;
-            right: 40px;
+            left: 20px;
+            right: 20px;
             height: 3px;
             background: linear-gradient(90deg, #6b7280 0%, #4b5563 100%);
             z-index: 0;
         }
         
         .day-column {
-            flex: 1;
-            min-width: 200px;
-            max-width: 250px;
             padding: 0 15px;
             position: relative;
             z-index: 1;
+            min-width: 0;
         }
         
         .day-circle {
@@ -210,13 +209,13 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            background: #fbbf24;
-            color: #000000;
+            background: #e5e7eb;
+            color: #374151;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            border: 1px solid #f59e0b;
+            border: 1px solid #d1d5db;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: all 0.2s ease;
         }
@@ -229,7 +228,7 @@
         
         .service-icon-button svg {
             flex-shrink: 0;
-            fill: #000000;
+            fill: #374151;
         }
         
         .event-description {
@@ -301,8 +300,8 @@
             }
             
             .service-icon-button {
-                background: #fbbf24 !important;
-                border: 1px solid #f59e0b !important;
+                background: #e5e7eb !important;
+                border: 1px solid #d1d5db !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
