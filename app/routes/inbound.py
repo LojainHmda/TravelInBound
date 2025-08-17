@@ -156,16 +156,21 @@ def api_save_itinerary(request_id):
         data = request.get_json()
         rows_data = data.get('rows', [])
         
+        print(f"DEBUG: Saving itinerary for request {request_id}")
+        print(f"DEBUG: Received {len(rows_data)} rows")
+        
         # Clear existing itinerary rows
-        ItineraryRow.query.filter_by(request_id=request_id).delete()
+        deleted_count = ItineraryRow.query.filter_by(request_id=request_id).delete()
+        print(f"DEBUG: Deleted {deleted_count} existing rows")
         
         # Add new rows
         for i, row_data in enumerate(rows_data):
+            print(f"DEBUG: Processing row {i}: {row_data}")
             row = ItineraryRow(
                 request_id=request_id,
                 date=datetime.strptime(row_data['date'], '%Y-%m-%d').date(),
                 description=row_data['description'],
-                base_cost=row_data['base_cost'],
+                base_cost=float(row_data['base_cost']) if row_data['base_cost'] else 0.0,
                 currency=row_data['currency'],
                 cost_unit=row_data['cost_unit'],
                 flag_hotel=row_data.get('flag_hotel', False),
@@ -173,17 +178,19 @@ def api_save_itinerary(request_id):
                 flag_transport=row_data.get('flag_transport', False),
                 flag_meal=row_data.get('flag_meal', False),
                 flag_airport=row_data.get('flag_airport', False),
-                hotel_single_rooms=row_data.get('hotel_single_rooms', 0),
-                hotel_double_rooms=row_data.get('hotel_double_rooms', 0),
-                hotel_triple_rooms=row_data.get('hotel_triple_rooms', 0),
-                hotel_other_rooms=row_data.get('hotel_other_rooms', 0)
+                hotel_single_rooms=int(row_data.get('hotel_single_rooms', 0)),
+                hotel_double_rooms=int(row_data.get('hotel_double_rooms', 0)),
+                hotel_triple_rooms=int(row_data.get('hotel_triple_rooms', 0)),
+                hotel_other_rooms=int(row_data.get('hotel_other_rooms', 0))
             )
             db.session.add(row)
+            print(f"DEBUG: Added row {i} to session")
         
         # Recalculate totals
         request_obj.calculate_total()
         
         db.session.commit()
+        print(f"DEBUG: Successfully saved itinerary")
         return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
         
     except Exception as e:
