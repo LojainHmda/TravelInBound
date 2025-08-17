@@ -1234,7 +1234,7 @@ body {
                         </div>
                         <div class="col-4">
                             <div class="border rounded p-3">
-                                <div class="h4 text-info mb-1">{{ "%.2f"|format((request.total_amount / request.pax) if request.pax > 0 else 0) }}</div>
+                                <div class="h4 text-info mb-1">{% if request.pax > 0 %}{{ "%.2f"|format(request.total_amount / request.pax) }}{% else %}0.00{% endif %}</div>
                                 <small class="text-muted">Per Person</small>
                             </div>
                         </div>
@@ -1408,20 +1408,20 @@ body {
                                                            style="width: 80px;"
                                                            required>
                                                     <select class="form-select form-select-sm" name="currency[]" style="width: 60px;">
-                                                        <option value="USD" {{ 'selected' if row.currency == 'USD' else '' }}>USD</option>
-                                                        <option value="EUR" {{ 'selected' if row.currency == 'EUR' else '' }}>EUR</option>
-                                                        <option value="JOD" {{ 'selected' if row.currency == 'JOD' else '' }}>JOD</option>
-                                                        <option value="GBP" {{ 'selected' if row.currency == 'GBP' else '' }}>GBP</option>
+                                                        <option value="USD" {% if row.currency == 'USD' %}selected{% endif %}>USD</option>
+                                                        <option value="EUR" {% if row.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                                        <option value="JOD" {% if row.currency == 'JOD' %}selected{% endif %}>JOD</option>
+                                                        <option value="GBP" {% if row.currency == 'GBP' %}selected{% endif %}>GBP</option>
                                                     </select>
                                                 </div>
                                             </td>
                                             <td>
                                                 <span class="badge bg-primary">
-                                                    {{ 'Per Person' if row.cost_unit == 'PER_PERSON' else 'Per Group' }}
+                                                    {% if row.cost_unit == 'PER_PERSON' %}Per Person{% else %}Per Group{% endif %}
                                                 </span>
                                                 <select class="form-select d-none" name="cost_unit[]" onchange="updateRowTotal(this.closest('tr'))">
-                                                    <option value="PER_PERSON" {{ 'selected' if row.cost_unit == 'PER_PERSON' else '' }}>Per Person</option>
-                                                    <option value="PER_GROUP" {{ 'selected' if row.cost_unit == 'PER_GROUP' else '' }}>Per Group</option>
+                                                    <option value="PER_PERSON" {% if row.cost_unit == 'PER_PERSON' %}selected{% endif %}>Per Person</option>
+                                                    <option value="PER_GROUP" {% if row.cost_unit == 'PER_GROUP' %}selected{% endif %}>Per Group</option>
                                                 </select>
                                             </td>
                                             <td>
@@ -1488,11 +1488,11 @@ body {
                                                     {% endif %}
                                                 </div>
                                                 <!-- Hidden inputs for form submission -->
-                                                <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{{ '1' if row.flag_hotel else '' }}">
-                                                <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{{ '1' if row.flag_guide else '' }}">
-                                                <input type="hidden" name="flag_transport_{{ loop.index0 }}" value="{{ '1' if row.flag_transport else '' }}">
-                                                <input type="hidden" name="flag_meal_{{ loop.index0 }}" value="{{ '1' if row.flag_meal else '' }}">
-                                                <input type="hidden" name="flag_airport_{{ loop.index0 }}" value="{{ '1' if row.flag_airport else '' }}">
+                                                <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{% if row.flag_hotel %}1{% endif %}">
+                                                <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{% if row.flag_guide %}1{% endif %}">
+                                                <input type="hidden" name="flag_transport_{{ loop.index0 }}" value="{% if row.flag_transport %}1{% endif %}">
+                                                <input type="hidden" name="flag_meal_{{ loop.index0 }}" value="{% if row.flag_meal %}1{% endif %}">
+                                                <input type="hidden" name="flag_airport_{{ loop.index0 }}" value="{% if row.flag_airport %}1{% endif %}">
                                                 <!-- Hidden room data -->
                                                 <input type="hidden" id="single_{{ loop.index0 }}_input" name="hotel_single_rooms[]" value="{{ row.hotel_single_rooms or 0 }}">
                                                 <input type="hidden" id="double_{{ loop.index0 }}_input" name="hotel_double_rooms[]" value="{{ row.hotel_double_rooms or 0 }}">
@@ -1655,7 +1655,7 @@ body {
                                             <td>{{ transport.vehicle_type or '-' }}</td>
                                             <td>{{ transport.pickup_location or '-' }}</td>
                                             <td>{{ transport.dropoff_location or '-' }}</td>
-                                            <td>{{ transport.pickup_time.strftime('%H:%M') if transport.pickup_time else '-' }}</td>
+                                            <td>{% if transport.pickup_time %}{{ transport.pickup_time.strftime('%H:%M') }}{% else %}-{% endif %}</td>
                                             <td>
                                                 {% if transport.is_airport_transfer %}
                                                     <span class="badge bg-danger">Airport</span>
@@ -1694,7 +1694,7 @@ body {
                                             <td>{{ meal.meal_type or '-' }}</td>
                                             <td>{{ meal.restaurant or '-' }}</td>
                                             <td>{{ meal.location or '-' }}</td>
-                                            <td>{{ meal.meal_time.strftime('%H:%M') if meal.meal_time else '-' }}</td>
+                                            <td>{% if meal.meal_time %}{{ meal.meal_time.strftime('%H:%M') }}{% else %}-{% endif %}</td>
                                             <td>{{ "%.2f"|format(meal.cost_per_person) }} {{ meal.currency }}</td>
                                             <td>{{ "%.2f"|format(meal.total_cost) }} {{ meal.currency }}</td>
                                         </tr>
@@ -3780,15 +3780,56 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Service Configuration JavaScript -->
+<!-- Service Configuration JavaScript - IMMEDIATELY DEFINE FUNCTION -->
 <script type="text/javascript">
+// IMMEDIATELY DEFINE GLOBAL FUNCTION
+window.showServiceConfigModal = function(serviceType) {
+    console.log('showServiceConfigModal called with:', serviceType);
+    
+    // Initialize modal if not done yet
+    if (!window.serviceConfigModal) {
+        const modalElement = document.getElementById('serviceConfigModal');
+        if (modalElement) {
+            window.serviceConfigModal = new bootstrap.Modal(modalElement);
+        }
+    }
+    
+    // Set current service type
+    window.currentServiceType = serviceType;
+    
+    // Reset selections
+    window.selectedRows = [];
+    document.querySelectorAll('.itinerary-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+    
+    // Update modal title
+    const titleElement = document.getElementById('serviceTypeTitle');
+    if (titleElement) {
+        titleElement.textContent = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+    }
+    
+    // Hide all service config sections
+    document.querySelectorAll('.service-config-section').forEach(section => {
+        section.classList.add('d-none');
+    });
+    
+    // Show the relevant service config section
+    const configSection = document.getElementById(serviceType + 'ServiceConfig');
+    if (configSection) {
+        configSection.classList.remove('d-none');
+    }
+    
+    // Show modal
+    if (window.serviceConfigModal) {
+        window.serviceConfigModal.show();
+    }
+};
+
 // Global variables
 var selectedRows = [];
 var currentServiceType = '';
 var serviceConfigModal;
-
-// Show service configuration modal
-function showServiceConfigModal(serviceType) {
     currentServiceType = serviceType;
     
     // Reset selections
