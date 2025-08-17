@@ -3781,14 +3781,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <script>
-let selectedRows = [];
-let currentServiceType = '';
-let serviceConfigModal;
-
-
+// Global variables
+var selectedRows = [];
+var currentServiceType = '';
+var serviceConfigModal;
 
 // Show service configuration modal
-function showServiceConfigModal(serviceType) {
+window.showServiceConfigModal = function(serviceType) {
     currentServiceType = serviceType;
     
     // Reset selections
@@ -3840,7 +3839,7 @@ function showServiceConfigModal(serviceType) {
 }
 
 // Select row function
-function selectRow(index) {
+window.selectRow = function(index) {
     // Only allow row selection when modal is open
     if (!serviceConfigModal || !document.body.classList.contains('modal-open')) {
         return;
@@ -4140,7 +4139,7 @@ function renumberRoomRows() {
 }
 
 // Apply service to selected date range
-function applyServiceToDateRange() {
+window.applyServiceToDateRange = function() {
     // For hotel and guide services, we don't require row selection - we apply to the date range
     if (!['hotel', 'guide'].includes(currentServiceType) && selectedRows.length === 0) {
         alert('Please select at least one date from your itinerary by clicking on the rows.');
