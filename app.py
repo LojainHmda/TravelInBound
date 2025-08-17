@@ -22,8 +22,8 @@ csrf = CSRFProtect()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 
-# Configure the database - use SQLite for demo
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///travel_booking.db"
+# Configure the database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///travel_booking.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,

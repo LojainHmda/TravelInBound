@@ -29,7 +29,6 @@ class InboundRequest(db.Model):
     no_of_days = db.Column(db.Integer, nullable=False)
     
     # Client information
-    agent = db.Column(db.String(200), nullable=True)  # Legacy field, now using customer_id
     customer_type = db.Column(db.String(20), nullable=False, default='AGENCY')  # AGENCY, GROUP, COMPANY, CORPORATE
     contact_name = db.Column(db.String(100), nullable=False)
     agent_ref = db.Column(db.String(50), nullable=True)
