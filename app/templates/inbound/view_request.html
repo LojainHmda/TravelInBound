@@ -1335,37 +1335,37 @@ body {
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
-                        <!-- Compact Service Selection Bar -->
-                        <div class="service-selection-bar mb-3">
-                            <div class="service-bar-title">
-                                <i class="fas fa-hand-paper me-2"></i>Drag services to rows:
+                        <!-- Intuitive Service Selection Bar -->
+                        <div class="service-selection-bar mb-3" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <div class="service-bar-title mb-2" style="font-weight: 600; color: #334155;">
+                                <i class="fas fa-click me-2" style="color: #fbbf24;"></i>Click services to add to selected dates:
                             </div>
-                            <div class="service-icons-horizontal" style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-start; align-items: center;">
-                                <div class="service-icon-item" draggable="true" data-service="hotel" ondragstart="handleDragStart(event)" 
-                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 10px; cursor: grab; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); margin: 0 3px; padding: 0;">
-                                    <i class="fas fa-bed" style="font-size: 1rem; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); margin: 0;"></i>
-                                    <span style="display: none;">Hotel</span>
-                                </div>
-                                <div class="service-icon-item" draggable="true" data-service="guide" ondragstart="handleDragStart(event)"
-                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 10px; cursor: grab; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); margin: 0 3px; padding: 0;">
-                                    <i class="fas fa-user-tie" style="font-size: 1rem; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); margin: 0;"></i>
-                                    <span style="display: none;">Guide</span>
-                                </div>
-                                <div class="service-icon-item" draggable="true" data-service="transport" ondragstart="handleDragStart(event)"
-                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 10px; cursor: grab; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); margin: 0 3px; padding: 0;">
-                                    <i class="fas fa-car" style="font-size: 1rem; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); margin: 0;"></i>
-                                    <span style="display: none;">Transport</span>
-                                </div>
-                                <div class="service-icon-item" draggable="true" data-service="meal" ondragstart="handleDragStart(event)"
-                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 10px; cursor: grab; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); margin: 0 3px; padding: 0;">
-                                    <i class="fas fa-utensils" style="font-size: 1rem; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); margin: 0;"></i>
-                                    <span style="display: none;">Meal</span>
-                                </div>
-                                <div class="service-icon-item" draggable="true" data-service="airport" ondragstart="handleDragStart(event)"
-                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 10px; cursor: grab; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3); margin: 0 3px; padding: 0;">
-                                    <i class="fas fa-plane" style="font-size: 1rem; color: white; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); margin: 0;"></i>
-                                    <span style="display: none;">Airport</span>
-                                </div>
+                            <div class="service-icons-horizontal d-flex gap-3 align-items-center">
+                                <button type="button" class="service-icon-button" data-service="hotel" onclick="showServiceConfigModal('hotel')" 
+                                        style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); min-width: 100px;">
+                                    <i class="fas fa-bed mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">Hotel</span>
+                                </button>
+                                <button type="button" class="service-icon-button" data-service="guide" onclick="showServiceConfigModal('guide')"
+                                        style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); min-width: 100px;">
+                                    <i class="fas fa-user-tie mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">Guide</span>
+                                </button>
+                                <button type="button" class="service-icon-button" data-service="transport" onclick="showServiceConfigModal('transport')"
+                                        style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); min-width: 100px;">
+                                    <i class="fas fa-car mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">Transport</span>
+                                </button>
+                                <button type="button" class="service-icon-button" data-service="meal" onclick="showServiceConfigModal('meal')"
+                                        style="background: linear-gradient(135deg, #7c2d12 0%, #451a03 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(124, 45, 18, 0.3); min-width: 100px;">
+                                    <i class="fas fa-utensils mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">Meal</span>
+                                </button>
+                                <button type="button" class="service-icon-button" data-service="airport" onclick="showServiceConfigModal('airport')"
+                                        style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); min-width: 100px;">
+                                    <i class="fas fa-plane mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">Airport</span>
+                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -1383,8 +1383,9 @@ body {
                                     </thead>
                                     <tbody id="itineraryTableBody">
                                         {% for row in request.itinerary_rows %}
-                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" 
-                                            ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" data-date="{{ row.date.strftime('%Y-%m-%d') }}" 
+                                            class="itinerary-row clickable-row" onclick="selectRow({{ loop.index0 }})" style="cursor: pointer; transition: all 0.2s ease;"
+                                            onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor=''">
                                             <td>
                                                 {{ row.date.strftime('%d %b %Y') }}
                                                 <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
@@ -3343,6 +3344,524 @@ document.addEventListener('DOMContentLoaded', function() {
 .cursor-pointer {
     cursor: pointer;
 }
+
+.service-icon-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+}
+
+.itinerary-row.selected {
+    background-color: #fef3c7 !important;
+    box-shadow: 0 0 0 2px #fbbf24;
+}
+
+.room-counter .input-group button {
+    min-width: 40px;
+}
+
+.service-config-section .card {
+    border-radius: 12px;
+    overflow: hidden;
+}
 </style>
+
+<!-- Service Configuration Modal -->
+<div class="modal fade" id="serviceConfigModal" tabindex="-1" aria-labelledby="serviceConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
+                <h5 class="modal-title" id="serviceConfigModalLabel">
+                    <i class="fas fa-cog me-2"></i>
+                    <span id="serviceTypeTitle">Service</span> Configuration
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Date Range Selection -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="alert alert-info" style="background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); border: none; border-radius: 10px;">
+                            <h6 class="mb-2"><i class="fas fa-calendar-alt me-2"></i>Select Date Range</h6>
+                            <p class="mb-2">Available dates from your itinerary: <strong>{{ request.from_date.strftime('%d %b %Y') }}</strong> to <strong>{{ request.to_date.strftime('%d %b %Y') }}</strong></p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">From Date:</label>
+                                    <input type="date" id="serviceFromDate" class="form-control" 
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}"
+                                           value="{{ request.from_date.strftime('%Y-%m-%d') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">To Date:</label>
+                                    <input type="date" id="serviceToDate" class="form-control" 
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}"
+                                           value="{{ request.to_date.strftime('%Y-%m-%d') }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Service Configuration -->
+                <div id="hotelServiceConfig" class="service-config-section d-none">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white;">
+                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Hotel Name:</label>
+                                    <input type="text" id="hotelName" class="form-control" placeholder="Enter hotel name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Location:</label>
+                                    <input type="text" id="hotelLocation" class="form-control" placeholder="Enter location">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Check-in:</label>
+                                    <input type="time" id="hotelCheckin" class="form-control" value="15:00">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Check-out:</label>
+                                    <input type="time" id="hotelCheckout" class="form-control" value="12:00">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Board Basis:</label>
+                                    <select id="hotelBoardBasis" class="form-select">
+                                        <option value="RO">Room Only</option>
+                                        <option value="BB" selected>Bed & Breakfast</option>
+                                        <option value="HB">Half Board</option>
+                                        <option value="FB">Full Board</option>
+                                        <option value="AI">All Inclusive</option>
+                                        <option value="UAI">Ultra All Inclusive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Cost per Night:</label>
+                                    <input type="number" id="hotelCostPerNight" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <!-- Room Distribution -->
+                            <div class="mt-4">
+                                <h6 class="mb-3"><i class="fas fa-door-open me-2"></i>Room Distribution</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="room-counter">
+                                            <label class="form-label">Single Rooms:</label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('single', -1)">-</button>
+                                                <input type="number" id="hotelSingleRooms" class="form-control text-center" value="0" min="0" max="20">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('single', 1)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="room-counter">
+                                            <label class="form-label">Double Rooms:</label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('double', -1)">-</button>
+                                                <input type="number" id="hotelDoubleRooms" class="form-control text-center" value="0" min="0" max="20">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('double', 1)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="room-counter">
+                                            <label class="form-label">Triple Rooms:</label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('triple', -1)">-</button>
+                                                <input type="number" id="hotelTripleRooms" class="form-control text-center" value="0" min="0" max="20">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('triple', 1)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="room-counter">
+                                            <label class="form-label">Other Rooms:</label>
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('other', -1)">-</button>
+                                                <input type="number" id="hotelOtherRooms" class="form-control text-center" value="0" min="0" max="20">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="adjustHotelRoomCount('other', 1)">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Total Rooms: <span id="totalHotelRooms" class="fw-bold">0</span></small>
+                                </div>
+                            </div>
+
+                            <!-- Dietary Requirements -->
+                            <div class="mt-3">
+                                <label class="form-label">Dietary Requirements:</label>
+                                <textarea id="hotelDietaryRequirements" class="form-control" rows="2" placeholder="Special dietary needs (Vegetarian, Halal, Gluten-free, etc.)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport Service Configuration -->
+                <div id="transportServiceConfig" class="service-config-section d-none">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white;">
+                            <h6 class="mb-0"><i class="fas fa-car me-2"></i>Transport Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Vehicle Type:</label>
+                                    <select id="transportVehicleType" class="form-select">
+                                        <option value="car">Car</option>
+                                        <option value="van">Van</option>
+                                        <option value="bus">Bus</option>
+                                        <option value="luxury">Luxury Vehicle</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Pickup Time:</label>
+                                    <input type="time" id="transportPickupTime" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Cost:</label>
+                                    <input type="number" id="transportCost" class="form-control" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Pickup Location:</label>
+                                    <input type="text" id="transportPickupLocation" class="form-control" placeholder="Enter pickup location">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Drop-off Location:</label>
+                                    <input type="text" id="transportDropoffLocation" class="form-control" placeholder="Enter drop-off location">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guide Service Configuration -->
+                <div id="guideServiceConfig" class="service-config-section d-none">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white;">
+                            <h6 class="mb-0"><i class="fas fa-user-tie me-2"></i>Guide Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Guide Name:</label>
+                                    <input type="text" id="guideName" class="form-control" placeholder="Enter guide name">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Language:</label>
+                                    <select id="guideLanguage" class="form-select">
+                                        <option value="english">English</option>
+                                        <option value="arabic">Arabic</option>
+                                        <option value="spanish">Spanish</option>
+                                        <option value="french">French</option>
+                                        <option value="german">German</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Duration (hours):</label>
+                                    <input type="number" id="guideDuration" class="form-control" min="1" max="24" value="8">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Meeting Point:</label>
+                                    <input type="text" id="guideMeetingPoint" class="form-control" placeholder="Enter meeting point">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cost:</label>
+                                    <input type="number" id="guideCost" class="form-control" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meal Service Configuration -->
+                <div id="mealServiceConfig" class="service-config-section d-none">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, #7c2d12 0%, #451a03 100%); color: white;">
+                            <h6 class="mb-0"><i class="fas fa-utensils me-2"></i>Meal Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Meal Type:</label>
+                                    <select id="mealType" class="form-select">
+                                        <option value="breakfast">Breakfast</option>
+                                        <option value="lunch">Lunch</option>
+                                        <option value="dinner">Dinner</option>
+                                        <option value="snack">Snack</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Time:</label>
+                                    <input type="time" id="mealTime" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Restaurant:</label>
+                                    <input type="text" id="mealRestaurant" class="form-control" placeholder="Restaurant name">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Cost per Person:</label>
+                                    <input type="number" id="mealCostPerPerson" class="form-control" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Location:</label>
+                                    <input type="text" id="mealLocation" class="form-control" placeholder="Restaurant location/address">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Airport Service Configuration -->
+                <div id="airportServiceConfig" class="service-config-section d-none">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white;">
+                            <h6 class="mb-0"><i class="fas fa-plane me-2"></i>Airport Configuration</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label class="form-label">Service Type:</label>
+                                    <select id="airportServiceType" class="form-select">
+                                        <option value="arrival">Arrival Transfer</option>
+                                        <option value="departure">Departure Transfer</option>
+                                        <option value="meetgreet">Meet & Greet</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Flight Time:</label>
+                                    <input type="time" id="airportFlightTime" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Cost:</label>
+                                    <input type="number" id="airportCost" class="form-control" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Flight Number:</label>
+                                    <input type="text" id="airportFlightNumber" class="form-control" placeholder="e.g., RJ123">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Terminal:</label>
+                                    <input type="text" id="airportTerminal" class="form-control" placeholder="Terminal number">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="applyServiceToDateRange()" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none;">
+                    <i class="fas fa-check me-2"></i>Apply to Selected Dates
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedRows = [];
+let currentServiceType = '';
+let serviceConfigModal;
+
+// Initialize modal when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('serviceConfigModal')) {
+        serviceConfigModal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
+    }
+});
+
+// Show service configuration modal
+function showServiceConfigModal(serviceType) {
+    currentServiceType = serviceType;
+    
+    // Reset selections
+    selectedRows = [];
+    document.querySelectorAll('.itinerary-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+    
+    // Update modal title
+    document.getElementById('serviceTypeTitle').textContent = serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+    
+    // Hide all service config sections
+    document.querySelectorAll('.service-config-section').forEach(section => {
+        section.classList.add('d-none');
+    });
+    
+    // Show the relevant service config section
+    document.getElementById(serviceType + 'ServiceConfig').classList.remove('d-none');
+    
+    // Show instructions
+    showNotification(`Click on the dates in your itinerary to select when you want ${serviceType} service, then configure the details below.`, 'info');
+    
+    serviceConfigModal.show();
+}
+
+// Select row function
+function selectRow(index) {
+    // Only allow row selection when modal is open
+    if (!serviceConfigModal || !document.body.classList.contains('modal-open')) {
+        return;
+    }
+    
+    const row = document.querySelector(`tr[data-row-index="${index}"]`);
+    if (!row) return;
+    
+    if (selectedRows.includes(index)) {
+        // Deselect
+        selectedRows = selectedRows.filter(i => i !== index);
+        row.classList.remove('selected');
+    } else {
+        // Select
+        selectedRows.push(index);
+        row.classList.add('selected');
+    }
+    
+    // Update date range inputs based on selection
+    if (selectedRows.length > 0) {
+        const dates = selectedRows.map(i => {
+            const row = document.querySelector(`tr[data-row-index="${i}"]`);
+            return row.dataset.date;
+        }).sort();
+        
+        document.getElementById('serviceFromDate').value = dates[0];
+        document.getElementById('serviceToDate').value = dates[dates.length - 1];
+    }
+}
+
+// Adjust hotel room count
+function adjustHotelRoomCount(roomType, adjustment) {
+    const input = document.getElementById(`hotel${roomType.charAt(0).toUpperCase() + roomType.slice(1)}Rooms`);
+    const currentValue = parseInt(input.value) || 0;
+    const newValue = Math.max(0, Math.min(20, currentValue + adjustment));
+    
+    input.value = newValue;
+    updateTotalHotelRooms();
+}
+
+// Update total hotel rooms display
+function updateTotalHotelRooms() {
+    const single = parseInt(document.getElementById('hotelSingleRooms').value) || 0;
+    const double = parseInt(document.getElementById('hotelDoubleRooms').value) || 0;
+    const triple = parseInt(document.getElementById('hotelTripleRooms').value) || 0;
+    const other = parseInt(document.getElementById('hotelOtherRooms').value) || 0;
+    
+    const total = single + double + triple + other;
+    document.getElementById('totalHotelRooms').textContent = total;
+}
+
+// Apply service to selected date range
+function applyServiceToDateRange() {
+    if (selectedRows.length === 0) {
+        showNotification('Please select at least one date from your itinerary.', 'warning');
+        return;
+    }
+    
+    // Apply the service to selected rows based on service type
+    selectedRows.forEach(rowIndex => {
+        addServiceToRow(rowIndex, currentServiceType);
+    });
+    
+    // Close modal
+    serviceConfigModal.hide();
+    
+    // Show success message
+    showNotification(`${currentServiceType.charAt(0).toUpperCase() + currentServiceType.slice(1)} service added to ${selectedRows.length} day(s) successfully!`, 'success');
+    
+    // Clear selections
+    selectedRows = [];
+    document.querySelectorAll('.itinerary-row').forEach(row => {
+        row.classList.remove('selected');
+    });
+}
+
+// Add service to specific row
+function addServiceToRow(rowIndex, serviceType) {
+    const row = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
+    if (!row) return;
+    
+    // Find the service flags cell
+    const serviceFlagsCell = row.querySelector('td:nth-child(5)');
+    if (!serviceFlagsCell) return;
+    
+    // Check if service already exists
+    const existingBadge = serviceFlagsCell.querySelector(`[data-service="${serviceType}"]`);
+    if (existingBadge) return; // Service already exists
+    
+    // Create service badge
+    const badge = createServiceBadge(serviceType, rowIndex);
+    
+    // Add to the service flags cell
+    const badgeContainer = serviceFlagsCell.querySelector('.d-flex') || serviceFlagsCell;
+    badgeContainer.appendChild(badge);
+    
+    // Update hidden inputs
+    updateHiddenServiceInputs(rowIndex, serviceType, true);
+}
+
+// Create service badge
+function createServiceBadge(serviceType, rowIndex) {
+    const colors = {
+        hotel: 'bg-danger',
+        guide: 'bg-success', 
+        transport: 'bg-primary',
+        meal: 'bg-warning',
+        airport: 'bg-info'
+    };
+    
+    const icons = {
+        hotel: 'fa-bed',
+        guide: 'fa-user-tie',
+        transport: 'fa-car',
+        meal: 'fa-utensils',
+        airport: 'fa-plane'
+    };
+    
+    const badge = document.createElement('span');
+    badge.className = `badge ${colors[serviceType]} me-1 service-badge-removable`;
+    badge.setAttribute('data-service', serviceType);
+    badge.innerHTML = `
+        <i class="fas ${icons[serviceType]}"></i> ${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)}
+        <button type="button" class="btn-remove-service ms-1" onclick="removeService(${rowIndex}, '${serviceType}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    return badge;
+}
+
+// Update hidden service inputs
+function updateHiddenServiceInputs(rowIndex, serviceType, value) {
+    const flagName = `flag_${serviceType}[]`;
+    let input = document.querySelector(`input[name="${flagName}"][data-row-index="${rowIndex}"]`);
+    
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = flagName;
+        input.setAttribute('data-row-index', rowIndex);
+        document.getElementById('itineraryForm').appendChild(input);
+    }
+    
+    input.value = value ? 'true' : 'false';
+}
+</script>
 
 {% endblock %}
