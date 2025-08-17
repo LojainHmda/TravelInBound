@@ -545,8 +545,11 @@ body {
                     <i class="fas fa-file-invoice-dollar me-1"></i> Generate Invoice
                 </a>
                 {% elif booking and booking.invoice_number %}
+                <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn action-arrow-button">
+                    <i class="fas fa-file-invoice me-1"></i> View Invoice
+                </a>
                 <a href="{{ url_for('booking.professional_invoice', booking_id=booking.id) }}" class="btn action-arrow-button" target="_blank">
-                    <i class="fas fa-file-pdf me-1"></i> View Invoice
+                    <i class="fas fa-file-pdf me-1"></i> Professional Invoice
                 </a>
                 {% endif %}
 
@@ -904,6 +907,9 @@ body {
                         {% else %}
                             <a href="{{ url_for('booking.invoice_details', booking_id=booking.id) }}" class="btn btn-sm btn-yellow">
                                 <i class="fas fa-file-invoice me-1"></i> View Invoice
+                            </a>
+                            <a href="{{ url_for('booking.professional_invoice', booking_id=booking.id) }}" class="btn btn-sm btn-warning" target="_blank">
+                                <i class="fas fa-file-pdf me-1"></i> Professional Invoice
                             </a>
                             <button type="button" class="btn btn-sm btn-yellow" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
                                 <i class="fas fa-credit-card me-1"></i> Add Payment
