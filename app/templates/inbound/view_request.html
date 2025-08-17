@@ -3491,6 +3491,42 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
 
+                            <!-- Room Distribution Summary - PRIMARY CONTROL -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header py-2" style="background-color: #1f2937; color: white;">
+                                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
+                                        </div>
+                                        <div class="card-body py-2">
+                                            <div class="row g-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Single Rooms</label>
+                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateMasterFromSummary()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Double Rooms</label>
+                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Triple Rooms</label>
+                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Other Rooms</label>
+                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                </div>
+                                            </div>
+                                            <div class="text-center mt-3">
+                                                <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary()">
+                                                    <i class="fas fa-table me-1"></i>Generate Room Table
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Master Room Configuration Section -->
                             <div class="mb-4">
                                 <div class="card">
@@ -3612,36 +3648,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
 
-                            <!-- Room Distribution Summary -->
-                            <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header py-2" style="background-color: #1f2937; color: white;">
-                                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
-                                        </div>
-                                        <div class="card-body py-2">
-                                            <div class="row g-3">
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Single Rooms</label>
-                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="0" readonly>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Double Rooms</label>
-                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" readonly>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Triple Rooms</label>
-                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" readonly>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Other Rooms</label>
-                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" readonly>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>

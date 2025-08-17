@@ -606,4 +606,67 @@ function addRoomRow(roomIndex, roomType) {
     tableBody.appendChild(newRow);
 }
 
+// Function to sync master config with room distribution summary
+function updateMasterFromSummary() {
+    const single = document.getElementById('hotelSingleRooms')?.value || 0;
+    const double = document.getElementById('hotelDoubleRooms')?.value || 0;
+    const triple = document.getElementById('hotelTripleRooms')?.value || 0;
+    const other = document.getElementById('hotelOtherRooms')?.value || 0;
+    
+    // Update master config inputs if they exist
+    if (document.getElementById('masterSingleRooms')) {
+        document.getElementById('masterSingleRooms').value = single;
+    }
+    if (document.getElementById('masterDoubleRooms')) {
+        document.getElementById('masterDoubleRooms').value = double;
+    }
+    if (document.getElementById('masterTripleRooms')) {
+        document.getElementById('masterTripleRooms').value = triple;
+    }
+    if (document.getElementById('masterOtherRooms')) {
+        document.getElementById('masterOtherRooms').value = other;
+    }
+}
+
+// Primary function to generate room table from the summary (main controls)
+function regenerateRoomTableFromSummary() {
+    const singleCount = parseInt(document.getElementById('hotelSingleRooms')?.value || 0);
+    const doubleCount = parseInt(document.getElementById('hotelDoubleRooms')?.value || 0);
+    const tripleCount = parseInt(document.getElementById('hotelTripleRooms')?.value || 0);
+    const otherCount = parseInt(document.getElementById('hotelOtherRooms')?.value || 0);
+    
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    if (!tableBody) return;
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    let roomIndex = 0;
+    
+    // Add single rooms
+    for (let i = 0; i < singleCount; i++) {
+        addRoomRow(roomIndex++, 'Single Room');
+    }
+    
+    // Add double rooms
+    for (let i = 0; i < doubleCount; i++) {
+        addRoomRow(roomIndex++, 'Double Room');
+    }
+    
+    // Add triple rooms
+    for (let i = 0; i < tripleCount; i++) {
+        addRoomRow(roomIndex++, 'Triple Room');
+    }
+    
+    // Add other rooms
+    for (let i = 0; i < otherCount; i++) {
+        addRoomRow(roomIndex++, 'Other');
+    }
+    
+    // Update master config to match
+    updateMasterFromSummary();
+    
+    console.log(`Generated ${roomIndex} rooms from summary: ${singleCount} single, ${doubleCount} double, ${tripleCount} triple, ${otherCount} other`);
+}
+
 console.log('Service Config JS loaded successfully');
