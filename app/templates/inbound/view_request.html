@@ -2107,11 +2107,16 @@ function saveRoomDistribution() {
         if (tripleInput) tripleInput.value = triple;
         if (otherInput) otherInput.value = other;
         
-        // Update modal display for service modal
-        document.getElementById('modalSingle').textContent = single;
-        document.getElementById('modalDouble').textContent = double;
-        document.getElementById('modalTriple').textContent = triple;
-        document.getElementById('modalOther').textContent = other;
+        // Update modal display for service modal (if elements exist)
+        const modalSingle = document.getElementById('modalSingle');
+        const modalDouble = document.getElementById('modalDouble');
+        const modalTriple = document.getElementById('modalTriple');
+        const modalOther = document.getElementById('modalOther');
+        
+        if (modalSingle) modalSingle.textContent = single;
+        if (modalDouble) modalDouble.textContent = double;
+        if (modalTriple) modalTriple.textContent = triple;
+        if (modalOther) modalOther.textContent = other;
         
         // Update room distribution display if hotel is already shown
         updateRoomDisplay(rowIndex, single, double, triple, other);
