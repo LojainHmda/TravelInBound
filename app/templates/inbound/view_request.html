@@ -451,25 +451,27 @@ body {
 }
 
 .service-icons-horizontal {
-    display: flex;
-    gap: 0.75rem;
+    display: flex !important;
+    gap: 8px !important;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start !important;
+    align-items: center;
 }
 
-.service-icon-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%);
-    border: none;
-    border-radius: 12px;
-    cursor: grab;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
-    margin-right: 8px;
+.service-icons-horizontal .service-icon-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: grab !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3) !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .service-icon-item:hover {
@@ -964,6 +966,68 @@ body {
 
 .text-purple {
     color: #6f42c1 !important;
+}
+
+/* FINAL OVERRIDE STYLES FOR ORANGE ICONS */
+.service-icons-horizontal .service-icon-item,
+.service-icon-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 50px !important;
+    height: 50px !important;
+    background: linear-gradient(135deg, #ff8c00 0%, #ff7700 100%) !important;
+    border: none !important;
+    border-radius: 12px !important;
+    cursor: grab !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3) !important;
+    margin: 0 4px !important;
+    padding: 0 !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
+    flex-direction: row !important;
+    gap: 0 !important;
+}
+
+.service-icons-horizontal .service-icon-item:hover,
+.service-icon-item:hover {
+    background: linear-gradient(135deg, #ff7700 0%, #ff6600 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(255, 140, 0, 0.4) !important;
+}
+
+.service-icons-horizontal .service-icon-item:active,
+.service-icon-item:active {
+    cursor: grabbing !important;
+    transform: scale(0.95) !important;
+}
+
+.service-icons-horizontal .service-icon-item i,
+.service-icon-item i {
+    font-size: 1.2rem !important;
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    margin: 0 !important;
+}
+
+.service-icons-horizontal .service-icon-item span,
+.service-icon-item span {
+    display: none !important;
+}
+
+/* Override all service icon colors to white */
+.service-icons-horizontal .service-icon-item[data-service="hotel"] i,
+.service-icons-horizontal .service-icon-item[data-service="guide"] i,
+.service-icons-horizontal .service-icon-item[data-service="transport"] i,
+.service-icons-horizontal .service-icon-item[data-service="meal"] i,
+.service-icons-horizontal .service-icon-item[data-service="airport"] i,
+.service-icon-item[data-service="hotel"] i,
+.service-icon-item[data-service="guide"] i,
+.service-icon-item[data-service="transport"] i,
+.service-icon-item[data-service="meal"] i,
+.service-icon-item[data-service="airport"] i {
+    color: white !important;
 }
 </style>
 {% endblock %}
