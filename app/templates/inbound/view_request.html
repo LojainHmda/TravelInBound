@@ -3433,7 +3433,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <label class="form-label">Hotel Name</label>
                                     <input type="text" name="hotel_name" id="hotelName" class="form-control" placeholder="Enter hotel name" required>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Supplier</label>
+                                    <select name="supplier" id="hotelSupplier" class="form-select">
+                                        <option value="">Select Supplier</option>
+                                        <option value="Direct Booking">Direct Booking</option>
+                                        <option value="Booking.com">Booking.com</option>
+                                        <option value="Expedia">Expedia</option>
+                                        <option value="Hotels.com">Hotels.com</option>
+                                        <option value="Agoda">Agoda</option>
+                                        <option value="Local Partner">Local Partner</option>
+                                        <option value="Travel Agent">Travel Agent</option>
+                                        <option value="Hotel Direct">Hotel Direct</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label">Status</label>
                                     <select name="status" id="hotelStatus" class="form-select">
                                         <option value="confirmed">Confirmed</option>
@@ -3441,6 +3455,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            <div class="row mb-4">
                                 <div class="col-md-3">
                                     <label class="form-label">Cost</label>
                                     <div class="input-group">
@@ -3453,17 +3470,25 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="d-grid">
-                                        <small class="text-muted mb-1">Use table below</small>
-                                    </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Confirmation Number</label>
+                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control" placeholder="Hotel confirmation #">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Pickup Location</label>
+                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control" placeholder="Address or landmark">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control" placeholder="Hotel contact number">
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Special Notes</label>
-                                <textarea name="special_notes" id="hotelSpecialNotes" class="form-control" rows="2" placeholder="Special requirements or notes"></textarea>
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="form-label">Special Notes</label>
+                                    <textarea name="special_notes" id="hotelSpecialNotes" class="form-control" rows="2" placeholder="Special requirements or notes"></textarea>
+                                </div>
                             </div>
 
                             <!-- Room Configuration Section -->
@@ -3775,6 +3800,11 @@ function showServiceConfigModal(serviceType) {
         
         // Initialize remove button visibility
         updateRemoveButtonsVisibility();
+        
+        // Initialize hotel autocomplete
+        setTimeout(() => {
+            initializeHotelAutocomplete();
+        }, 500);
     }
     
     // Show instructions
@@ -4097,9 +4127,13 @@ function applyServiceToDateRange() {
         // Collect hotel basic info
         serviceData = {
             hotelName: document.getElementById('hotelName').value,
+            supplier: document.getElementById('hotelSupplier').value,
             status: document.getElementById('hotelStatus').value,
             cost: document.getElementById('hotelCost').value,
             currency: document.getElementById('hotelCurrency').value,
+            confirmationNumber: document.getElementById('hotelConfirmationNumber').value,
+            pickupLocation: document.getElementById('hotelPickupLocation').value,
+            phoneNumber: document.getElementById('hotelPhoneNumber').value,
             specialNotes: document.getElementById('hotelSpecialNotes').value,
             rooms: []
         };
@@ -4274,6 +4308,18 @@ function updateHiddenServiceInputs(rowIndex, serviceType, value) {
     
     input.value = value ? 'true' : 'false';
 }
+
+// Initialize hotel autocomplete functionality
+function initializeHotelAutocomplete() {
+    const hotelNameInput = document.getElementById('hotelName');
+    if (hotelNameInput && typeof setupHotelAutocomplete === 'function') {
+        setupHotelAutocomplete(hotelNameInput);
+    }
+}
 </script>
+
+<!-- Include Hotel Autocomplete JavaScript -->
+<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
 
 {% endblock %}
