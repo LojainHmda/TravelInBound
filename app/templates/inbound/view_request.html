@@ -3431,7 +3431,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="row mb-4">
                                 <div class="col-md-4">
                                     <label class="form-label">Hotel Name</label>
-                                    <input type="text" name="hotel_name" id="hotelName" class="form-control" placeholder="Enter hotel name" required>
+                                    <input type="text" name="hotel_name" id="hotelName" class="form-control hotel-autocomplete" placeholder="Start typing hotel name..." required>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Supplier</label>
@@ -3518,7 +3518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             </thead>
                                             <tbody id="hotelRoomsTableBody">
                                                 <!-- Default single room -->
-                                                <tr>
+                                                <tr class="hotel-room-row">
                                                     <td><strong class="text-primary">Room 1</strong></td>
                                                     <td>
                                                         <select name="rooms[0][room_category]" class="form-control" onchange="updateRoomDistribution()">

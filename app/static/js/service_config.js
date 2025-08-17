@@ -109,6 +109,13 @@ class ServiceConfigManager {
             this.serviceConfigModal.show();
             console.log('Modal shown for service:', serviceType);
             
+            // Initialize hotel-specific functionality if it's a hotel service
+            if (serviceType === 'hotel') {
+                setTimeout(() => {
+                    this.initializeHotelFunctionality();
+                }, 200);
+            }
+            
             // Check if modal is actually visible after a short delay
             setTimeout(() => {
                 const modalBackdrop = document.querySelector('.modal-backdrop');
@@ -292,6 +299,75 @@ class ServiceConfigManager {
         
         console.log(`Added ${serviceType} badge to row`);
     }
+    
+    // Hotel-specific functionality
+    initializeHotelFunctionality() {
+        // Hotel autocomplete initialization
+        const hotelNameInput = document.getElementById('hotelName');
+        if (hotelNameInput) {
+            this.setupHotelAutocomplete(hotelNameInput);
+        }
+        
+        // Initialize room distribution functionality
+        this.updateRoomDistribution();
+    }
+    
+    setupHotelAutocomplete(inputElement) {
+        // Create autocomplete container
+        const suggestionsContainer = document.createElement('div');
+        suggestionsContainer.className = 'autocomplete-suggestions';
+        suggestionsContainer.style.cssText = `
+            display: none;
+            position: absolute;
+            z-index: 1050;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 200px;
+            overflow-y: auto;
+            width: ${inputElement.offsetWidth}px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 4px;
+        `;
+        
+        inputElement.parentNode.insertBefore(suggestionsContainer, inputElement.nextSibling);
+        
+        inputElement.addEventListener('input', function() {
+            const query = this.value.trim().toLowerCase();
+            
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Check if HOTEL_NAMES exists (from hotel_autocomplete_data.js)
+            if (typeof HOTEL_NAMES !== 'undefined') {
+                const suggestions = HOTEL_NAMES.filter(hotel => 
+                    hotel.name.toLowerCase().includes(query)
+                ).slice(0, 8);
+                
+                if (suggestions.length > 0) {
+                    suggestionsContainer.innerHTML = suggestions.map(hotel => 
+                        `<div class="suggestion-item" style="padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #eee;" 
+                             onmouseover="this.style.backgroundColor='#f8f9fa'" 
+                             onmouseout="this.style.backgroundColor='white'"
+                             onclick="document.getElementById('hotelName').value='${hotel.name}'; this.parentNode.style.display='none';">
+                            ${hotel.name}
+                        </div>`
+                    ).join('');
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                }
+            }
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!inputElement.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    }
 }
 
 // Initialize the service config manager
@@ -306,6 +382,127 @@ if (document.readyState === 'loading') {
 } else {
     serviceManager = new ServiceConfigManager();
     console.log('ServiceConfigManager initialized immediately');
+}
+
+// Global functions for hotel room management (for onclick handlers)
+function addHotelRoomToTable() {
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    if (!tableBody) return;
+    
+    const roomCount = tableBody.querySelectorAll('tr').length;
+    const roomIndex = roomCount;
+    
+    const newRow = document.createElement('tr');
+    newRow.className = 'hotel-room-row';
+    newRow.innerHTML = `
+        <td><strong class="text-primary">Room ${roomIndex + 1}</strong></td>
+        <td>
+            <select name="rooms[${roomIndex}][room_category]" class="form-control" onchange="updateRoomDistribution()">
+                <option value="Single Room">Single</option>
+                <option value="Double Room">Double</option>
+                <option value="Triple Room">Triple</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][hotel_room_option]" class="form-control" placeholder="Premium, Premier Sea View">
+        </td>
+        <td>
+            <select name="rooms[${roomIndex}][board_basis]" class="form-control">
+                <option value="Room Only">Room Only</option>
+                <option value="Bed & Breakfast">Bed & Breakfast</option>
+                <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                <option value="Full Board">Full Board (All Meals)</option>
+                <option value="All Inclusive">All Inclusive</option>
+                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
+        </td>
+        <td>
+            <input type="date" name="rooms[${roomIndex}][check_in]" class="form-control">
+        </td>
+        <td>
+            <input type="date" name="rooms[${roomIndex}][check_out]" class="form-control">
+        </td>
+        <td>
+            <input type="number" name="rooms[${roomIndex}][adults]" class="form-control" value="1" min="1" max="8">
+        </td>
+        <td>
+            <input type="number" name="rooms[${roomIndex}][children]" class="form-control" value="0" min="0" max="8">
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelTableRoom(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tableBody.appendChild(newRow);
+    updateRoomDistribution();
+    console.log('Hotel room added');
+}
+
+function removeHotelTableRoom(button) {
+    const row = button.closest('tr');
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    
+    if (tableBody.querySelectorAll('tr').length > 1) {
+        row.remove();
+        
+        // Renumber remaining rooms
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            const roomNumber = row.querySelector('td strong');
+            if (roomNumber) {
+                roomNumber.textContent = `Room ${index + 1}`;
+            }
+            
+            // Update input names
+            const inputs = row.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                if (input.name && input.name.includes('rooms[')) {
+                    input.name = input.name.replace(/rooms\[\d+\]/, `rooms[${index}]`);
+                }
+            });
+        });
+        
+        updateRoomDistribution();
+        console.log('Hotel room removed');
+    }
+}
+
+function updateRoomDistribution() {
+    const rows = document.querySelectorAll('.hotel-room-row');
+    let singleCount = 0, doubleCount = 0, tripleCount = 0, otherCount = 0;
+    
+    rows.forEach(row => {
+        const categorySelect = row.querySelector('select[name*="room_category"]');
+        if (categorySelect) {
+            const value = categorySelect.value;
+            if (value === 'Single Room') singleCount++;
+            else if (value === 'Double Room') doubleCount++;
+            else if (value === 'Triple Room') tripleCount++;
+            else if (value && value !== '') otherCount++;
+        }
+    });
+    
+    // Update distribution summary
+    const singleInput = document.getElementById('hotelSingleRooms');
+    const doubleInput = document.getElementById('hotelDoubleRooms');
+    const tripleInput = document.getElementById('hotelTripleRooms');
+    const otherInput = document.getElementById('hotelOtherRooms');
+    
+    if (singleInput) singleInput.value = singleCount;
+    if (doubleInput) doubleInput.value = doubleCount;
+    if (tripleInput) tripleInput.value = tripleCount;
+    if (otherInput) otherInput.value = otherCount;
+    
+    console.log(`Room distribution updated: ${singleCount} single, ${doubleCount} double, ${tripleCount} triple, ${otherCount} other`);
 }
 
 console.log('Service Config JS loaded successfully');
