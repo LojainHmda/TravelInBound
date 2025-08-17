@@ -309,7 +309,7 @@ class ServiceConfigManager {
         }
         
         // Initialize room distribution functionality
-        this.updateRoomDistribution();
+        updateRoomDistribution();
     }
     
     setupHotelAutocomplete(inputElement) {
@@ -503,6 +503,107 @@ function updateRoomDistribution() {
     if (otherInput) otherInput.value = otherCount;
     
     console.log(`Room distribution updated: ${singleCount} single, ${doubleCount} double, ${tripleCount} triple, ${otherCount} other`);
+}
+
+// Master room configuration function
+function regenerateRoomTable() {
+    const singleCount = parseInt(document.getElementById('masterSingleRooms')?.value || 0);
+    const doubleCount = parseInt(document.getElementById('masterDoubleRooms')?.value || 0);
+    const tripleCount = parseInt(document.getElementById('masterTripleRooms')?.value || 0);
+    const otherCount = parseInt(document.getElementById('masterOtherRooms')?.value || 0);
+    
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    if (!tableBody) return;
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    let roomIndex = 0;
+    
+    // Add single rooms
+    for (let i = 0; i < singleCount; i++) {
+        addRoomRow(roomIndex++, 'Single Room');
+    }
+    
+    // Add double rooms
+    for (let i = 0; i < doubleCount; i++) {
+        addRoomRow(roomIndex++, 'Double Room');
+    }
+    
+    // Add triple rooms
+    for (let i = 0; i < tripleCount; i++) {
+        addRoomRow(roomIndex++, 'Triple Room');
+    }
+    
+    // Add other rooms
+    for (let i = 0; i < otherCount; i++) {
+        addRoomRow(roomIndex++, 'Other');
+    }
+    
+    updateRoomDistribution();
+    console.log(`Generated ${roomIndex} rooms: ${singleCount} single, ${doubleCount} double, ${tripleCount} triple, ${otherCount} other`);
+}
+
+// Helper function to add a room row with specific type
+function addRoomRow(roomIndex, roomType) {
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    if (!tableBody) return;
+    
+    const newRow = document.createElement('tr');
+    newRow.className = 'hotel-room-row';
+    
+    // Set default adults based on room type
+    let defaultAdults = 1;
+    if (roomType === 'Double Room') defaultAdults = 2;
+    if (roomType === 'Triple Room') defaultAdults = 3;
+    
+    newRow.innerHTML = `
+        <td><strong class="text-primary">Room ${roomIndex + 1}</strong></td>
+        <td>
+            <select name="rooms[${roomIndex}][room_category]" class="form-control" onchange="updateRoomDistribution()">
+                <option value="Single Room" ${roomType === 'Single Room' ? 'selected' : ''}>Single</option>
+                <option value="Double Room" ${roomType === 'Double Room' ? 'selected' : ''}>Double</option>
+                <option value="Triple Room" ${roomType === 'Triple Room' ? 'selected' : ''}>Triple</option>
+                <option value="Other" ${roomType === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][hotel_room_option]" class="form-control" placeholder="Premium, Premier Sea View">
+        </td>
+        <td>
+            <select name="rooms[${roomIndex}][board_basis]" class="form-control">
+                <option value="Room Only">Room Only</option>
+                <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
+                <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                <option value="Full Board">Full Board (All Meals)</option>
+                <option value="All Inclusive">All Inclusive</option>
+                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
+        </td>
+        <td>
+            <input type="date" name="rooms[${roomIndex}][check_in]" class="form-control">
+        </td>
+        <td>
+            <input type="date" name="rooms[${roomIndex}][check_out]" class="form-control">
+        </td>
+        <td>
+            <input type="number" name="rooms[${roomIndex}][adults]" class="form-control" value="${defaultAdults}" min="1" max="8">
+        </td>
+        <td>
+            <input type="number" name="rooms[${roomIndex}][children]" class="form-control" value="0" min="0" max="8">
+        </td>
+        <td>
+            <input type="text" name="rooms[${roomIndex}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
+        </td>
+        <td>
+            <span class="text-muted"><small>Use Master Config</small></span>
+        </td>
+    `;
+    
+    tableBody.appendChild(newRow);
 }
 
 console.log('Service Config JS loaded successfully');
