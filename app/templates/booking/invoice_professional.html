@@ -27,39 +27,47 @@
         }
         
         .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 20px;
+            width: 100%;
+            margin-bottom: 30px;
         }
         
         .company-info {
-            flex: 1;
             text-align: center;
+            margin-bottom: 20px;
         }
         
         .company-info h1 {
-            margin: 0 0 10px 0;
-            font-size: 18px;
+            margin: 0 0 5px 0;
+            font-size: 16px;
             font-weight: bold;
             color: #000;
         }
         
         .company-info p {
-            margin: 2px 0;
-            font-size: 11px;
-        }
-        
-        .license-info {
-            flex: 0 0 200px;
-            text-align: left;
+            margin: 1px 0;
             font-size: 10px;
         }
         
-        .license-info div {
-            margin-bottom: 3px;
+        .license-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 20px 0;
+            font-size: 10px;
+        }
+        
+        .license-left {
+            flex: 0 0 150px;
+            text-align: left;
+        }
+        
+        .license-right {
+            flex: 0 0 150px;
+            text-align: right;
+        }
+        
+        .license-left div, .license-right div {
+            margin-bottom: 2px;
         }
         
         .invoice-title {
@@ -257,23 +265,25 @@
 
     <!-- Invoice Content -->
     <div class="invoice-header">
-        <div class="license-info">
-            <div><strong>License #</strong> 3453</div>
-            <div><strong>Company ID#</strong> 200120113</div>
-            <div><strong>Tax #</strong> 129228648</div>
-        </div>
-        
         <div class="company-info">
             <h1>Windows of Jordan Tours & Travel</h1>
             <p>Amman - Jordan</p>
             <p>Prince Mhd Street</p>
             <p>Building 247 5th floor</p>
             <p>Email: accounting@windowsofjordan.com</p>
-            <p>Cell: +962799661007</p>
-            <p>Tel: +96264619402</p>
         </div>
         
-        <div style="flex: 0 0 200px;"></div> <!-- Spacer for symmetry -->
+        <div class="license-section">
+            <div class="license-left">
+                <div><strong>License #</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3453</div>
+                <div><strong>Company ID#</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;200120113</div>
+                <div><strong>Tax #</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;129228648</div>
+            </div>
+            <div class="license-right">
+                <div>Cell: +962799661007</div>
+                <div>Tel: +96264619402</div>
+            </div>
+        </div>
     </div>
     
     <div class="invoice-title">
@@ -282,23 +292,26 @@
     
     <div class="invoice-details">
         <div class="invoice-number">
-            <strong>Invoice No.</strong> {{ booking.invoice_number or 'Not Generated' }}
+            <strong>Invoice No.</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ booking.invoice_number or '25061004' }}
         </div>
         <div class="invoice-date">
-            <strong>Issue Date:</strong> {{ booking.invoice_date.strftime('%d/%b/%y') if booking.invoice_date else 'Not Set' }}
+            <strong>Issue Date:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{ booking.invoice_date.strftime('%d/%b/%y') if booking.invoice_date else "17/Aug/25" }}
         </div>
     </div>
     
-    <div class="customer-info">
-        <strong>Addressed to:</strong>
-        {% if booking.customer %}
-            {{ booking.customer.name }}
-            {% if booking.customer.company_name %} - {{ booking.customer.company_name }}{% endif %}
-        {% else %}
-            {{ booking.requester.username if booking.requester else 'Unknown Customer' }}
-        {% endif %}
-        <br>
-        <strong>Pax #:</strong> {{ booking.pax_count or 1 }}
+    <div class="customer-info" style="margin-bottom: 20px;">
+        <div style="margin-bottom: 10px;">
+            <strong>Addressed to:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {% if booking.customer %}
+                {{ booking.customer.name }}
+                {% if booking.customer.company_name %} - {{ booking.customer.company_name }}{% endif %}
+            {% else %}
+                {{ booking.requester.username if booking.requester else 'Expert Travel - Customer Name' }}
+            {% endif %}
+        </div>
+        <div style="margin-left: 200px;">
+            <strong>Pax #:</strong> {{ booking.pax_count or 3 }}
+        </div>
     </div>
     
     <table class="services-table" id="servicesTable">
