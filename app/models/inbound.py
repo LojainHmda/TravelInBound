@@ -54,6 +54,7 @@ class InboundRequest(db.Model):
     inbound_transports = db.relationship('InboundTransport', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
+    booking = db.relationship('Booking', backref='inbound_request', lazy=True)
     
     def __repr__(self):
         return f'<InboundRequest {self.request_number}>'
