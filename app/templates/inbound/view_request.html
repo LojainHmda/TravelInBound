@@ -2847,7 +2847,13 @@ function generateDays() {
 }
 
 function saveChanges() {
-    document.getElementById('itineraryForm').submit();
+    const form = document.getElementById('itineraryForm');
+    if (form) {
+        form.submit();
+    } else {
+        console.error('Itinerary form not found');
+        showNotification('Error: Form not found', 'error');
+    }
 }
 
 function toggleItineraryEditMode() {
