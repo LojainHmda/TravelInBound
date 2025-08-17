@@ -4226,7 +4226,7 @@ function applyServiceToDateRange() {
         const fromDate = new Date(document.getElementById('serviceFromDate').value);
         const toDate = new Date(document.getElementById('serviceToDate').value);
         
-        // Find all rows within the date range
+        // Find all rows within the date range and apply service
         const rows = document.querySelectorAll('.itinerary-row');
         let appliedCount = 0;
         
@@ -4235,7 +4235,15 @@ function applyServiceToDateRange() {
             if (rowDateStr) {
                 const rowDate = new Date(rowDateStr);
                 if (rowDate >= fromDate && rowDate <= toDate) {
+                    // Add service badge immediately
                     addServiceToRow(index, currentServiceType, serviceData);
+                    
+                    // Update the hidden flag input for form submission
+                    const flagCheckbox = row.querySelector(`input[name="flag_${currentServiceType}[]"]`);
+                    if (flagCheckbox) {
+                        flagCheckbox.checked = true;
+                    }
+                    
                     appliedCount++;
                 }
             }
@@ -4278,11 +4286,21 @@ function addServiceToRow(rowIndex, serviceType, serviceData = {}) {
     // Create service badge with configuration info
     const badge = createServiceBadge(serviceType, rowIndex, serviceData);
     
-    // Add to the service flags cell
-    const badgeContainer = serviceFlagsCell.querySelector('.d-flex') || serviceFlagsCell;
+    // Ensure there's a container for badges
+    let badgeContainer = serviceFlagsCell.querySelector('.d-flex');
     if (!badgeContainer) {
-        const newContainer = document.createElement('div');
-        newContainer.className = 'd-flex flex-wrap gap-1';
+        badgeContainer = document.createElement('div');
+        badgeContainer.className = 'd-flex flex-wrap gap-1';
+        serviceFlagsCell.appendChild(badgeContainer);
+    }
+    
+    // Add the badge
+    badgeContainer.appendChild(badge);
+    
+    // Update hidden service inputs for form submission
+    updateHiddenServiceInputs(rowIndex, serviceType, true);
+    
+    console.log(`Added ${serviceType} service to row ${rowIndex}`);
         serviceFlagsCell.appendChild(newContainer);
         newContainer.appendChild(badge);
     } else {
@@ -4408,6 +4426,52 @@ function updateRoomDistribution() {
     if (tripleInput) tripleInput.value = tripleRooms;
     if (otherInput) otherInput.value = otherRooms;
 }
+
+// Restore service badges based on hidden form inputs after page load
+function restoreServiceBadges() {
+    const rows = document.querySelectorAll('.itinerary-row');
+    const serviceTypes = ['hotel', 'guide', 'transport', 'meal', 'airport'];
+    
+    rows.forEach((row, rowIndex) => {
+        serviceTypes.forEach(serviceType => {
+            // Check if the service flag is set for this row
+            const flagInput = row.querySelector(`input[name="flag_${serviceType}[]"]`);
+            if (flagInput && flagInput.checked) {
+                // Create and add the service badge
+                const serviceFlagsCell = row.querySelector('td:nth-child(5)');
+                if (serviceFlagsCell) {
+                    // Check if badge doesn't already exist
+                    const existingBadge = serviceFlagsCell.querySelector(`[data-service="${serviceType}"]`);
+                    if (!existingBadge) {
+                        const badge = createServiceBadge(serviceType, rowIndex);
+                        
+                        // Ensure container exists
+                        let badgeContainer = serviceFlagsCell.querySelector('.d-flex');
+                        if (!badgeContainer) {
+                            badgeContainer = document.createElement('div');
+                            badgeContainer.className = 'd-flex flex-wrap gap-1';
+                            serviceFlagsCell.appendChild(badgeContainer);
+                        }
+                        
+                        badgeContainer.appendChild(badge);
+                    }
+                }
+            }
+        });
+    });
+}
+
+// Initialize everything when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize service modals
+    serviceConfigModal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
+    
+    // Restore service badges after a short delay
+    setTimeout(restoreServiceBadges, 500);
+    
+    // Initialize room distribution
+    setTimeout(updateRoomDistribution, 1000);
+});
 </script>
 
 <!-- Include Hotel Autocomplete JavaScript -->
