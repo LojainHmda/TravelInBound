@@ -4115,8 +4115,8 @@ function renumberRoomRows() {
 
 // Apply service to selected date range
 function applyServiceToDateRange() {
-    // For hotel service, we don't require row selection - we apply to the date range
-    if (currentServiceType !== 'hotel' && selectedRows.length === 0) {
+    // For hotel and guide services, we don't require row selection - we apply to the date range
+    if (!['hotel', 'guide'].includes(currentServiceType) && selectedRows.length === 0) {
         alert('Please select at least one date from your itinerary by clicking on the rows.');
         return;
     }
@@ -4190,8 +4190,8 @@ function applyServiceToDateRange() {
         };
     }
     
-    // For hotel service, apply to all days in the date range
-    if (currentServiceType === 'hotel') {
+    // For hotel and guide services, apply to all days in the date range
+    if (['hotel', 'guide'].includes(currentServiceType)) {
         const fromDate = new Date(document.getElementById('serviceFromDate').value);
         const toDate = new Date(document.getElementById('serviceToDate').value);
         
@@ -4210,7 +4210,8 @@ function applyServiceToDateRange() {
             }
         });
         
-        alert(`Hotel service added to ${appliedCount} day(s) successfully!`);
+        const serviceName = currentServiceType === 'hotel' ? 'Hotel' : 'Guide';
+        alert(`${serviceName} service added to ${appliedCount} day(s) successfully!`);
     } else {
         // Apply the service to selected rows for other services
         selectedRows.forEach(rowIndex => {
