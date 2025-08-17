@@ -4473,13 +4473,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Ensure functions are globally available
-window.showServiceConfigModal = showServiceConfigModal;
-window.selectRow = selectRow;  
-window.applyServiceToDateRange = applyServiceToDateRange;
+if (typeof showServiceConfigModal !== 'undefined') {
+    window.showServiceConfigModal = showServiceConfigModal;
+}
+if (typeof selectRow !== 'undefined') {
+    window.selectRow = selectRow;
+}
+if (typeof applyServiceToDateRange !== 'undefined') {
+    window.applyServiceToDateRange = applyServiceToDateRange;
+}
 </script>
 
 <!-- Include Hotel Autocomplete JavaScript -->
-<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
-<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
+<script src="/static/js/hotel_autocomplete_data.js"></script>
+<script src="/static/js/hotel_autocomplete.js"></script>
 
 {% endblock %}
