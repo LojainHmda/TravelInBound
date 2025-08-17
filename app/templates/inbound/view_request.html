@@ -3,6 +3,7 @@
 {% block title %}View Inbound Request - {{ request.request_number }}{% endblock %}
 
 {% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css') }}">
 <style>
 /* Modern Premium Design Styles */
 body {
@@ -3322,23 +3323,25 @@ function removeService(rowIndex, serviceType) {
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-    color: #1f2937;
-    border: none;
+    background-color: #efdea4 !important;
+    border-color: #efdea4 !important;
+    color: #000000 !important;
+    border: 1px solid #efdea4;
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 2px 8px rgba(239, 222, 164, 0.3);
     text-decoration: none;
 }
 
 .action-btn:hover {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background-color: #e6d190 !important;
+    border-color: #e6d190 !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
-    color: #1f2937;
+    box-shadow: 0 4px 15px rgba(239, 222, 164, 0.4);
+    color: #000000 !important;
 }
 
 .action-btn:active {
@@ -3367,6 +3370,19 @@ function removeService(rowIndex, serviceType) {
 .action-buttons-bar .dropdown-item:hover {
     background: #fef3c7;
     color: #1f2937;
+}
+
+/* Override any remaining button styles to use yellow theme */
+.btn, button {
+    background-color: #efdea4 !important;
+    border-color: #efdea4 !important;
+    color: #000000 !important;
+}
+
+.btn:hover, button:hover {
+    background-color: #e6d192 !important;
+    border-color: #e6d192 !important;
+    color: #000000 !important;
 }
 </style>
 
