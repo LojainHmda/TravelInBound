@@ -3785,12 +3785,7 @@ let selectedRows = [];
 let currentServiceType = '';
 let serviceConfigModal;
 
-// Initialize modal when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('serviceConfigModal')) {
-        serviceConfigModal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
-    }
-});
+
 
 // Show service configuration modal
 function showServiceConfigModal(serviceType) {
@@ -4390,21 +4385,7 @@ function initializeHotelAutocomplete() {
     }
 }
 
-// Select row function
-function selectRow(element) {
-    element.classList.toggle('selected');
-    
-    const rowIndex = parseInt(element.getAttribute('data-row-index'));
-    const selectedIndex = selectedRows.indexOf(rowIndex);
-    
-    if (selectedIndex > -1) {
-        selectedRows.splice(selectedIndex, 1);
-    } else {
-        selectedRows.push(rowIndex);
-    }
-    
-    console.log('Selected rows:', selectedRows);
-}
+
 
 // Update room distribution summary based on room categories selected
 function updateRoomDistribution() {
@@ -4477,10 +4458,12 @@ function restoreServiceBadges() {
     });
 }
 
-// Initialize everything when page loads
+// Consolidated DOMContentLoaded initialization
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize service modals
-    serviceConfigModal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
+    if (document.getElementById('serviceConfigModal')) {
+        serviceConfigModal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
+    }
     
     // Restore service badges after a short delay
     setTimeout(restoreServiceBadges, 500);
