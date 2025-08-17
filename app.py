@@ -41,13 +41,25 @@ with app.app_context():
     # Create all tables
     db.create_all()
 
-# Register blueprints
-from app.routes.voucher import voucher_bp
-from app.routes.booking import booking_bp
-from app.routes.api import api_bp
-app.register_blueprint(voucher_bp)
-app.register_blueprint(booking_bp, url_prefix='/booking')
-app.register_blueprint(api_bp)
+# Function to create app with blueprints
+def create_app():
+    # Register blueprints
+    try:
+        from app.routes.voucher import voucher_bp
+        from app.routes.booking import booking_bp
+        from app.routes.api import api_bp
+        from app.routes.inbound import inbound_bp
+        app.register_blueprint(voucher_bp)
+        app.register_blueprint(booking_bp, url_prefix='/booking')
+        app.register_blueprint(api_bp)
+        app.register_blueprint(inbound_bp, url_prefix='/inbound')
+    except ImportError:
+        pass
 
-# Import main routes after app is configured
-from routes import *
+    # Import main routes after app is configured
+    try:
+        from routes import *
+    except ImportError:
+        pass
+    
+    return app

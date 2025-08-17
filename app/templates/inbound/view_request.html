@@ -1920,7 +1920,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Generate Days Function
+// Generate Days Function (Updated to use correct endpoint)
 function generateDays() {
     fetch('/inbound/api/{{ request.id }}/generate-days', {
         method: 'POST',
@@ -2690,75 +2690,7 @@ function showNotification(message, type) {
     }, 5000);
 }
 
-// Add missing functions for buttons
-function generateDays() {
-    const startDateEl = document.getElementById('start_date') || document.querySelector('input[name="start_date"]');
-    const endDateEl = document.getElementById('end_date') || document.querySelector('input[name="end_date"]');
-    
-    if (!startDateEl || !endDateEl) {
-        showNotification('Date input elements not found', 'error');
-        return;
-    }
-    
-    const startDate = startDateEl.value;
-    const endDate = endDateEl.value;
-    
-    if (!startDate || !endDate) {
-        showNotification('Please select both start and end dates', 'error');
-        return;
-    }
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start >= end) {
-        showNotification('End date must be after start date', 'error');
-        return;
-    }
-    
-    const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    
-    if (days > 30) {
-        showNotification('Cannot generate more than 30 days at once', 'error');
-        return;
-    }
-    
-    // Get request ID
-    const requestIdEl = document.querySelector('input[name="request_id"]') || document.querySelector('[data-request-id]');
-    const requestId = requestIdEl ? (requestIdEl.value || requestIdEl.dataset.requestId) : window.location.pathname.match(/\/inbound\/(\d+)/)?.[1];
-    
-    if (!requestId) {
-        showNotification('Unable to identify request ID', 'error');
-        return;
-    }
-    
-    // Generate itinerary rows
-    fetch(`/inbound/${requestId}/generate_days`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
-        },
-        body: JSON.stringify({
-            start_date: startDate,
-            end_date: endDate,
-            days: days
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification(`Generated ${days} days successfully!`, 'success');
-            setTimeout(() => window.location.reload(), 1500);
-        } else {
-            showNotification(data.message || 'Error generating days', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error generating days', 'error');
-    });
-}
+// Removed duplicate generateDays function
 
 function saveChanges() {
     const form = document.getElementById('itineraryForm');
