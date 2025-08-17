@@ -1234,7 +1234,7 @@ body {
                         </div>
                         <div class="col-4">
                             <div class="border rounded p-3">
-                                <div class="h4 text-info mb-1">{{ "%.2f"|format(request.total_amount / request.pax if request.pax > 0 else 0) }}</div>
+                                <div class="h4 text-info mb-1">{{ "%.2f"|format((request.total_amount / request.pax) if request.pax > 0 else 0) }}</div>
                                 <small class="text-muted">Per Person</small>
                             </div>
                         </div>
@@ -3787,7 +3787,7 @@ var currentServiceType = '';
 var serviceConfigModal;
 
 // Show service configuration modal
-window.showServiceConfigModal = function(serviceType) {
+function showServiceConfigModal(serviceType) {
     currentServiceType = serviceType;
     
     // Reset selections
@@ -3839,7 +3839,7 @@ window.showServiceConfigModal = function(serviceType) {
 }
 
 // Select row function
-window.selectRow = function(index) {
+function selectRow(index) {
     // Only allow row selection when modal is open
     if (!serviceConfigModal || !document.body.classList.contains('modal-open')) {
         return;
@@ -4139,7 +4139,7 @@ function renumberRoomRows() {
 }
 
 // Apply service to selected date range
-window.applyServiceToDateRange = function() {
+function applyServiceToDateRange() {
     // For hotel and guide services, we don't require row selection - we apply to the date range
     if (!['hotel', 'guide'].includes(currentServiceType) && selectedRows.length === 0) {
         alert('Please select at least one date from your itinerary by clicking on the rows.');
