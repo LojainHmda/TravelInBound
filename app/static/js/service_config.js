@@ -113,6 +113,8 @@ class ServiceConfigManager {
             if (serviceType === 'hotel') {
                 setTimeout(() => {
                     this.initializeHotelFunctionality();
+                    // Auto-generate initial room table based on default values
+                    regenerateRoomTableFromSummary();
                 }, 200);
             }
             
