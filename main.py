@@ -124,7 +124,7 @@ def logout():
 @app.route('/dashboard')
 @login_required  
 def dashboard():
-    return render_template('dashboard.html', user=current_user)
+    return render_template('simple_dashboard.html', user=current_user)
 
 @app.route('/booking/<int:booking_id>')
 @login_required
