@@ -3619,7 +3619,7 @@ function openCustomerModal() {
 }
 
 function loadCustomers(searchTerm = '') {
-    fetch(`/customer/api/list?q=${encodeURIComponent(searchTerm)}`)
+    fetch(`/api/customers`)
         .then(response => response.json())
         .then(customers => {
             const customerList = document.getElementById('customerList');

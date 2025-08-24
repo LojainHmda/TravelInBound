@@ -62,6 +62,7 @@ def create_app():
     with app.app_context():
         # Import models to ensure they are registered with SQLAlchemy
         from app.models import User
+        from app.models.invoice import Invoice
         
         # Register blueprints
         from app.routes.main import main_bp
