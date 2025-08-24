@@ -1315,9 +1315,184 @@ body {
                     <i class="fas fa-table"></i> <span id="itineraryEditModeText">Edit Itinerary</span>
                 </button>
                 {% endif %}
+                
+                <!-- Status Update Button -->
+                {% if request.booking_id %}
+                <button type="button" class="action-btn action-btn-status" onclick="toggleStatusUpdate()">
+                    <i class="fas fa-exchange-alt"></i> Update Status
+                </button>
+                
+                <!-- Generate Invoice Button -->
+                <button type="button" class="action-btn action-btn-invoice" onclick="generateInvoice()">
+                    <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
+                </button>
+                
+                <!-- Payment Tracking Button -->
+                <button type="button" class="action-btn action-btn-payment" onclick="togglePaymentTracking()">
+                    <i class="fas fa-credit-card"></i> Payments
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    <!-- Status Update Section (Hidden by default) -->
+    {% if request.booking_id %}
+    <div class="row mt-4" id="statusUpdateSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Status Update
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="statusUpdateForm" onsubmit="updateStatus(event)">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Current Status</label>
+                                <input type="text" class="form-control" value="{{ request.status }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">New Status</label>
+                                <select name="status" class="form-select" required>
+                                    <option value="">Select Status</option>
+                                    <option value="REQUEST">Request</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="CONFIRMED">Confirmed</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <button type="submit" class="btn btn-success me-2">
+                                        <i class="fas fa-save"></i> Update Status
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleStatusUpdate()">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Optional notes about status change"></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Tracking Section (Hidden by default) -->
+    <div class="row mt-4" id="paymentTrackingSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Payment Tracking & Financial Management
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Payment Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="text-primary">${{ "%.2f"|format(request.total_amount) }}</h5>
+                                    <small class="text-muted">Total Amount</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="text-success" id="totalPaidAmount">$0.00</h5>
+                                    <small class="text-muted">Total Paid</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="text-warning" id="remainingAmount">${{ "%.2f"|format(request.total_amount) }}</h5>
+                                    <small class="text-muted">Remaining</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="text-info" id="paymentStatusBadge">Pending</h5>
+                                    <small class="text-muted">Payment Status</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Payment Form -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Payment</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="addPaymentForm" onsubmit="addPayment(event)">
+                                        <div class="mb-3">
+                                            <label class="form-label">Payment Amount</label>
+                                            <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Payment Method</label>
+                                            <select name="payment_method" class="form-select" required>
+                                                <option value="">Select Method</option>
+                                                <option value="CREDIT_CARD">Credit Card</option>
+                                                <option value="BANK_TRANSFER">Bank Transfer</option>
+                                                <option value="PAYPAL">PayPal</option>
+                                                <option value="CASH">Cash</option>
+                                                <option value="OTHER">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Transaction ID (Optional)</label>
+                                            <input type="text" name="transaction_id" class="form-control">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Payment Date</label>
+                                            <input type="date" name="payment_date" class="form-control" value="{{ moment().strftime('%Y-%m-%d') if moment else '' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Notes (Optional)</label>
+                                            <textarea name="notes" class="form-control" rows="2"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-plus"></i> Add Payment
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Payment History</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="paymentHistoryContainer">
+                                        <p class="text-muted">No payments recorded yet.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Itinerary Details -->
     <div class="row mt-4">
@@ -1980,6 +2155,208 @@ function generateItinerary() {
 }
 
 // Generate Services Function - REMOVED (Not needed)
+
+// Status Update Functions
+function toggleStatusUpdate() {
+    const section = document.getElementById('statusUpdateSection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        section.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function updateStatus(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const data = {
+        status: formData.get('status'),
+        notes: formData.get('notes')
+    };
+    
+    fetch('/booking/{{ request.booking_id }}/update_status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Status updated successfully!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error updating status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating status', 'error');
+    });
+}
+
+// Invoice Generation Function
+function generateInvoice() {
+    if (!confirm('Generate invoice for this booking?')) {
+        return;
+    }
+    
+    fetch('/booking/{{ request.booking_id }}/generate_invoice', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            total_amount: {{ request.total_amount }},
+            notes: 'Invoice generated from inbound request {{ request.request_number }}'
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            showNotification('Invoice generated successfully!', 'success');
+            // Open invoice in new tab
+            window.open('/booking/{{ request.booking_id }}/invoice', '_blank');
+        } else {
+            throw new Error('Invoice generation failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error generating invoice', 'error');
+    });
+}
+
+// Payment Tracking Functions
+function togglePaymentTracking() {
+    const section = document.getElementById('paymentTrackingSection');
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        section.scrollIntoView({ behavior: 'smooth' });
+        loadPaymentHistory();
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function addPayment(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const data = {
+        amount: parseFloat(formData.get('amount')),
+        payment_method: formData.get('payment_method'),
+        transaction_id: formData.get('transaction_id'),
+        payment_date: formData.get('payment_date'),
+        notes: formData.get('notes')
+    };
+    
+    fetch('/booking/{{ request.booking_id }}/add_payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Payment added successfully!', 'success');
+            form.reset();
+            // Set today's date as default
+            form.querySelector('input[name="payment_date"]').value = new Date().toISOString().split('T')[0];
+            loadPaymentHistory();
+            updatePaymentSummary();
+        } else {
+            showNotification(data.message || 'Error adding payment', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding payment', 'error');
+    });
+}
+
+function loadPaymentHistory() {
+    fetch('/booking/{{ request.booking_id }}/payments', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('paymentHistoryContainer');
+        if (data.payments && data.payments.length > 0) {
+            let html = '';
+            data.payments.forEach(payment => {
+                html += `
+                    <div class="payment-item mb-2 p-2 border rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>$${payment.amount.toFixed(2)}</strong>
+                                <small class="text-muted">(${payment.payment_method})</small>
+                            </div>
+                            <small class="text-muted">${payment.payment_date}</small>
+                        </div>
+                        ${payment.transaction_id ? `<small>ID: ${payment.transaction_id}</small><br>` : ''}
+                        ${payment.notes ? `<small class="text-muted">${payment.notes}</small>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            updatePaymentSummary();
+        } else {
+            container.innerHTML = '<p class="text-muted">No payments recorded yet.</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading payment history:', error);
+        document.getElementById('paymentHistoryContainer').innerHTML = '<p class="text-danger">Error loading payment history.</p>';
+    });
+}
+
+function updatePaymentSummary() {
+    fetch('/booking/{{ request.booking_id }}/payment_summary', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('totalPaidAmount').textContent = `$${data.total_paid.toFixed(2)}`;
+        document.getElementById('remainingAmount').textContent = `$${data.remaining_amount.toFixed(2)}`;
+        document.getElementById('paymentStatusBadge').textContent = data.payment_status;
+        
+        // Update badge color based on status
+        const badge = document.getElementById('paymentStatusBadge');
+        badge.className = 'text-' + (data.payment_status === 'FULL' ? 'success' : 
+                                    data.payment_status === 'PARTIAL' ? 'warning' : 'info');
+    })
+    .catch(error => {
+        console.error('Error updating payment summary:', error);
+    });
+}
+
+// Set today's date as default on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentDateInput = document.querySelector('input[name="payment_date"]');
+    if (paymentDateInput && !paymentDateInput.value) {
+        paymentDateInput.value = new Date().toISOString().split('T')[0];
+    }
+});
 
 // Create Booking Function
 function createBooking() {
@@ -3242,7 +3619,7 @@ function openCustomerModal() {
 }
 
 function loadCustomers(searchTerm = '') {
-    fetch(`/api/customers/search?q=${encodeURIComponent(searchTerm)}`)
+    fetch(`/customer/api/list?q=${encodeURIComponent(searchTerm)}`)
         .then(response => response.json())
         .then(customers => {
             const customerList = document.getElementById('customerList');
