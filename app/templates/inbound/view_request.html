@@ -3621,9 +3621,18 @@ function openCustomerModal() {
 }
 
 function loadCustomers(searchTerm = '') {
+    console.log('Loading customers...');
     fetch('/customer/api/list')
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers.get('content-type'));
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(customers => {
+            console.log('Customers loaded:', customers);
             const customerList = document.getElementById('customerList');
             customerList.innerHTML = '';
             
@@ -3661,6 +3670,7 @@ function loadCustomers(searchTerm = '') {
 }
 
 function selectCustomer(customer) {
+    console.log('Selecting customer:', customer);
     document.getElementById('selectedCustomerId').value = customer.id;
     document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ` (${customer.company_name})` : '');
     
