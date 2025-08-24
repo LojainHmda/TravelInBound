@@ -1294,14 +1294,9 @@ body {
                     </ul>
                 </div>
                 
-                <!-- Generate Days Button -->
-                <button type="button" class="action-btn action-btn-generate" onclick="generateDays()">
-                    <i class="fas fa-calendar-plus"></i> Generate Days
-                </button>
-                
-                <!-- Generate Services Button -->
-                <button type="button" class="action-btn action-btn-services" onclick="generateServices()">
-                    <i class="fas fa-cogs"></i> Generate Services
+                <!-- Generate Itinerary Button -->
+                <button type="button" class="action-btn action-btn-generate" onclick="generateItinerary()">
+                    <i class="fas fa-calendar-plus"></i> Generate Itinerary
                 </button>
                 
                 <!-- Create Booking Button -->
@@ -1956,8 +1951,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Generate Days Function (Updated to use correct endpoint)
-function generateDays() {
+// Generate Itinerary Function (Updated to use correct endpoint)
+function generateItinerary() {
     fetch('/inbound/api/{{ request.id }}/generate-days', {
         method: 'POST',
         headers: {
@@ -1969,47 +1964,22 @@ function generateDays() {
     .then(data => {
         if (data.success) {
             // Show success message
-            showNotification('Days generated successfully!', 'success');
+            showNotification('Itinerary generated successfully!', 'success');
             // Refresh the page to show new itinerary
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
         } else {
-            showNotification(data.message || 'Error generating days', 'error');
+            showNotification(data.message || 'Error generating itinerary', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error generating days', 'error');
+        showNotification('Error generating itinerary', 'error');
     });
 }
 
-// Generate Services Function
-function generateServices() {
-    fetch('/inbound/api/{{ request.id }}/generate-services', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Services generated successfully!', 'success');
-            // Refresh the page to show new services
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showNotification(data.message || 'Error generating services', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error generating services', 'error');
-    });
-}
+// Generate Services Function - REMOVED (Not needed)
 
 // Create Booking Function
 function createBooking() {
