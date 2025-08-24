@@ -586,8 +586,9 @@ def api_generate_services(request_id):
             db.session.add(booking)
             db.session.flush()
             
-            # Link booking to inbound request
+            # Link booking to inbound request and update status to BOOKED
             request_obj.booking_id = booking.id
+            request_obj.status = 'BOOKED'
         
         # Clear existing service items
         ServiceItem.query.filter_by(booking_id=booking.id).delete()

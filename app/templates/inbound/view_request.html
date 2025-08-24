@@ -2371,9 +2371,11 @@ function createBooking() {
     .then(data => {
         if (data.success) {
             showNotification('Booking created successfully!', 'success');
-            // Redirect to the booking page
+            
+            // Update page state to show booking was created
+            // Reload the page to show the booking status and new buttons
             setTimeout(() => {
-                window.location.href = data.booking_url;
+                window.location.reload();
             }, 1500);
         } else {
             showNotification(data.message || 'Error creating booking', 'error');
