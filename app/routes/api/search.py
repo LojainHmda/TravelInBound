@@ -59,3 +59,70 @@ def quick_search():
         
     except Exception as e:
         return jsonify({'error': 'Search failed'}), 500
+
+
+@search_api.route('/api/search-suggestions')
+def search_suggestions():
+    """API endpoint for smart autocomplete suggestions"""
+    try:
+        from app.models.inbound import InboundRequest
+        from sqlalchemy import distinct
+        
+        # Get unique agent references from inbound requests
+        agents = db.session.query(distinct(InboundRequest.agent_ref))\
+            .filter(InboundRequest.agent_ref.isnot(None))\
+            .filter(InboundRequest.agent_ref != '')\
+            .all()
+        agents = [agent[0] for agent in agents if agent[0]]
+        
+        # Get unique contact names from inbound requests
+        contact_names = db.session.query(distinct(InboundRequest.contact_name))\
+            .filter(InboundRequest.contact_name.isnot(None))\
+            .filter(InboundRequest.contact_name != '')\
+            .all()
+        contact_names = [contact[0] for contact in contact_names if contact[0]]
+        
+        # Get unique request numbers
+        request_numbers = db.session.query(InboundRequest.request_number)\
+            .filter(InboundRequest.request_number.isnot(None))\
+            .order_by(InboundRequest.created_at.desc())\
+            .limit(50).all()
+        request_numbers = [req[0] for req in request_numbers if req[0]]
+        
+        # Get unique nationalities
+        nationalities = db.session.query(distinct(InboundRequest.nationality))\
+            .filter(InboundRequest.nationality.isnot(None))\
+            .filter(InboundRequest.nationality != '')\
+            .all()
+        nationalities = [nat[0] for nat in nationalities if nat[0]]
+        
+        # Also get customer data for additional suggestions
+        customers = Customer.query.with_entities(
+            distinct(Customer.first_name), 
+            distinct(Customer.last_name)
+        ).limit(30).all()
+        
+        customer_names = []
+        for customer in customers:
+            if customer[0]:
+                customer_names.append(customer[0])
+            if customer[1]:
+                customer_names.append(customer[1])
+        
+        return jsonify({
+            'agents': agents,
+            'contactNames': contact_names,
+            'requestNumbers': request_numbers,
+            'nationalities': nationalities,
+            'customerNames': customer_names
+        })
+        
+    except Exception as e:
+        # Return empty suggestions if there's an error
+        return jsonify({
+            'agents': [],
+            'contactNames': [],
+            'requestNumbers': [],
+            'nationalities': [],
+            'customerNames': []
+        })

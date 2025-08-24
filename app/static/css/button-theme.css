@@ -1,5 +1,59 @@
 /* Custom Button Theme - Windows of Jordan Yellow/Orange */
 
+/* Universal button override - apply to all buttons across the application */
+.btn, 
+button:not(.btn-reset):not(.close):not([data-dismiss]), 
+input[type="submit"], 
+input[type="button"],
+.btn-new-request,
+.action-button,
+.service-btn,
+.btn-search,
+.btn-save,
+.btn-cancel,
+.btn-add,
+.btn-remove,
+.btn-generate,
+.btn-send,
+.btn-create {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+    border: none !important;
+    color: #333 !important;
+    font-weight: 600 !important;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Hover states for all buttons */
+.btn:hover, 
+button:not(.btn-reset):not(.close):not([data-dismiss]):hover, 
+input[type="submit"]:hover, 
+input[type="button"]:hover,
+.btn-new-request:hover,
+.action-button:hover,
+.service-btn:hover,
+.btn-search:hover,
+.btn-save:hover,
+.btn-cancel:hover,
+.btn-add:hover,
+.btn-remove:hover,
+.btn-generate:hover,
+.btn-send:hover,
+.btn-create:hover {
+    background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
+    color: #333 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+}
+
 .btn {
     border-radius: 8px;
     font-weight: 600;
@@ -151,17 +205,81 @@
 }
 
 /* Disabled state */
-.btn:disabled, .btn.disabled {
+.btn:disabled, 
+.btn.disabled,
+button:disabled,
+input[type="submit"]:disabled,
+input[type="button"]:disabled {
     background: #e9ecef !important;
     border-color: #e9ecef !important;
     color: #6c757d !important;
-    transform: none;
-    box-shadow: none;
-    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
 }
 
 /* Focus states */
-.btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.25);
+.btn:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="button"]:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.25) !important;
+}
+
+/* Compact button styles */
+.btn-compact {
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+    border-radius: 6px !important;
+}
+
+/* Small buttons */
+.btn-sm,
+.btn-small {
+    padding: 6px 12px !important;
+    font-size: 0.875rem !important;
+    border-radius: 6px !important;
+}
+
+/* Icon buttons */
+.btn-icon {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+}
+
+/* Action button overrides for tables */
+table .btn,
+table button,
+table .action-buttons a,
+table .action-buttons button {
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+    border: none !important;
+    color: #333 !important;
+}
+
+table .btn:hover,
+table button:hover,
+table .action-buttons a:hover,
+table .action-buttons button:hover {
+    background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
+    color: #333 !important;
+}
+
+/* Reset button exception - keep neutral styling */
+.btn-reset {
+    background: white !important;
+    color: #6c757d !important;
+    border: 2px solid #dee2e6 !important;
+    font-weight: 600;
+}
+
+.btn-reset:hover {
+    background: #f8f9fa !important;
+    border-color: #adb5bd !important;
+    color: #6c757d !important;
+    transform: none !important;
 }
