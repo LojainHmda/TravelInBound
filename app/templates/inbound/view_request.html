@@ -3619,7 +3619,7 @@ function openCustomerModal() {
 }
 
 function loadCustomers(searchTerm = '') {
-    fetch(`/api/customers`)
+    fetch(`/customer/api/list`)
         .then(response => response.json())
         .then(customers => {
             const customerList = document.getElementById('customerList');
