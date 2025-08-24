@@ -560,9 +560,6 @@ body {
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Itinerary with Service Flags</h5>
                     <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="generateByDays">
-                            <i class="fas fa-calendar-alt"></i> Generate by Days
-                        </button>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="generateBySections">
                             <i class="fas fa-layer-group"></i> Generate by Sections
                         </button>
@@ -608,8 +605,11 @@ body {
                             <button type="button" class="btn btn-success" id="addRow">
                                 <i class="fas fa-plus"></i> Add Row
                             </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="generateByDays">
+                                <i class="fas fa-calendar-alt"></i> Generate Days
+                            </button>
                             <button type="button" class="btn btn-primary" id="saveItinerary">
-                                <i class="fas fa-save"></i> Save Itinerary
+                                <i class="fas fa-save"></i> Save Itinerary (Auto-generates if empty)
                             </button>
                         </div>
                         <div>

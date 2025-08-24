@@ -147,7 +147,7 @@ def api_update_request(request_id):
 @inbound_bp.route('/api/<int:request_id>/save-itinerary', methods=['POST'])
 @login_required
 def api_save_itinerary(request_id):
-    """Save itinerary data for inbound request"""
+    """Save itinerary data for inbound request - auto-generates days if empty"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
@@ -159,6 +159,38 @@ def api_save_itinerary(request_id):
         
         print(f"DEBUG: Saving itinerary for request {request_id}")
         print(f"DEBUG: Received {len(rows_data)} rows")
+        
+        # Auto-generate days if no rows provided but we have dates
+        if not rows_data and request_obj.from_date and request_obj.to_date:
+            print("DEBUG: No rows provided, auto-generating days from date range")
+            
+            # Generate one row per day
+            current_date = request_obj.from_date
+            day_counter = 1
+            
+            while current_date <= request_obj.to_date:
+                row_data = {
+                    'date': current_date.strftime('%Y-%m-%d'),
+                    'description': f'Day {day_counter} - {current_date.strftime("%A, %B %d")}',
+                    'base_cost': 0.0,
+                    'currency': request_obj.total_currency or 'USD',
+                    'cost_unit': 'PER_PERSON',
+                    'flag_hotel': False,
+                    'flag_guide': False,
+                    'flag_transport': False,
+                    'flag_meal': False,
+                    'flag_airport': False,
+                    'hotel_single_rooms': 0,
+                    'hotel_double_rooms': 0,
+                    'hotel_triple_rooms': 0,
+                    'hotel_other_rooms': 0
+                }
+                rows_data.append(row_data)
+                
+                current_date += timedelta(days=1)
+                day_counter += 1
+            
+            print(f"DEBUG: Auto-generated {len(rows_data)} rows")
         
         # Clear existing itinerary rows
         deleted_count = ItineraryRow.query.filter_by(request_id=request_id).delete()
