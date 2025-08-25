@@ -552,6 +552,18 @@ body {
     font-weight: 500;
 }
 
+/* Status indicator animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Hide/show animation */
+.status-flow-hidden {
+    display: none !important;
+}
+
 .service-bar-title {
     color: #1f2937;
     font-weight: 600;
@@ -1326,12 +1338,20 @@ body {
         <div class="col-lg-6">
             <!-- Status Flow -->
             <div class="card mb-3">
-                <div class="card-header" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: white;">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
+                <div class="card-header" style="background: white; color: #1f2937; border-bottom: 1px solid #e5e7eb;">
+                    <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
+                            <span class="status-indicator ms-2" id="statusIndicator">
+                                <i class="fas fa-circle text-{% if request.status == 'REQUEST' %}warning{% elif request.status == 'BOOKED' %}info{% elif request.status == 'CONFIRMED' %}primary{% elif request.status == 'IN_PROGRESS' %}success{% elif request.status == 'COMPLETED' %}success{% endif %}" style="font-size: 0.6rem; animation: pulse 2s infinite;"></i>
+                            </span>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleStatusFlow()" id="statusToggleBtn">
+                            <i class="fas fa-eye-slash" id="statusToggleIcon"></i>
+                        </button>
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="statusFlowContent">
                     <div class="status-flow-interactive">
                         <!-- Progress Bar -->
                         <div class="progress-container mb-4">
@@ -1490,13 +1510,13 @@ body {
 
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2 flex-wrap">
-                        <button type="button" class="btn btn-warning btn-sm" onclick="viewInvoice()">
+                        <button type="button" class="btn btn-sm" style="background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;" onclick="viewInvoice()">
                             <i class="fas fa-eye"></i> View Invoice
                         </button>
-                        <button type="button" class="btn btn-success btn-sm" onclick="addPayment()">
+                        <button type="button" class="btn btn-sm" style="background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;" onclick="addPayment()">
                             <i class="fas fa-plus"></i> Add Payment
                         </button>
-                        <button type="button" class="btn btn-info btn-sm" onclick="addCreditMemo()">
+                        <button type="button" class="btn btn-sm" style="background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;" onclick="addCreditMemo()">
                             <i class="fas fa-credit-card"></i> Add Credit Line
                         </button>
                     </div>
@@ -4475,6 +4495,22 @@ function showAlert(message, type) {
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
+}
+
+// Toggle Status Flow visibility
+function toggleStatusFlow() {
+    const content = document.getElementById('statusFlowContent');
+    const icon = document.getElementById('statusToggleIcon');
+    
+    if (content.classList.contains('status-flow-hidden')) {
+        // Show
+        content.classList.remove('status-flow-hidden');
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        // Hide
+        content.classList.add('status-flow-hidden');
+        icon.className = 'fas fa-eye';
+    }
 }
 </script>
 
