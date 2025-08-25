@@ -246,20 +246,25 @@ def view_document(customer_id, document_id):
     return send_file(file_path)
 
 @customer_bp.route('/api/list')
+@login_required
 def api_list_customers():
     """API endpoint to return customers as JSON"""
-    customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
-    
-    customers_list = [{
-        'id': c.id,
-        'name': c.name,
-        'email': c.email,
-        'phone': c.phone,
-        'customer_type': c.customer_type,
-        'company_name': c.company_name
-    } for c in customers]
-    
-    return jsonify(customers_list)
+    try:
+        customers = Customer.query.order_by(Customer.first_name, Customer.last_name).all()
+        
+        customers_list = [{
+            'id': c.id,
+            'name': c.name,
+            'email': c.email,
+            'phone': c.phone,
+            'customer_type': c.customer_type,
+            'company_name': c.company_name
+        } for c in customers]
+        
+        return jsonify(customers_list)
+    except Exception as e:
+        print(f"Error in api_list_customers: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @customer_bp.route('/api/scan-passport', methods=['POST'])
 def scan_passport():

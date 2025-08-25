@@ -171,7 +171,12 @@ function loadCustomers() {
     fetch('/api/customers')
         .then(response => response.json())
         .then(data => {
-            allCustomers = data.customers || [];
+            if (data.success) {
+                allCustomers = data.customers || [];
+            } else {
+                allCustomers = [];
+                console.error('API Error:', data.error);
+            }
             applyCurrentFilter();
             hideLoader();
         })
