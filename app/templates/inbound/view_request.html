@@ -442,6 +442,60 @@ body {
     border: 1px solid #e2e8f0;
 }
 
+/* Status flow styling */
+.status-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.status-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.status-step.active {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    color: #1f2937;
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+}
+
+.status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e7eb;
+    color: #6b7280;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.status-step.active .status-icon {
+    background: #1f2937;
+    color: #FFBF00;
+}
+
+.status-content h6 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-content small {
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
 .service-bar-title {
     color: #1f2937;
     font-weight: 600;
@@ -1212,9 +1266,58 @@ body {
             </div>
         </div>
 
-        <!-- Pricing Summary -->
+        <!-- Right Sidebar with Status, Pricing & Invoice/Payment -->
         <div class="col-lg-6">
-            <div class="card">
+            <!-- Status Flow -->
+            <div class="card mb-3">
+                <div class="card-header" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: white;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="status-flow">
+                        <div class="status-step {% if request.status == 'REQUEST' %}active{% endif %}">
+                            <div class="status-icon"><i class="fas fa-quote-left"></i></div>
+                            <div class="status-content">
+                                <h6>Quotation (Request)</h6>
+                                <small>Customer asks → prepare quotation. No invoice yet.</small>
+                            </div>
+                        </div>
+                        <div class="status-step {% if request.status == 'BOOKED' %}active{% endif %}">
+                            <div class="status-icon"><i class="fas fa-calendar-check"></i></div>
+                            <div class="status-content">
+                                <h6>Reservation (Pending)</h6>
+                                <small>Customer accepts → booking held. Status = pending confirmation.</small>
+                            </div>
+                        </div>
+                        <div class="status-step {% if request.status == 'CONFIRMED' %}active{% endif %}">
+                            <div class="status-icon"><i class="fas fa-check-circle"></i></div>
+                            <div class="status-content">
+                                <h6>Confirmed</h6>
+                                <small>Reservation secured, suppliers booked. Proforma Invoice issued.</small>
+                            </div>
+                        </div>
+                        <div class="status-step {% if request.status == 'IN_PROGRESS' %}active{% endif %}">
+                            <div class="status-icon"><i class="fas fa-cogs"></i></div>
+                            <div class="status-content">
+                                <h6>Operation (In Progress)</h6>
+                                <small>Daily itinerary executed. Supplier confirmations & delivery.</small>
+                            </div>
+                        </div>
+                        <div class="status-step {% if request.status == 'COMPLETED' %}active{% endif %}">
+                            <div class="status-icon"><i class="fas fa-trophy"></i></div>
+                            <div class="status-content">
+                                <h6>Completed</h6>
+                                <small>All services delivered. Final Invoice issued.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Summary -->
+            <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">Pricing Summary</h5>
                 </div>
@@ -1267,6 +1370,85 @@ body {
                     </div>
                 </div>
             </div>
+
+            <!-- Invoice & Payment Information (moved from separate section) -->
+            {% if request.booking_id %}
+            <div class="card">
+                <div class="card-header" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #333;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Invoice & Payment Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if request.booking.invoice_number %}
+                    <!-- Invoice Information -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-2"><i class="fas fa-file-invoice"></i> Invoice {{ request.booking.invoice_number }}</h6>
+                                <div><strong>Total Amount:</strong> ${{ "%.2f"|format(request.booking.total_amount) }}</div>
+                                <div><strong>Date:</strong> {{ request.booking.invoice_date.strftime('%d %b %Y') }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="mb-2"><i class="fas fa-chart-bar"></i> Payment Summary</h6>
+                                {% set total_payments = request.booking.payments|sum(attribute='amount') %}
+                                <div class="text-success"><strong>Payments:</strong> ${{ "%.2f"|format(total_payments) }}</div>
+                                <div class="text-danger"><strong>Balance Due:</strong> ${{ "%.2f"|format(request.booking.total_amount - total_payments) }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-warning btn-sm" onclick="viewInvoice()">
+                            <i class="fas fa-eye"></i> View Invoice
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="addPayment()">
+                            <i class="fas fa-plus"></i> Add Payment
+                        </button>
+                        <button type="button" class="btn btn-info btn-sm" onclick="addCreditMemo()">
+                            <i class="fas fa-credit-card"></i> Add Credit Line
+                        </button>
+                    </div>
+
+                    <!-- Payment History -->
+                    {% if request.booking.payments %}
+                    <hr>
+                    <h6><i class="fas fa-history"></i> Recent Payments</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                    <th>Method</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in request.booking.payments[-3:] %}
+                                <tr>
+                                    <td>{{ payment.payment_date.strftime('%d/%m/%Y') }}</td>
+                                    <td class="text-success">${{ "%.2f"|format(payment.amount) }}</td>
+                                    <td>{{ payment.payment_method }}</td>
+                                    <td>{{ payment.reference_number or '-' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-file-invoice fa-2x mb-2"></i>
+                        <p>No invoice generated yet. Create booking first.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -1274,11 +1456,6 @@ body {
     <div class="row mt-4">
         <div class="col-12">
             <div class="action-buttons-bar">
-                <!-- Search Button -->
-                <button type="button" class="action-btn action-btn-search">
-                    <i class="fas fa-search"></i> Search
-                </button>
-                
                 <!-- Generate Voucher Dropdown -->
                 <div class="dropdown d-inline-block">
                     <button type="button" class="action-btn action-btn-voucher dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1334,10 +1511,6 @@ body {
                 </button>
                 {% endif %}
                 
-                <!-- Payment Tracking Button -->
-                <button type="button" class="action-btn action-btn-payment" onclick="togglePaymentTracking()">
-                    <i class="fas fa-credit-card"></i> Payments
-                </button>
                 {% endif %}
             </div>
         </div>
@@ -1393,113 +1566,6 @@ body {
         </div>
     </div>
 
-    <!-- Payment Tracking Section (Hidden by default) -->
-    <div class="row mt-4" id="paymentTrackingSection" style="display: none;">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-credit-card me-2"></i>Payment Tracking & Financial Management
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Payment Summary -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="text-primary">${{ "%.2f"|format(request.total_amount) }}</h5>
-                                    <small class="text-muted">Total Amount</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="text-success" id="totalPaidAmount">$0.00</h5>
-                                    <small class="text-muted">Total Paid</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="text-warning" id="remainingAmount">${{ "%.2f"|format(request.total_amount) }}</h5>
-                                    <small class="text-muted">Remaining</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card text-center">
-                                <div class="card-body">
-                                    <h5 class="text-info" id="paymentStatusBadge">Pending</h5>
-                                    <small class="text-muted">Payment Status</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Add Payment Form -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Payment</h6>
-                                </div>
-                                <div class="card-body">
-                                    <form id="addPaymentForm" onsubmit="addPayment(event)">
-                                        <div class="mb-3">
-                                            <label class="form-label">Payment Amount</label>
-                                            <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Payment Method</label>
-                                            <select name="payment_method" class="form-select" required>
-                                                <option value="">Select Method</option>
-                                                <option value="CREDIT_CARD">Credit Card</option>
-                                                <option value="BANK_TRANSFER">Bank Transfer</option>
-                                                <option value="PAYPAL">PayPal</option>
-                                                <option value="CASH">Cash</option>
-                                                <option value="OTHER">Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Transaction ID (Optional)</label>
-                                            <input type="text" name="transaction_id" class="form-control">
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Payment Date</label>
-                                            <input type="date" name="payment_date" class="form-control" value="{{ moment().strftime('%Y-%m-%d') if moment else '' }}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label class="form-label">Notes (Optional)</label>
-                                            <textarea name="notes" class="form-control" rows="2"></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-plus"></i> Add Payment
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Payment History</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="paymentHistoryContainer">
-                                        <p class="text-muted">No payments recorded yet.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Itinerary Details -->
     <div class="row mt-4">
@@ -2249,6 +2315,17 @@ function generateInvoice() {
 // View Invoice Function
 function viewInvoice() {
     window.open('/booking/{{ request.booking_id }}/invoice', '_blank');
+}
+
+// Add Payment Function  
+function addPayment() {
+    window.open('/booking/{{ request.booking_id }}/add_payment', '_blank');
+}
+
+// Add Credit Memo Function
+function addCreditMemo() {
+    // TODO: Implement credit memo functionality
+    showNotification('Credit memo functionality coming soon!', 'info');
 }
 
 // Payment Tracking Functions
@@ -3543,9 +3620,9 @@ function removeService(rowIndex, serviceType) {
     align-items: center;
     gap: 8px;
     padding: 10px 20px;
-    background-color: #efdea4 !important;
-    border-color: #efdea4 !important;
-    color: #000000 !important;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+    border-color: #374151 !important;
+    color: white !important;
     border: 1px solid #efdea4;
     border-radius: 8px;
     font-weight: 600;
@@ -3557,11 +3634,11 @@ function removeService(rowIndex, serviceType) {
 }
 
 .action-btn:hover {
-    background-color: #e6d190 !important;
-    border-color: #e6d190 !important;
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%) !important;
+    border-color: #FFBF00 !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(239, 222, 164, 0.4);
-    color: #000000 !important;
+    box-shadow: 0 4px 15px rgba(255, 191, 0, 0.4);
+    color: #FFBF00 !important;
 }
 
 .action-btn:active {
