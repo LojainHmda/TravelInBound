@@ -269,6 +269,19 @@ table .action-buttons button:hover {
     color: #333 !important;
 }
 
+/* View Invoice Button Styling */
+.action-btn-view-invoice {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: none !important;
+    color: white !important;
+}
+
+.action-btn-view-invoice:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%) !important;
+    color: white !important;
+    transform: translateY(-2px) !important;
+}
+
 /* Reset button exception - keep neutral styling */
 .btn-reset {
     background: white !important;

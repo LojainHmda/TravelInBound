@@ -1323,9 +1323,16 @@ body {
                 </button>
                 
                 <!-- Generate Invoice Button -->
+                {% if not request.booking.invoice_number %}
                 <button type="button" class="action-btn action-btn-invoice" onclick="generateInvoice()">
                     <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
                 </button>
+                {% else %}
+                <!-- View Invoice Button (appears after invoice is generated) -->
+                <button type="button" class="action-btn action-btn-view-invoice" onclick="viewInvoice()">
+                    <i class="fas fa-file-invoice"></i> View Invoice
+                </button>
+                {% endif %}
                 
                 <!-- Payment Tracking Button -->
                 <button type="button" class="action-btn action-btn-payment" onclick="togglePaymentTracking()">
@@ -2225,6 +2232,10 @@ function generateInvoice() {
             showNotification('Invoice generated successfully!', 'success');
             // Open invoice in new tab
             window.open('/booking/{{ request.booking_id }}/invoice', '_blank');
+            // Reload page to show "View Invoice" button
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
         } else {
             throw new Error('Invoice generation failed');
         }
@@ -2233,6 +2244,11 @@ function generateInvoice() {
         console.error('Error:', error);
         showNotification('Error generating invoice', 'error');
     });
+}
+
+// View Invoice Function
+function viewInvoice() {
+    window.open('/booking/{{ request.booking_id }}/invoice', '_blank');
 }
 
 // Payment Tracking Functions
