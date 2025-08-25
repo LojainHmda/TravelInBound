@@ -16,13 +16,13 @@ input[type="button"],
 .btn-generate,
 .btn-send,
 .btn-create {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-    border: none !important;
-    color: #333 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #000 !important;
     font-weight: 600 !important;
     padding: 10px 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
     cursor: pointer;
     text-decoration: none;
@@ -48,10 +48,10 @@ input[type="button"]:hover,
 .btn-generate:hover,
 .btn-send:hover,
 .btn-create:hover {
-    background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
-    color: #333 !important;
+    background: #e9ecef !important;
+    color: #000 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn {
@@ -59,7 +59,7 @@ input[type="button"]:hover,
     font-weight: 600;
     transition: all 0.3s ease;
     border: none;
-    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Primary yellow/orange theme for all buttons */
@@ -80,7 +80,7 @@ input[type="button"]:hover,
     font-weight: 600;
     padding: 10px 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover, 
@@ -109,7 +109,7 @@ input[type="button"]:hover,
     border: none !important;
     color: #333 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Outline buttons */
@@ -122,8 +122,8 @@ input[type="button"]:hover,
 .btn-outline-dark,
 .btn-outline-light {
     background-color: transparent !important;
-    border: 2px solid #FFA500 !important;
-    color: #FFA500 !important;
+    border: 2px solid #6c757d !important;
+    color: #6c757d !important;
     font-weight: 600;
 }
 
@@ -135,11 +135,11 @@ input[type="button"]:hover,
 .btn-outline-danger:hover,
 .btn-outline-dark:hover,
 .btn-outline-light:hover {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-    border-color: #FFA500 !important;
-    color: #333 !important;
+    background: #f8f9fa !important;
+    border-color: #6c757d !important;
+    color: #000 !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Small buttons */
@@ -159,22 +159,22 @@ input[type="button"]:hover,
 /* Service configuration specific buttons */
 [data-service],
 .service-icon-button {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-    border: none !important;
-    color: #333 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #000 !important;
     font-weight: 600;
     min-width: 120px;
     padding: 12px;
     border-radius: 12px;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 [data-service]:hover,
 .service-icon-button:hover {
     background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     color: #333 !important;
 }
 
@@ -183,25 +183,25 @@ input[type="button"]:hover,
     font-size: 1.2rem;
     display: block;
     margin-bottom: 4px;
-    color: #333;
+    color: #000;
 }
 
 .service-icon-button span {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #333;
+    color: #000;
 }
 
 /* Override any existing service button styles */
 .service-selection-bar button {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-    border: none !important;
-    color: #333 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #000 !important;
 }
 
 .service-selection-bar button:hover {
-    background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
-    color: #333 !important;
+    background: #e9ecef !important;
+    color: #000 !important;
 }
 
 /* Disabled state */
@@ -225,7 +225,7 @@ button:focus,
 input[type="submit"]:focus,
 input[type="button"]:focus {
     outline: none !important;
-    box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.25) !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Compact button styles */
@@ -256,17 +256,17 @@ table .btn,
 table button,
 table .action-buttons a,
 table .action-buttons button {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
-    border: none !important;
-    color: #333 !important;
+    background: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #000 !important;
 }
 
 table .btn:hover,
 table button:hover,
 table .action-buttons a:hover,
 table .action-buttons button:hover {
-    background: linear-gradient(135deg, #FFED4E 0%, #FFB347 100%) !important;
-    color: #333 !important;
+    background: #e9ecef !important;
+    color: #000 !important;
 }
 
 /* View Invoice Button Styling */
