@@ -5,6 +5,7 @@ from flask import (
     Blueprint, render_template, request, redirect, 
     url_for, flash, jsonify, current_app, send_file
 )
+from flask_login import login_required
 from werkzeug.utils import secure_filename
 from app import db
 from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearchForm
