@@ -564,6 +564,149 @@ body {
     display: none !important;
 }
 
+/* Elegant Circular Status Flow */
+.elegant-status-flow {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.status-progress-line {
+    position: absolute;
+    top: 3.5rem;
+    left: 3rem;
+    right: 3rem;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    z-index: 1;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFBF00 0%, #FFD700 100%);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+.status-circles-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.status-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.status-stage.clickable:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 191, 0, 0.1);
+}
+
+.status-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 3px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+}
+
+.status-stage.active .status-circle {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    box-shadow: 0 8px 25px rgba(255, 191, 0, 0.3);
+}
+
+.circle-number {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+
+.status-stage.active .circle-number {
+    color: #1f2937;
+}
+
+.circle-check {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #10b981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.status-label {
+    text-align: center;
+    min-height: 3rem;
+}
+
+.stage-title {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.stage-subtitle {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.status-stage.active .stage-title {
+    color: #FFBF00;
+}
+
+.status-stage.clickable:hover .stage-title {
+    color: #FFBF00;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .status-circles-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .status-progress-line {
+        display: none;
+    }
+    
+    .status-stage {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .status-circle {
+        margin-bottom: 0;
+        margin-right: 1rem;
+    }
+}
+
 .service-bar-title {
     color: #1f2937;
     font-weight: 600;
@@ -1352,72 +1495,98 @@ body {
                     </h5>
                 </div>
                 <div class="card-body" id="statusFlowContent">
-                    <div class="status-flow-interactive">
-                        <!-- Progress Bar -->
-                        <div class="progress-container mb-4">
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-warning" id="statusProgressBar" style="width: {% if request.status == 'REQUEST' %}20%{% elif request.status == 'BOOKED' %}40%{% elif request.status == 'CONFIRMED' %}60%{% elif request.status == 'IN_PROGRESS' %}80%{% elif request.status == 'COMPLETED' %}100%{% endif %}; transition: width 0.5s ease;"></div>
-                            </div>
+                    <!-- Elegant Circular Status Flow -->
+                    <div class="elegant-status-flow">
+                        <!-- Progress Line -->
+                        <div class="status-progress-line">
+                            <div class="progress-fill" id="progressFill" style="width: {% if request.status == 'REQUEST' %}20%{% elif request.status == 'BOOKED' %}40%{% elif request.status == 'CONFIRMED' %}60%{% elif request.status == 'IN_PROGRESS' %}80%{% elif request.status == 'COMPLETED' %}100%{% endif %};"></div>
                         </div>
                         
-                        <!-- Interactive Status Steps -->
-                        <div class="status-step-interactive {% if request.status == 'REQUEST' %}active{% endif %} clickable" 
-                             onclick="updateRequestStatus('REQUEST')" data-status="REQUEST">
-                            <div class="status-icon">
-                                <i class="fas fa-quote-left"></i>
-                                {% if request.status == 'REQUEST' %}<i class="fas fa-check status-check"></i>{% endif %}
+                        <!-- Status Circles -->
+                        <div class="status-circles-container">
+                            <!-- Quotation Stage -->
+                            <div class="status-stage clickable {% if request.status == 'REQUEST' %}active{% endif %}" 
+                                 onclick="updateRequestStatus('REQUEST')" data-status="REQUEST">
+                                <div class="status-circle">
+                                    <div class="circle-number">1</div>
+                                    {% if request.status == 'REQUEST' %}
+                                    <div class="circle-check">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="status-label">
+                                    <span class="stage-title">Quotation</span>
+                                    <span class="stage-subtitle">Initial Request</span>
+                                </div>
                             </div>
-                            <div class="status-content">
-                                <h6>Quotation</h6>
-                                <small>Click to set as Request</small>
+                            
+                            <!-- Reservation Stage -->
+                            <div class="status-stage clickable {% if request.status == 'BOOKED' %}active{% endif %}" 
+                                 onclick="updateRequestStatus('BOOKED')" data-status="BOOKED">
+                                <div class="status-circle">
+                                    <div class="circle-number">2</div>
+                                    {% if request.status == 'BOOKED' %}
+                                    <div class="circle-check">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="status-label">
+                                    <span class="stage-title">Reservation</span>
+                                    <span class="stage-subtitle">Booking Held</span>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="status-step-interactive {% if request.status == 'BOOKED' %}active{% endif %} clickable" 
-                             onclick="updateRequestStatus('BOOKED')" data-status="BOOKED">
-                            <div class="status-icon">
-                                <i class="fas fa-calendar-check"></i>
-                                {% if request.status == 'BOOKED' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            
+                            <!-- Confirmed Stage -->
+                            <div class="status-stage clickable {% if request.status == 'CONFIRMED' %}active{% endif %}" 
+                                 onclick="updateRequestStatus('CONFIRMED')" data-status="CONFIRMED">
+                                <div class="status-circle">
+                                    <div class="circle-number">3</div>
+                                    {% if request.status == 'CONFIRMED' %}
+                                    <div class="circle-check">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="status-label">
+                                    <span class="stage-title">Confirmed</span>
+                                    <span class="stage-subtitle">Suppliers Booked</span>
+                                </div>
                             </div>
-                            <div class="status-content">
-                                <h6>Reservation</h6>
-                                <small>Click to set as Booked</small>
+                            
+                            <!-- Operation Stage -->
+                            <div class="status-stage clickable {% if request.status == 'IN_PROGRESS' %}active{% endif %}" 
+                                 onclick="updateRequestStatus('IN_PROGRESS')" data-status="IN_PROGRESS">
+                                <div class="status-circle">
+                                    <div class="circle-number">4</div>
+                                    {% if request.status == 'IN_PROGRESS' %}
+                                    <div class="circle-check">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="status-label">
+                                    <span class="stage-title">Operation</span>
+                                    <span class="stage-subtitle">In Progress</span>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="status-step-interactive {% if request.status == 'CONFIRMED' %}active{% endif %} clickable" 
-                             onclick="updateRequestStatus('CONFIRMED')" data-status="CONFIRMED">
-                            <div class="status-icon">
-                                <i class="fas fa-check-circle"></i>
-                                {% if request.status == 'CONFIRMED' %}<i class="fas fa-check status-check"></i>{% endif %}
-                            </div>
-                            <div class="status-content">
-                                <h6>Confirmed</h6>
-                                <small>Click to set as Confirmed</small>
-                            </div>
-                        </div>
-                        
-                        <div class="status-step-interactive {% if request.status == 'IN_PROGRESS' %}active{% endif %} clickable" 
-                             onclick="updateRequestStatus('IN_PROGRESS')" data-status="IN_PROGRESS">
-                            <div class="status-icon">
-                                <i class="fas fa-cogs"></i>
-                                {% if request.status == 'IN_PROGRESS' %}<i class="fas fa-check status-check"></i>{% endif %}
-                            </div>
-                            <div class="status-content">
-                                <h6>Operation</h6>
-                                <small>Click to set as In Progress</small>
-                            </div>
-                        </div>
-                        
-                        <div class="status-step-interactive {% if request.status == 'COMPLETED' %}active{% endif %} clickable" 
-                             onclick="updateRequestStatus('COMPLETED')" data-status="COMPLETED">
-                            <div class="status-icon">
-                                <i class="fas fa-trophy"></i>
-                                {% if request.status == 'COMPLETED' %}<i class="fas fa-check status-check"></i>{% endif %}
-                            </div>
-                            <div class="status-content">
-                                <h6>Completed</h6>
-                                <small>Click to set as Completed</small>
+                            
+                            <!-- Completed Stage -->
+                            <div class="status-stage clickable {% if request.status == 'COMPLETED' %}active{% endif %}" 
+                                 onclick="updateRequestStatus('COMPLETED')" data-status="COMPLETED">
+                                <div class="status-circle">
+                                    <div class="circle-number">5</div>
+                                    {% if request.status == 'COMPLETED' %}
+                                    <div class="circle-check">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="status-label">
+                                    <span class="stage-title">Completed</span>
+                                    <span class="stage-subtitle">All Delivered</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -4440,33 +4609,34 @@ function updateRequestStatus(newStatus) {
 
 // Update Status UI immediately for better UX
 function updateStatusUI(newStatus) {
-    // Remove active class from all steps
-    document.querySelectorAll('.status-step-interactive').forEach(step => {
-        step.classList.remove('active');
+    // Remove active class from all stages
+    document.querySelectorAll('.status-stage').forEach(stage => {
+        stage.classList.remove('active');
         // Remove any existing check marks
-        const existingCheck = step.querySelector('.status-check');
+        const existingCheck = stage.querySelector('.circle-check');
         if (existingCheck) {
             existingCheck.remove();
         }
     });
     
     // Add active class to new status
-    const newActiveStep = document.querySelector(`[data-status="${newStatus}"]`);
-    if (newActiveStep) {
-        newActiveStep.classList.add('active');
+    const newActiveStage = document.querySelector(`[data-status="${newStatus}"]`);
+    if (newActiveStage) {
+        newActiveStage.classList.add('active');
         
         // Add check mark
-        const icon = newActiveStep.querySelector('.status-icon');
-        if (icon && !icon.querySelector('.status-check')) {
-            const checkMark = document.createElement('i');
-            checkMark.className = 'fas fa-check status-check';
-            icon.appendChild(checkMark);
+        const circle = newActiveStage.querySelector('.status-circle');
+        if (circle && !circle.querySelector('.circle-check')) {
+            const checkMark = document.createElement('div');
+            checkMark.className = 'circle-check';
+            checkMark.innerHTML = '<i class="fas fa-check"></i>';
+            circle.appendChild(checkMark);
         }
     }
     
-    // Update progress bar
-    const progressBar = document.getElementById('statusProgressBar');
-    if (progressBar) {
+    // Update progress fill
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) {
         const progressWidths = {
             'REQUEST': '20%',
             'BOOKED': '40%',
@@ -4474,7 +4644,7 @@ function updateStatusUI(newStatus) {
             'IN_PROGRESS': '80%',
             'COMPLETED': '100%'
         };
-        progressBar.style.width = progressWidths[newStatus] || '0%';
+        progressFill.style.width = progressWidths[newStatus] || '0%';
     }
 }
 
