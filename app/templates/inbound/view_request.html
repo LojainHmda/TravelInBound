@@ -3622,7 +3622,9 @@ function openCustomerModal() {
 
 function loadCustomers(searchTerm = '') {
     console.log('Loading customers...');
-    fetch('/customer/api/list')
+    fetch('/customer/api/list', {
+        credentials: 'include'
+    })
         .then(response => {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers.get('content-type'));
