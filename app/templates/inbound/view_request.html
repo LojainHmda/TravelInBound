@@ -496,6 +496,62 @@ body {
     line-height: 1.3;
 }
 
+/* Interactive Status Flow Styles */
+.status-step-interactive {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.status-step-interactive.clickable {
+    cursor: pointer;
+}
+
+.status-step-interactive.clickable:hover {
+    border-color: #FFBF00;
+    background: #fffbeb;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.15);
+}
+
+.status-step-interactive.active {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    color: #1f2937;
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+}
+
+.status-step-interactive.active .status-icon {
+    background: #1f2937;
+    color: #FFBF00;
+}
+
+.status-check {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+
+.status-step-interactive.clickable .status-content small {
+    color: #f59e0b;
+    font-weight: 500;
+}
+
 .service-bar-title {
     color: #1f2937;
     font-weight: 600;
@@ -1276,40 +1332,72 @@ body {
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="status-flow">
-                        <div class="status-step {% if request.status == 'REQUEST' %}active{% endif %}">
-                            <div class="status-icon"><i class="fas fa-quote-left"></i></div>
-                            <div class="status-content">
-                                <h6>Quotation (Request)</h6>
-                                <small>Customer asks → prepare quotation. No invoice yet.</small>
+                    <div class="status-flow-interactive">
+                        <!-- Progress Bar -->
+                        <div class="progress-container mb-4">
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" id="statusProgressBar" style="width: {% if request.status == 'REQUEST' %}20%{% elif request.status == 'BOOKED' %}40%{% elif request.status == 'CONFIRMED' %}60%{% elif request.status == 'IN_PROGRESS' %}80%{% elif request.status == 'COMPLETED' %}100%{% endif %}; transition: width 0.5s ease;"></div>
                             </div>
                         </div>
-                        <div class="status-step {% if request.status == 'BOOKED' %}active{% endif %}">
-                            <div class="status-icon"><i class="fas fa-calendar-check"></i></div>
+                        
+                        <!-- Interactive Status Steps -->
+                        <div class="status-step-interactive {% if request.status == 'REQUEST' %}active{% endif %} clickable" 
+                             onclick="updateRequestStatus('REQUEST')" data-status="REQUEST">
+                            <div class="status-icon">
+                                <i class="fas fa-quote-left"></i>
+                                {% if request.status == 'REQUEST' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            </div>
                             <div class="status-content">
-                                <h6>Reservation (Pending)</h6>
-                                <small>Customer accepts → booking held. Status = pending confirmation.</small>
+                                <h6>Quotation</h6>
+                                <small>Click to set as Request</small>
                             </div>
                         </div>
-                        <div class="status-step {% if request.status == 'CONFIRMED' %}active{% endif %}">
-                            <div class="status-icon"><i class="fas fa-check-circle"></i></div>
+                        
+                        <div class="status-step-interactive {% if request.status == 'BOOKED' %}active{% endif %} clickable" 
+                             onclick="updateRequestStatus('BOOKED')" data-status="BOOKED">
+                            <div class="status-icon">
+                                <i class="fas fa-calendar-check"></i>
+                                {% if request.status == 'BOOKED' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            </div>
+                            <div class="status-content">
+                                <h6>Reservation</h6>
+                                <small>Click to set as Booked</small>
+                            </div>
+                        </div>
+                        
+                        <div class="status-step-interactive {% if request.status == 'CONFIRMED' %}active{% endif %} clickable" 
+                             onclick="updateRequestStatus('CONFIRMED')" data-status="CONFIRMED">
+                            <div class="status-icon">
+                                <i class="fas fa-check-circle"></i>
+                                {% if request.status == 'CONFIRMED' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            </div>
                             <div class="status-content">
                                 <h6>Confirmed</h6>
-                                <small>Reservation secured, suppliers booked. Proforma Invoice issued.</small>
+                                <small>Click to set as Confirmed</small>
                             </div>
                         </div>
-                        <div class="status-step {% if request.status == 'IN_PROGRESS' %}active{% endif %}">
-                            <div class="status-icon"><i class="fas fa-cogs"></i></div>
+                        
+                        <div class="status-step-interactive {% if request.status == 'IN_PROGRESS' %}active{% endif %} clickable" 
+                             onclick="updateRequestStatus('IN_PROGRESS')" data-status="IN_PROGRESS">
+                            <div class="status-icon">
+                                <i class="fas fa-cogs"></i>
+                                {% if request.status == 'IN_PROGRESS' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            </div>
                             <div class="status-content">
-                                <h6>Operation (In Progress)</h6>
-                                <small>Daily itinerary executed. Supplier confirmations & delivery.</small>
+                                <h6>Operation</h6>
+                                <small>Click to set as In Progress</small>
                             </div>
                         </div>
-                        <div class="status-step {% if request.status == 'COMPLETED' %}active{% endif %}">
-                            <div class="status-icon"><i class="fas fa-trophy"></i></div>
+                        
+                        <div class="status-step-interactive {% if request.status == 'COMPLETED' %}active{% endif %} clickable" 
+                             onclick="updateRequestStatus('COMPLETED')" data-status="COMPLETED">
+                            <div class="status-icon">
+                                <i class="fas fa-trophy"></i>
+                                {% if request.status == 'COMPLETED' %}<i class="fas fa-check status-check"></i>{% endif %}
+                            </div>
                             <div class="status-content">
                                 <h6>Completed</h6>
-                                <small>All services delivered. Final Invoice issued.</small>
+                                <small>Click to set as Completed</small>
                             </div>
                         </div>
                     </div>
@@ -4284,5 +4372,110 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/static/js/service_config.js"></script>
 <script src="/static/js/hotel_autocomplete_data.js"></script>
 <script src="/static/js/hotel_autocomplete.js"></script>
+
+<script>
+// Interactive Status Update Function
+function updateRequestStatus(newStatus) {
+    if (confirm(`Are you sure you want to change the status to ${newStatus}?`)) {
+        const requestId = {{ request.id }};
+        
+        // Show loading state
+        document.querySelector(`[data-status="${newStatus}"]`).style.opacity = '0.5';
+        
+        fetch(`/inbound/api/${requestId}/update-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrf_token]')?.value || ''
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the UI immediately
+                updateStatusUI(newStatus);
+                
+                // Show success message
+                showAlert('Status updated successfully!', 'success');
+                
+                // Reload page after short delay to refresh all data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showAlert('Error updating status: ' + (data.error || 'Unknown error'), 'error');
+                document.querySelector(`[data-status="${newStatus}"]`).style.opacity = '1';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error updating status. Please try again.', 'error');
+            document.querySelector(`[data-status="${newStatus}"]`).style.opacity = '1';
+        });
+    }
+}
+
+// Update Status UI immediately for better UX
+function updateStatusUI(newStatus) {
+    // Remove active class from all steps
+    document.querySelectorAll('.status-step-interactive').forEach(step => {
+        step.classList.remove('active');
+        // Remove any existing check marks
+        const existingCheck = step.querySelector('.status-check');
+        if (existingCheck) {
+            existingCheck.remove();
+        }
+    });
+    
+    // Add active class to new status
+    const newActiveStep = document.querySelector(`[data-status="${newStatus}"]`);
+    if (newActiveStep) {
+        newActiveStep.classList.add('active');
+        
+        // Add check mark
+        const icon = newActiveStep.querySelector('.status-icon');
+        if (icon && !icon.querySelector('.status-check')) {
+            const checkMark = document.createElement('i');
+            checkMark.className = 'fas fa-check status-check';
+            icon.appendChild(checkMark);
+        }
+    }
+    
+    // Update progress bar
+    const progressBar = document.getElementById('statusProgressBar');
+    if (progressBar) {
+        const progressWidths = {
+            'REQUEST': '20%',
+            'BOOKED': '40%',
+            'CONFIRMED': '60%',
+            'IN_PROGRESS': '80%',
+            'COMPLETED': '100%'
+        };
+        progressBar.style.width = progressWidths[newStatus] || '0%';
+    }
+}
+
+// Show alert messages
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at top of page
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto dismiss after 3 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
 
 {% endblock %}
