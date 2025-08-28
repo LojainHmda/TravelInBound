@@ -685,6 +685,157 @@ body {
     color: #FFBF00;
 }
 
+/* Status Sidebar Styles */
+.status-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+}
+
+.status-sidebar.show {
+    right: 0;
+}
+
+.status-sidebar-header {
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    justify-content: between;
+    align-items: center;
+}
+
+.btn-close-sidebar {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.status-sidebar-body {
+    padding: 1rem;
+}
+
+.status-stages-vertical {
+    position: relative;
+}
+
+.status-stage-vertical {
+    display: flex;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.status-stage-vertical::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 60px;
+    bottom: -30px;
+    width: 2px;
+    background: #e5e7eb;
+}
+
+.status-stage-vertical:last-child::before {
+    display: none;
+}
+
+.status-stage-vertical.active::before {
+    background: linear-gradient(180deg, #FFBF00 0%, #FFD700 100%);
+}
+
+.status-circle-vertical {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 3px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 1rem;
+}
+
+.status-stage-vertical.active .status-circle-vertical {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    box-shadow: 0 8px 25px rgba(255, 191, 0, 0.3);
+}
+
+.circle-check-vertical {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #10b981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.status-content-vertical {
+    flex: 1;
+    padding-top: 0.5rem;
+}
+
+.status-content-vertical .stage-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.status-stage-vertical.active .status-content-vertical .stage-title {
+    color: #FFBF00;
+}
+
+.status-content-vertical .stage-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+.status-content-vertical .stage-description {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.sidebar-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .status-circles-container {
@@ -704,6 +855,11 @@ body {
     .status-circle {
         margin-bottom: 0;
         margin-right: 1rem;
+    }
+    
+    .status-sidebar {
+        width: 100vw;
+        right: -100vw;
     }
 }
 
@@ -1477,121 +1633,12 @@ body {
             </div>
         </div>
 
-        <!-- Right Sidebar with Status, Pricing & Invoice/Payment -->
+        <!-- Right Sidebar with Pricing & Invoice/Payment -->
         <div class="col-lg-6">
-            <!-- Status Flow -->
-            <div class="card mb-3">
-                <div class="card-header" style="background: white; color: #1f2937; border-bottom: 1px solid #e5e7eb;">
-                    <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
-                            <span class="status-indicator ms-2" id="statusIndicator">
-                                <i class="fas fa-circle text-{% if request.status == 'REQUEST' %}warning{% elif request.status == 'BOOKED' %}info{% elif request.status == 'CONFIRMED' %}primary{% elif request.status == 'IN_PROGRESS' %}success{% elif request.status == 'COMPLETED' %}success{% endif %}" style="font-size: 0.6rem; animation: pulse 2s infinite;"></i>
-                            </span>
-                        </span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleStatusFlow()" id="statusToggleBtn">
-                            <i class="fas fa-eye-slash" id="statusToggleIcon"></i>
-                        </button>
-                    </h5>
-                </div>
-                <div class="card-body" id="statusFlowContent">
-                    <!-- Elegant Circular Status Flow -->
-                    <div class="elegant-status-flow">
-                        <!-- Progress Line -->
-                        <div class="status-progress-line">
-                            <div class="progress-fill" id="progressFill" style="width: {% if request.status == 'REQUEST' %}20%{% elif request.status == 'BOOKED' %}40%{% elif request.status == 'CONFIRMED' %}60%{% elif request.status == 'IN_PROGRESS' %}80%{% elif request.status == 'COMPLETED' %}100%{% endif %};"></div>
-                        </div>
-                        
-                        <!-- Status Circles -->
-                        <div class="status-circles-container">
-                            <!-- Quotation Stage -->
-                            <div class="status-stage clickable {% if request.status == 'REQUEST' %}active{% endif %}" 
-                                 onclick="updateRequestStatus('REQUEST')" data-status="REQUEST">
-                                <div class="status-circle">
-                                    <div class="circle-number">1</div>
-                                    {% if request.status == 'REQUEST' %}
-                                    <div class="circle-check">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="status-label">
-                                    <span class="stage-title">Quotation</span>
-                                    <span class="stage-subtitle">Initial Request</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Reservation Stage -->
-                            <div class="status-stage clickable {% if request.status == 'BOOKED' %}active{% endif %}" 
-                                 onclick="updateRequestStatus('BOOKED')" data-status="BOOKED">
-                                <div class="status-circle">
-                                    <div class="circle-number">2</div>
-                                    {% if request.status == 'BOOKED' %}
-                                    <div class="circle-check">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="status-label">
-                                    <span class="stage-title">Reservation</span>
-                                    <span class="stage-subtitle">Booking Held</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Confirmed Stage -->
-                            <div class="status-stage clickable {% if request.status == 'CONFIRMED' %}active{% endif %}" 
-                                 onclick="updateRequestStatus('CONFIRMED')" data-status="CONFIRMED">
-                                <div class="status-circle">
-                                    <div class="circle-number">3</div>
-                                    {% if request.status == 'CONFIRMED' %}
-                                    <div class="circle-check">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="status-label">
-                                    <span class="stage-title">Confirmed</span>
-                                    <span class="stage-subtitle">Suppliers Booked</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Operation Stage -->
-                            <div class="status-stage clickable {% if request.status == 'IN_PROGRESS' %}active{% endif %}" 
-                                 onclick="updateRequestStatus('IN_PROGRESS')" data-status="IN_PROGRESS">
-                                <div class="status-circle">
-                                    <div class="circle-number">4</div>
-                                    {% if request.status == 'IN_PROGRESS' %}
-                                    <div class="circle-check">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="status-label">
-                                    <span class="stage-title">Operation</span>
-                                    <span class="stage-subtitle">In Progress</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Completed Stage -->
-                            <div class="status-stage clickable {% if request.status == 'COMPLETED' %}active{% endif %}" 
-                                 onclick="updateRequestStatus('COMPLETED')" data-status="COMPLETED">
-                                <div class="status-circle">
-                                    <div class="circle-number">5</div>
-                                    {% if request.status == 'COMPLETED' %}
-                                    <div class="circle-check">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <div class="status-label">
-                                    <span class="stage-title">Completed</span>
-                                    <span class="stage-subtitle">All Delivered</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Status Flow Toggle Button -->
+            <button type="button" class="btn btn-sm btn-outline-primary mb-3" onclick="toggleStatusSidebar()" id="statusSidebarToggle">
+                <i class="fas fa-tasks me-2"></i>Show Status Flow
+            </button>
 
             <!-- Pricing Summary -->
             <div class="card mb-3">
@@ -1686,7 +1733,10 @@ body {
                             <i class="fas fa-plus"></i> Add Payment
                         </button>
                         <button type="button" class="btn btn-sm" style="background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;" onclick="addCreditMemo()">
-                            <i class="fas fa-credit-card"></i> Add Credit Line
+                            <i class="fas fa-credit-card"></i> Credit Memo
+                        </button>
+                        <button type="button" class="btn btn-sm" style="background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;" onclick="addDebitMemo()">
+                            <i class="fas fa-money-bill-wave"></i> Debit Memo
                         </button>
                     </div>
 
@@ -1776,10 +1826,17 @@ body {
                     <i class="fas fa-exchange-alt"></i> Update Status
                 </button>
                 
-                <!-- Generate Invoice Button -->
+                <!-- Generate Proforma Invoice Button -->
                 {% if not request.booking.invoice_number %}
-                <button type="button" class="action-btn action-btn-invoice" onclick="generateInvoice()">
-                    <i class="fas fa-file-invoice-dollar"></i> Generate Invoice
+                <button type="button" class="action-btn action-btn-invoice" onclick="generateProformaInvoice()">
+                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
+                </button>
+                {% endif %}
+                
+                <!-- Convert to Invoice Button (only after booking is completed) -->
+                {% if request.booking.invoice_number and request.status == 'COMPLETED' %}
+                <button type="button" class="action-btn action-btn-convert-invoice" onclick="convertToInvoice()">
+                    <i class="fas fa-file-invoice-dollar"></i> Convert to Invoice
                 </button>
                 {% else %}
                 <!-- View Invoice Button (appears after invoice is generated) -->
@@ -4682,6 +4739,272 @@ function toggleStatusFlow() {
         icon.className = 'fas fa-eye';
     }
 }
+
+// Toggle Status Sidebar
+function toggleStatusSidebar() {
+    const sidebar = document.getElementById('statusSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('statusSidebarToggle');
+    
+    if (sidebar.classList.contains('show')) {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('show');
+        toggleBtn.innerHTML = '<i class="fas fa-tasks me-2"></i>Show Status Flow';
+    } else {
+        sidebar.classList.add('show');
+        overlay.classList.add('show');
+        toggleBtn.innerHTML = '<i class="fas fa-tasks me-2"></i>Hide Status Flow';
+    }
+}
+
+// Credit Memo functionality
+function addCreditMemo() {
+    if (typeof bookingId === 'undefined' || !bookingId) {
+        showAlert('Please create a booking first', 'error');
+        return;
+    }
+    
+    const amount = prompt('Enter credit memo amount:');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`/booking/${bookingId}/credit-memo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                description: 'Credit memo adjustment'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Credit memo added successfully', 'success');
+                location.reload();
+            } else {
+                showAlert(data.error || 'Failed to add credit memo', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error adding credit memo', 'error');
+        });
+    }
+}
+
+// Debit Memo functionality
+function addDebitMemo() {
+    if (typeof bookingId === 'undefined' || !bookingId) {
+        showAlert('Please create a booking first', 'error');
+        return;
+    }
+    
+    const amount = prompt('Enter debit memo amount:');
+    if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+        fetch(`/booking/${bookingId}/debit-memo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                description: 'Debit memo adjustment'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Debit memo added successfully', 'success');
+                location.reload();
+            } else {
+                showAlert(data.error || 'Failed to add debit memo', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error adding debit memo', 'error');
+        });
+    }
+}
+
+// Generate Proforma Invoice functionality
+function generateProformaInvoice() {
+    if (typeof bookingId === 'undefined' || !bookingId) {
+        showAlert('Please create a booking first', 'error');
+        return;
+    }
+    
+    fetch(`/booking/${bookingId}/generate-proforma-invoice`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Proforma invoice generated successfully', 'success');
+            setTimeout(() => {
+                window.open(`/booking/${bookingId}/proforma-invoice`, '_blank');
+            }, 1000);
+        } else {
+            showAlert(data.error || 'Failed to generate proforma invoice', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Error generating proforma invoice', 'error');
+    });
+}
+
+// Convert to Invoice functionality
+function convertToInvoice() {
+    if (typeof bookingId === 'undefined' || !bookingId) {
+        showAlert('Please create a booking first', 'error');
+        return;
+    }
+    
+    if (confirm('Convert proforma invoice to final invoice? This action cannot be undone.')) {
+        fetch(`/booking/${bookingId}/convert-to-invoice`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Successfully converted to final invoice', 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAlert(data.error || 'Failed to convert to invoice', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Error converting to invoice', 'error');
+        });
+    }
+}
 </script>
+
+<!-- Status Flow Sidebar -->
+<div class="status-sidebar" id="statusSidebar">
+    <div class="status-sidebar-header">
+        <h5 class="mb-0">
+            <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
+            <span class="status-indicator ms-2">
+                <i class="fas fa-circle text-{% if request.status == 'REQUEST' %}warning{% elif request.status == 'BOOKED' %}info{% elif request.status == 'CONFIRMED' %}primary{% elif request.status == 'IN_PROGRESS' %}success{% elif request.status == 'COMPLETED' %}success{% endif %}" style="font-size: 0.6rem; animation: pulse 2s infinite;"></i>
+            </span>
+        </h5>
+        <button type="button" class="btn-close-sidebar" onclick="toggleStatusSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="status-sidebar-body">
+        <!-- Vertical Status Flow -->
+        <div class="status-flow-vertical">
+            <!-- Status Stages -->
+            <div class="status-stages-vertical">
+                <!-- Quotation Stage -->
+                <div class="status-stage-vertical {% if request.status == 'REQUEST' %}active{% endif %}" data-status="REQUEST">
+                    <div class="stage-connector"></div>
+                    <div class="status-circle-vertical">
+                        <div class="circle-number">1</div>
+                        {% if request.status == 'REQUEST' %}
+                        <div class="circle-check-vertical">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="status-content-vertical">
+                        <div class="stage-title">Quotation</div>
+                        <div class="stage-subtitle">Initial Request</div>
+                        <div class="stage-description">Customer inquiry received and being processed</div>
+                    </div>
+                </div>
+                
+                <!-- Reservation Stage -->
+                <div class="status-stage-vertical {% if request.status == 'BOOKED' %}active{% endif %}" data-status="BOOKED">
+                    <div class="stage-connector"></div>
+                    <div class="status-circle-vertical">
+                        <div class="circle-number">2</div>
+                        {% if request.status == 'BOOKED' %}
+                        <div class="circle-check-vertical">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="status-content-vertical">
+                        <div class="stage-title">Reservation</div>
+                        <div class="stage-subtitle">Booking Held</div>
+                        <div class="stage-description">Services reserved, awaiting confirmation</div>
+                    </div>
+                </div>
+                
+                <!-- Confirmed Stage -->
+                <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED">
+                    <div class="stage-connector"></div>
+                    <div class="status-circle-vertical">
+                        <div class="circle-number">3</div>
+                        {% if request.status == 'CONFIRMED' %}
+                        <div class="circle-check-vertical">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="status-content-vertical">
+                        <div class="stage-title">Confirmed</div>
+                        <div class="stage-subtitle">Suppliers Booked</div>
+                        <div class="stage-description">All suppliers confirmed and ready</div>
+                    </div>
+                </div>
+                
+                <!-- Operation Stage -->
+                <div class="status-stage-vertical {% if request.status == 'IN_PROGRESS' %}active{% endif %}" data-status="IN_PROGRESS">
+                    <div class="stage-connector"></div>
+                    <div class="status-circle-vertical">
+                        <div class="circle-number">4</div>
+                        {% if request.status == 'IN_PROGRESS' %}
+                        <div class="circle-check-vertical">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="status-content-vertical">
+                        <div class="stage-title">Operation</div>
+                        <div class="stage-subtitle">In Progress</div>
+                        <div class="stage-description">Services being delivered to customer</div>
+                    </div>
+                </div>
+                
+                <!-- Completed Stage -->
+                <div class="status-stage-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
+                    <div class="stage-connector"></div>
+                    <div class="status-circle-vertical">
+                        <div class="circle-number">5</div>
+                        {% if request.status == 'COMPLETED' %}
+                        <div class="circle-check-vertical">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="status-content-vertical">
+                        <div class="stage-title">Completed</div>
+                        <div class="stage-subtitle">All Delivered</div>
+                        <div class="stage-description">Tour completed successfully</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleStatusSidebar()"></div>
 
 {% endblock %}
