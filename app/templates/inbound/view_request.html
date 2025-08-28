@@ -704,118 +704,131 @@ body {
 }
 
 .status-sidebar-header {
-    padding: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    padding: 1.5rem;
+    background: white;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
+}
+
+.status-sidebar-header h5 {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #1f2937;
+    margin: 0;
 }
 
 .btn-close-sidebar {
     background: none;
     border: none;
-    color: white;
+    color: #6b7280;
     font-size: 1.2rem;
     cursor: pointer;
-    margin-left: auto;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s;
+}
+
+.btn-close-sidebar:hover {
+    background: #f3f4f6;
+    color: #374151;
 }
 
 .status-sidebar-body {
-    padding: 1rem;
+    padding: 1.5rem;
 }
 
 .status-stages-vertical {
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .status-stage-vertical {
     display: flex;
-    margin-bottom: 2rem;
+    align-items: center;
+    gap: 1rem;
     position: relative;
-}
-
-.status-stage-vertical::before {
-    content: '';
-    position: absolute;
-    left: 30px;
-    top: 60px;
-    bottom: -30px;
-    width: 2px;
-    background: #e5e7eb;
-}
-
-.status-stage-vertical:last-child::before {
-    display: none;
-}
-
-.status-stage-vertical.active::before {
-    background: linear-gradient(180deg, #FFBF00 0%, #FFD700 100%);
 }
 
 .status-circle-vertical {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: #f8fafc;
-    border: 3px solid #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
     flex-shrink: 0;
-    margin-right: 1rem;
-}
-
-.status-stage-vertical.active .status-circle-vertical {
-    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
-    border-color: #FFBF00;
-    box-shadow: 0 8px 25px rgba(255, 191, 0, 0.3);
-}
-
-.circle-check-vertical {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #10b981;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border: none;
     color: white;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    border: 2px solid white;
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+}
+
+/* Stage-specific colors matching the reference design */
+.status-stage-vertical[data-status="REQUEST"] .status-circle-vertical {
+    background: #3b82f6;
+}
+
+.status-stage-vertical[data-status="BOOKED"] .status-circle-vertical {
+    background: #f97316;
+}
+
+.status-stage-vertical[data-status="CONFIRMED"] .status-circle-vertical,
+.status-stage-vertical[data-status="IN_PROGRESS"] .status-circle-vertical,
+.status-stage-vertical[data-status="COMPLETED"] .status-circle-vertical {
+    background: #d1d5db;
+    color: #6b7280;
+}
+
+/* Active state overrides */
+.status-stage-vertical.active[data-status="REQUEST"] .status-circle-vertical {
+    background: #3b82f6;
+}
+
+.status-stage-vertical.active[data-status="BOOKED"] .status-circle-vertical {
+    background: #f97316;
+}
+
+.status-stage-vertical.active[data-status="CONFIRMED"] .status-circle-vertical {
+    background: #10b981;
+}
+
+.status-stage-vertical.active[data-status="IN_PROGRESS"] .status-circle-vertical {
+    background: #8b5cf6;
+}
+
+.status-stage-vertical.active[data-status="COMPLETED"] .status-circle-vertical {
+    background: #059669;
 }
 
 .status-content-vertical {
     flex: 1;
-    padding-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .status-content-vertical .stage-title {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.1rem;
     color: #1f2937;
     margin-bottom: 0.25rem;
-}
-
-.status-stage-vertical.active .status-content-vertical .stage-title {
-    color: #FFBF00;
-}
-
-.status-content-vertical .stage-subtitle {
-    font-size: 0.9rem;
-    color: #6b7280;
-    margin-bottom: 0.5rem;
+    line-height: 1.3;
 }
 
 .status-content-vertical .stage-description {
-    font-size: 0.8rem;
-    color: #9ca3af;
+    font-size: 0.9rem;
+    color: #6b7280;
     line-height: 1.4;
+    margin: 0;
+}
+
+/* Remove old subtitle styling */
+.status-content-vertical .stage-subtitle {
+    display: none;
 }
 
 .sidebar-overlay {
@@ -4895,108 +4908,95 @@ function convertToInvoice() {
 <!-- Status Flow Sidebar -->
 <div class="status-sidebar" id="statusSidebar">
     <div class="status-sidebar-header">
-        <h5 class="mb-0">
-            <i class="fas fa-tasks me-2"></i>Booking & Operations Flow
-            <span class="status-indicator ms-2">
-                <i class="fas fa-circle text-{% if request.status == 'REQUEST' %}warning{% elif request.status == 'BOOKED' %}info{% elif request.status == 'CONFIRMED' %}primary{% elif request.status == 'IN_PROGRESS' %}success{% elif request.status == 'COMPLETED' %}success{% endif %}" style="font-size: 0.6rem; animation: pulse 2s infinite;"></i>
-            </span>
-        </h5>
+        <h5>Booking Workflow</h5>
         <button type="button" class="btn-close-sidebar" onclick="toggleStatusSidebar()">
-            <i class="fas fa-times"></i>
+            <i class="fas fa-chevron-up"></i>
         </button>
     </div>
     <div class="status-sidebar-body">
-        <!-- Vertical Status Flow -->
-        <div class="status-flow-vertical">
-            <!-- Status Stages -->
-            <div class="status-stages-vertical">
-                <!-- Quotation Stage -->
-                <div class="status-stage-vertical {% if request.status == 'REQUEST' %}active{% endif %}" data-status="REQUEST">
-                    <div class="stage-connector"></div>
-                    <div class="status-circle-vertical">
-                        <div class="circle-number">1</div>
-                        {% if request.status == 'REQUEST' %}
-                        <div class="circle-check-vertical">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="status-content-vertical">
-                        <div class="stage-title">Quotation</div>
-                        <div class="stage-subtitle">Initial Request</div>
-                        <div class="stage-description">Customer inquiry received and being processed</div>
+        <!-- Status Stages -->
+        <div class="status-stages-vertical">
+            <!-- Quotation Stage -->
+            <div class="status-stage-vertical {% if request.status == 'REQUEST' %}active{% endif %}" data-status="REQUEST">
+                <div class="status-circle-vertical">
+                    {% if request.status == 'REQUEST' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-file-alt"></i>
+                    {% endif %}
+                </div>
+                <div class="status-content-vertical">
+                    <div class="stage-title">New Request</div>
+                    <div class="stage-description">
+                        {% if request.status == 'REQUEST' %}Customer submission{% else %}Pending{% endif %}
                     </div>
                 </div>
-                
-                <!-- Reservation Stage -->
-                <div class="status-stage-vertical {% if request.status == 'BOOKED' %}active{% endif %}" data-status="BOOKED">
-                    <div class="stage-connector"></div>
-                    <div class="status-circle-vertical">
-                        <div class="circle-number">2</div>
-                        {% if request.status == 'BOOKED' %}
-                        <div class="circle-check-vertical">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="status-content-vertical">
-                        <div class="stage-title">Reservation</div>
-                        <div class="stage-subtitle">Booking Held</div>
-                        <div class="stage-description">Services reserved, awaiting confirmation</div>
+            </div>
+            
+            <!-- Reservation Stage -->
+            <div class="status-stage-vertical {% if request.status == 'BOOKED' %}active{% endif %}" data-status="BOOKED">
+                <div class="status-circle-vertical">
+                    {% if request.status == 'BOOKED' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                <div class="status-content-vertical">
+                    <div class="stage-title">Account Review</div>
+                    <div class="stage-description">
+                        {% if request.status == 'BOOKED' %}Booking confirmed{% else %}{% if request.status == 'REQUEST' %}Awaiting approval{% else %}Pending{% endif %}{% endif %}
                     </div>
                 </div>
-                
-                <!-- Confirmed Stage -->
-                <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED">
-                    <div class="stage-connector"></div>
-                    <div class="status-circle-vertical">
-                        <div class="circle-number">3</div>
-                        {% if request.status == 'CONFIRMED' %}
-                        <div class="circle-check-vertical">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="status-content-vertical">
-                        <div class="stage-title">Confirmed</div>
-                        <div class="stage-subtitle">Suppliers Booked</div>
-                        <div class="stage-description">All suppliers confirmed and ready</div>
+            </div>
+            
+            <!-- Confirmed Stage -->
+            <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED">
+                <div class="status-circle-vertical">
+                    {% if request.status == 'CONFIRMED' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-dollar-sign"></i>
+                    {% endif %}
+                </div>
+                <div class="status-content-vertical">
+                    <div class="stage-title">Sales Approval</div>
+                    <div class="stage-description">
+                        {% if request.status == 'CONFIRMED' %}Suppliers confirmed{% else %}Pending{% endif %}
                     </div>
                 </div>
-                
-                <!-- Operation Stage -->
-                <div class="status-stage-vertical {% if request.status == 'IN_PROGRESS' %}active{% endif %}" data-status="IN_PROGRESS">
-                    <div class="stage-connector"></div>
-                    <div class="status-circle-vertical">
-                        <div class="circle-number">4</div>
-                        {% if request.status == 'IN_PROGRESS' %}
-                        <div class="circle-check-vertical">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="status-content-vertical">
-                        <div class="stage-title">Operation</div>
-                        <div class="stage-subtitle">In Progress</div>
-                        <div class="stage-description">Services being delivered to customer</div>
+            </div>
+            
+            <!-- Operation Stage -->
+            <div class="status-stage-vertical {% if request.status == 'IN_PROGRESS' %}active{% endif %}" data-status="IN_PROGRESS">
+                <div class="status-circle-vertical">
+                    {% if request.status == 'IN_PROGRESS' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-credit-card"></i>
+                    {% endif %}
+                </div>
+                <div class="status-content-vertical">
+                    <div class="stage-title">Finance Approval</div>
+                    <div class="stage-description">
+                        {% if request.status == 'IN_PROGRESS' %}In progress{% else %}Pending{% endif %}
                     </div>
                 </div>
-                
-                <!-- Completed Stage -->
-                <div class="status-stage-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
-                    <div class="stage-connector"></div>
-                    <div class="status-circle-vertical">
-                        <div class="circle-number">5</div>
-                        {% if request.status == 'COMPLETED' %}
-                        <div class="circle-check-vertical">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="status-content-vertical">
-                        <div class="stage-title">Completed</div>
-                        <div class="stage-subtitle">All Delivered</div>
-                        <div class="stage-description">Tour completed successfully</div>
+            </div>
+            
+            <!-- Completed Stage -->
+            <div class="status-stage-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
+                <div class="status-circle-vertical">
+                    {% if request.status == 'COMPLETED' %}
+                        <i class="fas fa-check"></i>
+                    {% else %}
+                        <i class="fas fa-warehouse"></i>
+                    {% endif %}
+                </div>
+                <div class="status-content-vertical">
+                    <div class="stage-title">Service Processing</div>
+                    <div class="stage-description">
+                        {% if request.status == 'COMPLETED' %}All delivered{% else %}Pending{% endif %}
                     </div>
                 </div>
             </div>
