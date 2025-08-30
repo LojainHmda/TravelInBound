@@ -697,6 +697,7 @@ body {
     z-index: 1000;
     transition: right 0.3s ease;
     overflow-y: auto;
+    border-left: 1px solid #e5e7eb;
 }
 
 .status-sidebar.show {
@@ -4762,15 +4763,27 @@ function toggleStatusFlow() {
 
 // Toggle Status Sidebar
 function toggleStatusSidebar() {
+    console.log('Toggle sidebar called');
     const sidebar = document.getElementById('statusSidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const toggleBtn = document.getElementById('statusSidebarToggle');
     
+    console.log('Sidebar element:', sidebar);
+    console.log('Overlay element:', overlay);
+    console.log('Toggle button:', toggleBtn);
+    
+    if (!sidebar || !overlay || !toggleBtn) {
+        console.error('Missing sidebar elements');
+        return;
+    }
+    
     if (sidebar.classList.contains('show')) {
+        console.log('Hiding sidebar');
         sidebar.classList.remove('show');
         overlay.classList.remove('show');
         toggleBtn.innerHTML = '<i class="fas fa-tasks me-2"></i>Show Status Flow';
     } else {
+        console.log('Showing sidebar');
         sidebar.classList.add('show');
         overlay.classList.add('show');
         toggleBtn.innerHTML = '<i class="fas fa-tasks me-2"></i>Hide Status Flow';
