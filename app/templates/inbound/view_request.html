@@ -697,7 +697,129 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.25rem 0;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    background: transparent;
+}
+
+.workflow-stage.active {
+    background: rgba(59, 130, 246, 0.05);
+    border-left: 4px solid #3b82f6;
+    transform: translateX(4px);
+}
+
+.workflow-stage.active[data-status="QUOTED"] {
+    background: rgba(249, 115, 22, 0.05);
+    border-left-color: #f97316;
+}
+
+.workflow-stage.active[data-status="CONFIRMED"] {
+    background: rgba(16, 185, 129, 0.05);
+    border-left-color: #10b981;
+}
+
+.workflow-stage.active[data-status="PENDING"] {
+    background: rgba(139, 92, 246, 0.05);
+    border-left-color: #8b5cf6;
+}
+
+.workflow-stage.active[data-status="COMPLETED"] {
+    background: rgba(5, 150, 105, 0.05);
+    border-left-color: #059669;
+}
+
+.animate-stage {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Status Indicator Styles */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    margin-right: 0.5rem;
+}
+
+.status-bullet {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.status-bullet.active-bullet {
+    color: #3b82f6;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.workflow-stage.active[data-status="QUOTED"] .status-bullet.active-bullet {
+    color: #f97316;
+    text-shadow: 0 0 8px rgba(249, 115, 22, 0.4);
+}
+
+.workflow-stage.active[data-status="CONFIRMED"] .status-bullet.active-bullet {
+    color: #10b981;
+    text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.workflow-stage.active[data-status="PENDING"] .status-bullet.active-bullet {
+    color: #8b5cf6;
+    text-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+.workflow-stage.active[data-status="COMPLETED"] .status-bullet.active-bullet {
+    color: #059669;
+    text-shadow: 0 0 8px rgba(5, 150, 105, 0.4);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+/* Active Badge */
+.active-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+    text-shadow: none;
+    animation: glow 2s ease-in-out infinite alternate;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes glow {
+    from {
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    to {
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.5), 0 0 12px rgba(16, 185, 129, 0.3);
+    }
 }
 
 .workflow-circle {
@@ -1649,18 +1771,24 @@ body {
                 <div class="card-body" id="workflowContent">
                     <div class="workflow-stages">
                         <!-- Request Stage -->
-                        <div class="workflow-stage active" data-status="REQUEST">
+                        <div class="workflow-stage active animate-stage" data-status="REQUEST">
+                            <div class="status-indicator">
+                                <span class="status-bullet active-bullet">●</span>
+                            </div>
                             <div class="workflow-circle">
                                 <i class="fas fa-check"></i>
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">New Request</div>
+                                <div class="workflow-title">New Request <span class="active-badge">CURRENT</span></div>
                                 <div class="workflow-description">Booking request created</div>
                             </div>
                         </div>
                         
                         <!-- Quoted Stage -->
-                        <div class="workflow-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="QUOTED">
+                        <div class="workflow-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="QUOTED">
+                            <div class="status-indicator">
+                                <span class="status-bullet {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
+                            </div>
                             <div class="workflow-circle">
                                 {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
@@ -1669,7 +1797,7 @@ body {
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Quoted</div>
+                                <div class="workflow-title">Quoted {% if request.status == 'QUOTED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
                                 <div class="workflow-description">
                                     {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Quotation sent to client{% else %}Pending{% endif %}
                                 </div>
@@ -1677,7 +1805,10 @@ body {
                         </div>
                         
                         <!-- Confirmed Stage -->
-                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
+                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="CONFIRMED">
+                            <div class="status-indicator">
+                                <span class="status-bullet {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
+                            </div>
                             <div class="workflow-circle">
                                 {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
@@ -1686,7 +1817,7 @@ body {
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Confirmed</div>
+                                <div class="workflow-title">Confirmed {% if request.status == 'CONFIRMED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
                                 <div class="workflow-description">
                                     {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}Client confirmed quote{% else %}Pending{% endif %}
                                 </div>
@@ -1694,7 +1825,10 @@ body {
                         </div>
                         
                         <!-- Pending Stage -->
-                        <div class="workflow-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active{% endif %}" data-status="PENDING">
+                        <div class="workflow-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="PENDING">
+                            <div class="status-indicator">
+                                <span class="status-bullet {% if request.status in ['PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
+                            </div>
                             <div class="workflow-circle">
                                 {% if request.status in ['PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
@@ -1703,7 +1837,7 @@ body {
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Processing</div>
+                                <div class="workflow-title">Processing {% if request.status == 'PENDING' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
                                 <div class="workflow-description">
                                     {% if request.status in ['PENDING', 'COMPLETED'] %}Internal operations ongoing{% else %}Pending{% endif %}
                                 </div>
@@ -1711,7 +1845,10 @@ body {
                         </div>
                         
                         <!-- Completed Stage -->
-                        <div class="workflow-stage {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
+                        <div class="workflow-stage {% if request.status == 'COMPLETED' %}active animate-stage{% endif %}" data-status="COMPLETED">
+                            <div class="status-indicator">
+                                <span class="status-bullet {% if request.status == 'COMPLETED' %}active-bullet{% endif %}">{% if request.status == 'COMPLETED' %}●{% else %}○{% endif %}</span>
+                            </div>
                             <div class="workflow-circle">
                                 {% if request.status == 'COMPLETED' %}
                                     <i class="fas fa-check"></i>
@@ -1720,7 +1857,7 @@ body {
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Completed</div>
+                                <div class="workflow-title">Completed {% if request.status == 'COMPLETED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
                                 <div class="workflow-description">
                                     {% if request.status == 'COMPLETED' %}Tour fully executed{% else %}Pending{% endif %}
                                 </div>
