@@ -2,16 +2,18 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Optional
 
-from app.models import (
-    STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models.service import (
+    STATUS_REQUEST, STATUS_QUOTED, STATUS_CONFIRMED, STATUS_PENDING, STATUS_COMPLETED
 )
 
 class UpdateServiceStatusForm(FlaskForm):
     """Form for updating the status of a service item"""
     status = SelectField('Status', choices=[
-        (STATUS_REQUEST, 'Request'),
-        (STATUS_IN_PROGRESS, 'In Progress'),
-        (STATUS_CONFIRMED, 'Confirmed')
+        (STATUS_REQUEST, 'New Request'),
+        (STATUS_QUOTED, 'Quoted'),
+        (STATUS_CONFIRMED, 'Confirmed'),
+        (STATUS_PENDING, 'Processing'),
+        (STATUS_COMPLETED, 'Completed')
     ], validators=[DataRequired()])
     
     notes = TextAreaField('Notes', validators=[Optional()])

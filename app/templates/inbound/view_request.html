@@ -721,13 +721,13 @@ body {
     color: white;
 }
 
-.workflow-stage[data-status="BOOKED"] .workflow-circle {
+.workflow-stage[data-status="QUOTED"] .workflow-circle {
     background: #f97316;
     color: white;
 }
 
 .workflow-stage[data-status="CONFIRMED"] .workflow-circle,
-.workflow-stage[data-status="IN_PROGRESS"] .workflow-circle,
+.workflow-stage[data-status="PENDING"] .workflow-circle,
 .workflow-stage[data-status="COMPLETED"] .workflow-circle {
     background: #d1d5db;
     color: #6b7280;
@@ -739,7 +739,7 @@ body {
     color: white;
 }
 
-.workflow-stage.active[data-status="BOOKED"] .workflow-circle {
+.workflow-stage.active[data-status="QUOTED"] .workflow-circle {
     background: #f97316;
     color: white;
 }
@@ -749,7 +749,7 @@ body {
     color: white;
 }
 
-.workflow-stage.active[data-status="IN_PROGRESS"] .workflow-circle {
+.workflow-stage.active[data-status="PENDING"] .workflow-circle {
     background: #8b5cf6;
     color: white;
 }
@@ -1606,81 +1606,81 @@ body {
                 </div>
                 <div class="card-body" id="workflowContent">
                     <div class="workflow-stages">
-                        <!-- New Request Stage -->
+                        <!-- Request Stage -->
                         <div class="workflow-stage active" data-status="REQUEST">
                             <div class="workflow-circle">
                                 <i class="fas fa-check"></i>
                             </div>
                             <div class="workflow-content">
                                 <div class="workflow-title">New Request</div>
-                                <div class="workflow-description">Customer submission</div>
+                                <div class="workflow-description">Booking request created</div>
                             </div>
                         </div>
                         
-                        <!-- Account Review Stage -->
-                        <div class="workflow-stage {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="BOOKED">
+                        <!-- Quoted Stage -->
+                        <div class="workflow-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="QUOTED">
                             <div class="workflow-circle">
-                                {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}
+                                {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
-                                    <i class="fas fa-user"></i>
+                                    <i class="fas fa-file-invoice-dollar"></i>
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Account Review</div>
+                                <div class="workflow-title">Quoted</div>
                                 <div class="workflow-description">
-                                    {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}Awaiting approval{% else %}Pending{% endif %}
+                                    {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Quotation sent to client{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Sales Approval Stage -->
-                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
+                        <!-- Confirmed Stage -->
+                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
                             <div class="workflow-circle">
-                                {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}
+                                {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
-                                    <i class="fas fa-dollar-sign"></i>
+                                    <i class="fas fa-handshake"></i>
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Sales Approval</div>
+                                <div class="workflow-title">Confirmed</div>
                                 <div class="workflow-description">
-                                    {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}Pending{% else %}Pending{% endif %}
+                                    {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}Client confirmed quote{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Finance Approval Stage -->
-                        <div class="workflow-stage {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="IN_PROGRESS">
+                        <!-- Pending Stage -->
+                        <div class="workflow-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active{% endif %}" data-status="PENDING">
                             <div class="workflow-circle">
-                                {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}
+                                {% if request.status in ['PENDING', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
-                                    <i class="fas fa-credit-card"></i>
+                                    <i class="fas fa-cogs"></i>
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Finance Approval</div>
+                                <div class="workflow-title">Processing</div>
                                 <div class="workflow-description">
-                                    {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}Pending{% else %}Pending{% endif %}
+                                    {% if request.status in ['PENDING', 'COMPLETED'] %}Internal operations ongoing{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Service Processing Stage -->
+                        <!-- Completed Stage -->
                         <div class="workflow-stage {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
                             <div class="workflow-circle">
                                 {% if request.status == 'COMPLETED' %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
-                                    <i class="fas fa-warehouse"></i>
+                                    <i class="fas fa-flag-checkered"></i>
                                 {% endif %}
                             </div>
                             <div class="workflow-content">
-                                <div class="workflow-title">Service Processing</div>
+                                <div class="workflow-title">Completed</div>
                                 <div class="workflow-description">
-                                    {% if request.status == 'COMPLETED' %}Pending{% else %}Pending{% endif %}
+                                    {% if request.status == 'COMPLETED' %}Tour fully executed{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
@@ -1919,9 +1919,11 @@ body {
                                 <label class="form-label">New Status</label>
                                 <select name="status" class="form-select" required>
                                     <option value="">Select Status</option>
-                                    <option value="REQUEST">Request</option>
-                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="REQUEST">New Request</option>
+                                    <option value="QUOTED">Quoted</option>
                                     <option value="CONFIRMED">Confirmed</option>
+                                    <option value="PENDING">Processing</option>
+                                    <option value="COMPLETED">Completed</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -4744,9 +4746,9 @@ function updateStatusUI(newStatus) {
     if (progressFill) {
         const progressWidths = {
             'REQUEST': '20%',
-            'BOOKED': '40%',
+            'QUOTED': '40%',
             'CONFIRMED': '60%',
-            'IN_PROGRESS': '80%',
+            'PENDING': '80%',
             'COMPLETED': '100%'
         };
         progressFill.style.width = progressWidths[newStatus] || '0%';

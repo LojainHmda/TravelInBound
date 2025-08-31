@@ -1,12 +1,16 @@
 from datetime import datetime
 from app import db
 
-# Constants for service item status
-STATUS_REQUEST = 'REQUEST'
-STATUS_BOOKED = 'BOOKED'
-STATUS_IN_PROGRESS = 'IN_PROGRESS'
-STATUS_CONFIRMED = 'CONFIRMED'  # New standard term
-STATUS_COMPLETED = 'COMPLETED'  # Consider deprecating in favor of STATUS_CONFIRMED
+# Constants for service item status - Updated workflow
+STATUS_REQUEST = 'REQUEST'      # Booking request is created. No quote shared yet.
+STATUS_QUOTED = 'QUOTED'        # Quotation has been sent to the client. Awaiting confirmation.
+STATUS_CONFIRMED = 'CONFIRMED'  # Client has confirmed the quote. Services can now be booked.
+STATUS_PENDING = 'PENDING'      # Internal processing and operations ongoing (e.g., service confirmations).
+STATUS_COMPLETED = 'COMPLETED'  # Tour has been fully executed and completed.
+
+# Legacy status constants (for backward compatibility)
+STATUS_BOOKED = 'CONFIRMED'     # Map old BOOKED to CONFIRMED
+STATUS_IN_PROGRESS = 'PENDING'  # Map old IN_PROGRESS to PENDING
 
 # Service types
 SERVICE_FLIGHT = 'FLIGHT'
