@@ -781,7 +781,7 @@ body {
 }
 
 .workflow-hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Responsive adjustments */
@@ -4785,14 +4785,25 @@ function toggleStatusFlow() {
 
 // Toggle Workflow visibility
 function toggleWorkflow() {
+    console.log('Toggle workflow called');
     const content = document.getElementById('workflowContent');
     const icon = document.getElementById('workflowToggleIcon');
     
+    console.log('Content element:', content);
+    console.log('Icon element:', icon);
+    
+    if (!content || !icon) {
+        console.error('Missing workflow elements');
+        return;
+    }
+    
     if (content.classList.contains('workflow-hidden')) {
+        console.log('Showing workflow');
         // Show
         content.classList.remove('workflow-hidden');
         icon.className = 'fas fa-chevron-up';
     } else {
+        console.log('Hiding workflow');
         // Hide
         content.classList.add('workflow-hidden');
         icon.className = 'fas fa-chevron-down';
