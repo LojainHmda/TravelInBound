@@ -822,6 +822,227 @@ body {
     }
 }
 
+/* Horizontal Workflow Styles */
+.horizontal-workflow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+    padding: 0 2rem;
+}
+
+.horizontal-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    min-width: 140px;
+}
+
+.stage-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.stage-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #d1d5db;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.1);
+}
+
+.stage-light.active-light {
+    background: #3b82f6;
+    box-shadow: 
+        0 0 0 3px rgba(59, 130, 246, 0.2),
+        0 0 12px rgba(59, 130, 246, 0.4),
+        0 0 20px rgba(59, 130, 246, 0.2);
+    animation: lightPulse 2s infinite;
+}
+
+.horizontal-stage[data-status="QUOTED"] .stage-light.active-light {
+    background: #f97316;
+    box-shadow: 
+        0 0 0 3px rgba(249, 115, 22, 0.2),
+        0 0 12px rgba(249, 115, 22, 0.4),
+        0 0 20px rgba(249, 115, 22, 0.2);
+}
+
+.horizontal-stage[data-status="CONFIRMED"] .stage-light.active-light {
+    background: #10b981;
+    box-shadow: 
+        0 0 0 3px rgba(16, 185, 129, 0.2),
+        0 0 12px rgba(16, 185, 129, 0.4),
+        0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+.horizontal-stage[data-status="PENDING"] .stage-light.active-light {
+    background: #8b5cf6;
+    box-shadow: 
+        0 0 0 3px rgba(139, 92, 246, 0.2),
+        0 0 12px rgba(139, 92, 246, 0.4),
+        0 0 20px rgba(139, 92, 246, 0.2);
+}
+
+.horizontal-stage[data-status="COMPLETED"] .stage-light.active-light {
+    background: #059669;
+    box-shadow: 
+        0 0 0 3px rgba(5, 150, 105, 0.2),
+        0 0 12px rgba(5, 150, 105, 0.4),
+        0 0 20px rgba(5, 150, 105, 0.2);
+}
+
+@keyframes lightPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}
+
+.stage-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+}
+
+.horizontal-stage.active .stage-circle {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.horizontal-stage.active[data-status="QUOTED"] .stage-circle {
+    background: #f97316;
+    border-color: #f97316;
+}
+
+.horizontal-stage.active[data-status="CONFIRMED"] .stage-circle {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.horizontal-stage.active[data-status="PENDING"] .stage-circle {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+}
+
+.horizontal-stage.active[data-status="COMPLETED"] .stage-circle {
+    background: #059669;
+    border-color: #059669;
+}
+
+.stage-content {
+    text-align: center;
+    min-height: 60px;
+}
+
+.stage-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.stage-description {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.horizontal-stage.active .stage-title {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.horizontal-stage.active .stage-description {
+    color: #374151;
+}
+
+.stage-connector {
+    position: absolute;
+    top: 30px;
+    left: calc(50% + 24px);
+    width: calc(100% - 48px);
+    height: 2px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.horizontal-stage:last-child .stage-connector {
+    display: none;
+}
+
+.horizontal-stage.active .stage-connector {
+    background: #3b82f6;
+}
+
+.horizontal-stage.active[data-status="QUOTED"] .stage-connector {
+    background: #f97316;
+}
+
+.horizontal-stage.active[data-status="CONFIRMED"] .stage-connector {
+    background: #10b981;
+}
+
+.horizontal-stage.active[data-status="PENDING"] .stage-connector {
+    background: #8b5cf6;
+}
+
+.horizontal-stage.active[data-status="COMPLETED"] .stage-connector {
+    background: #059669;
+}
+
+.horizontal-workflow-hidden {
+    display: none !important;
+}
+
+/* Responsive design for horizontal workflow */
+@media (max-width: 768px) {
+    .horizontal-workflow {
+        padding: 0 1rem;
+        gap: 0.5rem;
+    }
+    
+    .horizontal-stage {
+        min-width: 100px;
+    }
+    
+    .stage-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .stage-title {
+        font-size: 0.85rem;
+    }
+    
+    .stage-description {
+        font-size: 0.75rem;
+    }
+}
+
 .workflow-circle {
     width: 48px;
     height: 48px;
@@ -1594,6 +1815,115 @@ body {
         </div>
     </div>
 
+    <!-- Horizontal Status Flow at Top -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-tasks me-2 text-primary"></i>Booking Status Flow
+                    </h5>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleHorizontalWorkflow()" id="horizontalWorkflowToggle">
+                        <i class="fas fa-chevron-up" id="horizontalToggleIcon"></i>
+                    </button>
+                </div>
+                <div class="card-body py-4" id="horizontalWorkflowContent">
+                    <div class="horizontal-workflow">
+                        <!-- Request Stage -->
+                        <div class="horizontal-stage active" data-status="REQUEST">
+                            <div class="stage-indicator">
+                                <div class="stage-light active-light"></div>
+                                <div class="stage-circle">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">New Request</div>
+                                <div class="stage-description">Created</div>
+                            </div>
+                            <div class="stage-connector"></div>
+                        </div>
+                        
+                        <!-- Quoted Stage -->
+                        <div class="horizontal-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="QUOTED">
+                            <div class="stage-indicator">
+                                <div class="stage-light {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-circle">
+                                    {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
+                                        <i class="fas fa-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-file-invoice-dollar"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Quoted</div>
+                                <div class="stage-description">{% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Sent{% else %}Pending{% endif %}</div>
+                            </div>
+                            <div class="stage-connector"></div>
+                        </div>
+                        
+                        <!-- Confirmed Stage -->
+                        <div class="horizontal-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
+                            <div class="stage-indicator">
+                                <div class="stage-light {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-circle">
+                                    {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}
+                                        <i class="fas fa-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-handshake"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Confirmed</div>
+                                <div class="stage-description">{% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}Approved{% else %}Pending{% endif %}</div>
+                            </div>
+                            <div class="stage-connector"></div>
+                        </div>
+                        
+                        <!-- Pending Stage -->
+                        <div class="horizontal-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active{% endif %}" data-status="PENDING">
+                            <div class="stage-indicator">
+                                <div class="stage-light {% if request.status in ['PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-circle">
+                                    {% if request.status in ['PENDING', 'COMPLETED'] %}
+                                        <i class="fas fa-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-cogs"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Processing</div>
+                                <div class="stage-description">{% if request.status in ['PENDING', 'COMPLETED'] %}Active{% else %}Pending{% endif %}</div>
+                            </div>
+                            <div class="stage-connector"></div>
+                        </div>
+                        
+                        <!-- Completed Stage -->
+                        <div class="horizontal-stage {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
+                            <div class="stage-indicator">
+                                <div class="stage-light {% if request.status == 'COMPLETED' %}active-light{% endif %}"></div>
+                                <div class="stage-circle">
+                                    {% if request.status == 'COMPLETED' %}
+                                        <i class="fas fa-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-flag-checkered"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Completed</div>
+                                <div class="stage-description">{% if request.status == 'COMPLETED' %}Done{% else %}Pending{% endif %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <!-- Request Information -->
         <div class="col-lg-6">
@@ -1756,116 +2086,8 @@ body {
             </div>
         </div>
 
-        <!-- Right Sidebar with Workflow, Pricing & Invoice/Payment -->
+        <!-- Right Sidebar with Pricing & Invoice/Payment -->
         <div class="col-lg-6">
-            <!-- Booking Workflow -->
-            <div class="card mb-3">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="card-title mb-0 d-flex justify-content-between align-items-center">
-                        <span style="font-weight: 700; font-size: 1.25rem; color: #1f2937;">Booking Workflow</span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleWorkflow()" id="workflowToggleBtn">
-                            <i class="fas fa-chevron-up" id="workflowToggleIcon"></i>
-                        </button>
-                    </h5>
-                </div>
-                <div class="card-body" id="workflowContent">
-                    <div class="workflow-stages">
-                        <!-- Request Stage -->
-                        <div class="workflow-stage active animate-stage" data-status="REQUEST">
-                            <div class="status-indicator">
-                                <span class="status-bullet active-bullet">●</span>
-                            </div>
-                            <div class="workflow-circle">
-                                <i class="fas fa-check"></i>
-                            </div>
-                            <div class="workflow-content">
-                                <div class="workflow-title">New Request <span class="active-badge">CURRENT</span></div>
-                                <div class="workflow-description">Booking request created</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Quoted Stage -->
-                        <div class="workflow-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="QUOTED">
-                            <div class="status-indicator">
-                                <span class="status-bullet {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
-                            </div>
-                            <div class="workflow-circle">
-                                {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
-                                    <i class="fas fa-check"></i>
-                                {% else %}
-                                    <i class="fas fa-file-invoice-dollar"></i>
-                                {% endif %}
-                            </div>
-                            <div class="workflow-content">
-                                <div class="workflow-title">Quoted {% if request.status == 'QUOTED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
-                                <div class="workflow-description">
-                                    {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Quotation sent to client{% else %}Pending{% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Confirmed Stage -->
-                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="CONFIRMED">
-                            <div class="status-indicator">
-                                <span class="status-bullet {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
-                            </div>
-                            <div class="workflow-circle">
-                                {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}
-                                    <i class="fas fa-check"></i>
-                                {% else %}
-                                    <i class="fas fa-handshake"></i>
-                                {% endif %}
-                            </div>
-                            <div class="workflow-content">
-                                <div class="workflow-title">Confirmed {% if request.status == 'CONFIRMED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
-                                <div class="workflow-description">
-                                    {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}Client confirmed quote{% else %}Pending{% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Pending Stage -->
-                        <div class="workflow-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active animate-stage{% endif %}" data-status="PENDING">
-                            <div class="status-indicator">
-                                <span class="status-bullet {% if request.status in ['PENDING', 'COMPLETED'] %}active-bullet{% endif %}">{% if request.status in ['PENDING', 'COMPLETED'] %}●{% else %}○{% endif %}</span>
-                            </div>
-                            <div class="workflow-circle">
-                                {% if request.status in ['PENDING', 'COMPLETED'] %}
-                                    <i class="fas fa-check"></i>
-                                {% else %}
-                                    <i class="fas fa-cogs"></i>
-                                {% endif %}
-                            </div>
-                            <div class="workflow-content">
-                                <div class="workflow-title">Processing {% if request.status == 'PENDING' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
-                                <div class="workflow-description">
-                                    {% if request.status in ['PENDING', 'COMPLETED'] %}Internal operations ongoing{% else %}Pending{% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Completed Stage -->
-                        <div class="workflow-stage {% if request.status == 'COMPLETED' %}active animate-stage{% endif %}" data-status="COMPLETED">
-                            <div class="status-indicator">
-                                <span class="status-bullet {% if request.status == 'COMPLETED' %}active-bullet{% endif %}">{% if request.status == 'COMPLETED' %}●{% else %}○{% endif %}</span>
-                            </div>
-                            <div class="workflow-circle">
-                                {% if request.status == 'COMPLETED' %}
-                                    <i class="fas fa-check"></i>
-                                {% else %}
-                                    <i class="fas fa-flag-checkered"></i>
-                                {% endif %}
-                            </div>
-                            <div class="workflow-content">
-                                <div class="workflow-title">Completed {% if request.status == 'COMPLETED' %}<span class="active-badge">CURRENT</span>{% endif %}</div>
-                                <div class="workflow-description">
-                                    {% if request.status == 'COMPLETED' %}Tour fully executed{% else %}Pending{% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Pricing Summary -->
             <div class="card mb-3">
@@ -4969,30 +5191,29 @@ function toggleStatusFlow() {
     }
 }
 
-// Toggle Workflow visibility
-function toggleWorkflow() {
-    console.log('Toggle workflow called');
-    const content = document.getElementById('workflowContent');
-    const icon = document.getElementById('workflowToggleIcon');
+// Toggle Horizontal Workflow visibility
+function toggleHorizontalWorkflow() {
+    console.log('Toggle horizontal workflow called');
+    const content = document.getElementById('horizontalWorkflowContent');
+    const icon = document.getElementById('horizontalToggleIcon');
     
     console.log('Content element:', content);
     console.log('Icon element:', icon);
-    console.log('Current classes:', content.className);
     
     if (!content || !icon) {
-        console.error('Missing workflow elements');
+        console.error('Missing horizontal workflow elements');
         return;
     }
     
     if (content.style.display === 'none') {
-        console.log('Showing workflow');
+        console.log('Showing horizontal workflow');
         // Show
         content.style.display = 'block';
         content.style.visibility = 'visible';
         content.style.height = 'auto';
         icon.className = 'fas fa-chevron-up';
     } else {
-        console.log('Hiding workflow');
+        console.log('Hiding horizontal workflow');
         // Hide
         content.style.display = 'none';
         content.style.visibility = 'hidden';
