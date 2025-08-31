@@ -782,6 +782,17 @@ body {
 
 .workflow-hidden {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease;
+}
+
+.workflow-content-visible {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
 }
 
 /* Responsive adjustments */
@@ -1596,26 +1607,20 @@ body {
                 <div class="card-body" id="workflowContent">
                     <div class="workflow-stages">
                         <!-- New Request Stage -->
-                        <div class="workflow-stage {% if request.status == 'REQUEST' %}active{% endif %}" data-status="REQUEST">
+                        <div class="workflow-stage active" data-status="REQUEST">
                             <div class="workflow-circle">
-                                {% if request.status == 'REQUEST' %}
-                                    <i class="fas fa-check"></i>
-                                {% else %}
-                                    <i class="fas fa-file-alt"></i>
-                                {% endif %}
+                                <i class="fas fa-check"></i>
                             </div>
                             <div class="workflow-content">
                                 <div class="workflow-title">New Request</div>
-                                <div class="workflow-description">
-                                    {% if request.status == 'REQUEST' %}Customer submission{% else %}Pending{% endif %}
-                                </div>
+                                <div class="workflow-description">Customer submission</div>
                             </div>
                         </div>
                         
                         <!-- Account Review Stage -->
-                        <div class="workflow-stage {% if request.status == 'BOOKED' %}active{% endif %}" data-status="BOOKED">
+                        <div class="workflow-stage {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="BOOKED">
                             <div class="workflow-circle">
-                                {% if request.status == 'BOOKED' %}
+                                {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
                                     <i class="fas fa-user"></i>
@@ -1624,15 +1629,15 @@ body {
                             <div class="workflow-content">
                                 <div class="workflow-title">Account Review</div>
                                 <div class="workflow-description">
-                                    {% if request.status == 'BOOKED' %}Booking confirmed{% else %}{% if request.status == 'REQUEST' %}Awaiting approval{% else %}Pending{% endif %}{% endif %}
+                                    {% if request.status in ['BOOKED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}Awaiting approval{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Sales Approval Stage -->
-                        <div class="workflow-stage {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED">
+                        <div class="workflow-stage {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
                             <div class="workflow-circle">
-                                {% if request.status == 'CONFIRMED' %}
+                                {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
                                     <i class="fas fa-dollar-sign"></i>
@@ -1641,15 +1646,15 @@ body {
                             <div class="workflow-content">
                                 <div class="workflow-title">Sales Approval</div>
                                 <div class="workflow-description">
-                                    {% if request.status == 'CONFIRMED' %}Suppliers confirmed{% else %}Pending{% endif %}
+                                    {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}Pending{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Finance Approval Stage -->
-                        <div class="workflow-stage {% if request.status == 'IN_PROGRESS' %}active{% endif %}" data-status="IN_PROGRESS">
+                        <div class="workflow-stage {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}active{% endif %}" data-status="IN_PROGRESS">
                             <div class="workflow-circle">
-                                {% if request.status == 'IN_PROGRESS' %}
+                                {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}
                                     <i class="fas fa-check"></i>
                                 {% else %}
                                     <i class="fas fa-credit-card"></i>
@@ -1658,7 +1663,7 @@ body {
                             <div class="workflow-content">
                                 <div class="workflow-title">Finance Approval</div>
                                 <div class="workflow-description">
-                                    {% if request.status == 'IN_PROGRESS' %}In progress{% else %}Pending{% endif %}
+                                    {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}Pending{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
@@ -1675,7 +1680,7 @@ body {
                             <div class="workflow-content">
                                 <div class="workflow-title">Service Processing</div>
                                 <div class="workflow-description">
-                                    {% if request.status == 'COMPLETED' %}All delivered{% else %}Pending{% endif %}
+                                    {% if request.status == 'COMPLETED' %}Pending{% else %}Pending{% endif %}
                                 </div>
                             </div>
                         </div>
@@ -4791,21 +4796,26 @@ function toggleWorkflow() {
     
     console.log('Content element:', content);
     console.log('Icon element:', icon);
+    console.log('Current classes:', content.className);
     
     if (!content || !icon) {
         console.error('Missing workflow elements');
         return;
     }
     
-    if (content.classList.contains('workflow-hidden')) {
+    if (content.style.display === 'none') {
         console.log('Showing workflow');
         // Show
-        content.classList.remove('workflow-hidden');
+        content.style.display = 'block';
+        content.style.visibility = 'visible';
+        content.style.height = 'auto';
         icon.className = 'fas fa-chevron-up';
     } else {
         console.log('Hiding workflow');
         // Hide
-        content.classList.add('workflow-hidden');
+        content.style.display = 'none';
+        content.style.visibility = 'hidden';
+        content.style.height = '0';
         icon.className = 'fas fa-chevron-down';
     }
 }
