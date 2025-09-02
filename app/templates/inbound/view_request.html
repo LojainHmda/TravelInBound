@@ -1617,16 +1617,20 @@ body {
                 <div class="card-body py-4" id="horizontalWorkflowContent" style="display: block !important; visibility: visible !important; background: #f8fafc; border: 1px solid #d1d5db;">
                     <div class="horizontal-workflow">
                         <!-- Request Stage -->
-                        <div class="horizontal-stage active" data-status="REQUEST">
+                        <div class="horizontal-stage {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="REQUEST">
                             <div class="stage-indicator">
-                                <div class="stage-light active-light"></div>
+                                <div class="stage-light {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
                                 <div class="stage-circle">
-                                    <i class="fas fa-file-alt"></i>
+                                    {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
+                                        <i class="fas fa-check"></i>
+                                    {% else %}
+                                        <i class="fas fa-file-alt"></i>
+                                    {% endif %}
                                 </div>
                             </div>
                             <div class="stage-content">
                                 <div class="stage-title">New Request</div>
-                                <div class="stage-description">Created</div>
+                                <div class="stage-description">{% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Created{% else %}Pending{% endif %}</div>
                             </div>
                             <div class="stage-connector"></div>
                         </div>
