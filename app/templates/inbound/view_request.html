@@ -1617,11 +1617,11 @@ body {
                 <div class="card-body py-4" id="horizontalWorkflowContent" style="display: block !important; visibility: visible !important; background: #f8fafc; border: 1px solid #d1d5db;">
                     <div class="horizontal-workflow">
                         <!-- Request Stage -->
-                        <div class="horizontal-stage {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="REQUEST">
+                        <div class="horizontal-stage {% if request.status in ['REQUEST', 'BOOKED'] %}active{% endif %}" data-status="REQUEST">
                             <div class="stage-indicator">
-                                <div class="stage-light {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-light {% if request.status == 'REQUEST' %}active-light{% endif %}"></div>
                                 <div class="stage-circle">
-                                    {% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
+                                    {% if request.status in ['REQUEST', 'BOOKED'] %}
                                         <i class="fas fa-check"></i>
                                     {% else %}
                                         <i class="fas fa-file-alt"></i>
@@ -1630,83 +1630,71 @@ body {
                             </div>
                             <div class="stage-content">
                                 <div class="stage-title">New Request</div>
-                                <div class="stage-description">{% if request.status in ['REQUEST', 'QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Created{% else %}Pending{% endif %}</div>
+                                <div class="stage-description">{% if request.status in ['REQUEST', 'BOOKED'] %}Created{% else %}Pending{% endif %}</div>
                             </div>
                             <div class="stage-connector"></div>
                         </div>
                         
-                        <!-- Quoted Stage -->
-                        <div class="horizontal-stage {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="QUOTED">
+                        <!-- Booked Stage -->
+                        <div class="horizontal-stage {% if request.status == 'BOOKED' %}active{% endif %}" data-status="BOOKED">
                             <div class="stage-indicator">
-                                <div class="stage-light {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-light {% if request.status == 'BOOKED' %}active-light{% endif %}"></div>
                                 <div class="stage-circle">
-                                    {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}
+                                    {% if request.status == 'BOOKED' %}
                                         <i class="fas fa-check"></i>
                                     {% else %}
-                                        <i class="fas fa-file-invoice-dollar"></i>
+                                        <i class="fas fa-calendar-check"></i>
                                     {% endif %}
                                 </div>
                             </div>
                             <div class="stage-content">
-                                <div class="stage-title">Quoted</div>
-                                <div class="stage-description">{% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}Sent{% else %}Pending{% endif %}</div>
+                                <div class="stage-title">Booked</div>
+                                <div class="stage-description">{% if request.status == 'BOOKED' %}Confirmed{% else %}Pending{% endif %}</div>
+                            </div>
+                            <div class="stage-connector"></div>
+                        </div>
+                        
+                        <!-- In Progress Stage -->
+                        <div class="horizontal-stage" data-status="IN_PROGRESS">
+                            <div class="stage-indicator">
+                                <div class="stage-light"></div>
+                                <div class="stage-circle">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">In Progress</div>
+                                <div class="stage-description">Pending</div>
                             </div>
                             <div class="stage-connector"></div>
                         </div>
                         
                         <!-- Confirmed Stage -->
-                        <div class="horizontal-stage {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}" data-status="CONFIRMED">
+                        <div class="horizontal-stage" data-status="CONFIRMED">
                             <div class="stage-indicator">
-                                <div class="stage-light {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
+                                <div class="stage-light"></div>
                                 <div class="stage-circle">
-                                    {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}
-                                        <i class="fas fa-check"></i>
-                                    {% else %}
-                                        <i class="fas fa-handshake"></i>
-                                    {% endif %}
+                                    <i class="fas fa-handshake"></i>
                                 </div>
                             </div>
                             <div class="stage-content">
                                 <div class="stage-title">Confirmed</div>
-                                <div class="stage-description">{% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}Approved{% else %}Pending{% endif %}</div>
-                            </div>
-                            <div class="stage-connector"></div>
-                        </div>
-                        
-                        <!-- Pending Stage -->
-                        <div class="horizontal-stage {% if request.status in ['PENDING', 'COMPLETED'] %}active{% endif %}" data-status="PENDING">
-                            <div class="stage-indicator">
-                                <div class="stage-light {% if request.status in ['PENDING', 'COMPLETED'] %}active-light{% endif %}"></div>
-                                <div class="stage-circle">
-                                    {% if request.status in ['PENDING', 'COMPLETED'] %}
-                                        <i class="fas fa-check"></i>
-                                    {% else %}
-                                        <i class="fas fa-cogs"></i>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="stage-content">
-                                <div class="stage-title">Processing</div>
-                                <div class="stage-description">{% if request.status in ['PENDING', 'COMPLETED'] %}Active{% else %}Pending{% endif %}</div>
+                                <div class="stage-description">Pending</div>
                             </div>
                             <div class="stage-connector"></div>
                         </div>
                         
                         <!-- Completed Stage -->
-                        <div class="horizontal-stage {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED">
+                        <div class="horizontal-stage" data-status="COMPLETED">
                             <div class="stage-indicator">
-                                <div class="stage-light {% if request.status == 'COMPLETED' %}active-light{% endif %}"></div>
+                                <div class="stage-light"></div>
                                 <div class="stage-circle">
-                                    {% if request.status == 'COMPLETED' %}
-                                        <i class="fas fa-check"></i>
-                                    {% else %}
-                                        <i class="fas fa-flag-checkered"></i>
-                                    {% endif %}
+                                    <i class="fas fa-flag-checkered"></i>
                                 </div>
                             </div>
                             <div class="stage-content">
                                 <div class="stage-title">Completed</div>
-                                <div class="stage-description">{% if request.status == 'COMPLETED' %}Done{% else %}Pending{% endif %}</div>
+                                <div class="stage-description">Pending</div>
                             </div>
                         </div>
                     </div>
