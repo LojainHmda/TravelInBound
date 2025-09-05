@@ -11,80 +11,116 @@ body {
 }
 
 .status-flow-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2rem;
+    background-color: #f8f9fa;
+    padding: 1.5rem;
     margin: -20px -20px 2rem -20px;
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
+    border-radius: 8px;
 }
 
 .status-flow {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 2rem;
+    padding: 20px 0;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .status-step {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    opacity: 0.5;
-    transition: all 0.3s ease;
-}
-
-.status-step.active, .status-step.completed {
-    opacity: 1;
+    position: relative;
+    z-index: 2;
 }
 
 .status-circle {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 1.5rem;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 8px;
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 3;
 }
 
+/* REQUEST and IN_PROGRESS - Yellow/Orange */
 .status-step.active .status-circle {
-    background: white;
-    color: #667eea;
-    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+    background: #FFC107;
+    color: #333;
+    border: 3px solid #FFC107;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
 .status-step.completed .status-circle {
-    background: rgba(255, 255, 255, 0.9);
-    color: #10b981;
+    background: #FFC107;
+    color: #333;
+    border: 3px solid #FFC107;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* CONFIRMED - Green */
+.status-step.confirmed .status-circle {
+    background: #28a745;
+    color: white;
+    border: 3px solid #28a745;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* COMPLETED - Grey */
+.status-step.final .status-circle {
+    background: #6c757d;
+    color: white;
+    border: 3px solid #6c757d;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Inactive states - Light grey */
+.status-step:not(.active):not(.completed):not(.confirmed):not(.final) .status-circle {
+    background: #e9ecef;
+    color: #6c757d;
+    border: 3px solid #e9ecef;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .status-label {
     text-align: center;
+    min-width: 80px;
 }
 
 .status-title {
-    color: white;
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 2px;
 }
 
 .status-subtitle {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.8rem;
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 400;
 }
 
 .status-connector {
-    width: 100px;
-    height: 3px;
-    background: rgba(255, 255, 255, 0.2);
+    height: 4px;
+    width: 80px;
+    background: #e9ecef;
+    margin: 0 -15px;
+    margin-top: -25px;
+    border-radius: 2px;
+    transition: all 0.3s ease;
     position: relative;
+    z-index: 1;
 }
 
 .status-connector.active {
-    background: white;
+    background: #FFC107;
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
 }
 
 .custom-arrow-button {
