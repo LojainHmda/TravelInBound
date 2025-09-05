@@ -740,36 +740,41 @@ body {
     animation: lightPulse 2s infinite;
 }
 
+/* REQUEST and QUOTED - Yellow/Orange */
+.horizontal-stage[data-status="REQUEST"] .stage-light.active-light,
 .horizontal-stage[data-status="QUOTED"] .stage-light.active-light {
-    background: #f97316;
+    background: #FFC107;
     box-shadow: 
-        0 0 0 3px rgba(249, 115, 22, 0.2),
-        0 0 12px rgba(249, 115, 22, 0.4),
-        0 0 20px rgba(249, 115, 22, 0.2);
+        0 0 0 3px rgba(255, 193, 7, 0.2),
+        0 0 12px rgba(255, 193, 7, 0.4),
+        0 0 20px rgba(255, 193, 7, 0.2);
 }
 
+/* CONFIRMED - Green */
 .horizontal-stage[data-status="CONFIRMED"] .stage-light.active-light {
-    background: #10b981;
+    background: #28a745;
     box-shadow: 
-        0 0 0 3px rgba(16, 185, 129, 0.2),
-        0 0 12px rgba(16, 185, 129, 0.4),
-        0 0 20px rgba(16, 185, 129, 0.2);
+        0 0 0 3px rgba(40, 167, 69, 0.2),
+        0 0 12px rgba(40, 167, 69, 0.4),
+        0 0 20px rgba(40, 167, 69, 0.2);
 }
 
+/* PENDING - Yellow/Orange */
 .horizontal-stage[data-status="PENDING"] .stage-light.active-light {
-    background: #8b5cf6;
+    background: #FFC107;
     box-shadow: 
-        0 0 0 3px rgba(139, 92, 246, 0.2),
-        0 0 12px rgba(139, 92, 246, 0.4),
-        0 0 20px rgba(139, 92, 246, 0.2);
+        0 0 0 3px rgba(255, 193, 7, 0.2),
+        0 0 12px rgba(255, 193, 7, 0.4),
+        0 0 20px rgba(255, 193, 7, 0.2);
 }
 
+/* COMPLETED - Grey */
 .horizontal-stage[data-status="COMPLETED"] .stage-light.active-light {
-    background: #059669;
+    background: #6c757d;
     box-shadow: 
-        0 0 0 3px rgba(5, 150, 105, 0.2),
-        0 0 12px rgba(5, 150, 105, 0.4),
-        0 0 20px rgba(5, 150, 105, 0.2);
+        0 0 0 3px rgba(108, 117, 125, 0.2),
+        0 0 12px rgba(108, 117, 125, 0.4),
+        0 0 20px rgba(108, 117, 125, 0.2);
 }
 
 @keyframes lightPulse {
@@ -804,24 +809,37 @@ body {
     transform: scale(1.1);
 }
 
+/* REQUEST and QUOTED - Yellow/Orange circles */
+.horizontal-stage.active[data-status="REQUEST"] .stage-circle,
 .horizontal-stage.active[data-status="QUOTED"] .stage-circle {
-    background: #f97316;
-    border-color: #f97316;
+    background: #FFC107;
+    border-color: #FFC107;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
+/* CONFIRMED - Green circle */
 .horizontal-stage.active[data-status="CONFIRMED"] .stage-circle {
-    background: #10b981;
-    border-color: #10b981;
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
+/* PENDING - Yellow/Orange circle */
 .horizontal-stage.active[data-status="PENDING"] .stage-circle {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
+    background: #FFC107;
+    border-color: #FFC107;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
+/* COMPLETED - Grey circle */
 .horizontal-stage.active[data-status="COMPLETED"] .stage-circle {
-    background: #059669;
-    border-color: #059669;
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
 .stage-content {
@@ -870,20 +888,22 @@ body {
     background: #3b82f6;
 }
 
-.horizontal-stage.active[data-status="QUOTED"] .stage-connector {
-    background: #f97316;
+/* Active connectors matching circle colors */
+.horizontal-stage.active[data-status="REQUEST"] .stage-connector,
+.horizontal-stage.active[data-status="QUOTED"] .stage-connector,
+.horizontal-stage.active[data-status="PENDING"] .stage-connector {
+    background: #FFC107;
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
 }
 
 .horizontal-stage.active[data-status="CONFIRMED"] .stage-connector {
-    background: #10b981;
-}
-
-.horizontal-stage.active[data-status="PENDING"] .stage-connector {
-    background: #8b5cf6;
+    background: #28a745;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
 .horizontal-stage.active[data-status="COMPLETED"] .stage-connector {
-    background: #059669;
+    background: #6c757d;
+    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
 }
 
 .horizontal-workflow-hidden {
