@@ -116,7 +116,7 @@ body {
                 {% set current_status = booking.status if booking else 'REQUEST' %}
                 
                 <!-- Request Stage -->
-                <div class="status-step {% if current_status == 'REQUEST' %}active{% else %}completed{% endif %}">
+                <div class="status-step {% if current_status == 'REQUEST' %}active{% elif current_status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
                     <div class="status-circle">
                         <i class="fas fa-edit"></i>
                     </div>
@@ -144,7 +144,7 @@ body {
                 <div class="status-connector {% if current_status in ['CONFIRMED', 'COMPLETED'] %}active{% endif %}"></div>
                 
                 <!-- Confirmed Stage -->
-                <div class="status-step {% if current_status == 'CONFIRMED' %}active{% elif current_status == 'COMPLETED' %}completed{% endif %}">
+                <div class="status-step {% if current_status == 'CONFIRMED' %}confirmed{% elif current_status == 'COMPLETED' %}confirmed{% endif %}">
                     <div class="status-circle">
                         <i class="fas fa-check"></i>
                     </div>
@@ -158,7 +158,7 @@ body {
                 <div class="status-connector {% if current_status == 'COMPLETED' %}active{% endif %}"></div>
                 
                 <!-- Completed Stage -->
-                <div class="status-step {% if current_status == 'COMPLETED' %}active{% endif %}">
+                <div class="status-step {% if current_status == 'COMPLETED' %}final{% endif %}">
                     <div class="status-circle">
                         <i class="fas fa-flag-checkered"></i>
                     </div>
