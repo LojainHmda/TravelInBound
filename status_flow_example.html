@@ -1,0 +1,95 @@
+<!-- Status Flow Checklist - Copy this HTML to any template -->
+<div class="status-workflow-container" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+    <ul class="status-list">
+        <!-- Request Status -->
+        <li class="status-list-item status-request active">
+            <div class="status-checkbox">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Request</div>
+                <div class="status-subtitle">Created</div>
+            </div>
+        </li>
+        
+        <!-- Quoted Status -->
+        <li class="status-list-item status-quoted">
+            <div class="status-checkbox">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Quoted</div>
+                <div class="status-subtitle">Pending</div>
+            </div>
+        </li>
+        
+        <!-- Confirmed Status -->
+        <li class="status-list-item status-confirmed">
+            <div class="status-checkbox">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Confirmed</div>
+                <div class="status-subtitle">Pending</div>
+            </div>
+        </li>
+        
+        <!-- Completed Status -->
+        <li class="status-list-item status-completed">
+            <div class="status-checkbox">
+                <i class="fas fa-flag-checkered"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Completed</div>
+                <div class="status-subtitle">Pending</div>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<!-- Dynamic Status Example (using variables) -->
+<!-- 
+<div class="status-workflow-container" style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin: 1rem 0;">
+    <ul class="status-list">
+        <li class="status-list-item status-request {{ 'active' if current_status == 'REQUEST' }}">
+            <div class="status-checkbox">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Request</div>
+                <div class="status-subtitle">{{ 'Created' if current_status == 'REQUEST' else 'Completed' }}</div>
+            </div>
+        </li>
+        
+        <li class="status-list-item status-quoted {{ 'active' if current_status == 'QUOTED' }}">
+            <div class="status-checkbox">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Quoted</div>
+                <div class="status-subtitle">{{ 'Processing' if current_status == 'QUOTED' else 'Pending' }}</div>
+            </div>
+        </li>
+        
+        <li class="status-list-item status-confirmed {{ 'active' if current_status == 'CONFIRMED' }}">
+            <div class="status-checkbox">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Confirmed</div>
+                <div class="status-subtitle">{{ 'Service Ready' if current_status == 'CONFIRMED' else 'Pending' }}</div>
+            </div>
+        </li>
+        
+        <li class="status-list-item status-completed {{ 'active' if current_status == 'COMPLETED' }}">
+            <div class="status-checkbox">
+                <i class="fas fa-flag-checkered"></i>
+            </div>
+            <div class="status-content">
+                <div class="status-title">Completed</div>
+                <div class="status-subtitle">{{ 'Delivered' if current_status == 'COMPLETED' else 'Pending' }}</div>
+            </div>
+        </li>
+    </ul>
+</div>
+-->
