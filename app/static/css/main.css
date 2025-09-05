@@ -8,6 +8,12 @@
     --text-light: #f8f9fa;
     --border-color: #dee2e6;
     --background-color: #ffffff; /* White Background */
+}
+
+/* TEMPORARY TEST STYLE - ALL TEXT SHOULD BE BLUE IF CSS IS LOADING */
+body * {
+    color: blue !important;
+}
     --dashboard-bg-color: #f0f0f0; /* Light gray for dashboard */
     --dashboard-text-color: #223A5E; /* Custom dark blue text for dashboard */
     --dashboard-icon-color: #efdea4; /* Beige icons for dashboard */
@@ -278,6 +284,92 @@ p, span, div, label, td, th {
 .badge.status-completed {
     background-color: var(--status-completed);
     color: white;
+}
+
+/* Status List/Checklist Styles */
+.status-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.status-list-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.status-list-item:last-child {
+    border-bottom: none;
+}
+
+.status-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 4px;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: white;
+}
+
+/* REQUEST status - Yellow/Orange */
+.status-list-item.status-request .status-checkbox,
+.status-list-item.status-quoted .status-checkbox {
+    border-color: #FFC107;
+    background: #FFC107;
+    color: #333;
+}
+
+/* CONFIRMED status - Green */
+.status-list-item.status-confirmed .status-checkbox {
+    border-color: #28a745;
+    background: #28a745;
+    color: white;
+}
+
+/* COMPLETED status - Grey */
+.status-list-item.status-completed .status-checkbox {
+    border-color: #6c757d;
+    background: #6c757d;
+    color: white;
+}
+
+/* Inactive/Pending status - Light grey */
+.status-list-item.status-pending .status-checkbox {
+    border-color: #e5e7eb;
+    background: #f9fafb;
+    color: #9ca3af;
+}
+
+.status-content {
+    flex: 1;
+}
+
+.status-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.status-subtitle {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+/* Active status styling */
+.status-list-item.active .status-title {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.status-list-item.active .status-subtitle {
+    color: #374151;
 }
 
 /* Custom Colors */
