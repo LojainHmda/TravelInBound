@@ -783,16 +783,33 @@ p, span, div, label, td, th {
     }
 }
 
-/* Modern Status Flow Styles - Matching Design */
+/* Ultra Modern Status Flow - Premium Design */
 .status-flow {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px 0;
-    max-width: 700px;
+    padding: 2rem 1.5rem;
+    max-width: 900px;
     margin: 0 auto;
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 50%, #e2e8f0 100%);
+    border-radius: 24px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    position: relative;
+    overflow: hidden;
+}
+
+.status-flow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 191, 0, 0.03) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border-radius: 24px;
+    pointer-events: none;
 }
 
 .status-step {
@@ -801,136 +818,302 @@ p, span, div, label, td, th {
     align-items: center;
     position: relative;
     z-index: 2;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.status-step:hover {
+    transform: translateY(-3px);
 }
 
 .status-circle {
-    width: 50px;
-    height: 50px;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    transition: all 0.3s ease;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     position: relative;
     z-index: 3;
+    overflow: hidden;
 }
 
-/* REQUEST and IN_PROGRESS - Yellow/Orange */
+.status-circle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+    transition: all 0.3s ease;
+}
+
+/* REQUEST and IN_PROGRESS - Modern Orange Gradient */
 .status-step.active .status-circle {
-    background: #FFC107;
-    color: #333;
-    border: 3px solid #FFC107;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    background: linear-gradient(135deg, #FF8C00 0%, #FFB347 50%, #FFBF00 100%);
+    color: #1a202c;
+    border: 4px solid #FF8C00;
+    box-shadow: 
+        0 10px 30px rgba(255, 140, 0, 0.4),
+        0 0 0 10px rgba(255, 140, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: statusPulse 2.5s infinite;
 }
 
 .status-step.completed .status-circle {
-    background: #FFC107;
-    color: #333;
-    border: 3px solid #FFC107;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+    color: white;
+    border: 4px solid #10b981;
+    box-shadow: 
+        0 10px 30px rgba(16, 185, 129, 0.4),
+        0 0 0 10px rgba(16, 185, 129, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* CONFIRMED - Green */
+/* CONFIRMED - Modern Green Gradient */
 .status-step.confirmed .status-circle {
-    background: #28a745;
+    background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
     color: white;
-    border: 3px solid #28a745;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    border: 4px solid #059669;
+    box-shadow: 
+        0 10px 30px rgba(5, 150, 105, 0.4),
+        0 0 0 10px rgba(5, 150, 105, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* COMPLETED - Grey */
+.status-step.confirmed .status-circle::after {
+    content: '✓';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    color: #059669;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* COMPLETED - Modern Purple Gradient */
 .status-step.final .status-circle {
-    background: #6c757d;
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%);
     color: white;
-    border: 3px solid #6c757d;
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    border: 4px solid #7c3aed;
+    box-shadow: 
+        0 10px 30px rgba(124, 58, 237, 0.4),
+        0 0 0 10px rgba(124, 58, 237, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* Inactive states - Light grey */
+.status-step.final .status-circle::after {
+    content: '★';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Inactive states - Modern Grey Gradient */
 .status-step:not(.active):not(.completed):not(.confirmed):not(.final) .status-circle {
-    background: #e9ecef;
-    color: #6c757d;
-    border: 3px solid #e9ecef;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+    color: #64748b;
+    border: 4px solid #e2e8f0;
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .status-label {
     text-align: center;
-    min-width: 80px;
+    min-width: 100px;
+    padding: 0 8px;
 }
 
 .status-title {
-    font-weight: 600;
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 2px;
+    font-weight: 700;
+    font-size: 16px;
+    color: #1e293b;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 .status-subtitle {
-    font-size: 11px;
-    color: #6c757d;
-    font-weight: 400;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.3;
 }
 
-/* Connection lines between status circles */
+.status-step.active .status-title {
+    color: #ea580c;
+    text-shadow: 0 1px 2px rgba(234, 88, 12, 0.1);
+}
+
+.status-step.confirmed .status-title,
+.status-step.completed .status-title {
+    color: #059669;
+    text-shadow: 0 1px 2px rgba(5, 150, 105, 0.1);
+}
+
+.status-step.final .status-title {
+    color: #7c3aed;
+    text-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
+}
+
+/* Ultra Modern Connection Lines */
 .status-connector {
-    height: 4px;
-    width: 80px;
-    background: #e9ecef;
-    margin: 0 -15px;
-    margin-top: -25px;
-    border-radius: 2px;
-    transition: all 0.3s ease;
+    height: 6px;
+    width: 100px;
+    background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+    margin: 0 -20px;
+    margin-top: -35px;
+    border-radius: 10px;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
+    overflow: hidden;
+}
+
+.status-connector::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
 }
 
 .status-connector.active {
-    background: #FFC107;
-    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+    background: linear-gradient(90deg, #FF8C00 0%, #FFB347 50%, #FFBF00 100%);
+    box-shadow: 
+        0 4px 15px rgba(255, 140, 0, 0.3),
+        0 0 0 2px rgba(255, 140, 0, 0.1);
 }
 
-/* Responsive adjustments - compact design */
+.status-connector.active::before {
+    transform: translateX(100%);
+}
+
+.status-connector.confirmed {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #6ee7b7 100%);
+    box-shadow: 
+        0 4px 15px rgba(16, 185, 129, 0.3),
+        0 0 0 2px rgba(16, 185, 129, 0.1);
+}
+
+/* Pulse Animation for Active Status */
+@keyframes statusPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 
+            0 10px 30px rgba(255, 140, 0, 0.4),
+            0 0 0 10px rgba(255, 140, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 
+            0 15px 40px rgba(255, 140, 0, 0.5),
+            0 0 0 15px rgba(255, 140, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 
+            0 10px 30px rgba(255, 140, 0, 0.4),
+            0 0 0 10px rgba(255, 140, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+}
+
+/* Modern Responsive Design */
 @media (max-width: 768px) {
     .status-flow {
-        padding: 12px 8px;
+        padding: 1.5rem 1rem;
+        border-radius: 16px;
     }
     
     .status-circle {
-        width: 35px;
-        height: 35px;
-        font-size: 12px;
+        width: 55px;
+        height: 55px;
+        font-size: 18px;
     }
     
     .status-connector {
-        width: 50px;
-        margin-top: -18px;
+        width: 70px;
+        margin: 0 -15px;
+        margin-top: -28px;
     }
     
     .status-title {
-        font-size: 11px;
+        font-size: 14px;
     }
     
     .status-subtitle {
-        font-size: 8px;
+        font-size: 11px;
     }
 }
 
 @media (max-width: 576px) {
+    .status-flow {
+        padding: 1rem 0.5rem;
+        border-radius: 12px;
+    }
+    
     .status-connector {
-        width: 35px;
+        width: 50px;
+        margin: 0 -10px;
+        margin-top: -25px;
     }
     
     .status-label {
-        min-width: 50px;
+        min-width: 80px;
+        padding: 0 4px;
     }
     
     .status-circle {
-        width: 30px;
-        height: 30px;
-        font-size: 11px;
+        width: 45px;
+        height: 45px;
+        font-size: 16px;
+    }
+    
+    .status-title {
+        font-size: 12px;
+    }
+    
+    .status-subtitle {
+        font-size: 10px;
+    }
+    
+    .status-step.confirmed .status-circle::after,
+    .status-step.final .status-circle::after {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        top: -6px;
+        right: -6px;
     }
 }
