@@ -2037,10 +2037,24 @@ body {
                     <i class="fas fa-calendar-plus"></i> Generate Itinerary
                 </button>
                 
-                <!-- Create Booking Button -->
-                <button type="button" class="action-btn action-btn-booking" onclick="createBooking()">
-                    <i class="fas fa-plus-circle"></i> Create Booking
+                <!-- Generate Quote Button -->
+                <button type="button" class="action-btn action-btn-quote" onclick="generateQuote()">
+                    <i class="fas fa-calculator"></i> Generate Quote
                 </button>
+                
+                <!-- Generate Proforma Invoice Button (shown after quote) -->
+                {% if request.booking_id and not request.booking.invoice_number %}
+                <button type="button" class="action-btn action-btn-proforma" onclick="generateProformaInvoice()">
+                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
+                </button>
+                {% endif %}
+                
+                <!-- Confirm Booking Button (shown after proforma invoice) -->
+                {% if request.booking_id and request.booking.invoice_number %}
+                <button type="button" class="action-btn action-btn-confirm" onclick="confirmBooking()">
+                    <i class="fas fa-check-circle"></i> Confirm Booking
+                </button>
+                {% endif %}
                 
                 <!-- Edit Button -->
                 <button type="button" class="action-btn action-btn-edit" onclick="toggleEditMode()">
@@ -3022,9 +3036,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Create Booking Function
-function createBooking() {
-    fetch('/inbound/api/{{ request.id }}/create-booking', {
+// Generate Quote Function
+function generateQuote() {
+    fetch('/inbound/api/{{ request.id }}/generate-quote', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3034,20 +3048,75 @@ function createBooking() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Booking created successfully!', 'success');
+            showNotification('Quote generated successfully!', 'success');
             
-            // Update page state to show booking was created
-            // Reload the page to show the booking status and new buttons
+            // Stay on current page and update UI to show next steps
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
         } else {
-            showNotification(data.message || 'Error creating booking', 'error');
+            showNotification(data.message || 'Error generating quote', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error creating booking', 'error');
+        showNotification('Error generating quote', 'error');
+    });
+}
+
+// Generate Proforma Invoice Function
+function generateProformaInvoice() {
+    fetch('/inbound/api/{{ request.id }}/generate-proforma', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Proforma invoice generated successfully!', 'success');
+            
+            // Stay on current page and update UI
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error generating proforma invoice', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error generating proforma invoice', 'error');
+    });
+}
+
+// Confirm Booking Function
+function confirmBooking() {
+    fetch('/inbound/api/{{ request.id }}/confirm-booking', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Booking confirmed successfully!', 'success');
+            
+            // Stay on current page and update UI
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error confirming booking', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error confirming booking', 'error');
     });
 }
 
