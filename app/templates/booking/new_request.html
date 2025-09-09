@@ -591,13 +591,13 @@ body {
                         <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-md-2">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
-                        <button type="submit" name="save_action" value="generate_quote" class="btn btn-primary me-md-2">
+                        <button type="submit" name="save_action" value="generate_quote" class="btn btn-primary me-md-2" id="generateQuoteBtn">
                             <i class="fas fa-calculator me-2"></i>Generate Quote
                         </button>
-                        <button type="submit" name="save_action" value="generate_proforma" class="btn btn-warning me-md-2" style="display: none;" id="generateProformaBtn">
+                        <button type="submit" name="save_action" value="generate_proforma" class="btn btn-warning me-md-2" {% if not show_proforma_btn %}style="display: none;"{% endif %} id="generateProformaBtn">
                             <i class="fas fa-file-invoice me-2"></i>Generate Proforma Invoice
                         </button>
-                        <button type="submit" name="save_action" value="confirm_booking" class="btn btn-success" style="display: none;" id="confirmBookingBtn">
+                        <button type="submit" name="save_action" value="confirm_booking" class="btn btn-success" {% if not show_confirm_btn %}style="display: none;"{% endif %} id="confirmBookingBtn">
                             <i class="fas fa-check-circle me-2"></i>Confirm Booking
                         </button>
                     </div>
@@ -1215,6 +1215,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // Quote workflow management
+    function updateWorkflowButtons(status) {
+        const quoteBtn = document.getElementById('generateQuoteBtn');
+        const proformaBtn = document.getElementById('generateProformaBtn');
+        const confirmBtn = document.getElementById('confirmBookingBtn');
+        
+        // Show appropriate buttons based on status
+        switch(status) {
+            case 'REQUEST':
+                if (quoteBtn) quoteBtn.style.display = 'inline-block';
+                if (proformaBtn) proformaBtn.style.display = 'none';
+                if (confirmBtn) confirmBtn.style.display = 'none';
+                break;
+            case 'QUOTED':
+                if (quoteBtn) quoteBtn.style.display = 'none';
+                if (proformaBtn) proformaBtn.style.display = 'inline-block';
+                if (confirmBtn) confirmBtn.style.display = 'none';
+                break;
+            case 'PROFORMA_GENERATED':
+                if (quoteBtn) quoteBtn.style.display = 'none';
+                if (proformaBtn) proformaBtn.style.display = 'none';
+                if (confirmBtn) confirmBtn.style.display = 'inline-block';
+                break;
+            case 'BOOKED':
+            case 'IN_PROGRESS':
+                // All workflow complete
+                if (quoteBtn) quoteBtn.style.display = 'none';
+                if (proformaBtn) proformaBtn.style.display = 'none';
+                if (confirmBtn) confirmBtn.style.display = 'none';
+                break;
+        }
+    }
+    
+    // Initialize workflow on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we have workflow status indicators
+        const statusElement = document.querySelector('[data-booking-status]');
+        if (statusElement) {
+            const status = statusElement.getAttribute('data-booking-status');
+            updateWorkflowButtons(status);
+        }
+    });
 });
 </script>
 <style>
