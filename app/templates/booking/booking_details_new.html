@@ -11,116 +11,8 @@ body {
 }
 
 .status-flow-container {
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    margin: -20px -20px 2rem -20px;
-    border-radius: 8px;
-}
-
-.status-flow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px 0;
-    max-width: 700px;
-    margin: 0 auto;
-}
-
-.status-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-}
-
-.status-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 3;
-}
-
-/* REQUEST and IN_PROGRESS - Yellow/Orange */
-.status-step.active .status-circle {
-    background: #FFC107;
-    color: #333;
-    border: 3px solid #FFC107;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-}
-
-.status-step.completed .status-circle {
-    background: #FFC107;
-    color: #333;
-    border: 3px solid #FFC107;
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
-}
-
-/* CONFIRMED - Green */
-.status-step.confirmed .status-circle {
-    background: #28a745;
-    color: white;
-    border: 3px solid #28a745;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-}
-
-/* COMPLETED - Grey */
-.status-step.final .status-circle {
-    background: #6c757d;
-    color: white;
-    border: 3px solid #6c757d;
-    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-}
-
-/* Inactive states - Light grey */
-.status-step:not(.active):not(.completed):not(.confirmed):not(.final) .status-circle {
-    background: #e9ecef;
-    color: #6c757d;
-    border: 3px solid #e9ecef;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.status-label {
-    text-align: center;
-    min-width: 80px;
-}
-
-.status-title {
-    font-weight: 600;
-    font-size: 14px;
-    color: #333;
-    margin-bottom: 2px;
-}
-
-.status-subtitle {
-    font-size: 11px;
-    color: #6c757d;
-    font-weight: 400;
-}
-
-.status-connector {
-    height: 4px;
-    width: 80px;
-    background: #e9ecef;
-    margin: 0 -15px;
-    margin-top: -25px;
-    border-radius: 2px;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-}
-
-.status-connector.active {
-    background: #FFC107;
-    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+    padding: 1.5rem 0 2rem 0;
+    margin-bottom: 2rem;
 }
 
 .custom-arrow-button {
@@ -142,7 +34,7 @@ body {
 {% endblock %}
 
 {% block content %}
-<!-- Modern Status Flow Header -->
+<!-- Ultra Modern Status Flow Header -->
 <!-- Always show status flow - for new bookings show "Request" as active -->
 {% if booking or true %}
 <div class="status-flow-container">
@@ -154,11 +46,11 @@ body {
                 <!-- Request Stage -->
                 <div class="status-step {% if current_status == 'REQUEST' %}active{% elif current_status in ['IN_PROGRESS', 'CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
                     <div class="status-circle">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-paper-plane"></i>
                     </div>
                     <div class="status-label">
                         <div class="status-title">Request</div>
-                        <div class="status-subtitle">Initial submission</div>
+                        <div class="status-subtitle">Initial inquiry</div>
                     </div>
                 </div>
                 
@@ -168,39 +60,39 @@ body {
                 <!-- In Progress Stage -->
                 <div class="status-step {% if current_status == 'IN_PROGRESS' %}active{% elif current_status in ['CONFIRMED', 'COMPLETED'] %}completed{% endif %}">
                     <div class="status-circle">
-                        <i class="fas fa-cog"></i>
+                        <i class="fas fa-sync-alt"></i>
                     </div>
                     <div class="status-label">
-                        <div class="status-title">In Progress</div>
-                        <div class="status-subtitle">Processing</div>
+                        <div class="status-title">Processing</div>
+                        <div class="status-subtitle">Arranging services</div>
                     </div>
                 </div>
                 
                 <!-- Connection Line 2 -->
-                <div class="status-connector {% if current_status in ['CONFIRMED', 'COMPLETED'] %}active{% endif %}"></div>
+                <div class="status-connector {% if current_status in ['CONFIRMED', 'COMPLETED'] %}confirmed{% endif %}"></div>
                 
                 <!-- Confirmed Stage -->
-                <div class="status-step {% if current_status == 'CONFIRMED' %}confirmed{% elif current_status == 'COMPLETED' %}confirmed{% endif %}">
+                <div class="status-step {% if current_status == 'CONFIRMED' %}confirmed{% elif current_status == 'COMPLETED' %}completed{% endif %}">
                     <div class="status-circle">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-shield-alt"></i>
                     </div>
                     <div class="status-label">
                         <div class="status-title">Confirmed</div>
-                        <div class="status-subtitle">Service ready</div>
+                        <div class="status-subtitle">Services booked</div>
                     </div>
                 </div>
                 
                 <!-- Connection Line 3 -->
-                <div class="status-connector {% if current_status == 'COMPLETED' %}active{% endif %}"></div>
+                <div class="status-connector {% if current_status == 'COMPLETED' %}confirmed{% endif %}"></div>
                 
                 <!-- Completed Stage -->
                 <div class="status-step {% if current_status == 'COMPLETED' %}final{% endif %}">
                     <div class="status-circle">
-                        <i class="fas fa-flag-checkered"></i>
+                        <i class="fas fa-crown"></i>
                     </div>
                     <div class="status-label">
                         <div class="status-title">Completed</div>
-                        <div class="status-subtitle">Delivered</div>
+                        <div class="status-subtitle">Journey delivered</div>
                     </div>
                 </div>
             </div>
