@@ -423,9 +423,62 @@ def new_booking():
                     # Update for our current scope
                     service_items = session.get('service_items', [])
                 
+                # Handle new quote workflow actions
+                if action == 'generate_quote' and booking:
+                    # Update booking status to QUOTED
+                    booking.status = 'QUOTED'
+                    
+                    # Update all service items to QUOTED status
+                    for service_item in booking.service_items:
+                        service_item.status = 'QUOTED'
+                    
+                    db.session.commit()
+                    flash(f'Quote generated successfully for booking {reference}', 'success')
+                    
+                    # Stay on current page - don't redirect
+                    return render_template('booking/new_request.html', 
+                                         form=form, 
+                                         service_items=service_items,
+                                         show_proforma_btn=True)  # Show next step button
+                
+                elif action == 'generate_proforma' and booking:
+                    # Generate proforma invoice number if one doesn't exist
+                    if not booking.invoice_number:
+                        booking.generate_invoice_number()
+                    
+                    # Update status to indicate proforma invoice generated
+                    booking.status = 'PROFORMA_GENERATED'
+                    
+                    # Update all service items status
+                    for service_item in booking.service_items:
+                        service_item.status = 'PROFORMA_GENERATED'
+                    
+                    db.session.commit()
+                    flash(f'Proforma invoice {booking.invoice_number} generated for booking {reference}', 'success')
+                    
+                    # Stay on current page - don't redirect
+                    return render_template('booking/new_request.html', 
+                                         form=form, 
+                                         service_items=service_items,
+                                         show_confirm_btn=True)  # Show confirm button
+                
+                elif action == 'confirm_booking' and booking:
+                    # Confirm the booking
+                    booking.status = STATUS_IN_PROGRESS
+                    
+                    # Update all service items to confirmed status
+                    for service_item in booking.service_items:
+                        service_item.status = STATUS_IN_PROGRESS
+                    
+                    db.session.commit()
+                    flash(f'Booking {reference} confirmed successfully!', 'success')
+                    
+                    # Redirect to booking details page after confirmation
+                    return redirect(url_for('booking.details', booking_id=booking.id))
+                
                 # Handle invoice generation if requested (but do not try to create a new booking)
                 # Check for invoice generation request - prioritize this over checking invoice_notes
-                if (action == 'generate_invoice' or action == 'invoice') and booking:
+                elif (action == 'generate_invoice' or action == 'invoice') and booking:
                     import sys
                     print(f"Generate invoice action detected, form data: {request.form}", file=sys.stderr)
                     
