@@ -781,3 +781,237 @@ def api_create_booking(request_id):
             'success': False,
             'message': f'Error creating booking: {str(e)}'
         }), 500
+
+@inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
+@login_required
+def api_generate_quote(request_id):
+    """Generate a quote from an inbound request (creates booking with QUOTED status)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Check if quote already exists
+    if request_obj.booking_id:
+        booking = Booking.query.get(request_obj.booking_id)
+        if booking:
+            return jsonify({
+                'success': True,
+                'message': 'Quote already exists',
+                'booking_id': booking.id
+            })
+    
+    try:
+        # Import the necessary models
+        from app.models import Booking, ServiceItem, Customer
+        from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
+        
+        # Create or get customer
+        customer_id = getattr(request_obj, 'customer_id', None)
+        if customer_id:
+            customer = Customer.query.get(customer_id)
+        else:
+            # Fallback: find or create customer by contact name
+            customer = Customer.query.filter_by(first_name=request_obj.contact_name).first()
+            if not customer:
+                customer = Customer()
+                customer.first_name = request_obj.contact_name
+                customer.last_name = ""
+                customer.phone = "TBD"
+                customer.email = "tbd@example.com"
+                customer.nationality = request_obj.nationality
+                db.session.add(customer)
+                db.session.flush()
+        
+        # Create new booking with QUOTED status
+        booking = Booking()
+        booking.reference_number = request_obj.request_number
+        booking.user_id = request_obj.user_id
+        booking.customer_id = customer.id
+        booking.status = 'QUOTED'  # Set as quoted instead of booked
+        booking.total_amount = request_obj.total_amount
+        db.session.add(booking)
+        db.session.flush()
+        
+        # Link booking to inbound request and update status to QUOTED
+        request_obj.booking_id = booking.id
+        request_obj.status = 'QUOTED'
+        
+        # Clear existing service items and create new ones
+        ServiceItem.query.filter_by(booking_id=booking.id).delete()
+        
+        services_created = 0
+        
+        # Create service items based on itinerary flags
+        for row in request_obj.itinerary_rows:
+            if row.flag_hotel:
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_HOTEL
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Hotel service for {row.city}"
+                service_item.amount = row.hotel_cost or 0
+                service_item.status = 'QUOTED'
+                db.session.add(service_item)
+                services_created += 1
+            
+            if row.flag_transport:
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_TRANSPORT
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Transport service for {row.city}"
+                service_item.amount = row.transport_cost or 0
+                service_item.status = 'QUOTED'
+                db.session.add(service_item)
+                services_created += 1
+            
+            if row.flag_meal:
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_RESTAURANT
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Meal service for {row.city}"
+                service_item.amount = row.meal_cost or 0
+                service_item.status = 'QUOTED'
+                db.session.add(service_item)
+                services_created += 1
+            
+            if row.flag_guide:
+                service_item = ServiceItem()
+                service_item.booking_id = booking.id
+                service_item.service_type = SERVICE_GUIDE
+                service_item.start_date = row.date
+                service_item.end_date = row.date
+                service_item.description = f"Guide service for {row.city}"
+                service_item.amount = row.guide_cost or 0
+                service_item.status = 'QUOTED'
+                db.session.add(service_item)
+                services_created += 1
+        
+        # Recalculate booking total
+        booking.calculate_total()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Quote generated successfully with {services_created} services',
+            'booking_id': booking.id,
+            'services_count': services_created
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error generating quote: {str(e)}'
+        }), 500
+
+@inbound_bp.route('/api/<int:request_id>/generate-proforma', methods=['POST'])
+@login_required
+def api_generate_proforma(request_id):
+    """Generate a proforma invoice for a quoted booking"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    if not request_obj.booking_id:
+        return jsonify({
+            'success': False,
+            'message': 'No quote found. Please generate a quote first.'
+        }), 400
+    
+    try:
+        booking = Booking.query.get(request_obj.booking_id)
+        if not booking:
+            return jsonify({
+                'success': False,
+                'message': 'Booking not found'
+            }), 404
+        
+        if booking.status != 'QUOTED':
+            return jsonify({
+                'success': False,
+                'message': 'Booking must be in QUOTED status to generate proforma invoice'
+            }), 400
+        
+        # Generate proforma invoice number if not exists
+        if not booking.invoice_number:
+            booking.generate_invoice_number()
+        
+        # Update status to indicate proforma invoice generated
+        booking.status = 'PROFORMA_GENERATED'
+        request_obj.status = 'PROFORMA_GENERATED'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Proforma invoice generated successfully',
+            'invoice_number': booking.invoice_number,
+            'booking_id': booking.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error generating proforma invoice: {str(e)}'
+        }), 500
+
+@inbound_bp.route('/api/<int:request_id>/confirm-booking', methods=['POST'])
+@login_required
+def api_confirm_booking(request_id):
+    """Confirm a booking after proforma invoice is generated"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    if not request_obj.booking_id:
+        return jsonify({
+            'success': False,
+            'message': 'No booking found. Please generate a quote first.'
+        }), 400
+    
+    try:
+        booking = Booking.query.get(request_obj.booking_id)
+        if not booking:
+            return jsonify({
+                'success': False,
+                'message': 'Booking not found'
+            }), 404
+        
+        if booking.status not in ['QUOTED', 'PROFORMA_GENERATED']:
+            return jsonify({
+                'success': False,
+                'message': 'Booking must have proforma invoice before confirmation'
+            }), 400
+        
+        # Confirm the booking
+        booking.status = 'BOOKED'
+        request_obj.status = 'BOOKED'
+        
+        # Update all service items to BOOKED status
+        for service_item in booking.service_items:
+            service_item.status = 'BOOKED'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Booking confirmed successfully',
+            'booking_id': booking.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error confirming booking: {str(e)}'
+        }), 500
