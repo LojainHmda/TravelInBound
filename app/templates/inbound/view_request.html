@@ -2074,12 +2074,6 @@ body {
                     <i class="fas fa-exchange-alt"></i> Update Status
                 </button>
                 
-                <!-- Generate Proforma Invoice Button -->
-                {% if not request.booking.invoice_number %}
-                <button type="button" class="action-btn action-btn-invoice" onclick="generateProformaInvoice()">
-                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
-                </button>
-                {% endif %}
                 
                 <!-- Convert to Invoice Button (only after booking is completed) -->
                 {% if request.booking.invoice_number and request.status == 'COMPLETED' %}
@@ -3078,7 +3072,10 @@ function generateProformaInvoice() {
         if (data.success) {
             showNotification('Proforma invoice generated successfully!', 'success');
             
-            // Stay on current page and update UI
+            // Open proforma invoice in new tab and then reload current page
+            if (data.redirect_url) {
+                window.open(data.redirect_url, '_blank');
+            }
             setTimeout(() => {
                 window.location.reload();
             }, 1500);

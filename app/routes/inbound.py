@@ -954,7 +954,8 @@ def api_generate_proforma(request_id):
             'success': True,
             'message': 'Proforma invoice generated successfully',
             'invoice_number': booking.invoice_number,
-            'booking_id': booking.id
+            'booking_id': booking.id,
+            'redirect_url': f'/booking/{booking.id}/proforma-invoice'
         })
         
     except Exception as e:

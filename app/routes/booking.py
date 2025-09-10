@@ -454,13 +454,12 @@ def new_booking():
                         service_item.status = 'PROFORMA_GENERATED'
                     
                     db.session.commit()
-                    flash(f'Proforma invoice {booking.invoice_number} generated for booking {reference}', 'success')
-                    
-                    # Stay on current page - don't redirect
+                    flash(f'Proforma invoice {booking.invoice_number} generated! Check the new tab for details.', 'success')
                     return render_template('booking/new_request.html', 
                                          form=form, 
                                          service_items=service_items,
-                                         show_confirm_btn=True)  # Show confirm button
+                                         show_confirm_btn=True,  # Show confirm button
+                                         proforma_url=f'/booking/{booking.id}/proforma-invoice')
                 
                 elif action == 'confirm_booking' and booking:
                     # Confirm the booking
@@ -1988,6 +1987,25 @@ def invoice_details(booking_id):
     
     print(f"Rendering invoice template with invoice #{booking.invoice_number}", file=sys.stderr)
     return render_template('booking/invoice_details.html', booking=booking)
+
+@booking_bp.route('/<int:booking_id>/proforma-invoice')
+@login_required
+def proforma_invoice_details(booking_id):
+    """Display proforma invoice details for a booking"""
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Get the customer information
+    from app.models.customer import Customer
+    customer = Customer.query.get(booking.customer_id) if booking.customer_id else None
+    
+    # Calculate totals
+    service_total = sum(item.amount for item in booking.service_items if item.amount)
+    booking.total_amount = service_total if service_total > 0 else booking.total_amount
+    
+    return render_template('booking/proforma_invoice.html', 
+                         booking=booking, 
+                         customer=customer,
+                         is_proforma=True)
 
 @booking_bp.route('/<int:booking_id>/invoice/professional', methods=['GET'])
 def professional_invoice(booking_id):
