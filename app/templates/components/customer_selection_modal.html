@@ -55,7 +55,7 @@
                     <div id="noCustomersFound" class="text-center py-4 d-none">
                         <i class="fas fa-user-slash text-muted" style="font-size: 3rem;"></i>
                         <div class="mt-3 text-muted">No customers found</div>
-                        <button type="button" class="btn btn-primary btn-sm mt-2" onclick="showNewCustomerForm()">
+                        <button type="button" class="btn btn-sm mt-2 text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" onclick="showNewCustomerForm()">
                             <i class="fas fa-plus"></i> Add New Customer
                         </button>
                     </div>
@@ -65,7 +65,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-success" onclick="showNewCustomerForm()">
+                <button type="button" class="btn text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" onclick="showNewCustomerForm()">
                     <i class="fas fa-plus"></i> Add New Customer
                 </button>
             </div>
@@ -417,11 +417,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-labelledby="quickAddCustomerModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header text-dark" style="background-color: #FFBF00;">
                 <h5 class="modal-title" id="quickAddCustomerModalLabel">
                     <i class="fas fa-user-plus me-2"></i>Quick Add Customer
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="quickAddCustomerForm">
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-success" id="quickAddSubmitBtn" onclick="quickAddCustomer()">
+                <button type="button" class="btn text-dark" style="background-color: #FFBF00; border-color: #FFBF00;" id="quickAddSubmitBtn" onclick="quickAddCustomer()">
                     <i class="fas fa-plus"></i> Add Customer
                 </button>
             </div>

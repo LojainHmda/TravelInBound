@@ -369,10 +369,11 @@ def api_create_customer():
     """API endpoint to create a new customer via AJAX"""
     data = request.json
     
-    if not data or not data.get('first_name') or not data.get('email'):
+    # Validate required fields
+    if not data or not data.get('first_name') or not data.get('email') or not data.get('phone'):
         return jsonify({
             'success': False,
-            'message': 'First name and email are required'
+            'error': 'First name, email, and phone are required'
         }), 400
     
     # Check if customer with this email already exists
@@ -380,12 +381,20 @@ def api_create_customer():
     if existing_customer:
         return jsonify({
             'success': False,
-            'message': 'A customer with this email already exists',
+            'error': 'A customer with this email already exists',
             'customer': {
                 'id': existing_customer.id,
                 'name': existing_customer.name,
                 'email': existing_customer.email
             }
+        }), 400
+    
+    # Check if customer with this phone already exists
+    existing_phone = Customer.query.filter_by(phone=data.get('phone')).first()
+    if existing_phone:
+        return jsonify({
+            'success': False,
+            'error': 'A customer with this phone number already exists'
         }), 400
     
     # Create a new customer
@@ -394,9 +403,10 @@ def api_create_customer():
             first_name=data.get('first_name'),
             last_name=data.get('last_name', ''),
             email=data.get('email'),
-            phone=data.get('phone', ''),
+            phone=data.get('phone'),
+            nationality=data.get('nationality', ''),
             customer_type=data.get('customer_type', 'Individual'),
-            company_name=data.get('company_name', '') if data.get('customer_type') == 'Corporate' else '',
+            company_name=data.get('company_name', ''),
         )
         
         db.session.add(customer)
@@ -409,13 +419,12 @@ def api_create_customer():
                 'id': customer.id,
                 'name': customer.name,
                 'email': customer.email,
-                'value': str(customer.id),
-                'text': f"{customer.name} ({customer.email})"
+                'phone': customer.phone
             }
         })
     except Exception as e:
         db.session.rollback()
         return jsonify({
             'success': False,
-            'message': f'Error creating customer: {str(e)}'
+            'error': f'Error creating customer: {str(e)}'
         }), 500
