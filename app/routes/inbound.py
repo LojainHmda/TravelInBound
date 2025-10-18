@@ -101,33 +101,35 @@ def get_run_down_data_by_date():
             
             # Build activity info
             services = []
+            base_cost = row.base_cost or 0
+            
             if row.flag_hotel:
                 services.append({
                     'type': 'HOTEL',
                     'icon': 'fa-hotel',
                     'description': row.description or 'Hotel Service',
-                    'cost': row.hotel_cost or 0
+                    'cost': base_cost
                 })
             if row.flag_transport:
                 services.append({
                     'type': 'TRANSPORT',
                     'icon': 'fa-bus',
                     'description': row.description or 'Transport Service',
-                    'cost': row.transport_cost or 0
+                    'cost': base_cost
                 })
             if row.flag_meal:
                 services.append({
                     'type': 'MEAL',
                     'icon': 'fa-utensils',
                     'description': row.description or 'Meal Service',
-                    'cost': row.meal_cost or 0
+                    'cost': base_cost
                 })
             if row.flag_guide:
                 services.append({
                     'type': 'GUIDE',
                     'icon': 'fa-user-tie',
                     'description': row.description or 'Guide Service',
-                    'cost': row.guide_cost or 0
+                    'cost': base_cost
                 })
             if row.flag_airport:
                 services.append({
