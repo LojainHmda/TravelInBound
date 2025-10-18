@@ -337,11 +337,16 @@ function quickAddCustomer() {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
     
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     document.querySelector('input[name="csrf_token"]')?.value || '';
+    
     // Send to API
-    fetch('/customers/api/create', {
+    fetch('/customer/api/create', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
         },
         body: JSON.stringify(data)
     })

@@ -365,6 +365,7 @@ def api_search_customers():
     return jsonify({'results': results})
 
 @customer_bp.route('/api/create', methods=['POST'])
+@login_required
 def api_create_customer():
     """API endpoint to create a new customer via AJAX"""
     data = request.json
