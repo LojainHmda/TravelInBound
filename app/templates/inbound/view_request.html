@@ -4406,8 +4406,9 @@ function selectCustomer(customer) {
     document.getElementById('selectedCustomerId').value = customer.id;
     document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ` (${customer.company_name})` : '');
     
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('customerPickerModal'));
+    // Close modal - create instance if it doesn't exist
+    const modalEl = document.getElementById('customerPickerModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.hide();
 }
 
