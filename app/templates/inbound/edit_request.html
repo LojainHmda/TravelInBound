@@ -1221,15 +1221,6 @@ function exportVoucher(layout = 'vertical') {
 }
 
 // Customer selection functions
-function openCustomerSelectionModal(callback) {
-    // Store the callback function globally
-    window.customerSelectionCallback = callback;
-    
-    // Show the modal
-    const modal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
-    modal.show();
-}
-
 function handleCustomerSelection(customerId, customerName) {
     // Update the hidden input and display
     document.getElementById('selectedCustomerId').value = customerId;

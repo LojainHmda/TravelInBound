@@ -285,22 +285,98 @@ function selectCustomer(customerId) {
     // Find customer data
     const customer = allCustomers.find(c => c.id === customerId);
     
-    // Close modal and call callback
-    const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+    // Close modal using data-bs-dismiss approach
+    const modalEl = document.getElementById('customerSelectionModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.hide();
     
+    // Call callback with customer id and name
     if (window.customerSelectionCallback && customer) {
-        window.customerSelectionCallback(customer);
+        window.customerSelectionCallback(customer.id, customer.name);
     }
 }
 
 function showNewCustomerForm() {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
-    modal.hide();
+    // Hide customer selection modal
+    const customerModal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
+    if (customerModal) {
+        customerModal.hide();
+    }
     
-    // Redirect to new customer form or open new customer modal
-    // This depends on your implementation
-    window.location.href = '/customers/new';
+    // Show quick add modal
+    const quickAddModal = new bootstrap.Modal(document.getElementById('quickAddCustomerModal'));
+    quickAddModal.show();
+    
+    // Clear form
+    document.getElementById('quickAddCustomerForm').reset();
+}
+
+function quickAddCustomer() {
+    const form = document.getElementById('quickAddCustomerForm');
+    const formData = new FormData(form);
+    
+    // Convert to JSON
+    const data = {
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        email: formData.get('email'),
+        phone: formData.get('phone'),
+        company_name: formData.get('company_name'),
+        nationality: formData.get('nationality')
+    };
+    
+    // Validate required fields
+    if (!data.first_name || !data.email || !data.phone) {
+        alert('Please fill in all required fields (Name, Email, Phone)');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('quickAddSubmitBtn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+    
+    // Send to API
+    fetch('/customers/api/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            // Close quick add modal
+            const quickAddModal = bootstrap.Modal.getInstance(document.getElementById('quickAddCustomerModal'));
+            quickAddModal.hide();
+            
+            // Reload customers and select the new one
+            loadCustomers();
+            
+            // Show success message
+            setTimeout(() => {
+                if (window.customerSelectionCallback) {
+                    window.customerSelectionCallback(result.customer.id, result.customer.name);
+                }
+                
+                // Reopen customer selection modal
+                const customerModal = new bootstrap.Modal(document.getElementById('customerSelectionModal'));
+                customerModal.show();
+            }, 500);
+        } else {
+            alert('Error adding customer: ' + (result.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding customer. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    });
 }
 
 // Event listeners
@@ -336,3 +412,65 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- Quick Add Customer Modal -->
+<div class="modal fade" id="quickAddCustomerModal" tabindex="-1" aria-labelledby="quickAddCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="quickAddCustomerModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Quick Add Customer
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickAddCustomerForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">
+                                First Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            Email <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">
+                            Phone <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="phone" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="company_name" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="company_name" name="company_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nationality" class="form-label">Nationality</label>
+                        <input type="text" class="form-control" id="nationality" name="nationality">
+                    </div>
+                </form>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <small>Only basic information required. You can add more details later from the customer management page.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success" id="quickAddSubmitBtn" onclick="quickAddCustomer()">
+                    <i class="fas fa-plus"></i> Add Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
