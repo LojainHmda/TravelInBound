@@ -1800,8 +1800,8 @@ body {
                                     <input type="hidden" name="customer_id" value="{{ request.customer_id or '' }}" id="selectedCustomerId">
                                     <input type="text" class="form-control" id="selectedCustomerName" 
                                            value="{% if request.customer %}{{ request.customer.name }}{% if request.customer.company_name %} ({{ request.customer.company_name }}){% endif %}{% endif %}" 
-                                           readonly placeholder="Click to select customer">
-                                    <button type="button" class="btn btn-outline-secondary" onclick="openCustomerModal()">
+                                           readonly placeholder="Click to select customer" onclick="openCustomerSelectionModal(handleCustomerSelectionInView)">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="openCustomerSelectionModal(handleCustomerSelectionInView)">
                                         <i class="fas fa-search"></i>
                                     </button>
                                 </div>
@@ -4320,112 +4320,17 @@ function removeService(rowIndex, serviceType) {
 }
 </style>
 
-<!-- Customer Picker Modal -->
-<div class="modal fade" id="customerPickerModal" tabindex="-1" aria-labelledby="customerPickerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="customerPickerModalLabel">Select Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <input type="text" class="form-control" id="customerSearchInput" placeholder="Search customers by name, email, or phone...">
-                    </div>
-                </div>
-                <div id="customerList">
-                    <!-- Customers will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<!-- Customer Selection Handler for View Page -->
 <script>
-// Customer picker functions
-function openCustomerModal() {
-    loadCustomers();
-    const modal = new bootstrap.Modal(document.getElementById('customerPickerModal'));
-    modal.show();
+function handleCustomerSelectionInView(customerId, customerName) {
+    // Update the hidden input and display field
+    document.getElementById('selectedCustomerId').value = customerId;
+    document.getElementById('selectedCustomerName').value = customerName;
 }
-
-function loadCustomers(searchTerm = '') {
-    console.log('Loading customers...');
-    fetch('/customer/api/list', {
-        credentials: 'include'
-    })
-        .then(response => {
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers.get('content-type'));
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(customers => {
-            console.log('Customers loaded:', customers);
-            const customerList = document.getElementById('customerList');
-            customerList.innerHTML = '';
-            
-            if (customers.length === 0) {
-                customerList.innerHTML = '<p class="text-muted text-center">No customers found</p>';
-                return;
-            }
-            
-            customers.forEach(customer => {
-                const customerCard = document.createElement('div');
-                customerCard.className = 'customer-card mb-2 p-3 border rounded cursor-pointer';
-                customerCard.style.cursor = 'pointer';
-                customerCard.onclick = () => selectCustomer(customer);
-                
-                customerCard.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1">${customer.name}</h6>
-                            ${customer.company_name ? `<p class="mb-1 text-muted">${customer.company_name}</p>` : ''}
-                            <small class="text-muted">${customer.email} | ${customer.phone}</small>
-                        </div>
-                        <div>
-                            <span class="badge bg-secondary">${customer.customer_type}</span>
-                        </div>
-                    </div>
-                `;
-                
-                customerList.appendChild(customerCard);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading customers:', error);
-            document.getElementById('customerList').innerHTML = '<p class="text-danger text-center">Error loading customers</p>';
-        });
-}
-
-function selectCustomer(customer) {
-    console.log('Selecting customer:', customer);
-    document.getElementById('selectedCustomerId').value = customer.id;
-    document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ` (${customer.company_name})` : '');
-    
-    // Close modal - create instance if it doesn't exist
-    const modalEl = document.getElementById('customerPickerModal');
-    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
-    modal.hide();
-}
-
-// Search functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('customerSearchInput');
-    if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                loadCustomers(this.value);
-            }, 300);
-        });
-    }
-});
 </script>
+
+<!-- Include Customer Selection Modal Component -->
+{% include 'components/customer_selection_modal.html' %}
 
 <style>
 .customer-card:hover {
