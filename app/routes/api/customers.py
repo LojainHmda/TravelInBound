@@ -5,10 +5,10 @@ from app.models.booking import Booking
 from app import db
 from sqlalchemy import func
 
-# Create API blueprint
-api_bp = Blueprint('api', __name__, url_prefix='/api')
+# Create customers API blueprint
+customers_api_bp = Blueprint('customers_api', __name__)
 
-@api_bp.route('/customers')
+@customers_api_bp.route('/customers')
 @login_required
 def get_customers():
     """Get all customers with booking stats for selection modal"""
@@ -45,7 +45,7 @@ def get_customers():
             'error': str(e)
         }), 500
 
-@api_bp.route('/customers/<int:customer_id>')
+@customers_api_bp.route('/customers/<int:customer_id>')
 @login_required
 def get_customer(customer_id):
     """Get single customer details"""
