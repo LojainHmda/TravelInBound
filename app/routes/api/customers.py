@@ -19,7 +19,7 @@ def get_customers():
             func.count(Booking.id).label('booking_count')
         ).outerjoin(Booking, Customer.id == Booking.customer_id)\
          .group_by(Customer.id)\
-         .order_by(Customer.name)
+         .order_by(Customer.first_name, Customer.last_name)
         
         customers_data = []
         for customer, booking_count in customers_query.all():
