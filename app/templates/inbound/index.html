@@ -351,10 +351,6 @@
             Inbound Tour Requests
         </h1>
         <div class="header-buttons">
-            <a href="{{ url_for('inbound.run_down_plan') }}" class="btn-run-down">
-                <i class="fas fa-calendar-check"></i>
-                Run-Down Plan
-            </a>
             <a href="{{ url_for('inbound.new_request') }}" class="btn-new-request">
                 <i class="fas fa-plus"></i>
                 New Inbound Request
@@ -407,6 +403,59 @@
             </div>
         </form>
     </div>
+
+    <!-- Run-Down Plan Section -->
+    {% if run_down_data %}
+    <div class="run-down-section" style="margin-bottom: 30px;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: #495057;">
+            <i class="fas fa-calendar-day"></i> Daily Run-Down Plan (Next 30 Days)
+        </h2>
+        
+        {% for day in run_down_data %}
+        <div class="day-card" style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); overflow: hidden;">
+            <div class="day-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; font-weight: 700; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1.1rem;">{{ day.date_formatted }}</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.9rem;">
+                    {{ day.activities | length }} Activit{{ 'y' if day.activities | length == 1 else 'ies' }}
+                </span>
+            </div>
+            
+            <div class="day-activities" style="padding: 20px;">
+                {% for activity in day.activities %}
+                <div class="activity-item" style="background: #f8f9fa; border-left: 4px solid {{ activity.status_color }}; padding: 15px; margin-bottom: 15px; border-radius: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <a href="{{ url_for('inbound.view_request', id=activity.request_id) }}" style="font-weight: 700; color: #FFBF00; text-decoration: none; font-size: 1.05rem;">
+                                {{ activity.request_number }}
+                            </a>
+                            <div style="color: #6c757d; font-size: 0.9rem; margin-top: 5px;">
+                                <i class="fas fa-user"></i> {{ activity.customer_name }}
+                                <span style="margin-left: 15px;"><i class="fas fa-users"></i> {{ activity.pax }} pax</span>
+                            </div>
+                        </div>
+                        <span style="background: {{ activity.status_color }}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                            {{ activity.status }}
+                        </span>
+                    </div>
+                    
+                    <div class="services-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+                        {% for service in activity.services %}
+                        <div class="service-badge" style="background: white; border: 2px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas {{ service.icon }}" style="color: #667eea;"></i>
+                            <span style="font-weight: 600; font-size: 0.9rem;">{{ service.type }}</span>
+                            {% if service.cost > 0 %}
+                            <span style="color: #6c757d; font-size: 0.85rem;">(${{ "%.2f"|format(service.cost) }})</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Table Section -->
     {% if requests %}

@@ -22,7 +22,7 @@ inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 @inbound_bp.route('/')
 @login_required
 def index():
-    """List all inbound requests with filtering"""
+    """List all inbound requests with filtering and run-down plan"""
     query = InboundRequest.query.filter_by(user_id=current_user.id)
     
     # Apply filters
@@ -48,7 +48,109 @@ def index():
     
     # Order by most recent
     requests = query.order_by(InboundRequest.created_at.desc()).all()
-    return render_template('inbound/index.html', requests=requests)
+    
+    # Get run-down plan data for confirmed itineraries
+    run_down_data = get_run_down_data_by_date()
+    
+    return render_template('inbound/index.html', 
+                         requests=requests,
+                         run_down_data=run_down_data)
+
+def get_run_down_data_by_date():
+    """Get confirmed itineraries grouped by date with activities"""
+    from app.models.customer import Customer
+    from sqlalchemy import and_
+    
+    # Get date range (next 30 days)
+    today = datetime.now().date()
+    date_to = today + timedelta(days=30)
+    
+    # Get all confirmed requests with their itinerary rows
+    confirmed_requests = InboundRequest.query.filter(
+        InboundRequest.user_id == current_user.id,
+        InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
+    ).all()
+    
+    # Group activities by date
+    activities_by_date = {}
+    
+    for req in confirmed_requests:
+        # Get customer info
+        customer_name = "TBA"
+        if req.customer_id:
+            from app.models.customer import Customer
+            customer = Customer.query.get(req.customer_id)
+            if customer:
+                customer_name = customer.name
+        elif req.contact_name:
+            customer_name = req.contact_name
+        
+        # Process itinerary rows
+        for row in req.itinerary_rows:
+            if row.date < today or row.date > date_to:
+                continue
+                
+            date_key = row.date.strftime('%Y-%m-%d')
+            
+            if date_key not in activities_by_date:
+                activities_by_date[date_key] = {
+                    'date': row.date,
+                    'date_formatted': row.date.strftime('%A, %B %d, %Y'),
+                    'activities': []
+                }
+            
+            # Build activity info
+            services = []
+            if row.flag_hotel:
+                services.append({
+                    'type': 'HOTEL',
+                    'icon': 'fa-hotel',
+                    'description': row.description or 'Hotel Service',
+                    'cost': row.hotel_cost or 0
+                })
+            if row.flag_transport:
+                services.append({
+                    'type': 'TRANSPORT',
+                    'icon': 'fa-bus',
+                    'description': row.description or 'Transport Service',
+                    'cost': row.transport_cost or 0
+                })
+            if row.flag_meal:
+                services.append({
+                    'type': 'MEAL',
+                    'icon': 'fa-utensils',
+                    'description': row.description or 'Meal Service',
+                    'cost': row.meal_cost or 0
+                })
+            if row.flag_guide:
+                services.append({
+                    'type': 'GUIDE',
+                    'icon': 'fa-user-tie',
+                    'description': row.description or 'Guide Service',
+                    'cost': row.guide_cost or 0
+                })
+            if row.flag_airport:
+                services.append({
+                    'type': 'AIRPORT',
+                    'icon': 'fa-plane',
+                    'description': row.description or 'Airport Service',
+                    'cost': 0
+                })
+            
+            if services:  # Only add if there are services
+                activities_by_date[date_key]['activities'].append({
+                    'request_number': req.request_number,
+                    'request_id': req.id,
+                    'customer_name': customer_name,
+                    'pax': req.pax,
+                    'services': services,
+                    'status': req.status,
+                    'status_color': get_status_color(req.status)
+                })
+    
+    # Sort by date
+    sorted_data = sorted(activities_by_date.values(), key=lambda x: x['date'])
+    return sorted_data
 
 @inbound_bp.route('/new')
 @login_required
