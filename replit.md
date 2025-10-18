@@ -6,6 +6,29 @@ TravelBookPro is a Flask-based web application for travel agencies, managing boo
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (October 2025)
+
+### Run-Down Plan Dashboard for Daily Operations
+- **Date**: October 18, 2025
+- **Feature**: Comprehensive daily operational dashboard for inbound travel management showing all services organized by date
+- **Components Added**:
+  - New route: `/inbound/run-down` with modern dashboard interface
+  - Backend API: `/inbound/api/run-down-data` with SQLAlchemy queries joining ServiceItem, Booking, Customer, InboundRequest
+  - Date-wise layout showing services grouped by day with expandable cards
+  - Advanced filtering: Date range picker, status filter, booking number search
+  - Real-time statistics: Total days, services, bookings, and pax count
+  - Color-coded status badges (QUOTED=blue, BOOKED=yellow, CONFIRMED=green, CANCELLED=red)
+  - Excel export (`/inbound/run-down-export-excel`) using openpyxl with styled headers and formatting
+  - PDF export (`/inbound/run-down-export-pdf`) with printable landscape template
+  - Navigation button added to inbound landing page header
+- **Visual Elements**: Purple gradient date headers, yellow stats, responsive table design, modern card layout
+- **Export Features**: 
+  - Excel files with yellow headers, borders, and proper column widths
+  - PDF printable format with summary statistics and formatted tables
+  - Both exports respect all filters (date range, status, booking search)
+- **Use Case**: DMC/inbound agents can view daily operational summary to coordinate logistics with suppliers
+- **Status**: Fully implemented with working exports and comprehensive filtering
+
 ## Recent Changes (August 2025)
 
 ### JavaScript Architecture Fix - Service Configuration System
