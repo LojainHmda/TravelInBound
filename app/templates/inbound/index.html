@@ -440,7 +440,13 @@
                     
                     <div class="services-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
                         {% for service in activity.services %}
-                        <div class="service-badge" style="background: white; border: 2px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px;">
+                        <div class="service-badge clickable" 
+                             style="background: white; border: 2px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s;"
+                             data-bs-toggle="tooltip" 
+                             data-bs-html="true"
+                             data-bs-placement="top"
+                             title="{% if service.type == 'HOTEL' %}<strong>Hotel Service</strong><br>Rooms: {{ service.rooms }}<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'TRANSPORT' %}<strong>Transport Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'MEAL' %}<strong>Meal Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'GUIDE' %}<strong>Guide Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'AIRPORT' %}<strong>Airport Transfer</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax{% endif %}"
+                             onclick="showServiceModal('{{ service.type }}', '{{ service.description }}', '{{ activity.request_number }}', {{ service|tojson|safe }})">
                             <i class="fas {{ service.icon }}" style="color: #667eea;"></i>
                             <span style="font-weight: 600; font-size: 0.9rem;">{{ service.type }}</span>
                             {% if service.cost > 0 %}
@@ -539,4 +545,128 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Service Details Modal -->
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h5 class="modal-title" id="serviceModalLabel">
+          <i class="fas fa-info-circle"></i> Service Details
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="serviceModalContent">
+          <!-- Content will be populated by JavaScript -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.service-badge.clickable:hover {
+    border-color: #FFBF00 !important;
+    background: #fffbf0 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+}
+
+.service-badge.clickable:active {
+    transform: translateY(0);
+}
+</style>
+
+<script>
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+// Show service modal with details
+function showServiceModal(type, description, requestNumber, serviceData) {
+    const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
+    const content = document.getElementById('serviceModalContent');
+    
+    let html = `
+        <div style="margin-bottom: 20px;">
+            <h6 style="color: #667eea; margin-bottom: 15px; font-weight: 700;">
+                <i class="fas ${getServiceIcon(type)}"></i> ${type} Service
+            </h6>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Booking:</strong> ${requestNumber}
+            </p>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Description:</strong> ${description}
+            </p>
+    `;
+    
+    if (type === 'HOTEL') {
+        html += `
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Room Allocation:</strong> ${serviceData.rooms}
+            </p>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+            </p>
+        `;
+    } else if (type === 'TRANSPORT') {
+        html += `
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Passengers:</strong> ${serviceData.pax} pax
+            </p>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+            </p>
+        `;
+    } else if (type === 'MEAL') {
+        html += `
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Passengers:</strong> ${serviceData.pax} pax
+            </p>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+            </p>
+        `;
+    } else if (type === 'GUIDE') {
+        html += `
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Group Size:</strong> ${serviceData.pax} pax
+            </p>
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+            </p>
+        `;
+    } else if (type === 'AIRPORT') {
+        html += `
+            <p style="color: #495057; margin-bottom: 10px;">
+                <strong>Passengers:</strong> ${serviceData.pax} pax
+            </p>
+        `;
+    }
+    
+    html += `</div>`;
+    content.innerHTML = html;
+    modal.show();
+}
+
+function getServiceIcon(type) {
+    const icons = {
+        'HOTEL': 'fa-hotel',
+        'TRANSPORT': 'fa-bus',
+        'MEAL': 'fa-utensils',
+        'GUIDE': 'fa-user-tie',
+        'AIRPORT': 'fa-plane'
+    };
+    return icons[type] || 'fa-info-circle';
+}
+</script>
+
 {% endblock %}

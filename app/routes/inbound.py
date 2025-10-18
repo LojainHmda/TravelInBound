@@ -99,44 +99,64 @@ def get_run_down_data_by_date():
                     'activities': []
                 }
             
-            # Build activity info
+            # Build activity info with detailed service data
             services = []
             base_cost = row.base_cost or 0
             
             if row.flag_hotel:
+                # Build room breakdown
+                room_details = []
+                if row.hotel_single_rooms > 0:
+                    room_details.append(f"{row.hotel_single_rooms} Single")
+                if row.hotel_double_rooms > 0:
+                    room_details.append(f"{row.hotel_double_rooms} Double")
+                if row.hotel_triple_rooms > 0:
+                    room_details.append(f"{row.hotel_triple_rooms} Triple")
+                if row.hotel_other_rooms > 0:
+                    room_details.append(f"{row.hotel_other_rooms} Other")
+                
                 services.append({
                     'type': 'HOTEL',
                     'icon': 'fa-hotel',
                     'description': row.description or 'Hotel Service',
-                    'cost': base_cost
+                    'cost': base_cost,
+                    'rooms': ', '.join(room_details) if room_details else 'Rooms TBA',
+                    'cost_unit': row.cost_unit
                 })
             if row.flag_transport:
                 services.append({
                     'type': 'TRANSPORT',
                     'icon': 'fa-bus',
                     'description': row.description or 'Transport Service',
-                    'cost': base_cost
+                    'cost': base_cost,
+                    'cost_unit': row.cost_unit,
+                    'pax': req.pax
                 })
             if row.flag_meal:
                 services.append({
                     'type': 'MEAL',
                     'icon': 'fa-utensils',
                     'description': row.description or 'Meal Service',
-                    'cost': base_cost
+                    'cost': base_cost,
+                    'cost_unit': row.cost_unit,
+                    'pax': req.pax
                 })
             if row.flag_guide:
                 services.append({
                     'type': 'GUIDE',
                     'icon': 'fa-user-tie',
                     'description': row.description or 'Guide Service',
-                    'cost': base_cost
+                    'cost': base_cost,
+                    'cost_unit': row.cost_unit,
+                    'pax': req.pax
                 })
             if row.flag_airport:
                 services.append({
                     'type': 'AIRPORT',
                     'icon': 'fa-plane',
                     'description': row.description or 'Airport Service',
-                    'cost': 0
+                    'cost': 0,
+                    'pax': req.pax
                 })
             
             if services:  # Only add if there are services
