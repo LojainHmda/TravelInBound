@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run-Down Plan</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #FFBF00;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            color: #333;
+            font-size: 24pt;
+            margin: 0 0 10px 0;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 11pt;
+        }
+        
+        .date-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        
+        .date-header {
+            background: linear-gradient(135deg, #FFBF00 0%, #e6ac00 100%);
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .services-table thead th {
+            background: #f8f9fa;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 9pt;
+        }
+        
+        .services-table tbody td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 9pt;
+        }
+        
+        .services-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 8pt;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .service-type {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+            font-size: 9pt;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-value {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #FFBF00;
+        }
+        
+        .summary-label {
+            font-size: 9pt;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Run-Down Plan</h1>
+        <p>Daily Operational Summary</p>
+        <p><strong>Period:</strong> {{ date_from.strftime('%B %d, %Y') }} - {{ date_to.strftime('%B %d, %Y') }}</p>
+    </div>
+    
+    <div class="summary">
+        <div class="summary-item">
+            <div class="summary-value">{{ total_days }}</div>
+            <div class="summary-label">Total Days</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-value">{{ total_services }}</div>
+            <div class="summary-label">Total Services</div>
+        </div>
+    </div>
+    
+    {% for day in data %}
+    <div class="date-section">
+        <div class="date-header">
+            {{ day.date_formatted }} - {{ day.services | length }} Service{% if day.services | length != 1 %}s{% endif %}
+        </div>
+        
+        <table class="services-table">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Booking #</th>
+                    <th style="width: 20%;">Guest / Group</th>
+                    <th style="width: 6%;">Pax</th>
+                    <th style="width: 12%;">Service</th>
+                    <th style="width: 30%;">Description</th>
+                    <th style="width: 10%;">Amount</th>
+                    <th style="width: 10%;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for service in day.services %}
+                <tr>
+                    <td>{{ service.booking_number }}</td>
+                    <td>{{ service.guest_name }}</td>
+                    <td>{{ service.pax }}</td>
+                    <td class="service-type">{{ service.service_type }}</td>
+                    <td>{{ service.description }}</td>
+                    <td>${{ "%.2f" | format(service.amount) }}</td>
+                    <td>
+                        <span class="status-badge" style="background-color: {{ service.status_color }};">
+                            {{ service.status.replace('_', ' ') }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    
+    {% if not data %}
+    <div style="text-align: center; padding: 50px; color: #6c757d;">
+        <p style="font-size: 14pt;">No services found for the selected date range.</p>
+    </div>
+    {% endif %}
+    
+    <div class="footer">
+        <p>Generated on {{ current_time.strftime('%B %d, %Y at %I:%M %p') }}</p>
+        <p>Arab Travel Group - Run-Down Plan Dashboard</p>
+    </div>
+</body>
+</html>

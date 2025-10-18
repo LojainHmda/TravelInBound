@@ -1176,3 +1176,267 @@ def api_run_down_data():
         'date_from': date_from.strftime('%Y-%m-%d'),
         'date_to': date_to.strftime('%Y-%m-%d')
     })
+
+@inbound_bp.route('/run-down-export-excel')
+@login_required
+def run_down_export_excel():
+    """Export run-down plan to Excel"""
+    from app.models.customer import Customer
+    from sqlalchemy import and_
+    import io
+    from flask import send_file
+    
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    except ImportError:
+        flash('Excel export requires openpyxl package', 'error')
+        return redirect(url_for('inbound.run_down_plan'))
+    
+    # Get filter parameters
+    date_from_str = request.args.get('date_from')
+    date_to_str = request.args.get('date_to')
+    status_filter = request.args.get('status', '')
+    booking_filter = request.args.get('booking', '')
+    
+    # Parse dates
+    try:
+        if date_from_str:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        else:
+            date_from = datetime.now().date() - timedelta(days=7)
+        
+        if date_to_str:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        else:
+            date_to = datetime.now().date() + timedelta(days=30)
+    except ValueError:
+        flash('Invalid date format', 'error')
+        return redirect(url_for('inbound.run_down_plan'))
+    
+    # Build query
+    query = db.session.query(
+        ServiceItem.start_date.label('service_date'),
+        ServiceItem.service_type,
+        ServiceItem.description,
+        ServiceItem.status.label('service_status'),
+        ServiceItem.amount,
+        Booking.reference_number.label('booking_number'),
+        Booking.status.label('booking_status'),
+        Customer.first_name,
+        Customer.last_name,
+        Customer.company_name,
+        InboundRequest.pax,
+        InboundRequest.contact_name
+    ).join(
+        Booking, ServiceItem.booking_id == Booking.id
+    ).outerjoin(
+        Customer, Booking.customer_id == Customer.id
+    ).outerjoin(
+        InboundRequest, Booking.id == InboundRequest.booking_id
+    ).filter(
+        Booking.user_id == current_user.id
+    ).filter(
+        and_(
+            ServiceItem.start_date >= date_from,
+            ServiceItem.start_date <= date_to
+        )
+    )
+    
+    if status_filter:
+        query = query.filter(Booking.status == status_filter)
+    if booking_filter:
+        query = query.filter(Booking.reference_number.contains(booking_filter))
+    
+    query = query.order_by(ServiceItem.start_date, Booking.reference_number)
+    results = query.all()
+    
+    # Create Excel workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Run-Down Plan"
+    
+    # Header styling
+    header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
+    header_font = Font(bold=True, color="000000", size=12)
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Title
+    ws.merge_cells('A1:H1')
+    ws['A1'] = f"Run-Down Plan: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # Headers
+    headers = ['Date', 'Booking #', 'Guest / Group', 'Pax', 'Service Type', 'Description', 'Amount', 'Status']
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data rows
+    row = 4
+    for result in results:
+        # Guest name
+        if result.first_name and result.last_name:
+            guest_name = f"{result.first_name} {result.last_name}"
+        elif result.company_name:
+            guest_name = result.company_name
+        elif result.contact_name:
+            guest_name = result.contact_name
+        else:
+            guest_name = "TBA"
+        
+        ws.cell(row=row, column=1, value=result.service_date.strftime('%Y-%m-%d')).border = thin_border
+        ws.cell(row=row, column=2, value=result.booking_number).border = thin_border
+        ws.cell(row=row, column=3, value=guest_name).border = thin_border
+        ws.cell(row=row, column=4, value=result.pax or 1).border = thin_border
+        ws.cell(row=row, column=5, value=result.service_type).border = thin_border
+        ws.cell(row=row, column=6, value=result.description or f"{result.service_type} Service").border = thin_border
+        ws.cell(row=row, column=7, value=result.amount or 0).border = thin_border
+        ws.cell(row=row, column=7, value=f"${result.amount or 0:.2f}").border = thin_border
+        ws.cell(row=row, column=8, value=result.booking_status).border = thin_border
+        
+        row += 1
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 25
+    ws.column_dimensions['D'].width = 8
+    ws.column_dimensions['E'].width = 15
+    ws.column_dimensions['F'].width = 35
+    ws.column_dimensions['G'].width = 12
+    ws.column_dimensions['H'].width = 18
+    
+    # Save to bytes
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    filename = f"RunDown_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
+    )
+
+@inbound_bp.route('/run-down-export-pdf')
+@login_required
+def run_down_export_pdf():
+    """Export run-down plan to PDF"""
+    from app.models.customer import Customer
+    from sqlalchemy import and_
+    
+    # Get filter parameters
+    date_from_str = request.args.get('date_from')
+    date_to_str = request.args.get('date_to')
+    status_filter = request.args.get('status', '')
+    booking_filter = request.args.get('booking', '')
+    
+    # Parse dates
+    try:
+        if date_from_str:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        else:
+            date_from = datetime.now().date() - timedelta(days=7)
+        
+        if date_to_str:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        else:
+            date_to = datetime.now().date() + timedelta(days=30)
+    except ValueError:
+        flash('Invalid date format', 'error')
+        return redirect(url_for('inbound.run_down_plan'))
+    
+    # Build query
+    query = db.session.query(
+        ServiceItem.start_date.label('service_date'),
+        ServiceItem.service_type,
+        ServiceItem.description,
+        ServiceItem.amount,
+        Booking.reference_number.label('booking_number'),
+        Booking.status.label('booking_status'),
+        Customer.first_name,
+        Customer.last_name,
+        Customer.company_name,
+        InboundRequest.pax,
+        InboundRequest.contact_name
+    ).join(
+        Booking, ServiceItem.booking_id == Booking.id
+    ).outerjoin(
+        Customer, Booking.customer_id == Customer.id
+    ).outerjoin(
+        InboundRequest, Booking.id == InboundRequest.booking_id
+    ).filter(
+        Booking.user_id == current_user.id
+    ).filter(
+        and_(
+            ServiceItem.start_date >= date_from,
+            ServiceItem.start_date <= date_to
+        )
+    )
+    
+    if status_filter:
+        query = query.filter(Booking.status == status_filter)
+    if booking_filter:
+        query = query.filter(Booking.reference_number.contains(booking_filter))
+    
+    query = query.order_by(ServiceItem.start_date, Booking.reference_number)
+    results = query.all()
+    
+    # Group by date
+    run_down_data = {}
+    for row in results:
+        service_date = row.service_date.strftime('%Y-%m-%d')
+        if service_date not in run_down_data:
+            run_down_data[service_date] = {
+                'date': service_date,
+                'date_formatted': row.service_date.strftime('%A, %B %d, %Y'),
+                'services': []
+            }
+        
+        if row.first_name and row.last_name:
+            guest_name = f"{row.first_name} {row.last_name}"
+        elif row.company_name:
+            guest_name = row.company_name
+        elif row.contact_name:
+            guest_name = row.contact_name
+        else:
+            guest_name = "TBA"
+        
+        run_down_data[service_date]['services'].append({
+            'booking_number': row.booking_number,
+            'guest_name': guest_name,
+            'pax': row.pax or 1,
+            'service_type': row.service_type,
+            'description': row.description or f"{row.service_type} Service",
+            'amount': row.amount or 0,
+            'status': row.booking_status,
+            'status_color': get_status_color(row.booking_status)
+        })
+    
+    sorted_data = sorted(run_down_data.values(), key=lambda x: x['date'])
+    
+    # Calculate total services
+    total_services = sum(len(day['services']) for day in sorted_data)
+    
+    # Render PDF template
+    return render_template('inbound/run_down_pdf.html',
+                         data=sorted_data,
+                         date_from=date_from,
+                         date_to=date_to,
+                         total_days=len(sorted_data),
+                         total_services=total_services,
+                         current_time=datetime.now())

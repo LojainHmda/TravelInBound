@@ -1,4 +1,4 @@
-modules = ["python-3.11", "postgresql-16"]
+modules = ["python-3.11", "postgresql-16", "python3"]
 
 [nix]
 channel = "stable-24_05"
@@ -53,6 +53,10 @@ externalPort = 9000
 [[ports]]
 localPort = 33493
 externalPort = 3000
+
+[[ports]]
+localPort = 46013
+externalPort = 3001
 
 [agent]
 integrations = ["python_log_in_with_replit:1.0.0"]

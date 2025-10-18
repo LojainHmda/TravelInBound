@@ -494,13 +494,13 @@ function showError() {
 function exportToExcel() {
     const formData = new FormData(document.getElementById('filterForm'));
     const params = new URLSearchParams(formData);
-    alert('Excel export feature coming soon!');
+    window.location.href = `/inbound/run-down-export-excel?${params.toString()}`;
 }
 
 function exportToPDF() {
     const formData = new FormData(document.getElementById('filterForm'));
     const params = new URLSearchParams(formData);
-    alert('PDF export feature coming soon!');
+    window.open(`/inbound/run-down-export-pdf?${params.toString()}`, '_blank');
 }
 </script>
 {% endblock %}
