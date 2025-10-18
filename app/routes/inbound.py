@@ -786,6 +786,10 @@ def api_create_booking(request_id):
 @login_required
 def api_generate_quote(request_id):
     """Generate a quote from an inbound request (creates booking with QUOTED status)"""
+    # Import the necessary models
+    from app.models import Booking, ServiceItem, Customer
+    from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
+    
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
@@ -802,9 +806,6 @@ def api_generate_quote(request_id):
             })
     
     try:
-        # Import the necessary models
-        from app.models import Booking, ServiceItem, Customer
-        from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
         
         # Create or get customer
         customer_id = getattr(request_obj, 'customer_id', None)
