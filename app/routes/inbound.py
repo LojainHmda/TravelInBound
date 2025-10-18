@@ -1017,3 +1017,162 @@ def api_confirm_booking(request_id):
             'success': False,
             'message': f'Error confirming booking: {str(e)}'
         }), 500
+
+# ============================================================
+# RUN-DOWN PLAN DASHBOARD
+# ============================================================
+
+def get_status_color(status):
+    """Map booking status to color for visual coding"""
+    status_colors = {
+        'QUOTED': '#3b82f6',  # Blue
+        'PROFORMA_GENERATED': '#8b5cf6',  # Purple
+        'BOOKED': '#eab308',  # Yellow/Pending
+        'CONFIRMED': '#22c55e',  # Green
+        'COMPLETED': '#10b981',  # Green
+        'CANCELLED': '#ef4444',  # Red
+        'REQUEST': '#64748b',  # Gray
+    }
+    return status_colors.get(status, '#94a3b8')
+
+@inbound_bp.route('/run-down')
+@login_required
+def run_down_plan():
+    """Run-down plan dashboard showing daily operations"""
+    # Get default date range (today +/- 7 days)
+    today = datetime.now().date()
+    default_from = today - timedelta(days=7)
+    default_to = today + timedelta(days=30)
+    
+    # Get unique statuses for filter
+    statuses = ['QUOTED', 'PROFORMA_GENERATED', 'BOOKED', 'CONFIRMED', 'COMPLETED', 'CANCELLED']
+    
+    return render_template('inbound/run_down.html',
+                         default_from=default_from.strftime('%Y-%m-%d'),
+                         default_to=default_to.strftime('%Y-%m-%d'),
+                         statuses=statuses)
+
+@inbound_bp.route('/api/run-down-data')
+@login_required
+def api_run_down_data():
+    """API endpoint for run-down plan data"""
+    from app.models.customer import Customer
+    from app.models.service import ServiceConfirmation
+    from app.models.supplier import Supplier
+    from sqlalchemy import and_, or_
+    
+    # Get filter parameters
+    date_from_str = request.args.get('date_from')
+    date_to_str = request.args.get('date_to')
+    status_filter = request.args.get('status', '')
+    booking_filter = request.args.get('booking', '')
+    
+    # Parse dates
+    try:
+        if date_from_str:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+        else:
+            date_from = datetime.now().date() - timedelta(days=7)
+        
+        if date_to_str:
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        else:
+            date_to = datetime.now().date() + timedelta(days=30)
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
+    
+    # Build query - join ServiceItem with Booking and Customer
+    query = db.session.query(
+        ServiceItem.start_date.label('service_date'),
+        ServiceItem.service_type,
+        ServiceItem.description,
+        ServiceItem.status.label('service_status'),
+        ServiceItem.amount,
+        Booking.reference_number.label('booking_number'),
+        Booking.status.label('booking_status'),
+        Booking.id.label('booking_id'),
+        Customer.first_name,
+        Customer.last_name,
+        Customer.company_name,
+        InboundRequest.pax,
+        InboundRequest.contact_name,
+        InboundRequest.id.label('request_id')
+    ).join(
+        Booking, ServiceItem.booking_id == Booking.id
+    ).outerjoin(
+        Customer, Booking.customer_id == Customer.id
+    ).outerjoin(
+        InboundRequest, Booking.id == InboundRequest.booking_id
+    ).filter(
+        Booking.user_id == current_user.id
+    ).filter(
+        and_(
+            ServiceItem.start_date >= date_from,
+            ServiceItem.start_date <= date_to
+        )
+    )
+    
+    # Apply status filter
+    if status_filter:
+        query = query.filter(Booking.status == status_filter)
+    
+    # Apply booking number filter
+    if booking_filter:
+        query = query.filter(Booking.reference_number.contains(booking_filter))
+    
+    # Order by date
+    query = query.order_by(ServiceItem.start_date, Booking.reference_number)
+    
+    # Execute query
+    results = query.all()
+    
+    # Format results by date
+    run_down_data = {}
+    for row in results:
+        service_date = row.service_date.strftime('%Y-%m-%d')
+        
+        # Initialize date bucket if not exists
+        if service_date not in run_down_data:
+            run_down_data[service_date] = {
+                'date': service_date,
+                'date_formatted': row.service_date.strftime('%A, %B %d, %Y'),
+                'services': []
+            }
+        
+        # Build guest name
+        if row.first_name and row.last_name:
+            guest_name = f"{row.first_name} {row.last_name}"
+        elif row.company_name:
+            guest_name = row.company_name
+        elif row.contact_name:
+            guest_name = row.contact_name
+        else:
+            guest_name = "TBA"
+        
+        # Add service to date bucket
+        service_data = {
+            'booking_number': row.booking_number,
+            'booking_id': row.booking_id,
+            'request_id': row.request_id,
+            'guest_name': guest_name,
+            'pax': row.pax or 1,
+            'service_type': row.service_type,
+            'description': row.description or f"{row.service_type} Service",
+            'amount': row.amount or 0,
+            'status': row.booking_status,
+            'status_color': get_status_color(row.booking_status),
+            'service_status': row.service_status
+        }
+        
+        run_down_data[service_date]['services'].append(service_data)
+    
+    # Convert to sorted list
+    sorted_data = sorted(run_down_data.values(), key=lambda x: x['date'])
+    
+    return jsonify({
+        'success': True,
+        'data': sorted_data,
+        'total_days': len(sorted_data),
+        'date_from': date_from.strftime('%Y-%m-%d'),
+        'date_to': date_to.strftime('%Y-%m-%d')
+    })

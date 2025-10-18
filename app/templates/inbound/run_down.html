@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block title %}Run-Down Plan - Daily Operations{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css') }}">
+<style>
+/* Modern Design */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #FFBF00 0%, #e6ac00 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 20px rgba(255, 191, 0, 0.3);
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.dashboard-header p {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.95;
+    font-size: 1rem;
+}
+
+.filters-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #475569;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #FFBF00;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 191, 0, 0.1);
+}
+
+.btn-filter {
+    background: linear-gradient(135deg, #FFBF00 0%, #e6ac00 100%);
+    color: white;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 191, 0, 0.4);
+}
+
+.btn-export {
+    background: white;
+    color: #FFBF00;
+    border: 2px solid #FFBF00;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-left: 0.5rem;
+}
+
+.btn-export:hover {
+    background: #FFBF00;
+    color: white;
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #FFBF00;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.date-card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.date-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.date-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+}
+
+.services-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.services-table thead th {
+    background: #f8fafc;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #475569;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.services-table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.875rem;
+}
+
+.services-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.service-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+.service-type-badge.hotel {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.service-type-badge.transport {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.service-type-badge.restaurant {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.service-type-badge.guide {
+    background: #fce7f3;
+    color: #9f1239;
+}
+
+.booking-link {
+    color: #FFBF00;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.booking-link:hover {
+    text-decoration: underline;
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 3rem;
+}
+
+.spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #FFBF00;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #cbd5e1;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    color: #475569;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: #94a3b8;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 1800px; margin: 0 auto; padding: 2rem;">
+    <div class="dashboard-header">
+        <h1><i class="fas fa-calendar-check"></i> Run-Down Plan Dashboard</h1>
+        <p>Daily operational summary of all services and bookings</p>
+    </div>
+
+    <div class="filters-card">
+        <form id="filterForm">
+            <div class="filters-grid">
+                <div class="form-group">
+                    <label for="date_from">From Date</label>
+                    <input type="date" id="date_from" name="date_from" class="form-control" value="{{ default_from }}">
+                </div>
+                <div class="form-group">
+                    <label for="date_to">To Date</label>
+                    <input type="date" id="date_to" name="date_to" class="form-control" value="{{ default_to }}">
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="form-control">
+                        <option value="">All Statuses</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}">{{ status.replace('_', ' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="booking">Booking Number</label>
+                    <input type="text" id="booking" name="booking" class="form-control" placeholder="Search booking...">
+                </div>
+            </div>
+            <div style="text-align: right; margin-top: 1rem;">
+                <button type="submit" class="btn-filter">
+                    <i class="fas fa-search"></i> Apply Filters
+                </button>
+                <button type="button" class="btn-export" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Export Excel
+                </button>
+                <button type="button" class="btn-export" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="stats-row" id="statsRow" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-value" id="totalDays">0</div>
+            <div class="stat-label">Days</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalServices">0</div>
+            <div class="stat-label">Total Services</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalBookings">0</div>
+            <div class="stat-label">Bookings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalPax">0</div>
+            <div class="stat-label">Total Pax</div>
+        </div>
+    </div>
+
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: #64748b;">Loading run-down plan...</p>
+    </div>
+
+    <div id="runDownContent"></div>
+</div>
+
+<script>
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRunDownData();
+});
+
+// Handle form submission
+document.getElementById('filterForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    loadRunDownData();
+});
+
+function loadRunDownData() {
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    
+    document.getElementById('loadingSpinner').style.display = 'block';
+    document.getElementById('runDownContent').innerHTML = '';
+    document.getElementById('statsRow').style.display = 'none';
+    
+    fetch(`/inbound/api/run-down-data?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            if (data.success && data.data.length > 0) {
+                renderRunDownData(data);
+                updateStats(data);
+            } else {
+                showEmptyState();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading run-down data:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
+            showError();
+        });
+}
+
+function renderRunDownData(data) {
+    const content = document.getElementById('runDownContent');
+    content.innerHTML = '';
+    
+    data.data.forEach(day => {
+        const dateCard = document.createElement('div');
+        dateCard.className = 'date-card';
+        
+        const serviceCount = day.services.length;
+        
+        dateCard.innerHTML = `
+            <div class="date-header">
+                <span>${day.date_formatted}</span>
+                <span class="date-badge">${serviceCount} Service${serviceCount !== 1 ? 's' : ''}</span>
+            </div>
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>Booking #</th>
+                        <th>Guest / Group</th>
+                        <th>Pax</th>
+                        <th>Service</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${day.services.map(service => `
+                        <tr>
+                            <td>
+                                <a href="/inbound/${service.request_id || service.booking_id}/view" class="booking-link">
+                                    ${service.booking_number}
+                                </a>
+                            </td>
+                            <td>${service.guest_name}</td>
+                            <td>${service.pax}</td>
+                            <td>
+                                <span class="service-type-badge ${service.service_type.toLowerCase()}">
+                                    ${service.service_type}
+                                </span>
+                            </td>
+                            <td>${service.description}</td>
+                            <td>$${service.amount.toFixed(2)}</td>
+                            <td>
+                                <span class="status-badge" style="background-color: ${service.status_color};">
+                                    ${service.status.replace('_', ' ')}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        content.appendChild(dateCard);
+    });
+}
+
+function updateStats(data) {
+    document.getElementById('statsRow').style.display = 'grid';
+    
+    let totalServices = 0;
+    let totalPax = 0;
+    const uniqueBookings = new Set();
+    
+    data.data.forEach(day => {
+        totalServices += day.services.length;
+        day.services.forEach(service => {
+            uniqueBookings.add(service.booking_number);
+            totalPax += service.pax;
+        });
+    });
+    
+    document.getElementById('totalDays').textContent = data.total_days;
+    document.getElementById('totalServices').textContent = totalServices;
+    document.getElementById('totalBookings').textContent = uniqueBookings.size;
+    document.getElementById('totalPax').textContent = totalPax;
+}
+
+function showEmptyState() {
+    const content = document.getElementById('runDownContent');
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <h3>No Services Found</h3>
+            <p>There are no services scheduled for the selected date range and filters.</p>
+        </div>
+    `;
+}
+
+function showError() {
+    const content = document.getElementById('runDownContent');
+    content.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+            <h3>Error Loading Data</h3>
+            <p>There was an error loading the run-down plan. Please try again.</p>
+        </div>
+    `;
+}
+
+function exportToExcel() {
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    alert('Excel export feature coming soon!');
+}
+
+function exportToPDF() {
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    alert('PDF export feature coming soon!');
+}
+</script>
+{% endblock %}
