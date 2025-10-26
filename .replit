@@ -55,12 +55,16 @@ localPort = 33493
 externalPort = 3000
 
 [[ports]]
-localPort = 36781
+localPort = 35535
 externalPort = 3002
 
 [[ports]]
 localPort = 41889
 externalPort = 3001
+
+[[ports]]
+localPort = 42093
+externalPort = 3003
 
 [agent]
 integrations = ["python_log_in_with_replit:1.0.0"]

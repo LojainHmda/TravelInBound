@@ -443,10 +443,10 @@
                         <div class="service-badge clickable" 
                              style="background: white; border: 2px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s;"
                              data-bs-toggle="tooltip" 
-                             data-bs-html="true"
+                             data-bs-html="false"
                              data-bs-placement="top"
-                             title="{% if service.type == 'HOTEL' %}<strong>Hotel Service</strong><br>Rooms: {{ service.rooms }}<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'TRANSPORT' %}<strong>Transport Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'MEAL' %}<strong>Meal Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'GUIDE' %}<strong>Guide Service</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax<br>Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'AIRPORT' %}<strong>Airport Transfer</strong><br>{{ service.description }}<br>For: {{ service.pax }} pax{% endif %}"
-                             onclick="showServiceModal('{{ service.type }}', '{{ service.description }}', '{{ activity.request_number }}', {{ service|tojson|safe }})">
+                             title="{% if service.type == 'HOTEL' %}Hotel Service - Rooms: {{ service.rooms }} - Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'TRANSPORT' %}Transport - For: {{ service.pax }} pax - Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'MEAL' %}Meal Service - For: {{ service.pax }} pax - Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'GUIDE' %}Guide Service - For: {{ service.pax }} pax - Cost: ${{ "%.2f"|format(service.cost) }} ({{ service.cost_unit }}){% elif service.type == 'AIRPORT' %}Airport Transfer - For: {{ service.pax }} pax{% endif %}"
+                             onclick="showServiceModal({{ service.type|tojson }}, {{ activity.request_number|tojson }}, {{ service|tojson }})">
                             <i class="fas {{ service.icon }}" style="color: #667eea;"></i>
                             <span style="font-weight: 600; font-size: 0.9rem;">{{ service.type }}</span>
                             {% if service.cost > 0 %}
@@ -590,64 +590,85 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Show service modal with details
-function showServiceModal(type, description, requestNumber, serviceData) {
+// Show service modal with details - safely escape HTML
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+function showServiceModal(type, requestNumber, serviceData) {
     const modal = new bootstrap.Modal(document.getElementById('serviceModal'));
     const content = document.getElementById('serviceModalContent');
+    
+    // Safely escape all user-provided data
+    const safeType = escapeHtml(type);
+    const safeRequestNumber = escapeHtml(requestNumber);
+    const safeDescription = escapeHtml(serviceData.description || '');
     
     let html = `
         <div style="margin-bottom: 20px;">
             <h6 style="color: #667eea; margin-bottom: 15px; font-weight: 700;">
-                <i class="fas ${getServiceIcon(type)}"></i> ${type} Service
+                <i class="fas ${getServiceIcon(type)}"></i> ${safeType} Service
             </h6>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Booking:</strong> ${requestNumber}
+                <strong>Booking:</strong> ${safeRequestNumber}
             </p>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Description:</strong> ${description}
+                <strong>Description:</strong> ${safeDescription}
             </p>
     `;
     
     if (type === 'HOTEL') {
+        const safeRooms = escapeHtml(serviceData.rooms || 'TBA');
+        const safeCostUnit = escapeHtml(serviceData.cost_unit || '');
         html += `
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Room Allocation:</strong> ${serviceData.rooms}
+                <strong>Room Allocation:</strong> ${safeRooms}
             </p>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+                <strong>Cost:</strong> $${(serviceData.cost || 0).toFixed(2)} ${safeCostUnit}
             </p>
         `;
     } else if (type === 'TRANSPORT') {
+        const safeCostUnit = escapeHtml(serviceData.cost_unit || '');
         html += `
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Passengers:</strong> ${serviceData.pax} pax
+                <strong>Passengers:</strong> ${parseInt(serviceData.pax) || 0} pax
             </p>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+                <strong>Cost:</strong> $${(serviceData.cost || 0).toFixed(2)} ${safeCostUnit}
             </p>
         `;
     } else if (type === 'MEAL') {
+        const safeCostUnit = escapeHtml(serviceData.cost_unit || '');
         html += `
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Passengers:</strong> ${serviceData.pax} pax
+                <strong>Passengers:</strong> ${parseInt(serviceData.pax) || 0} pax
             </p>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+                <strong>Cost:</strong> $${(serviceData.cost || 0).toFixed(2)} ${safeCostUnit}
             </p>
         `;
     } else if (type === 'GUIDE') {
+        const safeCostUnit = escapeHtml(serviceData.cost_unit || '');
         html += `
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Group Size:</strong> ${serviceData.pax} pax
+                <strong>Group Size:</strong> ${parseInt(serviceData.pax) || 0} pax
             </p>
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Cost:</strong> $${serviceData.cost.toFixed(2)} ${serviceData.cost_unit || ''}
+                <strong>Cost:</strong> $${(serviceData.cost || 0).toFixed(2)} ${safeCostUnit}
             </p>
         `;
     } else if (type === 'AIRPORT') {
         html += `
             <p style="color: #495057; margin-bottom: 10px;">
-                <strong>Passengers:</strong> ${serviceData.pax} pax
+                <strong>Passengers:</strong> ${parseInt(serviceData.pax) || 0} pax
             </p>
         `;
     }
