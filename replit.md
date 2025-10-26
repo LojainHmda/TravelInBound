@@ -1,161 +1,10 @@
 # TravelBookPro - Comprehensive Travel Management System
 
 ## Overview
-TravelBookPro is a Flask-based web application for travel agencies, managing booking operations, customer requests, service confirmations, and financial operations. It streamlines the entire workflow from initial customer inquiry to service confirmation and financial tracking, providing a complete solution for modern travel agencies. The project aims to empower travel businesses with efficient tools to enhance productivity and customer satisfaction.
+TravelBookPro is a Flask-based web application designed for travel agencies to streamline booking operations, manage customer requests, confirm services, and track financial operations. It aims to enhance productivity and customer satisfaction by providing an efficient solution for the entire travel management workflow, from inquiry to financial tracking.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-
-## Recent Changes (October 2025)
-
-### Run-Down Plan Dashboard for Daily Operations
-- **Date**: October 18, 2025
-- **Feature**: Comprehensive daily operational dashboard for inbound travel management showing all services organized by date
-- **Components Added**:
-  - New route: `/inbound/run-down` with modern dashboard interface
-  - Backend API: `/inbound/api/run-down-data` with SQLAlchemy queries joining ServiceItem, Booking, Customer, InboundRequest
-  - Date-wise layout showing services grouped by day with expandable cards
-  - Advanced filtering: Date range picker, status filter, booking number search
-  - Real-time statistics: Total days, services, bookings, and pax count
-  - Color-coded status badges (QUOTED=blue, BOOKED=yellow, CONFIRMED=green, CANCELLED=red)
-  - Excel export (`/inbound/run-down-export-excel`) using openpyxl with styled headers and formatting
-  - PDF export (`/inbound/run-down-export-pdf`) with printable landscape template
-  - Navigation button added to inbound landing page header
-- **Visual Elements**: Purple gradient date headers, yellow stats, responsive table design, modern card layout
-- **Export Features**: 
-  - Excel files with yellow headers, borders, and proper column widths
-  - PDF printable format with summary statistics and formatted tables
-  - Both exports respect all filters (date range, status, booking search)
-- **Use Case**: DMC/inbound agents can view daily operational summary to coordinate logistics with suppliers
-- **Status**: Fully implemented with working exports and comprehensive filtering
-
-## Recent Changes (August 2025)
-
-### JavaScript Architecture Fix - Service Configuration System
-- **Date**: August 17, 2025
-- **Issue**: Persistent JavaScript errors preventing service configuration modals from working
-- **Root Cause**: Jinja2 template expressions mixing with JavaScript causing syntax errors, and incorrect static file directory
-- **Solution**: Complete JavaScript architecture overhaul
-- **Components Fixed**:
-  - External JavaScript module: `app/static/js/service_config.js` with ServiceConfigManager class
-  - Event delegation using `data-service` attributes instead of inline onclick handlers
-  - Proper Bootstrap modal initialization with comprehensive error handling
-  - Complete separation of template logic from JavaScript logic
-  - Fixed static file serving by using correct Flask directory (`app/static/js/`)
-- **Result**: Service buttons (Hotel, Guide, Transport, Meal, Airport) now open configuration modals successfully
-- **Technical Approach**: Used modern ES6 class structure with event delegation for better maintainability
-- **Status**: Fully working with comprehensive console debugging for future troubleshooting
-
-### Modern Dashboard Landing Page Redesign
-- **Date**: August 14, 2025  
-- **Feature**: Complete dashboard visual overhaul with modern, professional design
-- **Components Added**:
-  - Hero welcome section with "Windows of Jordan" branding and gradient background
-  - Modern stat cards with gradient colors, hover animations, and improved typography
-  - Beautiful table design with better spacing, colors, and visual hierarchy
-  - Responsive design optimized for all screen sizes
-  - Yellow/orange color scheme consistent with brand identity
-  - Professional buttons with hover effects and modern styling
-- **Visual Elements**: Blue gradient hero section, colorful stat cards, clean modern table, yellow accent colors
-- **User Experience**: Improved visual appeal, better readability, modern animations
-- **Status**: Fully implemented with responsive modern design replacing old grey layout
-
-### Modern Top Navigation with Die Menu System
-- **Date**: August 14, 2025
-- **Feature**: Complete navigation system overhaul with professional top navigation bar and dropdown menus
-- **Components Added**:
-  - Modern top navigation bar with TravelBookPro branding and "Windows of Jordan" tagline
-  - Die menu (dropdown) system with smooth animations and professional styling
-  - Organized navigation: Home, Tours & Booking dropdown, Management dropdown, Dashboard
-  - Tours & Booking includes: Inbound Tours, New Booking, Search & History, Travel Operations
-  - Management includes: Customers, Suppliers, Finance (role-based), User Management (admin-only)
-  - Mobile-responsive design with hamburger menu for smaller screens
-  - Clean mobile sidebar without redundant branding
-  - Professional gradient styling with yellow (#FFBF00) accent colors
-- **Visual Elements**: Dark blue gradient background, yellow highlights, smooth hover animations
-- **Mobile Design**: Collapsible sidebar with clean close button, overlay for better UX
-- **Status**: Fully implemented with responsive design and interactive dropdown functionality
-
-### Professional Windows of Jordan Invoice System
-- **Date**: August 17, 2025
-- **Feature**: Professional invoice template matching company's official format with Windows of Jordan branding
-- **Components Added**:
-  - New template: `invoice_professional.html` with authentic Windows of Jordan header and company details
-  - Professional layout with license info, company ID, and tax number display
-  - Line items table with service date, description, unit price, quantity, and total columns
-  - Banking details section with Jordan Ahli Bank information and IBAN
-  - Interactive controls for showing/hiding unit prices and overriding total amounts
-  - Print-optimized styling with proper A4 formatting
-- **Visual Elements**: Black and white professional design, company header with contact details, structured table format
-- **Interactive Features**: 
-  - Toggle unit prices visibility checkbox
-  - Override total amount input field
-  - Print button with proper print media styles
-  - Professional invoice numbering and date formatting
-- **Status**: Fully implemented with authentic company branding and banking details
-
-### Visual Timeline Voucher for Inbound Tours
-- **Date**: August 13, 2025 (Updated August 17, 2025)
-- **Feature**: Creative PDF timeline voucher generation for tour itineraries with dual layout options
-- **Components Added**:
-  - New templates: `voucher_timeline.html` (vertical) and `voucher_timeline_horizontal.html` (landscape)
-  - Dropdown menu to select between vertical and horizontal timeline layouts
-  - SVG icons replacing emojis for better print quality (Hotel, Transport, Meal, Guide, Airport)
-  - PDF generation using WeasyPrint library with landscape mode for horizontal layout
-  - Professional tour itinerary layout with cost breakdown
-  - Bold fonts throughout for improved readability
-- **Visual Elements**: Yellow (#fbbf24) headers with dark text, service icons in light grey (#e5e7eb) boxes
-- **Latest Updates**: 
-  - **Fixed multiple icons display**: Both layouts now show all service icons when multiple services exist on same day
-  - **Removed grey boxes**: All grey backgrounds replaced with yellow (#fbbf24) and dark text for readability
-  - **Compact day circles**: Horizontal layout uses smaller (40x40px) yellow circles with black text
-  - **Horizontal Layout Optimization (Aug 17, 2025)**: Changed to 4-column grid layout to prevent overflow, light grey service boxes (#e5e7eb), removed duplicate dates
-  - **Grid Layout**: Horizontal timeline now uses CSS Grid with 4 days per row for better spacing and page fitting
-  - **Service Icons Styling**: Changed from yellow to light grey (#e5e7eb) background with dark grey (#374151) text and icons
-- **Status**: Fully implemented with optimized horizontal layout for better print formatting
-
-## Recent Changes (August 2025)
-
-### Hotel Room Distribution Enhancement with Dietary Information
-- **Date**: August 15, 2025
-- **Feature**: Expanded hotel service with room type distribution and dietary requirements functionality
-- **Components Added**:
-  - Database columns: hotel_single_rooms, hotel_double_rooms, hotel_triple_rooms, hotel_other_rooms in ItineraryRow table
-  - Dynamic room distribution UI that expands when hotel checkbox is selected
-  - Professional dark blue header styling with white text for better contrast
-  - Room table expanded to 1800px minimum width with horizontal scrolling
-  - Added Board Basis dropdown (Room Only, B&B, Half Board, Full Board, All Inclusive, Ultra All Inclusive)
-  - Added Dietary Requirements field for special meal needs (Vegetarian, Halal, Gluten-free, etc.)
-  - JavaScript integration for real-time room count updates and "Add Room" functionality
-  - Backend save/load functionality for room distribution and dietary data
-- **Visual Elements**: Expanded table with 11 columns, optimized column widths, 200px Lead Passenger field
-- **Flow**: Room counts from itinerary automatically populate hotel confirmation pages with dietary options
-- **Status**: Fully implemented with comprehensive room and meal management capabilities
-
-### Inbound Tour Operator System Implementation
-- **Date**: August 9-10, 2025
-- **Feature**: Complete inbound tour operator module with itinerary-first booking approach
-- **Components Added**:
-  - New models: InboundRequest, ItineraryRow, InboundHotel, InboundTransport, InboundMeal, InboundGuide
-  - Service flag system for auto-generation of linked service records
-  - Auto request number generation (INB-YYYYMM-####)
-  - Dynamic pricing with Per Person/Per Group cost units
-  - Itinerary table with service flags (Hotel, M&G/Guide, Transport, Meal, Airport)
-  - Service auto-generation creates normal ServiceItem records linked to Booking
-  - Blueprint routing: /inbound/* for all inbound operations
-  - Forms and templates for comprehensive itinerary management
-  - JavaScript modules for real-time itinerary editing and service management
-  - Integration with normal booking workflow (/booking/124 format)
-  - New service types: SERVICE_RESTAURANT and SERVICE_GUIDE for inbound operations
-- **Workflow**: Generate itinerary → Generate Services & Open Booking → Use normal confirmation flow
-- **Latest Updates (Aug 10)**:
-  - **Unified Edit Interface**: Combined master details and itinerary on single page for better UX
-  - **Real-time Master Details Editing**: Agent, contact, dates, pax, customer selection all editable inline
-  - **Auto Date Calculation**: Dynamic calculation of number of days when dates change
-  - **Single Save Operation**: "Save All Changes" button updates both master details and itinerary
-  - **Customer Integration**: Customer selection dropdown integrated into master details form
-  - **Enhanced User Experience**: Eliminated need for separate navigation between master and itinerary sections
-- **Status**: Unified interface implemented with comprehensive master details editing
 
 ## System Architecture
 
@@ -169,25 +18,35 @@ Preferred communication style: Simple, everyday language.
 ### Frontend
 - **Template Engine**: Jinja2
 - **Styling**: Bootstrap 5 with custom CSS
-- **JavaScript**: Vanilla JS for interactive features
+- **JavaScript**: Vanilla JS for interactive features, with a focus on modern ES6 class structures and event delegation for maintainability.
 - **Icons**: FontAwesome 6
-- **UI Components**: Bootstrap modals, tabs, and responsive design
+- **UI Components**: Bootstrap modals, tabs, and responsive design.
 
 ### Database Design
-- **ORM**: SQLAlchemy with declarative base model
-- **Migration Strategy**: Direct SQL migrations
-- **Connection Pooling**: Configured with pool recycling and pre-ping
+- **ORM**: SQLAlchemy with declarative base model.
+- **Migration Strategy**: Direct SQL migrations.
+- **Connection Pooling**: Configured with pool recycling and pre-ping.
 
 ### Key Features & Design Patterns
 - **Core Models**: User, Agent, OAuth, Booking, ServiceItem, Document, Customer, Supplier, Payment, Expense, FinancialMetric, ServiceConfirmation.
-- **Booking Workflow**: REQUEST → BOOKED → IN-PROGRESS → CONFIRMED status progression.
-- **Service Types**: Flight, Hotel, Transport, Visa, Insurance.
-- **Financial Operations**: Invoice generation, payment tracking, supplier cost management.
+- **Booking Workflow**: Status progression (REQUEST → BOOKED → IN-PROGRESS → CONFIRMED).
+- **Service Types**: Flight, Hotel, Transport, Visa, Insurance, Restaurant, Guide.
+- **Financial Operations**: Invoice generation (professional "Windows of Jordan" template with banking details), payment tracking, supplier cost management.
 - **Document Management**: File uploads, AI-powered ticket/voucher analysis, document categorization.
-- **Blueprint Structure**: Modular design for main routes, booking, voucher generation, authentication, and finance.
-- **UI/UX Decisions**: Consistent branding with yellow/orange color scheme for status badges and company logo. Use of clean, modern typography (Segoe UI, Georgia serif) for readability, especially in vouchers. Compact and horizontal layouts for headers and footers to optimize space. Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
+- **Modular Design**: Blueprint structure for main routes, booking, voucher generation, authentication, and finance.
+- **UI/UX Decisions**:
+    - Consistent branding with yellow/orange color scheme for status badges and company logo.
+    - Clean, modern typography (Segoe UI, Georgia serif) for readability, especially in vouchers.
+    - Compact and horizontal layouts for headers and footers to optimize space.
+    - Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
+    - Modern dashboard landing page redesign with stat cards, improved tables, and responsive design.
+    - Professional top navigation with a "Die Menu" dropdown system and mobile responsiveness.
+    - Interactive service details in Run-Down Plan dashboard with hover tooltips and clickable modals.
 - **AI Integration**: AI-powered scanning for document data extraction (e.g., flight details, hotel details, passport information, ticket numbers, passenger types, PNRs) with sequential mapping and intelligent data population into forms.
-- **Voucher Generation**: Professional, airline-style PDF voucher generation with detailed layouts for flights, hotels, and comprehensive passenger/ticket information, ensuring accurate chronological ordering of services.
+- **Voucher Generation**: Professional, airline-style PDF voucher generation with detailed layouts for flights, hotels, and comprehensive passenger/ticket information, ensuring accurate chronological ordering of services. Creative PDF timeline voucher generation for tour itineraries with dual (vertical/horizontal) layout options and SVG icons.
+- **Inbound Tour Operator System**: Itinerary-first booking approach with new models (InboundRequest, ItineraryRow, etc.), service flag system for auto-generation of linked service records, dynamic pricing, and a unified edit interface for master details and itinerary.
+- **Hotel Room Distribution**: Enhanced hotel service with room type distribution, board basis selection, and dietary requirements functionality.
+- **Daily Operations Dashboard**: Comprehensive daily operational dashboard for inbound travel management, showing services organized by date with advanced filtering and export functionalities (Excel, PDF).
 
 ## External Dependencies
 
