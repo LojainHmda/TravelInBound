@@ -18,22 +18,81 @@ def supplier_redirect(supplier_id):
 @main_bp.route('/')
 @login_required
 def index():
-    """Home page showing recent inbound requests and workflow indicators"""
+    """Home page showing New Booking action and weekly run-down plan"""
     try:
         from app.models.inbound import InboundRequest
         from sqlalchemy import func
+        from datetime import datetime, timedelta
         
-        # Get recent inbound requests for the current user
-        recent_requests = InboundRequest.query.filter_by(user_id=current_user.id)\
-            .order_by(InboundRequest.created_at.desc()).limit(8).all()
+        # Get weekly run-down data (current week)
+        today = datetime.now().date()
+        week_start = today - timedelta(days=today.weekday())  # Monday
+        week_end = week_start + timedelta(days=6)  # Sunday
         
-        # Get status counts for workflow indicators
+        # Get confirmed requests for the week
+        confirmed_requests = InboundRequest.query.filter(
+            InboundRequest.user_id == current_user.id,
+            InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
+        ).all()
+        
+        # Group activities by date for the week
+        activities_by_date = {}
+        
+        for req in confirmed_requests:
+            # Get customer info
+            customer_name = "TBA"
+            if req.customer_id:
+                from app.models.customer import Customer
+                customer = Customer.query.get(req.customer_id)
+                if customer:
+                    customer_name = customer.name
+            elif req.contact_name:
+                customer_name = req.contact_name
+            
+            # Process itinerary rows
+            for row in req.itinerary_rows:
+                if row.date < week_start or row.date > week_end:
+                    continue
+                    
+                date_key = row.date.strftime('%Y-%m-%d')
+                
+                if date_key not in activities_by_date:
+                    activities_by_date[date_key] = {
+                        'date': row.date,
+                        'date_formatted': row.date.strftime('%A, %B %d'),
+                        'activities': []
+                    }
+                
+                # Build activity info
+                services = []
+                if row.flag_hotel:
+                    services.append({'type': 'Hotel', 'icon': 'fa-hotel'})
+                if row.flag_transport:
+                    services.append({'type': 'Transport', 'icon': 'fa-bus'})
+                if row.flag_meal:
+                    services.append({'type': 'Meal', 'icon': 'fa-utensils'})
+                if row.flag_guide:
+                    services.append({'type': 'Guide', 'icon': 'fa-user-tie'})
+                if row.flag_airport:
+                    services.append({'type': 'Airport', 'icon': 'fa-plane'})
+                
+                activities_by_date[date_key]['activities'].append({
+                    'request_number': req.request_number,
+                    'customer_name': customer_name,
+                    'pax': req.pax,
+                    'description': row.description,
+                    'services': services
+                })
+        
+        # Sort by date
+        weekly_rundown = sorted(activities_by_date.values(), key=lambda x: x['date'])
+        
+        # Get status counts for quick stats
         status_counts = db.session.query(
             InboundRequest.status,
             func.count(InboundRequest.id)
         ).filter_by(user_id=current_user.id).group_by(InboundRequest.status).all()
         
-        # Convert to dictionary for easy access
         counts = {status: count for status, count in status_counts}
         workflow_counts = {
             'REQUEST': counts.get(STATUS_REQUEST, 0),
@@ -41,22 +100,17 @@ def index():
             'IN_PROGRESS': counts.get(STATUS_IN_PROGRESS, 0),
             'CONFIRMED': counts.get(STATUS_CONFIRMED, 0)
         }
-        
-        # Get total amount for current user's requests
-        total_amount = db.session.query(func.sum(InboundRequest.total_amount))\
-            .filter_by(user_id=current_user.id).scalar() or 0
             
     except Exception as e:
-        # Handle database connection issues gracefully
         print(f"Database query error: {e}")
-        recent_requests = []
+        weekly_rundown = []
         workflow_counts = {'REQUEST': 0, 'BOOKED': 0, 'IN_PROGRESS': 0, 'CONFIRMED': 0}
-        total_amount = 0
         
     return render_template('index.html', 
-                         recent_requests=recent_requests,
+                         weekly_rundown=weekly_rundown,
                          workflow_counts=workflow_counts,
-                         total_amount=total_amount)
+                         week_start=week_start,
+                         week_end=week_end)
 
 @main_bp.route('/dashboard')
 @login_required
