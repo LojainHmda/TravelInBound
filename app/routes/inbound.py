@@ -1657,6 +1657,76 @@ def wizard_step2():
 def wizard_step3():
     """Wizard Step 3: Transport Services"""
     from flask import session
+    import json
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    if request.method == 'POST':
+        # Get transports data from JSON field
+        transports_json = request.form.get('transports_data', '[]')
+        try:
+            transports = json.loads(transports_json)
+        except json.JSONDecodeError:
+            transports = []
+        
+        # Update session with transport data
+        session['wizard_data']['transports'] = transports
+        session.modified = True
+        
+        # Redirect to step 4
+        return redirect(url_for('inbound.wizard_step4'))
+    
+    # GET request - pass wizard data to template
+    wizard_data = session.get('wizard_data', {})
+    return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
+
+
+@inbound_bp.route('/wizard/step4', methods=['GET', 'POST'])
+@login_required
+def wizard_step4():
+    """Wizard Step 4: Meals & Guide"""
+    from flask import session
+    import json
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    if request.method == 'POST':
+        # Get meals and guides data from JSON fields
+        meals_json = request.form.get('meals_data', '[]')
+        guides_json = request.form.get('guides_data', '[]')
+        
+        try:
+            meals = json.loads(meals_json)
+        except json.JSONDecodeError:
+            meals = []
+        
+        try:
+            guides = json.loads(guides_json)
+        except json.JSONDecodeError:
+            guides = []
+        
+        # Update session
+        session['wizard_data']['meals'] = meals
+        session['wizard_data']['guides'] = guides
+        session.modified = True
+        
+        # Redirect to step 5 (Review)
+        return redirect(url_for('inbound.wizard_step5'))
+    
+    # GET request - pass wizard data to template
+    wizard_data = session.get('wizard_data', {})
+    return render_template('inbound/wizard_step4.html', wizard_data=wizard_data)
+
+
+@inbound_bp.route('/wizard/step5', methods=['GET', 'POST'])
+@login_required
+def wizard_step5():
+    """Wizard Step 5: Review & Create"""
+    from flask import session
     
     if 'wizard_data' not in session:
         flash('Please start from step 1', 'warning')
@@ -1665,7 +1735,7 @@ def wizard_step3():
     if request.method == 'POST':
         wizard_data = session['wizard_data']
         
-        # Helper functions
+        # OLD HELPER FUNCTIONS PRESERVED
         def safe_int(value, default=0):
             """Safely convert to int, handling empty strings"""
             if not value or value == '':
