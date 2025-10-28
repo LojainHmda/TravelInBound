@@ -1624,27 +1624,31 @@ def wizard_step1():
 @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
 @login_required
 def wizard_step2():
-    """Wizard Step 2: Hotel Configuration"""
+    """Wizard Step 2: Add All Services"""
     from flask import session
-    import json
     
     if 'wizard_data' not in session:
         flash('Please start from step 1', 'warning')
         return redirect(url_for('inbound.wizard_step1'))
     
     if request.method == 'POST':
-        # Get hotels data from JSON field
-        hotels_json = request.form.get('hotels_data', '[]')
-        try:
-            hotels = json.loads(hotels_json)
-        except json.JSONDecodeError:
-            hotels = []
+        # Parse services from form
+        services_data = {}
+        for key, value in request.form.items():
+            if key.startswith('services['):
+                parts = key.split('[')
+                index = parts[1].split(']')[0]
+                field = parts[2].split(']')[0]
+                
+                if index not in services_data:
+                    services_data[index] = {}
+                services_data[index][field] = value
         
-        # Update session with hotel data
-        session['wizard_data']['hotels'] = hotels
+        # Store services in session by type
+        session['wizard_data']['services'] = services_data
         session.modified = True
         
-        # Redirect to step 3
+        # Redirect to step 3 (Review)
         return redirect(url_for('inbound.wizard_step3'))
     
     # GET request - pass wizard data to template
@@ -1655,77 +1659,7 @@ def wizard_step2():
 @inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
 @login_required
 def wizard_step3():
-    """Wizard Step 3: Transport Services"""
-    from flask import session
-    import json
-    
-    if 'wizard_data' not in session:
-        flash('Please start from step 1', 'warning')
-        return redirect(url_for('inbound.wizard_step1'))
-    
-    if request.method == 'POST':
-        # Get transports data from JSON field
-        transports_json = request.form.get('transports_data', '[]')
-        try:
-            transports = json.loads(transports_json)
-        except json.JSONDecodeError:
-            transports = []
-        
-        # Update session with transport data
-        session['wizard_data']['transports'] = transports
-        session.modified = True
-        
-        # Redirect to step 4
-        return redirect(url_for('inbound.wizard_step4'))
-    
-    # GET request - pass wizard data to template
-    wizard_data = session.get('wizard_data', {})
-    return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
-
-
-@inbound_bp.route('/wizard/step4', methods=['GET', 'POST'])
-@login_required
-def wizard_step4():
-    """Wizard Step 4: Meals & Guide"""
-    from flask import session
-    import json
-    
-    if 'wizard_data' not in session:
-        flash('Please start from step 1', 'warning')
-        return redirect(url_for('inbound.wizard_step1'))
-    
-    if request.method == 'POST':
-        # Get meals and guides data from JSON fields
-        meals_json = request.form.get('meals_data', '[]')
-        guides_json = request.form.get('guides_data', '[]')
-        
-        try:
-            meals = json.loads(meals_json)
-        except json.JSONDecodeError:
-            meals = []
-        
-        try:
-            guides = json.loads(guides_json)
-        except json.JSONDecodeError:
-            guides = []
-        
-        # Update session
-        session['wizard_data']['meals'] = meals
-        session['wizard_data']['guides'] = guides
-        session.modified = True
-        
-        # Redirect to step 5 (Review)
-        return redirect(url_for('inbound.wizard_step5'))
-    
-    # GET request - pass wizard data to template
-    wizard_data = session.get('wizard_data', {})
-    return render_template('inbound/wizard_step4.html', wizard_data=wizard_data)
-
-
-@inbound_bp.route('/wizard/step5', methods=['GET', 'POST'])
-@login_required
-def wizard_step5():
-    """Wizard Step 5: Review & Create"""
+    """Wizard Step 3: Review & Create"""
     from flask import session
     
     if 'wizard_data' not in session:
@@ -1735,7 +1669,7 @@ def wizard_step5():
     if request.method == 'POST':
         wizard_data = session['wizard_data']
         
-        # OLD HELPER FUNCTIONS PRESERVED
+        # Helper functions
         def safe_int(value, default=0):
             """Safely convert to int, handling empty strings"""
             if not value or value == '':
@@ -1764,23 +1698,13 @@ def wizard_step5():
                 current += timedelta(days=1)
             return dates
         
-        # Parse services from form
-        services_data = {}
-        for key, value in request.form.items():
-            if key.startswith('services['):
-                parts = key.split('[')
-                index = parts[1].split(']')[0]
-                field = parts[2].split(']')[0]
-                
-                if index not in services_data:
-                    services_data[index] = {}
-                services_data[index][field] = value
+        # Get services from session
+        services_data = wizard_data.get('services', {})
         
         # Validate that we have at least one service
         if not services_data:
             flash('Please add at least one service before creating the tour', 'error')
-            wizard_data = session.get('wizard_data', {})
-            return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+            return redirect(url_for('inbound.wizard_step2'))
         
         # Start transaction
         try:
@@ -2009,9 +1933,8 @@ def wizard_step5():
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating itinerary: {str(e)}', 'error')
-            wizard_data = session.get('wizard_data', {})
-            return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+            return redirect(url_for('inbound.wizard_step2'))
     
-    # GET request
+    # GET request - show review page
     wizard_data = session.get('wizard_data', {})
-    return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+    return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
