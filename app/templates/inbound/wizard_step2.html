@@ -4,107 +4,241 @@
 
 {% block content %}
 <style>
-.wizard-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
-.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; max-width: 300px; margin-left: auto; margin-right: auto; }
-.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 50%; height: 4px; background: linear-gradient(to right, #10b981, #8b5cf6); z-index: 0; }
-.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; background: white; padding: 0 10px; z-index: 1; }
-.step-circle { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.wizard-container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; max-width: 700px; margin-left: auto; margin-right: auto; }
+.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 100%; height: 4px; background: #e5e7eb; z-index: 0; }
+.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; background: white; padding: 0 10px; z-index: 1; position: relative; }
+.step-circle { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
 .progress-step.active .step-circle { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .progress-step.completed .step-circle { background: #10b981; color: white; }
-.step-label { font-size: 0.75rem; color: #6b7280; font-weight: 600; }
+.step-label { font-size: 0.7rem; color: #6b7280; font-weight: 600; text-align: center; max-width: 80px; }
+.progress-step.active .step-label { color: #8b5cf6; font-weight: 700; }
+.progress-step.completed .step-label { color: #10b981; }
 .wizard-card { background: white; border-radius: 16px; padding: 2.5rem; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08); }
 .wizard-title { font-size: 1.75rem; font-weight: 700; color: #1a1a1a; margin-bottom: 0.5rem; }
-.wizard-subtitle { color: #6b7280; margin-bottom: 1.5rem; }
-.tour-summary { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
-.tour-summary strong { color: #1e40af; }
-.info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
-.service-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-.add-service-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.3s; font-size: 1rem; }
-.add-service-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
-.add-service-btn.hotel { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.add-service-btn.hotel:hover { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
-.add-service-btn.transport { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-.add-service-btn.transport:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
-.add-service-btn.meal { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.add-service-btn.meal:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
-.add-service-btn.guide { background: linear-gradient(135deg, #10b981, #059669); }
-.add-service-btn.guide:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
-.service-item { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
-.service-item.hotel-item { background: #eff6ff; border-color: #bfdbfe; }
-.service-item.transport-item { background: #f5f3ff; border-color: #e9d5ff; }
-.service-item.meal-item { background: #fef3c7; border-color: #fde68a; }
-.service-item.guide-item { background: #d1fae5; border-color: #a7f3d0; }
-.service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.service-badge { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 0.5rem; }
-.service-badge.hotel { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.service-badge.transport { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-.service-badge.meal { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.service-badge.guide { background: linear-gradient(135deg, #10b981, #059669); }
-.remove-service-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 0.85rem; }
-.remove-service-btn:hover { background: #dc2626; }
+.wizard-subtitle { color: #6b7280; margin-bottom: 2rem; }
+.section-header { font-size: 1.1rem; font-weight: 700; color: #374151; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
+.form-label .required { color: #ef4444; margin-left: 0.25rem; }
 .form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; }
 .form-control:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
 .form-select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; background: white; }
-.room-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
-.rooming-header { background: #f3f4f6; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600; color: #374151; }
+.info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
 .wizard-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
 .btn { padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
 .btn-secondary { background: #f3f4f6; color: #374151; }
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .room-inputs { grid-template-columns: repeat(2, 1fr); } .service-buttons { grid-template-columns: 1fr; } }
+.btn-secondary:hover { background: #e5e7eb; }
+
+/* Room Card Styles */
+.room-cards-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem; }
+.room-card { background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%); border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; transition: all 0.3s; }
+.room-card:hover { border-color: #8b5cf6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15); }
+.room-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.room-icon { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+.room-card-title { font-size: 1rem; font-weight: 700; color: #1a1a1a; margin: 0; }
+.room-counter { display: flex; align-items: center; gap: 1rem; }
+.counter-btn { width: 40px; height: 40px; border-radius: 10px; border: 2px solid #e5e7eb; background: white; color: #374151; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+.counter-btn:hover { background: #8b5cf6; color: white; border-color: #8b5cf6; }
+.counter-btn:active { transform: scale(0.95); }
+.counter-display { width: 60px; text-align: center; font-size: 1.5rem; font-weight: 700; color: #1a1a1a; }
+
+.hotel-list { margin-bottom: 2rem; }
+.hotel-item { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; position: relative; }
+.hotel-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.hotel-item-title { font-size: 1.1rem; font-weight: 700; color: #1a1a1a; }
+.remove-hotel-btn { background: #fee2e2; color: #dc2626; border: 2px solid #dc2626; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.remove-hotel-btn:hover { background: #dc2626; color: white; }
+
+.add-hotel-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 1rem 2rem; border-radius: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; }
+.add-hotel-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+
+@media (max-width: 768px) { 
+    .form-row { grid-template-columns: 1fr; }
+    .room-cards-container { grid-template-columns: 1fr; }
+    .wizard-progress { max-width: 500px; } 
+    .step-label { font-size: 0.65rem; max-width: 60px; } 
+}
 </style>
 
 <div class="wizard-container">
     <div class="wizard-progress">
-        <div class="progress-step completed"><div class="step-circle"><i class="fas fa-check"></i></div><span class="step-label">Tour Details</span></div>
-        <div class="progress-step active"><div class="step-circle">2</div><span class="step-label">Add Services</span></div>
+        <div class="progress-step completed">
+            <div class="step-circle"><i class="fas fa-check"></i></div>
+            <span class="step-label">Arrival & Departure</span>
+        </div>
+        <div class="progress-step active">
+            <div class="step-circle">2</div>
+            <span class="step-label">Hotel</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">Transport</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">4</div>
+            <span class="step-label">Meals & Guide</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">5</div>
+            <span class="step-label">Review</span>
+        </div>
     </div>
 
     <div class="wizard-card">
-        <h2 class="wizard-title"><i class="fas fa-concierge-bell"></i> Add Services</h2>
-        <p class="wizard-subtitle">Step 2: Add hotels, transport, meals, and guides with FROM/TO dates</p>
-
-        <div class="tour-summary">
-            <strong>{{ wizard_data.contact_name }}</strong> | {{ wizard_data.pax }} PAX | {{ wizard_data.nationality }} | 
-            {{ wizard_data.from_date }} to {{ wizard_data.to_date }} ({{ wizard_data.no_of_days }} days)
-        </div>
+        <h2 class="wizard-title"><i class="fas fa-hotel"></i> Hotel Configuration</h2>
+        <p class="wizard-subtitle">Step 2: Add hotel stays with room distribution</p>
 
         <div class="info-box">
-            <i class="fas fa-lightbulb"></i> <strong>Service-Based Itinerary:</strong> 
-            Add services with FROM/TO dates. Example: Hotel Check-in Jan 1 → Check-out Jan 4 = Auto-creates 3 nights. Rooming list is inherited across all days.
+            <i class="fas fa-info-circle"></i> <strong>Hotel Auto-Generation:</strong> 
+            Each hotel creates itinerary rows for every NIGHT (check-in to check-out) with inherited room distribution.
         </div>
 
-        <div class="service-buttons">
-            <button type="button" class="add-service-btn hotel" onclick="addService('hotel')">
-                <i class="fas fa-hotel"></i> Add Hotel
-            </button>
-            <button type="button" class="add-service-btn transport" onclick="addService('transport')">
-                <i class="fas fa-bus"></i> Add Transport
-            </button>
-            <button type="button" class="add-service-btn meal" onclick="addService('meal')">
-                <i class="fas fa-utensils"></i> Add Meal
-            </button>
-            <button type="button" class="add-service-btn guide" onclick="addService('guide')">
-                <i class="fas fa-user-tie"></i> Add Guide
-            </button>
-        </div>
-
-        <form method="POST" id="serviceForm">
+        <form method="POST" id="step2Form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            
-            <div id="servicesContainer">
-                <!-- Services will be added here -->
+
+            <!-- Existing Hotels List -->
+            <div id="hotelsList" class="hotel-list">
+                {% if wizard_data.hotels %}
+                    {% for hotel in wizard_data.hotels %}
+                    <div class="hotel-item" data-index="{{ loop.index0 }}">
+                        <div class="hotel-item-header">
+                            <h4 class="hotel-item-title">
+                                <i class="fas fa-building"></i> {{ hotel.hotel_name }} 
+                                <small style="color: #6b7280; font-size: 0.85rem;">
+                                    ({{ hotel.check_in_date }} → {{ hotel.check_out_date }})
+                                </small>
+                            </h4>
+                            <button type="button" class="remove-hotel-btn" onclick="removeHotel({{ loop.index0 }})">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #6b7280;">
+                            <i class="fas fa-bed"></i> 
+                            Single: {{ hotel.single_rooms }}, 
+                            Double: {{ hotel.double_rooms }}, 
+                            Triple: {{ hotel.triple_rooms }}, 
+                            Other: {{ hotel.other_rooms }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #6b7280; text-align: center; padding: 2rem; background: #f9fafb; border-radius: 12px;">
+                        <i class="fas fa-hotel"></i> No hotels added yet. Click "Add Hotel" below to start.
+                    </p>
+                {% endif %}
             </div>
 
+            <!-- Add Hotel Section -->
+            <div id="addHotelSection" style="display: none;">
+                <div class="section-header">
+                    <i class="fas fa-plus-circle"></i> Add New Hotel
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Hotel Name<span class="required">*</span></label>
+                        <input type="text" id="hotelName" class="form-control" placeholder="e.g., Amman Rotana Hotel" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" id="hotelLocation" class="form-control" placeholder="e.g., Amman Downtown">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Check-in Date<span class="required">*</span></label>
+                        <input type="date" id="checkInDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Check-out Date<span class="required">*</span></label>
+                        <input type="date" id="checkOutDate" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="section-header" style="margin-top: 1.5rem;">
+                    <i class="fas fa-bed"></i> Room Distribution
+                </div>
+
+                <div class="room-cards-container">
+                    <div class="room-card">
+                        <div class="room-card-header">
+                            <div class="room-icon"><i class="fas fa-user"></i></div>
+                            <h5 class="room-card-title">Single Rooms</h5>
+                        </div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="decrementRoom('single')">−</button>
+                            <div class="counter-display" id="singleCount">0</div>
+                            <button type="button" class="counter-btn" onclick="incrementRoom('single')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="room-card">
+                        <div class="room-card-header">
+                            <div class="room-icon"><i class="fas fa-users"></i></div>
+                            <h5 class="room-card-title">Double Rooms</h5>
+                        </div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="decrementRoom('double')">−</button>
+                            <div class="counter-display" id="doubleCount">0</div>
+                            <button type="button" class="counter-btn" onclick="incrementRoom('double')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="room-card">
+                        <div class="room-card-header">
+                            <div class="room-icon"><i class="fas fa-user-friends"></i></div>
+                            <h5 class="room-card-title">Triple Rooms</h5>
+                        </div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="decrementRoom('triple')">−</button>
+                            <div class="counter-display" id="tripleCount">0</div>
+                            <button type="button" class="counter-btn" onclick="incrementRoom('triple')">+</button>
+                        </div>
+                    </div>
+
+                    <div class="room-card">
+                        <div class="room-card-header">
+                            <div class="room-icon"><i class="fas fa-home"></i></div>
+                            <h5 class="room-card-title">Other Rooms</h5>
+                        </div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="decrementRoom('other')">−</button>
+                            <div class="counter-display" id="otherCount">0</div>
+                            <button type="button" class="counter-btn" onclick="incrementRoom('other')">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="saveHotel()" style="margin-top: 1rem;">
+                    <i class="fas fa-check"></i> Save Hotel
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="cancelAddHotel()" style="margin-top: 1rem;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+
+            <!-- Add Hotel Button -->
+            <div style="text-align: center; margin-bottom: 2rem;" id="addHotelBtn">
+                <button type="button" class="add-hotel-btn" onclick="showAddHotel()">
+                    <i class="fas fa-plus"></i> Add Hotel
+                </button>
+            </div>
+
+            <!-- Hidden field to store hotels data -->
+            <input type="hidden" name="hotels_data" id="hotelsData" value="">
+
             <div class="wizard-actions">
-                <a href="{{ url_for('inbound.wizard_step1') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+                <a href="{{ url_for('inbound.wizard_step1') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-check-circle"></i>
-                    Create Tour
+                    Next: Transport Services
+                    <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
         </form>
@@ -112,273 +246,95 @@
 </div>
 
 <script>
-let serviceCount = 0;
-const tourData = {
-    fromDate: '{{ wizard_data.from_date }}',
-    toDate: '{{ wizard_data.to_date }}',
-    days: {{ wizard_data.no_of_days }},
-    pax: {{ wizard_data.pax }}
-};
+let hotels = {{ wizard_data.hotels | tojson | safe if wizard_data.hotels else '[]' }};
+let roomCounts = { single: 0, double: 0, triple: 0, other: 0 };
 
-function addService(type) {
-    const container = document.getElementById('servicesContainer');
-    const index = serviceCount++;
-    
-    let serviceHtml = '';
-    
-    if (type === 'hotel') {
-        serviceHtml = `
-            <div class="service-item hotel-item" id="service${index}">
-                <input type="hidden" name="services[${index}][type]" value="hotel">
-                <div class="service-header">
-                    <div class="service-badge hotel">
-                        <i class="fas fa-hotel"></i> Hotel Service
-                    </div>
-                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Check-in Date *</label>
-                        <input type="date" name="services[${index}][check_in_date]" class="form-control" 
-                               value="${tourData.fromDate}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Check-out Date *</label>
-                        <input type="date" name="services[${index}][check_out_date]" class="form-control" 
-                               value="${tourData.toDate}" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Hotel Name</label>
-                        <input type="text" name="services[${index}][hotel_name]" class="form-control" 
-                               placeholder="Hotel name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Location</label>
-                        <input type="text" name="services[${index}][location]" class="form-control" 
-                               placeholder="City/Area">
-                    </div>
-                </div>
-                
-                <div class="rooming-header">
-                    <i class="fas fa-bed"></i> Room Distribution (will be inherited across all nights)
-                </div>
-                <div class="room-inputs">
-                    <div class="form-group">
-                        <label class="form-label">Single Rooms</label>
-                        <input type="number" name="services[${index}][single_rooms]" class="form-control" 
-                               value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Double Rooms</label>
-                        <input type="number" name="services[${index}][double_rooms]" class="form-control" 
-                               value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Triple Rooms</label>
-                        <input type="number" name="services[${index}][triple_rooms]" class="form-control" 
-                               value="0" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Other Rooms</label>
-                        <input type="number" name="services[${index}][other_rooms]" class="form-control" 
-                               value="0" min="0">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cost per Night</label>
-                        <input type="number" name="services[${index}][cost]" class="form-control" 
-                               value="0" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cost Unit</label>
-                        <select name="services[${index}][cost_unit]" class="form-select">
-                            <option value="PER_PERSON">Per Person</option>
-                            <option value="PER_GROUP">Per Group</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (type === 'transport') {
-        serviceHtml = `
-            <div class="service-item transport-item" id="service${index}">
-                <input type="hidden" name="services[${index}][type]" value="transport">
-                <div class="service-header">
-                    <div class="service-badge transport">
-                        <i class="fas fa-bus"></i> Transport Service
-                    </div>
-                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" name="services[${index}][date]" class="form-control" 
-                               value="${tourData.fromDate}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Vehicle Type</label>
-                        <input type="text" name="services[${index}][vehicle_type]" class="form-control" 
-                               placeholder="e.g., Minibus, Coach">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Pickup Location *</label>
-                        <input type="text" name="services[${index}][pickup_location]" class="form-control" 
-                               placeholder="e.g., Airport, Hotel" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Dropoff Location *</label>
-                        <input type="text" name="services[${index}][dropoff_location]" class="form-control" 
-                               placeholder="e.g., Hotel, Airport" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cost</label>
-                        <input type="number" name="services[${index}][cost]" class="form-control" 
-                               value="0" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cost Unit</label>
-                        <select name="services[${index}][cost_unit]" class="form-select">
-                            <option value="PER_PERSON">Per Person</option>
-                            <option value="PER_GROUP" selected>Per Group</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (type === 'meal') {
-        serviceHtml = `
-            <div class="service-item meal-item" id="service${index}">
-                <input type="hidden" name="services[${index}][type]" value="meal">
-                <div class="service-header">
-                    <div class="service-badge meal">
-                        <i class="fas fa-utensils"></i> Meal Service
-                    </div>
-                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Date *</label>
-                        <input type="date" name="services[${index}][date]" class="form-control" 
-                               value="${tourData.fromDate}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Meal Type *</label>
-                        <select name="services[${index}][meal_type]" class="form-select" required>
-                            <option value="">Select Type</option>
-                            <option value="Breakfast">Breakfast</option>
-                            <option value="Lunch">Lunch</option>
-                            <option value="Dinner">Dinner</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Restaurant</label>
-                    <input type="text" name="services[${index}][restaurant]" class="form-control" 
-                           placeholder="Restaurant name">
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cost</label>
-                        <input type="number" name="services[${index}][cost]" class="form-control" 
-                               value="0" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cost Unit</label>
-                        <select name="services[${index}][cost_unit]" class="form-select">
-                            <option value="PER_PERSON" selected>Per Person</option>
-                            <option value="PER_GROUP">Per Group</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (type === 'guide') {
-        serviceHtml = `
-            <div class="service-item guide-item" id="service${index}">
-                <input type="hidden" name="services[${index}][type]" value="guide">
-                <div class="service-header">
-                    <div class="service-badge guide">
-                        <i class="fas fa-user-tie"></i> Guide Service
-                    </div>
-                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
-                        <i class="fas fa-trash"></i> Remove
-                    </button>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">From Date *</label>
-                        <input type="date" name="services[${index}][from_date]" class="form-control" 
-                               value="${tourData.fromDate}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">To Date *</label>
-                        <input type="date" name="services[${index}][to_date]" class="form-control" 
-                               value="${tourData.toDate}" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Service Type</label>
-                        <input type="text" name="services[${index}][service_type]" class="form-control" 
-                               placeholder="e.g., Tour Guide, Meet & Greet">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Language</label>
-                        <input type="text" name="services[${index}][language]" class="form-control" 
-                               placeholder="e.g., English, Spanish">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cost per Day</label>
-                        <input type="number" name="services[${index}][cost]" class="form-control" 
-                               value="0" min="0" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Cost Unit</label>
-                        <select name="services[${index}][cost_unit]" class="form-select">
-                            <option value="PER_PERSON">Per Person</option>
-                            <option value="PER_GROUP" selected>Per Group</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-    
-    container.insertAdjacentHTML('beforeend', serviceHtml);
+function incrementRoom(type) {
+    roomCounts[type]++;
+    document.getElementById(type + 'Count').textContent = roomCounts[type];
 }
 
-function removeService(index) {
-    const service = document.getElementById(`service${index}`);
-    if (service && confirm('Remove this service?')) {
-        service.remove();
+function decrementRoom(type) {
+    if (roomCounts[type] > 0) {
+        roomCounts[type]--;
+        document.getElementById(type + 'Count').textContent = roomCounts[type];
     }
 }
+
+function showAddHotel() {
+    document.getElementById('addHotelSection').style.display = 'block';
+    document.getElementById('addHotelBtn').style.display = 'none';
+    // Reset form
+    document.getElementById('hotelName').value = '';
+    document.getElementById('hotelLocation').value = '';
+    document.getElementById('checkInDate').value = '';
+    document.getElementById('checkOutDate').value = '';
+    roomCounts = { single: 0, double: 0, triple: 0, other: 0 };
+    updateRoomDisplay();
+}
+
+function cancelAddHotel() {
+    document.getElementById('addHotelSection').style.display = 'none';
+    document.getElementById('addHotelBtn').style.display = 'block';
+}
+
+function updateRoomDisplay() {
+    document.getElementById('singleCount').textContent = roomCounts.single;
+    document.getElementById('doubleCount').textContent = roomCounts.double;
+    document.getElementById('tripleCount').textContent = roomCounts.triple;
+    document.getElementById('otherCount').textContent = roomCounts.other;
+}
+
+function saveHotel() {
+    const hotelName = document.getElementById('hotelName').value;
+    const hotelLocation = document.getElementById('hotelLocation').value;
+    const checkInDate = document.getElementById('checkInDate').value;
+    const checkOutDate = document.getElementById('checkOutDate').value;
+
+    if (!hotelName || !checkInDate || !checkOutDate) {
+        alert('Please fill in all required fields (Hotel Name, Check-in, and Check-out dates)');
+        return;
+    }
+
+    // Validate dates
+    if (new Date(checkOutDate) <= new Date(checkInDate)) {
+        alert('Check-out date must be after check-in date');
+        return;
+    }
+
+    // Add hotel to array
+    hotels.push({
+        hotel_name: hotelName,
+        location: hotelLocation,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        single_rooms: roomCounts.single,
+        double_rooms: roomCounts.double,
+        triple_rooms: roomCounts.triple,
+        other_rooms: roomCounts.other
+    });
+
+    // Update hidden field
+    document.getElementById('hotelsData').value = JSON.stringify(hotels);
+
+    // Refresh the list
+    location.reload();
+}
+
+function removeHotel(index) {
+    if (confirm('Are you sure you want to remove this hotel?')) {
+        hotels.splice(index, 1);
+        document.getElementById('hotelsData').value = JSON.stringify(hotels);
+        location.reload();
+    }
+}
+
+// On form submit, ensure hotels data is set
+document.getElementById('step2Form').addEventListener('submit', function(e) {
+    document.getElementById('hotelsData').value = JSON.stringify(hotels);
+});
+
+// Set initial data
+document.getElementById('hotelsData').value = JSON.stringify(hotels);
 </script>
 {% endblock %}

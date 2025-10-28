@@ -1624,7 +1624,38 @@ def wizard_step1():
 @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
 @login_required
 def wizard_step2():
-    """Wizard Step 2: Build Itinerary"""
+    """Wizard Step 2: Hotel Configuration"""
+    from flask import session
+    import json
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    if request.method == 'POST':
+        # Get hotels data from JSON field
+        hotels_json = request.form.get('hotels_data', '[]')
+        try:
+            hotels = json.loads(hotels_json)
+        except json.JSONDecodeError:
+            hotels = []
+        
+        # Update session with hotel data
+        session['wizard_data']['hotels'] = hotels
+        session.modified = True
+        
+        # Redirect to step 3
+        return redirect(url_for('inbound.wizard_step3'))
+    
+    # GET request - pass wizard data to template
+    wizard_data = session.get('wizard_data', {})
+    return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+
+
+@inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
+@login_required
+def wizard_step3():
+    """Wizard Step 3: Transport Services"""
     from flask import session
     
     if 'wizard_data' not in session:
