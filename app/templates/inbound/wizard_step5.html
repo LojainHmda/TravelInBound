@@ -2,12 +2,12 @@
 
 {% block title %}New Itinerary - Step 5{% endblock %}
 
-{% block styles %}
+{% block content %}
 <style>
 .wizard-container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
 .wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; }
-.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, #10b981, #8b5cf6, #f59e0b, #ec4899); z-index: -1; }
-.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, #10b981, #8b5cf6, #f59e0b, #ec4899); z-index: 0; }
+.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; background: white; padding: 0 10px; z-index: 1; }
 .step-circle { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .progress-step.active .step-circle { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .progress-step.completed .step-circle { background: #10b981; color: white; }
@@ -19,9 +19,9 @@
 .guide-card { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: all 0.3s; }
 .guide-card:hover { border-color: #8b5cf6; background: #faf5ff; }
 .guide-card input[type="checkbox"] { display: none; }
-.guide-card input[type="checkbox"]:checked + .guide-content { border-left: 4px solid #8b5cf6; padding-left: 1rem; }
+.guide-card input[type="checkbox"]:checked ~ .guide-content { border-left: 4px solid #8b5cf6; padding-left: 1rem; }
 .guide-content { display: flex; align-items: center; gap: 1rem; }
-.guide-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #ec4899, #db2777); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; }
+.guide-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #ec4899, #db2777); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; flex-shrink: 0; }
 .guide-info h4 { font-size: 1rem; font-weight: 700; color: #1a1a1a; margin: 0 0 0.25rem 0; }
 .guide-info p { font-size: 0.85rem; color: #6b7280; margin: 0; }
 .form-group { margin-bottom: 1rem; }
@@ -34,9 +34,7 @@
 .btn-secondary { background: #f3f4f6; color: #374151; }
 .empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="wizard-container">
     <div class="wizard-progress">
         <div class="progress-step completed"><div class="step-circle"><i class="fas fa-check"></i></div><span class="step-label">Arrival & Departure</span></div>

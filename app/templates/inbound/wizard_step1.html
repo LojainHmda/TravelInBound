@@ -2,8 +2,9 @@
 
 {% block title %}New Itinerary - Step 1{% endblock %}
 
-{% block styles %}
+{% block content %}
 <style>
+/* Wizard Container */
 .wizard-container {
     max-width: 800px;
     margin: 2rem auto;
@@ -26,7 +27,7 @@
     right: 0;
     height: 4px;
     background: #e5e7eb;
-    z-index: -1;
+    z-index: 0;
 }
 
 .progress-step {
@@ -35,6 +36,9 @@
     align-items: center;
     gap: 0.5rem;
     position: relative;
+    background: white;
+    padding: 0 10px;
+    z-index: 1;
 }
 
 .step-circle {
@@ -165,6 +169,7 @@
 
 .checkbox-item:hover {
     background: #f3f4f6;
+    border-color: #8b5cf6;
 }
 
 .checkbox-item input[type="checkbox"] {
@@ -173,9 +178,8 @@
     cursor: pointer;
 }
 
-.checkbox-item input[type="checkbox"]:checked + label {
-    color: #8b5cf6;
-    font-weight: 600;
+.checkbox-item input[type="checkbox"]:checked {
+    accent-color: #8b5cf6;
 }
 
 /* Action Buttons */
@@ -233,9 +237,7 @@
     }
 }
 </style>
-{% endblock %}
 
-{% block content %}
 <div class="wizard-container">
     <!-- Progress Bar -->
     <div class="wizard-progress">
