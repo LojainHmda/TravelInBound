@@ -1698,6 +1698,11 @@ def wizard_step2():
                     # Hotel: create rows for each night with inherited rooming
                     check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
                     check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
+                    
+                    # Validate hotel dates
+                    if check_out <= check_in:
+                        raise ValueError(f"Hotel check-out date must be after check-in date")
+                    
                     hotel_name = service.get('hotel_name', '')
                     location = service.get('location', '')
                     
