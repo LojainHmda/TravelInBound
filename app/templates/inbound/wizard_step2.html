@@ -17,62 +17,88 @@
 .wizard-subtitle { color: #6b7280; margin-bottom: 1.5rem; }
 .tour-summary { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
 .tour-summary strong { color: #1e40af; }
-.itinerary-item { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
-.item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.item-number { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
-.remove-item-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-.remove-item-btn:hover { background: #dc2626; }
+.info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
+.service-buttons { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.add-service-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: all 0.3s; font-size: 1rem; }
+.add-service-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+.add-service-btn.hotel { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.add-service-btn.hotel:hover { box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4); }
+.add-service-btn.transport { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.add-service-btn.transport:hover { box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
+.add-service-btn.meal { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.add-service-btn.meal:hover { box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4); }
+.add-service-btn.guide { background: linear-gradient(135deg, #10b981, #059669); }
+.add-service-btn.guide:hover { box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+.service-item { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
+.service-item.hotel-item { background: #eff6ff; border-color: #bfdbfe; }
+.service-item.transport-item { background: #f5f3ff; border-color: #e9d5ff; }
+.service-item.meal-item { background: #fef3c7; border-color: #fde68a; }
+.service-item.guide-item { background: #d1fae5; border-color: #a7f3d0; }
+.service-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.service-badge { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 0.5rem; }
+.service-badge.hotel { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.service-badge.transport { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+.service-badge.meal { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.service-badge.guide { background: linear-gradient(135deg, #10b981, #059669); }
+.remove-service-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 0.85rem; }
+.remove-service-btn:hover { background: #dc2626; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
 .form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; }
 .form-control:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
 .form-select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; background: white; }
-.service-flags { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
-.flag-checkbox { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-.flag-checkbox:hover { border-color: #8b5cf6; background: #faf5ff; }
-.flag-checkbox input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #8b5cf6; }
-.flag-checkbox.checked { border-color: #8b5cf6; background: #f3e8ff; }
-.service-details { display: none; background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
-.service-details.active { display: block; }
-.service-details h4 { font-size: 1rem; font-weight: 600; color: #8b5cf6; margin-bottom: 1rem; }
-.add-item-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; margin-bottom: 2rem; }
-.add-item-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+.room-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+.rooming-header { background: #f3f4f6; padding: 0.75rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600; color: #374151; }
 .wizard-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
 .btn { padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
 .btn-secondary { background: #f3f4f6; color: #374151; }
-.room-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .room-inputs { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .room-inputs { grid-template-columns: repeat(2, 1fr); } .service-buttons { grid-template-columns: 1fr; } }
 </style>
 
 <div class="wizard-container">
     <div class="wizard-progress">
         <div class="progress-step completed"><div class="step-circle"><i class="fas fa-check"></i></div><span class="step-label">Tour Details</span></div>
-        <div class="progress-step active"><div class="step-circle">2</div><span class="step-label">Build Itinerary</span></div>
+        <div class="progress-step active"><div class="step-circle">2</div><span class="step-label">Add Services</span></div>
     </div>
 
     <div class="wizard-card">
-        <h2 class="wizard-title"><i class="fas fa-route"></i> Build Day-by-Day Itinerary</h2>
-        <p class="wizard-subtitle">Step 2: Create detailed itinerary with hotels, transport, meals, and guides</p>
+        <h2 class="wizard-title"><i class="fas fa-concierge-bell"></i> Add Services</h2>
+        <p class="wizard-subtitle">Step 2: Add hotels, transport, meals, and guides with FROM/TO dates</p>
 
         <div class="tour-summary">
             <strong>{{ wizard_data.contact_name }}</strong> | {{ wizard_data.pax }} PAX | {{ wizard_data.nationality }} | 
             {{ wizard_data.from_date }} to {{ wizard_data.to_date }} ({{ wizard_data.no_of_days }} days)
         </div>
 
-        <form method="POST" id="itineraryForm">
+        <div class="info-box">
+            <i class="fas fa-lightbulb"></i> <strong>Service-Based Itinerary:</strong> 
+            Add services with FROM/TO dates. Example: Hotel Check-in Jan 1 → Check-out Jan 4 = Auto-creates 3 nights. Rooming list is inherited across all days.
+        </div>
+
+        <div class="service-buttons">
+            <button type="button" class="add-service-btn hotel" onclick="addService('hotel')">
+                <i class="fas fa-hotel"></i> Add Hotel
+            </button>
+            <button type="button" class="add-service-btn transport" onclick="addService('transport')">
+                <i class="fas fa-bus"></i> Add Transport
+            </button>
+            <button type="button" class="add-service-btn meal" onclick="addService('meal')">
+                <i class="fas fa-utensils"></i> Add Meal
+            </button>
+            <button type="button" class="add-service-btn guide" onclick="addService('guide')">
+                <i class="fas fa-user-tie"></i> Add Guide
+            </button>
+        </div>
+
+        <form method="POST" id="serviceForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             
-            <div id="itineraryItems">
-                <!-- Itinerary items will be added here -->
+            <div id="servicesContainer">
+                <!-- Services will be added here -->
             </div>
-
-            <button type="button" class="add-item-btn" onclick="addItineraryItem()">
-                <i class="fas fa-plus"></i>
-                Add Itinerary Day
-            </button>
 
             <div class="wizard-actions">
                 <a href="{{ url_for('inbound.wizard_step1') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
@@ -86,191 +112,273 @@
 </div>
 
 <script>
-let itemCount = 0;
+let serviceCount = 0;
 const tourData = {
     fromDate: '{{ wizard_data.from_date }}',
     toDate: '{{ wizard_data.to_date }}',
-    days: {{ wizard_data.no_of_days }}
+    days: {{ wizard_data.no_of_days }},
+    pax: {{ wizard_data.pax }}
 };
 
-function addItineraryItem() {
-    const container = document.getElementById('itineraryItems');
-    const index = itemCount++;
+function addService(type) {
+    const container = document.getElementById('servicesContainer');
+    const index = serviceCount++;
     
-    // Calculate suggested date (increment from from_date)
-    const fromDate = new Date(tourData.fromDate);
-    const suggestedDate = new Date(fromDate);
-    suggestedDate.setDate(fromDate.getDate() + index);
-    const dateStr = suggestedDate.toISOString().split('T')[0];
+    let serviceHtml = '';
     
-    const itemHtml = `
-        <div class="itinerary-item" id="item${index}">
-            <div class="item-header">
-                <div class="item-number">Day ${index + 1}</div>
-                <button type="button" class="remove-item-btn" onclick="removeItem(${index})">
-                    <i class="fas fa-trash"></i> Remove
-                </button>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Date *</label>
-                    <input type="date" name="items[${index}][date]" class="form-control" value="${dateStr}" required>
+    if (type === 'hotel') {
+        serviceHtml = `
+            <div class="service-item hotel-item" id="service${index}">
+                <input type="hidden" name="services[${index}][type]" value="hotel">
+                <div class="service-header">
+                    <div class="service-badge hotel">
+                        <i class="fas fa-hotel"></i> Hotel Service
+                    </div>
+                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Cost Unit</label>
-                    <select name="items[${index}][cost_unit]" class="form-select">
-                        <option value="PER_PERSON">Per Person</option>
-                        <option value="PER_GROUP">Per Group</option>
-                    </select>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Check-in Date *</label>
+                        <input type="date" name="services[${index}][check_in_date]" class="form-control" 
+                               value="${tourData.fromDate}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Check-out Date *</label>
+                        <input type="date" name="services[${index}][check_out_date]" class="form-control" 
+                               value="${tourData.toDate}" required>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Description *</label>
-                <textarea name="items[${index}][description]" class="form-control" rows="2" 
-                          placeholder="Describe the day's activities..." required></textarea>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Base Cost</label>
-                    <input type="number" name="items[${index}][base_cost]" class="form-control" 
-                           value="0" min="0" step="0.01">
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Hotel Name</label>
+                        <input type="text" name="services[${index}][hotel_name]" class="form-control" 
+                               placeholder="Hotel name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <input type="text" name="services[${index}][location]" class="form-control" 
+                               placeholder="City/Area">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Currency</label>
-                    <select name="items[${index}][currency]" class="form-select">
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="JOD">JOD</option>
-                    </select>
+                
+                <div class="rooming-header">
+                    <i class="fas fa-bed"></i> Room Distribution (will be inherited across all nights)
                 </div>
-            </div>
-            
-            <label class="form-label">Service Flags</label>
-            <div class="service-flags">
-                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'hotel')">
-                    <input type="checkbox" name="items[${index}][flag_hotel]" id="flag_hotel_${index}">
-                    <span><i class="fas fa-hotel"></i> Hotel</span>
-                </label>
-                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'transport')">
-                    <input type="checkbox" name="items[${index}][flag_transport]" id="flag_transport_${index}">
-                    <span><i class="fas fa-bus"></i> Transport</span>
-                </label>
-                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'meal')">
-                    <input type="checkbox" name="items[${index}][flag_meal]" id="flag_meal_${index}">
-                    <span><i class="fas fa-utensils"></i> Meal</span>
-                </label>
-                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'guide')">
-                    <input type="checkbox" name="items[${index}][flag_guide]" id="flag_guide_${index}">
-                    <span><i class="fas fa-user-tie"></i> Guide</span>
-                </label>
-            </div>
-            
-            <div id="hotel_details_${index}" class="service-details">
-                <h4><i class="fas fa-hotel"></i> Hotel Room Distribution</h4>
                 <div class="room-inputs">
                     <div class="form-group">
                         <label class="form-label">Single Rooms</label>
-                        <input type="number" name="items[${index}][hotel_single_rooms]" class="form-control" value="0" min="0">
+                        <input type="number" name="services[${index}][single_rooms]" class="form-control" 
+                               value="0" min="0">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Double Rooms</label>
-                        <input type="number" name="items[${index}][hotel_double_rooms]" class="form-control" value="0" min="0">
+                        <input type="number" name="services[${index}][double_rooms]" class="form-control" 
+                               value="0" min="0">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Triple Rooms</label>
-                        <input type="number" name="items[${index}][hotel_triple_rooms]" class="form-control" value="0" min="0">
+                        <input type="number" name="services[${index}][triple_rooms]" class="form-control" 
+                               value="0" min="0">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Other Rooms</label>
-                        <input type="number" name="items[${index}][hotel_other_rooms]" class="form-control" value="0" min="0">
+                        <input type="number" name="services[${index}][other_rooms]" class="form-control" 
+                               value="0" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cost per Night</label>
+                        <input type="number" name="services[${index}][cost]" class="form-control" 
+                               value="0" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cost Unit</label>
+                        <select name="services[${index}][cost_unit]" class="form-select">
+                            <option value="PER_PERSON">Per Person</option>
+                            <option value="PER_GROUP">Per Group</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            
-            <div id="transport_details_${index}" class="service-details">
-                <h4><i class="fas fa-bus"></i> Transport Details</h4>
+        `;
+    } else if (type === 'transport') {
+        serviceHtml = `
+            <div class="service-item transport-item" id="service${index}">
+                <input type="hidden" name="services[${index}][type]" value="transport">
+                <div class="service-header">
+                    <div class="service-badge transport">
+                        <i class="fas fa-bus"></i> Transport Service
+                    </div>
+                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Pickup Location</label>
-                        <input type="text" name="items[${index}][transport_pickup]" class="form-control" placeholder="e.g., Hotel lobby">
+                        <label class="form-label">Date *</label>
+                        <input type="date" name="services[${index}][date]" class="form-control" 
+                               value="${tourData.fromDate}" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Dropoff Location</label>
-                        <input type="text" name="items[${index}][transport_dropoff]" class="form-control" placeholder="e.g., Airport">
+                        <label class="form-label">Vehicle Type</label>
+                        <input type="text" name="services[${index}][vehicle_type]" class="form-control" 
+                               placeholder="e.g., Minibus, Coach">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Pickup Location *</label>
+                        <input type="text" name="services[${index}][pickup_location]" class="form-control" 
+                               placeholder="e.g., Airport, Hotel" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dropoff Location *</label>
+                        <input type="text" name="services[${index}][dropoff_location]" class="form-control" 
+                               placeholder="e.g., Hotel, Airport" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cost</label>
+                        <input type="number" name="services[${index}][cost]" class="form-control" 
+                               value="0" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cost Unit</label>
+                        <select name="services[${index}][cost_unit]" class="form-select">
+                            <option value="PER_PERSON">Per Person</option>
+                            <option value="PER_GROUP" selected>Per Group</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            
-            <div id="meal_details_${index}" class="service-details">
-                <h4><i class="fas fa-utensils"></i> Meal Details</h4>
+        `;
+    } else if (type === 'meal') {
+        serviceHtml = `
+            <div class="service-item meal-item" id="service${index}">
+                <input type="hidden" name="services[${index}][type]" value="meal">
+                <div class="service-header">
+                    <div class="service-badge meal">
+                        <i class="fas fa-utensils"></i> Meal Service
+                    </div>
+                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Meal Type</label>
-                        <select name="items[${index}][meal_type]" class="form-select">
+                        <label class="form-label">Date *</label>
+                        <input type="date" name="services[${index}][date]" class="form-control" 
+                               value="${tourData.fromDate}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Meal Type *</label>
+                        <select name="services[${index}][meal_type]" class="form-select" required>
                             <option value="">Select Type</option>
                             <option value="Breakfast">Breakfast</option>
                             <option value="Lunch">Lunch</option>
                             <option value="Dinner">Dinner</option>
                         </select>
                     </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Restaurant</label>
+                    <input type="text" name="services[${index}][restaurant]" class="form-control" 
+                           placeholder="Restaurant name">
+                </div>
+                
+                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Restaurant</label>
-                        <input type="text" name="items[${index}][meal_restaurant]" class="form-control" placeholder="Restaurant name">
+                        <label class="form-label">Cost</label>
+                        <input type="number" name="services[${index}][cost]" class="form-control" 
+                               value="0" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cost Unit</label>
+                        <select name="services[${index}][cost_unit]" class="form-select">
+                            <option value="PER_PERSON" selected>Per Person</option>
+                            <option value="PER_GROUP">Per Group</option>
+                        </select>
                     </div>
                 </div>
             </div>
-            
-            <div id="guide_details_${index}" class="service-details">
-                <h4><i class="fas fa-user-tie"></i> Guide Details</h4>
+        `;
+    } else if (type === 'guide') {
+        serviceHtml = `
+            <div class="service-item guide-item" id="service${index}">
+                <input type="hidden" name="services[${index}][type]" value="guide">
+                <div class="service-header">
+                    <div class="service-badge guide">
+                        <i class="fas fa-user-tie"></i> Guide Service
+                    </div>
+                    <button type="button" class="remove-service-btn" onclick="removeService(${index})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">From Date *</label>
+                        <input type="date" name="services[${index}][from_date]" class="form-control" 
+                               value="${tourData.fromDate}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">To Date *</label>
+                        <input type="date" name="services[${index}][to_date]" class="form-control" 
+                               value="${tourData.toDate}" required>
+                    </div>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Service Type</label>
-                        <input type="text" name="items[${index}][guide_service_type]" class="form-control" placeholder="e.g., Meet & Greet, Tour Guide">
+                        <input type="text" name="services[${index}][service_type]" class="form-control" 
+                               placeholder="e.g., Tour Guide, Meet & Greet">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Language</label>
-                        <input type="text" name="items[${index}][guide_language]" class="form-control" placeholder="e.g., English, Spanish">
+                        <input type="text" name="services[${index}][language]" class="form-control" 
+                               placeholder="e.g., English, Spanish">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cost per Day</label>
+                        <input type="number" name="services[${index}][cost]" class="form-control" 
+                               value="0" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Cost Unit</label>
+                        <select name="services[${index}][cost_unit]" class="form-select">
+                            <option value="PER_PERSON">Per Person</option>
+                            <option value="PER_GROUP" selected>Per Group</option>
+                        </select>
                     </div>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
     
-    container.insertAdjacentHTML('beforeend', itemHtml);
+    container.insertAdjacentHTML('beforeend', serviceHtml);
 }
 
-function removeItem(index) {
-    const item = document.getElementById(`item${index}`);
-    if (item && confirm('Remove this itinerary day?')) {
-        item.remove();
+function removeService(index) {
+    const service = document.getElementById(`service${index}`);
+    if (service && confirm('Remove this service?')) {
+        service.remove();
     }
 }
-
-function toggleFlag(index, type) {
-    // Prevent double-toggle from label click
-    event.stopPropagation();
-    
-    setTimeout(() => {
-        const checkbox = document.getElementById(`flag_${type}_${index}`);
-        const details = document.getElementById(`${type}_details_${index}`);
-        const label = checkbox.closest('.flag-checkbox');
-        
-        if (checkbox.checked) {
-            details.classList.add('active');
-            label.classList.add('checked');
-        } else {
-            details.classList.remove('active');
-            label.classList.remove('checked');
-        }
-    }, 10);
-}
-
-// Add first item on page load
-window.addEventListener('load', () => {
-    addItineraryItem();
-});
 </script>
 {% endblock %}

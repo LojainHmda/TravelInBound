@@ -1614,7 +1614,7 @@ def wizard_step2():
     if request.method == 'POST':
         wizard_data = session['wizard_data']
         
-        # Helper function to safely parse numeric values
+        # Helper functions
         def safe_int(value, default=0):
             """Safely convert to int, handling empty strings"""
             if not value or value == '':
@@ -1633,31 +1633,41 @@ def wizard_step2():
             except (ValueError, TypeError):
                 return default
         
-        # Parse itinerary items from form FIRST (before creating request)
-        items_data = {}
+        def date_range(start_date, end_date):
+            """Generate list of dates between start and end (inclusive for start, exclusive for end for hotel nights)"""
+            from datetime import timedelta
+            dates = []
+            current = start_date
+            while current < end_date:
+                dates.append(current)
+                current += timedelta(days=1)
+            return dates
+        
+        # Parse services from form
+        services_data = {}
         for key, value in request.form.items():
-            if key.startswith('items['):
-                # Extract index and field name: items[0][date] -> 0, date
+            if key.startswith('services['):
                 parts = key.split('[')
                 index = parts[1].split(']')[0]
                 field = parts[2].split(']')[0]
                 
-                if index not in items_data:
-                    items_data[index] = {}
-                items_data[index][field] = value
+                if index not in services_data:
+                    services_data[index] = {}
+                services_data[index][field] = value
         
-        # Validate that we have at least one itinerary item
-        valid_items = [item for item in items_data.values() if item.get('description')]
-        if not valid_items:
-            flash('Please add at least one itinerary day before creating the tour', 'error')
+        # Validate that we have at least one service
+        if not services_data:
+            flash('Please add at least one service before creating the tour', 'error')
             wizard_data = session.get('wizard_data', {})
             return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
         
-        # Start transaction - create request and rows together
+        # Start transaction
         try:
+            from datetime import timedelta
             from_date = datetime.strptime(wizard_data['from_date'], '%Y-%m-%d').date()
             to_date = datetime.strptime(wizard_data['to_date'], '%Y-%m-%d').date()
             
+            # Create InboundRequest
             request_obj = InboundRequest(
                 request_number=InboundRequest.generate_request_number(),
                 from_date=from_date,
@@ -1676,33 +1686,183 @@ def wizard_step2():
             db.session.add(request_obj)
             db.session.flush()  # Get the ID
             
-            # Create ItineraryRow objects
-            for index in sorted(items_data.keys(), key=int):
-                item = items_data[index]
+            # Track itinerary rows by date to merge services on same dates
+            itinerary_by_date = {}
+            
+            # Process each service and generate itinerary rows
+            for index in sorted(services_data.keys(), key=int):
+                service = services_data[index]
+                service_type = service.get('type')
                 
-                # Skip if no description
-                if not item.get('description'):
-                    continue
+                if service_type == 'hotel':
+                    # Hotel: create rows for each night with inherited rooming
+                    check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
+                    check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
+                    hotel_name = service.get('hotel_name', '')
+                    location = service.get('location', '')
+                    
+                    # Room distribution (inherited across all nights)
+                    single = safe_int(service.get('single_rooms'))
+                    double = safe_int(service.get('double_rooms'))
+                    triple = safe_int(service.get('triple_rooms'))
+                    other = safe_int(service.get('other_rooms'))
+                    
+                    cost = safe_float(service.get('cost'))
+                    cost_unit = service.get('cost_unit', COST_UNIT_PER_PERSON)
+                    
+                    # Generate description
+                    desc = f"Hotel: {hotel_name or 'TBD'}"
+                    if location:
+                        desc += f" ({location})"
+                    
+                    # Create itinerary row for each night
+                    for night_date in date_range(check_in, check_out):
+                        if night_date not in itinerary_by_date:
+                            itinerary_by_date[night_date] = {
+                                'date': night_date,
+                                'description': desc,
+                                'base_cost': cost,
+                                'cost_unit': cost_unit,
+                                'flag_hotel': True,
+                                'hotel_single_rooms': single,
+                                'hotel_double_rooms': double,
+                                'hotel_triple_rooms': triple,
+                                'hotel_other_rooms': other,
+                                'flag_transport': False,
+                                'flag_meal': False,
+                                'flag_guide': False
+                            }
+                        else:
+                            # Merge with existing
+                            itinerary_by_date[night_date]['description'] += f" | {desc}"
+                            itinerary_by_date[night_date]['base_cost'] += cost
+                            itinerary_by_date[night_date]['flag_hotel'] = True
+                            itinerary_by_date[night_date]['hotel_single_rooms'] = single
+                            itinerary_by_date[night_date]['hotel_double_rooms'] = double
+                            itinerary_by_date[night_date]['hotel_triple_rooms'] = triple
+                            itinerary_by_date[night_date]['hotel_other_rooms'] = other
+                
+                elif service_type == 'transport':
+                    # Transport: single date
+                    transport_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
+                    pickup = service.get('pickup_location', 'TBD')
+                    dropoff = service.get('dropoff_location', 'TBD')
+                    vehicle = service.get('vehicle_type', '')
+                    cost = safe_float(service.get('cost'))
+                    cost_unit = service.get('cost_unit', COST_UNIT_PER_GROUP)
+                    
+                    desc = f"Transport: {pickup} → {dropoff}"
+                    if vehicle:
+                        desc += f" ({vehicle})"
+                    
+                    if transport_date not in itinerary_by_date:
+                        itinerary_by_date[transport_date] = {
+                            'date': transport_date,
+                            'description': desc,
+                            'base_cost': cost,
+                            'cost_unit': cost_unit,
+                            'flag_hotel': False,
+                            'hotel_single_rooms': 0,
+                            'hotel_double_rooms': 0,
+                            'hotel_triple_rooms': 0,
+                            'hotel_other_rooms': 0,
+                            'flag_transport': True,
+                            'flag_meal': False,
+                            'flag_guide': False
+                        }
+                    else:
+                        # Merge with existing
+                        itinerary_by_date[transport_date]['description'] += f" | {desc}"
+                        itinerary_by_date[transport_date]['base_cost'] += cost
+                        itinerary_by_date[transport_date]['flag_transport'] = True
+                
+                elif service_type == 'meal':
+                    # Meal: single date
+                    meal_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
+                    meal_type = service.get('meal_type', 'Meal')
+                    restaurant = service.get('restaurant', 'TBD')
+                    cost = safe_float(service.get('cost'))
+                    cost_unit = service.get('cost_unit', COST_UNIT_PER_PERSON)
+                    
+                    desc = f"{meal_type} at {restaurant}"
+                    
+                    if meal_date not in itinerary_by_date:
+                        itinerary_by_date[meal_date] = {
+                            'date': meal_date,
+                            'description': desc,
+                            'base_cost': cost,
+                            'cost_unit': cost_unit,
+                            'flag_hotel': False,
+                            'hotel_single_rooms': 0,
+                            'hotel_double_rooms': 0,
+                            'hotel_triple_rooms': 0,
+                            'hotel_other_rooms': 0,
+                            'flag_transport': False,
+                            'flag_meal': True,
+                            'flag_guide': False
+                        }
+                    else:
+                        # Merge with existing
+                        itinerary_by_date[meal_date]['description'] += f" | {desc}"
+                        itinerary_by_date[meal_date]['base_cost'] += cost
+                        itinerary_by_date[meal_date]['flag_meal'] = True
+                
+                elif service_type == 'guide':
+                    # Guide: date range
+                    guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
+                    guide_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    service_type_name = service.get('service_type', 'Guide Service')
+                    language = service.get('language', '')
+                    cost = safe_float(service.get('cost'))
+                    cost_unit = service.get('cost_unit', COST_UNIT_PER_GROUP)
+                    
+                    desc = f"{service_type_name}"
+                    if language:
+                        desc += f" ({language})"
+                    
+                    # Create row for each day in range (inclusive)
+                    guide_to_inclusive = guide_to + timedelta(days=1)
+                    for guide_date in date_range(guide_from, guide_to_inclusive):
+                        if guide_date not in itinerary_by_date:
+                            itinerary_by_date[guide_date] = {
+                                'date': guide_date,
+                                'description': desc,
+                                'base_cost': cost,
+                                'cost_unit': cost_unit,
+                                'flag_hotel': False,
+                                'hotel_single_rooms': 0,
+                                'hotel_double_rooms': 0,
+                                'hotel_triple_rooms': 0,
+                                'hotel_other_rooms': 0,
+                                'flag_transport': False,
+                                'flag_meal': False,
+                                'flag_guide': True
+                            }
+                        else:
+                            # Merge with existing
+                            itinerary_by_date[guide_date]['description'] += f" | {desc}"
+                            itinerary_by_date[guide_date]['base_cost'] += cost
+                            itinerary_by_date[guide_date]['flag_guide'] = True
+            
+            # Create ItineraryRow objects from merged data
+            for row_date in sorted(itinerary_by_date.keys()):
+                row_data = itinerary_by_date[row_date]
                 
                 row = ItineraryRow(
                     request_id=request_obj.id,
-                    date=datetime.strptime(item['date'], '%Y-%m-%d').date(),
-                    description=item['description'],
-                    base_cost=safe_float(item.get('base_cost')),
-                    cost_unit=item.get('cost_unit', COST_UNIT_PER_PERSON),
-                    currency=item.get('currency', 'USD'),
-                    
-                    # Service flags
-                    flag_hotel=item.get('flag_hotel') == 'on',
-                    flag_transport=item.get('flag_transport') == 'on',
-                    flag_meal=item.get('flag_meal') == 'on',
-                    flag_guide=item.get('flag_guide') == 'on',
-                    
-                    # Hotel room distribution (safe parsing)
-                    hotel_single_rooms=safe_int(item.get('hotel_single_rooms')),
-                    hotel_double_rooms=safe_int(item.get('hotel_double_rooms')),
-                    hotel_triple_rooms=safe_int(item.get('hotel_triple_rooms')),
-                    hotel_other_rooms=safe_int(item.get('hotel_other_rooms'))
+                    date=row_data['date'],
+                    description=row_data['description'],
+                    base_cost=row_data['base_cost'],
+                    cost_unit=row_data['cost_unit'],
+                    currency='USD',
+                    flag_hotel=row_data['flag_hotel'],
+                    flag_transport=row_data['flag_transport'],
+                    flag_meal=row_data['flag_meal'],
+                    flag_guide=row_data['flag_guide'],
+                    hotel_single_rooms=row_data['hotel_single_rooms'],
+                    hotel_double_rooms=row_data['hotel_double_rooms'],
+                    hotel_triple_rooms=row_data['hotel_triple_rooms'],
+                    hotel_other_rooms=row_data['hotel_other_rooms']
                 )
                 
                 db.session.add(row)
