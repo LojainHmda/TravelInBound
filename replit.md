@@ -40,17 +40,16 @@ Preferred communication style: Simple, everyday language.
     - Compact and horizontal layouts for headers and footers to optimize space.
     - Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
     - **Hub-Style Landing Page**: Modern tile-based home page with large, clickable cards for quick navigation to key features (New Itinerary, Bookings, Run-Down, Customers, Finance, Suppliers, Documents, Reports). Features floating action button (FAB) and quick stats bar.
-    - **Wizard Workflow for New Itineraries**: 2-step itinerary-building wizard fully integrated with the inbound tour operator system:
+    - **Wizard Workflow for New Itineraries**: 2-step service-based wizard fully integrated with the inbound tour operator system:
         1. **Tour Details**: Capture contact name, customer type, nationality, PAX, tour dates (from/to), and special notes. Automatically calculates number of days.
-        2. **Build Itinerary**: Dynamic day-by-day itinerary builder with:
-            - Service flags per day (hotel, transport, meal, guide) that reveal conditional detail fields
-            - Hotel room distribution (single, double, triple, other rooms) when hotel flag is checked
-            - Transport pickup/dropoff locations when transport flag is checked
-            - Meal type and restaurant details when meal flag is checked
-            - Guide service type and language when guide flag is checked
-            - Cost allocation per row with PER_PERSON or PER_GROUP pricing
-            - JavaScript-powered "Add Itinerary Day" functionality for unlimited days
-    - Progressive wizard UI with 2-step indicators (purple gradient for active, green for completed), session-based data persistence, safe numeric parsing with validation, and proper transaction rollback on errors.
+        2. **Add Services**: Service-based wizard with FROM/TO date logic that auto-generates itinerary rows:
+            - **Hotel Service**: Check-in/check-out dates with room distribution (single, double, triple, other rooms). Auto-generates itinerary rows for each NIGHT with inherited rooming across all nights. Example: Check-in Jan 1 → Check-out Jan 4 creates 3 rows (Jan 1, 2, 3) with same rooming.
+            - **Transport Service**: Single date with pickup/dropoff locations. Creates itinerary row for that date with transport flag.
+            - **Meal Service**: Single date with meal type and restaurant selection. Creates itinerary row for that date with meal flag.
+            - **Guide Service**: FROM/TO date range with service type and language. Creates itinerary rows for each day in range with guide flag.
+            - Services on the same date are automatically MERGED into a single itinerary row with multiple service flags.
+            - Cost allocation per service with PER_PERSON or PER_GROUP pricing.
+    - Progressive wizard UI with 2-step indicators (purple gradient for active, green for completed), session-based data persistence, safe numeric parsing with validation, hotel date validation (check-out must be after check-in), service merging logic, and proper transaction rollback on errors.
     - Professional top navigation with a "Die Menu" dropdown system and mobile responsiveness.
     - Interactive service details in Run-Down Plan dashboard with hover tooltips and clickable modals.
 - **AI Integration**: AI-powered scanning for document data extraction (e.g., flight details, hotel details, passport information, ticket numbers, passenger types, PNRs) with sequential mapping and intelligent data population into forms.
