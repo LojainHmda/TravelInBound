@@ -1564,3 +1564,145 @@ def run_down_export_pdf():
                          total_days=len(sorted_data),
                          total_services=total_services,
                          current_time=datetime.now())
+
+
+@inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
+@login_required
+def wizard_step1():
+    """Wizard Step 1: Arrival/Departure Points and Borders"""
+    if request.method == 'POST':
+        # Store wizard data in session
+        from flask import session
+        session['wizard_data'] = {
+            'arrival_point': request.form.get('arrival_point'),
+            'arrival_date': request.form.get('arrival_date'),
+            'arrival_time': request.form.get('arrival_time'),
+            'departure_point': request.form.get('departure_point'),
+            'departure_date': request.form.get('departure_date'),
+            'departure_time': request.form.get('departure_time'),
+            'border_crossings': request.form.getlist('border_crossings'),
+            'contact_name': request.form.get('contact_name', 'TBA'),
+            'pax': request.form.get('pax', '1'),
+            'nationality': request.form.get('nationality', 'TBA')
+        }
+        return redirect(url_for('inbound.wizard_step2'))
+    
+    return render_template('inbound/wizard_step1.html')
+
+
+@inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
+@login_required
+def wizard_step2():
+    """Wizard Step 2: Select Drivers"""
+    from flask import session
+    from app.models.supplier import Supplier
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    # Get transport suppliers (drivers)
+    drivers = Supplier.query.filter_by(supplier_type='TRANSPORT', is_active=True).all()
+    
+    if request.method == 'POST':
+        session['wizard_data']['selected_drivers'] = request.form.getlist('drivers')
+        session['wizard_data']['driver_notes'] = request.form.get('driver_notes', '')
+        session.modified = True
+        return redirect(url_for('inbound.wizard_step3'))
+    
+    return render_template('inbound/wizard_step2.html', drivers=drivers)
+
+
+@inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
+@login_required
+def wizard_step3():
+    """Wizard Step 3: Select Hotels"""
+    from flask import session
+    from app.models.supplier import Supplier
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    # Get hotel suppliers
+    hotels = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).all()
+    
+    if request.method == 'POST':
+        session['wizard_data']['selected_hotels'] = request.form.getlist('hotels')
+        session['wizard_data']['hotel_notes'] = request.form.get('hotel_notes', '')
+        session.modified = True
+        return redirect(url_for('inbound.wizard_step4'))
+    
+    return render_template('inbound/wizard_step3.html', hotels=hotels)
+
+
+@inbound_bp.route('/wizard/step4', methods=['GET', 'POST'])
+@login_required
+def wizard_step4():
+    """Wizard Step 4: Select Restaurants and Meals"""
+    from flask import session
+    from app.models.supplier import Supplier
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    # Get restaurant suppliers
+    restaurants = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).all()
+    
+    if request.method == 'POST':
+        session['wizard_data']['selected_restaurants'] = request.form.getlist('restaurants')
+        session['wizard_data']['meal_notes'] = request.form.get('meal_notes', '')
+        session.modified = True
+        return redirect(url_for('inbound.wizard_step5'))
+    
+    return render_template('inbound/wizard_step4.html', restaurants=restaurants)
+
+
+@inbound_bp.route('/wizard/step5', methods=['GET', 'POST'])
+@login_required
+def wizard_step5():
+    """Wizard Step 5: Select Guides and Create Request"""
+    from flask import session
+    from app.models.supplier import Supplier
+    
+    if 'wizard_data' not in session:
+        flash('Please start from step 1', 'warning')
+        return redirect(url_for('inbound.wizard_step1'))
+    
+    # Get guide suppliers
+    guides = Supplier.query.filter_by(supplier_type='GUIDE', is_active=True).all()
+    
+    if request.method == 'POST':
+        wizard_data = session['wizard_data']
+        wizard_data['selected_guides'] = request.form.getlist('guides')
+        wizard_data['guide_notes'] = request.form.get('guide_notes', '')
+        
+        # Create the inbound request
+        arrival_date = datetime.strptime(wizard_data['arrival_date'], '%Y-%m-%d').date()
+        departure_date = datetime.strptime(wizard_data['departure_date'], '%Y-%m-%d').date()
+        
+        request_obj = InboundRequest(
+            request_number=InboundRequest.generate_request_number(),
+            from_date=arrival_date,
+            to_date=departure_date,
+            customer_type='AGENCY',
+            contact_name=wizard_data.get('contact_name', 'TBA'),
+            nationality=wizard_data.get('nationality', 'TBA'),
+            pax=int(wizard_data.get('pax', 1)),
+            user_id=current_user.id,
+            status=STATUS_REQUEST,
+            special_note=f"Created via wizard\n\nArrival: {wizard_data['arrival_point']}\nDeparture: {wizard_data['departure_point']}\n\nDrivers: {wizard_data.get('driver_notes', '')}\nHotels: {wizard_data.get('hotel_notes', '')}\nMeals: {wizard_data.get('meal_notes', '')}\nGuides: {wizard_data.get('guide_notes', '')}"
+        )
+        request_obj.calculate_days()
+        
+        db.session.add(request_obj)
+        db.session.commit()
+        
+        # Clear wizard data from session
+        session.pop('wizard_data', None)
+        
+        flash(f'Itinerary {request_obj.request_number} created successfully!', 'success')
+        return redirect(url_for('inbound.view_request', id=request_obj.id))
+    
+    return render_template('inbound/wizard_step5.html', guides=guides)

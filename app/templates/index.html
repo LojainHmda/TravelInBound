@@ -1,468 +1,316 @@
 {% extends "base.html" %}
 
-{% block title %}Windows of Jordan - Travel Operations{% endblock %}
+{% block title %}Hub - Windows of Jordan{% endblock %}
 
 {% block styles %}
 <style>
-/* Modern Dashboard Styles */
+/* Hub Style Design */
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5;
 }
 
-.dashboard-container {
-    max-width: 1400px;
+.hub-container {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 2rem 1.5rem;
 }
 
-/* Hero Section with New Booking */
-.hero-section {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    border-radius: 20px;
-    padding: 3rem;
-    margin-bottom: 2rem;
-    color: white;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-}
-
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(239, 222, 164, 0.1) 0%, transparent 70%);
-    border-radius: 50%;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 2;
+/* Header */
+.hub-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 2rem;
+    margin-bottom: 2.5rem;
 }
 
-.hero-text h1 {
+.hub-title {
     font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    color: white;
-}
-
-.hero-text p {
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 0;
-}
-
-.hero-action {
-    flex-shrink: 0;
-}
-
-.btn-new-booking {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    color: #000;
-    padding: 1.2rem 2.5rem;
-    border-radius: 15px;
-    text-decoration: none;
     font-weight: 700;
-    font-size: 1.1rem;
-    box-shadow: 0 10px 30px rgba(255, 165, 0, 0.4);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: none;
+    color: #1a1a1a;
+    margin: 0;
 }
 
-.btn-new-booking:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(255, 165, 0, 0.5);
-    color: #000;
-}
-
-.btn-new-booking i {
-    font-size: 1.3rem;
-}
-
-/* Quick Stats */
-.quick-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.stat-icon {
+.hub-settings {
     width: 50px;
     height: 50px;
     border-radius: 12px;
+    background: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hub-settings:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.hub-settings i {
     font-size: 1.5rem;
+    color: #333;
 }
 
-.stat-icon.request {
-    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-    color: #856404;
+/* Grid Layout */
+.hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
 }
 
-.stat-icon.booked {
-    background: linear-gradient(135deg, #cce5ff, #b8daff);
-    color: #004085;
-}
-
-.stat-icon.in-progress {
-    background: linear-gradient(135deg, #e7e5ff, #d4d0ff);
-    color: #5a32a3;
-}
-
-.stat-icon.confirmed {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
-    color: #155724;
-}
-
-.stat-content h3 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    color: #1e293b;
-}
-
-.stat-content p {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin: 0;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Weekly Run-Down Section */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.section-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.section-header h2 i {
-    color: #667eea;
-}
-
-.week-range {
-    font-size: 0.9rem;
-    color: #64748b;
-    background: white;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
-}
-
-/* Day Cards */
-.day-cards {
+/* Hub Tiles */
+.hub-tile {
+    background: #e8e8e8;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-}
-
-.day-card {
-    background: white;
-    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    border: 2px solid transparent;
+    position: relative;
     overflow: hidden;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s;
 }
 
-.day-card:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
+.hub-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-.day-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1rem 1.5rem;
-    font-weight: 700;
-    font-size: 1.1rem;
+/* Primary Tile - New Itinerary */
+.hub-tile.primary {
+    background: linear-gradient(135deg, #e8d5ff 0%, #d5b3ff 100%);
+    border: 2px solid #a855f7;
 }
 
-.day-activities {
-    padding: 1rem 1.5rem;
+.hub-tile.primary:hover {
+    background: linear-gradient(135deg, #d5b3ff 0%, #c299ff 100%);
 }
 
-.activity-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: linear-gradient(135deg, #f8fafc, #fff);
-    border-radius: 8px;
-    margin-bottom: 0.75rem;
-    border: 1px solid #e2e8f0;
-    transition: all 0.3s;
-}
-
-.activity-item:last-child {
-    margin-bottom: 0;
-}
-
-.activity-item:hover {
-    background: linear-gradient(135deg, #fff, #f8fafc);
-    border-color: #667eea;
-    transform: translateX(4px);
-}
-
-.activity-info {
-    flex: 1;
-}
-
-.activity-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 0.5rem;
-}
-
-.activity-ref {
-    font-weight: 700;
-    color: #667eea;
-    font-size: 0.95rem;
-}
-
-.activity-customer {
-    color: #1e293b;
-    font-weight: 600;
-}
-
-.activity-pax {
-    background: linear-gradient(135deg, #FFD700, #FFA500);
-    color: #000;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-}
-
-.activity-description {
-    color: #64748b;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-}
-
-.activity-services {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.service-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #f1f5f9;
-    color: #475569;
-    padding: 0.375rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-.service-badge i {
-    font-size: 0.75rem;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.empty-state i {
-    font-size: 4rem;
-    color: #cbd5e1;
+/* Tile Icon */
+.tile-icon {
+    font-size: 3rem;
     margin-bottom: 1rem;
+    color: #1a1a1a;
 }
 
-.empty-state h3 {
-    color: #475569;
-    margin-bottom: 0.5rem;
+.hub-tile.primary .tile-icon {
+    color: #7c3aed;
 }
 
-.empty-state p {
-    color: #94a3b8;
-    font-size: 0.95rem;
+/* Tile Label */
+.tile-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 0;
 }
 
-/* Responsive Design */
+/* FAB Button */
+.fab-button {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    border: none;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.fab-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.5);
+}
+
+.fab-button i {
+    font-size: 1.8rem;
+    color: white;
+}
+
+/* Quick Stats Bar */
+.stats-bar {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: block;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.stat-item.requests .stat-value { color: #f59e0b; }
+.stat-item.booked .stat-value { color: #3b82f6; }
+.stat-item.progress .stat-value { color: #8b5cf6; }
+.stat-item.confirmed .stat-value { color: #10b981; }
+
+/* Responsive */
 @media (max-width: 768px) {
-    .hero-content {
-        flex-direction: column;
-        text-align: center;
+    .hub-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
     
-    .hero-text h1 {
+    .hub-title {
         font-size: 2rem;
     }
     
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+    .stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .hub-container {
+        padding: 1.5rem 1rem;
     }
     
-    .activity-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+    .fab-button {
+        bottom: 1.5rem;
+        right: 1.5rem;
+        width: 60px;
+        height: 60px;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <!-- Hero Section with New Booking Button -->
-    <div class="hero-section">
-        <div class="hero-content">
-            <div class="hero-text">
-                <h1>👋 Welcome, {{ current_user.username }}!</h1>
-                <p>Ready to create your next tour? Start a new inbound booking.</p>
+<div class="hub-container">
+    <!-- Header -->
+    <div class="hub-header">
+        <h1 class="hub-title">Hub</h1>
+        <button class="hub-settings" onclick="window.location.href='{{ url_for('main.dashboard') }}'">
+            <i class="fas fa-cog"></i>
+        </button>
+    </div>
+    
+    <!-- Hub Grid -->
+    <div class="hub-grid">
+        <!-- New Itinerary - Primary -->
+        <a href="{{ url_for('inbound.wizard_step1') }}" class="hub-tile primary">
+            <div class="tile-icon">
+                <i class="fas fa-route"></i>
             </div>
-            <div class="hero-action">
-                <a href="{{ url_for('inbound.new_request') }}" class="btn-new-booking">
-                    <i class="fas fa-plus-circle"></i>
-                    New Inbound Booking
-                </a>
+            <p class="tile-label">New Itinerary</p>
+        </a>
+        
+        <!-- View Bookings -->
+        <a href="{{ url_for('inbound.index') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-list"></i>
             </div>
-        </div>
+            <p class="tile-label">Bookings</p>
+        </a>
+        
+        <!-- Run-Down Plan -->
+        <a href="{{ url_for('inbound.run_down_plan') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <p class="tile-label">Run-Down</p>
+        </a>
+        
+        <!-- Customers -->
+        <a href="{{ url_for('customer.index') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <p class="tile-label">Customers</p>
+        </a>
+        
+        <!-- Finance -->
+        <a href="{{ url_for('finance.index') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <p class="tile-label">Finance</p>
+        </a>
+        
+        <!-- Suppliers -->
+        <a href="{{ url_for('finance.suppliers') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-truck"></i>
+            </div>
+            <p class="tile-label">Suppliers</p>
+        </a>
+        
+        <!-- Documents -->
+        <a href="{{ url_for('main.find_bookings') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <p class="tile-label">Documents</p>
+        </a>
+        
+        <!-- Reports -->
+        <a href="{{ url_for('main.dashboard') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <p class="tile-label">Reports</p>
+        </a>
     </div>
     
     <!-- Quick Stats -->
-    <div class="quick-stats">
-        <div class="stat-card">
-            <div class="stat-icon request">
-                <i class="fas fa-inbox"></i>
-            </div>
-            <div class="stat-content">
-                <h3>{{ workflow_counts.REQUEST }}</h3>
-                <p>Requests</p>
-            </div>
+    <div class="stats-bar">
+        <div class="stat-item requests">
+            <span class="stat-value">{{ workflow_counts.REQUEST }}</span>
+            <span class="stat-label">Requests</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon booked">
-                <i class="fas fa-check-circle"></i>
-            </div>
-            <div class="stat-content">
-                <h3>{{ workflow_counts.BOOKED }}</h3>
-                <p>Booked</p>
-            </div>
+        <div class="stat-item booked">
+            <span class="stat-value">{{ workflow_counts.BOOKED }}</span>
+            <span class="stat-label">Booked</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon in-progress">
-                <i class="fas fa-spinner"></i>
-            </div>
-            <div class="stat-content">
-                <h3>{{ workflow_counts.IN_PROGRESS }}</h3>
-                <p>In Progress</p>
-            </div>
+        <div class="stat-item progress">
+            <span class="stat-value">{{ workflow_counts.IN_PROGRESS }}</span>
+            <span class="stat-label">In Progress</span>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon confirmed">
-                <i class="fas fa-check-double"></i>
-            </div>
-            <div class="stat-content">
-                <h3>{{ workflow_counts.CONFIRMED }}</h3>
-                <p>Confirmed</p>
-            </div>
+        <div class="stat-item confirmed">
+            <span class="stat-value">{{ workflow_counts.CONFIRMED }}</span>
+            <span class="stat-label">Confirmed</span>
         </div>
-    </div>
-    
-    <!-- Weekly Run-Down Plan -->
-    <div class="section-header">
-        <h2>
-            <i class="fas fa-calendar-week"></i>
-            This Week's Run-Down Plan
-        </h2>
-        {% if week_start and week_end %}
-        <div class="week-range">
-            <i class="fas fa-calendar"></i> {{ week_start.strftime('%b %d') }} - {{ week_end.strftime('%b %d, %Y') }}
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="day-cards">
-        {% if weekly_rundown %}
-            {% for day in weekly_rundown %}
-            <div class="day-card">
-                <div class="day-header">
-                    <i class="fas fa-calendar-day"></i> {{ day.date_formatted }}
-                </div>
-                <div class="day-activities">
-                    {% for activity in day.activities %}
-                    <div class="activity-item">
-                        <div class="activity-info">
-                            <div class="activity-header">
-                                <span class="activity-ref">{{ activity.request_number }}</span>
-                                <span class="activity-customer">{{ activity.customer_name }}</span>
-                                <span class="activity-pax">
-                                    <i class="fas fa-users"></i> {{ activity.pax }} PAX
-                                </span>
-                            </div>
-                            <div class="activity-description">
-                                {{ activity.description }}
-                            </div>
-                            <div class="activity-services">
-                                {% for service in activity.services %}
-                                <span class="service-badge">
-                                    <i class="fas {{ service.icon }}"></i>
-                                    {{ service.type }}
-                                </span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-calendar-check"></i>
-                <h3>No Activities Scheduled This Week</h3>
-                <p>Create a new inbound booking to get started!</p>
-            </div>
-        {% endif %}
     </div>
 </div>
+
+<!-- FAB Button -->
+<button class="fab-button" onclick="window.location.href='{{ url_for('inbound.wizard_step1') }}'">
+    <i class="fas fa-plus"></i>
+</button>
 {% endblock %}

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}New Itinerary - Step 1{% endblock %}
+
+{% block styles %}
+<style>
+.wizard-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Progress Bar */
+.wizard-progress {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.wizard-progress::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: #e5e7eb;
+    z-index: -1;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.progress-step.active .step-circle {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: white;
+}
+
+.progress-step.completed .step-circle {
+    background: #10b981;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+    text-align: center;
+}
+
+.progress-step.active .step-label {
+    color: #8b5cf6;
+}
+
+/* Form Container */
+.wizard-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+}
+
+.wizard-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.wizard-subtitle {
+    color: #6b7280;
+    margin-bottom: 2rem;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: #8b5cf6;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Checkbox Group */
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.checkbox-item:hover {
+    background: #f3f4f6;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"]:checked + label {
+    color: #8b5cf6;
+    font-weight: 600;
+}
+
+/* Action Buttons */
+.wizard-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+}
+
+.btn {
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .wizard-progress {
+        overflow-x: auto;
+    }
+    
+    .step-label {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wizard-container">
+    <!-- Progress Bar -->
+    <div class="wizard-progress">
+        <div class="progress-step active">
+            <div class="step-circle">1</div>
+            <span class="step-label">Arrival & Departure</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">2</div>
+            <span class="step-label">Drivers</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">Hotels</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">4</div>
+            <span class="step-label">Meals</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">5</div>
+            <span class="step-label">Guides</span>
+        </div>
+    </div>
+
+    <!-- Wizard Card -->
+    <div class="wizard-card">
+        <h2 class="wizard-title">Create New Itinerary</h2>
+        <p class="wizard-subtitle">Step 1: Arrival & Departure Points</p>
+
+        <form method="POST">
+            <!-- Basic Info Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>
+                    Tour Details
+                </h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Contact Name</label>
+                        <input type="text" name="contact_name" class="form-control" placeholder="Guest Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Number of Passengers (PAX)</label>
+                        <input type="number" name="pax" class="form-control" value="1" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nationality</label>
+                    <input type="text" name="nationality" class="form-control" placeholder="e.g., American, British">
+                </div>
+            </div>
+
+            <!-- Arrival Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-plane-arrival"></i>
+                    Arrival Information
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">Arrival Point</label>
+                    <input type="text" name="arrival_point" class="form-control" placeholder="e.g., Queen Alia International Airport" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Arrival Date</label>
+                        <input type="date" name="arrival_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="arrival_time" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Departure Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-plane-departure"></i>
+                    Departure Information
+                </h3>
+                <div class="form-group">
+                    <label class="form-label">Departure Point</label>
+                    <input type="text" name="departure_point" class="form-control" placeholder="e.g., Queen Alia International Airport" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Departure Date</label>
+                        <input type="date" name="departure_date" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" name="departure_time" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Border Crossings Section -->
+            <div class="form-section">
+                <h3 class="section-title">
+                    <i class="fas fa-map-signs"></i>
+                    Border Crossings (Optional)
+                </h3>
+                <div class="checkbox-group">
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="border_crossings" value="King Hussein Bridge">
+                        <span>King Hussein Bridge</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="border_crossings" value="Wadi Araba">
+                        <span>Wadi Araba</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="border_crossings" value="Sheikh Hussein">
+                        <span>Sheikh Hussein</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="border_crossings" value="Aqaba-Eilat">
+                        <span>Aqaba-Eilat</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="wizard-actions">
+                <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Next: Select Drivers
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

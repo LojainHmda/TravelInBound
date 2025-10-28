@@ -39,7 +39,14 @@ Preferred communication style: Simple, everyday language.
     - Clean, modern typography (Segoe UI, Georgia serif) for readability, especially in vouchers.
     - Compact and horizontal layouts for headers and footers to optimize space.
     - Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
-    - Modern dashboard landing page redesign with stat cards, improved tables, and responsive design.
+    - **Hub-Style Landing Page**: Modern tile-based home page with large, clickable cards for quick navigation to key features (New Itinerary, Bookings, Run-Down, Customers, Finance, Suppliers, Documents, Reports). Features floating action button (FAB) and quick stats bar.
+    - **Wizard Workflow for New Itineraries**: 5-step guided wizard for creating new tour itineraries:
+        1. Arrival/Departure Points & Borders (contact info, dates, times, border crossings)
+        2. Driver Selection (transport providers with visual cards)
+        3. Hotel Selection (accommodation providers with visual cards)
+        4. Restaurant/Meal Selection (dining options with visual cards)
+        5. Guide Selection (tour guide selection and final itinerary creation)
+    - Progressive wizard UI with step indicators, session-based data persistence, and seamless flow between steps.
     - Professional top navigation with a "Die Menu" dropdown system and mobile responsiveness.
     - Interactive service details in Run-Down Plan dashboard with hover tooltips and clickable modals.
 - **AI Integration**: AI-powered scanning for document data extraction (e.g., flight details, hotel details, passport information, ticket numbers, passenger types, PNRs) with sequential mapping and intelligent data population into forms.
