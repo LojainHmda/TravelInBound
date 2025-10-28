@@ -1614,29 +1614,26 @@ def wizard_step2():
     if request.method == 'POST':
         wizard_data = session['wizard_data']
         
-        # Create the InboundRequest
-        from_date = datetime.strptime(wizard_data['from_date'], '%Y-%m-%d').date()
-        to_date = datetime.strptime(wizard_data['to_date'], '%Y-%m-%d').date()
+        # Helper function to safely parse numeric values
+        def safe_int(value, default=0):
+            """Safely convert to int, handling empty strings"""
+            if not value or value == '':
+                return default
+            try:
+                return int(value)
+            except (ValueError, TypeError):
+                return default
         
-        request_obj = InboundRequest(
-            request_number=InboundRequest.generate_request_number(),
-            from_date=from_date,
-            to_date=to_date,
-            no_of_days=wizard_data['no_of_days'],
-            customer_type=wizard_data['customer_type'],
-            contact_name=wizard_data['contact_name'],
-            agent_ref=wizard_data.get('agent_ref', ''),
-            nationality=wizard_data['nationality'],
-            pax=wizard_data['pax'],
-            special_note=wizard_data.get('special_note', ''),
-            user_id=current_user.id,
-            status=STATUS_REQUEST
-        )
+        def safe_float(value, default=0.0):
+            """Safely convert to float, handling empty strings"""
+            if not value or value == '':
+                return default
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return default
         
-        db.session.add(request_obj)
-        db.session.flush()  # Get the ID
-        
-        # Parse itinerary items from form
+        # Parse itinerary items from form FIRST (before creating request)
         items_data = {}
         for key, value in request.form.items():
             if key.startswith('items['):
@@ -1649,48 +1646,85 @@ def wizard_step2():
                     items_data[index] = {}
                 items_data[index][field] = value
         
-        # Create ItineraryRow objects
-        for index in sorted(items_data.keys(), key=int):
-            item = items_data[index]
+        # Validate that we have at least one itinerary item
+        valid_items = [item for item in items_data.values() if item.get('description')]
+        if not valid_items:
+            flash('Please add at least one itinerary day before creating the tour', 'error')
+            wizard_data = session.get('wizard_data', {})
+            return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+        
+        # Start transaction - create request and rows together
+        try:
+            from_date = datetime.strptime(wizard_data['from_date'], '%Y-%m-%d').date()
+            to_date = datetime.strptime(wizard_data['to_date'], '%Y-%m-%d').date()
             
-            # Skip if no description
-            if not item.get('description'):
-                continue
-            
-            row = ItineraryRow(
-                request_id=request_obj.id,
-                date=datetime.strptime(item['date'], '%Y-%m-%d').date(),
-                description=item['description'],
-                base_cost=float(item.get('base_cost', 0) or 0),
-                cost_unit=item.get('cost_unit', COST_UNIT_PER_PERSON),
-                currency=item.get('currency', 'USD'),
-                
-                # Service flags
-                flag_hotel=item.get('flag_hotel') == 'on',
-                flag_transport=item.get('flag_transport') == 'on',
-                flag_meal=item.get('flag_meal') == 'on',
-                flag_guide=item.get('flag_guide') == 'on',
-                
-                # Hotel room distribution
-                hotel_single_rooms=int(item.get('hotel_single_rooms', 0) or 0),
-                hotel_double_rooms=int(item.get('hotel_double_rooms', 0) or 0),
-                hotel_triple_rooms=int(item.get('hotel_triple_rooms', 0) or 0),
-                hotel_other_rooms=int(item.get('hotel_other_rooms', 0) or 0)
+            request_obj = InboundRequest(
+                request_number=InboundRequest.generate_request_number(),
+                from_date=from_date,
+                to_date=to_date,
+                no_of_days=wizard_data['no_of_days'],
+                customer_type=wizard_data['customer_type'],
+                contact_name=wizard_data['contact_name'],
+                agent_ref=wizard_data.get('agent_ref', ''),
+                nationality=wizard_data['nationality'],
+                pax=wizard_data['pax'],
+                special_note=wizard_data.get('special_note', ''),
+                user_id=current_user.id,
+                status=STATUS_REQUEST
             )
             
-            db.session.add(row)
-        
-        # Calculate total
-        db.session.flush()
-        request_obj.calculate_total()
-        
-        db.session.commit()
-        
-        # Clear wizard data from session
-        session.pop('wizard_data', None)
-        
-        flash(f'Tour itinerary {request_obj.request_number} created successfully!', 'success')
-        return redirect(url_for('inbound.view_request', id=request_obj.id))
+            db.session.add(request_obj)
+            db.session.flush()  # Get the ID
+            
+            # Create ItineraryRow objects
+            for index in sorted(items_data.keys(), key=int):
+                item = items_data[index]
+                
+                # Skip if no description
+                if not item.get('description'):
+                    continue
+                
+                row = ItineraryRow(
+                    request_id=request_obj.id,
+                    date=datetime.strptime(item['date'], '%Y-%m-%d').date(),
+                    description=item['description'],
+                    base_cost=safe_float(item.get('base_cost')),
+                    cost_unit=item.get('cost_unit', COST_UNIT_PER_PERSON),
+                    currency=item.get('currency', 'USD'),
+                    
+                    # Service flags
+                    flag_hotel=item.get('flag_hotel') == 'on',
+                    flag_transport=item.get('flag_transport') == 'on',
+                    flag_meal=item.get('flag_meal') == 'on',
+                    flag_guide=item.get('flag_guide') == 'on',
+                    
+                    # Hotel room distribution (safe parsing)
+                    hotel_single_rooms=safe_int(item.get('hotel_single_rooms')),
+                    hotel_double_rooms=safe_int(item.get('hotel_double_rooms')),
+                    hotel_triple_rooms=safe_int(item.get('hotel_triple_rooms')),
+                    hotel_other_rooms=safe_int(item.get('hotel_other_rooms'))
+                )
+                
+                db.session.add(row)
+            
+            # Calculate total
+            db.session.flush()
+            request_obj.calculate_total()
+            
+            # Commit transaction
+            db.session.commit()
+            
+            # Clear wizard data from session
+            session.pop('wizard_data', None)
+            
+            flash(f'Tour itinerary {request_obj.request_number} created successfully!', 'success')
+            return redirect(url_for('inbound.view_request', id=request_obj.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating itinerary: {str(e)}', 'error')
+            wizard_data = session.get('wizard_data', {})
+            return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
     
     # GET request
     wizard_data = session.get('wizard_data', {})
