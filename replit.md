@@ -40,13 +40,17 @@ Preferred communication style: Simple, everyday language.
     - Compact and horizontal layouts for headers and footers to optimize space.
     - Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
     - **Hub-Style Landing Page**: Modern tile-based home page with large, clickable cards for quick navigation to key features (New Itinerary, Bookings, Run-Down, Customers, Finance, Suppliers, Documents, Reports). Features floating action button (FAB) and quick stats bar.
-    - **Wizard Workflow for New Itineraries**: 5-step guided wizard for creating new tour itineraries:
-        1. Arrival/Departure Points & Borders (contact info, dates, times, border crossings)
-        2. Driver Selection (transport providers with visual cards)
-        3. Hotel Selection (accommodation providers with visual cards)
-        4. Restaurant/Meal Selection (dining options with visual cards)
-        5. Guide Selection (tour guide selection and final itinerary creation)
-    - Progressive wizard UI with step indicators, session-based data persistence, and seamless flow between steps.
+    - **Wizard Workflow for New Itineraries**: 2-step itinerary-building wizard fully integrated with the inbound tour operator system:
+        1. **Tour Details**: Capture contact name, customer type, nationality, PAX, tour dates (from/to), and special notes. Automatically calculates number of days.
+        2. **Build Itinerary**: Dynamic day-by-day itinerary builder with:
+            - Service flags per day (hotel, transport, meal, guide) that reveal conditional detail fields
+            - Hotel room distribution (single, double, triple, other rooms) when hotel flag is checked
+            - Transport pickup/dropoff locations when transport flag is checked
+            - Meal type and restaurant details when meal flag is checked
+            - Guide service type and language when guide flag is checked
+            - Cost allocation per row with PER_PERSON or PER_GROUP pricing
+            - JavaScript-powered "Add Itinerary Day" functionality for unlimited days
+    - Progressive wizard UI with 2-step indicators (purple gradient for active, green for completed), session-based data persistence, safe numeric parsing with validation, and proper transaction rollback on errors.
     - Professional top navigation with a "Die Menu" dropdown system and mobile responsiveness.
     - Interactive service details in Run-Down Plan dashboard with hover tooltips and clickable modals.
 - **AI Integration**: AI-powered scanning for document data extraction (e.g., flight details, hotel details, passport information, ticket numbers, passenger types, PNRs) with sequential mapping and intelligent data population into forms.
