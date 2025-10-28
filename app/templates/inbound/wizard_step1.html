@@ -4,153 +4,230 @@
 
 {% block content %}
 <style>
-.wizard-container { max-width: 900px; margin: 2rem auto; padding: 0 1.5rem; }
-.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; }
-.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 4px; background: #e5e7eb; z-index: 0; }
-.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; position: relative; background: white; padding: 0 10px; z-index: 1; }
+.wizard-container { max-width: 1000px; margin: 2rem auto; padding: 0 1.5rem; }
+.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; max-width: 700px; margin-left: auto; margin-right: auto; }
+.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 100%; height: 4px; background: #e5e7eb; z-index: 0; }
+.progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; background: white; padding: 0 10px; z-index: 1; position: relative; }
 .step-circle { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
 .progress-step.active .step-circle { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .progress-step.completed .step-circle { background: #10b981; color: white; }
-.step-label { font-size: 0.75rem; color: #6b7280; font-weight: 600; text-align: center; }
-.progress-step.active .step-label { color: #8b5cf6; }
+.step-label { font-size: 0.7rem; color: #6b7280; font-weight: 600; text-align: center; max-width: 80px; }
+.progress-step.active .step-label { color: #8b5cf6; font-weight: 700; }
 .wizard-card { background: white; border-radius: 16px; padding: 2.5rem; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08); }
 .wizard-title { font-size: 1.75rem; font-weight: 700; color: #1a1a1a; margin-bottom: 0.5rem; }
 .wizard-subtitle { color: #6b7280; margin-bottom: 2rem; }
-.form-section { margin-bottom: 2rem; }
-.section-title { font-size: 1.1rem; font-weight: 600; color: #1a1a1a; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-.section-title i { color: #8b5cf6; }
+.section-header { font-size: 1.1rem; font-weight: 700; color: #374151; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
-.form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s; }
+.form-label .required { color: #ef4444; margin-left: 0.25rem; }
+.form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; }
 .form-control:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
-.form-select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; background: white; transition: all 0.3s; }
+.form-select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; background: white; }
+.info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
 .wizard-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
 .btn { padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
 .btn-secondary { background: #f3f4f6; color: #374151; }
 .btn-secondary:hover { background: #e5e7eb; }
-.info-box { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; }
-.info-box i { color: #3b82f6; margin-right: 0.5rem; }
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .wizard-progress { overflow-x: auto; } .step-label { display: none; } }
+@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .wizard-progress { max-width: 500px; } .step-label { font-size: 0.65rem; max-width: 60px; } }
 </style>
 
 <div class="wizard-container">
-    <!-- Progress Bar -->
     <div class="wizard-progress">
         <div class="progress-step active">
             <div class="step-circle">1</div>
-            <span class="step-label">Tour Details</span>
+            <span class="step-label">Arrival & Departure</span>
         </div>
         <div class="progress-step">
             <div class="step-circle">2</div>
-            <span class="step-label">Build Itinerary</span>
+            <span class="step-label">Hotel</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">3</div>
+            <span class="step-label">Transport</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">4</div>
+            <span class="step-label">Meals & Guide</span>
+        </div>
+        <div class="progress-step">
+            <div class="step-circle">5</div>
+            <span class="step-label">Review</span>
         </div>
     </div>
 
-    <!-- Wizard Card -->
     <div class="wizard-card">
-        <h2 class="wizard-title">Create New Tour Itinerary</h2>
-        <p class="wizard-subtitle">Step 1: Enter basic tour information</p>
+        <h2 class="wizard-title"><i class="fas fa-plane-arrival"></i> Arrival & Departure Details</h2>
+        <p class="wizard-subtitle">Step 1: Enter tour start and end points with dates and times</p>
 
         <div class="info-box">
-            <i class="fas fa-info-circle"></i>
-            <strong>Itinerary-Based System:</strong> After entering tour details, you'll build a day-by-day itinerary with hotels, transport, meals, and guides.
+            <i class="fas fa-info-circle"></i> <strong>Inbound Tour System:</strong> 
+            Start by defining arrival (entry point) and departure (exit point) with dates and times.
         </div>
 
-        <form method="POST">
+        <form method="POST" id="step1Form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            
-            <!-- Client Information -->
-            <div class="form-section">
-                <h3 class="section-title">
-                    <i class="fas fa-user-circle"></i>
-                    Client Information
-                </h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Contact Name *</label>
-                        <input type="text" name="contact_name" class="form-control" 
-                               placeholder="Guest or agency name" 
-                               value="{{ wizard_data.contact_name or '' }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Agent Reference</label>
-                        <input type="text" name="agent_ref" class="form-control" 
-                               placeholder="Optional reference number"
-                               value="{{ wizard_data.agent_ref or '' }}">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Customer Type *</label>
-                        <select name="customer_type" class="form-select" required>
-                            <option value="AGENCY" {% if wizard_data.customer_type == 'AGENCY' %}selected{% endif %}>Travel Agency</option>
-                            <option value="GROUP" {% if wizard_data.customer_type == 'GROUP' %}selected{% endif %}>Group</option>
-                            <option value="COMPANY" {% if wizard_data.customer_type == 'COMPANY' %}selected{% endif %}>Company</option>
-                            <option value="CORPORATE" {% if wizard_data.customer_type == 'CORPORATE' %}selected{% endif %}>Corporate</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nationality *</label>
-                        <input type="text" name="nationality" class="form-control" 
-                               placeholder="e.g., American, British, German"
-                               value="{{ wizard_data.nationality or '' }}" required>
-                    </div>
-                </div>
-                
+
+            <!-- Arrival Section -->
+            <div class="section-header">
+                <i class="fas fa-plane-arrival"></i> Arrival Information
+            </div>
+
+            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Number of Passengers (PAX) *</label>
+                    <label class="form-label">
+                        Arrival Point (Border/Airport)<span class="required">*</span>
+                    </label>
+                    <select name="arrival_point" class="form-select" required>
+                        <option value="">Select arrival point</option>
+                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
+                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        Arrival Date<span class="required">*</span>
+                    </label>
+                    <input type="date" name="arrival_date" class="form-control" 
+                           value="{{ wizard_data.arrival_date or '' }}" required id="arrivalDate">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" name="arrival_time" class="form-control" 
+                           value="{{ wizard_data.arrival_time or '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrival Flight/Bus Number</label>
+                    <input type="text" name="arrival_reference" class="form-control" 
+                           placeholder="e.g., RJ123, Bus 456" 
+                           value="{{ wizard_data.arrival_reference or '' }}">
+                </div>
+            </div>
+
+            <!-- Departure Section -->
+            <div class="section-header" style="margin-top: 2rem;">
+                <i class="fas fa-plane-departure"></i> Departure Information
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        Departure Point (Border/Airport)<span class="required">*</span>
+                    </label>
+                    <select name="departure_point" class="form-select" required>
+                        <option value="">Select departure point</option>
+                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
+                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        Departure Date<span class="required">*</span>
+                    </label>
+                    <input type="date" name="departure_date" class="form-control" 
+                           value="{{ wizard_data.departure_date or '' }}" required id="departureDate">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" name="departure_time" class="form-control" 
+                           value="{{ wizard_data.departure_time or '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departure Flight/Bus Number</label>
+                    <input type="text" name="departure_reference" class="form-control" 
+                           placeholder="e.g., RJ456, Bus 789" 
+                           value="{{ wizard_data.departure_reference or '' }}">
+                </div>
+            </div>
+
+            <!-- Contact & Group Information -->
+            <div class="section-header" style="margin-top: 2rem;">
+                <i class="fas fa-users"></i> Contact & Group Information
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        Contact Name<span class="required">*</span>
+                    </label>
+                    <input type="text" name="contact_name" class="form-control" 
+                           placeholder="Tour operator or agency name" 
+                           value="{{ wizard_data.contact_name or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Agent Reference</label>
+                    <input type="text" name="agent_ref" class="form-control" 
+                           placeholder="Your reference number" 
+                           value="{{ wizard_data.agent_ref or '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        Customer Type<span class="required">*</span>
+                    </label>
+                    <select name="customer_type" class="form-select" required>
+                        <option value="AGENCY" {% if wizard_data.customer_type == 'AGENCY' %}selected{% endif %}>Travel Agency</option>
+                        <option value="GROUP" {% if wizard_data.customer_type == 'GROUP' %}selected{% endif %}>Group Tour</option>
+                        <option value="COMPANY" {% if wizard_data.customer_type == 'COMPANY' %}selected{% endif %}>Company</option>
+                        <option value="CORPORATE" {% if wizard_data.customer_type == 'CORPORATE' %}selected{% endif %}>Corporate</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        Nationality<span class="required">*</span>
+                    </label>
+                    <input type="text" name="nationality" class="form-control" 
+                           placeholder="e.g., American, British" 
+                           value="{{ wizard_data.nationality or '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">
+                        Number of PAX<span class="required">*</span>
+                    </label>
                     <input type="number" name="pax" class="form-control" 
-                           value="{{ wizard_data.pax or 1 }}" min="1" required>
+                           placeholder="Total passengers" min="1" 
+                           value="{{ wizard_data.pax or '' }}" required>
                 </div>
-            </div>
-
-            <!-- Tour Dates -->
-            <div class="form-section">
-                <h3 class="section-title">
-                    <i class="fas fa-calendar-alt"></i>
-                    Tour Dates
-                </h3>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">From Date *</label>
-                        <input type="date" name="from_date" class="form-control" 
-                               value="{{ wizard_data.from_date or '' }}" 
-                               id="fromDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">To Date *</label>
-                        <input type="date" name="to_date" class="form-control" 
-                               value="{{ wizard_data.to_date or '' }}"
-                               id="toDate" required>
-                    </div>
-                </div>
-                <div id="daysDisplay" style="font-size: 0.9rem; color: #6b7280; margin-top: 0.5rem;"></div>
-            </div>
-
-            <!-- Special Notes -->
-            <div class="form-section">
-                <h3 class="section-title">
-                    <i class="fas fa-sticky-note"></i>
-                    Special Notes (Optional)
-                </h3>
                 <div class="form-group">
-                    <textarea name="special_note" class="form-control" rows="4" 
-                              placeholder="Any special requirements, dietary needs, accessibility requirements, etc.">{{ wizard_data.special_note or '' }}</textarea>
+                    <label class="form-label">Number of Days</label>
+                    <input type="number" name="no_of_days" class="form-control" 
+                           id="daysDisplay" readonly 
+                           value="{{ wizard_data.no_of_days or '' }}"
+                           style="background: #f3f4f6;">
                 </div>
             </div>
 
-            <!-- Action Buttons -->
+            <div class="form-group">
+                <label class="form-label">Special Notes</label>
+                <textarea name="special_note" class="form-control" rows="3" 
+                          placeholder="Any special requirements or notes...">{{ wizard_data.special_note or '' }}</textarea>
+            </div>
+
             <div class="wizard-actions">
                 <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i>
-                    Cancel
+                    <i class="fas fa-times"></i> Cancel
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    Next: Build Itinerary
+                    Next: Hotel Configuration
                     <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
@@ -159,26 +236,33 @@
 </div>
 
 <script>
-// Calculate number of days between dates
+// Auto-calculate number of days when dates change
+const arrivalDateInput = document.getElementById('arrivalDate');
+const departureDateInput = document.getElementById('departureDate');
+const daysDisplay = document.getElementById('daysDisplay');
+
 function calculateDays() {
-    const fromDate = document.getElementById('fromDate').value;
-    const toDate = document.getElementById('toDate').value;
+    const arrivalDate = arrivalDateInput.value;
+    const departureDate = departureDateInput.value;
     
-    if (fromDate && toDate) {
-        const from = new Date(fromDate);
-        const to = new Date(toDate);
-        const diffTime = Math.abs(to - from);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both start and end
+    if (arrivalDate && departureDate) {
+        const arrival = new Date(arrivalDate);
+        const departure = new Date(departureDate);
         
-        document.getElementById('daysDisplay').innerHTML = 
-            `<i class="fas fa-info-circle" style="color: #8b5cf6;"></i> <strong>${diffDays} days</strong> tour`;
+        if (departure >= arrival) {
+            const diffTime = Math.abs(departure - arrival);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // Include both days
+            daysDisplay.value = diffDays;
+        } else {
+            daysDisplay.value = '';
+        }
     }
 }
 
-document.getElementById('fromDate').addEventListener('change', calculateDays);
-document.getElementById('toDate').addEventListener('change', calculateDays);
+arrivalDateInput.addEventListener('change', calculateDays);
+departureDateInput.addEventListener('change', calculateDays);
 
-// Calculate on page load if dates are present
+// Calculate on page load if dates are pre-filled
 window.addEventListener('load', calculateDays);
 </script>
 {% endblock %}

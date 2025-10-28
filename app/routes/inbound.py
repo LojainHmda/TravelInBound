@@ -1569,29 +1569,49 @@ def run_down_export_pdf():
 @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
 @login_required
 def wizard_step1():
-    """Wizard Step 1: Tour Details"""
+    """Wizard Step 1: Arrival & Departure Details"""
     from flask import session
     
     if request.method == 'POST':
-        # Store tour details in session
-        from_date = request.form.get('from_date')
-        to_date = request.form.get('to_date')
+        # Get arrival and departure dates
+        arrival_date = request.form.get('arrival_date')
+        departure_date = request.form.get('departure_date')
         
         # Calculate number of days
-        from_dt = datetime.strptime(from_date, '%Y-%m-%d').date()
-        to_dt = datetime.strptime(to_date, '%Y-%m-%d').date()
+        from_dt = datetime.strptime(arrival_date, '%Y-%m-%d').date()
+        to_dt = datetime.strptime(departure_date, '%Y-%m-%d').date()
         no_of_days = (to_dt - from_dt).days + 1
         
+        # Store wizard data in session
         session['wizard_data'] = {
+            # Arrival/Departure info
+            'arrival_point': request.form.get('arrival_point'),
+            'arrival_date': arrival_date,
+            'arrival_time': request.form.get('arrival_time', ''),
+            'arrival_reference': request.form.get('arrival_reference', ''),
+            'departure_point': request.form.get('departure_point'),
+            'departure_date': departure_date,
+            'departure_time': request.form.get('departure_time', ''),
+            'departure_reference': request.form.get('departure_reference', ''),
+            
+            # Contact & Group info
             'contact_name': request.form.get('contact_name'),
             'agent_ref': request.form.get('agent_ref', ''),
             'customer_type': request.form.get('customer_type', 'AGENCY'),
             'nationality': request.form.get('nationality'),
             'pax': int(request.form.get('pax', 1)),
-            'from_date': from_date,
-            'to_date': to_date,
+            'special_note': request.form.get('special_note', ''),
+            
+            # Calculated fields
+            'from_date': arrival_date,  # Use arrival as start
+            'to_date': departure_date,   # Use departure as end
             'no_of_days': no_of_days,
-            'special_note': request.form.get('special_note', '')
+            
+            # Initialize service collections
+            'hotels': [],
+            'transports': [],
+            'meals': [],
+            'guides': []
         }
         session.modified = True
         return redirect(url_for('inbound.wizard_step2'))
