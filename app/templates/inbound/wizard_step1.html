@@ -269,6 +269,7 @@
         <p class="wizard-subtitle">Step 1: Arrival & Departure Points</p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Basic Info Section -->
             <div class="form-section">
                 <h3 class="section-title">

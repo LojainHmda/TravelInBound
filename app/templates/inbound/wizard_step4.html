@@ -49,6 +49,7 @@
         <p class="wizard-subtitle">Step 4: Choose dining options for your tour</p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {% if restaurants %}
             <div class="restaurants-grid">
                 {% for restaurant in restaurants %}

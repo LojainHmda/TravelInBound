@@ -49,6 +49,7 @@
         <p class="wizard-subtitle">Step 2: Choose transport providers for your tour</p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {% if drivers %}
             <div class="drivers-grid">
                 {% for driver in drivers %}

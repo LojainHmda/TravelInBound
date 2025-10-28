@@ -49,6 +49,7 @@
         <p class="wizard-subtitle">Step 5: Choose tour guides and create your itinerary</p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {% if guides %}
             <div class="guides-grid">
                 {% for guide in guides %}

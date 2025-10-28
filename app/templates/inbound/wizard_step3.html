@@ -49,6 +49,7 @@
         <p class="wizard-subtitle">Step 3: Choose accommodation for your tour</p>
 
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {% if hotels %}
             <div class="hotels-grid">
                 {% for hotel in hotels %}
