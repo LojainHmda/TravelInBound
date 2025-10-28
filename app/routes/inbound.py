@@ -1569,140 +1569,129 @@ def run_down_export_pdf():
 @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
 @login_required
 def wizard_step1():
-    """Wizard Step 1: Arrival/Departure Points and Borders"""
+    """Wizard Step 1: Tour Details"""
+    from flask import session
+    
     if request.method == 'POST':
-        # Store wizard data in session
-        from flask import session
+        # Store tour details in session
+        from_date = request.form.get('from_date')
+        to_date = request.form.get('to_date')
+        
+        # Calculate number of days
+        from_dt = datetime.strptime(from_date, '%Y-%m-%d').date()
+        to_dt = datetime.strptime(to_date, '%Y-%m-%d').date()
+        no_of_days = (to_dt - from_dt).days + 1
+        
         session['wizard_data'] = {
-            'arrival_point': request.form.get('arrival_point'),
-            'arrival_date': request.form.get('arrival_date'),
-            'arrival_time': request.form.get('arrival_time'),
-            'departure_point': request.form.get('departure_point'),
-            'departure_date': request.form.get('departure_date'),
-            'departure_time': request.form.get('departure_time'),
-            'border_crossings': request.form.getlist('border_crossings'),
-            'contact_name': request.form.get('contact_name', 'TBA'),
-            'pax': request.form.get('pax', '1'),
-            'nationality': request.form.get('nationality', 'TBA')
+            'contact_name': request.form.get('contact_name'),
+            'agent_ref': request.form.get('agent_ref', ''),
+            'customer_type': request.form.get('customer_type', 'AGENCY'),
+            'nationality': request.form.get('nationality'),
+            'pax': int(request.form.get('pax', 1)),
+            'from_date': from_date,
+            'to_date': to_date,
+            'no_of_days': no_of_days,
+            'special_note': request.form.get('special_note', '')
         }
+        session.modified = True
         return redirect(url_for('inbound.wizard_step2'))
     
-    return render_template('inbound/wizard_step1.html')
+    # GET request - pass any existing wizard data to template
+    wizard_data = session.get('wizard_data', {})
+    return render_template('inbound/wizard_step1.html', wizard_data=wizard_data)
 
 
 @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
 @login_required
 def wizard_step2():
-    """Wizard Step 2: Select Drivers"""
+    """Wizard Step 2: Build Itinerary"""
     from flask import session
-    from app.models.supplier import Supplier
     
     if 'wizard_data' not in session:
         flash('Please start from step 1', 'warning')
         return redirect(url_for('inbound.wizard_step1'))
-    
-    # Get transport suppliers (drivers)
-    drivers = Supplier.query.filter_by(supplier_type='TRANSPORT', is_active=True).all()
-    
-    if request.method == 'POST':
-        session['wizard_data']['selected_drivers'] = request.form.getlist('drivers')
-        session['wizard_data']['driver_notes'] = request.form.get('driver_notes', '')
-        session.modified = True
-        return redirect(url_for('inbound.wizard_step3'))
-    
-    return render_template('inbound/wizard_step2.html', drivers=drivers)
-
-
-@inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
-@login_required
-def wizard_step3():
-    """Wizard Step 3: Select Hotels"""
-    from flask import session
-    from app.models.supplier import Supplier
-    
-    if 'wizard_data' not in session:
-        flash('Please start from step 1', 'warning')
-        return redirect(url_for('inbound.wizard_step1'))
-    
-    # Get hotel suppliers
-    hotels = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).all()
-    
-    if request.method == 'POST':
-        session['wizard_data']['selected_hotels'] = request.form.getlist('hotels')
-        session['wizard_data']['hotel_notes'] = request.form.get('hotel_notes', '')
-        session.modified = True
-        return redirect(url_for('inbound.wizard_step4'))
-    
-    return render_template('inbound/wizard_step3.html', hotels=hotels)
-
-
-@inbound_bp.route('/wizard/step4', methods=['GET', 'POST'])
-@login_required
-def wizard_step4():
-    """Wizard Step 4: Select Restaurants and Meals"""
-    from flask import session
-    from app.models.supplier import Supplier
-    
-    if 'wizard_data' not in session:
-        flash('Please start from step 1', 'warning')
-        return redirect(url_for('inbound.wizard_step1'))
-    
-    # Get restaurant suppliers
-    restaurants = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).all()
-    
-    if request.method == 'POST':
-        session['wizard_data']['selected_restaurants'] = request.form.getlist('restaurants')
-        session['wizard_data']['meal_notes'] = request.form.get('meal_notes', '')
-        session.modified = True
-        return redirect(url_for('inbound.wizard_step5'))
-    
-    return render_template('inbound/wizard_step4.html', restaurants=restaurants)
-
-
-@inbound_bp.route('/wizard/step5', methods=['GET', 'POST'])
-@login_required
-def wizard_step5():
-    """Wizard Step 5: Select Guides and Create Request"""
-    from flask import session
-    from app.models.supplier import Supplier
-    
-    if 'wizard_data' not in session:
-        flash('Please start from step 1', 'warning')
-        return redirect(url_for('inbound.wizard_step1'))
-    
-    # Get guide suppliers
-    guides = Supplier.query.filter_by(supplier_type='GUIDE', is_active=True).all()
     
     if request.method == 'POST':
         wizard_data = session['wizard_data']
-        wizard_data['selected_guides'] = request.form.getlist('guides')
-        wizard_data['guide_notes'] = request.form.get('guide_notes', '')
         
-        # Create the inbound request
-        arrival_date = datetime.strptime(wizard_data['arrival_date'], '%Y-%m-%d').date()
-        departure_date = datetime.strptime(wizard_data['departure_date'], '%Y-%m-%d').date()
+        # Create the InboundRequest
+        from_date = datetime.strptime(wizard_data['from_date'], '%Y-%m-%d').date()
+        to_date = datetime.strptime(wizard_data['to_date'], '%Y-%m-%d').date()
         
         request_obj = InboundRequest(
             request_number=InboundRequest.generate_request_number(),
-            from_date=arrival_date,
-            to_date=departure_date,
-            customer_type='AGENCY',
-            contact_name=wizard_data.get('contact_name', 'TBA'),
-            nationality=wizard_data.get('nationality', 'TBA'),
-            pax=int(wizard_data.get('pax', 1)),
+            from_date=from_date,
+            to_date=to_date,
+            no_of_days=wizard_data['no_of_days'],
+            customer_type=wizard_data['customer_type'],
+            contact_name=wizard_data['contact_name'],
+            agent_ref=wizard_data.get('agent_ref', ''),
+            nationality=wizard_data['nationality'],
+            pax=wizard_data['pax'],
+            special_note=wizard_data.get('special_note', ''),
             user_id=current_user.id,
-            status=STATUS_REQUEST,
-            special_note=f"Created via wizard\n\nArrival: {wizard_data['arrival_point']}\nDeparture: {wizard_data['departure_point']}\n\nDrivers: {wizard_data.get('driver_notes', '')}\nHotels: {wizard_data.get('hotel_notes', '')}\nMeals: {wizard_data.get('meal_notes', '')}\nGuides: {wizard_data.get('guide_notes', '')}"
+            status=STATUS_REQUEST
         )
-        request_obj.calculate_days()
         
         db.session.add(request_obj)
+        db.session.flush()  # Get the ID
+        
+        # Parse itinerary items from form
+        items_data = {}
+        for key, value in request.form.items():
+            if key.startswith('items['):
+                # Extract index and field name: items[0][date] -> 0, date
+                parts = key.split('[')
+                index = parts[1].split(']')[0]
+                field = parts[2].split(']')[0]
+                
+                if index not in items_data:
+                    items_data[index] = {}
+                items_data[index][field] = value
+        
+        # Create ItineraryRow objects
+        for index in sorted(items_data.keys(), key=int):
+            item = items_data[index]
+            
+            # Skip if no description
+            if not item.get('description'):
+                continue
+            
+            row = ItineraryRow(
+                request_id=request_obj.id,
+                date=datetime.strptime(item['date'], '%Y-%m-%d').date(),
+                description=item['description'],
+                base_cost=float(item.get('base_cost', 0) or 0),
+                cost_unit=item.get('cost_unit', COST_UNIT_PER_PERSON),
+                currency=item.get('currency', 'USD'),
+                
+                # Service flags
+                flag_hotel=item.get('flag_hotel') == 'on',
+                flag_transport=item.get('flag_transport') == 'on',
+                flag_meal=item.get('flag_meal') == 'on',
+                flag_guide=item.get('flag_guide') == 'on',
+                
+                # Hotel room distribution
+                hotel_single_rooms=int(item.get('hotel_single_rooms', 0) or 0),
+                hotel_double_rooms=int(item.get('hotel_double_rooms', 0) or 0),
+                hotel_triple_rooms=int(item.get('hotel_triple_rooms', 0) or 0),
+                hotel_other_rooms=int(item.get('hotel_other_rooms', 0) or 0)
+            )
+            
+            db.session.add(row)
+        
+        # Calculate total
+        db.session.flush()
+        request_obj.calculate_total()
+        
         db.session.commit()
         
         # Clear wizard data from session
         session.pop('wizard_data', None)
         
-        flash(f'Itinerary {request_obj.request_number} created successfully!', 'success')
+        flash(f'Tour itinerary {request_obj.request_number} created successfully!', 'success')
         return redirect(url_for('inbound.view_request', id=request_obj.id))
     
-    return render_template('inbound/wizard_step5.html', guides=guides)
+    # GET request
+    wizard_data = session.get('wizard_data', {})
+    return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)

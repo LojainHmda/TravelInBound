@@ -4,9 +4,9 @@
 
 {% block content %}
 <style>
-.wizard-container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
-.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; }
-.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 25%; height: 4px; background: linear-gradient(to right, #10b981, #8b5cf6); z-index: 0; }
+.wizard-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+.wizard-progress { display: flex; justify-content: space-between; margin-bottom: 3rem; position: relative; max-width: 300px; margin-left: auto; margin-right: auto; }
+.wizard-progress::before { content: ''; position: absolute; top: 20px; left: 0; width: 50%; height: 4px; background: linear-gradient(to right, #10b981, #8b5cf6); z-index: 0; }
 .progress-step { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; background: white; padding: 0 10px; z-index: 1; }
 .step-circle { width: 40px; height: 40px; border-radius: 50%; background: #e5e7eb; color: #6b7280; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 .progress-step.active .step-circle { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
@@ -14,74 +14,263 @@
 .step-label { font-size: 0.75rem; color: #6b7280; font-weight: 600; }
 .wizard-card { background: white; border-radius: 16px; padding: 2.5rem; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08); }
 .wizard-title { font-size: 1.75rem; font-weight: 700; color: #1a1a1a; margin-bottom: 0.5rem; }
-.wizard-subtitle { color: #6b7280; margin-bottom: 2rem; }
-.drivers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-.driver-card { background: #f9fafb; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; cursor: pointer; transition: all 0.3s; }
-.driver-card:hover { border-color: #8b5cf6; background: #faf5ff; }
-.driver-card input[type="checkbox"] { display: none; }
-.driver-card input[type="checkbox"]:checked ~ .driver-content { border-left: 4px solid #8b5cf6; padding-left: 1rem; }
-.driver-content { display: flex; align-items: center; gap: 1rem; }
-.driver-icon { width: 50px; height: 50px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem; flex-shrink: 0; }
-.driver-info h4 { font-size: 1rem; font-weight: 700; color: #1a1a1a; margin: 0 0 0.25rem 0; }
-.driver-info p { font-size: 0.85rem; color: #6b7280; margin: 0; }
+.wizard-subtitle { color: #6b7280; margin-bottom: 1.5rem; }
+.tour-summary { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-size: 0.9rem; }
+.tour-summary strong { color: #1e40af; }
+.itinerary-item { background: #faf5ff; border: 2px solid #e9d5ff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; position: relative; }
+.item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.item-number { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; font-size: 0.9rem; }
+.remove-item-btn { background: #ef4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+.remove-item-btn:hover { background: #dc2626; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
 .form-group { margin-bottom: 1rem; }
 .form-label { display: block; font-size: 0.9rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
-.form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; transition: all 0.3s; }
+.form-control { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; }
+.form-control:focus { outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
+.form-select { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; background: white; }
+.service-flags { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.flag-checkbox { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+.flag-checkbox:hover { border-color: #8b5cf6; background: #faf5ff; }
+.flag-checkbox input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #8b5cf6; }
+.flag-checkbox.checked { border-color: #8b5cf6; background: #f3e8ff; }
+.service-details { display: none; background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+.service-details.active { display: block; }
+.service-details h4 { font-size: 1rem; font-weight: 600; color: #8b5cf6; margin-bottom: 1rem; }
+.add-item-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 1rem 2rem; border-radius: 12px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.3s; margin-bottom: 2rem; }
+.add-item-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
 .wizard-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
 .btn { padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
 .btn-secondary { background: #f3f4f6; color: #374151; }
-.empty-state { text-align: center; padding: 3rem; color: #9ca3af; }
+.room-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .room-inputs { grid-template-columns: repeat(2, 1fr); } }
 </style>
 
 <div class="wizard-container">
     <div class="wizard-progress">
-        <div class="progress-step completed"><div class="step-circle"><i class="fas fa-check"></i></div><span class="step-label">Arrival & Departure</span></div>
-        <div class="progress-step active"><div class="step-circle">2</div><span class="step-label">Drivers</span></div>
-        <div class="progress-step"><div class="step-circle">3</div><span class="step-label">Hotels</span></div>
-        <div class="progress-step"><div class="step-circle">4</div><span class="step-label">Meals</span></div>
-        <div class="progress-step"><div class="step-circle">5</div><span class="step-label">Guides</span></div>
+        <div class="progress-step completed"><div class="step-circle"><i class="fas fa-check"></i></div><span class="step-label">Tour Details</span></div>
+        <div class="progress-step active"><div class="step-circle">2</div><span class="step-label">Build Itinerary</span></div>
     </div>
 
     <div class="wizard-card">
-        <h2 class="wizard-title"><i class="fas fa-bus"></i> Select Drivers</h2>
-        <p class="wizard-subtitle">Step 2: Choose transport providers for your tour</p>
+        <h2 class="wizard-title"><i class="fas fa-route"></i> Build Day-by-Day Itinerary</h2>
+        <p class="wizard-subtitle">Step 2: Create detailed itinerary with hotels, transport, meals, and guides</p>
 
-        <form method="POST">
+        <div class="tour-summary">
+            <strong>{{ wizard_data.contact_name }}</strong> | {{ wizard_data.pax }} PAX | {{ wizard_data.nationality }} | 
+            {{ wizard_data.from_date }} to {{ wizard_data.to_date }} ({{ wizard_data.no_of_days }} days)
+        </div>
+
+        <form method="POST" id="itineraryForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {% if drivers %}
-            <div class="drivers-grid">
-                {% for driver in drivers %}
-                <label class="driver-card">
-                    <input type="checkbox" name="drivers" value="{{ driver.id }}">
-                    <div class="driver-content">
-                        <div class="driver-icon"><i class="fas fa-car"></i></div>
-                        <div class="driver-info">
-                            <h4>{{ driver.name }}</h4>
-                            <p>{{ driver.contact_person or 'Transport Provider' }}</p>
-                        </div>
-                    </div>
-                </label>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="empty-state">
-                <i class="fas fa-car" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p>No drivers available. You can skip this step or add drivers in the Suppliers section.</p>
-            </div>
-            {% endif %}
             
-            <div class="form-group">
-                <label class="form-label">Driver Notes (Optional)</label>
-                <textarea name="driver_notes" class="form-control" rows="3" placeholder="Any special requirements or notes about transportation..."></textarea>
+            <div id="itineraryItems">
+                <!-- Itinerary items will be added here -->
             </div>
+
+            <button type="button" class="add-item-btn" onclick="addItineraryItem()">
+                <i class="fas fa-plus"></i>
+                Add Itinerary Day
+            </button>
 
             <div class="wizard-actions">
                 <a href="{{ url_for('inbound.wizard_step1') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
-                <button type="submit" class="btn btn-primary">Next: Select Hotels <i class="fas fa-arrow-right"></i></button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check-circle"></i>
+                    Create Tour
+                </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+let itemCount = 0;
+const tourData = {
+    fromDate: '{{ wizard_data.from_date }}',
+    toDate: '{{ wizard_data.to_date }}',
+    days: {{ wizard_data.no_of_days }}
+};
+
+function addItineraryItem() {
+    const container = document.getElementById('itineraryItems');
+    const index = itemCount++;
+    
+    // Calculate suggested date (increment from from_date)
+    const fromDate = new Date(tourData.fromDate);
+    const suggestedDate = new Date(fromDate);
+    suggestedDate.setDate(fromDate.getDate() + index);
+    const dateStr = suggestedDate.toISOString().split('T')[0];
+    
+    const itemHtml = `
+        <div class="itinerary-item" id="item${index}">
+            <div class="item-header">
+                <div class="item-number">Day ${index + 1}</div>
+                <button type="button" class="remove-item-btn" onclick="removeItem(${index})">
+                    <i class="fas fa-trash"></i> Remove
+                </button>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date *</label>
+                    <input type="date" name="items[${index}][date]" class="form-control" value="${dateStr}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cost Unit</label>
+                    <select name="items[${index}][cost_unit]" class="form-select">
+                        <option value="PER_PERSON">Per Person</option>
+                        <option value="PER_GROUP">Per Group</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Description *</label>
+                <textarea name="items[${index}][description]" class="form-control" rows="2" 
+                          placeholder="Describe the day's activities..." required></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Base Cost</label>
+                    <input type="number" name="items[${index}][base_cost]" class="form-control" 
+                           value="0" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select name="items[${index}][currency]" class="form-select">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="JOD">JOD</option>
+                    </select>
+                </div>
+            </div>
+            
+            <label class="form-label">Service Flags</label>
+            <div class="service-flags">
+                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'hotel')">
+                    <input type="checkbox" name="items[${index}][flag_hotel]" id="flag_hotel_${index}">
+                    <span><i class="fas fa-hotel"></i> Hotel</span>
+                </label>
+                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'transport')">
+                    <input type="checkbox" name="items[${index}][flag_transport]" id="flag_transport_${index}">
+                    <span><i class="fas fa-bus"></i> Transport</span>
+                </label>
+                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'meal')">
+                    <input type="checkbox" name="items[${index}][flag_meal]" id="flag_meal_${index}">
+                    <span><i class="fas fa-utensils"></i> Meal</span>
+                </label>
+                <label class="flag-checkbox" onclick="toggleFlag(${index}, 'guide')">
+                    <input type="checkbox" name="items[${index}][flag_guide]" id="flag_guide_${index}">
+                    <span><i class="fas fa-user-tie"></i> Guide</span>
+                </label>
+            </div>
+            
+            <div id="hotel_details_${index}" class="service-details">
+                <h4><i class="fas fa-hotel"></i> Hotel Room Distribution</h4>
+                <div class="room-inputs">
+                    <div class="form-group">
+                        <label class="form-label">Single Rooms</label>
+                        <input type="number" name="items[${index}][hotel_single_rooms]" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Double Rooms</label>
+                        <input type="number" name="items[${index}][hotel_double_rooms]" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Triple Rooms</label>
+                        <input type="number" name="items[${index}][hotel_triple_rooms]" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Other Rooms</label>
+                        <input type="number" name="items[${index}][hotel_other_rooms]" class="form-control" value="0" min="0">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="transport_details_${index}" class="service-details">
+                <h4><i class="fas fa-bus"></i> Transport Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Pickup Location</label>
+                        <input type="text" name="items[${index}][transport_pickup]" class="form-control" placeholder="e.g., Hotel lobby">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Dropoff Location</label>
+                        <input type="text" name="items[${index}][transport_dropoff]" class="form-control" placeholder="e.g., Airport">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="meal_details_${index}" class="service-details">
+                <h4><i class="fas fa-utensils"></i> Meal Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Meal Type</label>
+                        <select name="items[${index}][meal_type]" class="form-select">
+                            <option value="">Select Type</option>
+                            <option value="Breakfast">Breakfast</option>
+                            <option value="Lunch">Lunch</option>
+                            <option value="Dinner">Dinner</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Restaurant</label>
+                        <input type="text" name="items[${index}][meal_restaurant]" class="form-control" placeholder="Restaurant name">
+                    </div>
+                </div>
+            </div>
+            
+            <div id="guide_details_${index}" class="service-details">
+                <h4><i class="fas fa-user-tie"></i> Guide Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Service Type</label>
+                        <input type="text" name="items[${index}][guide_service_type]" class="form-control" placeholder="e.g., Meet & Greet, Tour Guide">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Language</label>
+                        <input type="text" name="items[${index}][guide_language]" class="form-control" placeholder="e.g., English, Spanish">
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', itemHtml);
+}
+
+function removeItem(index) {
+    const item = document.getElementById(`item${index}`);
+    if (item && confirm('Remove this itinerary day?')) {
+        item.remove();
+    }
+}
+
+function toggleFlag(index, type) {
+    // Prevent double-toggle from label click
+    event.stopPropagation();
+    
+    setTimeout(() => {
+        const checkbox = document.getElementById(`flag_${type}_${index}`);
+        const details = document.getElementById(`${type}_details_${index}`);
+        const label = checkbox.closest('.flag-checkbox');
+        
+        if (checkbox.checked) {
+            details.classList.add('active');
+            label.classList.add('checked');
+        } else {
+            details.classList.remove('active');
+            label.classList.remove('checked');
+        }
+    }, 10);
+}
+
+// Add first item on page load
+window.addEventListener('load', () => {
+    addItineraryItem();
+});
+</script>
 {% endblock %}
