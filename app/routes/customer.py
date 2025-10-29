@@ -323,6 +323,7 @@ def scan_passport():
         }), 500
 
 @customer_bp.route('/api/search')
+@login_required
 def api_search_customers():
     """API endpoint to search customers with filters"""
     # Get search parameters
