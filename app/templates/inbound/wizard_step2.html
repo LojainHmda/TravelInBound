@@ -218,16 +218,12 @@ function addService(type) {
             <div class="section-divider" style="margin: 2rem 0; border-top: 2px dashed #e5e7eb;"></div>
             
             <div class="room-list-section">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <label class="form-label mb-0" style="font-size: 1.05rem; font-weight: 700;">
-                        <i class="fas fa-list"></i> Room List & Passenger Details
-                    </label>
-                    <button type="button" class="btn-add-room" onclick="addHotelRoomToService(${index})" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">
-                        <i class="fas fa-plus"></i> Add Room
-                    </button>
-                </div>
-                <div id="roomsContainer-${index}" class="rooms-container">
-                    <!-- Rooms will be added here -->
+                <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">
+                    <i class="fas fa-list"></i> Room Details Table
+                </label>
+                <div id="roomsTableContainer-${index}" class="table-responsive">
+                    <!-- Table will be auto-generated based on room distribution -->
+                    <p class="text-muted" style="font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Set room distribution above to generate the table</p>
                 </div>
             </div>
             
@@ -268,17 +264,21 @@ function addService(type) {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Date*</label>
-                    <input type="date" name="services[${index}][date]" class="form-control" value="${defaultFromDate}" required>
+                    <label class="form-label">From Date*</label>
+                    <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Meal Type*</label>
-                    <select name="services[${index}][meal_type]" class="form-select" required>
-                        <option value="Breakfast">Breakfast</option>
-                        <option value="Lunch">Lunch</option>
-                        <option value="Dinner">Dinner</option>
-                    </select>
+                    <label class="form-label">To Date*</label>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Meal Type*</label>
+                <select name="services[${index}][meal_type]" class="form-select" required>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Restaurant*</label>
@@ -331,12 +331,24 @@ function removeService(index) {
 function increment(btn) {
     const input = btn.previousElementSibling;
     input.value = parseInt(input.value) + 1;
+    // Trigger table regeneration for hotel services
+    const serviceCard = btn.closest('.service-item');
+    if (serviceCard) {
+        const serviceIndex = serviceCard.id.replace('service-', '');
+        regenerateRoomTable(serviceIndex);
+    }
 }
 
 function decrement(btn) {
     const input = btn.nextElementSibling;
     if (parseInt(input.value) > 0) {
         input.value = parseInt(input.value) - 1;
+        // Trigger table regeneration for hotel services
+        const serviceCard = btn.closest('.service-item');
+        if (serviceCard) {
+            const serviceIndex = serviceCard.id.replace('service-', '');
+            regenerateRoomTable(serviceIndex);
+        }
     }
 }
 
@@ -349,7 +361,104 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Hotel room list management (borrowed from confirm_hotel.js)
+// Auto-generate room table based on distribution
+function regenerateRoomTable(serviceIndex) {
+    const container = document.getElementById(`roomsTableContainer-${serviceIndex}`);
+    if (!container) return;
+    
+    const serviceCard = document.getElementById(`service-${serviceIndex}`);
+    if (!serviceCard) return;
+    
+    // Get room distribution values
+    const singleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][single_rooms]"]`);
+    const doubleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][double_rooms]"]`);
+    const tripleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][triple_rooms]"]`);
+    const otherInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][other_rooms]"]`);
+    
+    const singles = parseInt(singleInput?.value || 0);
+    const doubles = parseInt(doubleInput?.value || 0);
+    const triples = parseInt(tripleInput?.value || 0);
+    const others = parseInt(otherInput?.value || 0);
+    
+    const totalRooms = singles + doubles + triples + others;
+    
+    if (totalRooms === 0) {
+        container.innerHTML = '<p class="text-muted" style="font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Set room distribution above to generate the table</p>';
+        return;
+    }
+    
+    // Build room list
+    const rooms = [];
+    for (let i = 0; i < singles; i++) rooms.push({ type: 'Single', defaultAdults: 1 });
+    for (let i = 0; i < doubles; i++) rooms.push({ type: 'Double', defaultAdults: 2 });
+    for (let i = 0; i < triples; i++) rooms.push({ type: 'Triple', defaultAdults: 3 });
+    for (let i = 0; i < others; i++) rooms.push({ type: 'Other', defaultAdults: 2 });
+    
+    // Generate table
+    let tableHTML = `
+        <table class="table table-bordered table-sm" style="font-size: 0.9rem;">
+            <thead style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 20%;">Room Type</th>
+                    <th style="width: 25%;">Board Basis</th>
+                    <th style="width: 10%;">Adults</th>
+                    <th style="width: 10%;">Children</th>
+                    <th style="width: 30%;">Lead Passenger</th>
+                </tr>
+            </thead>
+            <tbody>`;
+    
+    rooms.forEach((room, index) => {
+        tableHTML += `
+            <tr>
+                <td class="text-center" style="vertical-align: middle; font-weight: 600;">${index + 1}</td>
+                <td>
+                    <select name="services[${serviceIndex}][rooms][${index}][room_type]" class="form-select form-select-sm" required>
+                        <option value="">Select</option>
+                        <option value="Single Room" ${room.type === 'Single' ? 'selected' : ''}>Single Room</option>
+                        <option value="Double Room" ${room.type === 'Double' ? 'selected' : ''}>Double Room</option>
+                        <option value="Twin Room">Twin Room</option>
+                        <option value="Triple Room" ${room.type === 'Triple' ? 'selected' : ''}>Triple Room</option>
+                        <option value="Family Room">Family Room</option>
+                        <option value="Suite">Suite</option>
+                        <option value="Junior Suite">Junior Suite</option>
+                        <option value="Executive Suite">Executive Suite</option>
+                        <option value="Presidential Suite">Presidential Suite</option>
+                        <option value="Connecting Rooms">Connecting Rooms</option>
+                        <option value="Other" ${room.type === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </td>
+                <td>
+                    <select name="services[${serviceIndex}][rooms][${index}][board_basis]" class="form-select form-select-sm" required>
+                        <option value="Room Only">Room Only</option>
+                        <option value="Bed & Breakfast (BB)" selected>Bed & Breakfast (BB)</option>
+                        <option value="Half Board (HB)">Half Board (HB)</option>
+                        <option value="Full Board (FB)">Full Board (FB)</option>
+                        <option value="All Inclusive (AI)">All Inclusive (AI)</option>
+                        <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="services[${serviceIndex}][rooms][${index}][adults]" class="form-control form-control-sm" value="${room.defaultAdults}" min="0" required>
+                </td>
+                <td>
+                    <input type="number" name="services[${serviceIndex}][rooms][${index}][children]" class="form-control form-control-sm" value="0" min="0">
+                </td>
+                <td>
+                    <input type="text" name="services[${serviceIndex}][rooms][${index}][lead_passenger]" class="form-control form-control-sm" placeholder="Passenger name">
+                </td>
+            </tr>`;
+    });
+    
+    tableHTML += `
+            </tbody>
+        </table>`;
+    
+    container.innerHTML = tableHTML;
+}
+
+// OLD: Hotel room list management (dynamic cards - NO LONGER USED)
 function addHotelRoomToService(serviceIndex) {
     const container = document.getElementById(`roomsContainer-${serviceIndex}`);
     const roomIndex = container.children.length;

@@ -1852,8 +1852,9 @@ def wizard_step3():
                         itinerary_by_date[transport_date]['flag_transport'] = True
                 
                 elif service_type == 'meal':
-                    # Meal: single date
-                    meal_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
+                    # Meal: date range (FROM/TO dates)
+                    meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
+                    meal_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
                     meal_type = service.get('meal_type', 'Meal')
                     restaurant = service.get('restaurant', 'TBD')
                     cost = safe_float(service.get('cost'))
@@ -1861,26 +1862,29 @@ def wizard_step3():
                     
                     desc = f"{meal_type} at {restaurant}"
                     
-                    if meal_date not in itinerary_by_date:
-                        itinerary_by_date[meal_date] = {
-                            'date': meal_date,
-                            'description': desc,
-                            'base_cost': cost,
-                            'cost_unit': cost_unit,
-                            'flag_hotel': False,
-                            'hotel_single_rooms': 0,
-                            'hotel_double_rooms': 0,
-                            'hotel_triple_rooms': 0,
-                            'hotel_other_rooms': 0,
-                            'flag_transport': False,
-                            'flag_meal': True,
-                            'flag_guide': False
-                        }
-                    else:
-                        # Merge with existing
-                        itinerary_by_date[meal_date]['description'] += f" | {desc}"
-                        itinerary_by_date[meal_date]['base_cost'] += cost
-                        itinerary_by_date[meal_date]['flag_meal'] = True
+                    # Create row for each day in range (inclusive)
+                    meal_to_inclusive = meal_to + timedelta(days=1)
+                    for meal_date in date_range(meal_from, meal_to_inclusive):
+                        if meal_date not in itinerary_by_date:
+                            itinerary_by_date[meal_date] = {
+                                'date': meal_date,
+                                'description': desc,
+                                'base_cost': cost,
+                                'cost_unit': cost_unit,
+                                'flag_hotel': False,
+                                'hotel_single_rooms': 0,
+                                'hotel_double_rooms': 0,
+                                'hotel_triple_rooms': 0,
+                                'hotel_other_rooms': 0,
+                                'flag_transport': False,
+                                'flag_meal': True,
+                                'flag_guide': False
+                            }
+                        else:
+                            # Merge with existing
+                            itinerary_by_date[meal_date]['description'] += f" | {desc}"
+                            itinerary_by_date[meal_date]['base_cost'] += cost
+                            itinerary_by_date[meal_date]['flag_meal'] = True
                 
                 elif service_type == 'guide':
                     # Guide: date range
