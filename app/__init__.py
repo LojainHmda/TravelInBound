@@ -74,7 +74,7 @@ def create_app():
         # Register supplier and customer blueprints - removed conflicting supplier routes
         
         from app.routes.customer import customer_bp
-        app.register_blueprint(customer_bp, url_prefix='/customer')
+        app.register_blueprint(customer_bp)
         
         # Register confirmation blueprint
         from app.routes.confirmation import confirmation_bp

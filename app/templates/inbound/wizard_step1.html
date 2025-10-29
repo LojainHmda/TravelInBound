@@ -408,12 +408,7 @@ departureDateInput.addEventListener('change', calculateDays);
 
 // Calculate on page load if dates are pre-filled
 window.addEventListener('load', calculateDays);
-</script>
 
-<!-- Load Select2 AFTER jQuery (which is loaded in base.html) -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script>
 // Initialize customer Select2 autocomplete - ALL inside document.ready
 $(document).ready(function() {
     // Helper functions defined inside document.ready
