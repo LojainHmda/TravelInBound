@@ -30,4 +30,5 @@ dependencies = [
     "weasyprint>=65.1",
     "pdfkit>=1.0.0",
     "openpyxl>=3.1.5",
+    "python-docx>=1.2.0",
 ]
