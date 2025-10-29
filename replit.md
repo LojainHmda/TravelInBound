@@ -43,9 +43,9 @@ Preferred communication style: Simple, everyday language.
     - **Wizard Workflow for New Itineraries**: 3-step service-based wizard fully integrated with the inbound tour operator system:
         1. **Arrival & Departure**: Capture arrival/departure points (border/airport), dates, times, contact name (with Select2 customer autocomplete dropdown), customer type, nationality, PAX, and special notes. Automatically calculates tour duration. **Customer Autocomplete**: Select2-powered AJAX search integrated with customer database for quick customer selection.
         2. **Add Services**: Service-based wizard where ALL service types (hotels, transport, meals, guides) are added in one page using dynamic JavaScript cards with FROM/TO date logic that auto-generates itinerary rows. **Auto-filled Dates**: All service date fields automatically default to arrival/departure dates for improved UX:
-            - **Hotel Service**: Check-in/check-out dates (default to arrival/departure dates) with room distribution (single, double, triple, other rooms). **Enhanced Room List**: Detailed room-by-room management section appears AFTER room distribution with fields for room type (Single/Double/Twin/Triple/Suite/etc.), board basis (Room Only/BB/HB/FB/AI), adults, children, and lead passenger name. Supports dynamic room addition/removal with proper indexing. Auto-generates itinerary rows for each NIGHT with inherited rooming across all nights. Example: Check-in Jan 1 → Check-out Jan 4 creates 3 rows (Jan 1, 2, 3) with same rooming.
+            - **Hotel Service**: Check-in/check-out dates (default to arrival/departure dates) with room distribution (single, double, triple, other rooms). **Room Details Table**: Auto-generated table appears AFTER room distribution with rows matching distribution counts. Table columns include room type (pre-selected based on category), board basis (Room Only/BB/HB/FB/AI), adults (with smart defaults), children, and lead passenger name. Auto-generates itinerary rows for each NIGHT with inherited rooming across all nights. Example: Check-in Jan 1 → Check-out Jan 4 creates 3 rows (Jan 1, 2, 3) with same rooming.
             - **Transport Service**: Single date (defaults to arrival date) with pickup/dropoff locations and vehicle type. Creates itinerary row for that date with transport flag.
-            - **Meal Service**: Single date (defaults to arrival date) with meal type and restaurant selection. Creates itinerary row for that date with meal flag.
+            - **Meal Service**: FROM/TO date range (defaults to arrival/departure dates) with meal type and restaurant selection. Creates itinerary rows for each day in range with meal flag. Example: FROM Dec 25 → TO Dec 27 creates 3 rows (Dec 25, 26, 27).
             - **Guide Service**: FROM/TO date range (defaults to arrival/departure dates) with service type and language. Creates itinerary rows for each day in range with guide flag.
             - Services on the same date are automatically MERGED into a single itinerary row with multiple service flags.
             - Form field naming convention: `services[INDEX][FIELD_NAME]` for dynamic service addition/removal; nested room fields use `services[INDEX][rooms][ROOM_INDEX][FIELD_NAME]` pattern.
@@ -76,16 +76,18 @@ Preferred communication style: Simple, everyday language.
 
 2. **Auto-filled Service Dates (Step 2)**: All service date fields now intelligently default to itinerary arrival/departure dates:
    - Hotel check-in/out → arrival/departure dates
-   - Transport/Meal dates → arrival date
+   - Transport date → arrival date
+   - Meal from/to dates → arrival/departure dates (date range, not single date)
    - Guide from/to dates → arrival/departure dates
 
-3. **Enhanced Hotel Room List (Step 2)**: Added comprehensive room-by-room details section that appears AFTER room distribution:
-   - Dynamic room card management (add/remove rooms)
-   - Room type selection (Single, Double, Twin, Triple, Suite, etc.)
+3. **Enhanced Hotel Room Table (Step 2)**: Added comprehensive room details table that auto-generates based on room distribution:
+   - Table-based room management (no add/remove buttons - driven by distribution numbers)
+   - Auto-generates table rows matching distribution (e.g., 2 singles + 3 doubles = 5 rows)
+   - Room types pre-selected based on distribution category (Single/Double/Triple/Other)
+   - Table columns: #, Room Type, Board Basis, Adults, Children, Lead Passenger
    - Board basis options (Room Only, BB, HB, FB, AI, Ultra AI)
-   - Adults/Children counts
+   - Adults/Children counts with smart defaults (Single=1, Double=2, Triple=3)
    - Lead passenger name per room
-   - Automatic room numbering and index management
 
 4. **Robust Session Parsing**: Fixed backend parsing logic in `wizard_step2` route to handle nested data structures:
    - Simple fields: `services[INDEX][FIELD]`
