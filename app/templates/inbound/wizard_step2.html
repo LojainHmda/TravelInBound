@@ -198,15 +198,51 @@ function addService(type) {
                     <input type="date" name="services[${index}][check_out_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
-            <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">
-                <i class="fas fa-bed"></i> Room Details
-            </label>
-            <div id="hotelRoomsContainer-${index}" class="mb-3">
-                <!-- Room cards will be added here -->
+            
+            <!-- Master Room Configuration -->
+            <div class="mb-3" style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px; padding: 1.5rem;">
+                <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: #0c4a6e;">
+                    <i class="fas fa-cog"></i> Master Room Configuration
+                </label>
+                <div class="room-cards-container">
+                    <div class="room-card">
+                        <div class="room-card-title">Single Rooms</div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'single', -1)">−</button>
+                            <input type="number" id="masterSingleRooms-${index}" name="services[${index}][single_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'single', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="room-card">
+                        <div class="room-card-title">Double Rooms</div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'double', -1)">−</button>
+                            <input type="number" id="masterDoubleRooms-${index}" name="services[${index}][double_rooms]" class="counter-display" min="0" value="1" readonly style="border: none; background: transparent;">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'double', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="room-card">
+                        <div class="room-card-title">Triple Rooms</div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'triple', -1)">−</button>
+                            <input type="number" id="masterTripleRooms-${index}" name="services[${index}][triple_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'triple', 1)">+</button>
+                        </div>
+                    </div>
+                    <div class="room-card">
+                        <div class="room-card-title">Other Rooms</div>
+                        <div class="room-counter">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'other', -1)">−</button>
+                            <input type="number" id="masterOtherRooms-${index}" name="services[${index}][other_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
+                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'other', 1)">+</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <button type="button" class="btn btn-sm btn-primary" onclick="addHotelRoomToService(${index})">
-                <i class="fas fa-plus"></i> Add Room
-            </button>
+            
+            <div id="hotelRoomsContainer-${index}" class="mb-3" style="display: none;">
+                <!-- Hidden - room cards generated from master counts -->
+            </div>
             
             <input type="hidden" name="services[${index}][type]" value="hotel">`;
     } else if (type === 'transport') {
@@ -299,10 +335,9 @@ function addService(type) {
     container.insertAdjacentHTML('beforeend', html);
     services.push({ index, type });
     
-    // Auto-add first room for hotel services
+    // For hotel services, just attach listeners (rooms managed by master count)
     if (type === 'hotel') {
         setTimeout(() => {
-            addHotelRoomToService(index);
             attachDateListeners(index);
             updateItineraryPreview();
         }, 100);
@@ -447,6 +482,17 @@ function getIcon(type) {
 
 function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Adjust room count for master room configuration
+function adjustRoomCount(serviceIndex, roomType, change) {
+    const inputId = `master${capitalize(roomType)}Rooms-${serviceIndex}`;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    let currentValue = parseInt(input.value) || 0;
+    let newValue = Math.max(0, currentValue + change);
+    input.value = newValue;
 }
 
 // Hotel room management (dynamic cards like confirm_hotel.js)
