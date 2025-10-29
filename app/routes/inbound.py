@@ -1644,7 +1644,13 @@ def wizard_step2():
                     services_data[index] = {}
                 services_data[index][field] = value
         
-        # Store services in session by type
+        # Validate at least one service
+        if not services_data:
+            flash('Please add at least one service before continuing to review', 'warning')
+            wizard_data = session.get('wizard_data', {})
+            return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
+        
+        # Store services in session
         session['wizard_data']['services'] = services_data
         session.modified = True
         

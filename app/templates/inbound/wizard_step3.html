@@ -151,7 +151,7 @@
                         <strong>{{ service.date }}</strong>
                         {% if service.time %} at {{ service.time }}{% endif %}
                         <br>
-                        {{ service.pickup }} → {{ service.dropoff }}
+                        {{ service.pickup_location|default('TBD') }} → {{ service.dropoff_location|default('TBD') }}
                         {% if service.vehicle_type %}<br>Vehicle: {{ service.vehicle_type }}{% endif %}
                     </div>
                 {% elif service.type == 'meal' %}
@@ -170,7 +170,7 @@
                     <div style="font-size: 0.95rem;">
                         <strong>{{ service.from_date }}</strong> → <strong>{{ service.to_date }}</strong>
                         <br>
-                        {{ service.guide_type }}
+                        {{ service.guide_type|default('Guide Service') }}
                         {% if service.language %} ({{ service.language }}){% endif %}
                     </div>
                 {% endif %}
