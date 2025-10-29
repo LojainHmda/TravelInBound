@@ -32,6 +32,89 @@
 .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
 .btn-secondary { background: #f3f4f6; color: #374151; }
 .btn-secondary:hover { background: #e5e7eb; }
+
+/* Clean Select2 styling to match simple input fields */
+.select2-container--default .select2-selection--single {
+    height: auto !important;
+    padding: 0.75rem 1rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    font-size: 0.95rem !important;
+    background: white !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding: 0 !important;
+    line-height: 1.5 !important;
+    color: #374151 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #9ca3af !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    right: 10px !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1) !important;
+    outline: none !important;
+}
+
+.select2-dropdown {
+    border: 2px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 4px !important;
+}
+
+.select2-results__option {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+}
+
+.select2-results__option--highlighted {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+.select2-results__option--selected {
+    background: #ede9fe !important;
+    color: #6d28d9 !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    padding: 0.625rem !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    font-size: 0.9rem !important;
+}
+
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #8b5cf6 !important;
+    outline: none !important;
+}
+
+/* Customer result styling */
+.select2-result-customer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.select2-result-customer__title {
+    font-weight: 600;
+    color: #374151;
+}
+
+.select2-result-customer__description {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
 @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .wizard-progress { max-width: 500px; } .step-label { font-size: 0.65rem; max-width: 60px; } }
 </style>
 
