@@ -2,6 +2,11 @@
 
 {% block title %}New Itinerary - Step 2{% endblock %}
 
+{% block head %}
+<script src="{{ url_for('static', filename='js/hotel_autocomplete_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/hotel_autocomplete.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <style>
 .wizard-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
@@ -181,7 +186,7 @@ function addService(type) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Hotel Name*</label>
-                    <input type="text" name="services[${index}][hotel_name]" class="form-control" placeholder="e.g., Amman Rotana" required>
+                    <input type="text" id="hotelName-${index}" name="services[${index}][hotel_name]" class="form-control hotel-autocomplete" placeholder="e.g., Amman Rotana" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Location</label>
@@ -204,44 +209,33 @@ function addService(type) {
                 <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: #0c4a6e;">
                     <i class="fas fa-cog"></i> Master Room Configuration
                 </label>
-                <div class="room-cards-container">
-                    <div class="room-card">
-                        <div class="room-card-title">Single Rooms</div>
-                        <div class="room-counter">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'single', -1)">−</button>
-                            <input type="number" id="masterSingleRooms-${index}" name="services[${index}][single_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'single', 1)">+</button>
-                        </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Single Rooms</label>
+                        <input type="number" id="masterSingleRooms-${index}" name="services[${index}][single_rooms]" class="form-control" min="0" value="0">
                     </div>
-                    <div class="room-card">
-                        <div class="room-card-title">Double Rooms</div>
-                        <div class="room-counter">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'double', -1)">−</button>
-                            <input type="number" id="masterDoubleRooms-${index}" name="services[${index}][double_rooms]" class="counter-display" min="0" value="1" readonly style="border: none; background: transparent;">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'double', 1)">+</button>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Double Rooms</label>
+                        <input type="number" id="masterDoubleRooms-${index}" name="services[${index}][double_rooms]" class="form-control" min="0" value="1">
                     </div>
-                    <div class="room-card">
-                        <div class="room-card-title">Triple Rooms</div>
-                        <div class="room-counter">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'triple', -1)">−</button>
-                            <input type="number" id="masterTripleRooms-${index}" name="services[${index}][triple_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'triple', 1)">+</button>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Triple Rooms</label>
+                        <input type="number" id="masterTripleRooms-${index}" name="services[${index}][triple_rooms]" class="form-control" min="0" value="0">
                     </div>
-                    <div class="room-card">
-                        <div class="room-card-title">Other Rooms</div>
-                        <div class="room-counter">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'other', -1)">−</button>
-                            <input type="number" id="masterOtherRooms-${index}" name="services[${index}][other_rooms]" class="counter-display" min="0" value="0" readonly style="border: none; background: transparent;">
-                            <button type="button" class="counter-btn" onclick="adjustRoomCount(${index}, 'other', 1)">+</button>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Other Rooms</label>
+                        <input type="number" id="masterOtherRooms-${index}" name="services[${index}][other_rooms]" class="form-control" min="0" value="0">
                     </div>
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-primary" onclick="generateRoomTable(${index})">
+                        <i class="fas fa-table"></i> GENERATE Room Table
+                    </button>
                 </div>
             </div>
             
-            <div id="hotelRoomsContainer-${index}" class="mb-3" style="display: none;">
-                <!-- Hidden - room cards generated from master counts -->
+            <div id="hotelRoomsContainer-${index}" class="mb-3">
+                <!-- Room table will be generated here -->
             </div>
             
             <input type="hidden" name="services[${index}][type]" value="hotel">`;
@@ -274,6 +268,16 @@ function addService(type) {
                 <div class="form-group">
                     <label class="form-label">Time</label>
                     <input type="time" name="services[${index}][time]" class="form-control">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">From Date*</label>
+                    <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">To Date*</label>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
             <input type="hidden" name="services[${index}][type]" value="transport">`;
@@ -335,9 +339,13 @@ function addService(type) {
     container.insertAdjacentHTML('beforeend', html);
     services.push({ index, type });
     
-    // For hotel services, just attach listeners (rooms managed by master count)
+    // For hotel services, setup autocomplete and attach listeners
     if (type === 'hotel') {
         setTimeout(() => {
+            const hotelInput = document.getElementById(`hotelName-${index}`);
+            if (hotelInput && typeof setupHotelAutocomplete === 'function') {
+                setupHotelAutocomplete(hotelInput);
+            }
             attachDateListeners(index);
             updateItineraryPreview();
         }, 100);
@@ -484,15 +492,96 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Adjust room count for master room configuration
-function adjustRoomCount(serviceIndex, roomType, change) {
-    const inputId = `master${capitalize(roomType)}Rooms-${serviceIndex}`;
-    const input = document.getElementById(inputId);
-    if (!input) return;
+// Generate room table from master counts
+function generateRoomTable(serviceIndex) {
+    const singleCount = parseInt(document.getElementById(`masterSingleRooms-${serviceIndex}`).value) || 0;
+    const doubleCount = parseInt(document.getElementById(`masterDoubleRooms-${serviceIndex}`).value) || 0;
+    const tripleCount = parseInt(document.getElementById(`masterTripleRooms-${serviceIndex}`).value) || 0;
+    const otherCount = parseInt(document.getElementById(`masterOtherRooms-${serviceIndex}`).value) || 0;
     
-    let currentValue = parseInt(input.value) || 0;
-    let newValue = Math.max(0, currentValue + change);
-    input.value = newValue;
+    const container = document.getElementById(`hotelRoomsContainer-${serviceIndex}`);
+    container.innerHTML = '';
+    
+    let roomIndex = 0;
+    
+    // Add single rooms
+    for (let i = 0; i < singleCount; i++) {
+        addRoomToTable(serviceIndex, roomIndex++, 'Single Room', 1);
+    }
+    
+    // Add double rooms
+    for (let i = 0; i < doubleCount; i++) {
+        addRoomToTable(serviceIndex, roomIndex++, 'Double Room', 2);
+    }
+    
+    // Add triple rooms
+    for (let i = 0; i < tripleCount; i++) {
+        addRoomToTable(serviceIndex, roomIndex++, 'Triple Room', 3);
+    }
+    
+    // Add other rooms
+    for (let i = 0; i < otherCount; i++) {
+        addRoomToTable(serviceIndex, roomIndex++, 'Other', 1);
+    }
+    
+    console.log(`Generated ${roomIndex} rooms for service ${serviceIndex}`);
+}
+
+function addRoomToTable(serviceIndex, roomIndex, roomType, defaultAdults) {
+    const container = document.getElementById(`hotelRoomsContainer-${serviceIndex}`);
+    
+    const roomCard = document.createElement('div');
+    roomCard.className = 'hotel-room-card mb-3';
+    roomCard.style.cssText = 'border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; background-color: #eff6ff;';
+    
+    roomCard.innerHTML = \`
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0" style="color: #3b82f6; font-weight: 700;"><i class="fas fa-door-open"></i> Room \${roomIndex + 1} - \${roomType}</h6>
+        </div>
+        
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Room Type</label>
+                <select name="services[\${serviceIndex}][rooms][\${roomIndex}][room_type]" class="form-control" style="font-size: 0.9rem;">
+                    <option value="Single Room" \${roomType === 'Single Room' ? 'selected' : ''}>Single Room</option>
+                    <option value="Double Room" \${roomType === 'Double Room' ? 'selected' : ''}>Double Room</option>
+                    <option value="Twin Room" \${roomType === 'Twin Room' ? 'selected' : ''}>Twin Room</option>
+                    <option value="Triple Room" \${roomType === 'Triple Room' ? 'selected' : ''}>Triple Room</option>
+                    <option value="Other" \${roomType === 'Other' ? 'selected' : ''}>Other</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Board Basis</label>
+                <select name="services[\${serviceIndex}][rooms][\${roomIndex}][board_basis]" class="form-control" style="font-size: 0.9rem;">
+                    <option value="Room Only">Room Only</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Half Board">Half Board</option>
+                    <option value="Full Board">Full Board</option>
+                    <option value="All Inclusive">All Inclusive</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Adults</label>
+                <input type="number" name="services[\${serviceIndex}][rooms][\${roomIndex}][adults]" class="form-control" min="0" value="\${defaultAdults}" style="font-size: 0.9rem;">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Children</label>
+                <input type="number" name="services[\${serviceIndex}][rooms][\${roomIndex}][children]" class="form-control" min="0" value="0" style="font-size: 0.9rem;">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Lead Passenger</label>
+                <input type="text" name="services[\${serviceIndex}][rooms][\${roomIndex}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="font-size: 0.9rem;">
+            </div>
+        </div>
+    \`;
+    
+    container.appendChild(roomCard);
 }
 
 // Hotel room management (dynamic cards like confirm_hotel.js)
