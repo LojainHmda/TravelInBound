@@ -41,14 +41,15 @@ Preferred communication style: Simple, everyday language.
     - Dynamic UI elements for multi-segment flights and multi-room hotel bookings.
     - **Hub-Style Landing Page**: Modern tile-based home page with large, clickable cards for quick navigation to key features (New Itinerary, Bookings, Run-Down, Customers, Finance, Suppliers, Documents, Reports). Features floating action button (FAB) and quick stats bar.
     - **Wizard Workflow for New Itineraries**: 3-step service-based wizard fully integrated with the inbound tour operator system:
-        1. **Arrival & Departure**: Capture arrival/departure points (border/airport), dates, times, contact name, customer type, nationality, PAX, and special notes. Automatically calculates tour duration.
-        2. **Add Services**: Service-based wizard where ALL service types (hotels, transport, meals, guides) are added in one page using dynamic JavaScript cards with FROM/TO date logic that auto-generates itinerary rows:
-            - **Hotel Service**: Check-in/check-out dates with room distribution (single, double, triple, other rooms). Auto-generates itinerary rows for each NIGHT with inherited rooming across all nights. Example: Check-in Jan 1 → Check-out Jan 4 creates 3 rows (Jan 1, 2, 3) with same rooming.
-            - **Transport Service**: Single date with pickup/dropoff locations and vehicle type. Creates itinerary row for that date with transport flag.
-            - **Meal Service**: Single date with meal type and restaurant selection. Creates itinerary row for that date with meal flag.
-            - **Guide Service**: FROM/TO date range with service type and language. Creates itinerary rows for each day in range with guide flag.
+        1. **Arrival & Departure**: Capture arrival/departure points (border/airport), dates, times, contact name (with Select2 customer autocomplete dropdown), customer type, nationality, PAX, and special notes. Automatically calculates tour duration. **Customer Autocomplete**: Select2-powered AJAX search integrated with customer database for quick customer selection.
+        2. **Add Services**: Service-based wizard where ALL service types (hotels, transport, meals, guides) are added in one page using dynamic JavaScript cards with FROM/TO date logic that auto-generates itinerary rows. **Auto-filled Dates**: All service date fields automatically default to arrival/departure dates for improved UX:
+            - **Hotel Service**: Check-in/check-out dates (default to arrival/departure dates) with room distribution (single, double, triple, other rooms). **Enhanced Room List**: Detailed room-by-room management section appears AFTER room distribution with fields for room type (Single/Double/Twin/Triple/Suite/etc.), board basis (Room Only/BB/HB/FB/AI), adults, children, and lead passenger name. Supports dynamic room addition/removal with proper indexing. Auto-generates itinerary rows for each NIGHT with inherited rooming across all nights. Example: Check-in Jan 1 → Check-out Jan 4 creates 3 rows (Jan 1, 2, 3) with same rooming.
+            - **Transport Service**: Single date (defaults to arrival date) with pickup/dropoff locations and vehicle type. Creates itinerary row for that date with transport flag.
+            - **Meal Service**: Single date (defaults to arrival date) with meal type and restaurant selection. Creates itinerary row for that date with meal flag.
+            - **Guide Service**: FROM/TO date range (defaults to arrival/departure dates) with service type and language. Creates itinerary rows for each day in range with guide flag.
             - Services on the same date are automatically MERGED into a single itinerary row with multiple service flags.
-            - Form field naming convention: `services[INDEX][FIELD_NAME]` for dynamic service addition/removal.
+            - Form field naming convention: `services[INDEX][FIELD_NAME]` for dynamic service addition/removal; nested room fields use `services[INDEX][rooms][ROOM_INDEX][FIELD_NAME]` pattern.
+            - **Robust Parsing**: Backend parsing logic handles both simple 2-level fields and complex 3-level nested room structures, ensuring data integrity throughout wizard flow.
         3. **Review & Create**: Summary page showing all tour information and color-coded service cards (blue=hotel, purple=transport, yellow=meal, green=guide) before final submission.
     - Progressive wizard UI with 3-step indicators (purple gradient for active, green for completed), session-based data persistence, safe numeric parsing with validation, hotel date validation (check-out must be after check-in), service merging logic, empty-service validation, and proper transaction rollback on errors.
     - Professional top navigation with a "Die Menu" dropdown system and mobile responsiveness.
@@ -65,5 +66,28 @@ Preferred communication style: Simple, everyday language.
 - **AI/ML**: OpenAI (for AI-powered document scanning and data extraction)
 - **PDF Processing**: `pdf2image`, `pypdf2`, `pillow`, `reportlab`, `weasyprint` (for PDF generation and image conversion)
 - **Communication**: Twilio (for SMS integration)
-- **Frontend Libraries**: Bootstrap 5, FontAwesome, Chart.js (for data visualization)
+- **Frontend Libraries**: Bootstrap 5, FontAwesome, Chart.js (for data visualization), Select2 (for enhanced autocomplete dropdowns)
 - **OAuth**: Replit Auth (via Flask-Dance)
+
+## Recent Enhancements (October 2025)
+
+### Wizard Improvements
+1. **Customer Autocomplete (Step 1)**: Replaced plain text input with Select2-powered autocomplete dropdown that searches the customer database via AJAX (`/customers/api/search` endpoint). Includes proper jQuery dependency management (Select2 loads after jQuery from base.html).
+
+2. **Auto-filled Service Dates (Step 2)**: All service date fields now intelligently default to itinerary arrival/departure dates:
+   - Hotel check-in/out → arrival/departure dates
+   - Transport/Meal dates → arrival date
+   - Guide from/to dates → arrival/departure dates
+
+3. **Enhanced Hotel Room List (Step 2)**: Added comprehensive room-by-room details section that appears AFTER room distribution:
+   - Dynamic room card management (add/remove rooms)
+   - Room type selection (Single, Double, Twin, Triple, Suite, etc.)
+   - Board basis options (Room Only, BB, HB, FB, AI, Ultra AI)
+   - Adults/Children counts
+   - Lead passenger name per room
+   - Automatic room numbering and index management
+
+4. **Robust Session Parsing**: Fixed backend parsing logic in `wizard_step2` route to handle nested data structures:
+   - Simple fields: `services[INDEX][FIELD]`
+   - Nested room fields: `services[INDEX][rooms][ROOM_INDEX][FIELD]`
+   - Ensures data integrity when services with room details flow through session storage across wizard steps
