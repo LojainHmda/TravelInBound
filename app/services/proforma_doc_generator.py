@@ -125,21 +125,21 @@ class ProformaDocGenerator:
     
     def _add_service_table(self, service_items):
         """Add table of service items"""
-        # Create table
-        table = self.doc.add_table(rows=1, cols=6)
+        # Create table with simple columns: #, Service, Pax, Total
+        table = self.doc.add_table(rows=1, cols=4)
         table.style = 'Light Grid Accent 1'
         table.autofit = False
         table.allow_autofit = False
         
         # Set column widths
-        widths = [Inches(0.5), Inches(2.5), Inches(1.2), Inches(0.8), Inches(1.0), Inches(1.0)]
+        widths = [Inches(0.5), Inches(4.5), Inches(1.0), Inches(1.5)]
         for idx, width in enumerate(widths):
             for cell in table.columns[idx].cells:
                 cell.width = width
         
         # Header row
         header_cells = table.rows[0].cells
-        headers = ['#', 'Service Description', 'Date Range', 'Pax', 'Unit Price', 'Total']
+        headers = ['#', 'Service Description', 'Passengers', 'Amount']
         
         for idx, header in enumerate(headers):
             cell = header_cells[idx]
@@ -148,64 +148,54 @@ class ProformaDocGenerator:
             for paragraph in cell.paragraphs:
                 for run in paragraph.runs:
                     run.bold = True
-                    run.font.size = Pt(10)
+                    run.font.size = Pt(11)
                     run.font.color.rgb = RGBColor(31, 41, 55)
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             # Set background color
             shading_elm = OxmlElement('w:shd')
-            shading_elm.set(qn('w:fill'), 'EFD992')
+            shading_elm.set(qn('w:fill'), 'D1D5DB')
             cell._element.get_or_add_tcPr().append(shading_elm)
         
         # Add service rows
         for idx, item in enumerate(service_items, 1):
             row_cells = table.add_row().cells
             row_cells[0].text = str(idx)
+            row_cells[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            # Service description
             row_cells[1].text = item.get('description', '')
             
-            # Date range
-            date_from = item.get('date_from', '')
-            date_to = item.get('date_to', '')
-            if date_from and date_to:
-                if date_from == date_to:
-                    row_cells[2].text = str(date_from)
-                else:
-                    row_cells[2].text = f"{date_from} to {date_to}"
-            elif date_from:
-                row_cells[2].text = str(date_from)
-            else:
-                row_cells[2].text = '-'
+            # Passengers
+            row_cells[2].text = str(item.get('pax', ''))
+            row_cells[2].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             
-            row_cells[3].text = str(item.get('pax', ''))
-            row_cells[4].text = f"${item.get('unit_price', 0):.2f}"
-            row_cells[5].text = f"${item.get('total', 0):.2f}"
-            
-            # Center align numeric columns
-            for cell_idx in [0, 3, 4, 5]:
-                row_cells[cell_idx].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            # Amount
+            row_cells[3].text = f"${item.get('total', 0):.2f}"
+            row_cells[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
         
         # Add totals row
         total_row = table.add_row().cells
-        total_row[0].merge(total_row[4])
-        total_row[0].text = 'TOTAL'
+        total_row[0].merge(total_row[2])
+        total_row[0].text = 'TOTAL QUOTE'
         total_row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for paragraph in total_row[0].paragraphs:
             for run in paragraph.runs:
                 run.bold = True
-                run.font.size = Pt(11)
+                run.font.size = Pt(12)
         
         # Calculate and add total
         total_amount = sum(item.get('total', 0) for item in service_items)
-        total_row[5].text = f"${total_amount:.2f}"
-        total_row[5].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for paragraph in total_row[5].paragraphs:
+        total_row[3].text = f"${total_amount:.2f}"
+        total_row[3].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        for paragraph in total_row[3].paragraphs:
             for run in paragraph.runs:
                 run.bold = True
-                run.font.size = Pt(11)
+                run.font.size = Pt(12)
         
         # Style total row
-        for cell in [total_row[0], total_row[5]]:
+        for cell in [total_row[0], total_row[3]]:
             shading_elm = OxmlElement('w:shd')
-            shading_elm.set(qn('w:fill'), 'FFFBEB')
+            shading_elm.set(qn('w:fill'), 'FEF3C7')
             cell._element.get_or_add_tcPr().append(shading_elm)
         
         self.doc.add_paragraph()
