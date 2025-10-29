@@ -1582,6 +1582,9 @@ def wizard_step1():
         to_dt = datetime.strptime(departure_date, '%Y-%m-%d').date()
         no_of_days = (to_dt - from_dt).days + 1
         
+        # Get customer_id if selected, otherwise use contact_name
+        customer_id = request.form.get('customer_id', '')
+        
         # Store wizard data in session
         session['wizard_data'] = {
             # Arrival/Departure info
@@ -1595,6 +1598,7 @@ def wizard_step1():
             'departure_reference': request.form.get('departure_reference', ''),
             
             # Contact & Group info
+            'customer_id': customer_id if customer_id else None,
             'contact_name': request.form.get('contact_name'),
             'agent_ref': request.form.get('agent_ref', ''),
             'customer_type': request.form.get('customer_type', 'AGENCY'),

@@ -140,6 +140,10 @@
 </div>
 
 <script>
+// Get default dates from wizard data
+const defaultFromDate = '{{ wizard_data.from_date or '' }}';
+const defaultToDate = '{{ wizard_data.to_date or '' }}';
+
 let serviceCount = 0;
 const services = [];
 
@@ -168,11 +172,11 @@ function addService(type) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Check-in Date*</label>
-                    <input type="date" name="services[${index}][check_in_date]" class="form-control" required>
+                    <input type="date" name="services[${index}][check_in_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Check-out Date*</label>
-                    <input type="date" name="services[${index}][check_out_date]" class="form-control" required>
+                    <input type="date" name="services[${index}][check_out_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
             <label class="form-label">Room Distribution</label>
@@ -215,7 +219,7 @@ function addService(type) {
         html += `
             <div class="form-group">
                 <label class="form-label">Date*</label>
-                <input type="date" name="services[${index}][date]" class="form-control" required>
+                <input type="date" name="services[${index}][date]" class="form-control" value="${defaultFromDate}" required>
             </div>
             <div class="form-row">
                 <div class="form-group">
@@ -248,7 +252,7 @@ function addService(type) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Date*</label>
-                    <input type="date" name="services[${index}][date]" class="form-control" required>
+                    <input type="date" name="services[${index}][date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Meal Type*</label>
@@ -269,11 +273,11 @@ function addService(type) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">From Date*</label>
-                    <input type="date" name="services[${index}][from_date]" class="form-control" required>
+                    <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">To Date*</label>
-                    <input type="date" name="services[${index}][to_date]" class="form-control" required>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
             <div class="form-row">
