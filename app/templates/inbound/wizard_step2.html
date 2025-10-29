@@ -126,6 +126,25 @@
                 <!-- Services will be added here dynamically -->
             </div>
 
+            <!-- Itinerary Preview Grid -->
+            <div id="itineraryPreview" class="mt-5" style="display: none;">
+                <h4 class="mb-3"><i class="fas fa-calendar-check"></i> Itinerary Preview</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Service Flags</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itineraryPreviewBody">
+                            <!-- Preview rows will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="wizard-actions">
                 <a href="{{ url_for('inbound.wizard_step1') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back
@@ -179,53 +198,15 @@ function addService(type) {
                     <input type="date" name="services[${index}][check_out_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
-            <label class="form-label">Room Distribution</label>
-            <div class="room-cards-container">
-                <div class="room-card">
-                    <div class="room-card-title">Single</div>
-                    <div class="room-counter">
-                        <button type="button" class="counter-btn" onclick="decrement(this)">−</button>
-                        <input type="number" name="services[${index}][single_rooms]" value="0" class="counter-display" style="border:none; background:transparent;" readonly>
-                        <button type="button" class="counter-btn" onclick="increment(this)">+</button>
-                    </div>
-                </div>
-                <div class="room-card">
-                    <div class="room-card-title">Double</div>
-                    <div class="room-counter">
-                        <button type="button" class="counter-btn" onclick="decrement(this)">−</button>
-                        <input type="number" name="services[${index}][double_rooms]" value="0" class="counter-display" style="border:none; background:transparent;" readonly>
-                        <button type="button" class="counter-btn" onclick="increment(this)">+</button>
-                    </div>
-                </div>
-                <div class="room-card">
-                    <div class="room-card-title">Triple</div>
-                    <div class="room-counter">
-                        <button type="button" class="counter-btn" onclick="decrement(this)">−</button>
-                        <input type="number" name="services[${index}][triple_rooms]" value="0" class="counter-display" style="border:none; background:transparent;" readonly>
-                        <button type="button" class="counter-btn" onclick="increment(this)">+</button>
-                    </div>
-                </div>
-                <div class="room-card">
-                    <div class="room-card-title">Other</div>
-                    <div class="room-counter">
-                        <button type="button" class="counter-btn" onclick="decrement(this)">−</button>
-                        <input type="number" name="services[${index}][other_rooms]" value="0" class="counter-display" style="border:none; background:transparent;" readonly>
-                        <button type="button" class="counter-btn" onclick="increment(this)">+</button>
-                    </div>
-                </div>
+            <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">
+                <i class="fas fa-bed"></i> Room Details
+            </label>
+            <div id="hotelRoomsContainer-${index}" class="mb-3">
+                <!-- Room cards will be added here -->
             </div>
-            
-            <div class="section-divider" style="margin: 2rem 0; border-top: 2px dashed #e5e7eb;"></div>
-            
-            <div class="room-list-section">
-                <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">
-                    <i class="fas fa-list"></i> Room Details Table
-                </label>
-                <div id="roomsTableContainer-${index}" class="table-responsive">
-                    <!-- Table will be auto-generated based on room distribution -->
-                    <p class="text-muted" style="font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Set room distribution above to generate the table</p>
-                </div>
-            </div>
+            <button type="button" class="btn btn-sm btn-primary" onclick="addHotelRoomToService(${index})">
+                <i class="fas fa-plus"></i> Add Room
+            </button>
             
             <input type="hidden" name="services[${index}][type]" value="hotel">`;
     } else if (type === 'transport') {
@@ -317,6 +298,31 @@ function addService(type) {
     html += `</div>`;
     container.insertAdjacentHTML('beforeend', html);
     services.push({ index, type });
+    
+    // Auto-add first room for hotel services
+    if (type === 'hotel') {
+        setTimeout(() => {
+            addHotelRoomToService(index);
+            attachDateListeners(index);
+            updateItineraryPreview();
+        }, 100);
+    } else {
+        setTimeout(() => {
+            attachDateListeners(index);
+            updateItineraryPreview();
+        }, 100);
+    }
+}
+
+// Attach change listeners to date inputs to update preview
+function attachDateListeners(serviceIndex) {
+    const serviceDiv = document.getElementById(`service-${serviceIndex}`);
+    if (!serviceDiv) return;
+    
+    const dateInputs = serviceDiv.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        input.addEventListener('change', () => updateItineraryPreview());
+    });
 }
 
 function removeService(index) {
@@ -325,31 +331,113 @@ function removeService(index) {
         elem.remove();
         const idx = services.findIndex(s => s.index === index);
         if (idx > -1) services.splice(idx, 1);
+        updateItineraryPreview();
     }
 }
 
-function increment(btn) {
-    const input = btn.previousElementSibling;
-    input.value = parseInt(input.value) + 1;
-    // Trigger table regeneration for hotel services
-    const serviceCard = btn.closest('.service-item');
-    if (serviceCard) {
-        const serviceIndex = serviceCard.id.replace('service-', '');
-        regenerateRoomTable(serviceIndex);
+// Update itinerary preview grid
+function updateItineraryPreview() {
+    const preview = document.getElementById('itineraryPreview');
+    const tbody = document.getElementById('itineraryPreviewBody');
+    
+    if (services.length === 0) {
+        preview.style.display = 'none';
+        return;
     }
-}
-
-function decrement(btn) {
-    const input = btn.nextElementSibling;
-    if (parseInt(input.value) > 0) {
-        input.value = parseInt(input.value) - 1;
-        // Trigger table regeneration for hotel services
-        const serviceCard = btn.closest('.service-item');
-        if (serviceCard) {
-            const serviceIndex = serviceCard.id.replace('service-', '');
-            regenerateRoomTable(serviceIndex);
+    
+    preview.style.display = 'block';
+    tbody.innerHTML = '';
+    
+    // Collect all date ranges from services
+    const dateMap = new Map();
+    
+    services.forEach(service => {
+        const serviceDiv = document.getElementById(`service-${service.index}`);
+        if (!serviceDiv) return;
+        
+        let fromDate, toDate;
+        const type = service.type;
+        
+        if (type === 'hotel') {
+            fromDate = serviceDiv.querySelector(`input[name="services[${service.index}][check_in_date]"]`)?.value;
+            toDate = serviceDiv.querySelector(`input[name="services[${service.index}][check_out_date]"]`)?.value;
+            if (fromDate && toDate) {
+                const checkIn = new Date(fromDate);
+                const checkOut = new Date(toDate);
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                
+                for (let i = 0; i < nights; i++) {
+                    const currentDate = new Date(checkIn);
+                    currentDate.setDate(currentDate.getDate() + i);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    
+                    if (!dateMap.has(dateStr)) {
+                        dateMap.set(dateStr, { date: currentDate, services: [] });
+                    }
+                    dateMap.get(dateStr).services.push({ type: 'hotel', icon: 'hotel', color: '#3b82f6' });
+                }
+            }
+        } else if (type === 'transport') {
+            const date = serviceDiv.querySelector(`input[name="services[${service.index}][date]"]`)?.value;
+            if (date) {
+                if (!dateMap.has(date)) {
+                    dateMap.set(date, { date: new Date(date), services: [] });
+                }
+                dateMap.get(date).services.push({ type: 'transport', icon: 'bus', color: '#8b5cf6' });
+            }
+        } else if (type === 'meal' || type === 'guide') {
+            fromDate = serviceDiv.querySelector(`input[name="services[${service.index}][from_date]"]`)?.value;
+            toDate = serviceDiv.querySelector(`input[name="services[${service.index}][to_date]"]`)?.value;
+            
+            if (fromDate && toDate) {
+                const start = new Date(fromDate);
+                const end = new Date(toDate);
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                
+                for (let i = 0; i < days; i++) {
+                    const currentDate = new Date(start);
+                    currentDate.setDate(currentDate.getDate() + i);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    
+                    if (!dateMap.has(dateStr)) {
+                        dateMap.set(dateStr, { date: currentDate, services: [] });
+                    }
+                    const icon = type === 'meal' ? 'utensils' : 'user-tie';
+                    const color = type === 'meal' ? '#f59e0b' : '#10b981';
+                    dateMap.get(dateStr).services.push({ type, icon, color });
+                }
+            }
         }
-    }
+    });
+    
+    // Sort dates and render
+    const sortedDates = Array.from(dateMap.entries()).sort((a, b) => a[1].date - b[1].date);
+    
+    sortedDates.forEach(([dateStr, data], dayIndex) => {
+        const row = document.createElement('tr');
+        
+        // Format date
+        const dateObj = data.date;
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        // Create service flags HTML
+        const flagsHTML = data.services.map(s => 
+            `<i class="fas fa-${s.icon}" style="color: ${s.color}; font-size: 1.2rem; margin: 0 4px;" title="${s.type}"></i>`
+        ).join('');
+        
+        row.innerHTML = `
+            <td style="white-space: nowrap;">${formattedDate}</td>
+            <td>Day ${dayIndex + 1}</td>
+            <td>${flagsHTML}</td>
+        `;
+        
+        tbody.appendChild(row);
+    });
 }
 
 function getIcon(type) {
@@ -361,106 +449,9 @@ function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-// Auto-generate room table based on distribution
-function regenerateRoomTable(serviceIndex) {
-    const container = document.getElementById(`roomsTableContainer-${serviceIndex}`);
-    if (!container) return;
-    
-    const serviceCard = document.getElementById(`service-${serviceIndex}`);
-    if (!serviceCard) return;
-    
-    // Get room distribution values
-    const singleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][single_rooms]"]`);
-    const doubleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][double_rooms]"]`);
-    const tripleInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][triple_rooms]"]`);
-    const otherInput = serviceCard.querySelector(`input[name="services[${serviceIndex}][other_rooms]"]`);
-    
-    const singles = parseInt(singleInput?.value || 0);
-    const doubles = parseInt(doubleInput?.value || 0);
-    const triples = parseInt(tripleInput?.value || 0);
-    const others = parseInt(otherInput?.value || 0);
-    
-    const totalRooms = singles + doubles + triples + others;
-    
-    if (totalRooms === 0) {
-        container.innerHTML = '<p class="text-muted" style="font-size: 0.9rem;"><i class="fas fa-info-circle"></i> Set room distribution above to generate the table</p>';
-        return;
-    }
-    
-    // Build room list
-    const rooms = [];
-    for (let i = 0; i < singles; i++) rooms.push({ type: 'Single', defaultAdults: 1 });
-    for (let i = 0; i < doubles; i++) rooms.push({ type: 'Double', defaultAdults: 2 });
-    for (let i = 0; i < triples; i++) rooms.push({ type: 'Triple', defaultAdults: 3 });
-    for (let i = 0; i < others; i++) rooms.push({ type: 'Other', defaultAdults: 2 });
-    
-    // Generate table
-    let tableHTML = `
-        <table class="table table-bordered table-sm" style="font-size: 0.9rem;">
-            <thead style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;">
-                <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 20%;">Room Type</th>
-                    <th style="width: 25%;">Board Basis</th>
-                    <th style="width: 10%;">Adults</th>
-                    <th style="width: 10%;">Children</th>
-                    <th style="width: 30%;">Lead Passenger</th>
-                </tr>
-            </thead>
-            <tbody>`;
-    
-    rooms.forEach((room, index) => {
-        tableHTML += `
-            <tr>
-                <td class="text-center" style="vertical-align: middle; font-weight: 600;">${index + 1}</td>
-                <td>
-                    <select name="services[${serviceIndex}][rooms][${index}][room_type]" class="form-select form-select-sm" required>
-                        <option value="">Select</option>
-                        <option value="Single Room" ${room.type === 'Single' ? 'selected' : ''}>Single Room</option>
-                        <option value="Double Room" ${room.type === 'Double' ? 'selected' : ''}>Double Room</option>
-                        <option value="Twin Room">Twin Room</option>
-                        <option value="Triple Room" ${room.type === 'Triple' ? 'selected' : ''}>Triple Room</option>
-                        <option value="Family Room">Family Room</option>
-                        <option value="Suite">Suite</option>
-                        <option value="Junior Suite">Junior Suite</option>
-                        <option value="Executive Suite">Executive Suite</option>
-                        <option value="Presidential Suite">Presidential Suite</option>
-                        <option value="Connecting Rooms">Connecting Rooms</option>
-                        <option value="Other" ${room.type === 'Other' ? 'selected' : ''}>Other</option>
-                    </select>
-                </td>
-                <td>
-                    <select name="services[${serviceIndex}][rooms][${index}][board_basis]" class="form-select form-select-sm" required>
-                        <option value="Room Only">Room Only</option>
-                        <option value="Bed & Breakfast (BB)" selected>Bed & Breakfast (BB)</option>
-                        <option value="Half Board (HB)">Half Board (HB)</option>
-                        <option value="Full Board (FB)">Full Board (FB)</option>
-                        <option value="All Inclusive (AI)">All Inclusive (AI)</option>
-                        <option value="Ultra All Inclusive">Ultra All Inclusive</option>
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="services[${serviceIndex}][rooms][${index}][adults]" class="form-control form-control-sm" value="${room.defaultAdults}" min="0" required>
-                </td>
-                <td>
-                    <input type="number" name="services[${serviceIndex}][rooms][${index}][children]" class="form-control form-control-sm" value="0" min="0">
-                </td>
-                <td>
-                    <input type="text" name="services[${serviceIndex}][rooms][${index}][lead_passenger]" class="form-control form-control-sm" placeholder="Passenger name">
-                </td>
-            </tr>`;
-    });
-    
-    tableHTML += `
-            </tbody>
-        </table>`;
-    
-    container.innerHTML = tableHTML;
-}
-
-// OLD: Hotel room list management (dynamic cards - NO LONGER USED)
+// Hotel room management (dynamic cards like confirm_hotel.js)
 function addHotelRoomToService(serviceIndex) {
-    const container = document.getElementById(`roomsContainer-${serviceIndex}`);
+    const container = document.getElementById(`hotelRoomsContainer-${serviceIndex}`);
     const roomIndex = container.children.length;
     
     const roomCard = document.createElement('div');
@@ -535,7 +526,8 @@ function removeHotelRoomFromService(button, serviceIndex) {
 }
 
 function updateRoomNumbersInService(serviceIndex) {
-    const container = document.getElementById(`roomsContainer-${serviceIndex}`);
+    const container = document.getElementById(`hotelRoomsContainer-${serviceIndex}`);
+    if (!container) return;
     const roomCards = container.querySelectorAll('.hotel-room-card');
     
     roomCards.forEach((card, index) => {
