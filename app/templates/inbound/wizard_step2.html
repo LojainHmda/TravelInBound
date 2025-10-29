@@ -534,25 +534,25 @@ function addRoomToTable(serviceIndex, roomIndex, roomType, defaultAdults) {
     roomCard.className = 'hotel-room-card mb-3';
     roomCard.style.cssText = 'border: 2px solid #3b82f6; border-radius: 8px; padding: 15px; background-color: #eff6ff;';
     
-    roomCard.innerHTML = \`
+    roomCard.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0" style="color: #3b82f6; font-weight: 700;"><i class="fas fa-door-open"></i> Room \${roomIndex + 1} - \${roomType}</h6>
+            <h6 class="mb-0" style="color: #3b82f6; font-weight: 700;"><i class="fas fa-door-open"></i> Room ${roomIndex + 1} - ${roomType}</h6>
         </div>
         
         <div class="row mb-2">
             <div class="col-md-6">
                 <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Room Type</label>
-                <select name="services[\${serviceIndex}][rooms][\${roomIndex}][room_type]" class="form-control" style="font-size: 0.9rem;">
-                    <option value="Single Room" \${roomType === 'Single Room' ? 'selected' : ''}>Single Room</option>
-                    <option value="Double Room" \${roomType === 'Double Room' ? 'selected' : ''}>Double Room</option>
-                    <option value="Twin Room" \${roomType === 'Twin Room' ? 'selected' : ''}>Twin Room</option>
-                    <option value="Triple Room" \${roomType === 'Triple Room' ? 'selected' : ''}>Triple Room</option>
-                    <option value="Other" \${roomType === 'Other' ? 'selected' : ''}>Other</option>
+                <select name="services[${serviceIndex}][rooms][${roomIndex}][room_type]" class="form-control" style="font-size: 0.9rem;">
+                    <option value="Single Room" ${roomType === 'Single Room' ? 'selected' : ''}>Single Room</option>
+                    <option value="Double Room" ${roomType === 'Double Room' ? 'selected' : ''}>Double Room</option>
+                    <option value="Twin Room" ${roomType === 'Twin Room' ? 'selected' : ''}>Twin Room</option>
+                    <option value="Triple Room" ${roomType === 'Triple Room' ? 'selected' : ''}>Triple Room</option>
+                    <option value="Other" ${roomType === 'Other' ? 'selected' : ''}>Other</option>
                 </select>
             </div>
             <div class="col-md-6">
                 <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Board Basis</label>
-                <select name="services[\${serviceIndex}][rooms][\${roomIndex}][board_basis]" class="form-control" style="font-size: 0.9rem;">
+                <select name="services[${serviceIndex}][rooms][${roomIndex}][board_basis]" class="form-control" style="font-size: 0.9rem;">
                     <option value="Room Only">Room Only</option>
                     <option value="Breakfast">Breakfast</option>
                     <option value="Half Board">Half Board</option>
@@ -565,21 +565,21 @@ function addRoomToTable(serviceIndex, roomIndex, roomType, defaultAdults) {
         <div class="row mb-2">
             <div class="col-md-6">
                 <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Adults</label>
-                <input type="number" name="services[\${serviceIndex}][rooms][\${roomIndex}][adults]" class="form-control" min="0" value="\${defaultAdults}" style="font-size: 0.9rem;">
+                <input type="number" name="services[${serviceIndex}][rooms][${roomIndex}][adults]" class="form-control" min="0" value="${defaultAdults}" style="font-size: 0.9rem;">
             </div>
             <div class="col-md-6">
                 <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Children</label>
-                <input type="number" name="services[\${serviceIndex}][rooms][\${roomIndex}][children]" class="form-control" min="0" value="0" style="font-size: 0.9rem;">
+                <input type="number" name="services[${serviceIndex}][rooms][${roomIndex}][children]" class="form-control" min="0" value="0" style="font-size: 0.9rem;">
             </div>
         </div>
         
         <div class="row">
             <div class="col-md-12">
                 <label class="form-label" style="font-size: 0.85rem; font-weight: 600; color: #374151;">Lead Passenger</label>
-                <input type="text" name="services[\${serviceIndex}][rooms][\${roomIndex}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="font-size: 0.9rem;">
+                <input type="text" name="services[${serviceIndex}][rooms][${roomIndex}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="font-size: 0.9rem;">
             </div>
         </div>
-    \`;
+    `;
     
     container.appendChild(roomCard);
 }
