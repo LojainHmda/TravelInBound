@@ -414,8 +414,36 @@ window.addEventListener('load', calculateDays);
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-// Initialize customer Select2 autocomplete
+// Initialize customer Select2 autocomplete - ALL inside document.ready
 $(document).ready(function() {
+    // Helper functions defined inside document.ready
+    function formatCustomer(customer) {
+        if (customer.loading) {
+            return customer.text;
+        }
+        
+        var $container = $(
+            "<div class='select2-result-customer clearfix'>" +
+            "<div class='select2-result-customer__meta'>" +
+            "<div class='select2-result-customer__title'></div>" +
+            "<div class='select2-result-customer__description'></div>" +
+            "</div>" +
+            "</div>"
+        );
+        
+        $container.find('.select2-result-customer__title').text(customer.name);
+        $container.find('.select2-result-customer__description').text(
+            customer.email + (customer.company_name ? ' | ' + customer.company_name : '')
+        );
+        
+        return $container;
+    }
+    
+    function formatCustomerSelection(customer) {
+        return customer.name || customer.text;
+    }
+    
+    // Initialize Select2
     $('#customerSelect').select2({
         ajax: {
             url: '/customers/api/search',
@@ -450,107 +478,81 @@ $(document).ready(function() {
     $('#customerSelect').on('select2:clear', function (e) {
         $('#contactNameHidden').val('');
     });
-});
-
-function formatCustomer(customer) {
-    if (customer.loading) {
-        return customer.text;
-    }
     
-    var $container = $(
-        "<div class='select2-result-customer clearfix'>" +
-        "<div class='select2-result-customer__meta'>" +
-        "<div class='select2-result-customer__title'></div>" +
-        "<div class='select2-result-customer__description'></div>" +
-        "</div>" +
-        "</div>"
-    );
+    // Handle "Create New Customer" link click
+    $('#createCustomerLink').on('click', function(e) {
+        e.preventDefault();
+        $('#createCustomerModal').modal('show');
+        $('#createCustomerForm')[0].reset();
+        $('#createCustomerError').hide();
+    });
     
-    $container.find('.select2-result-customer__title').text(customer.name);
-    $container.find('.select2-result-customer__description').text(
-        customer.email + (customer.company_name ? ' | ' + customer.company_name : '')
-    );
-    
-    return $container;
-}
-
-function formatCustomerSelection(customer) {
-    return customer.name || customer.text;
-}
-
-// Handle "Create New Customer" link click
-$('#createCustomerLink').on('click', function(e) {
-    e.preventDefault();
-    $('#createCustomerModal').modal('show');
-    $('#createCustomerForm')[0].reset();
-    $('#createCustomerError').hide();
-});
-
-// Handle customer creation
-$('#saveCustomerBtn').on('click', function() {
-    const firstName = $('#newCustomerFirstName').val().trim();
-    const lastName = $('#newCustomerLastName').val().trim();
-    const email = $('#newCustomerEmail').val().trim();
-    const phone = $('#newCustomerPhone').val().trim();
-    const companyName = $('#newCustomerCompany').val().trim();
-    const nationality = $('#newCustomerNationality').val().trim();
-    const customerType = $('#newCustomerType').val();
-    
-    // Validate required fields
-    if (!firstName || !email || !phone) {
-        $('#createCustomerError').text('First name, email, and phone are required.').show();
-        return;
-    }
-    
-    // Disable button and show loading
-    $('#saveCustomerBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
-    $('#createCustomerError').hide();
-    
-    // Submit via AJAX
-    $.ajax({
-        url: '/customers/api/create',
-        method: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            phone: phone,
-            company_name: companyName,
-            nationality: nationality,
-            customer_type: customerType
-        }),
-        success: function(response) {
-            if (response.success) {
-                // Add the new customer to the Select2 dropdown
-                const newOption = new Option(
-                    response.customer.name, 
-                    response.customer.id, 
-                    true, 
-                    true
-                );
-                $('#customerSelect').append(newOption).trigger('change');
-                
-                // Update hidden contact name field
-                $('#contactNameHidden').val(response.customer.name);
-                
-                // Close modal and reset form
-                $('#createCustomerModal').modal('hide');
-                $('#createCustomerForm')[0].reset();
-                
-                // Show success message (optional - you can add a toast notification here)
-                console.log('Customer created successfully:', response.customer.name);
-            } else {
-                $('#createCustomerError').text(response.error || 'Failed to create customer').show();
-            }
-        },
-        error: function(xhr) {
-            const errorMsg = xhr.responseJSON?.error || 'An error occurred while creating the customer';
-            $('#createCustomerError').text(errorMsg).show();
-        },
-        complete: function() {
-            $('#saveCustomerBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Create Customer');
+    // Handle customer creation
+    $('#saveCustomerBtn').on('click', function() {
+        const firstName = $('#newCustomerFirstName').val().trim();
+        const lastName = $('#newCustomerLastName').val().trim();
+        const email = $('#newCustomerEmail').val().trim();
+        const phone = $('#newCustomerPhone').val().trim();
+        const companyName = $('#newCustomerCompany').val().trim();
+        const nationality = $('#newCustomerNationality').val().trim();
+        const customerType = $('#newCustomerType').val();
+        
+        // Validate required fields
+        if (!firstName || !email || !phone) {
+            $('#createCustomerError').text('First name, email, and phone are required.').show();
+            return;
         }
+        
+        // Disable button and show loading
+        $('#saveCustomerBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Creating...');
+        $('#createCustomerError').hide();
+        
+        // Submit via AJAX
+        $.ajax({
+            url: '/customers/api/create',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                phone: phone,
+                company_name: companyName,
+                nationality: nationality,
+                customer_type: customerType
+            }),
+            success: function(response) {
+                if (response.success) {
+                    // Add the new customer to the Select2 dropdown
+                    const newOption = new Option(
+                        response.customer.name, 
+                        response.customer.id, 
+                        true, 
+                        true
+                    );
+                    $('#customerSelect').append(newOption).trigger('change');
+                    
+                    // Update hidden contact name field
+                    $('#contactNameHidden').val(response.customer.name);
+                    
+                    // Close modal and reset form
+                    $('#createCustomerModal').modal('hide');
+                    $('#createCustomerForm')[0].reset();
+                    
+                    // Show success message
+                    console.log('Customer created successfully:', response.customer.name);
+                } else {
+                    $('#createCustomerError').text(response.error || 'Failed to create customer').show();
+                }
+            },
+            error: function(xhr) {
+                const errorMsg = xhr.responseJSON?.error || 'An error occurred while creating the customer';
+                $('#createCustomerError').text(errorMsg).show();
+            },
+            complete: function() {
+                $('#saveCustomerBtn').prop('disabled', false).html('<i class="fas fa-check"></i> Create Customer');
+            }
+        });
     });
 });
 </script>
