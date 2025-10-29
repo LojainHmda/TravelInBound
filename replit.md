@@ -73,12 +73,16 @@ Preferred communication style: Simple, everyday language.
 
 ### Wizard Improvements (Latest - October 2025)
 
-1. **Clean Customer Lookup (Step 1)**: 
-   - Select2-powered autocomplete dropdown with clean, modern styling
+1. **Contact & Group Information - FIRST SECTION (Step 1)**: 
+   - **Section Order**: Contact & Group Information appears FIRST, before Arrival/Departure sections
+   - **Customer Dropdown**: Select2-powered autocomplete with clean, modern styling
    - Searches customer database via AJAX (`/customers/api/search` endpoint)
-   - Matches form design with custom CSS overrides
    - Placeholder text: "Search for customer..."
    - Shows customer name, email, and company in dropdown results
+   - **Create New Customer**: Click "Create New Customer" link to open modal
+   - Modal form with fields: First Name, Last Name, Email, Phone, Company, Nationality, Customer Type
+   - AJAX submission to `/customers/api/create` endpoint
+   - Newly created customer auto-selected in dropdown
 
 2. **Auto-filled Service Dates (Step 2)**: 
    - All service date fields intelligently default to itinerary arrival/departure dates:
