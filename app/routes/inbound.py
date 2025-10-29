@@ -1219,6 +1219,131 @@ def api_export_proforma_doc(request_id):
         flash(f'Error generating proforma document: {str(e)}', 'error')
         return redirect(url_for('inbound.view_request', request_id=request_id))
 
+@inbound_bp.route('/api/<int:request_id>/export-voucher-doc', methods=['GET'])
+@login_required
+def api_export_voucher_doc(request_id):
+    """Export trip voucher as Word document with full itinerary"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
+        
+        # Collect tour information
+        customer_name = request_obj.contact_name
+        if request_obj.customer_id:
+            customer = Customer.query.get(request_obj.customer_id)
+            if customer:
+                customer_name = customer.name
+        
+        tour_data = {
+            'reference': request_obj.request_number,
+            'guest_name': customer_name,
+            'nationality': request_obj.nationality,
+            'pax': request_obj.pax,
+            'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
+            'to_date': request_obj.to_date.strftime('%d %b %Y') if request_obj.to_date else '',
+            'no_of_days': request_obj.no_of_days,
+            'agent_ref': request_obj.agent_ref
+        }
+        
+        # Collect hotel details
+        hotels_data = []
+        for hotel in request_obj.inbound_hotels:
+            rooms_info = []
+            for room in hotel.rooms:
+                rooms_info.append(f"{room.room_type}: {room.adults}A + {room.children}C")
+            
+            hotels_data.append({
+                'name': hotel.hotel_name or 'Hotel TBA',
+                'location': hotel.location or 'TBA',
+                'check_in': hotel.check_in_date.strftime('%d %b %Y') if hotel.check_in_date else 'TBA',
+                'check_out': hotel.check_out_date.strftime('%d %b %Y') if hotel.check_out_date else 'TBA',
+                'rooms': ', '.join(rooms_info) if rooms_info else 'Rooms TBA',
+                'board_basis': hotel.meal_plan or 'BB'
+            })
+        
+        # Build day-by-day itinerary from itinerary rows
+        itinerary_days = []
+        day_number = 1
+        
+        for row in sorted(request_obj.itinerary_rows, key=lambda x: x.date):
+            services = []
+            
+            # Find services for this date
+            if row.flag_hotel:
+                hotels_for_date = [h for h in request_obj.inbound_hotels 
+                                  if h.check_in_date == row.date]
+                for hotel in hotels_for_date:
+                    services.append({
+                        'type': 'HOTEL',
+                        'description': f"{hotel.hotel_name or 'Hotel TBA'} - {hotel.location or ''}"
+                    })
+            
+            if row.flag_transport:
+                transports_for_date = [t for t in request_obj.inbound_transports 
+                                      if t.date == row.date or (t.end_date and t.date <= row.date <= t.end_date)]
+                for transport in transports_for_date:
+                    services.append({
+                        'type': 'TRANSPORT',
+                        'description': f"{transport.vehicle_type or 'Vehicle'} from {transport.pickup_location or 'TBA'} to {transport.dropoff_location or 'TBA'}"
+                    })
+            
+            if row.flag_meal:
+                meals_for_date = [m for m in request_obj.inbound_meals 
+                                 if m.date == row.date or (m.end_date and m.date <= row.date <= m.end_date)]
+                for meal in meals_for_date:
+                    services.append({
+                        'type': 'MEAL',
+                        'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'Restaurant'}"
+                    })
+            
+            if row.flag_guide:
+                guides_for_date = [g for g in request_obj.inbound_guides 
+                                  if g.date == row.date or (g.end_date and g.date <= row.date <= g.end_date)]
+                for guide in guides_for_date:
+                    services.append({
+                        'type': 'GUIDE',
+                        'description': f"{guide.service_type or 'Guide Service'} - {guide.guide_name or 'TBA'}"
+                    })
+            
+            itinerary_days.append({
+                'day_number': day_number,
+                'date': row.date.strftime('%A, %d %b %Y'),
+                'description': row.description,
+                'services': services
+            })
+            day_number += 1
+        
+        # Prepare voucher data
+        voucher_data = {
+            'voucher_number': request_obj.request_number,
+            'voucher_date': datetime.now().strftime('%d %b %Y'),
+            'company_name': 'Arabi Travel',
+            'company_address': 'Amman, Jordan',
+            'tour': tour_data,
+            'hotels': hotels_data,
+            'itinerary_days': itinerary_days
+        }
+        
+        # Generate Word document
+        generator = VoucherTripPlanGenerator()
+        output_path = generator.generate_voucher(voucher_data)
+        
+        # Send file for download
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f'Voucher_{request_obj.request_number}.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating voucher document: {str(e)}', 'error')
+        return redirect(url_for('inbound.view_request', id=request_id))
+
 @inbound_bp.route('/api/<int:request_id>/confirm-booking', methods=['POST'])
 @login_required
 def api_confirm_booking(request_id):
