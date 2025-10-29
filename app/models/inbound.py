@@ -54,6 +54,7 @@ class InboundRequest(db.Model):
     inbound_transports = db.relationship('InboundTransport', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
+    inbound_cash_expenses = db.relationship('InboundCashExpense', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
     
     def __repr__(self):
@@ -199,6 +200,7 @@ class InboundTransport(db.Model):
     
     # Transport details
     date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)  # For multi-day transport services
     vehicle_type = db.Column(db.String(100), nullable=True)
     pickup_location = db.Column(db.String(200), nullable=True)
     dropoff_location = db.Column(db.String(200), nullable=True)
@@ -233,6 +235,7 @@ class InboundMeal(db.Model):
     
     # Meal details
     date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)  # For multi-day meal packages
     meal_type = db.Column(db.String(50), nullable=True)  # Breakfast, Lunch, Dinner
     restaurant = db.Column(db.String(200), nullable=True)
     location = db.Column(db.String(200), nullable=True)
@@ -267,6 +270,7 @@ class InboundGuide(db.Model):
     
     # Guide details
     date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)  # For multi-day guide services
     guide_name = db.Column(db.String(100), nullable=True)
     language = db.Column(db.String(50), nullable=True)
     service_type = db.Column(db.String(100), nullable=True)  # Meet & Greet, Tour Guide, etc.
@@ -288,3 +292,38 @@ class InboundGuide(db.Model):
     
     def __repr__(self):
         return f'<InboundGuide {self.guide_name} - {self.date}>'
+
+class InboundCashExpense(db.Model):
+    """Cash expenses for inbound tours (tips, entrance fees, misc costs)"""
+    __tablename__ = 'inbound_cash_expense'
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    # Expense details
+    date = db.Column(db.Date, nullable=False)
+    category = db.Column(db.String(100), nullable=True)  # Tips, Entrance Fees, Parking, Misc
+    description = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(200), nullable=True)
+    
+    # Costing
+    amount = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(3), default='USD')
+    is_per_person = db.Column(db.Boolean, default=False)  # True if per person, False if total
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<InboundCashExpense {self.category} - {self.date}>'
+    
+    def calculate_total_cost(self, pax_count):
+        """Calculate total cost based on whether it's per person or total"""
+        if self.is_per_person:
+            return (self.amount or 0) * pax_count
+        else:
+            return self.amount or 0

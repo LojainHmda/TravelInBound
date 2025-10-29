@@ -1,20 +1,23 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, send_file
 from flask_login import current_user, login_required
 from datetime import datetime, timedelta
 import json
+import os
 
 from app import db
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
-    InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
+    InboundMeal, InboundGuide, InboundCashExpense, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
 from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
 from app.models.booking import Booking
+from app.models.customer import Customer
 from app.forms.inbound import (
     InboundRequestForm, ItineraryRowForm, InboundHotelForm, 
     InboundTransportForm, InboundMealForm, InboundGuideForm
 )
+from app.services.proforma_doc_generator import ProformaDocGenerator
 
 # Create blueprint for inbound tour operator routes
 inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
@@ -1089,6 +1092,132 @@ def api_generate_proforma(request_id):
             'success': False,
             'message': f'Error generating proforma invoice: {str(e)}'
         }), 500
+
+@inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
+@login_required
+def api_export_proforma_doc(request_id):
+    """Export proforma invoice as Word document with service line items"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        # Collect customer information
+        customer_data = {}
+        if request_obj.customer_id:
+            customer = Customer.query.get(request_obj.customer_id)
+            if customer:
+                customer_data = {
+                    'name': customer.name,
+                    'company_name': customer.company_name,
+                    'email': customer.email,
+                    'phone': customer.phone,
+                    'nationality': customer.nationality
+                }
+        else:
+            # Use contact name from request if no customer linked
+            customer_data = {
+                'name': request_obj.contact_name,
+                'nationality': request_obj.nationality
+            }
+        
+        # Collect tour information
+        tour_data = {
+            'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
+            'to_date': request_obj.to_date.strftime('%d %b %Y') if request_obj.to_date else '',
+            'pax': request_obj.pax,
+            'nationality': request_obj.nationality
+        }
+        
+        # Collect all service items with date ranges
+        service_items = []
+        
+        # Add hotels
+        for hotel in request_obj.inbound_hotels:
+            service_items.append({
+                'description': f"Hotel: {hotel.hotel_name or 'TBD'} - {hotel.location or ''} ({hotel.room_type or 'Standard'}, {hotel.meal_plan or 'BB'})",
+                'date_from': hotel.check_in_date,
+                'date_to': hotel.check_out_date,
+                'pax': request_obj.pax,
+                'unit_price': hotel.cost_per_night,
+                'total': hotel.total_cost
+            })
+        
+        # Add transport
+        for transport in request_obj.inbound_transports:
+            service_items.append({
+                'description': f"Transport: {transport.vehicle_type or 'Vehicle'} - {transport.pickup_location or ''} to {transport.dropoff_location or ''}",
+                'date_from': transport.date,
+                'date_to': transport.end_date if transport.end_date else transport.date,
+                'pax': request_obj.pax,
+                'unit_price': transport.cost,
+                'total': transport.cost
+            })
+        
+        # Add meals
+        for meal in request_obj.inbound_meals:
+            service_items.append({
+                'description': f"Meal: {meal.meal_type or 'Meal'} at {meal.restaurant or 'Restaurant'} - {meal.location or ''}",
+                'date_from': meal.date,
+                'date_to': meal.end_date if meal.end_date else meal.date,
+                'pax': request_obj.pax,
+                'unit_price': meal.cost_per_person,
+                'total': meal.total_cost
+            })
+        
+        # Add guides
+        for guide in request_obj.inbound_guides:
+            service_items.append({
+                'description': f"Guide: {guide.service_type or 'Guide Service'} - {guide.guide_name or 'TBD'} ({guide.language or 'English'})",
+                'date_from': guide.date,
+                'date_to': guide.end_date if guide.end_date else guide.date,
+                'pax': request_obj.pax,
+                'unit_price': guide.cost,
+                'total': guide.cost
+            })
+        
+        # Add cash expenses
+        for expense in request_obj.inbound_cash_expenses:
+            total_expense = expense.calculate_total_cost(request_obj.pax)
+            service_items.append({
+                'description': f"{expense.category or 'Expense'}: {expense.description} - {expense.location or ''}",
+                'date_from': expense.date,
+                'date_to': expense.date,
+                'pax': request_obj.pax if expense.is_per_person else 1,
+                'unit_price': expense.amount,
+                'total': total_expense
+            })
+        
+        # Sort service items by date
+        service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
+        
+        # Prepare invoice data
+        invoice_data = {
+            'invoice_number': request_obj.request_number,
+            'invoice_date': datetime.now().strftime('%d %b %Y'),
+            'company_name': 'Arabi Travel',
+            'company_address': 'Amman, Jordan',
+            'customer': customer_data,
+            'tour': tour_data,
+            'service_items': service_items
+        }
+        
+        # Generate Word document
+        generator = ProformaDocGenerator()
+        output_path = generator.generate_proforma(invoice_data)
+        
+        # Send file for download
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f'Proforma_{request_obj.request_number}.docx',
+            mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating proforma document: {str(e)}', 'error')
+        return redirect(url_for('inbound.view_request', request_id=request_id))
 
 @inbound_bp.route('/api/<int:request_id>/confirm-booking', methods=['POST'])
 @login_required

@@ -2049,6 +2049,11 @@ body {
                 </button>
                 {% endif %}
                 
+                <!-- Export Proforma Word Document Button (always available) -->
+                <a href="/inbound/api/{{ request.id }}/export-proforma-doc" class="action-btn action-btn-export" style="text-decoration: none;">
+                    <i class="fas fa-file-word"></i> Export Proforma (Word)
+                </a>
+                
                 <!-- Confirm Booking Button (shown after proforma invoice) -->
                 {% if request.booking_id and request.booking.invoice_number %}
                 <button type="button" class="action-btn action-btn-confirm" onclick="confirmBooking()">
