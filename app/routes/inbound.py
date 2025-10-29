@@ -18,6 +18,7 @@ from app.forms.inbound import (
     InboundTransportForm, InboundMealForm, InboundGuideForm
 )
 from app.services.proforma_doc_generator import ProformaDocGenerator
+from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
 
 # Create blueprint for inbound tour operator routes
 inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
@@ -1229,8 +1230,6 @@ def api_export_voucher_doc(request_id):
         abort(403)
     
     try:
-        from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
-        
         # Collect tour information
         customer_name = request_obj.contact_name
         if request_obj.customer_id:
