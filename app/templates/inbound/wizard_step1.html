@@ -183,7 +183,8 @@
                     <label class="form-label">
                         Customer Type<span class="required">*</span>
                     </label>
-                    <select name="customer_type" class="form-select" required>
+                    <select name="customer_type" id="customerType" class="form-select" required style="background: #f3f4f6;">
+                        <option value="">Auto-filled from customer</option>
                         <option value="AGENCY" {% if wizard_data.customer_type == 'AGENCY' %}selected{% endif %}>Travel Agency</option>
                         <option value="GROUP" {% if wizard_data.customer_type == 'GROUP' %}selected{% endif %}>Group Tour</option>
                         <option value="COMPANY" {% if wizard_data.customer_type == 'COMPANY' %}selected{% endif %}>Company</option>
@@ -194,9 +195,32 @@
                     <label class="form-label">
                         Nationality<span class="required">*</span>
                     </label>
-                    <input type="text" name="nationality" class="form-control" 
-                           placeholder="e.g., American, British" 
-                           value="{{ wizard_data.nationality or '' }}" required>
+                    <select name="nationality" id="nationality" class="form-select" required>
+                        <option value="">Select nationality</option>
+                        <option value="American" {% if wizard_data.nationality == 'American' %}selected{% endif %}>American</option>
+                        <option value="British" {% if wizard_data.nationality == 'British' %}selected{% endif %}>British</option>
+                        <option value="Canadian" {% if wizard_data.nationality == 'Canadian' %}selected{% endif %}>Canadian</option>
+                        <option value="Australian" {% if wizard_data.nationality == 'Australian' %}selected{% endif %}>Australian</option>
+                        <option value="German" {% if wizard_data.nationality == 'German' %}selected{% endif %}>German</option>
+                        <option value="French" {% if wizard_data.nationality == 'French' %}selected{% endif %}>French</option>
+                        <option value="Italian" {% if wizard_data.nationality == 'Italian' %}selected{% endif %}>Italian</option>
+                        <option value="Spanish" {% if wizard_data.nationality == 'Spanish' %}selected{% endif %}>Spanish</option>
+                        <option value="Chinese" {% if wizard_data.nationality == 'Chinese' %}selected{% endif %}>Chinese</option>
+                        <option value="Japanese" {% if wizard_data.nationality == 'Japanese' %}selected{% endif %}>Japanese</option>
+                        <option value="Korean" {% if wizard_data.nationality == 'Korean' %}selected{% endif %}>Korean</option>
+                        <option value="Indian" {% if wizard_data.nationality == 'Indian' %}selected{% endif %}>Indian</option>
+                        <option value="Brazilian" {% if wizard_data.nationality == 'Brazilian' %}selected{% endif %}>Brazilian</option>
+                        <option value="Mexican" {% if wizard_data.nationality == 'Mexican' %}selected{% endif %}>Mexican</option>
+                        <option value="Argentinian" {% if wizard_data.nationality == 'Argentinian' %}selected{% endif %}>Argentinian</option>
+                        <option value="Russian" {% if wizard_data.nationality == 'Russian' %}selected{% endif %}>Russian</option>
+                        <option value="Saudi" {% if wizard_data.nationality == 'Saudi' %}selected{% endif %}>Saudi</option>
+                        <option value="Emirati" {% if wizard_data.nationality == 'Emirati' %}selected{% endif %}>Emirati</option>
+                        <option value="Jordanian" {% if wizard_data.nationality == 'Jordanian' %}selected{% endif %}>Jordanian</option>
+                        <option value="Egyptian" {% if wizard_data.nationality == 'Egyptian' %}selected{% endif %}>Egyptian</option>
+                        <option value="Lebanese" {% if wizard_data.nationality == 'Lebanese' %}selected{% endif %}>Lebanese</option>
+                        <option value="Turkish" {% if wizard_data.nationality == 'Turkish' %}selected{% endif %}>Turkish</option>
+                        <option value="Other" {% if wizard_data.nationality == 'Other' %}selected{% endif %}>Other</option>
+                    </select>
                 </div>
             </div>
 
@@ -466,14 +490,26 @@ $(document).ready(function() {
         templateSelection: formatCustomerSelection
     });
     
-    // Update hidden contact_name field when customer is selected
+    // Update hidden contact_name field and auto-populate fields when customer is selected
     $('#customerSelect').on('select2:select', function (e) {
         const data = e.params.data;
         $('#contactNameHidden').val(data.name);
+        
+        // Auto-populate customer type if available
+        if (data.customer_type) {
+            $('#customerType').val(data.customer_type);
+        }
+        
+        // Auto-populate nationality if available
+        if (data.nationality) {
+            $('#nationality').val(data.nationality);
+        }
     });
     
     $('#customerSelect').on('select2:clear', function (e) {
         $('#contactNameHidden').val('');
+        $('#customerType').val('');
+        $('#nationality').val('');
     });
     
     // Handle "Create New Customer" link click

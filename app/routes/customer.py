@@ -360,7 +360,8 @@ def api_search_customers():
         'email': c.email,
         'phone': c.phone,
         'customer_type': c.customer_type,
-        'company_name': c.company_name or ''
+        'company_name': c.company_name or '',
+        'nationality': c.nationality or ''
     } for c in customers]
     
     return jsonify({'results': results})
