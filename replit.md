@@ -71,25 +71,56 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Enhancements (October 2025)
 
-### Wizard Improvements
-1. **Customer Autocomplete (Step 1)**: Replaced plain text input with Select2-powered autocomplete dropdown that searches the customer database via AJAX (`/customers/api/search` endpoint). Includes proper jQuery dependency management (Select2 loads after jQuery from base.html).
+### Wizard Improvements (Latest - October 2025)
 
-2. **Auto-filled Service Dates (Step 2)**: All service date fields now intelligently default to itinerary arrival/departure dates:
-   - Hotel check-in/out → arrival/departure dates
-   - Transport date → arrival date
-   - Meal from/to dates → arrival/departure dates (date range, not single date)
-   - Guide from/to dates → arrival/departure dates
+1. **Clean Customer Lookup (Step 1)**: 
+   - Select2-powered autocomplete dropdown with clean, modern styling
+   - Searches customer database via AJAX (`/customers/api/search` endpoint)
+   - Matches form design with custom CSS overrides
+   - Placeholder text: "Search for customer..."
+   - Shows customer name, email, and company in dropdown results
 
-3. **Enhanced Hotel Room Table (Step 2)**: Added comprehensive room details table that auto-generates based on room distribution:
-   - Table-based room management (no add/remove buttons - driven by distribution numbers)
-   - Auto-generates table rows matching distribution (e.g., 2 singles + 3 doubles = 5 rows)
-   - Room types pre-selected based on distribution category (Single/Double/Triple/Other)
-   - Table columns: #, Room Type, Board Basis, Adults, Children, Lead Passenger
-   - Board basis options (Room Only, BB, HB, FB, AI, Ultra AI)
-   - Adults/Children counts with smart defaults (Single=1, Double=2, Triple=3)
-   - Lead passenger name per room
+2. **Auto-filled Service Dates (Step 2)**: 
+   - All service date fields intelligently default to itinerary arrival/departure dates:
+     - Hotel check-in/out → arrival/departure dates
+     - Transport date → arrival date
+     - Meal from/to dates → arrival/departure dates (date range, not single date)
+     - Guide from/to dates → arrival/departure dates
 
-4. **Robust Session Parsing**: Fixed backend parsing logic in `wizard_step2` route to handle nested data structures:
-   - Simple fields: `services[INDEX][FIELD]`
-   - Nested room fields: `services[INDEX][rooms][ROOM_INDEX][FIELD]`
-   - Ensures data integrity when services with room details flow through session storage across wizard steps
+3. **Dynamic Hotel Room Cards (Step 2)**: 
+   - Card-based room management with add/remove buttons (matching confirm_hotel.js pattern)
+   - Each card includes:
+     - Room Type dropdown (Single, Double, Twin, Triple, Family, Suite, Deluxe, etc.)
+     - Board Basis dropdown (Room Only, BB, HB, FB, AI, Ultra AI)
+     - Number inputs for Adults and Children (with smart defaults)
+     - Text input for Lead Passenger name
+   - Auto-adds first room when hotel service is created
+   - Dynamic add/remove functionality for multiple rooms
+   - Form naming: `services[INDEX][rooms][ROOM_INDEX][FIELD_NAME]`
+
+4. **Live Itinerary Preview Grid (Step 2)**:
+   - Dynamic preview table that updates in real-time
+   - Shows all dates covered by services with day numbers
+   - Color-coded service flag icons:
+     - Hotel (blue): 🏨
+     - Transport (purple): 🚌
+     - Meal (orange): 🍽️
+     - Guide (green): 👔
+   - Updates automatically when:
+     - Services are added/removed
+     - Date fields are edited via change event listeners
+   - Services on same date merge into single row
+   - Hidden when no services, visible when services exist
+
+5. **Meal Service Date Range (Step 2)**:
+   - FROM/TO date range (not single date)
+   - Both fields default to arrival/departure dates
+   - Backend creates one itinerary row per day in range
+   - Example: FROM Jan 1 → TO Jan 4 creates 4 rows (Jan 1, 2, 3, 4)
+
+6. **Robust Session Parsing**: 
+   - Backend parsing handles complex nested data structures:
+     - Simple fields: `services[INDEX][FIELD]`
+     - Nested room fields: `services[INDEX][rooms][ROOM_INDEX][FIELD]`
+   - Ensures data integrity across wizard steps
+   - Safe numeric parsing with validation
