@@ -1636,17 +1636,32 @@ def wizard_step2():
         return redirect(url_for('inbound.wizard_step1'))
     
     if request.method == 'POST':
-        # Parse services from form
+        # Parse services from form (handles both 2-level and 3-level nested structures)
         services_data = {}
         for key, value in request.form.items():
             if key.startswith('services['):
                 parts = key.split('[')
                 index = parts[1].split(']')[0]
-                field = parts[2].split(']')[0]
                 
                 if index not in services_data:
                     services_data[index] = {}
-                services_data[index][field] = value
+                
+                # Check if this is a nested structure like services[0][rooms][0][field]
+                if len(parts) > 3 and 'rooms' in key:
+                    # This is a hotel room field: services[INDEX][rooms][ROOM_INDEX][FIELD]
+                    room_index = parts[3].split(']')[0]
+                    field_name = parts[4].split(']')[0]
+                    
+                    if 'rooms' not in services_data[index]:
+                        services_data[index]['rooms'] = {}
+                    if room_index not in services_data[index]['rooms']:
+                        services_data[index]['rooms'][room_index] = {}
+                    
+                    services_data[index]['rooms'][room_index][field_name] = value
+                else:
+                    # Simple field: services[INDEX][FIELD]
+                    field = parts[2].split(']')[0]
+                    services_data[index][field] = value
         
         # Validate at least one service
         if not services_data:
