@@ -206,48 +206,30 @@ body {
                 {% if request.itinerary_rows %}
                     {% for row in request.itinerary_rows %}
                     
-                    <!-- Hotel Service Card (Only Check-in and Check-out) -->
+                    <!-- Hotel Service Card -->
                     {% if row.flag_hotel %}
-                        {# Check if this is a check-in or check-out day #}
-                        {% set is_hotel_day = False %}
-                        {% for hotel in request.inbound_hotels %}
-                            {% if row.date == hotel.check_in_date or row.date == hotel.check_out_date %}
-                                {% set is_hotel_day = True %}
-                            {% endif %}
-                        {% endfor %}
-                        
-                        {% if is_hotel_day %}
-                        <div class="service-card">
-                            <div class="service-icon">🏨</div>
-                            <div class="service-details">
-                                {% set action_type = '' %}
-                                {% for hotel in request.inbound_hotels %}
-                                    {% if row.date == hotel.check_in_date %}
-                                        {% set action_type = 'Check-in' %}
-                                    {% elif row.date == hotel.check_out_date %}
-                                        {% set action_type = 'Check-out' %}
+                    <div class="service-card">
+                        <div class="service-icon">🏨</div>
+                        <div class="service-details">
+                            <div class="service-title">Hotel - {{ row.date.strftime('%A, %b %d') }}</div>
+                            <div class="service-meta">
+                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
+                                <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}...</span>
+                                
+                                {# Show cash expenses for this date #}
+                                {% for expense in request.cash_expenses %}
+                                    {% if expense.date == row.date %}
+                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
+                                        <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
+                                    </a>
                                     {% endif %}
                                 {% endfor %}
-                                <div class="service-title">Hotel {{ action_type }} - {{ row.date.strftime('%A, %b %d') }}</div>
-                                <div class="service-meta">
-                                    <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                                    <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}...</span>
-                                    
-                                    {# Show cash expenses for this date #}
-                                    {% for expense in request.cash_expenses %}
-                                        {% if expense.date == row.date %}
-                                        <span class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
-                                            <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
-                                        </span>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="service-action">
-                                <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
                             </div>
                         </div>
-                        {% endif %}
+                        <div class="service-action">
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
+                        </div>
+                    </div>
                     {% endif %}
 
                     <!-- Transport Service Card -->
@@ -263,9 +245,9 @@ body {
                                 {# Show cash expenses for this date #}
                                 {% for expense in request.cash_expenses %}
                                     {% if expense.date == row.date %}
-                                    <span class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
                                         <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </span>
+                                    </a>
                                     {% endif %}
                                 {% endfor %}
                             </div>
@@ -289,9 +271,9 @@ body {
                                 {# Show cash expenses for this date #}
                                 {% for expense in request.cash_expenses %}
                                     {% if expense.date == row.date %}
-                                    <span class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
                                         <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </span>
+                                    </a>
                                     {% endif %}
                                 {% endfor %}
                             </div>
@@ -315,9 +297,9 @@ body {
                                 {# Show cash expenses for this date #}
                                 {% for expense in request.cash_expenses %}
                                     {% if expense.date == row.date %}
-                                    <span class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px;">
+                                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
                                         <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
-                                    </span>
+                                    </a>
                                     {% endif %}
                                 {% endfor %}
                             </div>
@@ -397,7 +379,7 @@ body {
                     </div>
                 </div>
                 <div class="service-action">
-                    <button class="btn-assign">Assign Guide</button>
+                    <button class="btn-assign">Assign Driver</button>
                 </div>
             </div>
 
