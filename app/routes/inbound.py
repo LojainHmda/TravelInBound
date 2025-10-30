@@ -2290,6 +2290,109 @@ def wizard_step3():
                 
                 db.session.add(row)
             
+            # Create service records directly from service data
+            for service_idx, service in services_data.items():
+                service_type = service.get('type')
+                
+                if service_type == 'transport':
+                    # Create InboundTransport record with arrival/departure flags
+                    transport_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
+                    from_date_str = service.get('from_date')
+                    to_date_str = service.get('to_date')
+                    
+                    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date() if from_date_str else transport_date
+                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else transport_date
+                    
+                    pickup_time_str = service.get('time')
+                    pickup_time = None
+                    if pickup_time_str:
+                        try:
+                            pickup_time = datetime.strptime(pickup_time_str, '%H:%M').time()
+                        except:
+                            pass
+                    
+                    transport = InboundTransport(
+                        request_id=request_obj.id,
+                        date=from_date,
+                        end_date=to_date if to_date != from_date else None,
+                        vehicle_type=service.get('vehicle_type'),
+                        pickup_location=service.get('pickup_location'),
+                        dropoff_location=service.get('dropoff_location'),
+                        pickup_time=pickup_time,
+                        is_arrival=service.get('is_arrival') == '1',
+                        is_departure=service.get('is_departure') == '1',
+                        cost=safe_float(service.get('cost', 0)),
+                        currency='USD'
+                    )
+                    db.session.add(transport)
+                
+                elif service_type == 'meal':
+                    # Create InboundMeal records
+                    meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
+                    meal_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    
+                    meal = InboundMeal(
+                        request_id=request_obj.id,
+                        date=meal_from,
+                        end_date=meal_to if meal_to != meal_from else None,
+                        meal_type=service.get('meal_type'),
+                        restaurant=service.get('restaurant'),
+                        cost_per_person=safe_float(service.get('cost', 0)),
+                        currency='USD'
+                    )
+                    db.session.add(meal)
+                
+                elif service_type == 'guide':
+                    # Create InboundGuide records
+                    guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
+                    guide_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    
+                    guide = InboundGuide(
+                        request_id=request_obj.id,
+                        date=guide_from,
+                        end_date=guide_to if guide_to != guide_from else None,
+                        service_type=service.get('guide_type'),
+                        language=service.get('language', 'English'),
+                        cost=safe_float(service.get('cost', 0)),
+                        currency='USD'
+                    )
+                    db.session.add(guide)
+                
+                elif service_type == 'hotel':
+                    # Create InboundHotel record with room details
+                    check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
+                    check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
+                    
+                    hotel = InboundHotel(
+                        request_id=request_obj.id,
+                        hotel_name=service.get('hotel_name'),
+                        location=service.get('location'),
+                        check_in_date=check_in,
+                        check_out_date=check_out,
+                        single_rooms=safe_int(service.get('single_rooms', 0)),
+                        double_rooms=safe_int(service.get('double_rooms', 0)),
+                        triple_rooms=safe_int(service.get('triple_rooms', 0)),
+                        other_rooms=safe_int(service.get('other_rooms', 0)),
+                        total_cost=safe_float(service.get('cost', 0)),
+                        currency='USD'
+                    )
+                    db.session.add(hotel)
+                    db.session.flush()
+                    
+                    # Add room details if available
+                    rooms_data = service.get('rooms', {})
+                    for room_idx, room in rooms_data.items():
+                        room_detail = InboundHotelRoom(
+                            hotel_id=hotel.id,
+                            room_number=safe_int(room_idx) + 1,
+                            room_type=room.get('room_type'),
+                            board_basis=room.get('board_basis'),
+                            adults=safe_int(room.get('adults', 0)),
+                            children=safe_int(room.get('children', 0)),
+                            lead_passenger_name=room.get('lead_passenger')
+                        )
+                        db.session.add(room_detail)
+            
             # Calculate total
             db.session.flush()
             request_obj.calculate_total()

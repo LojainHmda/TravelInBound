@@ -307,6 +307,25 @@ function addService(type) {
                     <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
                 </div>
             </div>
+            <div class="form-group" style="background: #fef3c7; padding: 1rem; border-radius: 8px; border: 2px solid #fbbf24;">
+                <label class="form-label" style="font-weight: 700; margin-bottom: 0.75rem;">
+                    <i class="fas fa-plane"></i> Voucher Transfer Flags
+                </label>
+                <div style="display: flex; gap: 2rem;">
+                    <div class="form-check">
+                        <input type="checkbox" name="services[${index}][is_arrival]" class="form-check-input" id="isArrival-${index}" value="1">
+                        <label class="form-check-label" for="isArrival-${index}">
+                            <strong>Arrival Transfer</strong> (Show in Arrivals section)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="services[${index}][is_departure]" class="form-check-input" id="isDeparture-${index}" value="1">
+                        <label class="form-check-label" for="isDeparture-${index}">
+                            <strong>Departure Transfer</strong> (Show in Departures section)
+                        </label>
+                    </div>
+                </div>
+            </div>
             <input type="hidden" name="services[${index}][type]" value="transport">`;
     } else if (type === 'meal') {
         html += `

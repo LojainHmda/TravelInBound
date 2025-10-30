@@ -206,6 +206,8 @@ class InboundTransport(db.Model):
     dropoff_location = db.Column(db.String(200), nullable=True)
     pickup_time = db.Column(db.Time, nullable=True)
     is_airport_transfer = db.Column(db.Boolean, default=False)
+    is_arrival = db.Column(db.Boolean, default=False)  # Flag for arrival transfer (shows in Arrivals section of voucher)
+    is_departure = db.Column(db.Boolean, default=False)  # Flag for departure transfer (shows in Departures section of voucher)
     
     # Costing
     cost = db.Column(db.Float, default=0.0)
