@@ -2257,6 +2257,13 @@ body {
                 </button>
                 {% endif %}
                 
+                <!-- Start Processing Button (shown after status is CONFIRMED) -->
+                {% if request.status == 'CONFIRMED' %}
+                <button type="button" class="action-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="startProcessing()">
+                    <i class="fas fa-play-circle"></i> Start Processing
+                </button>
+                {% endif %}
+                
                 <!-- Edit Button -->
                 <button type="button" class="action-btn action-btn-edit" onclick="toggleEditMode()">
                     <i class="fas fa-edit"></i> Edit
@@ -3310,6 +3317,37 @@ function confirmBooking() {
             }, 1500);
         } else {
             showNotification(data.message || 'Error confirming booking', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error confirming booking', 'error');
+    });
+}
+
+function startProcessing() {
+    if (!confirm('Start processing this itinerary? Status will change to PROCESSING and operations will become active.')) {
+        return;
+    }
+    
+    fetch('/inbound/api/{{ request.id }}/start-processing', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Processing started successfully!', 'success');
+            
+            // Reload to show processing views
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error starting processing', 'error');
         }
     })
     .catch(error => {

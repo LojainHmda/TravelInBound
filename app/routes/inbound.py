@@ -1689,6 +1689,45 @@ def api_confirm_booking(request_id):
             'message': f'Error confirming booking: {str(e)}'
         }), 500
 
+@inbound_bp.route('/api/<int:request_id>/start-processing', methods=['POST'])
+@login_required
+def api_start_processing(request_id):
+    """Start processing an itinerary - change status from CONFIRMED to PROCESSING"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    if request_obj.status != 'CONFIRMED':
+        return jsonify({
+            'success': False,
+            'message': 'Itinerary must be CONFIRMED before processing can start'
+        }), 400
+    
+    try:
+        # Change status to PROCESSING (operations active)
+        request_obj.status = 'PROCESSING'
+        
+        if request_obj.booking_id:
+            booking = Booking.query.get(request_obj.booking_id)
+            if booking:
+                booking.status = 'PROCESSING'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Processing started successfully. Operations are now active.',
+            'new_status': 'PROCESSING'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error starting processing: {str(e)}'
+        }), 500
+
 # ============================================================
 # RUN-DOWN PLAN DASHBOARD
 # ============================================================
