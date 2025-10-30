@@ -2747,3 +2747,59 @@ def api_export_expense_report(request_id):
     except Exception as e:
         flash(f'Error generating expense report: {str(e)}', 'error')
         return redirect(url_for('inbound.view_request', id=request_id))
+
+@inbound_bp.route('/<int:request_id>/add-cash-expense', methods=['POST'])
+@login_required
+def add_cash_expense(request_id):
+    """Add a cash expense item"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        expense_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        
+        expense = InboundCashExpense(
+            request_id=request_obj.id,
+            date=expense_date,
+            description=request.form['description'],
+            driver_name=request.form.get('driver_name', ''),
+            amount=float(request.form['amount']),
+            currency='USD',
+            is_per_person=False
+        )
+        
+        db.session.add(expense)
+        db.session.commit()
+        
+        flash('Cash expense added successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding cash expense: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.view_request', id=request_id))
+
+@inbound_bp.route('/<int:request_id>/delete-cash-expense/<int:expense_id>', methods=['POST'])
+@login_required
+def delete_cash_expense(request_id, expense_id):
+    """Delete a cash expense item"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    expense = InboundCashExpense.query.get_or_404(expense_id)
+    
+    if expense.request_id != request_id:
+        abort(403)
+    
+    try:
+        db.session.delete(expense)
+        db.session.commit()
+        flash('Cash expense deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting cash expense: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.view_request', id=request_id))

@@ -1929,6 +1929,79 @@ body {
                 </div>
             </div>
 
+            <!-- Cash Expenses -->
+            <div class="card mb-3">
+                <div class="card-header" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white;">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>Cash Expenses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Existing Cash Expenses -->
+                    {% if request.inbound_cash_expenses %}
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Driver</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
+                            <tr>
+                                <td>{{ expense.date.strftime('%d %b') }}</td>
+                                <td>{{ expense.description }}</td>
+                                <td>{{ expense.driver_name or '-' }}</td>
+                                <td>${{ "%.2f"|format(expense.amount) }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this expense?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted">No cash expenses recorded.</p>
+                    {% endif %}
+
+                    <!-- Add New Cash Expense Form -->
+                    <hr>
+                    <form method="POST" action="{{ url_for('inbound.add_cash_expense', request_id=request.id) }}" class="row g-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="col-md-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" name="date" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Description</label>
+                            <input type="text" name="description" class="form-control form-control-sm" placeholder="e.g., Tips, Entrance fee" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Driver</label>
+                            <input type="text" name="driver_name" class="form-control form-control-sm" placeholder="Driver name">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Amount</label>
+                            <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <!-- Invoice & Payment Information (moved from separate section) -->
             {% if request.booking_id %}
             <div class="card">
