@@ -1248,28 +1248,37 @@ def api_export_voucher_doc(request_id):
             'to_date': request_obj.to_date.strftime('%d-%b-%y') if request_obj.to_date else ''
         }
         
-        # Collect arrivals/departures data from airport transfers
+        # Collect arrivals/departures data from flagged transport services
         arrivals_data = []
-        airport_transports = [t for t in request_obj.inbound_transports if t.is_airport_transfer]
+        arrival_departure_transports = [
+            t for t in request_obj.inbound_transports 
+            if t.is_arrival or t.is_departure
+        ]
         
-        if airport_transports:
-            for transport in airport_transports:
-                border_point = transport.pickup_location if transport.pickup_location else 'Airport'
-                drop_point = transport.dropoff_location if transport.dropoff_location else 'TBA'
-                transport_time = transport.pickup_time or ''
+        if arrival_departure_transports:
+            for transport in sorted(arrival_departure_transports, key=lambda x: x.date):
+                border = 'Airport'
+                if transport.pickup_location and 'border' in transport.pickup_location.lower():
+                    border = 'Border'
+                
+                drop_point = transport.dropoff_location or 'TBA'
+                if transport.is_departure:
+                    drop_point = transport.pickup_location or 'TBA'
+                
+                time_str = transport.pickup_time.strftime('%H:%M') if transport.pickup_time else ''
                 
                 arrivals_data.append({
-                    'date': transport.date.strftime('%d-%b-%y') if transport.date else '',
-                    'border': border_point,
+                    'date': transport.date.strftime('%d-%b-%y'),
+                    'border': border,
                     'drop_point': drop_point,
                     'pax': request_obj.pax,
                     'carrier': '',
                     'flight': '',
-                    'time': transport_time,
-                    'note': ''
+                    'time': time_str,
+                    'note': f"{transport.vehicle_type}" if transport.vehicle_type else ''
                 })
         else:
-            # Add default arrival/departure if no airport transfers
+            # Add default arrival/departure if no flagged transfers
             arrivals_data.append({
                 'date': request_obj.from_date.strftime('%d-%b-%y') if request_obj.from_date else '',
                 'border': 'Airport',
@@ -2362,6 +2371,7 @@ def wizard_step3():
                     # Create InboundHotel record with room details
                     check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
                     check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
+                    nights = (check_out - check_in).days
                     
                     hotel = InboundHotel(
                         request_id=request_obj.id,
@@ -2369,10 +2379,7 @@ def wizard_step3():
                         location=service.get('location'),
                         check_in_date=check_in,
                         check_out_date=check_out,
-                        single_rooms=safe_int(service.get('single_rooms', 0)),
-                        double_rooms=safe_int(service.get('double_rooms', 0)),
-                        triple_rooms=safe_int(service.get('triple_rooms', 0)),
-                        other_rooms=safe_int(service.get('other_rooms', 0)),
+                        nights=nights,
                         total_cost=safe_float(service.get('cost', 0)),
                         currency='USD'
                     )
