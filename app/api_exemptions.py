@@ -8,6 +8,8 @@ csrf_exempt_routes = [
     '/tools/analyze-ticket',  # Flight ticket scanner API endpoint
     '/booking/service_item',  # Service item operations including delete
     '/customers/api/scan-passport',  # Passport scanner API endpoint
+    '/customers/api/create',  # Customer creation API endpoint
+    '/customers/api/search',  # Customer search API endpoint
     '/booking/scan-flight-document',  # Multi-segment flight document scanner API endpoint
 ]
 
