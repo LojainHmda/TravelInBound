@@ -2780,6 +2780,37 @@ def add_cash_expense(request_id):
     
     return redirect(url_for('inbound.view_request', id=request_id))
 
+@inbound_bp.route('/<int:request_id>/update-cash-expense/<int:expense_id>', methods=['POST'])
+@login_required
+def update_cash_expense(request_id, expense_id):
+    """Update a cash expense item"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    expense = InboundCashExpense.query.get_or_404(expense_id)
+    
+    if expense.request_id != request_id:
+        abort(403)
+    
+    try:
+        if 'date' in request.form:
+            expense.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        if 'description' in request.form:
+            expense.description = request.form['description']
+        if 'driver_name' in request.form:
+            expense.driver_name = request.form['driver_name']
+        if 'amount' in request.form:
+            expense.amount = float(request.form['amount'])
+        
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating cash expense: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.view_request', id=request_id))
+
 @inbound_bp.route('/<int:request_id>/delete-cash-expense/<int:expense_id>', methods=['POST'])
 @login_required
 def delete_cash_expense(request_id, expense_id):

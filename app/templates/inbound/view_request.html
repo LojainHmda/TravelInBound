@@ -2045,10 +2045,30 @@ body {
                         <tbody>
                             {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
                             <tr>
-                                <td>{{ expense.date.strftime('%d %b') }}</td>
-                                <td>{{ expense.description }}</td>
-                                <td>{{ expense.driver_name or '-' }}</td>
-                                <td>${{ "%.2f"|format(expense.amount) }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="date" name="date" value="{{ expense.date.strftime('%Y-%m-%d') }}" class="form-control form-control-sm" style="width:120px; display:inline;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="description" value="{{ expense.description }}" class="form-control form-control-sm">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="driver_name" value="{{ expense.driver_name or '' }}" class="form-control form-control-sm" style="width:100px;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" class="form-control form-control-sm" style="width:90px;">
+                                    </form>
+                                </td>
                                 <td>
                                     <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
