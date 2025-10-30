@@ -2022,99 +2022,6 @@ body {
                 </div>
             </div>
 
-            <!-- Meals -->
-            <div class="card mb-3">
-                <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-utensils me-2"></i>Meals
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Existing Meals -->
-                    {% if request.inbound_meals %}
-                    <table class="table table-sm table-hover">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Restaurant</th>
-                                <th>Location</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for meal in request.inbound_meals|sort(attribute='date') %}
-                            <tr>
-                                <td>{{ meal.date.strftime('%d %b') }}</td>
-                                <td>{{ meal.meal_type or '-' }}</td>
-                                <td>{{ meal.restaurant or '-' }}</td>
-                                <td>{{ meal.location or '-' }}</td>
-                                <td>
-                                    <form method="POST" action="{{ url_for('inbound.delete_meal', request_id=request.id, meal_id=meal.id) }}" style="display:inline;">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this meal?')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    {% else %}
-                    <p class="text-muted">No meals recorded.</p>
-                    {% endif %}
-
-                    <!-- Add New Meal Form -->
-                    <hr>
-                    <form method="POST" action="{{ url_for('inbound.add_meal', request_id=request.id) }}" class="row g-2">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <div class="col-md-2">
-                            <label class="form-label">Date</label>
-                            <input type="date" name="date" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Type</label>
-                            <select name="meal_type" class="form-control form-control-sm" required>
-                                <option value="">Select...</option>
-                                <option value="Breakfast">Breakfast</option>
-                                <option value="Lunch">Lunch</option>
-                                <option value="Dinner">Dinner</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Restaurant</label>
-                            <input type="text" name="restaurant" class="form-control form-control-sm" placeholder="Restaurant name">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Location</label>
-                            <select name="location" class="form-control form-control-sm">
-                                <option value="">Select location</option>
-                                <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
-                                <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                                <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                                <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
-                                <option value="Hotel">Hotel</option>
-                                <option value="Dead Sea">Dead Sea</option>
-                                <option value="Petra">Petra</option>
-                                <option value="Wadi Rum">Wadi Rum</option>
-                                <option value="Jerash">Jerash</option>
-                                <option value="Madaba">Madaba</option>
-                                <option value="Mount Nebo">Mount Nebo</option>
-                                <option value="Amman City">Amman City</option>
-                                <option value="Aqaba">Aqaba</option>
-                            </select>
-                        </div>
-                        <div class="col-md-1">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="submit" class="btn btn-sm btn-success w-100">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Invoice & Payment Information (moved from separate section) -->
             {% if request.booking_id %}
             <div class="card">
@@ -2203,21 +2110,6 @@ body {
     <div class="row mt-4">
         <div class="col-12">
             <div class="action-buttons-bar">
-                <!-- Generate Voucher Dropdown -->
-                <div class="dropdown d-inline-block">
-                    <button type="button" class="action-btn action-btn-voucher dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-file-pdf"></i> Generate Voucher
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=vertical" target="_blank">
-                            <i class="fas fa-arrows-alt-v"></i> Vertical Timeline
-                        </a></li>
-                        <li><a class="dropdown-item" href="/inbound/{{ request.id }}/voucher?layout=horizontal" target="_blank">
-                            <i class="fas fa-arrows-alt-h"></i> Horizontal Timeline
-                        </a></li>
-                    </ul>
-                </div>
-                
                 <!-- Generate Proforma Invoice Button - ALWAYS FIRST -->
                 {% if not request.booking_id or not request.booking.invoice_number %}
                 <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="action-btn" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); text-decoration: none; color: #1f2937; font-weight: 600;">
@@ -2386,11 +2278,6 @@ body {
                                         style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
                                     <i class="fas fa-utensils mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Meal</span>
-                                </button>
-                                <button type="button" class="service-icon-button" data-service="airport"
-                                        style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
-                                    <i class="fas fa-plane mb-1" style="font-size: 1.2rem; display: block;"></i>
-                                    <span style="font-size: 0.85rem; font-weight: 600;">Airport</span>
                                 </button>
                             </div>
                         </div>
