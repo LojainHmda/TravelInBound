@@ -1303,37 +1303,17 @@ def api_export_voucher_doc(request_id):
         # Collect hotel details
         hotels_data = []
         for hotel in request_obj.inbound_hotels:
-            # Count room types from hotel.rooms
-            single_rooms = 0
-            double_rooms = 0
-            twin_rooms = 0
-            triple_rooms = 0
-            other_rooms = 0
-            
-            for room in hotel.rooms:
-                room_type = room.room_type.upper()
-                if 'SINGLE' in room_type or 'SGL' in room_type:
-                    single_rooms += 1
-                elif 'DOUBLE' in room_type or 'DBL' in room_type:
-                    double_rooms += 1
-                elif 'TWIN' in room_type:
-                    twin_rooms += 1
-                elif 'TRIPLE' in room_type or 'TRPL' in room_type:
-                    triple_rooms += 1
-                else:
-                    other_rooms += 1
-            
             hotels_data.append({
                 'check_in': hotel.check_in_date.strftime('%d-%b-%y') if hotel.check_in_date else 'TBA',
                 'check_out': hotel.check_out_date.strftime('%d-%b-%y') if hotel.check_out_date else 'TBA',
                 'name': hotel.hotel_name or 'Hotel TBA',
                 'board_basis': hotel.meal_plan or 'BB',
                 'note': '',
-                'single_rooms': single_rooms,
-                'double_rooms': double_rooms,
-                'twin_rooms': twin_rooms,
-                'triple_rooms': triple_rooms,
-                'other_rooms': other_rooms
+                'single_rooms': 0,
+                'double_rooms': 0,
+                'twin_rooms': 0,
+                'triple_rooms': 0,
+                'other_rooms': 0
             })
         
         # Build itinerary organized by service type
@@ -2153,6 +2133,7 @@ def wizard_step3():
                 no_of_days=wizard_data['no_of_days'],
                 customer_type=wizard_data['customer_type'],
                 contact_name=wizard_data['contact_name'],
+                customer_id=wizard_data.get('customer_id'),
                 agent_ref=wizard_data.get('agent_ref', ''),
                 nationality=wizard_data['nationality'],
                 pax=wizard_data['pax'],
@@ -2485,8 +2466,8 @@ def api_export_expense_report(request_id):
         # Header
         ws['B2'] = 'Windows of Jordan'
         ws['B2'].font = Font(size=16, bold=True)
-        ws['B3'] = 'Actual Expense Sheet'
-        ws['B3'].font = Font(size=14)
+        ws['B3'] = ' Actual Expense Sheet'
+        ws['B3'].font = Font(size=22)
         
         # File info
         ws['B5'] = request_obj.request_number
@@ -2518,7 +2499,7 @@ def api_export_expense_report(request_id):
             ws[f'B{row}'] = expense.description
             ws[f'D{row}'] = expense.amount
             ws[f'E{row}'] = request_obj.pax if expense.is_per_person else 1
-            ws[f'F{row}'] = f'=D{row}*E{row}'
+            ws[f'F{row}'] = f'=SUM(D{row}*E{row})'
             row += 1
         
         # Totals
