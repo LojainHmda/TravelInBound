@@ -2694,11 +2694,12 @@ def api_export_expense_report(request_id):
         # Table header
         header_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
         ws['B11'] = 'Item'
+        ws['C11'] = 'Driver'
         ws['D11'] = 'Cost PP'
         ws['E11'] = 'Pax'
         ws['F11'] = 'Total'
         
-        for cell in ['B11', 'D11', 'E11', 'F11']:
+        for cell in ['B11', 'C11', 'D11', 'E11', 'F11']:
             ws[cell].font = Font(bold=True)
             ws[cell].fill = header_fill
             ws[cell].alignment = Alignment(horizontal='center')
@@ -2707,6 +2708,7 @@ def api_export_expense_report(request_id):
         row = 12
         for expense in sorted(request_obj.inbound_cash_expenses, key=lambda x: x.date):
             ws[f'B{row}'] = expense.description
+            ws[f'C{row}'] = expense.driver_name or '-'
             ws[f'D{row}'] = expense.amount
             ws[f'E{row}'] = request_obj.pax if expense.is_per_person else 1
             ws[f'F{row}'] = f'=SUM(D{row}*E{row})'
