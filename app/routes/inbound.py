@@ -1127,9 +1127,11 @@ def preview_proforma(request_id):
         booking.customer_id = customer.id
         booking.status = 'QUOTED'
         booking.total_amount = request_obj.total_amount or 0
-        booking.generate_invoice_number()
         db.session.add(booking)
         db.session.flush()
+        
+        # Generate invoice number AFTER flush (so booking.id exists)
+        booking.generate_invoice_number()
         
         # Link booking to request
         request_obj.booking_id = booking.id
