@@ -13,7 +13,16 @@
                     <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Request
                     </a>
-                    <a href="{{ url_for('inbound.api_export_proforma_doc', request_id=request.id) }}" class="btn btn-primary">
+                    <button type="button" class="btn btn-warning" id="editBtn" onclick="toggleEdit()">
+                        <i class="fas fa-edit"></i> Edit Prices
+                    </button>
+                    <button type="button" class="btn btn-success d-none" id="saveBtn" onclick="savePrices()">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button type="button" class="btn btn-secondary d-none" id="cancelBtn" onclick="cancelEdit()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <a href="{{ url_for('inbound.api_export_proforma_doc', request_id=request.id) }}" class="btn btn-primary" id="downloadBtn">
                         <i class="fas fa-file-word"></i> Download Word Document
                     </a>
                 </div>
@@ -94,7 +103,7 @@
                             </thead>
                             <tbody>
                                 {% for item in invoice.service_items %}
-                                <tr>
+                                <tr data-index="{{ loop.index0 }}">
                                     <td>{{ loop.index }}</td>
                                     <td>
                                         {% if item.type == 'Hotel' %}
@@ -112,9 +121,15 @@
                                     <td>{{ item.description }}</td>
                                     <td>{{ item.date_from.strftime('%d %b %Y') if item.date_from else 'N/A' }}</td>
                                     <td>{{ item.date_to.strftime('%d %b %Y') if item.date_to else 'N/A' }}</td>
-                                    <td>{{ item.pax }}</td>
-                                    <td style="text-align: right;">${{ "%.2f"|format(item.unit_price) }}</td>
-                                    <td style="text-align: right;"><strong>${{ "%.2f"|format(item.total) }}</strong></td>
+                                    <td>
+                                        <span class="view-mode">{{ item.pax }}</span>
+                                        <input type="number" class="form-control form-control-sm edit-mode d-none pax-input" value="{{ item.pax }}" min="1" style="width: 80px;">
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <span class="view-mode">${{ "%.2f"|format(item.unit_price) }}</span>
+                                        <input type="number" class="form-control form-control-sm edit-mode d-none price-input" value="{{ item.unit_price }}" step="0.01" min="0" style="width: 100px;">
+                                    </td>
+                                    <td style="text-align: right;"><strong class="total-cell">${{ "%.2f"|format(item.total) }}</strong></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -169,4 +184,79 @@
         }
     }
 </style>
+
+<script>
+let editMode = false;
+
+function toggleEdit() {
+    editMode = true;
+    document.querySelectorAll('.view-mode').forEach(el => el.classList.add('d-none'));
+    document.querySelectorAll('.edit-mode').forEach(el => el.classList.remove('d-none'));
+    
+    document.getElementById('editBtn').classList.add('d-none');
+    document.getElementById('saveBtn').classList.remove('d-none');
+    document.getElementById('cancelBtn').classList.remove('d-none');
+    document.getElementById('downloadBtn').classList.add('d-none');
+    
+    // Add event listeners to recalculate on change
+    document.querySelectorAll('.price-input, .pax-input').forEach(input => {
+        input.addEventListener('input', recalculateTotals);
+    });
+}
+
+function cancelEdit() {
+    location.reload();
+}
+
+function recalculateTotals() {
+    let grandTotal = 0;
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        const total = pax * price;
+        
+        row.querySelector('.total-cell').textContent = `$${total.toFixed(2)}`;
+        grandTotal += total;
+    });
+    
+    document.querySelector('tfoot .total-cell').textContent = `$${grandTotal.toFixed(2)}`;
+}
+
+function savePrices() {
+    const items = [];
+    document.querySelectorAll('tbody tr').forEach(row => {
+        const index = row.getAttribute('data-index');
+        const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        
+        items.push({
+            index: parseInt(index),
+            pax: pax,
+            unit_price: price,
+            total: pax * price
+        });
+    });
+    
+    fetch('/inbound/api/{{ request.id }}/update-proforma-prices', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ items: items })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Prices updated successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error saving prices');
+        console.error(error);
+    });
+}
+</script>
 {% endblock %}

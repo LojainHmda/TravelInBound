@@ -1,211 +1,346 @@
 {% extends "base.html" %}
 
-{% block title %}Run-Down - Operations Dashboard{% endblock %}
+{% block title %}Operations Dashboard{% endblock %}
 
 {% block content %}
 <style>
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    background: #f5f5f7;
 }
 
 .container-fluid {
-    max-width: 1400px;
+    max-width: 1200px;
+}
+
+/* Modern Tab Buttons */
+.ops-tabs {
+    display: flex;
+    gap: 12px;
+    padding: 20px 0 24px 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.ops-tab {
+    position: relative;
+    padding: 10px 20px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #3c3c43;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ops-tab:hover {
+    background: #f5f5f7;
+}
+
+.ops-tab.active {
+    background: #d1e7ff;
+    color: #0066cc;
+}
+
+.ops-tab .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff3b30;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+}
+
+/* Service Cards */
+.service-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s ease;
+}
+
+.service-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.service-icon {
+    font-size: 28px;
+    width: 48px;
+    text-align: center;
+}
+
+.service-details {
+    flex: 1;
+}
+
+.service-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin-bottom: 6px;
+}
+
+.service-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 14px;
+    color: #86868b;
+}
+
+.service-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.service-action {
+    margin-left: auto;
+}
+
+.btn-complete {
+    background: #34c759;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-assign {
+    background: #e5e7eb;
+    color: #3c3c43;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-track {
+    background: #34c759;
+    color: white;
+    border: none;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.btn-view {
+    background: #007aff;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.tab-content-section {
+    display: none;
+}
+
+.tab-content-section.active {
+    display: block;
 }
 </style>
 
-<div class="container-fluid py-3">
+<div class="container-fluid py-4">
     <!-- Header -->
-    <div class="card mb-3" style="border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
-        <div class="card-header py-2" style="background: #f1f5f9; color: #334155; border: none; border-bottom: 2px solid #e2e8f0;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Run-Down Operations Dashboard</h5>
-                    <p class="mb-0 small" style="color: #64748b;">All active itineraries in PROCESSING status</p>
-                </div>
-                <a href="{{ url_for('main.index') }}" class="btn btn-sm" style="background: #fef3c7; color: #92400e; border: none;">
-                    <i class="fas fa-arrow-left me-1"></i>Back to Hub
-                </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="font-size: 28px; font-weight: 700; color: #1d1d1f;">Operations Dashboard</h2>
+        <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Hub
+        </a>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="ops-tabs">
+        <button class="ops-tab active" onclick="switchTab('daily')">
+            Daily Rundown
+            <span class="badge">{{ status_counts.PROCESSING }}</span>
+        </button>
+        <button class="ops-tab" onclick="switchTab('arrivals')">
+            Arrivals & Departures
+        </button>
+        <button class="ops-tab" onclick="switchTab('tours')">
+            Tours & Guides
+        </button>
+        <button class="ops-tab" onclick="switchTab('restaurants')">
+            Restaurants
+        </button>
+        <button class="ops-tab" onclick="switchTab('calendar')">
+            Calendar View
+        </button>
+    </div>
+
+    <!-- Daily Rundown Tab -->
+    <div id="daily-content" class="tab-content-section active">
+        {% if processing_requests %}
+            {% for request in processing_requests %}
+            <!-- Tour Header -->
+            <div style="margin-bottom: 24px;">
+                <h5 style="font-size: 18px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px;">
+                    {{ request.request_number }} - {{ request.contact_name }}
+                </h5>
+                <p style="font-size: 14px; color: #86868b; margin-bottom: 12px;">
+                    <i class="fas fa-calendar"></i> {{ request.from_date.strftime('%b %d') }} - {{ request.to_date.strftime('%b %d, %Y') }} | 
+                    <i class="fas fa-users"></i> {{ request.pax }} PAX | 
+                    <i class="fas fa-globe"></i> {{ request.nationality }}
+                </p>
+
+                <!-- Service Cards -->
+                {% if request.itinerary_rows %}
+                    {% for row in request.itinerary_rows %}
+                    
+                    <!-- Hotel Service Card -->
+                    {% if row.flag_hotel %}
+                    <div class="service-card">
+                        <div class="service-icon">🏨</div>
+                        <div class="service-details">
+                            <div class="service-title">Hotel - {{ row.date.strftime('%A, %b %d') }}</div>
+                            <div class="service-meta">
+                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
+                                <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}...</span>
+                            </div>
+                        </div>
+                        <div class="service-action">
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Transport Service Card -->
+                    {% if row.flag_transport %}
+                    <div class="service-card">
+                        <div class="service-icon">🚌</div>
+                        <div class="service-details">
+                            <div class="service-title">Transport - {{ row.date.strftime('%A, %b %d') }}</div>
+                            <div class="service-meta">
+                                <span class="service-meta-item"><i class="fas fa-clock"></i> {{ row.date.strftime('%H:%M') }}</span>
+                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
+                                {% if row.base_cost %}
+                                <span class="service-meta-item"><i class="fas fa-dollar-sign"></i> ${{ row.base_cost }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="service-action">
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-track">Track</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Meal Service Card -->
+                    {% if row.flag_meal %}
+                    <div class="service-card">
+                        <div class="service-icon">🍽️</div>
+                        <div class="service-details">
+                            <div class="service-title">Meal - {{ row.date.strftime('%A, %b %d') }}</div>
+                            <div class="service-meta">
+                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
+                                <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}</span>
+                            </div>
+                        </div>
+                        <div class="service-action">
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Guide Service Card -->
+                    {% if row.flag_guide %}
+                    <div class="service-card">
+                        <div class="service-icon">👔</div>
+                        <div class="service-details">
+                            <div class="service-title">Guide - {{ row.date.strftime('%A, %b %d') }}</div>
+                            <div class="service-meta">
+                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
+                                <span class="service-meta-item"><i class="fas fa-user"></i> Guide Needed</span>
+                            </div>
+                        </div>
+                        <div class="service-action">
+                            <button class="btn-assign">Assign Guide</button>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% endfor %}
+                {% else %}
+                    <p style="color: #86868b; text-align: center; padding: 40px 0;">No itinerary data available</p>
+                {% endif %}
             </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-calendar-times" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; color: #86868b;">No active operations in PROCESSING status</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Arrivals & Departures Tab -->
+    <div id="arrivals-content" class="tab-content-section">
+        <div style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-plane" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <p style="font-size: 16px; color: #86868b;">Arrivals & Departures view coming soon</p>
         </div>
     </div>
 
-    <!-- Stats Bar -->
-    <div class="card mb-3" style="border: none; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);">
-        <div class="card-body py-2">
-            <div class="row text-center g-3">
-                <div class="col">
-                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ status_counts.REQUEST }}</div>
-                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">REQUESTS</div>
-                </div>
-                <div class="col">
-                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ status_counts.QUOTED }}</div>
-                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">QUOTED</div>
-                </div>
-                <div class="col">
-                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #1e3a8a;">{{ status_counts.PROCESSING }}</div>
-                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">IN PROGRESS</div>
-                </div>
-                <div class="col">
-                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #10b981;">{{ status_counts.CONFIRMED }}</div>
-                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">CONFIRMED</div>
-                </div>
-                <div class="col">
-                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #059669;">{{ status_counts.COMPLETED }}</div>
-                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">COMPLETED</div>
-                </div>
-            </div>
+    <!-- Tours & Guides Tab -->
+    <div id="tours-content" class="tab-content-section">
+        <div style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-user-tie" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <p style="font-size: 16px; color: #86868b;">Tours & Guides view coming soon</p>
         </div>
     </div>
 
-    {% if processing_requests %}
-        {% for request in processing_requests %}
-        <!-- Itinerary Card -->
-        <div class="card mb-3" style="border: 2px solid #1e40af; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.15);">
-            <div class="card-header py-2" style="background: #fef3c7; border: none; border-bottom: 2px solid #fde68a;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-0" style="color: #92400e; font-weight: 600;">
-                            <i class="fas fa-route me-2"></i>{{ request.request_number }} - {{ request.contact_name }}
-                        </h6>
-                        <div class="d-flex gap-3" style="font-size: 0.75rem; color: #78350f;">
-                            <span><i class="fas fa-calendar me-1"></i>{{ request.from_date.strftime('%b %d') }} - {{ request.to_date.strftime('%b %d, %Y') }}</span>
-                            <span><i class="fas fa-users me-1"></i>{{ request.pax }} PAX</span>
-                            <span><i class="fas fa-globe me-1"></i>{{ request.nationality }}</span>
-                        </div>
-                    </div>
-                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-sm" style="background: #1e40af; color: white; border: none;">
-                        <i class="fas fa-eye me-1"></i>View Details
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                <!-- Timeline View -->
-                <div class="operations-timeline p-3" style="background: white;">
-                    <h6 class="text-uppercase fw-bold mb-2" style="color: #1e3a8a; letter-spacing: 0.5px; font-size: 0.8rem;">
-                        <i class="fas fa-calendar-day me-2"></i>Daily Timeline
-                    </h6>
-                    {% if request.itinerary_rows %}
-                    <div class="timeline-container" style="position: relative;">
-                        {% for row in request.itinerary_rows %}
-                        <div class="timeline-day mb-2" style="position: relative; padding-left: 35px;">
-                            <!-- Timeline Dot -->
-                            <div style="position: absolute; left: 0; top: 3px; width: 16px; height: 16px; background: #fde68a; border: 2px solid #1e40af; border-radius: 50%;"></div>
-                            
-                            <!-- Connector Line -->
-                            {% if not loop.last %}
-                            <div style="position: absolute; left: 7px; top: 19px; width: 2px; height: calc(100% + 8px); background: #cbd5e1;"></div>
-                            {% endif %}
-                            
-                            <!-- Day Card -->
-                            <div class="day-card" style="background: #fefce8; border-radius: 8px; padding: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 3px solid #1e40af;">
-                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                    <div>
-                                        <div class="fw-bold" style="font-size: 0.85rem; color: #1e3a8a;">
-                                            {{ row.date.strftime('%A, %B %d, %Y') }}
-                                        </div>
-                                        <div class="text-muted" style="font-size: 0.7rem;">Day {{ loop.index }}</div>
-                                    </div>
-                                    <div class="d-flex gap-1">
-                                        {% if row.flag_hotel %}
-                                        <span class="badge" style="background: #1e40af; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                            <i class="fas fa-bed"></i>
-                                        </span>
-                                        {% endif %}
-                                        {% if row.flag_transport %}
-                                        <span class="badge" style="background: #1e40af; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                            <i class="fas fa-car"></i>
-                                        </span>
-                                        {% endif %}
-                                        {% if row.flag_meal %}
-                                        <span class="badge" style="background: #d97706; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                            <i class="fas fa-utensils"></i>
-                                        </span>
-                                        {% endif %}
-                                        {% if row.flag_guide %}
-                                        <span class="badge" style="background: #10b981; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                            <i class="fas fa-user-tie"></i>
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <div style="color: #78350f; font-size: 0.8rem;">{{ row.description }}</div>
-                                {% if row.base_cost and row.base_cost > 0 %}
-                                <div class="mt-1 text-muted" style="font-size: 0.7rem;">
-                                    Cost: {{ row.base_cost }} {{ row.currency }} {% if row.cost_unit == 'PER_PERSON' %}pp{% else %}total{% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center text-muted py-3">
-                        <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                        <p>No itinerary data</p>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <!-- Calendar View -->
-                <div class="operations-calendar p-3" style="background: #f8fafc; border-top: 2px solid #fde68a;">
-                    <h6 class="text-uppercase fw-bold mb-2" style="color: #1e3a8a; letter-spacing: 0.5px; font-size: 0.8rem;">
-                        <i class="fas fa-calendar-alt me-2"></i>Calendar Grid
-                    </h6>
-                    {% if request.itinerary_rows %}
-                    <div class="calendar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem;">
-                        {% for row in request.itinerary_rows %}
-                        <div class="calendar-day-card" style="background: white; border-radius: 6px; padding: 0.65rem; border: 1px solid #cbd5e1; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(30, 58, 138, 0.15)'; this.style.borderColor='#1e40af';" onmouseout="this.style.transform=''; this.style.boxShadow=''; this.style.borderColor='#cbd5e1';">
-                            <div class="calendar-day-header mb-1" style="background: #fef3c7; color: #92400e; padding: 0.4rem; border-radius: 4px; text-align: center; font-weight: bold; font-size: 1.1rem;">
-                                {{ row.date.strftime('%d') }}
-                                <div style="font-size: 0.65rem; opacity: 0.9;">{{ row.date.strftime('%b %Y') }}</div>
-                            </div>
-                            <div class="calendar-day-name text-center mb-1" style="font-size: 0.7rem; color: #78350f;">
-                                {{ row.date.strftime('%A') }}
-                            </div>
-                            <div class="calendar-services d-flex flex-wrap gap-1 justify-content-center mb-1">
-                                {% if row.flag_hotel %}
-                                <span class="badge" style="background: #1e40af; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Hotel"><i class="fas fa-bed"></i></span>
-                                {% endif %}
-                                {% if row.flag_transport %}
-                                <span class="badge" style="background: #1e40af; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Transport"><i class="fas fa-car"></i></span>
-                                {% endif %}
-                                {% if row.flag_meal %}
-                                <span class="badge" style="background: #d97706; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Meal"><i class="fas fa-utensils"></i></span>
-                                {% endif %}
-                                {% if row.flag_guide %}
-                                <span class="badge" style="background: #10b981; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Guide"><i class="fas fa-user-tie"></i></span>
-                                {% endif %}
-                            </div>
-                            <div class="calendar-description text-truncate" style="color: #475569; font-size: 0.75rem;" title="{{ row.description }}">
-                                {{ row.description }}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="text-center text-muted py-3">
-                        <i class="fas fa-calendar-times fa-2x mb-2"></i>
-                        <p>No calendar data</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- Restaurants Tab -->
+    <div id="restaurants-content" class="tab-content-section">
+        <div style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-utensils" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <p style="font-size: 16px; color: #86868b;">Restaurants view coming soon</p>
         </div>
-        {% endfor %}
-    {% else %}
-        <!-- Empty State -->
-        <div class="card" style="border: 2px dashed #cbd5e1;">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted">No Active Operations</h4>
-                <p class="text-muted">No itineraries are currently in PROCESSING status.</p>
-                <p class="text-muted small">To start operations, open a CONFIRMED itinerary and click "Start Processing"</p>
-                <a href="{{ url_for('inbound.index') }}" class="btn btn-primary mt-3">
-                    <i class="fas fa-list me-2"></i>View All Bookings
-                </a>
-            </div>
+    </div>
+
+    <!-- Calendar View Tab -->
+    <div id="calendar-content" class="tab-content-section">
+        <div style="text-align: center; padding: 60px 20px;">
+            <i class="fas fa-calendar-alt" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <p style="font-size: 16px; color: #86868b;">Calendar view coming soon</p>
         </div>
-    {% endif %}
+    </div>
 </div>
+
+<script>
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.ops-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabName + '-content').classList.add('active');
+    
+    // Activate clicked button
+    event.target.closest('.ops-tab').classList.add('active');
+}
+</script>
 {% endblock %}

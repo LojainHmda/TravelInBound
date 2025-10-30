@@ -1250,6 +1250,65 @@ def preview_proforma(request_id):
                          request=request_obj,
                          invoice=invoice_data)
 
+@inbound_bp.route('/api/<int:request_id>/update-proforma-prices', methods=['POST'])
+@login_required
+def update_proforma_prices(request_id):
+    """Update pricing for proforma invoice service items"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        items = data.get('items', [])
+        
+        # Collect all service models in order
+        all_services = []
+        for hotel in request_obj.inbound_hotels:
+            all_services.append(('hotel', hotel))
+        for transport in request_obj.inbound_transports:
+            all_services.append(('transport', transport))
+        for meal in request_obj.inbound_meals:
+            all_services.append(('meal', meal))
+        for guide in request_obj.inbound_guides:
+            all_services.append(('guide', guide))
+        
+        # Update each service based on index
+        for item in items:
+            index = item['index']
+            if index < len(all_services):
+                service_type, service = all_services[index]
+                
+                if service_type == 'hotel':
+                    service.cost_per_night = item['unit_price']
+                    service.total_cost = item['total']
+                elif service_type == 'transport':
+                    service.cost = item['unit_price']
+                elif service_type == 'meal':
+                    service.cost_per_person = item['unit_price']
+                    service.total_cost = item['total']
+                elif service_type == 'guide':
+                    service.cost_per_day = item['unit_price']
+                    service.total_cost = item['total']
+        
+        # Recalculate total
+        total = sum(item['total'] for item in items)
+        request_obj.total_amount = total
+        
+        # Update booking total if exists
+        if request_obj.booking_id:
+            booking = Booking.query.get(request_obj.booking_id)
+            if booking:
+                booking.total_amount = total
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Prices updated successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
 @login_required
 def api_export_proforma_doc(request_id):
