@@ -6,7 +6,7 @@
 <style>
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: #f8fafc;
 }
 
 .container-fluid {
@@ -14,45 +14,45 @@ body {
 }
 </style>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-3">
     <!-- Header -->
-    <div class="card mb-4" style="border: none; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);">
-        <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+    <div class="card mb-3" style="border: none; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.15);">
+        <div class="card-header py-2" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; border: none;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="mb-1"><i class="fas fa-calendar-check me-2"></i>Run-Down Operations Dashboard</h3>
-                    <p class="mb-0 opacity-90">All active itineraries in PROCESSING status</p>
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Run-Down Operations Dashboard</h5>
+                    <p class="mb-0 opacity-90 small">All active itineraries in PROCESSING status</p>
                 </div>
-                <a href="{{ url_for('main.index') }}" class="btn btn-light">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Hub
+                <a href="{{ url_for('main.index') }}" class="btn btn-sm" style="background: #fef3c7; color: #92400e; border: none;">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Hub
                 </a>
             </div>
         </div>
     </div>
 
     <!-- Stats Bar -->
-    <div class="card mb-4" style="border: none; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);">
-        <div class="card-body">
-            <div class="row text-center g-4">
+    <div class="card mb-3" style="border: none; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);">
+        <div class="card-body py-2">
+            <div class="row text-center g-3">
                 <div class="col">
-                    <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; color: #f59e0b;">{{ status_counts.REQUEST }}</div>
-                    <div class="stat-label" style="font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">REQUESTS</div>
+                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #d97706;">{{ status_counts.REQUEST }}</div>
+                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">REQUESTS</div>
                 </div>
                 <div class="col">
-                    <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; color: #3b82f6;">{{ status_counts.QUOTED }}</div>
-                    <div class="stat-label" style="font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">QUOTED</div>
+                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">{{ status_counts.QUOTED }}</div>
+                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">QUOTED</div>
                 </div>
                 <div class="col">
-                    <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; color: #8b5cf6;">{{ status_counts.PROCESSING }}</div>
-                    <div class="stat-label" style="font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">IN PROGRESS</div>
+                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #1e3a8a;">{{ status_counts.PROCESSING }}</div>
+                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">IN PROGRESS</div>
                 </div>
                 <div class="col">
-                    <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; color: #10b981;">{{ status_counts.CONFIRMED }}</div>
-                    <div class="stat-label" style="font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">CONFIRMED</div>
+                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #10b981;">{{ status_counts.CONFIRMED }}</div>
+                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">CONFIRMED</div>
                 </div>
                 <div class="col">
-                    <div class="stat-value" style="font-size: 2.5rem; font-weight: 700; color: #059669;">{{ status_counts.COMPLETED }}</div>
-                    <div class="stat-label" style="font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">COMPLETED</div>
+                    <div class="stat-value" style="font-size: 1.75rem; font-weight: 700; color: #059669;">{{ status_counts.COMPLETED }}</div>
+                    <div class="stat-label" style="font-size: 0.65rem; color: #666; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">COMPLETED</div>
                 </div>
             </div>
         </div>
@@ -61,77 +61,77 @@ body {
     {% if processing_requests %}
         {% for request in processing_requests %}
         <!-- Itinerary Card -->
-        <div class="card mb-4" style="border: 3px solid #667eea; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);">
-            <div class="card-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border: none;">
+        <div class="card mb-3" style="border: 2px solid #1e40af; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.15);">
+            <div class="card-header py-2" style="background: #fef3c7; border: none; border-bottom: 2px solid #fde68a;">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1">
+                        <h6 class="mb-0" style="color: #92400e; font-weight: 600;">
                             <i class="fas fa-route me-2"></i>{{ request.request_number }} - {{ request.contact_name }}
-                        </h5>
-                        <div class="d-flex gap-3 small">
+                        </h6>
+                        <div class="d-flex gap-3" style="font-size: 0.75rem; color: #78350f;">
                             <span><i class="fas fa-calendar me-1"></i>{{ request.from_date.strftime('%b %d') }} - {{ request.to_date.strftime('%b %d, %Y') }}</span>
                             <span><i class="fas fa-users me-1"></i>{{ request.pax }} PAX</span>
                             <span><i class="fas fa-globe me-1"></i>{{ request.nationality }}</span>
                         </div>
                     </div>
-                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-light btn-sm">
+                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-sm" style="background: #1e40af; color: white; border: none;">
                         <i class="fas fa-eye me-1"></i>View Details
                     </a>
                 </div>
             </div>
             <div class="card-body p-0">
                 <!-- Timeline View -->
-                <div class="operations-timeline p-4" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
-                    <h6 class="text-uppercase fw-bold mb-3" style="color: #475569; letter-spacing: 1px;">
+                <div class="operations-timeline p-3" style="background: white;">
+                    <h6 class="text-uppercase fw-bold mb-2" style="color: #1e3a8a; letter-spacing: 0.5px; font-size: 0.8rem;">
                         <i class="fas fa-calendar-day me-2"></i>Daily Timeline
                     </h6>
                     {% if request.itinerary_rows %}
                     <div class="timeline-container" style="position: relative;">
                         {% for row in request.itinerary_rows %}
-                        <div class="timeline-day mb-3" style="position: relative; padding-left: 40px;">
+                        <div class="timeline-day mb-2" style="position: relative; padding-left: 35px;">
                             <!-- Timeline Dot -->
-                            <div style="position: absolute; left: 0; top: 5px; width: 20px; height: 20px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);"></div>
+                            <div style="position: absolute; left: 0; top: 3px; width: 16px; height: 16px; background: #fde68a; border: 2px solid #1e40af; border-radius: 50%;"></div>
                             
                             <!-- Connector Line -->
                             {% if not loop.last %}
-                            <div style="position: absolute; left: 9px; top: 25px; width: 2px; height: calc(100% + 12px); background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);"></div>
+                            <div style="position: absolute; left: 7px; top: 19px; width: 2px; height: calc(100% + 8px); background: #cbd5e1;"></div>
                             {% endif %}
                             
                             <!-- Day Card -->
-                            <div class="day-card" style="background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left: 4px solid #fbbf24;">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="day-card" style="background: #fefce8; border-radius: 8px; padding: 0.65rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border-left: 3px solid #1e40af;">
+                                <div class="d-flex justify-content-between align-items-start mb-1">
                                     <div>
-                                        <div class="fw-bold text-dark" style="font-size: 1rem;">
+                                        <div class="fw-bold" style="font-size: 0.85rem; color: #1e3a8a;">
                                             {{ row.date.strftime('%A, %B %d, %Y') }}
                                         </div>
-                                        <div class="text-muted small">Day {{ loop.index }}</div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">Day {{ loop.index }}</div>
                                     </div>
                                     <div class="d-flex gap-1">
                                         {% if row.flag_hotel %}
-                                        <span class="badge" style="background: #3b82f6; color: white; font-size: 0.75rem;">
+                                        <span class="badge" style="background: #1e40af; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
                                             <i class="fas fa-bed"></i>
                                         </span>
                                         {% endif %}
                                         {% if row.flag_transport %}
-                                        <span class="badge" style="background: #a855f7; color: white; font-size: 0.75rem;">
+                                        <span class="badge" style="background: #1e40af; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
                                             <i class="fas fa-car"></i>
                                         </span>
                                         {% endif %}
                                         {% if row.flag_meal %}
-                                        <span class="badge" style="background: #f59e0b; color: white; font-size: 0.75rem;">
+                                        <span class="badge" style="background: #d97706; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
                                             <i class="fas fa-utensils"></i>
                                         </span>
                                         {% endif %}
                                         {% if row.flag_guide %}
-                                        <span class="badge" style="background: #10b981; color: white; font-size: 0.75rem;">
+                                        <span class="badge" style="background: #10b981; color: white; font-size: 0.65rem; padding: 0.2rem 0.4rem;">
                                             <i class="fas fa-user-tie"></i>
                                         </span>
                                         {% endif %}
                                     </div>
                                 </div>
-                                <div class="text-dark small">{{ row.description }}</div>
+                                <div style="color: #78350f; font-size: 0.8rem;">{{ row.description }}</div>
                                 {% if row.base_cost and row.base_cost > 0 %}
-                                <div class="mt-2 small text-muted">
+                                <div class="mt-1 text-muted" style="font-size: 0.7rem;">
                                     Cost: {{ row.base_cost }} {{ row.currency }} {% if row.cost_unit == 'PER_PERSON' %}pp{% else %}total{% endif %}
                                 </div>
                                 {% endif %}
@@ -148,36 +148,36 @@ body {
                 </div>
                 
                 <!-- Calendar View -->
-                <div class="operations-calendar p-4" style="background: white; border-top: 2px solid #e2e8f0;">
-                    <h6 class="text-uppercase fw-bold mb-3" style="color: #475569; letter-spacing: 1px;">
+                <div class="operations-calendar p-3" style="background: #f8fafc; border-top: 2px solid #fde68a;">
+                    <h6 class="text-uppercase fw-bold mb-2" style="color: #1e3a8a; letter-spacing: 0.5px; font-size: 0.8rem;">
                         <i class="fas fa-calendar-alt me-2"></i>Calendar Grid
                     </h6>
                     {% if request.itinerary_rows %}
-                    <div class="calendar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
+                    <div class="calendar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.75rem;">
                         {% for row in request.itinerary_rows %}
-                        <div class="calendar-day-card" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-radius: 10px; padding: 1rem; border: 2px solid #e2e8f0; transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(0,0,0,0.12)';" onmouseout="this.style.transform=''; this.style.boxShadow='';">
-                            <div class="calendar-day-header mb-2" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: bold;">
+                        <div class="calendar-day-card" style="background: white; border-radius: 6px; padding: 0.65rem; border: 1px solid #cbd5e1; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(30, 58, 138, 0.15)'; this.style.borderColor='#1e40af';" onmouseout="this.style.transform=''; this.style.boxShadow=''; this.style.borderColor='#cbd5e1';">
+                            <div class="calendar-day-header mb-1" style="background: #fef3c7; color: #92400e; padding: 0.4rem; border-radius: 4px; text-align: center; font-weight: bold; font-size: 1.1rem;">
                                 {{ row.date.strftime('%d') }}
-                                <div style="font-size: 0.7rem; opacity: 0.9;">{{ row.date.strftime('%b %Y') }}</div>
+                                <div style="font-size: 0.65rem; opacity: 0.9;">{{ row.date.strftime('%b %Y') }}</div>
                             </div>
-                            <div class="calendar-day-name text-center text-muted small mb-2">
+                            <div class="calendar-day-name text-center mb-1" style="font-size: 0.7rem; color: #78350f;">
                                 {{ row.date.strftime('%A') }}
                             </div>
-                            <div class="calendar-services d-flex flex-wrap gap-1 justify-content-center mb-2">
+                            <div class="calendar-services d-flex flex-wrap gap-1 justify-content-center mb-1">
                                 {% if row.flag_hotel %}
-                                <span class="badge bg-primary" title="Hotel"><i class="fas fa-bed"></i></span>
+                                <span class="badge" style="background: #1e40af; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Hotel"><i class="fas fa-bed"></i></span>
                                 {% endif %}
                                 {% if row.flag_transport %}
-                                <span class="badge" style="background: #a855f7;" title="Transport"><i class="fas fa-car"></i></span>
+                                <span class="badge" style="background: #1e40af; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Transport"><i class="fas fa-car"></i></span>
                                 {% endif %}
                                 {% if row.flag_meal %}
-                                <span class="badge bg-warning text-dark" title="Meal"><i class="fas fa-utensils"></i></span>
+                                <span class="badge" style="background: #d97706; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Meal"><i class="fas fa-utensils"></i></span>
                                 {% endif %}
                                 {% if row.flag_guide %}
-                                <span class="badge bg-success" title="Guide"><i class="fas fa-user-tie"></i></span>
+                                <span class="badge" style="background: #10b981; font-size: 0.65rem; padding: 0.2rem 0.35rem;" title="Guide"><i class="fas fa-user-tie"></i></span>
                                 {% endif %}
                             </div>
-                            <div class="calendar-description small text-truncate" style="color: #475569;" title="{{ row.description }}">
+                            <div class="calendar-description text-truncate" style="color: #475569; font-size: 0.75rem;" title="{{ row.description }}">
                                 {{ row.description }}
                             </div>
                         </div>
