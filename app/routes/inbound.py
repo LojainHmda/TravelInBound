@@ -2463,3 +2463,94 @@ def wizard_step3():
     # GET request - show review page
     wizard_data = session.get('wizard_data', {})
     return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
+@inbound_bp.route('/api/<int:request_id>/export-expense-report')
+@login_required
+def api_export_expense_report(request_id):
+    """Export cash expense report in Windows of Jordan Excel format"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill
+    import os
+    import tempfile
+    
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Sheet1"
+        
+        # Header
+        ws['B2'] = 'Windows of Jordan'
+        ws['B2'].font = Font(size=16, bold=True)
+        ws['B3'] = 'Actual Expense Sheet'
+        ws['B3'].font = Font(size=14)
+        
+        # File info
+        ws['B5'] = request_obj.request_number
+        ws['E5'] = 'Date'
+        ws['F5'] = request_obj.from_date if request_obj.from_date else datetime.now()
+        ws['F5'].number_format = 'DD-MMM-YY'
+        
+        ws['B8'] = f'File Expense {request_obj.agent or "N/A"}'
+        ws['E8'] = 'Ref:'
+        ws['F8'] = request_obj.contact_name or 'N/A'
+        ws['E9'] = 'Pax:'
+        ws['F9'] = str(request_obj.pax)
+        
+        # Table header
+        header_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
+        ws['B11'] = 'Item'
+        ws['D11'] = 'Cost PP'
+        ws['E11'] = 'Pax'
+        ws['F11'] = 'Total'
+        
+        for cell in ['B11', 'D11', 'E11', 'F11']:
+            ws[cell].font = Font(bold=True)
+            ws[cell].fill = header_fill
+            ws[cell].alignment = Alignment(horizontal='center')
+        
+        # Add expense items
+        row = 12
+        for expense in sorted(request_obj.inbound_cash_expenses, key=lambda x: x.date):
+            ws[f'B{row}'] = expense.description
+            ws[f'D{row}'] = expense.amount
+            ws[f'E{row}'] = request_obj.pax if expense.is_per_person else 1
+            ws[f'F{row}'] = f'=D{row}*E{row}'
+            row += 1
+        
+        # Totals
+        if row > 12:
+            ws[f'F{row+1}'] = f'=SUM(F12:F{row-1})'
+            ws[f'F{row+1}'].font = Font(bold=True)
+            
+            ws[f'D{row+2}'] = 'Advance Payment'
+            ws[f'D{row+2}'].font = Font(bold=True)
+            ws[f'F{row+2}'] = 0
+            
+            ws[f'D{row+3}'] = 'Total'
+            ws[f'D{row+3}'].font = Font(bold=True, size=12)
+            ws[f'F{row+3}'] = f'=F{row+1}-F{row+2}'
+            ws[f'F{row+3}'].font = Font(bold=True, size=12)
+            
+            # Signature lines
+            ws[f'B{row+7}'] = 'Authorization:…................................................'
+            ws[f'D{row+7}'] = 'Guide\\Driver:…............................'
+        
+        # Save to temp file
+        output_dir = tempfile.gettempdir()
+        output_path = os.path.join(output_dir, f'Expense_Report_{request_obj.request_number}.xlsx')
+        wb.save(output_path)
+        
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f'Expense_Report_{request_obj.request_number}.xlsx',
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        flash(f'Error generating expense report: {str(e)}', 'error')
+        return redirect(url_for('inbound.view_request', id=request_id))
