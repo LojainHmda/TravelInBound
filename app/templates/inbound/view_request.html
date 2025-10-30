@@ -759,8 +759,8 @@ body {
         0 0 20px rgba(40, 167, 69, 0.2);
 }
 
-/* PENDING - Yellow/Orange */
-.horizontal-stage[data-status="PENDING"] .stage-light.active-light {
+/* PROCESSING - Yellow/Orange */
+.horizontal-stage[data-status="PROCESSING"] .stage-light.active-light {
     background: #FFC107;
     box-shadow: 
         0 0 0 3px rgba(255, 193, 7, 0.2),
@@ -826,8 +826,8 @@ body {
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
 
-/* PENDING - Yellow/Orange circle */
-.horizontal-stage.active[data-status="PENDING"] .stage-circle {
+/* PROCESSING - Yellow/Orange circle */
+.horizontal-stage.active[data-status="PROCESSING"] .stage-circle {
     background: #FFC107;
     border-color: #FFC107;
     color: #333;
@@ -891,7 +891,7 @@ body {
 /* Active connectors matching circle colors */
 .horizontal-stage.active[data-status="REQUEST"] .stage-connector,
 .horizontal-stage.active[data-status="QUOTED"] .stage-connector,
-.horizontal-stage.active[data-status="PENDING"] .stage-connector {
+.horizontal-stage.active[data-status="PROCESSING"] .stage-connector {
     background: #FFC107;
     box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
 }
@@ -963,7 +963,7 @@ body {
 }
 
 .workflow-stage[data-status="CONFIRMED"] .workflow-circle,
-.workflow-stage[data-status="PENDING"] .workflow-circle,
+.workflow-stage[data-status="PROCESSING"] .workflow-circle,
 .workflow-stage[data-status="COMPLETED"] .workflow-circle {
     background: #d1d5db;
     color: #6b7280;
@@ -1638,7 +1638,7 @@ body {
                     <!-- Ultra Modern Status Flow for Inbound Requests -->
                     <div class="status-flow">
                         <!-- Request Stage -->
-                        <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-paper-plane"></i>
                             </div>
@@ -1649,10 +1649,10 @@ body {
                         </div>
                         
                         <!-- Connection Line 1 -->
-                        <div class="status-connector {% if request.status in ['QUOTED', 'CONFIRMED', 'PENDING', 'COMPLETED'] %}active{% endif %}"></div>
+                        <div class="status-connector {% if request.status in ['QUOTED', 'CONFIRMED', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
                         
                         <!-- Quoted Stage -->
-                        <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </div>
@@ -1663,10 +1663,10 @@ body {
                         </div>
                         
                         <!-- Connection Line 2 -->
-                        <div class="status-connector {% if request.status in ['CONFIRMED', 'PENDING', 'COMPLETED'] %}confirmed{% endif %}"></div>
+                        <div class="status-connector {% if request.status in ['CONFIRMED', 'PROCESSING', 'COMPLETED'] %}confirmed{% endif %}"></div>
                         
                         <!-- Confirmed Stage -->
-                        <div class="status-step {% if request.status == 'CONFIRMED' %}confirmed{% elif request.status in ['PENDING', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="status-step {% if request.status == 'CONFIRMED' %}confirmed{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
@@ -1677,10 +1677,10 @@ body {
                         </div>
                         
                         <!-- Connection Line 3 -->
-                        <div class="status-connector {% if request.status in ['PENDING', 'COMPLETED'] %}active{% endif %}"></div>
+                        <div class="status-connector {% if request.status in ['PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
                         
-                        <!-- Pending/Processing Stage -->
-                        <div class="status-step {% if request.status == 'PENDING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}">
+                        <!-- Processing Stage -->
+                        <div class="status-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-sync-alt"></i>
                             </div>
@@ -2324,7 +2324,7 @@ body {
                                     <option value="REQUEST">New Request</option>
                                     <option value="QUOTED">Quoted</option>
                                     <option value="CONFIRMED">Confirmed</option>
-                                    <option value="PENDING">Processing</option>
+                                    <option value="PROCESSING">Processing</option>
                                     <option value="COMPLETED">Completed</option>
                                 </select>
                             </div>
@@ -5145,7 +5145,7 @@ function updateStatusUI(newStatus) {
             'REQUEST': '20%',
             'QUOTED': '40%',
             'CONFIRMED': '60%',
-            'PENDING': '80%',
+            'PROCESSING': '80%',
             'COMPLETED': '100%'
         };
         progressFill.style.width = progressWidths[newStatus] || '0%';
