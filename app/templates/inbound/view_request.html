@@ -2218,27 +2218,12 @@ body {
                     </ul>
                 </div>
                 
-                <!-- Generate Itinerary Button -->
-                <button type="button" class="action-btn action-btn-generate" onclick="generateItinerary()">
-                    <i class="fas fa-calendar-plus"></i> Generate Itinerary
-                </button>
-                
-                <!-- Generate Quote Button -->
-                <button type="button" class="action-btn action-btn-quote" onclick="generateQuote()">
-                    <i class="fas fa-calculator"></i> Generate Quote
-                </button>
-                
-                <!-- Generate Proforma Invoice Button (shown after quote) -->
-                {% if request.booking_id and not request.booking.invoice_number %}
-                <button type="button" class="action-btn action-btn-proforma" onclick="generateProformaInvoice()">
-                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
-                </button>
-                {% endif %}
-                
-                <!-- Generate Proforma Invoice Button -->
-                <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="action-btn action-btn-export" style="text-decoration: none;">
+                <!-- Generate Proforma Invoice Button - ALWAYS FIRST -->
+                {% if not request.booking_id or not request.booking.invoice_number %}
+                <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="action-btn" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); text-decoration: none; color: #1f2937; font-weight: 600;">
                     <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
                 </a>
+                {% endif %}
                 
                 <!-- Export Voucher/Trip Plan Word Document Button (always available) -->
                 <a href="/inbound/api/{{ request.id }}/export-voucher-doc" class="action-btn action-btn-export" style="text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">

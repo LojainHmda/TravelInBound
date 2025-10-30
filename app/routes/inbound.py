@@ -1181,19 +1181,6 @@ def preview_proforma(request_id):
             'total': guide.cost or 0
         })
     
-    # Add cash expenses
-    for expense in request_obj.inbound_cash_expenses:
-        total_expense = expense.calculate_total_cost(request_obj.pax)
-        service_items.append({
-            'type': 'Expense',
-            'description': f"{expense.category or 'Expense'}: {expense.description} - {expense.location or ''}",
-            'date_from': expense.date,
-            'date_to': expense.date,
-            'pax': request_obj.pax if expense.is_per_person else 1,
-            'unit_price': expense.amount or 0,
-            'total': total_expense or 0
-        })
-    
     # Sort service items by date
     service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
     
@@ -1310,18 +1297,6 @@ def api_export_proforma_doc(request_id):
                 'pax': request_obj.pax,
                 'unit_price': guide.cost,
                 'total': guide.cost
-            })
-        
-        # Add cash expenses
-        for expense in request_obj.inbound_cash_expenses:
-            total_expense = expense.calculate_total_cost(request_obj.pax)
-            service_items.append({
-                'description': f"{expense.category or 'Expense'}: {expense.description} - {expense.location or ''}",
-                'date_from': expense.date,
-                'date_to': expense.date,
-                'pax': request_obj.pax if expense.is_per_person else 1,
-                'unit_price': expense.amount,
-                'total': total_expense
             })
         
         # Sort service items by date
