@@ -1336,12 +1336,67 @@ def api_export_voucher_doc(request_id):
                 'other_rooms': other_rooms
             })
         
-        # Build itinerary from itinerary rows (simple date + description format)
+        # Build itinerary organized by service type
         itinerary_days = []
-        for row in sorted(request_obj.itinerary_rows, key=lambda x: x.date):
+        
+        # Group all services by date
+        services_by_date = {}
+        
+        # Add hotels
+        for hotel in request_obj.inbound_hotels:
+            current_date = hotel.check_in_date
+            while current_date < hotel.check_out_date:
+                date_key = current_date.strftime('%d-%b-%y')
+                if date_key not in services_by_date:
+                    services_by_date[date_key] = []
+                
+                services_by_date[date_key].append(f"Hotel: {hotel.hotel_name or 'TBA'}")
+                current_date += timedelta(days=1)
+        
+        # Add transport
+        for transport in request_obj.inbound_transports:
+            date_key = transport.date.strftime('%d-%b-%y')
+            if date_key not in services_by_date:
+                services_by_date[date_key] = []
+            
+            services_by_date[date_key].append(
+                f"Transport: {transport.pickup_location or 'TBA'} → {transport.dropoff_location or 'TBA'}"
+            )
+        
+        # Add meals
+        for meal in request_obj.inbound_meals:
+            current_date = meal.date
+            end_date = meal.end_date if meal.end_date else meal.date
+            while current_date <= end_date:
+                date_key = current_date.strftime('%d-%b-%y')
+                if date_key not in services_by_date:
+                    services_by_date[date_key] = []
+                
+                services_by_date[date_key].append(
+                    f"{meal.meal_type or 'Meal'}: {meal.restaurant or 'TBA'}"
+                )
+                current_date += timedelta(days=1)
+        
+        # Add guides
+        for guide in request_obj.inbound_guides:
+            current_date = guide.date
+            end_date = guide.end_date if guide.end_date else guide.date
+            while current_date <= end_date:
+                date_key = current_date.strftime('%d-%b-%y')
+                if date_key not in services_by_date:
+                    services_by_date[date_key] = []
+                
+                services_by_date[date_key].append(
+                    f"Guide: {guide.service_type or 'Guide Service'} ({guide.language or 'English'})"
+                )
+                current_date += timedelta(days=1)
+        
+        # Convert to list format
+        for date_key in sorted(services_by_date.keys(), key=lambda x: datetime.strptime(x, '%d-%b-%y')):
+            description = '\n'.join(services_by_date[date_key])
             itinerary_days.append({
-                'date': row.date.strftime('%d-%b-%y'),
-                'description': row.description
+                'date': date_key,
+                'description': description
             })
         
         # Collect meals data
