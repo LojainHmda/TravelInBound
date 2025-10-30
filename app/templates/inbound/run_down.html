@@ -16,12 +16,12 @@ body {
 
 <div class="container-fluid py-3">
     <!-- Header -->
-    <div class="card mb-3" style="border: none; box-shadow: 0 2px 8px rgba(30, 58, 138, 0.15);">
-        <div class="card-header py-2" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; border: none;">
+    <div class="card mb-3" style="border: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+        <div class="card-header py-2" style="background: #f1f5f9; color: #334155; border: none; border-bottom: 2px solid #e2e8f0;">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Run-Down Operations Dashboard</h5>
-                    <p class="mb-0 opacity-90 small">All active itineraries in PROCESSING status</p>
+                    <p class="mb-0 small" style="color: #64748b;">All active itineraries in PROCESSING status</p>
                 </div>
                 <a href="{{ url_for('main.index') }}" class="btn btn-sm" style="background: #fef3c7; color: #92400e; border: none;">
                     <i class="fas fa-arrow-left me-1"></i>Back to Hub
