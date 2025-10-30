@@ -1748,19 +1748,15 @@ def get_status_color(status):
 @inbound_bp.route('/run-down')
 @login_required
 def run_down_plan():
-    """Run-down plan dashboard showing daily operations"""
-    # Get default date range (today +/- 7 days)
-    today = datetime.now().date()
-    default_from = today - timedelta(days=7)
-    default_to = today + timedelta(days=30)
-    
-    # Get unique statuses for filter
-    statuses = ['QUOTED', 'PROFORMA_GENERATED', 'BOOKED', 'CONFIRMED', 'COMPLETED', 'CANCELLED']
+    """Run-down plan dashboard showing all PROCESSING itineraries"""
+    # Get all PROCESSING itineraries for current user
+    processing_requests = InboundRequest.query.filter_by(
+        user_id=current_user.id,
+        status='PROCESSING'
+    ).order_by(InboundRequest.arrival_date).all()
     
     return render_template('inbound/run_down.html',
-                         default_from=default_from.strftime('%Y-%m-%d'),
-                         default_to=default_to.strftime('%Y-%m-%d'),
-                         statuses=statuses)
+                         processing_requests=processing_requests)
 
 @inbound_bp.route('/api/run-down-data')
 @login_required
