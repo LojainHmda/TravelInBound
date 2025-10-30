@@ -2751,29 +2751,63 @@ def api_export_expense_report(request_id):
 @inbound_bp.route('/<int:request_id>/add-cash-expense', methods=['POST'])
 @login_required
 def add_cash_expense(request_id):
-    """Add a cash expense item"""
+    """Add a cash expense item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
         abort(403)
     
     try:
-        expense_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        from app.models.inbound import ItineraryRow
         
+        expense_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        description = request.form['description']
+        driver_name = request.form.get('driver_name', '')
+        amount = float(request.form['amount'])
+        
+        # Create the cash expense record
         expense = InboundCashExpense(
             request_id=request_obj.id,
             date=expense_date,
-            description=request.form['description'],
-            driver_name=request.form.get('driver_name', ''),
-            amount=float(request.form['amount']),
+            description=description,
+            driver_name=driver_name,
+            amount=amount,
             currency='USD',
             is_per_person=False
         )
-        
         db.session.add(expense)
-        db.session.commit()
+        db.session.flush()
         
-        flash('Cash expense added successfully', 'success')
+        # Create or update itinerary row for this date
+        existing_row = ItineraryRow.query.filter_by(
+            request_id=request_obj.id,
+            date=expense_date
+        ).first()
+        
+        if existing_row:
+            # Add expense to existing row description
+            expense_text = f"Cash: {description} (${amount:.2f})"
+            if existing_row.description:
+                existing_row.description += f" | {expense_text}"
+            else:
+                existing_row.description = expense_text
+            # Add to base cost
+            existing_row.base_cost += amount
+        else:
+            # Create new itinerary row
+            expense_text = f"Cash: {description} (${amount:.2f})"
+            
+            itinerary_row = ItineraryRow(
+                request_id=request_obj.id,
+                date=expense_date,
+                description=expense_text,
+                base_cost=amount,
+                currency='USD'
+            )
+            db.session.add(itinerary_row)
+        
+        db.session.commit()
+        flash('Cash expense added to itinerary successfully', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error adding cash expense: {str(e)}', 'error')
@@ -2838,30 +2872,71 @@ def delete_cash_expense(request_id, expense_id):
 @inbound_bp.route('/<int:request_id>/add-meal', methods=['POST'])
 @login_required
 def add_meal(request_id):
-    """Add a meal item"""
+    """Add a meal item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
         abort(403)
     
     try:
-        meal_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        from app.models.inbound import ItineraryRow, SERVICE_FLAG_MEAL
         
+        meal_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        meal_type = request.form['meal_type']
+        restaurant = request.form.get('restaurant', '')
+        location = request.form.get('location', '')
+        
+        # Create the meal record
         meal = InboundMeal(
             request_id=request_obj.id,
             date=meal_date,
-            meal_type=request.form['meal_type'],
-            restaurant=request.form.get('restaurant', ''),
-            location=request.form.get('location', ''),
+            meal_type=meal_type,
+            restaurant=restaurant,
+            location=location,
             cost_per_person=0.0,
             currency='USD',
             status='CONFIRMED'
         )
-        
         db.session.add(meal)
-        db.session.commit()
+        db.session.flush()
         
-        flash('Meal added successfully', 'success')
+        # Create or update itinerary row for this date
+        existing_row = ItineraryRow.query.filter_by(
+            request_id=request_obj.id,
+            date=meal_date
+        ).first()
+        
+        if existing_row:
+            # Add meal flag to existing row
+            existing_row.has_meal = True
+            if existing_row.description:
+                existing_row.description += f" | {meal_type}"
+            else:
+                existing_row.description = meal_type
+        else:
+            # Create new itinerary row
+            description = f"{meal_type}"
+            if restaurant:
+                description += f" at {restaurant}"
+            if location:
+                description += f" ({location})"
+            
+            itinerary_row = ItineraryRow(
+                request_id=request_obj.id,
+                date=meal_date,
+                description=description,
+                has_meal=True,
+                base_cost=0.0,
+                currency='USD'
+            )
+            db.session.add(itinerary_row)
+            db.session.flush()
+            
+            # Link meal to itinerary row
+            meal.source_itinerary_id = itinerary_row.id
+        
+        db.session.commit()
+        flash('Meal added to itinerary successfully', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error adding meal: {str(e)}', 'error')
