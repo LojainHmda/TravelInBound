@@ -1753,7 +1753,7 @@ def run_down_plan():
     processing_requests = InboundRequest.query.filter_by(
         user_id=current_user.id,
         status='PROCESSING'
-    ).order_by(InboundRequest.arrival_date).all()
+    ).order_by(InboundRequest.from_date).all()
     
     return render_template('inbound/run_down.html',
                          processing_requests=processing_requests)
