@@ -202,6 +202,7 @@ class InboundTransport(db.Model):
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day transport services
     vehicle_type = db.Column(db.String(100), nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)  # Driver assigned to this transport
     pickup_location = db.Column(db.String(200), nullable=True)
     dropoff_location = db.Column(db.String(200), nullable=True)
     pickup_time = db.Column(db.Time, nullable=True)

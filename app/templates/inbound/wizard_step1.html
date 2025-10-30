@@ -284,6 +284,27 @@
                 </div>
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Arrival Driver Name</label>
+                    <input type="text" name="arrival_driver" class="form-control" 
+                           placeholder="Driver name for arrival transfer" 
+                           value="{{ wizard_data.arrival_driver or '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Arrival Vehicle Type</label>
+                    <select name="arrival_vehicle" class="form-select">
+                        <option value="">Select vehicle</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Mini Bus">Mini Bus</option>
+                        <option value="Van">Van</option>
+                        <option value="Car">Car</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Coaster">Coaster</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Departure Section -->
             <div class="section-header" style="margin-top: 2rem;">
                 <i class="fas fa-plane-departure"></i> Departure Information
@@ -323,6 +344,27 @@
                     <input type="text" name="departure_reference" class="form-control" 
                            placeholder="e.g., RJ456, Bus 789" 
                            value="{{ wizard_data.departure_reference or '' }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Departure Driver Name</label>
+                    <input type="text" name="departure_driver" class="form-control" 
+                           placeholder="Driver name for departure transfer" 
+                           value="{{ wizard_data.departure_driver or '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Departure Vehicle Type</label>
+                    <select name="departure_vehicle" class="form-select">
+                        <option value="">Select vehicle</option>
+                        <option value="Bus">Bus</option>
+                        <option value="Mini Bus">Mini Bus</option>
+                        <option value="Van">Van</option>
+                        <option value="Car">Car</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Coaster">Coaster</option>
+                    </select>
                 </div>
             </div>
 

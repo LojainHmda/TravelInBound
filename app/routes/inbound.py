@@ -2304,6 +2304,56 @@ def wizard_step3():
             db.session.add(request_obj)
             db.session.flush()  # Get the ID
             
+            # Create arrival transport if driver/vehicle specified
+            if wizard_data.get('arrival_driver') or wizard_data.get('arrival_vehicle'):
+                arrival_time_str = wizard_data.get('arrival_time')
+                arrival_time = None
+                if arrival_time_str:
+                    try:
+                        arrival_time = datetime.strptime(arrival_time_str, '%H:%M').time()
+                    except:
+                        pass
+                
+                arrival_transport = InboundTransport(
+                    request_id=request_obj.id,
+                    date=from_date,
+                    vehicle_type=wizard_data.get('arrival_vehicle'),
+                    driver_name=wizard_data.get('arrival_driver'),
+                    pickup_location=wizard_data.get('arrival_point', ''),
+                    dropoff_location='Hotel',  # Default dropoff
+                    pickup_time=arrival_time,
+                    is_airport_transfer=True,
+                    is_arrival=True,
+                    cost=0.0,
+                    currency='USD'
+                )
+                db.session.add(arrival_transport)
+            
+            # Create departure transport if driver/vehicle specified
+            if wizard_data.get('departure_driver') or wizard_data.get('departure_vehicle'):
+                departure_time_str = wizard_data.get('departure_time')
+                departure_time = None
+                if departure_time_str:
+                    try:
+                        departure_time = datetime.strptime(departure_time_str, '%H:%M').time()
+                    except:
+                        pass
+                
+                departure_transport = InboundTransport(
+                    request_id=request_obj.id,
+                    date=to_date,
+                    vehicle_type=wizard_data.get('departure_vehicle'),
+                    driver_name=wizard_data.get('departure_driver'),
+                    pickup_location='Hotel',  # Default pickup
+                    dropoff_location=wizard_data.get('departure_point', ''),
+                    pickup_time=departure_time,
+                    is_airport_transfer=True,
+                    is_departure=True,
+                    cost=0.0,
+                    currency='USD'
+                )
+                db.session.add(departure_transport)
+            
             # Track itinerary rows by date to merge services on same dates
             itinerary_by_date = {}
             
@@ -2521,6 +2571,7 @@ def wizard_step3():
                         date=from_date,
                         end_date=to_date if to_date != from_date else None,
                         vehicle_type=service.get('vehicle_type'),
+                        driver_name=service.get('driver_name'),
                         pickup_location=service.get('pickup_location'),
                         dropoff_location=service.get('dropoff_location'),
                         pickup_time=pickup_time,
