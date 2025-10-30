@@ -1094,6 +1094,140 @@ def api_generate_proforma(request_id):
             'message': f'Error generating proforma invoice: {str(e)}'
         }), 500
 
+@inbound_bp.route('/<int:request_id>/preview-proforma', methods=['GET'])
+@login_required
+def preview_proforma(request_id):
+    """Preview proforma invoice on a web page before exporting to Word"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    # Collect customer information
+    customer_data = {}
+    if request_obj.customer_id:
+        customer = Customer.query.get(request_obj.customer_id)
+        if customer:
+            customer_data = {
+                'name': customer.name,
+                'company_name': customer.company_name,
+                'email': customer.email,
+                'phone': customer.phone,
+                'nationality': customer.nationality
+            }
+    else:
+        # Use contact name from request if no customer linked
+        customer_data = {
+            'name': request_obj.contact_name,
+            'nationality': request_obj.nationality
+        }
+    
+    # Collect tour information
+    tour_data = {
+        'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
+        'to_date': request_obj.to_date.strftime('%d %b %Y') if request_obj.to_date else '',
+        'pax': request_obj.pax,
+        'nationality': request_obj.nationality
+    }
+    
+    # Collect all service items with date ranges
+    service_items = []
+    
+    # Add hotels
+    for hotel in request_obj.inbound_hotels:
+        service_items.append({
+            'type': 'Hotel',
+            'description': f"Hotel: {hotel.hotel_name or 'TBD'} - {hotel.location or ''} ({hotel.room_type or 'Standard'}, {hotel.meal_plan or 'BB'})",
+            'date_from': hotel.check_in_date,
+            'date_to': hotel.check_out_date,
+            'pax': request_obj.pax,
+            'unit_price': hotel.cost_per_night or 0,
+            'total': hotel.total_cost or 0
+        })
+    
+    # Add transport
+    for transport in request_obj.inbound_transports:
+        service_items.append({
+            'type': 'Transport',
+            'description': f"Transport: {transport.vehicle_type or 'Vehicle'} - {transport.pickup_location or ''} to {transport.dropoff_location or ''}",
+            'date_from': transport.date,
+            'date_to': transport.end_date if transport.end_date else transport.date,
+            'pax': request_obj.pax,
+            'unit_price': transport.cost or 0,
+            'total': transport.cost or 0
+        })
+    
+    # Add meals
+    for meal in request_obj.inbound_meals:
+        service_items.append({
+            'type': 'Meal',
+            'description': f"Meal: {meal.meal_type or 'Meal'} at {meal.restaurant or 'Restaurant'} - {meal.location or ''}",
+            'date_from': meal.date,
+            'date_to': meal.end_date if meal.end_date else meal.date,
+            'pax': request_obj.pax,
+            'unit_price': meal.cost_per_person or 0,
+            'total': meal.total_cost or 0
+        })
+    
+    # Add guides
+    for guide in request_obj.inbound_guides:
+        service_items.append({
+            'type': 'Guide',
+            'description': f"Guide: {guide.service_type or 'Guide Service'} - {guide.guide_name or 'TBD'} ({guide.language or 'English'})",
+            'date_from': guide.date,
+            'date_to': guide.end_date if guide.end_date else guide.date,
+            'pax': request_obj.pax,
+            'unit_price': guide.cost or 0,
+            'total': guide.cost or 0
+        })
+    
+    # Add cash expenses
+    for expense in request_obj.inbound_cash_expenses:
+        total_expense = expense.calculate_total_cost(request_obj.pax)
+        service_items.append({
+            'type': 'Expense',
+            'description': f"{expense.category or 'Expense'}: {expense.description} - {expense.location or ''}",
+            'date_from': expense.date,
+            'date_to': expense.date,
+            'pax': request_obj.pax if expense.is_per_person else 1,
+            'unit_price': expense.amount or 0,
+            'total': total_expense or 0
+        })
+    
+    # Sort service items by date
+    service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
+    
+    # Calculate total
+    grand_total = sum(item['total'] for item in service_items)
+    
+    # Update status to QUOTED when generating proforma invoice preview
+    if request_obj.status not in ['QUOTED', 'CONFIRMED']:
+        request_obj.status = 'QUOTED'
+        
+        # Also update booking status if it exists
+        if request_obj.booking_id:
+            booking = Booking.query.get(request_obj.booking_id)
+            if booking:
+                booking.status = 'QUOTED'
+        
+        db.session.commit()
+    
+    # Prepare invoice data for template
+    invoice_data = {
+        'invoice_number': request_obj.request_number,
+        'invoice_date': datetime.now().strftime('%d %b %Y'),
+        'company_name': 'Windows of Jordan',
+        'company_address': 'Amman, Jordan',
+        'customer': customer_data,
+        'tour': tour_data,
+        'service_items': service_items,
+        'grand_total': grand_total
+    }
+    
+    return render_template('inbound/preview_proforma.html', 
+                         request=request_obj,
+                         invoice=invoice_data)
+
 @inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
 @login_required
 def api_export_proforma_doc(request_id):

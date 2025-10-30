@@ -2049,9 +2049,9 @@ body {
                 </button>
                 {% endif %}
                 
-                <!-- Export Proforma Word Document Button (always available) -->
-                <a href="/inbound/api/{{ request.id }}/export-proforma-doc" class="action-btn action-btn-export" style="text-decoration: none;">
-                    <i class="fas fa-file-word"></i> Export Proforma (Word)
+                <!-- Generate Proforma Invoice Button -->
+                <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="action-btn action-btn-export" style="text-decoration: none;">
+                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
                 </a>
                 
                 <!-- Export Voucher/Trip Plan Word Document Button (always available) -->

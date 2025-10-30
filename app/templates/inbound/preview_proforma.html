@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Proforma Invoice Preview - {{ invoice.invoice_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Header with actions -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-invoice"></i> Proforma Invoice Preview</h2>
+                <div>
+                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Request
+                    </a>
+                    <a href="{{ url_for('inbound.api_export_proforma_doc', request_id=request.id) }}" class="btn btn-primary">
+                        <i class="fas fa-file-word"></i> Download Word Document
+                    </a>
+                </div>
+            </div>
+
+            <!-- Invoice Card -->
+            <div class="card shadow-sm">
+                <div class="card-body" style="background: white; padding: 40px;">
+                    <!-- Company Header -->
+                    <div class="text-center mb-4" style="border-bottom: 3px solid #f59e0b; padding-bottom: 20px;">
+                        <h1 style="color: #f59e0b; font-weight: 700; margin-bottom: 5px;">{{ invoice.company_name }}</h1>
+                        <p style="color: #666; margin-bottom: 0;">{{ invoice.company_address }}</p>
+                    </div>
+
+                    <!-- Invoice Title -->
+                    <div class="text-center mb-4">
+                        <h2 style="color: #1f2937; font-weight: 600;">PROFORMA INVOICE</h2>
+                    </div>
+
+                    <!-- Invoice Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 style="color: #374151; font-weight: 600; margin-bottom: 15px;">Customer Information</h5>
+                            <p style="margin-bottom: 5px;"><strong>Name:</strong> {{ invoice.customer.name }}</p>
+                            {% if invoice.customer.company_name %}
+                            <p style="margin-bottom: 5px;"><strong>Company:</strong> {{ invoice.customer.company_name }}</p>
+                            {% endif %}
+                            {% if invoice.customer.email %}
+                            <p style="margin-bottom: 5px;"><strong>Email:</strong> {{ invoice.customer.email }}</p>
+                            {% endif %}
+                            {% if invoice.customer.phone %}
+                            <p style="margin-bottom: 5px;"><strong>Phone:</strong> {{ invoice.customer.phone }}</p>
+                            {% endif %}
+                            {% if invoice.customer.nationality %}
+                            <p style="margin-bottom: 5px;"><strong>Nationality:</strong> {{ invoice.customer.nationality }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p style="margin-bottom: 5px;"><strong>Invoice Number:</strong> {{ invoice.invoice_number }}</p>
+                            <p style="margin-bottom: 5px;"><strong>Date:</strong> {{ invoice.invoice_date }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Tour Information -->
+                    <div class="mb-4" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                        <h5 style="color: #374151; font-weight: 600; margin-bottom: 10px;">Tour Details</h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <p style="margin-bottom: 5px;"><strong>From:</strong> {{ invoice.tour.from_date }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p style="margin-bottom: 5px;"><strong>To:</strong> {{ invoice.tour.to_date }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p style="margin-bottom: 5px;"><strong>PAX:</strong> {{ invoice.tour.pax }}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p style="margin-bottom: 5px;"><strong>Nationality:</strong> {{ invoice.tour.nationality }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Service Items Table -->
+                    <h5 style="color: #374151; font-weight: 600; margin-bottom: 15px;">Service Items</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-striped" style="border: 1px solid #d1d5db;">
+                            <thead style="background: #f59e0b; color: white;">
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 10%;">Type</th>
+                                    <th style="width: 35%;">Description</th>
+                                    <th style="width: 12%;">Date From</th>
+                                    <th style="width: 12%;">Date To</th>
+                                    <th style="width: 8%;">PAX</th>
+                                    <th style="width: 10%;">Unit Price</th>
+                                    <th style="width: 10%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in invoice.service_items %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        {% if item.type == 'Hotel' %}
+                                        <span class="badge bg-primary">{{ item.type }}</span>
+                                        {% elif item.type == 'Transport' %}
+                                        <span class="badge bg-info">{{ item.type }}</span>
+                                        {% elif item.type == 'Meal' %}
+                                        <span class="badge bg-warning">{{ item.type }}</span>
+                                        {% elif item.type == 'Guide' %}
+                                        <span class="badge bg-success">{{ item.type }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ item.type }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.date_from.strftime('%d %b %Y') if item.date_from else 'N/A' }}</td>
+                                    <td>{{ item.date_to.strftime('%d %b %Y') if item.date_to else 'N/A' }}</td>
+                                    <td>{{ item.pax }}</td>
+                                    <td style="text-align: right;">${{ "%.2f"|format(item.unit_price) }}</td>
+                                    <td style="text-align: right;"><strong>${{ "%.2f"|format(item.total) }}</strong></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #fef3c7;">
+                                    <td colspan="7" style="text-align: right; font-weight: 600; font-size: 1.1em;">GRAND TOTAL:</td>
+                                    <td style="text-align: right; font-weight: 700; font-size: 1.2em; color: #f59e0b;">${{ "%.2f"|format(invoice.grand_total) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Banking Information -->
+                    <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                        <h5 style="color: #374151; font-weight: 600; margin-bottom: 15px;">Banking Information</h5>
+                        <p style="margin-bottom: 5px;"><strong>Bank Name:</strong> Arab Bank</p>
+                        <p style="margin-bottom: 5px;"><strong>Account Name:</strong> Windows of Jordan</p>
+                        <p style="margin-bottom: 5px;"><strong>Account Number:</strong> [Account details to be added]</p>
+                        <p style="margin-bottom: 5px;"><strong>SWIFT/BIC:</strong> [SWIFT code to be added]</p>
+                    </div>
+
+                    <!-- Footer Notes -->
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #d1d5db;">
+                        <p style="color: #666; font-size: 0.9em; margin-bottom: 5px;"><strong>Terms & Conditions:</strong></p>
+                        <ul style="color: #666; font-size: 0.9em;">
+                            <li>This is a proforma invoice and not a tax invoice.</li>
+                            <li>Payment is due within 7 days of invoice date.</li>
+                            <li>All prices are in USD unless otherwise stated.</li>
+                            <li>Services are subject to availability at time of booking.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons at Bottom -->
+            <div class="text-center mt-4 mb-5">
+                <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn btn-secondary btn-lg me-3">
+                    <i class="fas fa-arrow-left"></i> Back to Request
+                </a>
+                <a href="{{ url_for('inbound.api_export_proforma_doc', request_id=request.id) }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-file-word"></i> Download Word Document
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .btn, .d-flex {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}
