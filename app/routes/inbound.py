@@ -1073,9 +1073,9 @@ def api_generate_proforma(request_id):
         if not booking.invoice_number:
             booking.generate_invoice_number()
         
-        # Update status to indicate proforma invoice generated
-        booking.status = 'PROFORMA_GENERATED'
-        request_obj.status = 'PROFORMA_GENERATED'
+        # Update status to QUOTED when proforma invoice generated
+        booking.status = 'QUOTED'
+        request_obj.status = 'QUOTED'
         
         db.session.commit()
         
@@ -1193,11 +1193,19 @@ def api_export_proforma_doc(request_id):
         # Sort service items by date
         service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
         
+        # Update booking status to QUOTED when exporting proforma
+        if request_obj.booking_id:
+            booking = Booking.query.get(request_obj.booking_id)
+            if booking and booking.status != 'QUOTED':
+                booking.status = 'QUOTED'
+                request_obj.status = 'QUOTED'
+                db.session.commit()
+        
         # Prepare invoice data
         invoice_data = {
             'invoice_number': request_obj.request_number,
             'invoice_date': datetime.now().strftime('%d %b %Y'),
-            'company_name': 'Arabi Travel',
+            'company_name': 'Windows of Jordan',
             'company_address': 'Amman, Jordan',
             'customer': customer_data,
             'tour': tour_data,
