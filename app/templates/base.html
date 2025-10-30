@@ -16,8 +16,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v={{ range(1, 10000) | random }}&t={{ moment().strftime('%Y%m%d%H%M%S') if moment else '20250905' }}">
     <!-- Button Theme CSS (loads last to override other styles) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/button-theme.css', v=1) }}">
-    <!-- Quick Actions FAB CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/quick-actions.css', v=1) }}">
     <!-- AI Chat CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-chat.css', v=1) }}">
     
@@ -718,8 +716,6 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
     <script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
-    <!-- Quick Actions FAB JS -->
-    <script src="{{ url_for('static', filename='js/quick-actions.js') }}"></script>
     <!-- Screen Context JS -->
     <script src="{{ url_for('static', filename='js/screen-context.js') }}"></script>
     <!-- AI Chat JS -->
