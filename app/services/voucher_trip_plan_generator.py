@@ -1,10 +1,10 @@
 """
-Voucher/Trip Plan Word Document Generator
-Generates professional Word documents for trip itineraries/vouchers with day-by-day details
+Voucher/Trip Plan Word Document Generator - Windows of Jordan Format
+Generates professional Word documents matching the Windows of Jordan voucher format
 """
 
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
+from docx.shared import Inches, Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -13,243 +13,428 @@ import os
 
 
 class VoucherTripPlanGenerator:
-    """Generate Word documents for trip vouchers/itineraries"""
+    """Generate Word documents for trip vouchers in Windows of Jordan format"""
     
     def __init__(self):
         self.doc = Document()
         self._setup_styles()
+        # Set narrow margins
+        sections = self.doc.sections
+        for section in sections:
+            section.top_margin = Cm(1.27)
+            section.bottom_margin = Cm(1.27)
+            section.left_margin = Cm(1.27)
+            section.right_margin = Cm(1.27)
     
     def _setup_styles(self):
         """Setup document styles"""
         style = self.doc.styles['Normal']
         font = style.font
-        font.name = 'Arial'
-        font.size = Pt(10)
+        font.name = 'Calibri'
+        font.size = Pt(9)
     
-    def _add_header(self, company_name="Arabi Travel", company_address="Amman, Jordan"):
-        """Add company header"""
-        header = self.doc.add_paragraph()
-        header.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = header.add_run(company_name)
-        run.bold = True
-        run.font.size = Pt(18)
-        run.font.color.rgb = RGBColor(139, 115, 85)
-        
-        address = self.doc.add_paragraph()
-        address.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = address.add_run(company_address)
-        run.font.size = Pt(10)
-        run.font.color.rgb = RGBColor(107, 114, 128)
-        
-        self.doc.add_paragraph()
+    def _set_cell_shading(self, cell, color):
+        """Set background color for table cell"""
+        shading_elm = OxmlElement('w:shd')
+        shading_elm.set(qn('w:fill'), color)
+        cell._element.get_or_add_tcPr().append(shading_elm)
     
-    def _add_title(self, voucher_number, voucher_date):
-        """Add voucher title"""
-        title = self.doc.add_paragraph()
-        title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = title.add_run('TRIP VOUCHER')
-        run.bold = True
-        run.font.size = Pt(16)
-        run.font.color.rgb = RGBColor(31, 41, 55)
+    def _add_header_row(self, tour_file, company_name="Windows of Jordan"):
+        """Add header with tour file and company name"""
+        # Create header table
+        table = self.doc.add_table(rows=1, cols=2)
+        table.autofit = False
+        table.allow_autofit = False
         
-        details = self.doc.add_paragraph()
-        details.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = details.add_run(f'Voucher No: {voucher_number}')
-        run.font.size = Pt(11)
-        details.add_run('\n')
-        run = details.add_run(f'Date: {voucher_date}')
-        run.font.size = Pt(11)
+        # Set column widths
+        table.columns[0].width = Inches(3.0)
+        table.columns[1].width = Inches(4.5)
         
-        self.doc.add_paragraph()
-    
-    def _add_tour_summary(self, tour_data):
-        """Add tour summary section"""
-        heading = self.doc.add_paragraph()
-        run = heading.add_run('Tour Information')
-        run.bold = True
+        # Tour File cell
+        cell = table.rows[0].cells[0]
+        p = cell.paragraphs[0]
+        run = p.add_run(f'Tour File : {tour_file}')
+        run.font.size = Pt(12)
+        run.font.bold = True
+        
+        # Company name cell
+        cell = table.rows[0].cells[1]
+        p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        run = p.add_run(company_name)
         run.font.size = Pt(14)
-        run.font.color.rgb = RGBColor(31, 41, 55)
+        run.font.bold = True
+    
+    def _add_tour_details_table(self, tour_data):
+        """Add tour details table with group info"""
+        # Create table
+        table = self.doc.add_table(rows=4, cols=6)
+        table.style = 'Table Grid'
+        table.autofit = False
         
-        # Create table for tour info
-        table = self.doc.add_table(rows=0, cols=2)
-        table.style = 'Light Grid Accent 1'
+        # Row 1: Group Name and Visa
+        table.rows[0].cells[0].text = 'Group Name:'
+        table.rows[0].cells[1].merge(table.rows[0].cells[2])
+        table.rows[0].cells[1].text = tour_data.get('guest_name', '')
+        table.rows[0].cells[3].text = 'Visa - Free'
+        table.rows[0].cells[3].merge(table.rows[0].cells[5])
         
-        # Add tour details
-        details = [
-            ('Tour Reference', tour_data.get('reference', 'N/A')),
-            ('Guest Name', tour_data.get('guest_name', 'N/A')),
-            ('Nationality', tour_data.get('nationality', 'N/A')),
-            ('Number of Passengers', str(tour_data.get('pax', 'N/A'))),
-            ('Tour Duration', f"{tour_data.get('from_date', '')} to {tour_data.get('to_date', '')}"),
-            ('Number of Days', str(tour_data.get('no_of_days', 'N/A'))),
-        ]
+        # Row 2: Nationality and Last Modified
+        table.rows[1].cells[0].text = 'Nationality:'
+        table.rows[1].cells[1].merge(table.rows[1].cells[2])
+        table.rows[1].cells[1].text = tour_data.get('nationality', '')
+        table.rows[1].cells[3].text = f"Last Modified: {datetime.now().strftime('%d-%m-%Y %H:%M')}"
+        table.rows[1].cells[3].merge(table.rows[1].cells[5])
         
-        if tour_data.get('agent_ref'):
-            details.append(('Agent Reference', tour_data.get('agent_ref')))
+        # Row 3: Agent Name, Pax, Contact Name
+        table.rows[2].cells[0].text = 'Agent Name:'
+        table.rows[2].cells[1].merge(table.rows[2].cells[2])
+        table.rows[2].cells[1].text = tour_data.get('agent_ref', '')
+        table.rows[2].cells[3].text = 'Pax :'
+        table.rows[2].cells[4].text = str(tour_data.get('pax', ''))
+        table.rows[2].cells[5].text = 'Contact Name'
         
-        for label, value in details:
-            row = table.add_row()
-            row.cells[0].text = label
-            row.cells[0].paragraphs[0].runs[0].bold = True
-            row.cells[0].width = Inches(2.0)
-            row.cells[1].text = value
-            row.cells[1].width = Inches(4.5)
+        # Row 4: Notes
+        table.rows[3].cells[0].text = 'Notes :'
+        table.rows[3].cells[1].merge(table.rows[3].cells[5])
+        table.rows[3].cells[1].text = tour_data.get('notes', '')
         
         self.doc.add_paragraph()
     
-    def _add_hotel_details(self, hotels_data):
-        """Add hotel accommodation details"""
+    def _add_arrivals_departures_table(self, arrivals_data):
+        """Add Arrivals and Departures table"""
+        # Section heading
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Arrivals and Departures')
+        run.bold = True
+        run.font.size = Pt(11)
+        run.italic = True
+        
+        # Create table
+        table = self.doc.add_table(rows=1, cols=9)
+        table.style = 'Table Grid'
+        
+        # Header row
+        headers = ['Date', 'Border', 'Drop Point', 'Pax', 'Carrier', 'Flight #', 'Time', 'Note']
+        header_row = table.rows[0]
+        for idx, header_text in enumerate(headers):
+            cell = header_row.cells[idx] if idx < 8 else header_row.cells[8]
+            cell.text = header_text
+            self._set_cell_shading(cell, 'FFFF00')  # Yellow
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Add data rows
+        for arrival in arrivals_data:
+            row = table.add_row()
+            row.cells[0].text = arrival.get('date', '')
+            row.cells[1].text = arrival.get('border', '')
+            row.cells[2].text = arrival.get('drop_point', '')
+            row.cells[3].text = str(arrival.get('pax', ''))
+            row.cells[4].text = arrival.get('carrier', '')
+            row.cells[5].text = arrival.get('flight', '')
+            row.cells[6].text = arrival.get('time', '')
+            row.cells[7].text = arrival.get('note', '')
+        
+        self.doc.add_paragraph()
+    
+    def _add_accommodation_table(self, hotels_data):
+        """Add Accommodation table with room breakdown"""
         if not hotels_data:
             return
         
+        # Section heading
         heading = self.doc.add_paragraph()
-        run = heading.add_run('Hotel Accommodations')
+        run = heading.add_run('Accommodation')
         run.bold = True
-        run.font.size = Pt(14)
-        run.font.color.rgb = RGBColor(31, 41, 55)
+        run.font.size = Pt(11)
+        run.italic = True
         
         for hotel in hotels_data:
-            # Hotel name and dates
-            hotel_para = self.doc.add_paragraph()
-            run = hotel_para.add_run(f"🏨 {hotel.get('name', 'Hotel TBA')}")
-            run.bold = True
-            run.font.size = Pt(11)
+            # Hotel summary row
+            table = self.doc.add_table(rows=1, cols=5)
+            table.style = 'Table Grid'
             
-            hotel_para.add_run(f"\nCheck-in: {hotel.get('check_in', 'TBA')} | Check-out: {hotel.get('check_out', 'TBA')}")
-            hotel_para.add_run(f"\nLocation: {hotel.get('location', 'TBA')}")
+            row = table.rows[0]
+            row.cells[0].text = 'From'
+            row.cells[1].text = 'To'
+            row.cells[2].text = 'Hotel Name'
+            row.cells[3].text = 'Meal'
+            row.cells[4].text = 'Note'
             
-            # Room configuration
-            if hotel.get('rooms'):
-                hotel_para.add_run(f"\nRooms: {hotel['rooms']}")
+            # Yellow headers
+            for cell in row.cells:
+                self._set_cell_shading(cell, 'FFFF00')
+                cell.paragraphs[0].runs[0].font.bold = True
+                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
             
-            if hotel.get('board_basis'):
-                hotel_para.add_run(f"\nBoard Basis: {hotel['board_basis']}")
+            # Hotel data row
+            data_row = table.add_row()
+            data_row.cells[0].text = hotel.get('check_in', '')
+            data_row.cells[1].text = hotel.get('check_out', '')
+            data_row.cells[2].text = hotel.get('name', '')
+            data_row.cells[3].text = hotel.get('board_basis', 'BB')
+            data_row.cells[4].text = hotel.get('note', '')
+            
+            # Room breakdown table
+            room_table = self.doc.add_table(rows=2, cols=6)
+            room_table.style = 'Table Grid'
+            
+            # Room header
+            room_header = room_table.rows[0]
+            room_header.cells[0].text = 'Room Type'
+            room_header.cells[1].text = 'SGL'
+            room_header.cells[2].text = 'DBL'
+            room_header.cells[3].text = 'TWIN'
+            room_header.cells[4].text = 'TRPL'
+            room_header.cells[5].text = 'OTHER'
+            
+            for cell in room_header.cells:
+                self._set_cell_shading(cell, 'FFFF00')
+                cell.paragraphs[0].runs[0].font.bold = True
+                cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+            
+            # Room data
+            room_data = room_table.rows[1]
+            room_data.cells[0].text = 'Standard'
+            room_data.cells[1].text = str(hotel.get('single_rooms', 0))
+            room_data.cells[2].text = str(hotel.get('double_rooms', 0))
+            room_data.cells[3].text = str(hotel.get('twin_rooms', 0))
+            room_data.cells[4].text = str(hotel.get('triple_rooms', 0))
+            room_data.cells[5].text = str(hotel.get('other_rooms', 0))
+            
+            # Notes row
+            notes_row = room_table.add_row()
+            notes_row.cells[0].text = 'Notes'
+            notes_row.cells[0].merge(notes_row.cells[5])
+            
+            self.doc.add_paragraph()
         
         self.doc.add_paragraph()
     
-    def _add_day_by_day_itinerary(self, itinerary_days):
-        """Add day-by-day itinerary"""
+    def _add_itinerary_table(self, itinerary_days):
+        """Add Itinerary table"""
+        if not itinerary_days:
+            return
+        
+        # Section heading
         heading = self.doc.add_paragraph()
-        run = heading.add_run('Day-by-Day Itinerary')
+        run = heading.add_run('Itinerary')
         run.bold = True
-        run.font.size = Pt(14)
-        run.font.color.rgb = RGBColor(31, 41, 55)
+        run.font.size = Pt(11)
+        run.italic = True
         
+        # Create table
+        table = self.doc.add_table(rows=1, cols=2)
+        table.style = 'Table Grid'
+        table.autofit = False
+        
+        # Header row
+        header_row = table.rows[0]
+        header_row.cells[0].text = 'Date'
+        header_row.cells[1].text = 'Itinerary Description'
+        
+        for cell in header_row.cells:
+            self._set_cell_shading(cell, 'FFFF00')
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Set column widths
+        table.columns[0].width = Inches(1.5)
+        table.columns[1].width = Inches(5.5)
+        
+        # Add itinerary rows
         for day in itinerary_days:
-            # Day header
-            day_para = self.doc.add_paragraph()
-            day_para.paragraph_format.space_before = Pt(12)
-            day_para.paragraph_format.space_after = Pt(6)
-            
-            run = day_para.add_run(f"Day {day.get('day_number', '')} - {day.get('date', '')}")
-            run.bold = True
-            run.font.size = Pt(12)
-            run.font.color.rgb = RGBColor(31, 41, 55)
-            
-            # Day description
-            if day.get('description'):
-                desc_para = self.doc.add_paragraph(day['description'])
-                desc_para.paragraph_format.left_indent = Inches(0.25)
-            
-            # Services for the day
-            services = day.get('services', [])
-            if services:
-                for service in services:
-                    service_para = self.doc.add_paragraph(style='List Bullet')
-                    service_para.paragraph_format.left_indent = Inches(0.5)
-                    
-                    service_type = service.get('type', '')
-                    service_desc = service.get('description', '')
-                    
-                    icon = ''
-                    if service_type == 'HOTEL':
-                        icon = '🏨'
-                    elif service_type == 'TRANSPORT':
-                        icon = '🚗'
-                    elif service_type == 'MEAL':
-                        icon = '🍽️'
-                    elif service_type == 'GUIDE':
-                        icon = '👤'
-                    
-                    service_para.add_run(f"{icon} {service_type}: {service_desc}")
+            row = table.add_row()
+            row.cells[0].text = day.get('date', '')
+            row.cells[1].text = day.get('description', '')
         
         self.doc.add_paragraph()
     
-    def _add_footer_notes(self):
-        """Add footer with important notes"""
-        self.doc.add_paragraph()
+    def _add_meals_table(self, meals_data):
+        """Add Meals table"""
+        if not meals_data:
+            return
         
-        terms_heading = self.doc.add_paragraph()
-        run = terms_heading.add_run('Important Notes:')
+        # Section heading
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Meals')
         run.bold = True
         run.font.size = Pt(11)
+        run.italic = True
         
-        notes = [
-            'Please carry this voucher with you during your trip.',
-            'Contact numbers will be provided upon confirmation.',
-            'Check-in time is typically 2:00 PM, check-out is 12:00 PM.',
-            'Please arrive at pickup locations 10 minutes early.',
-            'Any changes to the itinerary should be coordinated with our office.'
-        ]
+        # Create table
+        table = self.doc.add_table(rows=1, cols=5)
+        table.style = 'Table Grid'
         
-        for note in notes:
-            p = self.doc.add_paragraph(note, style='List Bullet')
-            p.paragraph_format.left_indent = Inches(0.25)
-            for run in p.runs:
-                run.font.size = Pt(9)
-                run.font.color.rgb = RGBColor(107, 114, 128)
+        # Header row
+        headers = ['Date', 'Restaurant Name', 'Meal Type', 'Pax', 'Note']
+        header_row = table.rows[0]
+        for idx, header_text in enumerate(headers):
+            cell = header_row.cells[idx]
+            cell.text = header_text
+            self._set_cell_shading(cell, 'FFFF00')
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Add meal rows
+        for meal in meals_data:
+            row = table.add_row()
+            row.cells[0].text = meal.get('date', '')
+            row.cells[1].text = meal.get('restaurant', '')
+            row.cells[2].text = meal.get('meal_type', '')
+            row.cells[3].text = str(meal.get('pax', ''))
+            row.cells[4].text = meal.get('note', '')
+        
+        self.doc.add_paragraph()
+    
+    def _add_transportation_table(self, transport_data):
+        """Add Transportation table"""
+        if not transport_data:
+            return
+        
+        # Section heading
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Transportation')
+        run.bold = True
+        run.font.size = Pt(11)
+        run.italic = True
+        
+        # Create table
+        table = self.doc.add_table(rows=1, cols=4)
+        table.style = 'Table Grid'
+        
+        # Header row
+        headers = ['Time', 'Transportation Name', 'Note', 'Driver']
+        header_row = table.rows[0]
+        for idx, header_text in enumerate(headers):
+            cell = header_row.cells[idx]
+            cell.text = header_text
+            self._set_cell_shading(cell, 'FFFF00')
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Add transport rows
+        for transport in transport_data:
+            row = table.add_row()
+            row.cells[0].text = transport.get('time', '')
+            row.cells[1].text = transport.get('name', '')
+            row.cells[2].text = transport.get('note', '')
+            row.cells[3].text = transport.get('driver', '')
+        
+        self.doc.add_paragraph()
+    
+    def _add_guides_table(self, guides_data):
+        """Add Guides table"""
+        if not guides_data:
+            return
+        
+        # Section heading
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Guides')
+        run.bold = True
+        run.font.size = Pt(11)
+        run.italic = True
+        
+        # Create table with 5 columns
+        table = self.doc.add_table(rows=1, cols=5)
+        table.style = 'Table Grid'
+        
+        # Header row
+        headers = ['From', 'To', 'Guide Name', 'Language', 'Note']
+        header_row = table.rows[0]
+        for idx in range(5):
+            cell = header_row.cells[idx]
+            cell.text = headers[idx]
+            self._set_cell_shading(cell, 'FFFF00')
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Add guide rows
+        for guide in guides_data:
+            row = table.add_row()
+            row.cells[0].text = guide.get('from_date', '')
+            row.cells[1].text = guide.get('to_date', '')
+            row.cells[2].text = guide.get('name', '')
+            row.cells[3].text = guide.get('language', '')
+            row.cells[4].text = guide.get('note', '')
+        
+        self.doc.add_paragraph()
+    
+    def _add_miscellaneous_section(self):
+        """Add Miscellaneous section"""
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Miscellaneous')
+        run.bold = True
+        run.font.size = Pt(11)
+        run.italic = True
         
         self.doc.add_paragraph()
         
-        thank_you = self.doc.add_paragraph()
-        thank_you.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = thank_you.add_run('Have a wonderful trip!')
-        run.italic = True
-        run.font.size = Pt(11)
-        run.font.color.rgb = RGBColor(139, 115, 85)
+        # Page footer
+        footer = self.doc.add_paragraph()
+        footer.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        run = footer.add_run('Page 1 of 1')
+        run.font.size = Pt(9)
     
     def generate_voucher(self, voucher_data, output_path=None):
         """
-        Generate a trip voucher/itinerary Word document
+        Generate a trip voucher Word document in Windows of Jordan format
         
         Args:
             voucher_data (dict): Dictionary containing:
-                - voucher_number: Voucher/booking reference number
-                - voucher_date: Date of voucher generation
-                - tour: Tour info dict (reference, guest_name, nationality, pax, from_date, to_date, no_of_days, agent_ref)
+                - tour_file: Tour file number
+                - company_name: Company name (default: Windows of Jordan)
+                - tour: Tour info dict
+                - arrivals: List of arrival/departure info
                 - hotels: List of hotel details
-                - itinerary_days: List of day-by-day itinerary items
+                - itinerary_days: List of itinerary items
+                - meals: List of meal details
+                - transport: List of transport details
+                - guides: List of guide details
             output_path (str): Optional path to save document
         
         Returns:
             str: Path to generated document
         """
-        # Add header
-        self._add_header(
-            company_name=voucher_data.get('company_name', 'Arabi Travel'),
-            company_address=voucher_data.get('company_address', 'Amman, Jordan')
+        # Add header row
+        self._add_header_row(
+            tour_file=voucher_data.get('tour_file', voucher_data.get('voucher_number', 'DRAFT')),
+            company_name=voucher_data.get('company_name', 'Windows of Jordan')
         )
         
-        # Add title
-        self._add_title(
-            voucher_number=voucher_data.get('voucher_number', 'DRAFT'),
-            voucher_date=voucher_data.get('voucher_date', datetime.now().strftime('%d %b %Y'))
-        )
+        self.doc.add_paragraph()
         
-        # Add tour summary
+        # Add tour details table
         if voucher_data.get('tour'):
-            self._add_tour_summary(voucher_data['tour'])
+            self._add_tour_details_table(voucher_data['tour'])
         
-        # Add hotel details
+        # Add arrivals and departures
+        if voucher_data.get('arrivals'):
+            self._add_arrivals_departures_table(voucher_data['arrivals'])
+        
+        # Add accommodation
         if voucher_data.get('hotels'):
-            self._add_hotel_details(voucher_data['hotels'])
+            self._add_accommodation_table(voucher_data['hotels'])
         
-        # Add day-by-day itinerary
+        # Add itinerary
         if voucher_data.get('itinerary_days'):
-            self._add_day_by_day_itinerary(voucher_data['itinerary_days'])
+            self._add_itinerary_table(voucher_data['itinerary_days'])
         
-        # Add footer
-        self._add_footer_notes()
+        # Add meals
+        if voucher_data.get('meals'):
+            self._add_meals_table(voucher_data['meals'])
+        
+        # Add transportation
+        if voucher_data.get('transport'):
+            self._add_transportation_table(voucher_data['transport'])
+        
+        # Add guides
+        if voucher_data.get('guides'):
+            self._add_guides_table(voucher_data['guides'])
+        
+        # Add miscellaneous
+        self._add_miscellaneous_section()
         
         # Save document
         if not output_path:
@@ -257,7 +442,7 @@ class VoucherTripPlanGenerator:
             os.makedirs(output_dir, exist_ok=True)
             output_path = os.path.join(
                 output_dir,
-                f"Voucher_{voucher_data.get('voucher_number', 'DRAFT')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+                f"Voucher_{voucher_data.get('tour_file', voucher_data.get('voucher_number', 'DRAFT'))}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
             )
         
         self.doc.save(output_path)

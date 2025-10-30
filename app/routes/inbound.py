@@ -1238,93 +1238,160 @@ def api_export_voucher_doc(request_id):
                 customer_name = customer.name
         
         tour_data = {
-            'reference': request_obj.request_number,
             'guest_name': customer_name,
             'nationality': request_obj.nationality,
             'pax': request_obj.pax,
-            'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
-            'to_date': request_obj.to_date.strftime('%d %b %Y') if request_obj.to_date else '',
-            'no_of_days': request_obj.no_of_days,
-            'agent_ref': request_obj.agent_ref
+            'agent_ref': request_obj.agent_ref or '',
+            'notes': request_obj.special_note or '',
+            'tour_file': request_obj.request_number,
+            'from_date': request_obj.from_date.strftime('%d-%b-%y') if request_obj.from_date else '',
+            'to_date': request_obj.to_date.strftime('%d-%b-%y') if request_obj.to_date else ''
         }
+        
+        # Collect arrivals/departures data from airport transfers
+        arrivals_data = []
+        airport_transports = [t for t in request_obj.inbound_transports if t.is_airport_transfer]
+        
+        if airport_transports:
+            for transport in airport_transports:
+                border_point = transport.pickup_location if transport.pickup_location else 'Airport'
+                drop_point = transport.dropoff_location if transport.dropoff_location else 'TBA'
+                transport_time = transport.pickup_time or ''
+                
+                arrivals_data.append({
+                    'date': transport.date.strftime('%d-%b-%y') if transport.date else '',
+                    'border': border_point,
+                    'drop_point': drop_point,
+                    'pax': request_obj.pax,
+                    'carrier': '',
+                    'flight': '',
+                    'time': transport_time,
+                    'note': ''
+                })
+        else:
+            # Add default arrival/departure if no airport transfers
+            arrivals_data.append({
+                'date': request_obj.from_date.strftime('%d-%b-%y') if request_obj.from_date else '',
+                'border': 'Airport',
+                'drop_point': 'TBA',
+                'pax': request_obj.pax,
+                'carrier': '',
+                'flight': '',
+                'time': '',
+                'note': ''
+            })
+            arrivals_data.append({
+                'date': request_obj.to_date.strftime('%d-%b-%y') if request_obj.to_date else '',
+                'border': 'Airport',
+                'drop_point': 'TBA',
+                'pax': request_obj.pax,
+                'carrier': '',
+                'flight': '',
+                'time': '',
+                'note': ''
+            })
         
         # Collect hotel details
         hotels_data = []
         for hotel in request_obj.inbound_hotels:
-            rooms_info = []
+            # Count room types from hotel.rooms
+            single_rooms = 0
+            double_rooms = 0
+            twin_rooms = 0
+            triple_rooms = 0
+            other_rooms = 0
+            
             for room in hotel.rooms:
-                rooms_info.append(f"{room.room_type}: {room.adults}A + {room.children}C")
+                room_type = room.room_type.upper()
+                if 'SINGLE' in room_type or 'SGL' in room_type:
+                    single_rooms += 1
+                elif 'DOUBLE' in room_type or 'DBL' in room_type:
+                    double_rooms += 1
+                elif 'TWIN' in room_type:
+                    twin_rooms += 1
+                elif 'TRIPLE' in room_type or 'TRPL' in room_type:
+                    triple_rooms += 1
+                else:
+                    other_rooms += 1
             
             hotels_data.append({
+                'check_in': hotel.check_in_date.strftime('%d-%b-%y') if hotel.check_in_date else 'TBA',
+                'check_out': hotel.check_out_date.strftime('%d-%b-%y') if hotel.check_out_date else 'TBA',
                 'name': hotel.hotel_name or 'Hotel TBA',
-                'location': hotel.location or 'TBA',
-                'check_in': hotel.check_in_date.strftime('%d %b %Y') if hotel.check_in_date else 'TBA',
-                'check_out': hotel.check_out_date.strftime('%d %b %Y') if hotel.check_out_date else 'TBA',
-                'rooms': ', '.join(rooms_info) if rooms_info else 'Rooms TBA',
-                'board_basis': hotel.meal_plan or 'BB'
+                'board_basis': hotel.meal_plan or 'BB',
+                'note': '',
+                'single_rooms': single_rooms,
+                'double_rooms': double_rooms,
+                'twin_rooms': twin_rooms,
+                'triple_rooms': triple_rooms,
+                'other_rooms': other_rooms
             })
         
-        # Build day-by-day itinerary from itinerary rows
+        # Build itinerary from itinerary rows (simple date + description format)
         itinerary_days = []
-        day_number = 1
-        
         for row in sorted(request_obj.itinerary_rows, key=lambda x: x.date):
-            services = []
-            
-            # Find services for this date
-            if row.flag_hotel:
-                hotels_for_date = [h for h in request_obj.inbound_hotels 
-                                  if h.check_in_date == row.date]
-                for hotel in hotels_for_date:
-                    services.append({
-                        'type': 'HOTEL',
-                        'description': f"{hotel.hotel_name or 'Hotel TBA'} - {hotel.location or ''}"
-                    })
-            
-            if row.flag_transport:
-                transports_for_date = [t for t in request_obj.inbound_transports 
-                                      if t.date == row.date or (t.end_date and t.date <= row.date <= t.end_date)]
-                for transport in transports_for_date:
-                    services.append({
-                        'type': 'TRANSPORT',
-                        'description': f"{transport.vehicle_type or 'Vehicle'} from {transport.pickup_location or 'TBA'} to {transport.dropoff_location or 'TBA'}"
-                    })
-            
-            if row.flag_meal:
-                meals_for_date = [m for m in request_obj.inbound_meals 
-                                 if m.date == row.date or (m.end_date and m.date <= row.date <= m.end_date)]
-                for meal in meals_for_date:
-                    services.append({
-                        'type': 'MEAL',
-                        'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'Restaurant'}"
-                    })
-            
-            if row.flag_guide:
-                guides_for_date = [g for g in request_obj.inbound_guides 
-                                  if g.date == row.date or (g.end_date and g.date <= row.date <= g.end_date)]
-                for guide in guides_for_date:
-                    services.append({
-                        'type': 'GUIDE',
-                        'description': f"{guide.service_type or 'Guide Service'} - {guide.guide_name or 'TBA'}"
-                    })
-            
             itinerary_days.append({
-                'day_number': day_number,
-                'date': row.date.strftime('%A, %d %b %Y'),
-                'description': row.description,
-                'services': services
+                'date': row.date.strftime('%d-%b-%y'),
+                'description': row.description
             })
-            day_number += 1
+        
+        # Collect meals data
+        meals_data = []
+        for meal in request_obj.inbound_meals:
+            start_date = meal.date
+            end_date = meal.end_date if meal.end_date else meal.date
+            
+            # Generate entry for each day in range
+            current_date = start_date
+            while current_date <= end_date:
+                meals_data.append({
+                    'date': current_date.strftime('%d-%b-%y'),
+                    'restaurant': meal.restaurant or 'Restaurant',
+                    'meal_type': meal.meal_type or 'Lunch',
+                    'pax': request_obj.pax,
+                    'note': ''
+                })
+                current_date += timedelta(days=1)
+        
+        # Collect transport data
+        transport_data = []
+        for transport in request_obj.inbound_transports:
+            start_date = transport.date
+            end_date = transport.end_date if transport.end_date else transport.date
+            
+            # Generate entry for date range
+            current_date = start_date
+            while current_date <= end_date:
+                transport_data.append({
+                    'time': f"{current_date.strftime('%d-%b-%y')} - {end_date.strftime('%d-%b-%y')}",
+                    'name': transport.vehicle_type or 'Vehicle',
+                    'note': f"{transport.pickup_location or ''} to {transport.dropoff_location or ''}",
+                    'driver': ''
+                })
+                break  # Only add once for range
+        
+        # Collect guides data
+        guides_data = []
+        for guide in request_obj.inbound_guides:
+            guides_data.append({
+                'from_date': guide.date.strftime('%d-%b-%y') if guide.date else '',
+                'to_date': guide.end_date.strftime('%d-%b-%y') if guide.end_date else guide.date.strftime('%d-%b-%y'),
+                'name': guide.guide_name or 'TBA',
+                'language': guide.language or 'English',
+                'note': guide.service_type or ''
+            })
         
         # Prepare voucher data
         voucher_data = {
-            'voucher_number': request_obj.request_number,
-            'voucher_date': datetime.now().strftime('%d %b %Y'),
-            'company_name': 'Arabi Travel',
-            'company_address': 'Amman, Jordan',
+            'tour_file': request_obj.request_number,
+            'company_name': 'Windows of Jordan',
             'tour': tour_data,
+            'arrivals': arrivals_data,
             'hotels': hotels_data,
-            'itinerary_days': itinerary_days
+            'itinerary_days': itinerary_days,
+            'meals': meals_data,
+            'transport': transport_data,
+            'guides': guides_data
         }
         
         # Generate Word document
