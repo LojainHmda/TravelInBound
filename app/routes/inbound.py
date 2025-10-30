@@ -1303,17 +1303,34 @@ def api_export_voucher_doc(request_id):
         # Collect hotel details
         hotels_data = []
         for hotel in request_obj.inbound_hotels:
+            # Get room data from itinerary rows for this hotel's date range
+            single_rooms = 0
+            double_rooms = 0
+            twin_rooms = 0
+            triple_rooms = 0
+            other_rooms = 0
+            
+            # Find itinerary row with hotel flag for this hotel's check-in date
+            for row in request_obj.itinerary_rows:
+                if row.flag_hotel and row.date == hotel.check_in_date:
+                    single_rooms = row.hotel_single_rooms or 0
+                    double_rooms = row.hotel_double_rooms or 0
+                    twin_rooms = 0  # We use double for DBL
+                    triple_rooms = row.hotel_triple_rooms or 0
+                    other_rooms = row.hotel_other_rooms or 0
+                    break
+            
             hotels_data.append({
                 'check_in': hotel.check_in_date.strftime('%d-%b-%y') if hotel.check_in_date else 'TBA',
                 'check_out': hotel.check_out_date.strftime('%d-%b-%y') if hotel.check_out_date else 'TBA',
                 'name': hotel.hotel_name or 'Hotel TBA',
                 'board_basis': hotel.meal_plan or 'BB',
                 'note': '',
-                'single_rooms': 0,
-                'double_rooms': 0,
-                'twin_rooms': 0,
-                'triple_rooms': 0,
-                'other_rooms': 0
+                'single_rooms': single_rooms,
+                'double_rooms': double_rooms,
+                'twin_rooms': twin_rooms,
+                'triple_rooms': triple_rooms,
+                'other_rooms': other_rooms
             })
         
         # Build itinerary organized by service type
