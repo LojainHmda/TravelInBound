@@ -69,6 +69,16 @@
 .counter-btn:hover { background: #8b5cf6; color: white; border-color: #8b5cf6; }
 .counter-display { width: 40px; text-align: center; font-size: 1.25rem; font-weight: 700; color: #1a1a1a; }
 
+/* Room Table Compact */
+.room-table-scroll { max-height: 350px; overflow-y: auto; margin-top: 1rem; }
+.room-table-scroll table { margin-bottom: 0; font-size: 0.85rem; }
+.room-table-scroll thead th { padding: 0.5rem; font-size: 0.8rem; position: sticky; top: 0; z-index: 10; }
+.room-table-scroll tbody td { padding: 0.4rem; }
+.room-table-scroll input, .room-table-scroll select { font-size: 0.85rem; padding: 0.3rem 0.5rem; }
+.master-room-config { padding: 1rem !important; }
+.master-room-config .row { margin-bottom: 0.5rem !important; }
+.master-room-config label { font-size: 0.85rem; margin-bottom: 0.25rem; }
+
 .wizard-actions { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
 .btn { padding: 0.875rem 2rem; border-radius: 12px; font-weight: 600; text-decoration: none; transition: all 0.3s; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem; border: none; cursor: pointer; }
 .btn-primary { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; }
@@ -205,11 +215,11 @@ function addService(type) {
             </div>
             
             <!-- Master Room Configuration -->
-            <div class="mb-3" style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px; padding: 1.5rem;">
-                <label class="form-label" style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; color: #0c4a6e;">
+            <div class="mb-3 master-room-config" style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px;">
+                <label class="form-label" style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; color: #0c4a6e;">
                     <i class="fas fa-cog"></i> Master Room Configuration
                 </label>
-                <div class="row g-3 mb-3">
+                <div class="row g-2 mb-2">
                     <div class="col-md-3">
                         <label class="form-label">Single Rooms</label>
                         <input type="number" id="masterSingleRooms-${index}" name="services[${index}][single_rooms]" class="form-control" min="0" value="0">
@@ -227,8 +237,8 @@ function addService(type) {
                         <input type="number" id="masterOtherRooms-${index}" name="services[${index}][other_rooms]" class="form-control" min="0" value="0">
                     </div>
                 </div>
-                <div class="text-center">
-                    <button type="button" class="btn btn-primary" onclick="generateRoomTable(${index})">
+                <div class="text-center" style="margin-top: 0.5rem;">
+                    <button type="button" class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.85rem;" onclick="generateRoomTable(${index})">
                         <i class="fas fa-table"></i> GENERATE Room Table
                     </button>
                 </div>
@@ -236,7 +246,7 @@ function addService(type) {
             
             <div id="hotelRoomsContainer-${index}" class="mb-3">
                 <!-- Room table will be generated here -->
-                <div class="table-responsive">
+                <div class="room-table-scroll">
                     <table class="table table-bordered table-hover">
                         <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
                             <tr>
