@@ -2353,6 +2353,146 @@ body {
     </div>
     {% endif %}
 
+    <!-- Run-Down Operational View (visible when status = PROCESSING) -->
+    {% if request.status == 'PROCESSING' %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card" style="border: 3px solid #667eea; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);">
+                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-play-circle me-2"></i>Operations Dashboard - PROCESSING</h5>
+                        <span class="badge" style="background: rgba(255,255,255,0.3); font-size: 0.9rem;">Live Operations</span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Timeline View -->
+                    <div class="operations-timeline p-4" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+                        <h6 class="text-uppercase fw-bold mb-3" style="color: #475569; letter-spacing: 1px;">
+                            <i class="fas fa-calendar-day me-2"></i>Daily Timeline View
+                        </h6>
+                        {% if request.itinerary_rows %}
+                        <div class="timeline-container" style="position: relative;">
+                            {% for row in request.itinerary_rows %}
+                            <div class="timeline-day mb-4" style="position: relative; padding-left: 40px;">
+                                <!-- Timeline Dot -->
+                                <div style="position: absolute; left: 0; top: 5px; width: 20px; height: 20px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: 3px solid white; border-radius: 50%; box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);"></div>
+                                
+                                <!-- Connector Line -->
+                                {% if not loop.last %}
+                                <div style="position: absolute; left: 9px; top: 25px; width: 2px; height: calc(100% + 16px); background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);"></div>
+                                {% endif %}
+                                
+                                <!-- Day Card -->
+                                <div class="day-card" style="background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left: 4px solid #fbbf24;">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark" style="font-size: 1.1rem;">
+                                                {{ row.date.strftime('%A, %B %d, %Y') }}
+                                            </div>
+                                            <div class="text-muted small">Day {{ loop.index }}</div>
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            {% if row.flag_hotel %}
+                                            <span class="badge" style="background: #3b82f6; color: white; font-size: 0.8rem;">
+                                                <i class="fas fa-bed"></i>
+                                            </span>
+                                            {% endif %}
+                                            {% if row.flag_transport %}
+                                            <span class="badge" style="background: #a855f7; color: white; font-size: 0.8rem;">
+                                                <i class="fas fa-car"></i>
+                                            </span>
+                                            {% endif %}
+                                            {% if row.flag_meal %}
+                                            <span class="badge" style="background: #f59e0b; color: white; font-size: 0.8rem;">
+                                                <i class="fas fa-utensils"></i>
+                                            </span>
+                                            {% endif %}
+                                            {% if row.flag_guide %}
+                                            <span class="badge" style="background: #10b981; color: white; font-size: 0.8rem;">
+                                                <i class="fas fa-user-tie"></i>
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-dark">{{ row.description }}</div>
+                                    {% if row.base_cost and row.base_cost > 0 %}
+                                    <div class="mt-2 small text-muted">
+                                        Cost: {{ row.base_cost }} {{ row.currency }} {% if row.cost_unit == 'PER_PERSON' %}per person{% else %}per group{% endif %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Service Details -->
+                                    <div class="mt-2">
+                                        {% if row.flag_hotel and row.hotel_single_rooms %}
+                                        <div class="small" style="color: #3b82f6;">
+                                            <i class="fas fa-bed me-1"></i>
+                                            Rooms: 
+                                            {% if row.hotel_single_rooms > 0 %}Single: {{ row.hotel_single_rooms }}{% endif %}
+                                            {% if row.hotel_double_rooms > 0 %}, Double: {{ row.hotel_double_rooms }}{% endif %}
+                                            {% if row.hotel_triple_rooms > 0 %}, Triple: {{ row.hotel_triple_rooms }}{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>No itinerary data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Calendar View (Calendar grid showing services) -->
+                    <div class="operations-calendar p-4" style="background: white; border-top: 2px solid #e2e8f0;">
+                        <h6 class="text-uppercase fw-bold mb-3" style="color: #475569; letter-spacing: 1px;">
+                            <i class="fas fa-calendar-alt me-2"></i>Calendar Overview
+                        </h6>
+                        {% if request.itinerary_rows %}
+                        <div class="calendar-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                            {% for row in request.itinerary_rows %}
+                            <div class="calendar-day-card" style="background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border-radius: 10px; padding: 1rem; border: 2px solid #e2e8f0; transition: all 0.3s ease;">
+                                <div class="calendar-day-header mb-2" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; padding: 0.5rem; border-radius: 6px; text-align: center; font-weight: bold;">
+                                    {{ row.date.strftime('%d') }}
+                                    <div style="font-size: 0.7rem; opacity: 0.9;">{{ row.date.strftime('%b %Y') }}</div>
+                                </div>
+                                <div class="calendar-day-name text-center text-muted small mb-2">
+                                    {{ row.date.strftime('%A') }}
+                                </div>
+                                <div class="calendar-services d-flex flex-wrap gap-1 justify-content-center">
+                                    {% if row.flag_hotel %}
+                                    <span class="badge bg-primary" title="Hotel"><i class="fas fa-bed"></i></span>
+                                    {% endif %}
+                                    {% if row.flag_transport %}
+                                    <span class="badge" style="background: #a855f7;" title="Transport"><i class="fas fa-car"></i></span>
+                                    {% endif %}
+                                    {% if row.flag_meal %}
+                                    <span class="badge bg-warning text-dark" title="Meal"><i class="fas fa-utensils"></i></span>
+                                    {% endif %}
+                                    {% if row.flag_guide %}
+                                    <span class="badge bg-success" title="Guide"><i class="fas fa-user-tie"></i></span>
+                                    {% endif %}
+                                </div>
+                                <div class="calendar-description small text-truncate mt-2" title="{{ row.description }}">
+                                    {{ row.description }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <p>No calendar data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Itinerary Details -->
     <div class="row mt-4">
