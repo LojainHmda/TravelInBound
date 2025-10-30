@@ -128,3 +128,17 @@ Preferred communication style: Simple, everyday language.
      - Nested room fields: `services[INDEX][rooms][ROOM_INDEX][FIELD]`
    - Ensures data integrity across wizard steps
    - Safe numeric parsing with validation
+
+### Expense Report Export (Latest - October 2025)
+
+1. **Excel Expense Report Export**:
+   - Matches "Windows of Jordan Actual Expense Sheet" template format
+   - Header: Company name, title, file number, date, reference, PAX count
+   - Table columns: Item | Cost PP | Pax | Total
+   - Auto-calculates totals using Excel formulas (=D*E)
+   - Subtotal, Advance Payment, and Final Total rows
+   - Signature lines for Authorization and Guide/Driver
+   - Route: `/inbound/api/<request_id>/export-expense-report`
+   - Download button in itinerary view with green gradient styling
+   - Pulls expense data from InboundCashExpense model
+   - Professional formatting with yellow header fills and bold fonts

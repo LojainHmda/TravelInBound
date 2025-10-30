@@ -2059,6 +2059,11 @@ body {
                     <i class="fas fa-file-word"></i> Export Voucher (Word)
                 </a>
                 
+                <!-- Export Expense Report Button (always available) -->
+                <a href="/inbound/api/{{ request.id }}/export-expense-report" class="action-btn action-btn-export" style="text-decoration: none; background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <i class="fas fa-file-excel"></i> Export Expense Report
+                </a>
+                
                 <!-- Confirm Booking Button (shown after proforma invoice) -->
                 {% if request.booking_id and request.booking.invoice_number %}
                 <button type="button" class="action-btn action-btn-confirm" onclick="confirmBooking()">
