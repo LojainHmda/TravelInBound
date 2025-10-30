@@ -1103,6 +1103,39 @@ def preview_proforma(request_id):
     if request_obj.user_id != current_user.id:
         abort(403)
     
+    # CREATE BOOKING IF IT DOESN'T EXIST
+    if not request_obj.booking_id:
+        # Get or create customer
+        if request_obj.customer_id:
+            customer = Customer.query.get(request_obj.customer_id)
+        else:
+            customer = Customer.query.filter_by(first_name=request_obj.contact_name).first()
+            if not customer:
+                customer = Customer()
+                customer.first_name = request_obj.contact_name
+                customer.last_name = ""
+                customer.phone = "TBD"
+                customer.email = "tbd@example.com"
+                customer.nationality = request_obj.nationality
+                db.session.add(customer)
+                db.session.flush()
+        
+        # Create booking with QUOTED status
+        booking = Booking()
+        booking.reference_number = request_obj.request_number
+        booking.user_id = request_obj.user_id
+        booking.customer_id = customer.id
+        booking.status = 'QUOTED'
+        booking.total_amount = request_obj.total_amount or 0
+        booking.generate_invoice_number()
+        db.session.add(booking)
+        db.session.flush()
+        
+        # Link booking to request
+        request_obj.booking_id = booking.id
+        request_obj.status = 'QUOTED'
+        db.session.commit()
+    
     # Collect customer information
     customer_data = {}
     if request_obj.customer_id:
