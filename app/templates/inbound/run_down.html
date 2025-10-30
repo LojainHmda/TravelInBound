@@ -379,65 +379,104 @@ body {
     <!-- Calendar View Tab -->
     <div id="calendar-content" class="tab-content-section">
         {% if processing_requests %}
+            {# Build a dictionary of all dates across all bookings #}
+            {% set all_dates = {} %}
             {% for request in processing_requests %}
-            <div style="margin-bottom: 32px;">
-                <h5 style="font-size: 18px; font-weight: 600; color: #1d1d1f; margin-bottom: 16px;">
-                    {{ request.request_number }} - {{ request.contact_name }}
-                </h5>
-
-                <!-- Calendar Grid -->
                 {% if request.itinerary_rows %}
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px;">
                     {% for row in request.itinerary_rows %}
-                    <div class="service-card" style="flex-direction: column; padding: 12px; align-items: flex-start;">
-                        <!-- Date Header -->
-                        <div style="background: #d1e7ff; color: #0066cc; padding: 8px; border-radius: 8px; text-align: center; width: 100%; margin-bottom: 8px;">
-                            <div style="font-size: 24px; font-weight: 700;">{{ row.date.strftime('%d') }}</div>
-                            <div style="font-size: 12px;">{{ row.date.strftime('%b %Y') }}</div>
-                        </div>
+                        {% set date_str = row.date.strftime('%Y-%m-%d') %}
+                        {% if date_str not in all_dates %}
+                            {% set _ = all_dates.update({date_str: {'date': row.date, 'bookings': []}}) %}
+                        {% endif %}
+                        {% set _ = all_dates[date_str]['bookings'].append({
+                            'request': request,
+                            'hotel': row.flag_hotel,
+                            'transport': row.flag_transport,
+                            'meal': row.flag_meal,
+                            'guide': row.flag_guide
+                        }) %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
 
-                        <!-- Day Name -->
-                        <div style="font-size: 13px; font-weight: 500; color: #3c3c43; margin-bottom: 8px; text-align: center; width: 100%;">
-                            {{ row.date.strftime('%A') }}
-                        </div>
+            <!-- Unified Calendar Grid -->
+            {% if all_dates %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px;">
+                {% for date_str in all_dates.keys()|sort %}
+                {% set date_data = all_dates[date_str] %}
+                {% set date = date_data['date'] %}
+                {% set bookings = date_data['bookings'] %}
+                
+                <div class="service-card" style="flex-direction: column; padding: 12px; align-items: flex-start;">
+                    <!-- Date Header -->
+                    <div style="background: #d1e7ff; color: #0066cc; padding: 8px; border-radius: 8px; text-align: center; width: 100%; margin-bottom: 8px;">
+                        <div style="font-size: 24px; font-weight: 700;">{{ date.strftime('%d') }}</div>
+                        <div style="font-size: 12px;">{{ date.strftime('%b %Y') }}</div>
+                    </div>
 
-                        <!-- Service Badges -->
-                        <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                            {% if row.flag_hotel %}
-                            <span style="background: #007aff; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-bed"></i> Hotel
-                            </span>
-                            {% endif %}
-                            {% if row.flag_transport %}
-                            <span style="background: #5856d6; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-car"></i> Transport
-                            </span>
-                            {% endif %}
-                            {% if row.flag_meal %}
-                            <span style="background: #ff9500; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-utensils"></i> Meal
-                            </span>
-                            {% endif %}
-                            {% if row.flag_guide %}
-                            <span style="background: #34c759; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-user-tie"></i> Guide
-                            </span>
-                            {% endif %}
-                        </div>
+                    <!-- Day Name -->
+                    <div style="font-size: 13px; font-weight: 500; color: #3c3c43; margin-bottom: 8px; text-align: center; width: 100%;">
+                        {{ date.strftime('%A') }}
+                    </div>
 
-                        {% if row.base_cost and row.base_cost > 0 %}
-                        <div style="margin-top: 8px; font-size: 12px; color: #86868b; text-align: center; width: 100%;">
-                            ${{ row.base_cost }}
-                        </div>
+                    <!-- Booking Links -->
+                    <div style="width: 100%; margin-bottom: 8px;">
+                        {% set unique_requests = [] %}
+                        {% for booking in bookings %}
+                            {% if booking.request not in unique_requests %}
+                                {% set _ = unique_requests.append(booking.request) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% for req in unique_requests %}
+                        <a href="{{ url_for('inbound.view_request', id=req.id) }}" 
+                           style="display: block; font-size: 11px; color: #1d1d1f; text-decoration: none; padding: 4px 0; border-bottom: 1px solid #f0f0f0;">
+                            {{ req.request_number }} - {{ req.contact_name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Aggregate Service Badges for this date -->
+                    <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                        {% set has_hotel = namespace(value=False) %}
+                        {% set has_transport = namespace(value=False) %}
+                        {% set has_meal = namespace(value=False) %}
+                        {% set has_guide = namespace(value=False) %}
+                        
+                        {% for booking in bookings %}
+                            {% if booking.hotel %}{% set has_hotel.value = True %}{% endif %}
+                            {% if booking.transport %}{% set has_transport.value = True %}{% endif %}
+                            {% if booking.meal %}{% set has_meal.value = True %}{% endif %}
+                            {% if booking.guide %}{% set has_guide.value = True %}{% endif %}
+                        {% endfor %}
+                        
+                        {% if has_hotel.value %}
+                        <span style="background: #007aff; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-bed"></i> Hotel
+                        </span>
+                        {% endif %}
+                        {% if has_transport.value %}
+                        <span style="background: #5856d6; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-car"></i> Transport
+                        </span>
+                        {% endif %}
+                        {% if has_meal.value %}
+                        <span style="background: #ff9500; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-utensils"></i> Meal
+                        </span>
+                        {% endif %}
+                        {% if has_guide.value %}
+                        <span style="background: #34c759; color: white; font-size: 11px; padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                            <i class="fas fa-user-tie"></i> Guide
+                        </span>
                         {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                    <p style="color: #86868b; text-align: center; padding: 20px 0;">No itinerary data</p>
-                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% else %}
+                <p style="color: #86868b; text-align: center; padding: 20px 0;">No itinerary data</p>
+            {% endif %}
         {% else %}
             <div style="text-align: center; padding: 60px 20px;">
                 <i class="fas fa-calendar-alt" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
