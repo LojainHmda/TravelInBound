@@ -305,9 +305,11 @@ class InboundCashExpense(db.Model):
     
     # Expense details
     date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)  # For multi-day expenses
     category = db.Column(db.String(100), nullable=True)  # Tips, Entrance Fees, Parking, Misc
     description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(200), nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)  # Driver who holds the cash
     
     # Costing
     amount = db.Column(db.Float, default=0.0)

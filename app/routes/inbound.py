@@ -1381,6 +1381,29 @@ def api_export_voucher_doc(request_id):
                 'note': guide.service_type or ''
             })
         
+        # Collect cash expenses data
+        cash_expenses_data = []
+        for expense in request_obj.inbound_cash_expenses:
+            start_date = expense.date
+            end_date = expense.end_date if expense.end_date else expense.date
+            
+            # Generate entry for each day in range
+            current_date = start_date
+            while current_date <= end_date:
+                amount_display = f"{expense.currency} {expense.amount:.2f}"
+                if expense.is_per_person:
+                    amount_display += " pp"
+                
+                cash_expenses_data.append({
+                    'date': current_date.strftime('%d-%b-%y'),
+                    'category': expense.category or 'Expense',
+                    'description': expense.description,
+                    'amount': amount_display,
+                    'driver_name': expense.driver_name or '',
+                    'note': expense.location or ''
+                })
+                current_date += timedelta(days=1)
+        
         # Prepare voucher data
         voucher_data = {
             'tour_file': request_obj.request_number,
@@ -1391,7 +1414,8 @@ def api_export_voucher_doc(request_id):
             'itinerary_days': itinerary_days,
             'meals': meals_data,
             'transport': transport_data,
-            'guides': guides_data
+            'guides': guides_data,
+            'cash_expenses': cash_expenses_data
         }
         
         # Generate Word document

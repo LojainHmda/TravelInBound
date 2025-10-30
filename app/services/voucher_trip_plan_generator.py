@@ -110,15 +110,15 @@ class VoucherTripPlanGenerator:
         run.font.size = Pt(11)
         run.italic = True
         
-        # Create table
-        table = self.doc.add_table(rows=1, cols=9)
+        # Create table with 8 columns
+        table = self.doc.add_table(rows=1, cols=8)
         table.style = 'Table Grid'
         
         # Header row
         headers = ['Date', 'Border', 'Drop Point', 'Pax', 'Carrier', 'Flight #', 'Time', 'Note']
         header_row = table.rows[0]
         for idx, header_text in enumerate(headers):
-            cell = header_row.cells[idx] if idx < 8 else header_row.cells[8]
+            cell = header_row.cells[idx]
             cell.text = header_text
             self._set_cell_shading(cell, 'FFFF00')  # Yellow
             cell.paragraphs[0].runs[0].font.bold = True
@@ -361,6 +361,44 @@ class VoucherTripPlanGenerator:
         
         self.doc.add_paragraph()
     
+    def _add_cash_expenses_table(self, expenses_data):
+        """Add Cash Expenses table"""
+        if not expenses_data:
+            return
+        
+        # Section heading
+        heading = self.doc.add_paragraph()
+        run = heading.add_run('Cash Expenses')
+        run.bold = True
+        run.font.size = Pt(11)
+        run.italic = True
+        
+        # Create table
+        table = self.doc.add_table(rows=1, cols=6)
+        table.style = 'Table Grid'
+        
+        # Header row
+        headers = ['Date', 'Category', 'Description', 'Amount', 'Driver Name', 'Note']
+        header_row = table.rows[0]
+        for idx, header_text in enumerate(headers):
+            cell = header_row.cells[idx]
+            cell.text = header_text
+            self._set_cell_shading(cell, 'FFFF00')
+            cell.paragraphs[0].runs[0].font.bold = True
+            cell.paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        
+        # Add expense rows
+        for expense in expenses_data:
+            row = table.add_row()
+            row.cells[0].text = expense.get('date', '')
+            row.cells[1].text = expense.get('category', '')
+            row.cells[2].text = expense.get('description', '')
+            row.cells[3].text = expense.get('amount', '')
+            row.cells[4].text = expense.get('driver_name', '')
+            row.cells[5].text = expense.get('note', '')
+        
+        self.doc.add_paragraph()
+    
     def _add_miscellaneous_section(self):
         """Add Miscellaneous section"""
         heading = self.doc.add_paragraph()
@@ -432,6 +470,10 @@ class VoucherTripPlanGenerator:
         # Add guides
         if voucher_data.get('guides'):
             self._add_guides_table(voucher_data['guides'])
+        
+        # Add cash expenses
+        if voucher_data.get('cash_expenses'):
+            self._add_cash_expenses_table(voucher_data['cash_expenses'])
         
         # Add miscellaneous
         self._add_miscellaneous_section()
