@@ -2803,3 +2803,60 @@ def delete_cash_expense(request_id, expense_id):
         flash(f'Error deleting cash expense: {str(e)}', 'error')
     
     return redirect(url_for('inbound.view_request', id=request_id))
+
+@inbound_bp.route('/<int:request_id>/add-meal', methods=['POST'])
+@login_required
+def add_meal(request_id):
+    """Add a meal item"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    try:
+        meal_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
+        
+        meal = InboundMeal(
+            request_id=request_obj.id,
+            date=meal_date,
+            meal_type=request.form['meal_type'],
+            restaurant=request.form.get('restaurant', ''),
+            location=request.form.get('location', ''),
+            cost_per_person=0.0,
+            currency='USD',
+            status='CONFIRMED'
+        )
+        
+        db.session.add(meal)
+        db.session.commit()
+        
+        flash('Meal added successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error adding meal: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.view_request', id=request_id))
+
+@inbound_bp.route('/<int:request_id>/delete-meal/<int:meal_id>', methods=['POST'])
+@login_required
+def delete_meal(request_id, meal_id):
+    """Delete a meal item"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        abort(403)
+    
+    meal = InboundMeal.query.get_or_404(meal_id)
+    
+    if meal.request_id != request_id:
+        abort(403)
+    
+    try:
+        db.session.delete(meal)
+        db.session.commit()
+        flash('Meal deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting meal: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.view_request', id=request_id))
