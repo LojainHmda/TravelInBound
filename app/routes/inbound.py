@@ -1755,8 +1755,18 @@ def run_down_plan():
         status='PROCESSING'
     ).order_by(InboundRequest.from_date).all()
     
+    # Get counts by status for stats bar
+    status_counts = {
+        'REQUEST': InboundRequest.query.filter_by(user_id=current_user.id, status='REQUEST').count(),
+        'QUOTED': InboundRequest.query.filter_by(user_id=current_user.id, status='QUOTED').count(),
+        'CONFIRMED': InboundRequest.query.filter_by(user_id=current_user.id, status='CONFIRMED').count(),
+        'PROCESSING': InboundRequest.query.filter_by(user_id=current_user.id, status='PROCESSING').count(),
+        'COMPLETED': InboundRequest.query.filter_by(user_id=current_user.id, status='COMPLETED').count()
+    }
+    
     return render_template('inbound/run_down.html',
-                         processing_requests=processing_requests)
+                         processing_requests=processing_requests,
+                         status_counts=status_counts)
 
 @inbound_bp.route('/api/run-down-data')
 @login_required
