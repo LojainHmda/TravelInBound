@@ -331,12 +331,12 @@ function addService(type) {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">From Date*</label>
+                    <label class="form-label">Date*</label>
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">To Date*</label>
-                    <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
+                    <label class="form-label">To Date <small>(Optional - leave blank for single day)</small></label>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" placeholder="Leave blank for single day">
                 </div>
             </div>
             <div class="form-group">

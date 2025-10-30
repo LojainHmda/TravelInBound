@@ -2260,9 +2260,10 @@ def wizard_step3():
                         itinerary_by_date[transport_date]['flag_transport'] = True
                 
                 elif service_type == 'meal':
-                    # Meal: date range (FROM/TO dates)
+                    # Meal: single date or date range (FROM/TO dates)
                     meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    meal_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    meal_to_str = service.get('to_date', '')
+                    meal_to = datetime.strptime(meal_to_str, '%Y-%m-%d').date() if meal_to_str else meal_from
                     meal_type = service.get('meal_type', 'Meal')
                     restaurant = service.get('restaurant', 'TBD')
                     cost = safe_float(service.get('cost'))
@@ -2393,7 +2394,8 @@ def wizard_step3():
                 elif service_type == 'meal':
                     # Create InboundMeal records
                     meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    meal_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    meal_to_str = service.get('to_date', '')
+                    meal_to = datetime.strptime(meal_to_str, '%Y-%m-%d').date() if meal_to_str else meal_from
                     
                     meal = InboundMeal(
                         request_id=request_obj.id,
@@ -2423,7 +2425,7 @@ def wizard_step3():
                     db.session.add(guide)
                 
                 elif service_type == 'hotel':
-                    # Create InboundHotel record with room details
+                    # Create InboundHotel record
                     check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
                     check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
                     nights = (check_out - check_in).days
@@ -2439,21 +2441,6 @@ def wizard_step3():
                         currency='USD'
                     )
                     db.session.add(hotel)
-                    db.session.flush()
-                    
-                    # Add room details if available
-                    rooms_data = service.get('rooms', {})
-                    for room_idx, room in rooms_data.items():
-                        room_detail = InboundHotelRoom(
-                            hotel_id=hotel.id,
-                            room_number=safe_int(room_idx) + 1,
-                            room_type=room.get('room_type'),
-                            board_basis=room.get('board_basis'),
-                            adults=safe_int(room.get('adults', 0)),
-                            children=safe_int(room.get('children', 0)),
-                            lead_passenger_name=room.get('lead_passenger')
-                        )
-                        db.session.add(room_detail)
             
             # Calculate total
             db.session.flush()
