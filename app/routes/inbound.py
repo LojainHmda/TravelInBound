@@ -1532,13 +1532,13 @@ def api_confirm_booking(request_id):
                 'message': 'Booking must have proforma invoice before confirmation'
             }), 400
         
-        # Confirm the booking
-        booking.status = 'BOOKED'
-        request_obj.status = 'BOOKED'
+        # Confirm the booking and move to CONFIRMED status
+        booking.status = 'CONFIRMED'
+        request_obj.status = 'CONFIRMED'
         
-        # Update all service items to BOOKED status
+        # Update all service items to CONFIRMED status
         for service_item in booking.service_items:
-            service_item.status = 'BOOKED'
+            service_item.status = 'CONFIRMED'
         
         db.session.commit()
         

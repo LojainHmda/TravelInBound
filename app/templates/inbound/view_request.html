@@ -2064,8 +2064,8 @@ body {
                     <i class="fas fa-file-excel"></i> Export Expense Report
                 </a>
                 
-                <!-- Confirm Booking Button (shown after proforma invoice) -->
-                {% if request.booking_id and request.booking.invoice_number %}
+                <!-- Confirm Booking Button (shown after status is QUOTED) -->
+                {% if request.booking_id and request.status == 'QUOTED' %}
                 <button type="button" class="action-btn action-btn-confirm" onclick="confirmBooking()">
                     <i class="fas fa-check-circle"></i> Confirm Booking
                 </button>
