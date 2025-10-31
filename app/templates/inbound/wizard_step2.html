@@ -423,15 +423,37 @@ function addService(type) {
     }
 }
 
-// Attach change listeners to date inputs to update preview
+// Attach change listeners to date inputs to update preview and validate
 function attachDateListeners(serviceIndex) {
     const serviceDiv = document.getElementById(`service-${serviceIndex}`);
     if (!serviceDiv) return;
     
     const dateInputs = serviceDiv.querySelectorAll('input[type="date"]');
     dateInputs.forEach(input => {
-        input.addEventListener('change', () => updateItineraryPreview());
+        input.addEventListener('change', () => {
+            validateServiceDate(input);
+            updateItineraryPreview();
+        });
     });
+}
+
+// Validate that service dates fall within arrival/departure range
+function validateServiceDate(dateInput) {
+    if (!defaultFromDate || !defaultToDate) return;
+    
+    const selectedDate = dateInput.value;
+    if (!selectedDate) return;
+    
+    const arrivalDate = new Date(defaultFromDate);
+    const departureDate = new Date(defaultToDate);
+    const serviceDate = new Date(selectedDate);
+    
+    if (serviceDate < arrivalDate || serviceDate > departureDate) {
+        dateInput.setCustomValidity('Service date must be between arrival and departure dates');
+        dateInput.reportValidity();
+    } else {
+        dateInput.setCustomValidity('');
+    }
 }
 
 function removeService(index) {
@@ -495,26 +517,15 @@ function updateItineraryPreview() {
                 dateMap.get(date).services.push({ type: 'transport', icon: 'bus', color: '#8b5cf6' });
             }
         } else if (type === 'meal' || type === 'guide') {
-            fromDate = serviceDiv.querySelector(`input[name="services[${service.index}][from_date]"]`)?.value;
-            toDate = serviceDiv.querySelector(`input[name="services[${service.index}][to_date]"]`)?.value;
+            const date = serviceDiv.querySelector(`input[name="services[${service.index}][from_date]"]`)?.value;
             
-            if (fromDate && toDate) {
-                const start = new Date(fromDate);
-                const end = new Date(toDate);
-                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-                
-                for (let i = 0; i < days; i++) {
-                    const currentDate = new Date(start);
-                    currentDate.setDate(currentDate.getDate() + i);
-                    const dateStr = currentDate.toISOString().split('T')[0];
-                    
-                    if (!dateMap.has(dateStr)) {
-                        dateMap.set(dateStr, { date: currentDate, services: [] });
-                    }
-                    const icon = type === 'meal' ? 'utensils' : 'user-tie';
-                    const color = type === 'meal' ? '#f59e0b' : '#10b981';
-                    dateMap.get(dateStr).services.push({ type, icon, color });
+            if (date) {
+                if (!dateMap.has(date)) {
+                    dateMap.set(date, { date: new Date(date), services: [] });
                 }
+                const icon = type === 'meal' ? 'utensils' : 'user-tie';
+                const color = type === 'meal' ? '#f59e0b' : '#10b981';
+                dateMap.get(date).services.push({ type, icon, color });
             }
         }
     });
