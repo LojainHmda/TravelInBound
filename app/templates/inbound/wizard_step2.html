@@ -112,7 +112,7 @@
 
     <div class="wizard-card">
         <h2 class="wizard-title"><i class="fas fa-concierge-bell"></i> Add Services</h2>
-        <p class="wizard-subtitle">Step 2: Add hotels, transport, meals, and guides with FROM/TO dates</p>
+        <p class="wizard-subtitle">Step 2: Add hotels, transport, meals, and guides to your itinerary</p>
 
         <div class="info-box">
             <i class="fas fa-lightbulb"></i> <strong>Service-Based Itinerary:</strong> 
@@ -365,17 +365,13 @@ function addService(type) {
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">To Date <small>(Optional - leave blank for single day)</small></label>
-                    <input type="date" name="services[${index}][to_date]" class="form-control" placeholder="Leave blank for single day">
+                    <label class="form-label">Meal Type*</label>
+                    <select name="services[${index}][meal_type]" class="form-select" required>
+                        <option value="Breakfast">Breakfast</option>
+                        <option value="Lunch">Lunch</option>
+                        <option value="Dinner">Dinner</option>
+                    </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Meal Type*</label>
-                <select name="services[${index}][meal_type]" class="form-select" required>
-                    <option value="Breakfast">Breakfast</option>
-                    <option value="Lunch">Lunch</option>
-                    <option value="Dinner">Dinner</option>
-                </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Restaurant*</label>
@@ -386,15 +382,9 @@ function addService(type) {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">From Date*</label>
+                    <label class="form-label">Date*</label>
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">To Date*</label>
-                    <input type="date" name="services[${index}][to_date]" class="form-control" value="${defaultToDate}" required>
-                </div>
-            </div>
-            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Guide Type*</label>
                     <select name="services[${index}][guide_type]" class="form-select" required>
@@ -403,10 +393,10 @@ function addService(type) {
                         <option value="Local Guide">Local Guide</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Language</label>
-                    <input type="text" name="services[${index}][language]" class="form-control" value="English">
-                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Language</label>
+                <input type="text" name="services[${index}][language]" class="form-control" value="English">
             </div>
             <input type="hidden" name="services[${index}][type]" value="guide">`;
     }
