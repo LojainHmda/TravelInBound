@@ -2600,41 +2600,37 @@ def wizard_step3():
                             itinerary_by_date[meal_date]['flag_meal'] = True
                 
                 elif service_type == 'guide':
-                    # Guide: date range
-                    guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    guide_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
-                    service_type_name = service.get('service_type', 'Guide Service')
+                    # Guide: single date (from_date only)
+                    guide_date = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
+                    guide_type = service.get('guide_type', 'Guide Service')
                     language = service.get('language', '')
                     cost = safe_float(service.get('cost'))
                     cost_unit = service.get('cost_unit', COST_UNIT_PER_GROUP)
                     
-                    desc = f"{service_type_name}"
+                    desc = f"{guide_type}"
                     if language:
                         desc += f" ({language})"
                     
-                    # Create row for each day in range (inclusive)
-                    guide_to_inclusive = guide_to + timedelta(days=1)
-                    for guide_date in date_range(guide_from, guide_to_inclusive):
-                        if guide_date not in itinerary_by_date:
-                            itinerary_by_date[guide_date] = {
-                                'date': guide_date,
-                                'description': desc,
-                                'base_cost': cost,
-                                'cost_unit': cost_unit,
-                                'flag_hotel': False,
-                                'hotel_single_rooms': 0,
-                                'hotel_double_rooms': 0,
-                                'hotel_triple_rooms': 0,
-                                'hotel_other_rooms': 0,
-                                'flag_transport': False,
-                                'flag_meal': False,
-                                'flag_guide': True
-                            }
-                        else:
-                            # Merge with existing
-                            itinerary_by_date[guide_date]['description'] += f" | {desc}"
-                            itinerary_by_date[guide_date]['base_cost'] += cost
-                            itinerary_by_date[guide_date]['flag_guide'] = True
+                    if guide_date not in itinerary_by_date:
+                        itinerary_by_date[guide_date] = {
+                            'date': guide_date,
+                            'description': desc,
+                            'base_cost': cost,
+                            'cost_unit': cost_unit,
+                            'flag_hotel': False,
+                            'hotel_single_rooms': 0,
+                            'hotel_double_rooms': 0,
+                            'hotel_triple_rooms': 0,
+                            'hotel_other_rooms': 0,
+                            'flag_transport': False,
+                            'flag_meal': False,
+                            'flag_guide': True
+                        }
+                    else:
+                        # Merge with existing
+                        itinerary_by_date[guide_date]['description'] += f" | {desc}"
+                        itinerary_by_date[guide_date]['base_cost'] += cost
+                        itinerary_by_date[guide_date]['flag_guide'] = True
             
             # Create ItineraryRow objects from merged data
             for row_date in sorted(itinerary_by_date.keys()):
@@ -2714,14 +2710,13 @@ def wizard_step3():
                     db.session.add(meal)
                 
                 elif service_type == 'guide':
-                    # Create InboundGuide records
-                    guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
-                    guide_to = datetime.strptime(service['to_date'], '%Y-%m-%d').date()
+                    # Create InboundGuide records (single date)
+                    guide_date = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
                     
                     guide = InboundGuide(
                         request_id=request_obj.id,
-                        date=guide_from,
-                        end_date=guide_to if guide_to != guide_from else None,
+                        date=guide_date,
+                        end_date=None,
                         service_type=service.get('guide_type'),
                         language=service.get('language', 'English'),
                         cost=safe_float(service.get('cost', 0)),
