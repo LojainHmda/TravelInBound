@@ -3082,3 +3082,44 @@ def delete_meal(request_id, meal_id):
         flash(f'Error deleting meal: {str(e)}', 'error')
     
     return redirect(url_for('inbound.view_request', id=request_id))
+
+@inbound_bp.route('/api/hotels/search')
+@login_required
+def api_search_hotels():
+    """API endpoint to search hotels for autocomplete"""
+    query = request.args.get('query', '').strip()
+    limit = request.args.get('limit', 20, type=int)
+    
+    # Query distinct hotel names from InboundHotel table
+    hotels_query = db.session.query(InboundHotel.hotel_name, InboundHotel.location).filter(
+        InboundHotel.hotel_name.isnot(None),
+        InboundHotel.hotel_name != ''
+    )
+    
+    # Apply search filter if query provided
+    if query:
+        hotels_query = hotels_query.filter(
+            db.or_(
+                InboundHotel.hotel_name.ilike(f'%{query}%'),
+                InboundHotel.location.ilike(f'%{query}%')
+            )
+        )
+    
+    # Get distinct hotel names with their most recent location
+    hotels_query = hotels_query.distinct(InboundHotel.hotel_name).order_by(
+        InboundHotel.hotel_name
+    ).limit(limit)
+    
+    hotels = hotels_query.all()
+    
+    # Format for Select2
+    results = []
+    for hotel_name, location in hotels:
+        results.append({
+            'id': hotel_name,
+            'text': f"{hotel_name}" + (f" ({location})" if location else ""),
+            'name': hotel_name,
+            'location': location or ''
+        })
+    
+    return jsonify({'results': results})
