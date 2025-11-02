@@ -143,13 +143,20 @@
 </style>
 
 <script>
+(function() {
+// Prevent duplicate declarations by using IIFE
+if (window.customerSelectionInitialized) {
+    return;
+}
+window.customerSelectionInitialized = true;
+
 let allCustomers = [];
 let filteredCustomers = [];
 let selectedCustomerId = null;
 let currentFilter = 'all';
 
 // Customer selection modal functions
-function openCustomerSelectionModal(callback) {
+window.openCustomerSelectionModal = function(callback) {
     window.customerSelectionCallback = callback;
     selectedCustomerId = null;
     
@@ -161,7 +168,7 @@ function openCustomerSelectionModal(callback) {
     loadCustomers();
 }
 
-function loadCustomers() {
+window.loadCustomers = function() {
     // Show loader
     document.getElementById('customerListLoader').classList.remove('d-none');
     document.getElementById('customerList').classList.add('d-none');
@@ -269,7 +276,7 @@ function showNoCustomersFound() {
     document.getElementById('noCustomersFound').classList.remove('d-none');
 }
 
-function selectCustomer(customerId) {
+window.selectCustomer = function(customerId) {
     selectedCustomerId = customerId;
     
     // Update visual selection
@@ -296,7 +303,7 @@ function selectCustomer(customerId) {
     }
 }
 
-function showNewCustomerForm() {
+window.showNewCustomerForm = function() {
     // Hide customer selection modal
     const customerModal = bootstrap.Modal.getInstance(document.getElementById('customerSelectionModal'));
     if (customerModal) {
@@ -311,7 +318,7 @@ function showNewCustomerForm() {
     document.getElementById('quickAddCustomerForm').reset();
 }
 
-function quickAddCustomer() {
+window.quickAddCustomer = function() {
     const form = document.getElementById('quickAddCustomerForm');
     const formData = new FormData(form);
     
@@ -416,6 +423,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+})(); // End IIFE
 </script>
 
 <!-- Quick Add Customer Modal -->
