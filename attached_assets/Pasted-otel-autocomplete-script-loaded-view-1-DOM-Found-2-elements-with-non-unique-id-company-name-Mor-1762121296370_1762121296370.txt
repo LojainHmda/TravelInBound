@@ -1,0 +1,23 @@
+otel autocomplete script loaded
+view:1 [DOM] Found 2 elements with non-unique id #company_name: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"company_name" name=​"company_name">​ <input type=​"text" class=​"form-control" id=​"company_name" name=​"company_name">​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #customerSelectionSearchInput: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"customerSelectionSearchInput" placeholder=​"Search by name, email, phone, or company..." autocomplete=​"off">​ <input type=​"text" class=​"form-control" id=​"customerSelectionSearchInput" placeholder=​"Search by name, email, phone, or company..." autocomplete=​"off">​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #email: (More info: https://goo.gl/9p2vKq) <input type=​"email" class=​"form-control" id=​"email" name=​"email" required>​ <input type=​"email" class=​"form-control" id=​"email" name=​"email" required>​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #first_name: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"first_name" name=​"first_name" required>​ <input type=​"text" class=​"form-control" id=​"first_name" name=​"first_name" required>​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #last_name: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"last_name" name=​"last_name">​ <input type=​"text" class=​"form-control" id=​"last_name" name=​"last_name">​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #nationality: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"nationality" name=​"nationality">​ <input type=​"text" class=​"form-control" id=​"nationality" name=​"nationality">​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #phone: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"form-control" id=​"phone" name=​"phone" required>​ <input type=​"text" class=​"form-control" id=​"phone" name=​"phone" required>​Understand this warning
+view:1 [DOM] Found 2 elements with non-unique id #quickAddCustomerForm: (More info: https://goo.gl/9p2vKq) <form id=​"quickAddCustomerForm">​…​</form>​ <form id=​"quickAddCustomerForm">​…​</form>​Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'ambient-light-sensor'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'battery'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'execution-while-not-rendered'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'layout-animations'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'legacy-image-formats'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'navigation-override'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'oversized-images'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'publickey-credentials'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'speaker-selection'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'unoptimized-images'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Unrecognized feature: 'unsized-media'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Allow attribute will take precedence over 'allowfullscreen'.Understand this warning
+workspace_iframe.html?initialPath=%2F&id=%3Ar26d%3A:1 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warning
