@@ -174,7 +174,13 @@ body {
             <span class="badge">{{ status_counts.PROCESSING }}</span>
         </button>
         <button class="ops-tab" onclick="switchTab('arrivals')">
-            Arrivals & Departures
+            Arrivals
+        </button>
+        <button class="ops-tab" onclick="switchTab('departures')">
+            Departures
+        </button>
+        <button class="ops-tab" onclick="switchTab('transport')">
+            Transport
         </button>
         <button class="ops-tab" onclick="switchTab('tours')">
             Tours & Guides
@@ -330,11 +336,10 @@ body {
         {% endif %}
     </div>
 
-    <!-- Arrivals & Departures Tab -->
+    <!-- Arrivals Tab -->
     <div id="arrivals-content" class="tab-content-section">
         {% if processing_requests %}
             {% for request in processing_requests %}
-            
             <!-- Arrival Card -->
             <div class="service-card">
                 <div class="service-icon">✈️</div>
@@ -349,6 +354,7 @@ body {
                         </a>
                     </div>
                     <div class="service-meta">
+                        <span class="service-meta-item"><i class="fas fa-calendar"></i> {{ request.from_date.strftime('%b %d, %Y') if request.from_date else 'TBD' }}</span>
                         <span class="service-meta-item"><i class="fas fa-clock"></i> {{ request.from_date.strftime('%H:%M') if request.from_date else '09:00' }}</span>
                         <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
                         <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ request.from_border or 'Airport' }}</span>
@@ -356,31 +362,22 @@ body {
                     </div>
                 </div>
                 <div class="service-action">
-                    <button class="btn-complete">✓ Complete</button>
+                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
                 </div>
             </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-plane-arrival" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; color: #86868b;">No arrivals scheduled</p>
+            </div>
+        {% endif %}
+    </div>
 
-            <!-- Transport Services from itinerary -->
-            {% if request.itinerary_rows %}
-                {% for row in request.itinerary_rows %}
-                    {% if row.flag_transport %}
-                    <div class="service-card">
-                        <div class="service-icon">🚌</div>
-                        <div class="service-details">
-                            <div class="service-title">{{ row.description[:80] }}</div>
-                            <div class="service-meta">
-                                <span class="service-meta-item"><i class="fas fa-calendar"></i> {{ row.date.strftime('%b %d, %Y') }}</span>
-                                <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
-                            </div>
-                        </div>
-                        <div class="service-action">
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-track">Track</a>
-                        </div>
-                    </div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-
+    <!-- Departures Tab -->
+    <div id="departures-content" class="tab-content-section">
+        {% if processing_requests %}
+            {% for request in processing_requests %}
             <!-- Departure Card -->
             <div class="service-card">
                 <div class="service-icon">🛫</div>
@@ -395,22 +392,77 @@ body {
                         </a>
                     </div>
                     <div class="service-meta">
+                        <span class="service-meta-item"><i class="fas fa-calendar"></i> {{ request.to_date.strftime('%b %d, %Y') if request.to_date else 'TBD' }}</span>
                         <span class="service-meta-item"><i class="fas fa-clock"></i> {{ request.to_date.strftime('%H:%M') if request.to_date else '19:00' }}</span>
                         <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
                         <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ request.to_border or 'Airport' }}</span>
+                        <span class="service-meta-item"><i class="fas fa-user"></i> {{ request.contact_name }}</span>
                     </div>
                 </div>
                 <div class="service-action">
-                    <button class="btn-assign">Assign Driver</button>
+                    <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="btn-view">View</a>
                 </div>
             </div>
-
-            <hr style="margin: 24px 0; border-color: #e5e7eb;">
             {% endfor %}
         {% else %}
             <div style="text-align: center; padding: 60px 20px;">
-                <i class="fas fa-plane" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <p style="font-size: 16px; color: #86868b;">No arrivals or departures scheduled</p>
+                <i class="fas fa-plane-departure" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; color: #86868b;">No departures scheduled</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Transport Tab -->
+    <div id="transport-content" class="tab-content-section">
+        {% if processing_requests %}
+            <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">From Date</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">To Date</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">PAX</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Vech Type</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">SUPPLIER</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Driver</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Pickup Point</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Pickup Time</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Drop-off Point</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600; border-right: 1px solid rgba(255,255,255,0.2);">Note</th>
+                            <th style="padding: 12px 8px; text-align: center; font-weight: 600;">STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for request in processing_requests %}
+                            {% if request.itinerary_rows %}
+                                {% for row in request.itinerary_rows %}
+                                    {% if row.flag_transport %}
+                                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%d') }}</td>
+                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%d') }}</td>
+                                        <td style="padding: 10px 8px; text-align: center;">{{ request.pax }}</td>
+                                        <td style="padding: 10px 8px; text-align: center;">BUS</td>
+                                        <td style="padding: 10px 8px; text-align: center;">-</td>
+                                        <td style="padding: 10px 8px; text-align: center;">-</td>
+                                        <td style="padding: 10px 8px; text-align: center;">{{ row.description[:30] if row.description else '-' }}</td>
+                                        <td style="padding: 10px 8px; text-align: center;">{{ row.date.strftime('%H:%M') if row.date else '-' }}</td>
+                                        <td style="padding: 10px 8px; text-align: center;">-</td>
+                                        <td style="padding: 10px 8px; text-align: center;">-</td>
+                                        <td style="padding: 10px 8px; text-align: center;">
+                                            <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">REQUESTED</span>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-bus" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <p style="font-size: 16px; color: #86868b;">No transport services scheduled</p>
             </div>
         {% endif %}
     </div>
