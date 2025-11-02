@@ -3881,8 +3881,8 @@ function saveItinerary(event) {
         rows.push(rowData);
     }
     
-    // Send update request
-    fetch('/inbound/api/{{ request.id }}/save-itinerary', {
+    // Send update request (auto-generates services)
+    fetch('/inbound/api/{{ request.id }}/itinerary', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3890,11 +3890,16 @@ function saveItinerary(event) {
         },
         body: JSON.stringify({rows: rows})
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            showNotification('Itinerary saved successfully!', 'success');
-            // Reload page to show updated data
+            showNotification('Itinerary saved & services generated successfully!', 'success');
+            // Reload page to show updated data and generated service tabs
             setTimeout(() => {
                 window.location.reload();
             }, 1500);
