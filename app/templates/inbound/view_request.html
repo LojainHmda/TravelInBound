@@ -3848,6 +3848,7 @@ function updateRowTotal(row) {
 
 // Save Itinerary Function
 function saveItinerary(event) {
+    console.log('saveItinerary function called');
     event.preventDefault();
     
     const form = event.target;
@@ -3860,6 +3861,9 @@ function saveItinerary(event) {
     const baseCosts = formData.getAll('base_cost[]');
     const currencies = formData.getAll('currency[]');
     const costUnits = formData.getAll('cost_unit[]');
+    
+    console.log('Collected dates:', dates);
+    console.log('Number of rows:', dates.length);
     
     for (let i = 0; i < dates.length; i++) {
         const rowData = {
@@ -3880,6 +3884,9 @@ function saveItinerary(event) {
         };
         rows.push(rowData);
     }
+    
+    console.log('Rows to save:', rows);
+    console.log('Sending POST to: /inbound/api/{{ request.id }}/itinerary');
     
     // Send update request (auto-generates services)
     fetch('/inbound/api/{{ request.id }}/itinerary', {
