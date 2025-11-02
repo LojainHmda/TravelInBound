@@ -1309,6 +1309,31 @@ def update_proforma_prices(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/update-pricing-mode', methods=['POST'])
+@login_required
+def update_pricing_mode(request_id):
+    """Update pricing mode for proforma invoice (ITEMIZED or LUMPSUM)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        pricing_mode = data.get('pricing_mode', 'ITEMIZED')
+        
+        if pricing_mode not in ['ITEMIZED', 'LUMPSUM']:
+            return jsonify({'success': False, 'message': 'Invalid pricing mode'}), 400
+        
+        request_obj.pricing_mode = pricing_mode
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Pricing mode updated to {pricing_mode}'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
 @login_required
 def api_export_proforma_doc(request_id):

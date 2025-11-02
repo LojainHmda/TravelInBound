@@ -47,6 +47,7 @@ class InboundRequest(db.Model):
     # Total pricing
     total_amount = db.Column(db.Float, default=0.0)
     total_currency = db.Column(db.String(3), default='USD')
+    pricing_mode = db.Column(db.String(20), default='ITEMIZED')  # ITEMIZED or LUMPSUM
     
     # Relationships
     itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan")
