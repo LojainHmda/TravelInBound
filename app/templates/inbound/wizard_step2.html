@@ -363,15 +363,9 @@ function addService(type) {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">From Date*</label>
+                    <label class="form-label">Date*</label>
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">To Date <small class="text-muted">(Optional - leave blank for single day)</small></label>
-                    <input type="date" name="services[${index}][to_date]" class="form-control" placeholder="Leave blank for single day">
-                </div>
-            </div>
-            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Meal Type*</label>
                     <select name="services[${index}][meal_type]" class="form-select" required>
@@ -380,9 +374,15 @@ function addService(type) {
                         <option value="Dinner">Dinner</option>
                     </select>
                 </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Restaurant*</label>
                     <input type="text" name="services[${index}][restaurant]" class="form-control" placeholder="Restaurant name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <input type="text" name="services[${index}][location]" class="form-control" placeholder="City/Area">
                 </div>
             </div>
             <input type="hidden" name="services[${index}][type]" value="meal">`;
