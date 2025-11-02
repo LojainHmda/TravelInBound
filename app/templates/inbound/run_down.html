@@ -217,10 +217,10 @@ body {
                                 <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}...</span>
                                 
                                 {# Show cash expenses for this date #}
-                                {% for expense in request.cash_expenses %}
+                                {% for expense in request.inbound_cash_expenses %}
                                     {% if expense.date == row.date %}
                                     <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
+                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or 'Expense' }}: ${{ expense.amount }}
                                     </a>
                                     {% endif %}
                                 {% endfor %}
@@ -243,10 +243,10 @@ body {
                                 <span class="service-meta-item"><i class="fas fa-users"></i> {{ request.pax }} passengers</span>
                                 
                                 {# Show cash expenses for this date #}
-                                {% for expense in request.cash_expenses %}
+                                {% for expense in request.inbound_cash_expenses %}
                                     {% if expense.date == row.date %}
                                     <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
+                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or 'Expense' }}: ${{ expense.amount }}
                                     </a>
                                     {% endif %}
                                 {% endfor %}
@@ -269,10 +269,10 @@ body {
                                 <span class="service-meta-item"><i class="fas fa-map-marker-alt"></i> {{ row.description[:50] }}</span>
                                 
                                 {# Show cash expenses for this date #}
-                                {% for expense in request.cash_expenses %}
+                                {% for expense in request.inbound_cash_expenses %}
                                     {% if expense.date == row.date %}
                                     <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
+                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or 'Expense' }}: ${{ expense.amount }}
                                     </a>
                                     {% endif %}
                                 {% endfor %}
@@ -295,10 +295,10 @@ body {
                                 <span class="service-meta-item"><i class="fas fa-user"></i> Guide Needed</span>
                                 
                                 {# Show cash expenses for this date #}
-                                {% for expense in request.cash_expenses %}
+                                {% for expense in request.inbound_cash_expenses %}
                                     {% if expense.date == row.date %}
                                     <a href="{{ url_for('inbound.view_request', id=request.id) }}" class="service-meta-item" style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 12px; font-size: 11px; text-decoration: none; cursor: pointer;">
-                                        <i class="fas fa-money-bill-wave"></i> {{ expense.category or 'Expense' }}: ${{ expense.amount }}
+                                        <i class="fas fa-money-bill-wave"></i> {{ expense.description or 'Expense' }}: ${{ expense.amount }}
                                     </a>
                                     {% endif %}
                                 {% endfor %}
