@@ -3944,14 +3944,61 @@ function showNotification(message, type) {
 
 // Removed duplicate generateDays function
 
-function saveChanges() {
-    const form = document.getElementById('itineraryForm');
-    if (form) {
-        form.submit();
-    } else {
-        console.error('Itinerary form not found');
-        showNotification('Error: Form not found', 'error');
+function saveChanges(event) {
+    // This function is for the editMode form (master details)
+    // NOT for the itinerary form
+    if (event) {
+        event.preventDefault();
     }
+    
+    const form = document.getElementById('editMode');
+    if (!form) {
+        console.error('Edit form not found');
+        showNotification('Error: Form not found', 'error');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    const data = {
+        customer_id: formData.get('customer_id'),
+        customer_type: formData.get('customer_type'),
+        contact_name: formData.get('contact_name'),
+        agent_ref: formData.get('agent_ref'),
+        nationality: formData.get('nationality'),
+        from_date: formData.get('from_date'),
+        to_date: formData.get('to_date'),
+        pax: parseInt(formData.get('pax')),
+        special_note: formData.get('special_note')
+    };
+    
+    fetch('/inbound/api/{{ request.id }}/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Master details saved successfully!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving master details', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving master details', 'error');
+    });
 }
 
 function toggleItineraryEditMode() {

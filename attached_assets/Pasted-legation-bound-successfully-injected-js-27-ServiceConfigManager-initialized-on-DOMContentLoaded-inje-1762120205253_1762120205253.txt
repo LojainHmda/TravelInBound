@@ -1,0 +1,62 @@
+legation bound successfully
+injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+injected.js:27 Hotel autocomplete script loaded
+injected.js:27 Itinerary form not found
+(anonymous) @ VM380 injected.js:27
+saveChanges @ VM526 view:1088
+onsubmit @ VM751 view:1Understand this error
+injected.js:27 Service Config JS loading...
+injected.js:27 Service Config JS loaded successfully
+view?customer_id=&customer_type=AGENCY&contact_name=TBA&agent_ref=&nationality=TBA&from_date=2025-1…:4352 Uncaught SyntaxError: Identifier 'allCustomers' has already been declared (at view?customer_id=&customer_type=AGENCY&contact_name=TBA&agent_ref=&nationality=TBA&from_date=2025-1…:4352:9)Understand this error
+injected.js:27 ServiceConfigManager initialized
+injected.js:27 Binding service config events...
+injected.js:27 Service modal initialized
+injected.js:27 Event delegation bound successfully
+injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+injected.js:27 Hotel autocomplete script loaded
+injected.js:27 Service Config JS loading...
+injected.js:27 Service Config JS loaded successfully
+view?customer_id=&customer_type=AGENCY&contact_name=TBA&agent_ref=&nationality=TBA&from_date=2025-1…:4352 Uncaught SyntaxError: Identifier 'allCustomers' has already been declared (at view?customer_id=&customer_type=AGENCY&contact_name=TBA&agent_ref=&nationality=TBA&from_date=2025-1…:4352:9)Understand this error
+injected.js:27 ServiceConfigManager initialized
+injected.js:27 Binding service config events...
+injected.js:27 Service modal initialized
+injected.js:27 Event delegation bound successfully
+injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+injected.js:27 Hotel autocomplete script loaded
+inbound/:498  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/images/logo.png 502 (Bad Gateway)Understand this error
+inbound/:19  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/css/button-theme.css?v=1 net::ERR_ABORTED 502 (Bad Gateway)Understand this error
+inbound/:17  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/css/main.css?v=6150&t=20250905 net::ERR_ABORTED 502 (Bad Gateway)Understand this error
+inbound/:21  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/css/ai-chat.css?v=1 net::ERR_ABORTED 502 (Bad Gateway)Understand this error
+inbound/:688  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/js/smart_search.js net::ERR_ABORTED 502 (Bad Gateway)Understand this error
+inbound/:1628  GET https://d33490c5-18ea-47be-bfdc-e6069ec48c81-00-3jqaqyl4vd40o.sisko.replit.dev/static/js/booking.js net::ERR_ABORTED 502 (Bad Gateway)Understand this error
+VM1024 injected.js:27 Service Config JS loading...
+VM1024 injected.js:27 Service Config JS loaded successfully
+view:4359 Uncaught SyntaxError: Identifier 'allCustomers' has already been declared (at view:4359:9)Understand this error
+VM1024 injected.js:27 ServiceConfigManager initialized
+VM1024 injected.js:27 Binding service config events...
+VM1024 injected.js:27 Service modal initialized
+VM1024 injected.js:27 Event delegation bound successfully
+VM1024 injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+VM1024 injected.js:27 Hotel autocomplete script loaded
+VM1024 injected.js:27 Itinerary form not found
+(anonymous) @ VM1024 injected.js:27
+saveChanges @ view:2419
+onsubmit @ view:870Understand this error
+VM1046 injected.js:27 Service Config JS loading...
+VM1046 injected.js:27 Service Config JS loaded successfully
+VM1054 view:1 Uncaught SyntaxError: Identifier 'allCustomers' has already been declared (at VM1054 view:1:1)Understand this error
+VM1046 injected.js:27 ServiceConfigManager initialized
+VM1046 injected.js:27 Binding service config events...
+VM1046 injected.js:27 Service modal initialized
+VM1046 injected.js:27 Event delegation bound successfully
+VM1046 injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+VM1046 injected.js:27 Hotel autocomplete script loaded
+injected.js:27 Service Config JS loading...
+injected.js:27 Service Config JS loaded successfully
+view:4352 Uncaught SyntaxError: Identifier 'allCustomers' has already been declared (at view:4352:9)Understand this error
+injected.js:27 ServiceConfigManager initialized
+injected.js:27 Binding service config events...
+injected.js:27 Service modal initialized
+injected.js:27 Event delegation bound successfully
+injected.js:27 ServiceConfigManager initialized on DOMContentLoaded
+injected.js:27 Hotel autocomplete script loaded
