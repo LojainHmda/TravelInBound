@@ -196,11 +196,13 @@ function addService(type) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Hotel Name*</label>
-                    <input type="text" id="hotelName-${index}" name="services[${index}][hotel_name]" class="form-control hotel-autocomplete" placeholder="e.g., Amman Rotana" required>
+                    <select id="hotelName-${index}" name="services[${index}][hotel_name]" class="form-control hotel-autocomplete" required>
+                        <option value=""></option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Location</label>
-                    <input type="text" name="services[${index}][location]" class="form-control" placeholder="City/Area">
+                    <input type="text" id="hotelLocation-${index}" name="services[${index}][location]" class="form-control" placeholder="City/Area">
                 </div>
             </div>
             <div class="form-row">
@@ -771,6 +773,79 @@ function updateRoomNumbersInService(serviceIndex) {
             deleteButton.style.display = 'none';
         } else {
             deleteButton.style.display = 'inline-block';
+        }
+    });
+}
+
+// Setup hotel name autocomplete with Select2
+function setupHotelAutocomplete(selectElement) {
+    if (!selectElement || !window.jQuery) return;
+    
+    const $select = $(selectElement);
+    const serviceIndex = selectElement.id.replace('hotelName-', '');
+    
+    $select.select2({
+        ajax: {
+            url: '/inbound/api/hotels/search',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    query: params.term || '',
+                    limit: 20
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            },
+            cache: true
+        },
+        placeholder: 'Search for hotel or type new name...',
+        minimumInputLength: 0,
+        allowClear: true,
+        tags: true,
+        createTag: function (params) {
+            const term = $.trim(params.term);
+            if (term === '') {
+                return null;
+            }
+            return {
+                id: term,
+                text: term,
+                name: term,
+                location: '',
+                isNew: true
+            };
+        },
+        templateResult: function (hotel) {
+            if (hotel.loading) {
+                return hotel.text;
+            }
+            if (hotel.isNew) {
+                return $('<span><i class="fas fa-plus-circle"></i> Add new: <strong>' + hotel.text + '</strong></span>');
+            }
+            return $('<span>' + hotel.text + '</span>');
+        },
+        templateSelection: function (hotel) {
+            return hotel.name || hotel.text;
+        }
+    });
+    
+    // Auto-populate location when hotel is selected
+    $select.on('select2:select', function (e) {
+        const data = e.params.data;
+        const locationInput = document.getElementById(`hotelLocation-${serviceIndex}`);
+        if (locationInput && data.location && !data.isNew) {
+            locationInput.value = data.location;
+        }
+    });
+    
+    $select.on('select2:clear', function (e) {
+        const locationInput = document.getElementById(`hotelLocation-${serviceIndex}`);
+        if (locationInput) {
+            locationInput.value = '';
         }
     });
 }
