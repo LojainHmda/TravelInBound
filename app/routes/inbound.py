@@ -395,13 +395,17 @@ def api_get_itinerary(request_id):
 @login_required
 def api_save_itinerary_original(request_id):
     """Save itinerary rows for a request (original version)"""
+    print(f"[DEBUG] api_save_itinerary_original called for request_id: {request_id}")
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != current_user.id:
+        print(f"[DEBUG] Access denied: user {current_user.id} != owner {request_obj.user_id}")
         return jsonify({'error': 'Access denied'}), 403
     
     data = request.get_json()
+    print(f"[DEBUG] Received data: {data}")
     rows_data = data.get('rows', [])
+    print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
     
     # Clear existing rows
     ItineraryRow.query.filter_by(request_id=request_id).delete()
