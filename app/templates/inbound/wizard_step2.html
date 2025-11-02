@@ -361,9 +361,15 @@ function addService(type) {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Date*</label>
+                    <label class="form-label">From Date*</label>
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">To Date <small class="text-muted">(Optional - leave blank for single day)</small></label>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" placeholder="Leave blank for single day">
+                </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Meal Type*</label>
                     <select name="services[${index}][meal_type]" class="form-select" required>
@@ -372,19 +378,25 @@ function addService(type) {
                         <option value="Dinner">Dinner</option>
                     </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Restaurant*</label>
-                <input type="text" name="services[${index}][restaurant]" class="form-control" placeholder="Restaurant name" required>
+                <div class="form-group">
+                    <label class="form-label">Restaurant*</label>
+                    <input type="text" name="services[${index}][restaurant]" class="form-control" placeholder="Restaurant name" required>
+                </div>
             </div>
             <input type="hidden" name="services[${index}][type]" value="meal">`;
     } else if (type === 'guide') {
         html += `
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Date*</label>
+                    <label class="form-label">From Date*</label>
                     <input type="date" name="services[${index}][from_date]" class="form-control" value="${defaultFromDate}" required>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">To Date <small class="text-muted">(Optional - leave blank for single day)</small></label>
+                    <input type="date" name="services[${index}][to_date]" class="form-control" placeholder="Leave blank for single day">
+                </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Guide Type*</label>
                     <select name="services[${index}][guide_type]" class="form-select" required>
@@ -393,10 +405,10 @@ function addService(type) {
                         <option value="Local Guide">Local Guide</option>
                     </select>
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Language</label>
-                <input type="text" name="services[${index}][language]" class="form-control" value="English">
+                <div class="form-group">
+                    <label class="form-label">Language</label>
+                    <input type="text" name="services[${index}][language]" class="form-control" value="English">
+                </div>
             </div>
             <input type="hidden" name="services[${index}][type]" value="guide">`;
     }
@@ -517,15 +529,26 @@ function updateItineraryPreview() {
                 dateMap.get(date).services.push({ type: 'transport', icon: 'bus', color: '#8b5cf6' });
             }
         } else if (type === 'meal' || type === 'guide') {
-            const date = serviceDiv.querySelector(`input[name="services[${service.index}][from_date]"]`)?.value;
+            fromDate = serviceDiv.querySelector(`input[name="services[${service.index}][from_date]"]`)?.value;
+            toDate = serviceDiv.querySelector(`input[name="services[${service.index}][to_date]"]`)?.value;
             
-            if (date) {
-                if (!dateMap.has(date)) {
-                    dateMap.set(date, { date: new Date(date), services: [] });
+            if (fromDate) {
+                const start = new Date(fromDate);
+                const end = toDate ? new Date(toDate) : start;
+                const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                
+                for (let i = 0; i < days; i++) {
+                    const currentDate = new Date(start);
+                    currentDate.setDate(currentDate.getDate() + i);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    
+                    if (!dateMap.has(dateStr)) {
+                        dateMap.set(dateStr, { date: currentDate, services: [] });
+                    }
+                    const icon = type === 'meal' ? 'utensils' : 'user-tie';
+                    const color = type === 'meal' ? '#f59e0b' : '#10b981';
+                    dateMap.get(dateStr).services.push({ type, icon, color });
                 }
-                const icon = type === 'meal' ? 'utensils' : 'user-tie';
-                const color = type === 'meal' ? '#f59e0b' : '#10b981';
-                dateMap.get(date).services.push({ type, icon, color });
             }
         }
     });
