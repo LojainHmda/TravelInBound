@@ -3843,8 +3843,8 @@ function updateRowTotal(row) {
     totalCell.textContent = `${total.toFixed(2)} ${currency}`;
 }
 
-// Save Itinerary Function
-function saveItinerary(event) {
+// Save Itinerary Function (expose globally)
+window.saveItinerary = function(event) {
     console.log('saveItinerary function called');
     event.preventDefault();
     
