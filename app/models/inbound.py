@@ -28,6 +28,12 @@ class InboundRequest(db.Model):
     to_date = db.Column(db.Date, nullable=False)
     no_of_days = db.Column(db.Integer, nullable=False)
     
+    # Arrival/Departure details
+    arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport", "Sheikh Hussein Border"
+    departure_point = db.Column(db.String(150), nullable=True)
+    arrival_time = db.Column(db.Time, nullable=True)
+    departure_time = db.Column(db.Time, nullable=True)
+    
     # Client information
     customer_type = db.Column(db.String(20), nullable=False, default='AGENCY')  # AGENCY, GROUP, COMPANY, CORPORATE
     contact_name = db.Column(db.String(100), nullable=False)
