@@ -407,6 +407,26 @@ def api_save_itinerary_original(request_id):
     rows_data = data.get('rows', [])
     print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
     
+    # Update arrival/departure details if provided
+    if 'arrival_point' in data:
+        request_obj.arrival_point = data.get('arrival_point') or None
+    if 'departure_point' in data:
+        request_obj.departure_point = data.get('departure_point') or None
+    if 'arrival_time' in data and data.get('arrival_time'):
+        try:
+            request_obj.arrival_time = datetime.strptime(data.get('arrival_time'), '%H:%M').time()
+        except:
+            request_obj.arrival_time = None
+    elif 'arrival_time' in data and not data.get('arrival_time'):
+        request_obj.arrival_time = None
+    if 'departure_time' in data and data.get('departure_time'):
+        try:
+            request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
+        except:
+            request_obj.departure_time = None
+    elif 'departure_time' in data and not data.get('departure_time'):
+        request_obj.departure_time = None
+    
     # Clear existing rows
     ItineraryRow.query.filter_by(request_id=request_id).delete()
     

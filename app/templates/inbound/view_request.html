@@ -2296,6 +2296,38 @@ body {
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
+                        <!-- Arrival & Departure Section -->
+                        <div class="mb-4 p-3" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; border: 2px solid #fbbf24;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" style="color: #92400e;">
+                                        <i class="fas fa-plane-arrival me-2"></i>Arrival Point
+                                    </label>
+                                    <input type="text" class="form-control mb-2" id="itinerary_arrival_point" 
+                                           value="{{ request.arrival_point or '' }}" 
+                                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                                    <label class="form-label fw-bold" style="color: #92400e;">
+                                        <i class="fas fa-clock me-2"></i>Arrival Time
+                                    </label>
+                                    <input type="time" class="form-control" id="itinerary_arrival_time" 
+                                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" style="color: #92400e;">
+                                        <i class="fas fa-plane-departure me-2"></i>Departure Point
+                                    </label>
+                                    <input type="text" class="form-control mb-2" id="itinerary_departure_point" 
+                                           value="{{ request.departure_point or '' }}" 
+                                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                                    <label class="form-label fw-bold" style="color: #92400e;">
+                                        <i class="fas fa-clock me-2"></i>Departure Time
+                                    </label>
+                                    <input type="time" class="form-control" id="itinerary_departure_time" 
+                                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Intuitive Service Selection Bar -->
                         <div class="service-selection-bar mb-3" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                             <div class="service-bar-title mb-2" style="font-weight: 600; color: #334155;">
@@ -3923,6 +3955,12 @@ window.saveItinerary = function(event) {
     console.log('Rows to save:', rows);
     console.log('Sending POST to: /inbound/api/{{ request.id }}/itinerary');
     
+    // Collect arrival/departure data
+    const arrival_point = document.getElementById('itinerary_arrival_point')?.value || '';
+    const arrival_time = document.getElementById('itinerary_arrival_time')?.value || '';
+    const departure_point = document.getElementById('itinerary_departure_point')?.value || '';
+    const departure_time = document.getElementById('itinerary_departure_time')?.value || '';
+    
     // Send update request (auto-generates services)
     fetch('/inbound/api/{{ request.id }}/itinerary', {
         method: 'POST',
@@ -3930,7 +3968,13 @@ window.saveItinerary = function(event) {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
         },
-        body: JSON.stringify({rows: rows})
+        body: JSON.stringify({
+            rows: rows,
+            arrival_point: arrival_point,
+            arrival_time: arrival_time,
+            departure_point: departure_point,
+            departure_time: departure_time
+        })
     })
     .then(response => {
         if (!response.ok) {
