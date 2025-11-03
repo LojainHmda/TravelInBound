@@ -2288,10 +2288,10 @@ body {
                                         <tr>
                                             <th>Date</th>
                                             <th>Description</th>
-                                            <th>Cost</th>
-                                            <th>Unit</th>
+                                            <th>Restaurant</th>
+                                            <th>Cash Expense</th>
+                                            <th>Comment</th>
                                             <th>Service Flags</th>
-                                            <th>Row Total</th>
                                         </tr>
                                     </thead>
                                     <tbody id="itineraryTableBody">
@@ -2311,31 +2311,24 @@ body {
                                                        required>
                                             </td>
                                             <td>
-                                                <div class="d-flex gap-1 align-items-center">
-                                                    <input type="number" class="form-control form-control-sm" 
-                                                           name="base_cost[]" 
-                                                           value="{{ row.base_cost }}" 
-                                                           step="0.01" 
-                                                           min="0" 
-                                                           onchange="updateRowTotal(this.closest('tr'))" 
-                                                           style="width: 80px;"
-                                                           required>
-                                                    <select class="form-select form-select-sm" name="currency[]" style="width: 60px;">
-                                                        <option value="USD" {% if row.currency == 'USD' %}selected{% endif %}>USD</option>
-                                                        <option value="EUR" {% if row.currency == 'EUR' %}selected{% endif %}>EUR</option>
-                                                        <option value="JOD" {% if row.currency == 'JOD' %}selected{% endif %}>JOD</option>
-                                                        <option value="GBP" {% if row.currency == 'GBP' %}selected{% endif %}>GBP</option>
-                                                    </select>
-                                                </div>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       name="restaurant[]" 
+                                                       value="{{ row.restaurant or '' }}" 
+                                                       placeholder="Restaurant name">
                                             </td>
                                             <td>
-                                                <span class="badge bg-primary">
-                                                    {% if row.cost_unit == 'PER_PERSON' %}Per Person{% else %}Per Group{% endif %}
-                                                </span>
-                                                <select class="form-select d-none" name="cost_unit[]" onchange="updateRowTotal(this.closest('tr'))">
-                                                    <option value="PER_PERSON" {% if row.cost_unit == 'PER_PERSON' %}selected{% endif %}>Per Person</option>
-                                                    <option value="PER_GROUP" {% if row.cost_unit == 'PER_GROUP' %}selected{% endif %}>Per Group</option>
-                                                </select>
+                                                <input type="number" class="form-control form-control-sm" 
+                                                       name="cash_expense[]" 
+                                                       value="{{ row.cash_expense or 0 }}" 
+                                                       step="0.01" 
+                                                       min="0" 
+                                                       style="width: 90px;">
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       name="comment[]" 
+                                                       value="{{ row.comment or '' }}" 
+                                                       placeholder="Comment">
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
@@ -2433,10 +2426,6 @@ body {
                                         {% endfor %}
                                     </tbody>
                                     <tfoot>
-                                        <tr class="table-success">
-                                            <td colspan="5" class="text-end"><strong>Total:</strong></td>
-                                            <td class="fw-bold">{{ "%.2f"|format(request.total_amount) }} {{ request.total_currency }}</td>
-                                        </tr>
                                         <tr>
                                             <td colspan="6" class="text-center py-3">
                                                 <button type="button" class="btn btn-info me-2" onclick="addItineraryRow()">
@@ -2549,34 +2538,40 @@ body {
                         {% if request.inbound_transports %}
                         <div class="tab-pane fade" id="transport" role="tabpanel">
                             <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
                                         <tr>
-                                            <th>Date</th>
-                                            <th>Vehicle</th>
-                                            <th>Pickup</th>
-                                            <th>Dropoff</th>
-                                            <th>Time</th>
-                                            <th>Type</th>
-                                            <th>Cost</th>
+                                            <th>From Date</th>
+                                            <th>To Date</th>
+                                            <th>Pax</th>
+                                            <th>Vech Type</th>
+                                            <th>SUPPLIER</th>
+                                            <th>Driver</th>
+                                            <th>Pickup Port</th>
+                                            <th>Pickup Time</th>
+                                            <th>Drop Off Point</th>
+                                            <th>Note</th>
+                                            <th>STATUS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for transport in request.inbound_transports %}
                                         <tr>
-                                            <td>{{ transport.date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ transport.date.strftime('%m/%d') if transport.date else '-' }}</td>
+                                            <td>{{ transport.end_date.strftime('%m/%d') if transport.end_date else '-' }}</td>
+                                            <td>{{ transport.pax or request.pax or '-' }}</td>
                                             <td>{{ transport.vehicle_type or '-' }}</td>
+                                            <td>{{ transport.supplier or '-' }}</td>
+                                            <td>{{ transport.driver_name or '-' }}</td>
                                             <td>{{ transport.pickup_location or '-' }}</td>
+                                            <td>{{ transport.pickup_time.strftime('%H:%M') if transport.pickup_time else '-' }}</td>
                                             <td>{{ transport.dropoff_location or '-' }}</td>
-                                            <td>{% if transport.pickup_time %}{{ transport.pickup_time.strftime('%H:%M') }}{% else %}-{% endif %}</td>
+                                            <td>{{ transport.note or '-' }}</td>
                                             <td>
-                                                {% if transport.is_airport_transfer %}
-                                                    <span class="badge bg-danger">Airport</span>
-                                                {% else %}
-                                                    <span class="badge bg-info">Regular</span>
-                                                {% endif %}
+                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'REQUESTED' %}warning{% else %}secondary{% endif %}">
+                                                    {{ transport.status }}
+                                                </span>
                                             </td>
-                                            <td>{{ "%.2f"|format(transport.cost) }} {{ transport.currency }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -3855,9 +3850,9 @@ window.saveItinerary = function(event) {
     const rows = [];
     const dates = formData.getAll('date[]');
     const descriptions = formData.getAll('description[]');
-    const baseCosts = formData.getAll('base_cost[]');
-    const currencies = formData.getAll('currency[]');
-    const costUnits = formData.getAll('cost_unit[]');
+    const restaurants = formData.getAll('restaurant[]');
+    const cashExpenses = formData.getAll('cash_expense[]');
+    const comments = formData.getAll('comment[]');
     
     console.log('Collected dates:', dates);
     console.log('Number of rows:', dates.length);
@@ -3866,9 +3861,9 @@ window.saveItinerary = function(event) {
         const rowData = {
             date: dates[i],
             description: descriptions[i],
-            base_cost: parseFloat(baseCosts[i]),
-            currency: currencies[i],
-            cost_unit: costUnits[i],
+            restaurant: restaurants[i] || '',
+            cash_expense: parseFloat(cashExpenses[i]) || 0,
+            comment: comments[i] || '',
             flag_hotel: formData.get(`flag_hotel_${i}`) ? true : false,
             flag_guide: formData.get(`flag_guide_${i}`) ? true : false,
             flag_transport: formData.get(`flag_transport_${i}`) ? true : false,

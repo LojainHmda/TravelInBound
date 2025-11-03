@@ -138,6 +138,11 @@ class ItineraryRow(db.Model):
     hotel_triple_rooms = db.Column(db.Integer, default=0)
     hotel_other_rooms = db.Column(db.Integer, default=0)
     
+    # Additional fields for itinerary display
+    restaurant = db.Column(db.String(200), nullable=True)
+    cash_expense = db.Column(db.Float, default=0.0)
+    comment = db.Column(db.Text, nullable=True)
+    
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -202,11 +207,14 @@ class InboundTransport(db.Model):
     # Transport details
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day transport services
+    pax = db.Column(db.Integer, default=0)  # Passenger count
     vehicle_type = db.Column(db.String(100), nullable=True)
+    supplier = db.Column(db.String(200), nullable=True)  # Supplier/company name
     driver_name = db.Column(db.String(200), nullable=True)  # Driver assigned to this transport
     pickup_location = db.Column(db.String(200), nullable=True)
     dropoff_location = db.Column(db.String(200), nullable=True)
     pickup_time = db.Column(db.Time, nullable=True)
+    note = db.Column(db.Text, nullable=True)  # Additional notes
     is_airport_transfer = db.Column(db.Boolean, default=False)
     is_arrival = db.Column(db.Boolean, default=False)  # Flag for arrival transfer (shows in Arrivals section of voucher)
     is_departure = db.Column(db.Boolean, default=False)  # Flag for departure transfer (shows in Departures section of voucher)
