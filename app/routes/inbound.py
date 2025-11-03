@@ -2256,9 +2256,10 @@ def run_down_export_pdf():
                          current_time=datetime.now())
 
 
-@inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
-@login_required
-def wizard_step1():
+# WIZARD DISABLED - User requested NO wizard workflow
+# @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
+# @login_required
+def wizard_step1_DISABLED():
     """Wizard Step 1: Arrival & Departure Details"""
     from flask import session
     
@@ -2315,9 +2316,9 @@ def wizard_step1():
     return render_template('inbound/wizard_step1.html', wizard_data=wizard_data)
 
 
-@inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
-@login_required
-def wizard_step2():
+# @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
+# @login_required
+def wizard_step2_DISABLED():
     """Wizard Step 2: Add All Services"""
     from flask import session
     
@@ -2371,9 +2372,9 @@ def wizard_step2():
     return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
 
 
-@inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
-@login_required
-def wizard_step3():
+# @inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
+# @login_required
+def wizard_step3_DISABLED():
     """Wizard Step 3: Review & Create"""
     from flask import session
     
