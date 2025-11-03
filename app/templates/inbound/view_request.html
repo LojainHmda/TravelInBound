@@ -1783,6 +1783,27 @@ body {
                             </div>
                         </div>
 
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <strong>Arrival:</strong><br>
+                                {% if request.arrival_point %}
+                                    <i class="fas fa-map-marker-alt text-primary"></i> {{ request.arrival_point }}
+                                    {% if request.arrival_time %} at {{ request.arrival_time.strftime('%H:%M') }}{% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-6">
+                                <strong>Departure:</strong><br>
+                                {% if request.departure_point %}
+                                    <i class="fas fa-map-marker-alt text-danger"></i> {{ request.departure_point }}
+                                    {% if request.departure_time %} at {{ request.departure_time.strftime('%H:%M') }}{% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
                         {% if request.special_note %}
                         <div class="mb-3">
                             <strong>Special Notes:</strong><br>
@@ -1850,6 +1871,28 @@ body {
                             <div class="col-4">
                                 <label class="form-label">Pax</label>
                                 <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Arrival Point</label>
+                                <input type="text" class="form-control" name="arrival_point" value="{{ request.arrival_point or '' }}" placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Arrival Time</label>
+                                <input type="time" class="form-control" name="arrival_time" value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Departure Point</label>
+                                <input type="text" class="form-control" name="departure_point" value="{{ request.departure_point or '' }}" placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Departure Time</label>
+                                <input type="time" class="form-control" name="departure_time" value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
                             </div>
                         </div>
 
