@@ -2296,36 +2296,12 @@ body {
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
-                        <!-- Arrival & Departure Section -->
-                        <div class="mb-4 p-3" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; border: 2px solid #fbbf24;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold" style="color: #92400e;">
-                                        <i class="fas fa-plane-arrival me-2"></i>Arrival Point
-                                    </label>
-                                    <input type="text" class="form-control mb-2" id="itinerary_arrival_point" 
-                                           value="{{ request.arrival_point or '' }}" 
-                                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
-                                    <label class="form-label fw-bold" style="color: #92400e;">
-                                        <i class="fas fa-clock me-2"></i>Arrival Time
-                                    </label>
-                                    <input type="time" class="form-control" id="itinerary_arrival_time" 
-                                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold" style="color: #92400e;">
-                                        <i class="fas fa-plane-departure me-2"></i>Departure Point
-                                    </label>
-                                    <input type="text" class="form-control mb-2" id="itinerary_departure_point" 
-                                           value="{{ request.departure_point or '' }}" 
-                                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
-                                    <label class="form-label fw-bold" style="color: #92400e;">
-                                        <i class="fas fa-clock me-2"></i>Departure Time
-                                    </label>
-                                    <input type="time" class="form-control" id="itinerary_departure_time" 
-                                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
-                                </div>
-                            </div>
+                        <!-- Arrival & Departure Button + Service Selection Bar -->
+                        <div class="d-flex gap-3 align-items-center mb-3">
+                            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalDepartureModal"
+                                    style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px; color: #374151; font-weight: 500;">
+                                <i class="fas fa-plane me-2"></i>Arrival / Departure
+                            </button>
                         </div>
 
                         <!-- Intuitive Service Selection Bar -->
@@ -5405,5 +5381,43 @@ function convertToInvoice() {
 }
 </script>
 
+<!-- Arrival/Departure Modal -->
+<div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #1e3a8a; color: white;">
+                <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
+                    <input type="text" class="form-control" id="itinerary_arrival_point" 
+                           value="{{ request.arrival_point or '' }}" 
+                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
+                    <input type="time" class="form-control" id="itinerary_arrival_time" 
+                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
+                    <input type="text" class="form-control" id="itinerary_departure_point" 
+                           value="{{ request.departure_point or '' }}" 
+                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
+                    <input type="time" class="form-control" id="itinerary_departure_time" 
+                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
