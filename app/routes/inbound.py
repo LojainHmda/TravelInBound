@@ -633,11 +633,32 @@ def api_update_master_details(request_id):
     request_obj.special_note = data.get('special_note', request_obj.special_note)
     request_obj.customer_id = data.get('customer_id') if data.get('customer_id') else None
     
+    # Update arrival/departure details
+    request_obj.arrival_point = data.get('arrival_point', request_obj.arrival_point)
+    request_obj.departure_point = data.get('departure_point', request_obj.departure_point)
+    
     # Handle date updates
     if data.get('from_date'):
         request_obj.from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
     if data.get('to_date'):
         request_obj.to_date = datetime.strptime(data.get('to_date'), '%Y-%m-%d').date()
+    
+    # Handle time updates
+    if data.get('arrival_time'):
+        try:
+            request_obj.arrival_time = datetime.strptime(data.get('arrival_time'), '%H:%M').time()
+        except:
+            pass  # Invalid time format, skip
+    elif data.get('arrival_time') == '':
+        request_obj.arrival_time = None
+        
+    if data.get('departure_time'):
+        try:
+            request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
+        except:
+            pass  # Invalid time format, skip
+    elif data.get('departure_time') == '':
+        request_obj.departure_time = None
     
     # Recalculate days
     request_obj.calculate_days()

@@ -70,6 +70,27 @@ Preferred communication style: Simple, everyday language.
 - **Frontend Libraries**: Bootstrap 5, FontAwesome, Chart.js (for data visualization), Select2 (for enhanced autocomplete dropdowns)
 - **OAuth**: Replit Auth (via Flask-Dance)
 
+## Recent Enhancements (November 2025)
+
+### Arrival/Departure Fields (November 3, 2025)
+
+Added arrival and departure details to InboundRequest model:
+- **arrival_point** (String, 150): Border/airport arrival location (e.g., "Queen Alia Airport", "Sheikh Hussein Border")
+- **arrival_time** (Time): Time of arrival (e.g., "14:30")
+- **departure_point** (String, 150): Border/airport departure location
+- **departure_time** (Time): Time of departure
+
+Fields are displayed in the unified view/edit page below travel dates. Database migration executed via ALTER TABLE. Fields are optional (nullable).
+
+**Database Migration**: 
+```sql
+ALTER TABLE inbound_request 
+ADD COLUMN arrival_point VARCHAR(150),
+ADD COLUMN departure_point VARCHAR(150),
+ADD COLUMN arrival_time TIME,
+ADD COLUMN departure_time TIME;
+```
+
 ## Recent Enhancements (October 2025)
 
 ### Wizard Improvements (Latest - October 2025)
