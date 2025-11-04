@@ -5466,14 +5466,109 @@ function convertToInvoice() {
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveArrivalDeparture()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Sync arrival/departure modal fields to the hidden fields used by saveItinerary
+// Save arrival/departure changes immediately
+function saveArrivalDeparture() {
+    const arrivalPoint = document.getElementById('modal_arrival_point').value;
+    const arrivalTime = document.getElementById('modal_arrival_time').value;
+    const departurePoint = document.getElementById('modal_departure_point').value;
+    const departureTime = document.getElementById('modal_departure_time').value;
+    
+    // Sync to hidden fields
+    document.getElementById('itinerary_arrival_point').value = arrivalPoint;
+    document.getElementById('itinerary_arrival_time').value = arrivalTime;
+    document.getElementById('itinerary_departure_point').value = departurePoint;
+    document.getElementById('itinerary_departure_time').value = departureTime;
+    
+    // Close modal first
+    const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalDepartureModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Save to database
+    fetch('/inbound/api/{{ request.id }}/itinerary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            rows: getCurrentItineraryRows(),
+            arrival_point: arrivalPoint,
+            arrival_time: arrivalTime,
+            departure_point: departurePoint,
+            departure_time: departureTime
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Arrival & Departure details saved successfully!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving details', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving arrival/departure details', 'error');
+    });
+}
+
+// Helper function to get current itinerary rows from the form
+function getCurrentItineraryRows() {
+    const rows = [];
+    const form = document.getElementById('itineraryForm');
+    if (!form) return rows;
+    
+    const formData = new FormData(form);
+    const dates = formData.getAll('date[]');
+    const descriptions = formData.getAll('description[]');
+    const restaurants = formData.getAll('restaurant[]');
+    const cashExpenses = formData.getAll('cash_expense[]');
+    const comments = formData.getAll('comment[]');
+    
+    for (let i = 0; i < dates.length; i++) {
+        const rowData = {
+            date: dates[i],
+            description: descriptions[i],
+            restaurant: restaurants[i] || '',
+            cash_expense: parseFloat(cashExpenses[i]) || 0,
+            comment: comments[i] || '',
+            flag_hotel: formData.get(`flag_hotel_${i}`) ? true : false,
+            flag_guide: formData.get(`flag_guide_${i}`) ? true : false,
+            flag_transport: formData.get(`flag_transport_${i}`) ? true : false,
+            flag_meal: formData.get(`flag_meal_${i}`) ? true : false,
+            flag_airport: formData.get(`flag_airport_${i}`) ? true : false,
+            hotel_single_rooms: parseInt(document.getElementById(`single_${i}_input`)?.value) || 0,
+            hotel_double_rooms: parseInt(document.getElementById(`double_${i}_input`)?.value) || 0,
+            hotel_triple_rooms: parseInt(document.getElementById(`triple_${i}_input`)?.value) || 0,
+            hotel_other_rooms: parseInt(document.getElementById(`other_${i}_input`)?.value) || 0
+        };
+        rows.push(rowData);
+    }
+    
+    return rows;
+}
+
+// Legacy sync function (kept for backward compatibility)
 document.getElementById('arrivalDepartureModal')?.addEventListener('hidden.bs.modal', function() {
     document.getElementById('itinerary_arrival_point').value = document.getElementById('modal_arrival_point').value;
     document.getElementById('itinerary_arrival_time').value = document.getElementById('modal_arrival_time').value;
