@@ -2989,51 +2989,7 @@ body {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <!-- Add New Item Section -->
-                <div class="card mb-3" style="border: 2px solid #3b82f6; border-radius: 12px;">
-                    <div class="card-header" style="background: linear-gradient(135deg, #f3f4f6, #e5e7eb); border-bottom: 2px solid #3b82f6;">
-                        <h6 class="mb-0" style="color: #1e40af; font-weight: 600;">
-                            <i class="fas fa-plus-circle me-2"></i>Add New Itinerary Item
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-2">
-                                <label class="form-label fw-bold">Date</label>
-                                <input type="date" id="newItemDate" class="form-control" 
-                                       value="{{ request.arrival_date.strftime('%Y-%m-%d') if request.arrival_date else '' }}">
-                            </div>
-                            <div class="col-md-10">
-                                <label class="form-label fw-bold">Description</label>
-                                <input type="text" id="newItemDescription" class="form-control" 
-                                       placeholder="Enter daily tour activities">
-                            </div>
-                        </div>
-                        <div class="row g-3 mt-2">
-                            <div class="col-md-4">
-                                <label class="form-label">Restaurant</label>
-                                <input type="text" id="newItemRestaurant" class="form-control" placeholder="Optional">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Cash Expense</label>
-                                <input type="number" id="newItemCashExpense" class="form-control" 
-                                       placeholder="0.00" step="0.01" min="0">
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label">Comment</label>
-                                <input type="text" id="newItemComment" class="form-control" placeholder="Optional">
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-primary" onclick="addItineraryItem()" 
-                                    style="background: linear-gradient(135deg, #1e40af, #3b82f6); border: none;">
-                                <i class="fas fa-plus me-1"></i>Add Item
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Current Itinerary List -->
+                <!-- Editable Itinerary Grid -->
                 <div class="table-responsive">
                     <table class="table table-hover" style="font-size: 0.9rem;">
                         <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
@@ -3052,16 +3008,33 @@ body {
                                 <td style="font-weight: 600; color: #334155;">
                                     {{ row.date.strftime('%-m/%-d') }}
                                 </td>
-                                <td style="color: #1e293b;">{{ row.description }}</td>
-                                <td style="color: #64748b; font-size: 0.85rem;">{{ row.restaurant or '-' }}</td>
-                                <td style="color: #64748b;">
-                                    {% if row.cash_expense and row.cash_expense > 0 %}
-                                        {{ "%.2f"|format(row.cash_expense) }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
+                                <td>
+                                    <input type="text" class="form-control form-control-sm border-0 edit-description" 
+                                           value="{{ row.description }}" 
+                                           style="color: #1e293b; background: transparent; padding: 4px 8px;"
+                                           data-row-id="{{ row.id }}">
                                 </td>
-                                <td style="color: #64748b; font-size: 0.85rem;">{{ row.comment or '-' }}</td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm border-0 edit-restaurant" 
+                                           value="{{ row.restaurant or '' }}" 
+                                           placeholder="-"
+                                           style="color: #64748b; background: transparent; padding: 4px 8px;"
+                                           data-row-id="{{ row.id }}">
+                                </td>
+                                <td>
+                                    <input type="number" class="form-control form-control-sm border-0 edit-cash-expense" 
+                                           value="{{ row.cash_expense or 0 }}" 
+                                           step="0.01" min="0"
+                                           style="color: #64748b; background: transparent; padding: 4px 8px; width: 90px;"
+                                           data-row-id="{{ row.id }}">
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control form-control-sm border-0 edit-comment" 
+                                           value="{{ row.comment or '' }}" 
+                                           placeholder="-"
+                                           style="color: #64748b; background: transparent; padding: 4px 8px;"
+                                           data-row-id="{{ row.id }}">
+                                </td>
                                 <td>
                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                             onclick="deleteItineraryRow({{ row.id }})"
@@ -3076,6 +3049,9 @@ body {
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveAllItineraryEdits()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
                 <button type="button" class="btn btn-outline-primary" onclick="printItinerary()">
                     <i class="fas fa-print me-1"></i>Print
                 </button>
@@ -5982,49 +5958,49 @@ function openTripItineraryModal() {
     modal.show();
 }
 
-// Add Itinerary Item
-function addItineraryItem() {
-    const date = document.getElementById('newItemDate').value;
-    const description = document.getElementById('newItemDescription').value;
-    const restaurant = document.getElementById('newItemRestaurant').value;
-    const cashExpense = document.getElementById('newItemCashExpense').value;
-    const comment = document.getElementById('newItemComment').value;
+// Save All Itinerary Edits
+function saveAllItineraryEdits() {
+    const rows = document.querySelectorAll('#itineraryItemsList tr');
+    const updates = [];
     
-    if (!date || !description) {
-        showNotification('Please fill in Date and Description', 'error');
-        return;
-    }
+    rows.forEach(row => {
+        const rowId = row.getAttribute('data-row-id');
+        const description = row.querySelector('.edit-description').value;
+        const restaurant = row.querySelector('.edit-restaurant').value;
+        const cashExpense = row.querySelector('.edit-cash-expense').value;
+        const comment = row.querySelector('.edit-comment').value;
+        
+        updates.push({
+            row_id: rowId,
+            description: description,
+            restaurant: restaurant,
+            cash_expense: parseFloat(cashExpense) || 0,
+            comment: comment
+        });
+    });
     
-    const data = {
-        date: date,
-        description: description,
-        restaurant: restaurant,
-        cash_expense: parseFloat(cashExpense) || 0,
-        comment: comment
-    };
-    
-    fetch('/inbound/api/{{ request.id }}/add-itinerary-row', {
+    fetch('/inbound/api/{{ request.id }}/update-itinerary-bulk', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ updates: updates })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Itinerary item added successfully!', 'success');
+            showNotification('Trip itinerary saved successfully!', 'success');
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } else {
-            showNotification(data.message || 'Error adding item', 'error');
+            showNotification(data.message || 'Error saving changes', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error adding itinerary item', 'error');
+        showNotification('Error saving trip itinerary', 'error');
     });
 }
 

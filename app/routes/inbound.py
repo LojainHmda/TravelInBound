@@ -3450,6 +3450,37 @@ def api_search_hotels():
     
     return jsonify({'results': results})
 
+@inbound_bp.route('/api/<int:request_id>/update-itinerary-bulk', methods=['POST'])
+@login_required
+def api_update_itinerary_bulk(request_id):
+    """API endpoint to bulk update itinerary rows"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        updates = data.get('updates', [])
+        
+        for update in updates:
+            row_id = update.get('row_id')
+            row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
+            
+            if row:
+                row.description = update.get('description', '')
+                row.restaurant = update.get('restaurant', '')
+                row.cash_expense = float(update.get('cash_expense', 0))
+                row.comment = update.get('comment', '')
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Trip itinerary updated successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/add-itinerary-row', methods=['POST'])
 @login_required
 def api_add_itinerary_row(request_id):
