@@ -4234,26 +4234,6 @@ function saveChanges(event) {
     });
 }
 
-function toggleItineraryEditMode() {
-    // This function enables itinerary editing
-    const editSection = document.querySelector('.itinerary-edit-section');
-    const viewSection = document.querySelector('.itinerary-view-section');
-    
-    if (editSection) {
-        editSection.style.display = 'block';
-    }
-    if (viewSection) {
-        viewSection.style.display = 'none';
-    }
-    
-    // Or trigger add itinerary if none exists
-    const addItineraryBtn = document.querySelector('button[onclick="toggleItineraryEditMode()"]');
-    if (addItineraryBtn) {
-        // Redirect to add itinerary
-        const requestId = document.querySelector('input[name="request_id"]').value;
-        window.location.href = `/inbound/${requestId}/edit`;
-    }
-}
 
 function toggleEditMode() {
     // Toggle between edit and view mode
