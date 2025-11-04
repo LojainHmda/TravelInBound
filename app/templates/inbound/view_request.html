@@ -2344,8 +2344,8 @@ body {
                                         <tr>
                                             <th>Date</th>
                                             <th>Description</th>
-                                            <th>Restaurant</th>
-                                            <th>Cash Expense</th>
+                                            <th style="display: none;">Restaurant</th>
+                                            <th style="display: none;">Cash Expense</th>
                                             <th>Comment</th>
                                             <th>Service Flags</th>
                                         </tr>
@@ -2367,13 +2367,13 @@ body {
                                                        placeholder="Enter description" 
                                                        required>
                                             </td>
-                                            <td>
+                                            <td style="display: none;">
                                                 <input type="text" class="form-control form-control-sm" 
                                                        name="restaurant[]" 
                                                        value="{{ row.restaurant or '' }}" 
                                                        placeholder="Restaurant name">
                                             </td>
-                                            <td>
+                                            <td style="display: none;">
                                                 <input type="number" class="form-control form-control-sm" 
                                                        name="cash_expense[]" 
                                                        value="{{ row.cash_expense or 0 }}" 
