@@ -72,23 +72,58 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Enhancements (November 2025)
 
-### Arrival/Departure Fields (November 3, 2025)
+### Enhanced Arrival/Departure Fields (November 4, 2025)
 
-Added arrival and departure details to InboundRequest model:
+Added comprehensive arrival and departure details to InboundRequest model:
 - **arrival_point** (String, 150): Border/airport arrival location (e.g., "Queen Alia Airport", "Sheikh Hussein Border")
 - **arrival_time** (Time): Time of arrival (e.g., "14:30")
 - **departure_point** (String, 150): Border/airport departure location
 - **departure_time** (Time): Time of departure
+- **visa_type** (String, 50): Visa status - FREE, RESTRICTED, INCLUDED, NOT_INCLUDED (default)
+- **arrival_driver_name** (String, 150): Name of driver for arrival pickup
+- **meeting_assistance** (Boolean): Toggle for meeting & assistance at departure (default: False)
+- **departure_tax** (String, 50): Departure tax status - INCLUDED, NOT_INCLUDED (default)
 
-Fields are displayed in the unified view/edit page below travel dates. Database migration executed via ALTER TABLE. Fields are optional (nullable).
+**ArrivalDeparture Model**: New model to support multiple arrivals/departures per booking:
+- Links to InboundRequest and InboundTransport
+- Tracks arrival/departure points, times, visa type, driver, meeting assistance, departure tax
+- Enables tracking of multi-leg journeys
 
-**Database Migration**: 
+**UI Enhancements**:
+- Enhanced modal with two color-coded sections (blue for arrival, yellow for departure)
+- Auto-save functionality: Changes save immediately to database on modal close
+- Robust boolean parsing for meeting_assistance field (handles "true"/"false"/"1"/"0")
+- Professional visual design with FontAwesome icons
+
+**Database Migrations**: 
 ```sql
+-- InboundRequest enhancements
 ALTER TABLE inbound_request 
 ADD COLUMN arrival_point VARCHAR(150),
 ADD COLUMN departure_point VARCHAR(150),
 ADD COLUMN arrival_time TIME,
-ADD COLUMN departure_time TIME;
+ADD COLUMN departure_time TIME,
+ADD COLUMN visa_type VARCHAR(50) DEFAULT 'NOT_INCLUDED',
+ADD COLUMN arrival_driver_name VARCHAR(150),
+ADD COLUMN meeting_assistance BOOLEAN DEFAULT FALSE,
+ADD COLUMN departure_tax VARCHAR(50) DEFAULT 'NOT_INCLUDED';
+
+-- ArrivalDeparture model
+CREATE TABLE arrival_departure (
+    id SERIAL PRIMARY KEY,
+    request_id INTEGER REFERENCES inbound_request(id) ON DELETE CASCADE,
+    transport_id INTEGER REFERENCES inbound_transport(id) ON DELETE SET NULL,
+    arrival_point VARCHAR(150),
+    arrival_time TIME,
+    departure_point VARCHAR(150),
+    departure_time TIME,
+    visa_type VARCHAR(50) DEFAULT 'NOT_INCLUDED',
+    arrival_driver_name VARCHAR(150),
+    meeting_assistance BOOLEAN DEFAULT FALSE,
+    departure_tax VARCHAR(50) DEFAULT 'NOT_INCLUDED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ## Recent Enhancements (October 2025)
