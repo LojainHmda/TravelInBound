@@ -272,8 +272,13 @@ class ServiceConfigManager {
     }
     
     addServiceBadgeToRow(row, serviceType, serviceData) {
+        console.log('addServiceBadgeToRow called:', serviceType, row);
         const serviceFlagsCell = row.querySelector('td:nth-child(6) .d-flex');
-        if (!serviceFlagsCell) return;
+        console.log('Service flags cell found:', !!serviceFlagsCell);
+        if (!serviceFlagsCell) {
+            console.error('Service flags cell not found in row');
+            return;
+        }
         
         // Remove existing badge of same type
         const existingBadge = serviceFlagsCell.querySelector(`[data-service="${serviceType}"]`);
@@ -307,19 +312,25 @@ class ServiceConfigManager {
         `;
         
         serviceFlagsCell.appendChild(badge);
+        console.log('Badge appended to cell');
         
         // Set the hidden flag input
         const rowIndex = row.getAttribute('data-row-index');
+        console.log('Row index:', rowIndex);
         const flagInputName = `flag_${serviceType}_${rowIndex}`;
+        console.log('Looking for input with name:', flagInputName);
         const flagInput = document.querySelector(`input[name="${flagInputName}"]`);
+        console.log('Flag input found:', !!flagInput, flagInput);
         if (flagInput) {
+            const oldValue = flagInput.value;
             flagInput.value = '1';
-            console.log(`Set flag input ${flagInputName} to 1`);
+            console.log(`Set flag input ${flagInputName} from "${oldValue}" to "${flagInput.value}"`);
         } else {
             console.error(`Flag input not found: ${flagInputName}`);
+            console.log('All inputs in document:', document.querySelectorAll('input[type="hidden"]'));
         }
         
-        console.log(`Added ${serviceType} badge to row and set ${config.flag} flag`);
+        console.log(`Added ${serviceType} badge to row`);
     }
     
     // Hotel-specific functionality
