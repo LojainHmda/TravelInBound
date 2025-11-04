@@ -4199,10 +4199,9 @@ window.saveItinerary = function(event) {
     .then(data => {
         if (data.success) {
             showNotification('Itinerary saved & services generated successfully!', 'success');
-            // Reload page to show updated data and generated service tabs
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            // DO NOT reload page automatically to preserve multi-hotel DOM state
+            // User must manually save the page to persist hotel configurations
+            console.log('Itinerary saved successfully - page not reloaded to preserve modal state');
         } else {
             showNotification(data.message || 'Error saving itinerary', 'error');
         }
