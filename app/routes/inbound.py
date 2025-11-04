@@ -3449,3 +3449,74 @@ def api_search_hotels():
         })
     
     return jsonify({'results': results})
+
+@inbound_bp.route('/api/<int:request_id>/add-itinerary-row', methods=['POST'])
+@login_required
+def api_add_itinerary_row(request_id):
+    """API endpoint to add a new itinerary row"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        data = request.get_json()
+        
+        # Parse date
+        date_str = data.get('date')
+        if not date_str:
+            return jsonify({'success': False, 'message': 'Date is required'}), 400
+        
+        date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
+        
+        # Create new itinerary row
+        new_row = ItineraryRow(
+            request_id=request_id,
+            date=date_obj,
+            description=data.get('description', ''),
+            restaurant=data.get('restaurant', ''),
+            cash_expense=float(data.get('cash_expense', 0)),
+            comment=data.get('comment', ''),
+            flag_hotel=bool(data.get('flag_hotel', False)),
+            flag_transport=bool(data.get('flag_transport', False)),
+            flag_meal=bool(data.get('flag_meal', False)),
+            flag_guide=bool(data.get('flag_guide', False)),
+            flag_airport=bool(data.get('flag_airport', False))
+        )
+        
+        db.session.add(new_row)
+        db.session.commit()
+        
+        # Auto-generate linked services if flags are set
+        request_obj._auto_generate_services()
+        
+        return jsonify({'success': True, 'message': 'Itinerary item added successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/delete-itinerary-row/<int:row_id>', methods=['DELETE'])
+@login_required
+def api_delete_itinerary_row(request_id, row_id):
+    """API endpoint to delete an itinerary row"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first_or_404()
+        
+        # Delete the row
+        db.session.delete(row)
+        db.session.commit()
+        
+        # Regenerate services to remove any auto-generated ones
+        request_obj._auto_generate_services()
+        
+        return jsonify({'success': True, 'message': 'Itinerary item deleted successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
