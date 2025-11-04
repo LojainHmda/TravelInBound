@@ -2302,7 +2302,7 @@ body {
                                 <i class="fas fa-click me-2" style="color: #fbbf24;"></i>Click services to add to selected dates:
                             </div>
                             <div class="service-icons-horizontal d-flex gap-3 align-items-center">
-                                <button type="button" class="service-icon-button" data-service="arrival"
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalDepartureModal"
                                         style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
                                     <i class="fas fa-plane mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Arrival / Departure</span>
@@ -5431,6 +5431,55 @@ function convertToInvoice() {
         });
     }
 }
+</script>
+
+<!-- Arrival/Departure Modal -->
+<div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #1e3a8a; color: white;">
+                <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
+                    <input type="text" class="form-control" id="modal_arrival_point" 
+                           value="{{ request.arrival_point or '' }}" 
+                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
+                    <input type="time" class="form-control" id="modal_arrival_time" 
+                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
+                    <input type="text" class="form-control" id="modal_departure_point" 
+                           value="{{ request.departure_point or '' }}" 
+                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
+                    <input type="time" class="form-control" id="modal_departure_time" 
+                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Sync arrival/departure modal fields to the hidden fields used by saveItinerary
+document.getElementById('arrivalDepartureModal')?.addEventListener('hidden.bs.modal', function() {
+    document.getElementById('itinerary_arrival_point').value = document.getElementById('modal_arrival_point').value;
+    document.getElementById('itinerary_arrival_time').value = document.getElementById('modal_arrival_time').value;
+    document.getElementById('itinerary_departure_point').value = document.getElementById('modal_departure_point').value;
+    document.getElementById('itinerary_departure_time').value = document.getElementById('modal_departure_time').value;
+});
 </script>
 
 {% endblock %}
