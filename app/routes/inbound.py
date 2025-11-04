@@ -1002,8 +1002,10 @@ def api_get_arrival_departure_batches(request_id):
         
         batch_dict = {
             'id': batch.id,
+            'arrival_date': batch.arrival_date.strftime('%Y-%m-%d') if batch.arrival_date else '',
             'arrival_point': arrival_point or '',
             'arrival_time': arrival_time.strftime('%H:%M') if arrival_time else '',
+            'departure_date': batch.departure_date.strftime('%Y-%m-%d') if batch.departure_date else '',
             'departure_point': departure_point or '',
             'departure_time': departure_time.strftime('%H:%M') if departure_time else '',
             'visa_type': batch.visa_type or 'NOT_INCLUDED',
@@ -1038,6 +1040,21 @@ def api_save_arrival_departure_batches(request_id):
         
         # Create new batches
         for batch_data in batches_data:
+            # Parse date values
+            arrival_date = None
+            if batch_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
+            departure_date = None
+            if batch_data.get('departure_date'):
+                try:
+                    departure_date = datetime.strptime(batch_data['departure_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
             # Parse time values
             arrival_time = None
             if batch_data.get('arrival_time'):
@@ -1073,8 +1090,10 @@ def api_save_arrival_departure_batches(request_id):
             
             batch = ArrivalDeparture(
                 request_id=request_id,
+                arrival_date=arrival_date,
                 arrival_point=batch_data.get('arrival_point') or None,
                 arrival_time=arrival_time,
+                departure_date=departure_date,
                 departure_point=batch_data.get('departure_point') or None,
                 departure_time=departure_time,
                 visa_type=batch_data.get('visa_type') or 'NOT_INCLUDED',
@@ -1088,7 +1107,50 @@ def api_save_arrival_departure_batches(request_id):
         
         db.session.commit()
         
-        return jsonify({'success': True, 'message': 'Batches saved successfully'})
+        # Auto-flag itinerary rows with flag_airport based on arrival/departure dates
+        from app.models.inbound import ItineraryRow
+        
+        # Step 1: Clear ALL flag_airport values for this request (to remove stale flags)
+        ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
+        
+        # Step 2: Set flag_airport for all rows matching arrival/departure dates
+        for batch_data in batches_data:
+            # Parse dates again for auto-flagging
+            arrival_date = None
+            if batch_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
+            departure_date = None
+            if batch_data.get('departure_date'):
+                try:
+                    departure_date = datetime.strptime(batch_data['departure_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
+            # Set flag_airport for ALL rows on arrival date
+            if arrival_date:
+                arrival_rows = ItineraryRow.query.filter_by(
+                    request_id=request_id,
+                    date=arrival_date
+                ).all()
+                for row in arrival_rows:
+                    row.flag_airport = True
+            
+            # Set flag_airport for ALL rows on departure date
+            if departure_date:
+                departure_rows = ItineraryRow.query.filter_by(
+                    request_id=request_id,
+                    date=departure_date
+                ).all()
+                for row in departure_rows:
+                    row.flag_airport = True
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Batches saved and itinerary auto-flagged successfully'})
         
     except Exception as e:
         db.session.rollback()

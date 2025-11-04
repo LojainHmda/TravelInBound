@@ -371,12 +371,14 @@ class ArrivalDeparture(db.Model):
     pax_count = db.Column(db.Integer, nullable=True)  # Number of passengers in this batch
     
     # Arrival details
+    arrival_date = db.Column(db.Date, nullable=True)  # Which itinerary day for arrival
     arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport"
     arrival_time = db.Column(db.Time, nullable=True)
     visa_type = db.Column(db.String(50), default='NOT_INCLUDED')  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
     arrival_driver_name = db.Column(db.String(200), nullable=True)
     
     # Departure details
+    departure_date = db.Column(db.Date, nullable=True)  # Which itinerary day for departure
     departure_point = db.Column(db.String(150), nullable=True)
     departure_time = db.Column(db.Time, nullable=True)
     meeting_assistance = db.Column(db.Boolean, default=False)
