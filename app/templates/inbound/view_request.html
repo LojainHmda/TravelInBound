@@ -5548,6 +5548,33 @@ function convertToInvoice() {
     </div>
 </div>
 
+<!-- Datalist for Arrival/Departure Points (autocomplete with free text) -->
+<datalist id="arrival-points-list">
+    <option value="Queen Alia International Airport (QAIA)">
+    <option value="Aqaba King Hussein International Airport">
+    <option value="Amman Civil Airport (Marka)">
+    <option value="King Hussein Bridge (Allenby Border)">
+    <option value="Sheikh Hussein Bridge (Jordan River Crossing)">
+    <option value="Aqaba-Eilat Border (Wadi Araba Crossing)">
+    <option value="Omari Border (Saudi Arabia)">
+    <option value="Jaber Border (Syria)">
+    <option value="Al-Mudawara Border (Saudi Arabia)">
+    <option value="Al-Karameh Border (Iraq)">
+</datalist>
+
+<datalist id="departure-points-list">
+    <option value="Queen Alia International Airport (QAIA)">
+    <option value="Aqaba King Hussein International Airport">
+    <option value="Amman Civil Airport (Marka)">
+    <option value="King Hussein Bridge (Allenby Border)">
+    <option value="Sheikh Hussein Bridge (Jordan River Crossing)">
+    <option value="Aqaba-Eilat Border (Wadi Araba Crossing)">
+    <option value="Omari Border (Saudi Arabia)">
+    <option value="Jaber Border (Syria)">
+    <option value="Al-Mudawara Border (Saudi Arabia)">
+    <option value="Al-Karameh Border (Iraq)">
+</datalist>
+
 <script>
 // Arrival/Departure Batch Management
 function addArrivalDepartureBatch(batchData = null) {
@@ -5578,7 +5605,8 @@ function addArrivalDepartureBatch(batchData = null) {
                 <div class="col-md-4 mb-2">
                     <label class="form-label small">Arrival Point</label>
                     <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_point]" 
-                           value="${batchData?.arrival_point || ''}" placeholder="e.g., Queen Alia Airport">
+                           value="${batchData?.arrival_point || ''}" placeholder="Select or type location"
+                           list="arrival-points-list">
                 </div>
                 <div class="col-md-4 mb-2">
                     <label class="form-label small">Arrival Time</label>
@@ -5616,7 +5644,8 @@ function addArrivalDepartureBatch(batchData = null) {
                 <div class="col-md-4 mb-2">
                     <label class="form-label small">Departure Point</label>
                     <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][departure_point]" 
-                           value="${batchData?.departure_point || ''}" placeholder="e.g., Queen Alia Airport">
+                           value="${batchData?.departure_point || ''}" placeholder="Select or type location"
+                           list="departure-points-list">
                 </div>
                 <div class="col-md-4 mb-2">
                     <label class="form-label small">Departure Time</label>
