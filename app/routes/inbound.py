@@ -11,7 +11,7 @@ from app.models.inbound import (
     InboundQuotationItem, QuotationAttachment,
     COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
-from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
 from app.models.booking import Booking
 from app.models.customer import Customer
@@ -3542,3 +3542,151 @@ def api_delete_itinerary_row(request_id, row_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+# Supplier Confirmation Status Endpoints
+@inbound_bp.route('/api/hotel/<int:hotel_id>/mark-reserved', methods=['POST'])
+@login_required
+def api_mark_hotel_reserved(hotel_id):
+    """Mark a single hotel as RESERVED (Supplier Confirmed)"""
+    try:
+        hotel = InboundHotel.query.get_or_404(hotel_id)
+        request_obj = InboundRequest.query.get_or_404(hotel.request_id)
+        
+        if request_obj.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Update hotel status to RESERVED
+        hotel.status = STATUS_RESERVED
+        db.session.commit()
+        
+        # Check if all services are now RESERVED, auto-update request to CONFIRMED
+        check_and_update_request_status(request_obj.id)
+        
+        return jsonify({'success': True, 'message': 'Hotel marked as Supplier Confirmed'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/transport/<int:transport_id>/mark-reserved', methods=['POST'])
+@login_required
+def api_mark_transport_reserved(transport_id):
+    """Mark a single transport as RESERVED (Supplier Confirmed)"""
+    try:
+        transport = InboundTransport.query.get_or_404(transport_id)
+        request_obj = InboundRequest.query.get_or_404(transport.request_id)
+        
+        if request_obj.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Update transport status to RESERVED
+        transport.status = STATUS_RESERVED
+        db.session.commit()
+        
+        # Check if all services are now RESERVED, auto-update request to CONFIRMED
+        check_and_update_request_status(request_obj.id)
+        
+        return jsonify({'success': True, 'message': 'Transport marked as Supplier Confirmed'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/confirm-all-hotels', methods=['POST'])
+@login_required
+def api_confirm_all_hotels(request_id):
+    """Mark ALL hotels in a request as RESERVED (Supplier Confirmed)"""
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        if request_obj.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Update all hotels to RESERVED
+        hotels = InboundHotel.query.filter_by(request_id=request_id).all()
+        count = 0
+        for hotel in hotels:
+            if hotel.status not in [STATUS_RESERVED, STATUS_CONFIRMED]:
+                hotel.status = STATUS_RESERVED
+                count += 1
+        
+        db.session.commit()
+        
+        # Check if all services are now RESERVED, auto-update request to CONFIRMED
+        check_and_update_request_status(request_id)
+        
+        return jsonify({'success': True, 'count': count, 'message': f'{count} hotel(s) marked as Supplier Confirmed'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/confirm-all-transports', methods=['POST'])
+@login_required
+def api_confirm_all_transports(request_id):
+    """Mark ALL transports in a request as RESERVED (Supplier Confirmed)"""
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        if request_obj.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # Update all transports to RESERVED
+        transports = InboundTransport.query.filter_by(request_id=request_id).all()
+        count = 0
+        for transport in transports:
+            if transport.status not in [STATUS_RESERVED, STATUS_CONFIRMED]:
+                transport.status = STATUS_RESERVED
+                count += 1
+        
+        db.session.commit()
+        
+        # Check if all services are now RESERVED, auto-update request to CONFIRMED
+        check_and_update_request_status(request_id)
+        
+        return jsonify({'success': True, 'count': count, 'message': f'{count} transport(s) marked as Supplier Confirmed'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+def check_and_update_request_status(request_id):
+    """
+    Check if all hotels and transports are RESERVED.
+    If yes, automatically update InboundRequest status to CONFIRMED.
+    """
+    try:
+        request_obj = InboundRequest.query.get(request_id)
+        if not request_obj:
+            return
+        
+        # Get all hotels and transports
+        hotels = InboundHotel.query.filter_by(request_id=request_id).all()
+        transports = InboundTransport.query.filter_by(request_id=request_id).all()
+        
+        # If there are no hotels AND no transports, don't auto-update
+        if not hotels and not transports:
+            return
+        
+        # Check if ALL hotels are RESERVED or CONFIRMED
+        all_hotels_confirmed = all(
+            hotel.status in [STATUS_RESERVED, STATUS_CONFIRMED] 
+            for hotel in hotels
+        ) if hotels else True
+        
+        # Check if ALL transports are RESERVED or CONFIRMED
+        all_transports_confirmed = all(
+            transport.status in [STATUS_RESERVED, STATUS_CONFIRMED] 
+            for transport in transports
+        ) if transports else True
+        
+        # If all services are confirmed, update request to CONFIRMED
+        if all_hotels_confirmed and all_transports_confirmed:
+            if request_obj.status != STATUS_CONFIRMED:
+                request_obj.status = STATUS_CONFIRMED
+                db.session.commit()
+                print(f"✅ All services confirmed! InboundRequest {request_id} auto-updated to CONFIRMED status")
+        
+    except Exception as e:
+        print(f"Error checking request status: {e}")
+        db.session.rollback()

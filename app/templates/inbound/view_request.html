@@ -2628,9 +2628,14 @@ body {
                         
                         {% if request.inbound_hotels %}
                         <div class="tab-pane fade {% if not request.itinerary_rows %}show active{% endif %}" id="hotels" role="tabpanel">
+                            <div class="mb-3 text-end">
+                                <button type="button" class="btn btn-success btn-sm" onclick="confirmAllHotels()">
+                                    <i class="fas fa-check-double me-1"></i>Mark All Hotels as Supplier Confirmed
+                                </button>
+                            </div>
                             <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Hotel</th>
                                             <th>Check-in</th>
@@ -2639,6 +2644,8 @@ body {
                                             <th>Room Type</th>
                                             <th>Meal Plan</th>
                                             <th>Cost</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -2651,6 +2658,20 @@ body {
                                             <td>{{ hotel.room_type or '-' }}</td>
                                             <td>{{ hotel.meal_plan }}</td>
                                             <td>{{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}">
+                                                    {% if hotel.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ hotel.status }}{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if hotel.status not in ['RESERVED', 'CONFIRMED'] %}
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markHotelAsReserved({{ hotel.id }})">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </button>
+                                                {% else %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -2661,8 +2682,13 @@ body {
 
                         {% if request.inbound_transports %}
                         <div class="tab-pane fade" id="transport" role="tabpanel">
+                            <div class="mb-3 text-end">
+                                <button type="button" class="btn btn-success btn-sm" onclick="confirmAllTransports()">
+                                    <i class="fas fa-check-double me-1"></i>Mark All Transports as Supplier Confirmed
+                                </button>
+                            </div>
                             <div class="table-responsive">
-                                <table class="table table-sm table-bordered">
+                                <table class="table table-sm table-bordered table-hover">
                                     <thead class="table-light">
                                         <tr>
                                             <th>From Date</th>
@@ -2676,6 +2702,7 @@ body {
                                             <th>Drop Off Point</th>
                                             <th>Note</th>
                                             <th>STATUS</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -2692,9 +2719,18 @@ body {
                                             <td>{{ transport.dropoff_location or '-' }}</td>
                                             <td>{{ transport.note or '-' }}</td>
                                             <td>
-                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'REQUESTED' %}warning{% else %}secondary{% endif %}">
-                                                    {{ transport.status }}
+                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'RESERVED' %}info{% elif transport.status == 'REQUESTED' or transport.status == 'REQUEST' %}warning{% else %}secondary{% endif %}">
+                                                    {% if transport.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ transport.status }}{% endif %}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                {% if transport.status not in ['RESERVED', 'CONFIRMED'] %}
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markTransportAsReserved({{ transport.id }})">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </button>
+                                                {% else %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -6524,6 +6560,119 @@ function initializeHotelAutocomplete() {
                 })
                 .catch(err => console.log('Hotel autocomplete error:', err));
         });
+    });
+}
+
+// Supplier Confirmation Functions
+function markHotelAsReserved(hotelId) {
+    if (!confirm('Mark this hotel as confirmed by supplier?')) {
+        return;
+    }
+    
+    fetch(`/inbound/api/hotel/${hotelId}/mark-reserved`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Hotel marked as Supplier Confirmed!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Error updating hotel status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating hotel status', 'error');
+    });
+}
+
+function markTransportAsReserved(transportId) {
+    if (!confirm('Mark this transport as confirmed by supplier?')) {
+        return;
+    }
+    
+    fetch(`/inbound/api/transport/${transportId}/mark-reserved`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Transport marked as Supplier Confirmed!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Error updating transport status', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating transport status', 'error');
+    });
+}
+
+function confirmAllHotels() {
+    if (!confirm('Mark ALL hotels as confirmed by supplier?')) {
+        return;
+    }
+    
+    const requestId = {{ request.id }};
+    
+    fetch(`/inbound/api/${requestId}/confirm-all-hotels`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`${data.count} hotel(s) marked as Supplier Confirmed!`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Error updating hotel statuses', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating hotel statuses', 'error');
+    });
+}
+
+function confirmAllTransports() {
+    if (!confirm('Mark ALL transports as confirmed by supplier?')) {
+        return;
+    }
+    
+    const requestId = {{ request.id }};
+    
+    fetch(`/inbound/api/${requestId}/confirm-all-transports`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`${data.count} transport(s) marked as Supplier Confirmed!`, 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showNotification(data.message || 'Error updating transport statuses', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating transport statuses', 'error');
     });
 }
 </script>
