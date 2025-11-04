@@ -3459,8 +3459,47 @@ function saveRoomDistribution() {
         serviceModal.show();
     }
     
-    // Show success message
-    showNotification('Room distribution updated successfully!', 'success');
+    // Save changes to database
+    const rows = getCurrentItineraryRows();
+    const arrivalPoint = document.getElementById('itinerary_arrival_point')?.value || '';
+    const arrivalTime = document.getElementById('itinerary_arrival_time')?.value || '';
+    const departurePoint = document.getElementById('itinerary_departure_point')?.value || '';
+    const departureTime = document.getElementById('itinerary_departure_time')?.value || '';
+    
+    fetch('/inbound/api/{{ request.id }}/itinerary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            rows: rows,
+            arrival_point: arrivalPoint,
+            arrival_time: arrivalTime,
+            departure_point: departurePoint,
+            departure_time: departureTime
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Room distribution updated and saved successfully!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving room distribution', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving room distribution', 'error');
+    });
 }
 
 // Service Selection Modal functionality
@@ -3684,7 +3723,47 @@ function saveServiceSelection() {
     // Close modal
     serviceModal.hide();
     
-    showNotification('Services updated successfully!', 'success');
+    // Save changes to database
+    const rows = getCurrentItineraryRows();
+    const arrivalPoint = document.getElementById('itinerary_arrival_point')?.value || '';
+    const arrivalTime = document.getElementById('itinerary_arrival_time')?.value || '';
+    const departurePoint = document.getElementById('itinerary_departure_point')?.value || '';
+    const departureTime = document.getElementById('itinerary_departure_time')?.value || '';
+    
+    fetch('/inbound/api/{{ request.id }}/itinerary', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify({
+            rows: rows,
+            arrival_point: arrivalPoint,
+            arrival_time: arrivalTime,
+            departure_point: departurePoint,
+            departure_time: departureTime
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Services updated and saved successfully!', 'success');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error saving services', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving services', 'error');
+    });
 }
 
 // Add service badge to display
