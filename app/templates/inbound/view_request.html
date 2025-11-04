@@ -4873,7 +4873,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
 <!-- Service Configuration Modal -->
 <div class="modal fade" id="serviceConfigModal" tabindex="-1" aria-labelledby="serviceConfigModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xl" style="max-width: 95%;">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
                 <h5 class="modal-title" id="serviceConfigModalLabel">
@@ -4932,23 +4932,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
                             </button>
                         </div>
                         <div class="card-body">
-                            <!-- AI Hotel Scanner -->
-                            <div class="mb-4">
-                                <div class="p-3" style="background-color: #1e3a8a; border-radius: 8px; border: 2px solid #1e40af;">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1 text-white">
-                                                <i class="fas fa-robot me-2"></i>AI Assistant
-                                            </h6>
-                                            <small class="text-white opacity-75">Upload a hotel booking confirmation to automatically fill the form</small>
-                                        </div>
-                                        <button type="button" class="btn btn-warning text-dark" data-bs-toggle="modal" data-bs-target="#hotelScannerModal" style="background-color: #ffc107; border: 2px solid #ffca2c; font-weight: bold;">
-                                            <i class="fas fa-scan me-1"></i>Scan with AI
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Hotel Basic Information -->
                             <div class="row mb-4">
                                 <div class="col-md-4">
@@ -5040,7 +5023,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                                 </div>
                                             </div>
                                             <div class="text-center mt-3">
-                                                <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary()">
+                                                <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary(this)">
                                                     <i class="fas fa-table me-1"></i>Generate Room Table
                                                 </button>
                                             </div>
@@ -6197,12 +6180,16 @@ function updateMasterFromSummary() {
     console.log('Room distribution updated from summary');
 }
 
-function regenerateRoomTableFromSummary() {
-    // Get the distribution from the summary fields
-    const singleRooms = parseInt(document.getElementById('hotelSingleRooms')?.value || 0);
-    const doubleRooms = parseInt(document.getElementById('hotelDoubleRooms')?.value || 0);
-    const tripleRooms = parseInt(document.getElementById('hotelTripleRooms')?.value || 0);
-    const otherRooms = parseInt(document.getElementById('hotelOtherRooms')?.value || 0);
+function regenerateRoomTableFromSummary(button) {
+    // Find the hotel card this button belongs to
+    const hotelCard = button ? button.closest('.hotel-card') : document.querySelector('.hotel-card');
+    if (!hotelCard) return;
+    
+    // Get the distribution from the summary fields within this hotel card
+    const singleRooms = parseInt(hotelCard.querySelector('[name*="hotel_single_rooms"]')?.value || 0);
+    const doubleRooms = parseInt(hotelCard.querySelector('[name*="hotel_double_rooms"]')?.value || 0);
+    const tripleRooms = parseInt(hotelCard.querySelector('[name*="hotel_triple_rooms"]')?.value || 0);
+    const otherRooms = parseInt(hotelCard.querySelector('[name*="hotel_other_rooms"]')?.value || 0);
     
     const totalRooms = singleRooms + doubleRooms + tripleRooms + otherRooms;
     
@@ -6211,8 +6198,8 @@ function regenerateRoomTableFromSummary() {
         return;
     }
     
-    // Clear existing room table
-    const tableBody = document.getElementById('hotelRoomsTableBody');
+    // Clear existing room table within this hotel card
+    const tableBody = hotelCard.querySelector('tbody');
     if (!tableBody) return;
     
     tableBody.innerHTML = '';
