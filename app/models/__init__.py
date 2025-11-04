@@ -9,6 +9,7 @@ SERVICE_GUIDE = 'GUIDE'  # For inbound guide services
 
 # Define constants for status
 STATUS_REQUEST = 'REQUEST'
+STATUS_QUOTED = 'QUOTED'  # After quotation is created and sent
 STATUS_BOOKED = 'BOOKED'  # Keep for backward compatibility but no longer used in new workflow
 STATUS_IN_PROGRESS = 'IN_PROGRESS'
 STATUS_CONFIRMED = 'CONFIRMED'
@@ -38,13 +39,8 @@ from app.models.finance import (
 # Import inbound models
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
-    InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
-    SERVICE_FLAG_HOTEL, SERVICE_FLAG_GUIDE, SERVICE_FLAG_TRANSPORT, 
-    SERVICE_FLAG_MEAL, SERVICE_FLAG_AIRPORT
-)
-from app.models.inbound import (
-    InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
-    InboundMeal, InboundGuide, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
+    InboundMeal, InboundGuide, InboundQuotation, InboundQuotationItem, 
+    QuotationAttachment, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
     SERVICE_FLAG_HOTEL, SERVICE_FLAG_GUIDE, SERVICE_FLAG_TRANSPORT, 
     SERVICE_FLAG_MEAL, SERVICE_FLAG_AIRPORT
 )

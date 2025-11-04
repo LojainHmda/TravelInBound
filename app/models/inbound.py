@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from app import db
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 
 # Cost units for pricing
 COST_UNIT_PER_PERSON = 'PER_PERSON'
@@ -69,6 +69,7 @@ class InboundRequest(db.Model):
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_cash_expenses = db.relationship('InboundCashExpense', backref='request', lazy=True, cascade="all, delete-orphan")
     arrival_departures = db.relationship('ArrivalDeparture', backref='request', lazy=True, cascade="all, delete-orphan")
+    quotations = db.relationship('InboundQuotation', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
     
     def __repr__(self):
@@ -403,3 +404,130 @@ class ArrivalDeparture(db.Model):
     def __repr__(self):
         batch_label = self.batch_name or f'Batch {self.id}'
         return f'<ArrivalDeparture {batch_label}>'
+
+
+class InboundQuotation(db.Model):
+    """Quotation header for inbound requests"""
+    __tablename__ = 'inbound_quotation'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    # Quotation metadata
+    quotation_number = db.Column(db.String(50), unique=True, nullable=False)  # QUOT-YYYYMM-####
+    version = db.Column(db.Integer, default=1)  # Version tracking for revised quotes
+    status = db.Column(db.String(20), default='DRAFT')  # DRAFT, SENT, APPROVED, REJECTED
+    
+    # Quotation details
+    valid_until = db.Column(db.Date, nullable=True)  # Quote validity date
+    notes = db.Column(db.Text, nullable=True)  # Additional notes or terms
+    subtotal = db.Column(db.Numeric(12, 2), default=0.00)
+    tax_rate = db.Column(db.Numeric(5, 2), default=0.00)  # Tax percentage
+    tax_amount = db.Column(db.Numeric(12, 2), default=0.00)
+    total_amount = db.Column(db.Numeric(12, 2), default=0.00)
+    currency = db.Column(db.String(3), default='USD')
+    
+    # Unique constraint on version per request
+    __table_args__ = (
+        db.UniqueConstraint('request_id', 'version', name='uq_request_version'),
+    )
+    
+    # Tracking
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sent_at = db.Column(db.DateTime, nullable=True)  # When quotation was sent
+    approved_at = db.Column(db.DateTime, nullable=True)  # When quotation was approved
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    quotation_items = db.relationship('InboundQuotationItem', backref='quotation', lazy=True, cascade="all, delete-orphan")
+    attachments = db.relationship('QuotationAttachment', backref='quotation', lazy=True, cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f'<InboundQuotation {self.quotation_number}>'
+    
+    @classmethod
+    def generate_quotation_number(cls):
+        """Generate auto quotation number in format QUOT-YYYYMM-####"""
+        now = datetime.now()
+        prefix = f"QUOT-{now.strftime('%Y%m')}"
+        
+        # Find the highest number for current month
+        latest = cls.query.filter(
+            cls.quotation_number.like(f"{prefix}-%")
+        ).order_by(cls.quotation_number.desc()).first()
+        
+        if latest:
+            try:
+                last_num = int(latest.quotation_number.split('-')[-1])
+                next_num = last_num + 1
+            except:
+                next_num = 1
+        else:
+            next_num = 1
+        
+        return f"{prefix}-{next_num:04d}"
+    
+    def calculate_total(self):
+        """Calculate quotation total from line items"""
+        from app.models.inbound import InboundQuotationItem
+        items = InboundQuotationItem.query.filter_by(quotation_id=self.id).all()
+        
+        self.subtotal = sum(item.line_total or 0 for item in items)
+        self.tax_amount = (self.subtotal * self.tax_rate) / 100
+        self.total_amount = self.subtotal + self.tax_amount
+        
+        return self.total_amount
+
+
+class InboundQuotationItem(db.Model):
+    """Individual line items in a quotation"""
+    __tablename__ = 'inbound_quotation_item'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    quotation_id = db.Column(db.Integer, db.ForeignKey('inbound_quotation.id'), nullable=False)
+    
+    # Line item details
+    item_order = db.Column(db.Integer, default=0)  # Display order
+    description = db.Column(db.Text, nullable=False)
+    quantity = db.Column(db.Numeric(10, 2), default=1.00)
+    unit_price = db.Column(db.Numeric(12, 2), default=0.00)
+    line_total = db.Column(db.Numeric(12, 2), default=0.00)  # quantity * unit_price
+    
+    # Optional categorization
+    category = db.Column(db.String(50), nullable=True)  # e.g., 'Hotel', 'Transport', 'Guide'
+    notes = db.Column(db.Text, nullable=True)
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<QuotationItem {self.description[:30]}>'
+    
+    def calculate_line_total(self):
+        """Calculate line total"""
+        self.line_total = (self.quantity or 0) * (self.unit_price or 0)
+        return self.line_total
+
+
+class QuotationAttachment(db.Model):
+    """Attachments for quotations (PDFs, images, etc.)"""
+    __tablename__ = 'quotation_attachment'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    quotation_id = db.Column(db.Integer, db.ForeignKey('inbound_quotation.id'), nullable=False)
+    
+    # File details
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(500), nullable=False)  # Relative path in uploads/quotations/
+    file_size = db.Column(db.Integer, nullable=True)  # File size in bytes
+    mime_type = db.Column(db.String(100), nullable=True)
+    
+    # Metadata
+    description = db.Column(db.Text, nullable=True)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<QuotationAttachment {self.filename}>'

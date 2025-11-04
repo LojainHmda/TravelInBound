@@ -7,9 +7,11 @@ import os
 from app import db
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
-    InboundMeal, InboundGuide, InboundCashExpense, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
+    InboundMeal, InboundGuide, InboundCashExpense, InboundQuotation, 
+    InboundQuotationItem, QuotationAttachment,
+    COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
-from app.models import STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
 from app.models.booking import Booking
 from app.models.customer import Customer

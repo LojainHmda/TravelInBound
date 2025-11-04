@@ -4911,9 +4911,25 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                 <!-- Hotel Service Configuration -->
                 <div id="hotelServiceConfig" class="service-config-section d-none">
+                    <!-- Add Hotel Button -->
+                    <div class="mb-3 text-end">
+                        <button type="button" class="btn btn-success" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Another Hotel
+                        </button>
+                        <small class="text-muted d-block mt-1">For groups splitting into multiple hotels</small>
+                    </div>
+                    
+                    <!-- Multiple Hotels Container -->
+                    <div id="hotelsContainer">
+                    
+                    <!-- Hotel Card Template (first hotel) -->
+                    <div class="hotel-card mb-4" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel Configuration</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span> Configuration</h6>
+                            <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
                         </div>
                         <div class="card-body">
                             <!-- AI Hotel Scanner -->
@@ -5033,40 +5049,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                 </div>
                             </div>
 
-                            <!-- Master Room Configuration Section -->
-                            <div class="mb-4">
-                                <div class="card">
-                                    <div class="card-header py-2" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white;">
-                                        <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Master Room Configuration</h6>
-                                    </div>
-                                    <div class="card-body py-3">
-                                        <div class="row g-3 mb-3">
-                                            <div class="col-md-3">
-                                                <label class="form-label">Single Rooms</label>
-                                                <input type="number" id="masterSingleRooms" class="form-control" min="0" value="1" onchange="regenerateRoomTable()">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Double Rooms</label>
-                                                <input type="number" id="masterDoubleRooms" class="form-control" min="0" value="0" onchange="regenerateRoomTable()">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Triple Rooms</label>
-                                                <input type="number" id="masterTripleRooms" class="form-control" min="0" value="0" onchange="regenerateRoomTable()">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label class="form-label">Other Rooms</label>
-                                                <input type="number" id="masterOtherRooms" class="form-control" min="0" value="0" onchange="regenerateRoomTable()">
-                                            </div>
-                                        </div>
-                                        <div class="text-center">
-                                            <button type="button" class="btn btn-primary" onclick="regenerateRoomTable()">
-                                                <i class="fas fa-refresh me-1"></i>Generate Room Table
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Room Configuration Section -->
                             <div class="mb-3">
                                 <h5 class="text-primary">Room Details & Lead Passengers</h5>
@@ -5157,6 +5139,11 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                         </div>
                     </div>
+                    </div>
+                    <!-- End of first hotel card -->
+                    
+                    </div>
+                    <!-- End of hotels container -->
                 </div>
 
                 <!-- Transport Service Configuration -->
