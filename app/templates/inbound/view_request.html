@@ -5521,27 +5521,77 @@ function convertToInvoice() {
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
-                    <input type="text" class="form-control" id="modal_arrival_point" 
-                           value="{{ request.arrival_point or '' }}" 
-                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                <!-- Arrival Section -->
+                <div class="mb-4 p-3" style="background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
+                    <h6 class="text-primary mb-3"><i class="fas fa-plane-arrival me-2"></i>Arrival Details</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Arrival Point</label>
+                            <input type="text" class="form-control" id="modal_arrival_point" 
+                                   value="{{ request.arrival_point or '' }}" 
+                                   placeholder="e.g., Queen Alia Airport">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Arrival Time</label>
+                            <input type="time" class="form-control" id="modal_arrival_time" 
+                                   value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Visa Type</label>
+                            <select class="form-select" id="modal_visa_type">
+                                <option value="NOT_INCLUDED" {% if request.visa_type == 'NOT_INCLUDED' or not request.visa_type %}selected{% endif %}>Not Included</option>
+                                <option value="FREE" {% if request.visa_type == 'FREE' %}selected{% endif %}>Free</option>
+                                <option value="RESTRICTED" {% if request.visa_type == 'RESTRICTED' %}selected{% endif %}>Restricted</option>
+                                <option value="INCLUDED" {% if request.visa_type == 'INCLUDED' %}selected{% endif %}>Included</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Driver Name</label>
+                            <input type="text" class="form-control" id="modal_arrival_driver" 
+                                   value="{{ request.arrival_driver_name or '' }}" 
+                                   placeholder="Driver name">
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
-                    <input type="time" class="form-control" id="modal_arrival_time" 
-                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
-                    <input type="text" class="form-control" id="modal_departure_point" 
-                           value="{{ request.departure_point or '' }}" 
-                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
-                    <input type="time" class="form-control" id="modal_departure_time" 
-                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                
+                <!-- Departure Section -->
+                <div class="mb-3 p-3" style="background: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                    <h6 class="text-warning mb-3"><i class="fas fa-plane-departure me-2"></i>Departure Details</h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Departure Point</label>
+                            <input type="text" class="form-control" id="modal_departure_point" 
+                                   value="{{ request.departure_point or '' }}" 
+                                   placeholder="e.g., Queen Alia Airport">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Departure Time</label>
+                            <input type="time" class="form-control" id="modal_departure_time" 
+                                   value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Meeting & Assistance</label>
+                            <select class="form-select" id="modal_meeting_assistance">
+                                <option value="0" {% if not request.meeting_assistance %}selected{% endif %}>No</option>
+                                <option value="1" {% if request.meeting_assistance %}selected{% endif %}>Yes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Departure Tax</label>
+                            <select class="form-select" id="modal_departure_tax">
+                                <option value="NOT_INCLUDED" {% if request.departure_tax == 'NOT_INCLUDED' or not request.departure_tax %}selected{% endif %}>Not Included</option>
+                                <option value="INCLUDED" {% if request.departure_tax == 'INCLUDED' %}selected{% endif %}>Included</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -5561,6 +5611,10 @@ function saveArrivalDeparture() {
     const arrivalTime = document.getElementById('modal_arrival_time').value;
     const departurePoint = document.getElementById('modal_departure_point').value;
     const departureTime = document.getElementById('modal_departure_time').value;
+    const visaType = document.getElementById('modal_visa_type').value;
+    const arrivalDriver = document.getElementById('modal_arrival_driver').value;
+    const meetingAssistance = document.getElementById('modal_meeting_assistance').value === '1';
+    const departureTax = document.getElementById('modal_departure_tax').value;
     
     // Sync to hidden fields
     document.getElementById('itinerary_arrival_point').value = arrivalPoint;
@@ -5586,7 +5640,11 @@ function saveArrivalDeparture() {
             arrival_point: arrivalPoint,
             arrival_time: arrivalTime,
             departure_point: departurePoint,
-            departure_time: departureTime
+            departure_time: departureTime,
+            visa_type: visaType,
+            arrival_driver_name: arrivalDriver,
+            meeting_assistance: meetingAssistance,
+            departure_tax: departureTax
         })
     })
     .then(response => {

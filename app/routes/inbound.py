@@ -427,6 +427,25 @@ def api_save_itinerary_original(request_id):
     elif 'departure_time' in data and not data.get('departure_time'):
         request_obj.departure_time = None
     
+    # Update new arrival/departure fields
+    if 'visa_type' in data:
+        request_obj.visa_type = data.get('visa_type') or 'NOT_INCLUDED'
+    if 'arrival_driver_name' in data:
+        request_obj.arrival_driver_name = data.get('arrival_driver_name') or None
+    if 'meeting_assistance' in data:
+        # Properly parse boolean from various input types
+        ma_value = data.get('meeting_assistance')
+        if isinstance(ma_value, bool):
+            request_obj.meeting_assistance = ma_value
+        elif isinstance(ma_value, str):
+            request_obj.meeting_assistance = ma_value.lower() in ('true', '1', 'yes')
+        elif isinstance(ma_value, (int, float)):
+            request_obj.meeting_assistance = bool(ma_value)
+        else:
+            request_obj.meeting_assistance = False
+    if 'departure_tax' in data:
+        request_obj.departure_tax = data.get('departure_tax') or 'NOT_INCLUDED'
+    
     # Clear existing rows
     ItineraryRow.query.filter_by(request_id=request_id).delete()
     

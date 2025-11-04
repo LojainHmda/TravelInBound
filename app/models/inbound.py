@@ -28,11 +28,17 @@ class InboundRequest(db.Model):
     to_date = db.Column(db.Date, nullable=False)
     no_of_days = db.Column(db.Integer, nullable=False)
     
-    # Arrival/Departure details
+    # Arrival/Departure details (kept for backward compatibility, use ArrivalDeparture model for multiple entries)
     arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport", "Sheikh Hussein Border"
     departure_point = db.Column(db.String(150), nullable=True)
     arrival_time = db.Column(db.Time, nullable=True)
     departure_time = db.Column(db.Time, nullable=True)
+    
+    # New arrival/departure fields
+    visa_type = db.Column(db.String(50), nullable=True, default='NOT_INCLUDED')  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    arrival_driver_name = db.Column(db.String(200), nullable=True)
+    meeting_assistance = db.Column(db.Boolean, default=False)  # Meeting & Assistance for departure
+    departure_tax = db.Column(db.String(50), nullable=True, default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
     
     # Client information
     customer_type = db.Column(db.String(20), nullable=False, default='AGENCY')  # AGENCY, GROUP, COMPANY, CORPORATE
@@ -62,6 +68,7 @@ class InboundRequest(db.Model):
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_cash_expenses = db.relationship('InboundCashExpense', backref='request', lazy=True, cascade="all, delete-orphan")
+    arrival_departures = db.relationship('ArrivalDeparture', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
     
     def __repr__(self):
@@ -347,3 +354,48 @@ class InboundCashExpense(db.Model):
             return (self.amount or 0) * pax_count
         else:
             return self.amount or 0
+
+class ArrivalDeparture(db.Model):
+    """Multiple arrivals and departures per booking with driver and visa details"""
+    __tablename__ = 'arrival_departure'
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    # Type: ARRIVAL or DEPARTURE
+    type = db.Column(db.String(20), nullable=False)  # ARRIVAL, DEPARTURE
+    
+    # Date and Time
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.Time, nullable=True)
+    
+    # Location details
+    point = db.Column(db.String(150), nullable=False)  # Airport, Border, etc.
+    
+    # Arrival-specific fields
+    visa_type = db.Column(db.String(50), nullable=True)  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    
+    # Departure-specific fields
+    meeting_assistance = db.Column(db.Boolean, default=False)  # Meeting & Assistance
+    departure_tax = db.Column(db.String(50), nullable=True)  # INCLUDED, NOT_INCLUDED
+    
+    # Driver/Transfer details (linked to InboundTransport if needed)
+    driver_name = db.Column(db.String(200), nullable=True)
+    transport_id = db.Column(db.Integer, db.ForeignKey('inbound_transport.id'), nullable=True)  # Link to transport record
+    
+    # Additional info
+    flight_number = db.Column(db.String(50), nullable=True)  # For arrivals/departures
+    notes = db.Column(db.Text, nullable=True)
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship to transport
+    transport = db.relationship('InboundTransport', backref='arrival_departure_link', foreign_keys=[transport_id])
+    
+    def __repr__(self):
+        return f'<ArrivalDeparture {self.type} - {self.point} on {self.date}>'
