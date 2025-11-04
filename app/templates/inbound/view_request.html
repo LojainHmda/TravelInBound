@@ -4911,9 +4911,25 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                 <!-- Hotel Service Configuration -->
                 <div id="hotelServiceConfig" class="service-config-section d-none">
+                    <!-- Add Hotel Button -->
+                    <div class="mb-3 text-end">
+                        <button type="button" class="btn btn-success" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Another Hotel
+                        </button>
+                        <small class="text-muted d-block mt-1">For groups splitting into multiple hotels</small>
+                    </div>
+                    
+                    <!-- Multiple Hotels Container -->
+                    <div id="hotelsContainer">
+                    
+                    <!-- Hotel Card Template (first hotel) -->
+                    <div class="hotel-card mb-4" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel Configuration</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span> Configuration</h6>
+                            <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
                         </div>
                         <div class="card-body">
                             <!-- AI Hotel Scanner -->
@@ -5123,6 +5139,11 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                         </div>
                     </div>
+                    </div>
+                    <!-- End of first hotel card -->
+                    
+                    </div>
+                    <!-- End of hotels container -->
                 </div>
 
                 <!-- Transport Service Configuration -->
@@ -6302,6 +6323,120 @@ function removeHotelTableRoom(button) {
             }
         });
     }
+}
+
+// Multi-Hotel Management Functions
+function addAnotherHotel() {
+    const hotelsContainer = document.getElementById('hotelsContainer');
+    const existingHotels = hotelsContainer.querySelectorAll('.hotel-card');
+    const newIndex = existingHotels.length;
+    
+    // Clone the first hotel card
+    const firstHotel = existingHotels[0];
+    const newHotelCard = firstHotel.cloneNode(true);
+    
+    // Update the hotel index
+    newHotelCard.setAttribute('data-hotel-index', newIndex);
+    
+    // Update the hotel number in the header
+    const hotelNumber = newHotelCard.querySelector('.hotel-number');
+    if (hotelNumber) {
+        hotelNumber.textContent = newIndex + 1;
+    }
+    
+    // Show the remove button
+    const removeBtn = newHotelCard.querySelector('.remove-hotel-btn');
+    if (removeBtn) {
+        removeBtn.classList.remove('d-none');
+    }
+    
+    // Clear all input values
+    const inputs = newHotelCard.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea');
+    inputs.forEach(input => {
+        if (input.type === 'number') {
+            input.value = input.name.includes('rooms') ? 0 : (input.min || 0);
+        } else {
+            input.value = '';
+        }
+    });
+    
+    // Reset selects
+    const selects = newHotelCard.querySelectorAll('select');
+    selects.forEach(select => {
+        select.selectedIndex = 0;
+    });
+    
+    // Clear room table
+    const roomTableBody = newHotelCard.querySelector('tbody');
+    if (roomTableBody) {
+        roomTableBody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">Click "Generate Room Table" to create room entries</td></tr>';
+    }
+    
+    // Update form field names to include hotel index
+    updateHotelFieldNames(newHotelCard, newIndex);
+    
+    // Append to container
+    hotelsContainer.appendChild(newHotelCard);
+    
+    console.log(`Added hotel #${newIndex + 1}`);
+}
+
+function removeHotelCard(button) {
+    const hotelCard = button.closest('.hotel-card');
+    const hotelsContainer = document.getElementById('hotelsContainer');
+    const remainingHotels = hotelsContainer.querySelectorAll('.hotel-card');
+    
+    if (remainingHotels.length <= 1) {
+        alert('You must have at least one hotel configured.');
+        return;
+    }
+    
+    if (confirm('Are you sure you want to remove this hotel configuration?')) {
+        hotelCard.remove();
+        
+        // Renumber remaining hotels
+        const hotels = hotelsContainer.querySelectorAll('.hotel-card');
+        hotels.forEach((card, index) => {
+            card.setAttribute('data-hotel-index', index);
+            const hotelNumber = card.querySelector('.hotel-number');
+            if (hotelNumber) {
+                hotelNumber.textContent = index + 1;
+            }
+            
+            // Hide remove button on first hotel
+            const removeBtn = card.querySelector('.remove-hotel-btn');
+            if (removeBtn) {
+                if (index === 0) {
+                    removeBtn.classList.add('d-none');
+                } else {
+                    removeBtn.classList.remove('d-none');
+                }
+            }
+            
+            // Update field names
+            updateHotelFieldNames(card, index);
+        });
+        
+        console.log('Hotel removed and remaining hotels renumbered');
+    }
+}
+
+function updateHotelFieldNames(hotelCard, hotelIndex) {
+    // Update all input, select, and textarea names to include hotel index
+    const fields = hotelCard.querySelectorAll('input, select, textarea');
+    fields.forEach(field => {
+        if (field.name) {
+            // Remove any existing hotel index prefix
+            let baseName = field.name.replace(/^hotels\[\d+\]\[/, '').replace(/\]$/, '');
+            
+            // Handle nested room fields like rooms[0][room_category]
+            if (baseName.startsWith('rooms[')) {
+                field.name = `hotels[${hotelIndex}][${baseName}]`;
+            } else {
+                field.name = `hotels[${hotelIndex}][${baseName}]`;
+            }
+        }
+    });
 }
 </script>
 
