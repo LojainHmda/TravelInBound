@@ -356,7 +356,7 @@ class InboundCashExpense(db.Model):
             return self.amount or 0
 
 class ArrivalDeparture(db.Model):
-    """Multiple arrivals and departures per booking with driver and visa details"""
+    """Multiple arrivals and departures per booking - batch-based (each record contains both arrival and departure for a group)"""
     __tablename__ = 'arrival_departure'
     
     def __init__(self, **kwargs):
@@ -364,30 +364,31 @@ class ArrivalDeparture(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
-    
-    # Type: ARRIVAL or DEPARTURE
-    type = db.Column(db.String(20), nullable=False)  # ARRIVAL, DEPARTURE
-    
-    # Date and Time
-    date = db.Column(db.Date, nullable=False)
-    time = db.Column(db.Time, nullable=True)
-    
-    # Location details
-    point = db.Column(db.String(150), nullable=False)  # Airport, Border, etc.
-    
-    # Arrival-specific fields
-    visa_type = db.Column(db.String(50), nullable=True)  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
-    
-    # Departure-specific fields
-    meeting_assistance = db.Column(db.Boolean, default=False)  # Meeting & Assistance
-    departure_tax = db.Column(db.String(50), nullable=True)  # INCLUDED, NOT_INCLUDED
-    
-    # Driver/Transfer details (linked to InboundTransport if needed)
-    driver_name = db.Column(db.String(200), nullable=True)
     transport_id = db.Column(db.Integer, db.ForeignKey('inbound_transport.id'), nullable=True)  # Link to transport record
     
-    # Additional info
-    flight_number = db.Column(db.String(50), nullable=True)  # For arrivals/departures
+    # Batch identification
+    batch_name = db.Column(db.String(100), nullable=True)  # e.g., "Group A", "Family 1"
+    pax_count = db.Column(db.Integer, nullable=True)  # Number of passengers in this batch
+    
+    # Arrival details
+    arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport"
+    arrival_time = db.Column(db.Time, nullable=True)
+    visa_type = db.Column(db.String(50), default='NOT_INCLUDED')  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    arrival_driver_name = db.Column(db.String(200), nullable=True)
+    
+    # Departure details
+    departure_point = db.Column(db.String(150), nullable=True)
+    departure_time = db.Column(db.Time, nullable=True)
+    meeting_assistance = db.Column(db.Boolean, default=False)
+    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
+    
+    # Legacy fields (for backwards compatibility)
+    type = db.Column(db.String(20), nullable=True)  # ARRIVAL, DEPARTURE
+    date = db.Column(db.Date, nullable=True)
+    time = db.Column(db.Time, nullable=True)
+    point = db.Column(db.String(150), nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)
+    flight_number = db.Column(db.String(50), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     
     # Tracking
@@ -398,4 +399,5 @@ class ArrivalDeparture(db.Model):
     transport = db.relationship('InboundTransport', backref='arrival_departure_link', foreign_keys=[transport_id])
     
     def __repr__(self):
-        return f'<ArrivalDeparture {self.type} - {self.point} on {self.date}>'
+        batch_label = self.batch_name or f'Batch {self.id}'
+        return f'<ArrivalDeparture {batch_label}>'

@@ -977,6 +977,126 @@ def api_create_booking(request_id):
             'message': f'Error creating booking: {str(e)}'
         }), 500
 
+@inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['GET'])
+@login_required
+def api_get_arrival_departure_batches(request_id):
+    """Get all arrival/departure batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Import the ArrivalDeparture model
+    from app.models.inbound import ArrivalDeparture
+    
+    batches = ArrivalDeparture.query.filter_by(request_id=request_id).all()
+    
+    batches_data = []
+    for batch in batches:
+        # Fallback to legacy fields if new batch fields are empty (for backwards compatibility)
+        arrival_point = batch.arrival_point or (batch.point if batch.type == 'ARRIVAL' else '')
+        arrival_time = batch.arrival_time or (batch.time if batch.type == 'ARRIVAL' else None)
+        departure_point = batch.departure_point or (batch.point if batch.type == 'DEPARTURE' else '')
+        departure_time = batch.departure_time or (batch.time if batch.type == 'DEPARTURE' else None)
+        driver_name = batch.arrival_driver_name or batch.driver_name or ''
+        
+        batch_dict = {
+            'id': batch.id,
+            'arrival_point': arrival_point or '',
+            'arrival_time': arrival_time.strftime('%H:%M') if arrival_time else '',
+            'departure_point': departure_point or '',
+            'departure_time': departure_time.strftime('%H:%M') if departure_time else '',
+            'visa_type': batch.visa_type or 'NOT_INCLUDED',
+            'arrival_driver_name': driver_name,
+            'meeting_assistance': batch.meeting_assistance,
+            'departure_tax': batch.departure_tax or 'NOT_INCLUDED',
+            'pax_count': batch.pax_count or 0,
+            'batch_name': batch.batch_name or ''
+        }
+        batches_data.append(batch_dict)
+    
+    return jsonify({'batches': batches_data})
+
+@inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['POST'])
+@login_required
+def api_save_arrival_departure_batches(request_id):
+    """Save arrival/departure batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    batches_data = data.get('batches', [])
+    
+    # Import the ArrivalDeparture model
+    from app.models.inbound import ArrivalDeparture
+    
+    try:
+        # Delete existing batches
+        ArrivalDeparture.query.filter_by(request_id=request_id).delete()
+        
+        # Create new batches
+        for batch_data in batches_data:
+            # Parse time values
+            arrival_time = None
+            if batch_data.get('arrival_time'):
+                try:
+                    arrival_time = datetime.strptime(batch_data['arrival_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            departure_time = None
+            if batch_data.get('departure_time'):
+                try:
+                    departure_time = datetime.strptime(batch_data['departure_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Parse meeting_assistance as boolean
+            meeting_assistance = False
+            ma_value = batch_data.get('meeting_assistance')
+            if isinstance(ma_value, bool):
+                meeting_assistance = ma_value
+            elif isinstance(ma_value, str):
+                meeting_assistance = ma_value in ('1', 'true', 'True', 'yes', 'Yes')
+            elif isinstance(ma_value, (int, float)):
+                meeting_assistance = bool(ma_value)
+            
+            # Parse pax_count
+            pax_count = 0
+            if batch_data.get('pax_count'):
+                try:
+                    pax_count = int(batch_data['pax_count'])
+                except:
+                    pax_count = 0
+            
+            batch = ArrivalDeparture(
+                request_id=request_id,
+                arrival_point=batch_data.get('arrival_point') or None,
+                arrival_time=arrival_time,
+                departure_point=batch_data.get('departure_point') or None,
+                departure_time=departure_time,
+                visa_type=batch_data.get('visa_type') or 'NOT_INCLUDED',
+                arrival_driver_name=batch_data.get('arrival_driver_name') or None,
+                meeting_assistance=meeting_assistance,
+                departure_tax=batch_data.get('departure_tax') or 'NOT_INCLUDED',
+                pax_count=pax_count,
+                batch_name=batch_data.get('batch_name') or None
+            )
+            db.session.add(batch)
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Batches saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving batches: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
 @login_required
 def api_generate_quote(request_id):

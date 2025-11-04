@@ -96,8 +96,12 @@ Added comprehensive arrival and departure details to InboundRequest model:
 - Professional visual design with FontAwesome icons
 
 **Database Migrations**: 
+
+**Migration 004 - Batch-Based Arrival/Departure Fields** (November 4, 2025):
+Extended the `arrival_departure` table to support batch-based arrivals/departures where each record contains both arrival and departure information for a tourist group. Run: `migrations/004_arrival_departure_batch_fields.sql`
+
+**InboundRequest Base Fields**:
 ```sql
--- InboundRequest enhancements
 ALTER TABLE inbound_request 
 ADD COLUMN arrival_point VARCHAR(150),
 ADD COLUMN departure_point VARCHAR(150),
@@ -107,23 +111,6 @@ ADD COLUMN visa_type VARCHAR(50) DEFAULT 'NOT_INCLUDED',
 ADD COLUMN arrival_driver_name VARCHAR(150),
 ADD COLUMN meeting_assistance BOOLEAN DEFAULT FALSE,
 ADD COLUMN departure_tax VARCHAR(50) DEFAULT 'NOT_INCLUDED';
-
--- ArrivalDeparture model
-CREATE TABLE arrival_departure (
-    id SERIAL PRIMARY KEY,
-    request_id INTEGER REFERENCES inbound_request(id) ON DELETE CASCADE,
-    transport_id INTEGER REFERENCES inbound_transport(id) ON DELETE SET NULL,
-    arrival_point VARCHAR(150),
-    arrival_time TIME,
-    departure_point VARCHAR(150),
-    departure_time TIME,
-    visa_type VARCHAR(50) DEFAULT 'NOT_INCLUDED',
-    arrival_driver_name VARCHAR(150),
-    meeting_assistance BOOLEAN DEFAULT FALSE,
-    departure_tax VARCHAR(50) DEFAULT 'NOT_INCLUDED',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 ```
 
 ## Recent Enhancements (October 2025)
