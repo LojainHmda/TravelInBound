@@ -2296,14 +2296,6 @@ body {
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
-                        <!-- Arrival & Departure Button + Service Selection Bar -->
-                        <div class="d-flex gap-3 align-items-center mb-3">
-                            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalDepartureModal"
-                                    style="background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 16px; color: #374151; font-weight: 500;">
-                                <i class="fas fa-plane me-2"></i>Arrival / Departure
-                            </button>
-                        </div>
-
                         <!-- Intuitive Service Selection Bar -->
                         <div class="service-selection-bar mb-3" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 12px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                             <div class="service-bar-title mb-2" style="font-weight: 600; color: #334155;">
@@ -2513,7 +2505,7 @@ body {
 
 
     <!-- Service Details Tabs -->
-    {% if request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
+    {% if request.itinerary_rows %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -2522,9 +2514,14 @@ body {
                 </div>
                 <div class="card-body">
                     <ul class="nav nav-tabs" id="servicesTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="arrival-tab" data-bs-toggle="tab" data-bs-target="#arrival" type="button" role="tab">
+                                <i class="fas fa-plane"></i> Arrival / Departure
+                            </button>
+                        </li>
                         {% if request.inbound_hotels %}
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab">
+                            <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab">
                                 <i class="fas fa-bed"></i> Hotels ({{ request.inbound_hotels|length }})
                             </button>
                         </li>
@@ -2553,8 +2550,30 @@ body {
                     </ul>
 
                     <div class="tab-content mt-3" id="servicesTabContent">
+                        <div class="tab-pane fade show active" id="arrival" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
+                                    <input type="text" class="form-control mb-3" id="itinerary_arrival_point" 
+                                           value="{{ request.arrival_point or '' }}" 
+                                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
+                                    <input type="time" class="form-control" id="itinerary_arrival_time" 
+                                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
+                                    <input type="text" class="form-control mb-3" id="itinerary_departure_point" 
+                                           value="{{ request.departure_point or '' }}" 
+                                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
+                                    <input type="time" class="form-control" id="itinerary_departure_time" 
+                                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
                         {% if request.inbound_hotels %}
-                        <div class="tab-pane fade show active" id="hotels" role="tabpanel">
+                        <div class="tab-pane fade" id="hotels" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead>
@@ -5380,44 +5399,5 @@ function convertToInvoice() {
     }
 }
 </script>
-
-<!-- Arrival/Departure Modal -->
-<div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header" style="background: #1e3a8a; color: white;">
-                <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Details</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
-                    <input type="text" class="form-control" id="itinerary_arrival_point" 
-                           value="{{ request.arrival_point or '' }}" 
-                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
-                    <input type="time" class="form-control" id="itinerary_arrival_time" 
-                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
-                    <input type="text" class="form-control" id="itinerary_departure_point" 
-                           value="{{ request.departure_point or '' }}" 
-                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
-                    <input type="time" class="form-control" id="itinerary_departure_time" 
-                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 {% endblock %}
