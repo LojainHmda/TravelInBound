@@ -4911,25 +4911,9 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                 <!-- Hotel Service Configuration -->
                 <div id="hotelServiceConfig" class="service-config-section d-none">
-                    <!-- Add Hotel Button -->
-                    <div class="mb-3 text-end">
-                        <button type="button" class="btn btn-success" onclick="addAnotherHotel()">
-                            <i class="fas fa-plus me-1"></i>Add Another Hotel
-                        </button>
-                        <small class="text-muted d-block mt-1">For groups splitting into multiple hotels</small>
-                    </div>
-                    
-                    <!-- Multiple Hotels Container -->
-                    <div id="hotelsContainer">
-                    
-                    <!-- Hotel Card Template (first hotel) -->
-                    <div class="hotel-card mb-4" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span> Configuration</h6>
-                            <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
-                                <i class="fas fa-times"></i> Remove
-                            </button>
+                        <div class="card-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel Configuration</h6>
                         </div>
                         <div class="card-body">
                             <!-- AI Hotel Scanner -->
@@ -5139,11 +5123,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                         </div>
                     </div>
-                    </div>
-                    <!-- End of first hotel card -->
-                    
-                    </div>
-                    <!-- End of hotels container -->
                 </div>
 
                 <!-- Transport Service Configuration -->
@@ -6188,6 +6167,141 @@ function printItinerary() {
     setTimeout(() => {
         printWindow.print();
     }, 250);
+}
+
+// Room Distribution Summary Functions (stub implementations)
+function updateMasterFromSummary() {
+    // This function syncs the summary counts with master configuration
+    // Currently just a stub to prevent errors
+    console.log('Room distribution updated from summary');
+}
+
+function regenerateRoomTableFromSummary() {
+    // Get the distribution from the summary fields
+    const singleRooms = parseInt(document.getElementById('hotelSingleRooms')?.value || 0);
+    const doubleRooms = parseInt(document.getElementById('hotelDoubleRooms')?.value || 0);
+    const tripleRooms = parseInt(document.getElementById('hotelTripleRooms')?.value || 0);
+    const otherRooms = parseInt(document.getElementById('hotelOtherRooms')?.value || 0);
+    
+    const totalRooms = singleRooms + doubleRooms + tripleRooms + otherRooms;
+    
+    if (totalRooms === 0) {
+        alert('Please enter at least one room in the distribution.');
+        return;
+    }
+    
+    // Clear existing room table
+    const tableBody = document.getElementById('hotelRoomsTableBody');
+    if (!tableBody) return;
+    
+    tableBody.innerHTML = '';
+    
+    let roomIndex = 0;
+    
+    // Add single rooms
+    for (let i = 0; i < singleRooms; i++) {
+        addRoomRow(tableBody, roomIndex, 'Single Room');
+        roomIndex++;
+    }
+    
+    // Add double rooms
+    for (let i = 0; i < doubleRooms; i++) {
+        addRoomRow(tableBody, roomIndex, 'Double Room');
+        roomIndex++;
+    }
+    
+    // Add triple rooms
+    for (let i = 0; i < tripleRooms; i++) {
+        addRoomRow(tableBody, roomIndex, 'Triple Room');
+        roomIndex++;
+    }
+    
+    // Add other rooms
+    for (let i = 0; i < otherRooms; i++) {
+        addRoomRow(tableBody, roomIndex, 'Other');
+        roomIndex++;
+    }
+    
+    console.log(`Generated ${totalRooms} rooms in table`);
+}
+
+function addRoomRow(tableBody, index, roomType) {
+    const row = document.createElement('tr');
+    row.className = 'hotel-room-row';
+    
+    const adults = roomType === 'Single Room' ? 1 : roomType === 'Double Room' ? 2 : roomType === 'Triple Room' ? 3 : 1;
+    
+    row.innerHTML = `
+        <td><strong class="text-primary">Room ${index + 1}</strong></td>
+        <td>
+            <select name="rooms[${index}][room_category]" class="form-control" onchange="updateRoomDistribution()">
+                <option value="Single Room" ${roomType === 'Single Room' ? 'selected' : ''}>Single</option>
+                <option value="Double Room" ${roomType === 'Double Room' ? 'selected' : ''}>Double</option>
+                <option value="Triple Room" ${roomType === 'Triple Room' ? 'selected' : ''}>Triple</option>
+                <option value="Other" ${roomType === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${index}][hotel_room_option]" class="form-control" placeholder="Premium, Premier Sea View">
+        </td>
+        <td>
+            <select name="rooms[${index}][board_basis]" class="form-control">
+                <option value="Room Only">Room Only</option>
+                <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
+                <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                <option value="Full Board">Full Board (All Meals)</option>
+                <option value="All Inclusive">All Inclusive</option>
+                <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
+        </td>
+        <td>
+            <input type="date" name="rooms[${index}][check_in]" class="form-control" id="hotelDefaultCheckin">
+        </td>
+        <td>
+            <input type="date" name="rooms[${index}][check_out]" class="form-control" id="hotelDefaultCheckout">
+        </td>
+        <td>
+            <input type="number" name="rooms[${index}][adults]" class="form-control" value="${adults}" min="1" max="8">
+        </td>
+        <td>
+            <input type="number" name="rooms[${index}][children]" class="form-control" value="0" min="0" max="8">
+        </td>
+        <td>
+            <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelTableRoom(this)" ${index === 0 ? 'style="display: none;"' : ''}>
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tableBody.appendChild(row);
+}
+
+function updateRoomDistribution() {
+    // This would update the summary based on individual room changes
+    // Currently just a stub to prevent errors
+    console.log('Room distribution updated');
+}
+
+function removeHotelTableRoom(button) {
+    const row = button.closest('tr');
+    if (row) {
+        row.remove();
+        // Renumber remaining rooms
+        const tableBody = document.getElementById('hotelRoomsTableBody');
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            const roomLabel = row.querySelector('td:first-child strong');
+            if (roomLabel) {
+                roomLabel.textContent = `Room ${index + 1}`;
+            }
+        });
+    }
 }
 </script>
 
