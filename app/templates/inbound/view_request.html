@@ -2350,6 +2350,7 @@ body {
                                             <td>
                                                 {{ row.date.strftime('%d %b %Y') }}
                                                 <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
+                                                <input type="hidden" name="row_id[]" value="{{ row.id }}">
                                             </td>
                                             <td>
                                                 <input type="text" class="form-control" 
@@ -2433,9 +2434,12 @@ body {
                                                         </span>
                                                     {% endif %}
                                                     {% if row.flag_airport %}
-                                                        <span class="badge bg-secondary service-badge-removable" data-service="airport">
+                                                        <span class="badge bg-secondary service-badge-removable clickable-airport-badge" 
+                                                              data-service="airport" 
+                                                              onclick="openArrivalDepartureBatchModal()" 
+                                                              style="cursor: pointer;">
                                                             <i class="fas fa-plane"></i> Airport
-                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'airport')">
+                                                            <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'airport')">
                                                                 <i class="fas fa-times"></i>
                                                             </button>
                                                         </span>
@@ -3976,16 +3980,19 @@ window.saveItinerary = function(event) {
     // Collect itinerary data
     const rows = [];
     const dates = formData.getAll('date[]');
+    const rowIds = formData.getAll('row_id[]');
     const descriptions = formData.getAll('description[]');
     const restaurants = formData.getAll('restaurant[]');
     const cashExpenses = formData.getAll('cash_expense[]');
     const comments = formData.getAll('comment[]');
     
     console.log('Collected dates:', dates);
+    console.log('Collected row IDs:', rowIds);
     console.log('Number of rows:', dates.length);
     
     for (let i = 0; i < dates.length; i++) {
         const rowData = {
+            id: rowIds[i] ? parseInt(rowIds[i]) : null,
             date: dates[i],
             description: descriptions[i],
             restaurant: restaurants[i] || '',
@@ -5748,6 +5755,12 @@ function saveArrivalDepartureBatches() {
         console.error('Error:', error);
         showNotification('Error saving arrival/departure batches', 'error');
     });
+}
+
+// Function to open the arrival/departure batch modal
+function openArrivalDepartureBatchModal() {
+    const modal = new bootstrap.Modal(document.getElementById('arrivalDepartureModal'));
+    modal.show();
 }
 
 // Load existing batches when modal opens
