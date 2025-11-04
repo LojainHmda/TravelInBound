@@ -6438,6 +6438,114 @@ function updateHotelFieldNames(hotelCard, hotelIndex) {
         }
     });
 }
+
+// Room Distribution Modal Functions
+function adjustRoomCount(roomType, delta) {
+    const inputId = roomType + 'Rooms';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
+    const currentValue = parseInt(input.value) || 0;
+    const newValue = Math.max(0, Math.min(20, currentValue + delta));
+    
+    input.value = newValue;
+    updateTotalRoomsDisplay();
+}
+
+function updateTotalRoomsDisplay() {
+    const single = parseInt(document.getElementById('singleRooms')?.value || 0);
+    const double = parseInt(document.getElementById('doubleRooms')?.value || 0);
+    const triple = parseInt(document.getElementById('tripleRooms')?.value || 0);
+    const other = parseInt(document.getElementById('otherRooms')?.value || 0);
+    
+    const total = single + double + triple + other;
+    
+    const totalDisplay = document.getElementById('totalRoomsDisplay');
+    if (totalDisplay) {
+        totalDisplay.textContent = total;
+    }
+}
+
+function saveRoomDistribution() {
+    const single = parseInt(document.getElementById('singleRooms')?.value || 0);
+    const double = parseInt(document.getElementById('doubleRooms')?.value || 0);
+    const triple = parseInt(document.getElementById('tripleRooms')?.value || 0);
+    const other = parseInt(document.getElementById('otherRooms')?.value || 0);
+    
+    // Update master room distribution fields if they exist
+    const masterSingle = document.getElementById('hotelSingleRooms');
+    const masterDouble = document.getElementById('hotelDoubleRooms');
+    const masterTriple = document.getElementById('hotelTripleRooms');
+    const masterOther = document.getElementById('hotelOtherRooms');
+    
+    if (masterSingle) masterSingle.value = single;
+    if (masterDouble) masterDouble.value = double;
+    if (masterTriple) masterTriple.value = triple;
+    if (masterOther) masterOther.value = other;
+    
+    // Close the modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('roomDistributionModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    console.log(`Room distribution saved: ${single}S, ${double}D, ${triple}T, ${other}O`);
+}
+
+// Initialize Room Distribution Modal listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Add change listeners to room count inputs
+    const roomInputs = ['singleRooms', 'doubleRooms', 'tripleRooms', 'otherRooms'];
+    roomInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('input', updateTotalRoomsDisplay);
+        }
+    });
+    
+    // Initialize Hotel Autocomplete
+    initializeHotelAutocomplete();
+});
+
+// Hotel Autocomplete Initialization
+function initializeHotelAutocomplete() {
+    const hotelInputs = document.querySelectorAll('.hotel-autocomplete');
+    
+    hotelInputs.forEach(input => {
+        // Simple autocomplete using datalist (can be enhanced with Select2 if needed)
+        input.addEventListener('focus', function() {
+            console.log('Hotel autocomplete focused');
+        });
+        
+        input.addEventListener('input', function(e) {
+            const query = e.target.value;
+            if (query.length < 2) return;
+            
+            // Fetch hotel suggestions via API
+            fetch(`/api/hotels/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Create or update datalist
+                    let datalist = document.getElementById('hotelSuggestions');
+                    if (!datalist) {
+                        datalist = document.createElement('datalist');
+                        datalist.id = 'hotelSuggestions';
+                        document.body.appendChild(datalist);
+                    }
+                    
+                    datalist.innerHTML = '';
+                    data.forEach(hotel => {
+                        const option = document.createElement('option');
+                        option.value = hotel.name;
+                        datalist.appendChild(option);
+                    });
+                    
+                    input.setAttribute('list', 'hotelSuggestions');
+                })
+                .catch(err => console.log('Hotel autocomplete error:', err));
+        });
+    });
+}
 </script>
 
 {% endblock %}
