@@ -239,6 +239,14 @@ class ServiceConfigManager {
                     terminal: document.getElementById('airportTerminal')?.value || ''
                 };
                 
+            case 'arrival':
+                return {
+                    arrivalPoint: document.getElementById('itinerary_arrival_point')?.value || '',
+                    arrivalTime: document.getElementById('itinerary_arrival_time')?.value || '',
+                    departurePoint: document.getElementById('itinerary_departure_point')?.value || '',
+                    departureTime: document.getElementById('itinerary_departure_time')?.value || ''
+                };
+                
             default:
                 return null;
         }
@@ -264,7 +272,7 @@ class ServiceConfigManager {
     }
     
     addServiceBadgeToRow(row, serviceType, serviceData) {
-        const serviceFlagsCell = row.querySelector('td:nth-child(5) .d-flex');
+        const serviceFlagsCell = row.querySelector('td:nth-child(6) .d-flex');
         if (!serviceFlagsCell) return;
         
         // Remove existing badge of same type
@@ -280,11 +288,12 @@ class ServiceConfigManager {
         
         // Set badge color and icon based on service type
         const serviceConfig = {
-            hotel: { class: 'bg-danger', icon: 'fas fa-bed', text: 'Hotel' },
-            guide: { class: 'bg-success', icon: 'fas fa-user-tie', text: 'Guide' },
-            transport: { class: 'bg-info', icon: 'fas fa-car', text: 'Transport' },
-            meal: { class: 'bg-warning text-dark', icon: 'fas fa-utensils', text: 'Meal' },
-            airport: { class: 'bg-secondary', icon: 'fas fa-plane', text: 'Airport' }
+            hotel: { class: 'bg-danger', icon: 'fas fa-bed', text: 'Hotel', flag: 'flag_hotel' },
+            guide: { class: 'bg-success', icon: 'fas fa-user-tie', text: 'Guide', flag: 'flag_guide' },
+            transport: { class: 'bg-info', icon: 'fas fa-car', text: 'Transport', flag: 'flag_transport' },
+            meal: { class: 'bg-warning text-dark', icon: 'fas fa-utensils', text: 'Meal', flag: 'flag_meal' },
+            airport: { class: 'bg-secondary', icon: 'fas fa-plane', text: 'Airport', flag: 'flag_airport' },
+            arrival: { class: 'bg-primary', icon: 'fas fa-plane', text: 'Arrival/Departure', flag: 'flag_airport' }
         };
         
         const config = serviceConfig[serviceType] || serviceConfig.hotel;
@@ -292,14 +301,21 @@ class ServiceConfigManager {
         
         badge.innerHTML = `
             <i class="${config.icon}"></i> ${config.text}
-            <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); this.closest('.service-badge-removable').remove()">
+            <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeServiceFlag(this, '${config.flag}')">
                 <i class="fas fa-times"></i>
             </button>
         `;
         
         serviceFlagsCell.appendChild(badge);
         
-        console.log(`Added ${serviceType} badge to row`);
+        // Set the hidden flag input
+        const rowIndex = row.getAttribute('data-row-index');
+        const flagInput = row.querySelector(`input[name="${config.flag}[]"]`);
+        if (flagInput) {
+            flagInput.value = '1';
+        }
+        
+        console.log(`Added ${serviceType} badge to row and set ${config.flag} flag`);
     }
     
     // Hotel-specific functionality
