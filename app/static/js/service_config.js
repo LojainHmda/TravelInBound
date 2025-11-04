@@ -310,9 +310,13 @@ class ServiceConfigManager {
         
         // Set the hidden flag input
         const rowIndex = row.getAttribute('data-row-index');
-        const flagInput = row.querySelector(`input[name="${config.flag}[]"]`);
+        const flagInputName = `flag_${serviceType}_${rowIndex}`;
+        const flagInput = document.querySelector(`input[name="${flagInputName}"]`);
         if (flagInput) {
             flagInput.value = '1';
+            console.log(`Set flag input ${flagInputName} to 1`);
+        } else {
+            console.error(`Flag input not found: ${flagInputName}`);
         }
         
         console.log(`Added ${serviceType} badge to row and set ${config.flag} flag`);
