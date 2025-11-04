@@ -5563,12 +5563,17 @@ function addArrivalDepartureBatch(batchData = null) {
         <div class="mb-3 p-2" style="background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
             <h6 class="text-primary mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-arrival me-1"></i>Arrival</h6>
             <div class="row">
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
+                    <label class="form-label small">Arrival Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_date]" 
+                           value="${batchData?.arrival_date || ''}" required>
+                </div>
+                <div class="col-md-4 mb-2">
                     <label class="form-label small">Arrival Point</label>
                     <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_point]" 
                            value="${batchData?.arrival_point || ''}" placeholder="e.g., Queen Alia Airport">
                 </div>
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
                     <label class="form-label small">Arrival Time</label>
                     <input type="time" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_time]" 
                            value="${batchData?.arrival_time || ''}">
@@ -5596,12 +5601,17 @@ function addArrivalDepartureBatch(batchData = null) {
         <div class="mb-2 p-2" style="background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
             <h6 class="text-warning mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-departure me-1"></i>Departure</h6>
             <div class="row">
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
+                    <label class="form-label small">Departure Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control form-control-sm" name="batches[${batchIndex}][departure_date]" 
+                           value="${batchData?.departure_date || ''}" required>
+                </div>
+                <div class="col-md-4 mb-2">
                     <label class="form-label small">Departure Point</label>
                     <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][departure_point]" 
                            value="${batchData?.departure_point || ''}" placeholder="e.g., Queen Alia Airport">
                 </div>
-                <div class="col-md-6 mb-2">
+                <div class="col-md-4 mb-2">
                     <label class="form-label small">Departure Time</label>
                     <input type="time" class="form-control form-control-sm" name="batches[${batchIndex}][departure_time]" 
                            value="${batchData?.departure_time || ''}">
