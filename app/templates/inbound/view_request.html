@@ -2285,69 +2285,6 @@ body {
     </div>
     {% endif %}
 
-    <!-- Trip Itinerary (Simple View) -->
-    {% if request.itinerary_rows %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h5 class="card-title mb-0"><i class="fas fa-calendar-alt me-2"></i>Trip Itinerary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover" style="font-size: 0.95rem;">
-                            <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                <tr>
-                                    <th style="width: 10%; font-weight: 600; color: #475569;">Date</th>
-                                    <th style="width: 50%; font-weight: 600; color: #475569;">Daily Activities</th>
-                                    <th style="width: 15%; font-weight: 600; color: #475569;">Restaurant</th>
-                                    <th style="width: 12%; font-weight: 600; color: #475569;">Cash Expense</th>
-                                    <th style="width: 13%; font-weight: 600; color: #475569;">Comment</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in request.itinerary_rows %}
-                                <tr style="border-bottom: 1px solid #f1f5f9;">
-                                    <td style="font-weight: 600; color: #334155;">
-                                        {{ row.date.strftime('%-m/%-d') }}
-                                    </td>
-                                    <td style="color: #1e293b;">
-                                        {{ row.description }}
-                                        {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport %}
-                                        <div class="mt-1">
-                                            {% if row.flag_airport %}<span class="badge bg-secondary" style="font-size: 0.7rem;"><i class="fas fa-plane"></i> Airport</span>{% endif %}
-                                            {% if row.flag_hotel %}<span class="badge bg-danger" style="font-size: 0.7rem;"><i class="fas fa-bed"></i> Hotel</span>{% endif %}
-                                            {% if row.flag_transport %}<span class="badge bg-info" style="font-size: 0.7rem;"><i class="fas fa-car"></i> Transport</span>{% endif %}
-                                            {% if row.flag_meal %}<span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="fas fa-utensils"></i> Meal</span>{% endif %}
-                                            {% if row.flag_guide %}<span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-user-tie"></i> Guide</span>{% endif %}
-                                        </div>
-                                        {% endif %}
-                                    </td>
-                                    <td style="color: #64748b;">{{ row.restaurant or '-' }}</td>
-                                    <td style="color: #64748b;">
-                                        {% if row.cash_expense and row.cash_expense > 0 %}
-                                            {{ "%.2f"|format(row.cash_expense) }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td style="color: #64748b; font-size: 0.85rem;">{{ row.comment or '-' }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="mt-3 text-end">
-                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="printItinerary()">
-                            <i class="fas fa-print me-1"></i>Print Itinerary
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- Itinerary Details -->
     <div class="row mt-4">
         <div class="col-12">
@@ -2577,7 +2514,8 @@ body {
 
 
     <!-- Service Details Tabs -->
-    {% if request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
+    {% set itinerary_count = request.itinerary_rows | selectattr('flag_hotel') | list | length + request.itinerary_rows | selectattr('flag_transport') | list | length + request.itinerary_rows | selectattr('flag_meal') | list | length + request.itinerary_rows | selectattr('flag_guide') | list | length + request.itinerary_rows | selectattr('flag_airport') | list | length %}
+    {% if request.itinerary_rows or request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
     <div class="row mt-4">
         <div class="col-12">
             <div class="card">
@@ -2586,9 +2524,16 @@ body {
                 </div>
                 <div class="card-body">
                     <ul class="nav nav-tabs" id="servicesTabs" role="tablist">
+                        {% if request.itinerary_rows %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary" type="button" role="tab">
+                                <i class="fas fa-calendar-alt"></i> Trip Itinerary
+                            </button>
+                        </li>
+                        {% endif %}
                         {% if request.inbound_hotels %}
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab">
+                            <button class="nav-link {% if not request.itinerary_rows %}active{% endif %}" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab">
                                 <i class="fas fa-bed"></i> Hotels ({{ request.inbound_hotels|length }})
                             </button>
                         </li>
@@ -2617,8 +2562,64 @@ body {
                     </ul>
 
                     <div class="tab-content mt-3" id="servicesTabContent">
+                        {% if request.itinerary_rows %}
+                        <div class="tab-pane fade show active" id="itinerary" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover" style="font-size: 0.95rem;">
+                                    <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                        <tr>
+                                            <th style="width: 10%; font-weight: 600; color: #475569;">Date</th>
+                                            <th style="width: 50%; font-weight: 600; color: #475569;">Daily Activities</th>
+                                            <th style="width: 15%; font-weight: 600; color: #475569;">Restaurant</th>
+                                            <th style="width: 12%; font-weight: 600; color: #475569;">Cash Expense</th>
+                                            <th style="width: 13%; font-weight: 600; color: #475569;">Comment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for row in request.itinerary_rows %}
+                                        {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport %}
+                                        <tr style="border-bottom: 1px solid #f1f5f9; cursor: pointer;" 
+                                            onclick="scrollToEditMode({{ loop.index0 }})"
+                                            onmouseover="this.style.backgroundColor='#f8fafc'" 
+                                            onmouseout="this.style.backgroundColor=''">
+                                            <td style="font-weight: 600; color: #334155;">
+                                                {{ row.date.strftime('%-m/%-d') }}
+                                            </td>
+                                            <td style="color: #1e293b;">
+                                                {{ row.description }}
+                                                <div class="mt-1">
+                                                    {% if row.flag_airport %}<span class="badge bg-secondary" style="font-size: 0.7rem;"><i class="fas fa-plane"></i> Airport</span>{% endif %}
+                                                    {% if row.flag_hotel %}<span class="badge bg-danger" style="font-size: 0.7rem;"><i class="fas fa-bed"></i> Hotel</span>{% endif %}
+                                                    {% if row.flag_transport %}<span class="badge bg-info" style="font-size: 0.7rem;"><i class="fas fa-car"></i> Transport</span>{% endif %}
+                                                    {% if row.flag_meal %}<span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="fas fa-utensils"></i> Meal</span>{% endif %}
+                                                    {% if row.flag_guide %}<span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-user-tie"></i> Guide</span>{% endif %}
+                                                </div>
+                                            </td>
+                                            <td style="color: #64748b;">{{ row.restaurant or '-' }}</td>
+                                            <td style="color: #64748b;">
+                                                {% if row.cash_expense and row.cash_expense > 0 %}
+                                                    {{ "%.2f"|format(row.cash_expense) }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td style="color: #64748b; font-size: 0.85rem;">{{ row.comment or '-' }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-3 text-end">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="printItinerary()">
+                                    <i class="fas fa-print me-1"></i>Print Itinerary
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                         {% if request.inbound_hotels %}
-                        <div class="tab-pane fade show active" id="hotels" role="tabpanel">
+                        <div class="tab-pane fade {% if not request.itinerary_rows %}show active{% endif %}" id="hotels" role="tabpanel">
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead>
@@ -5879,6 +5880,25 @@ document.getElementById('arrivalDepartureModal')?.addEventListener('shown.bs.mod
             });
     }
 });
+
+// Scroll to edit mode when itinerary row is clicked
+function scrollToEditMode(rowIndex) {
+    // Scroll to the itinerary edit section
+    const editSection = document.getElementById('itineraryEditMode');
+    if (editSection) {
+        editSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Highlight the corresponding row in the edit table
+        const targetRow = document.querySelector(`tr[data-row-index="${rowIndex}"]`);
+        if (targetRow) {
+            // Flash the row to indicate which one it is
+            targetRow.style.backgroundColor = '#fef3c7';
+            setTimeout(() => {
+                targetRow.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+}
 
 // Print Trip Itinerary
 function printItinerary() {
