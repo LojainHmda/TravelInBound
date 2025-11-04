@@ -2330,6 +2330,11 @@ body {
                                     <i class="fas fa-utensils mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Meal</span>
                                 </button>
+                                <button type="button" onclick="openTripItineraryModal()"
+                                        style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); min-width: 100px; font-weight: 600;">
+                                    <i class="fas fa-calendar-alt mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 600;">Trip Itinerary</span>
+                                </button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -2968,6 +2973,71 @@ body {
                         <button type="button" class="btn btn-primary btn-sm" onclick="saveRoomDistribution()">Save</button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trip Itinerary Modal -->
+<div class="modal fade" id="tripItineraryModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-calendar-alt me-2"></i> Trip Itinerary
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" style="font-size: 0.95rem;">
+                        <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                            <tr>
+                                <th style="width: 10%; font-weight: 600; color: #475569;">Date</th>
+                                <th style="width: 50%; font-weight: 600; color: #475569;">Daily Activities</th>
+                                <th style="width: 15%; font-weight: 600; color: #475569;">Restaurant</th>
+                                <th style="width: 12%; font-weight: 600; color: #475569;">Cash Expense</th>
+                                <th style="width: 13%; font-weight: 600; color: #475569;">Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in request.itinerary_rows %}
+                            {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport %}
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="font-weight: 600; color: #334155;">
+                                    {{ row.date.strftime('%-m/%-d') }}
+                                </td>
+                                <td style="color: #1e293b;">
+                                    {{ row.description }}
+                                    <div class="mt-1">
+                                        {% if row.flag_airport %}<span class="badge bg-secondary" style="font-size: 0.7rem;"><i class="fas fa-plane"></i> Airport</span>{% endif %}
+                                        {% if row.flag_hotel %}<span class="badge bg-danger" style="font-size: 0.7rem;"><i class="fas fa-bed"></i> Hotel</span>{% endif %}
+                                        {% if row.flag_transport %}<span class="badge bg-info" style="font-size: 0.7rem;"><i class="fas fa-car"></i> Transport</span>{% endif %}
+                                        {% if row.flag_meal %}<span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="fas fa-utensils"></i> Meal</span>{% endif %}
+                                        {% if row.flag_guide %}<span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-user-tie"></i> Guide</span>{% endif %}
+                                    </div>
+                                </td>
+                                <td style="color: #64748b;">{{ row.restaurant or '-' }}</td>
+                                <td style="color: #64748b;">
+                                    {% if row.cash_expense and row.cash_expense > 0 %}
+                                        {{ "%.2f"|format(row.cash_expense) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td style="color: #64748b; font-size: 0.85rem;">{{ row.comment or '-' }}</td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" onclick="printItinerary()">
+                    <i class="fas fa-print me-1"></i>Print
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -5863,6 +5933,12 @@ document.getElementById('arrivalDepartureModal')?.addEventListener('shown.bs.mod
             });
     }
 });
+
+// Open Trip Itinerary Modal
+function openTripItineraryModal() {
+    const modal = new bootstrap.Modal(document.getElementById('tripItineraryModal'));
+    modal.show();
+}
 
 // Scroll to Trip Itinerary tab
 function scrollToTripItinerary() {
