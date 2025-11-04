@@ -5696,26 +5696,26 @@ function addArrivalDepartureBatch(batchData = null) {
             <h6 class="text-primary mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-arrival me-1"></i>Arrival</h6>
             <div class="row">
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Arrival Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_date]" 
+                    <label class="form-label">Arrival Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="batches[${batchIndex}][arrival_date]" 
                            value="${batchData?.arrival_date || ''}" required>
                 </div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Arrival Point</label>
-                    <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_point]" 
+                    <label class="form-label">Arrival Point</label>
+                    <input type="text" class="form-control" name="batches[${batchIndex}][arrival_point]" 
                            value="${batchData?.arrival_point || ''}" placeholder="Select or type location"
                            list="arrival-points-list">
                 </div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Arrival Time</label>
-                    <input type="time" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_time]" 
+                    <label class="form-label">Arrival Time</label>
+                    <input type="time" class="form-control" name="batches[${batchIndex}][arrival_time]" 
                            value="${batchData?.arrival_time || ''}">
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-2">
-                    <label class="form-label small">Visa Type</label>
-                    <select class="form-select form-select-sm" name="batches[${batchIndex}][visa_type]">
+                    <label class="form-label">Visa Type</label>
+                    <select class="form-select" name="batches[${batchIndex}][visa_type]">
                         <option value="NOT_INCLUDED" ${!batchData || batchData.visa_type === 'NOT_INCLUDED' ? 'selected' : ''}>Not Included</option>
                         <option value="FREE" ${batchData?.visa_type === 'FREE' ? 'selected' : ''}>Free</option>
                         <option value="RESTRICTED" ${batchData?.visa_type === 'RESTRICTED' ? 'selected' : ''}>Restricted</option>
@@ -5723,8 +5723,8 @@ function addArrivalDepartureBatch(batchData = null) {
                     </select>
                 </div>
                 <div class="col-md-6 mb-2">
-                    <label class="form-label small">Driver Name</label>
-                    <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][arrival_driver_name]" 
+                    <label class="form-label">Driver Name</label>
+                    <input type="text" class="form-control" name="batches[${batchIndex}][arrival_driver_name]" 
                            value="${batchData?.arrival_driver_name || ''}" placeholder="Driver name">
                 </div>
             </div>
@@ -5735,33 +5735,33 @@ function addArrivalDepartureBatch(batchData = null) {
             <h6 class="text-warning mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-departure me-1"></i>Departure</h6>
             <div class="row">
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Departure Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control form-control-sm" name="batches[${batchIndex}][departure_date]" 
+                    <label class="form-label">Departure Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="batches[${batchIndex}][departure_date]" 
                            value="${batchData?.departure_date || ''}" required>
                 </div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Departure Point</label>
-                    <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][departure_point]" 
+                    <label class="form-label">Departure Point</label>
+                    <input type="text" class="form-control" name="batches[${batchIndex}][departure_point]" 
                            value="${batchData?.departure_point || ''}" placeholder="Select or type location"
                            list="departure-points-list">
                 </div>
                 <div class="col-md-4 mb-2">
-                    <label class="form-label small">Departure Time</label>
-                    <input type="time" class="form-control form-control-sm" name="batches[${batchIndex}][departure_time]" 
+                    <label class="form-label">Departure Time</label>
+                    <input type="time" class="form-control" name="batches[${batchIndex}][departure_time]" 
                            value="${batchData?.departure_time || ''}">
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-2">
-                    <label class="form-label small">Meeting & Assistance</label>
-                    <select class="form-select form-select-sm" name="batches[${batchIndex}][meeting_assistance]">
+                    <label class="form-label">Meeting & Assistance</label>
+                    <select class="form-select" name="batches[${batchIndex}][meeting_assistance]">
                         <option value="0" ${!batchData || !batchData.meeting_assistance ? 'selected' : ''}>No</option>
                         <option value="1" ${batchData?.meeting_assistance ? 'selected' : ''}>Yes</option>
                     </select>
                 </div>
                 <div class="col-md-6 mb-2">
-                    <label class="form-label small">Departure Tax</label>
-                    <select class="form-select form-select-sm" name="batches[${batchIndex}][departure_tax]">
+                    <label class="form-label">Departure Tax</label>
+                    <select class="form-select" name="batches[${batchIndex}][departure_tax]">
                         <option value="NOT_INCLUDED" ${!batchData || batchData.departure_tax === 'NOT_INCLUDED' ? 'selected' : ''}>Not Included</option>
                         <option value="INCLUDED" ${batchData?.departure_tax === 'INCLUDED' ? 'selected' : ''}>Included</option>
                     </select>
@@ -5772,13 +5772,13 @@ function addArrivalDepartureBatch(batchData = null) {
         <!-- Optional PAX Count -->
         <div class="row">
             <div class="col-md-6 mb-2">
-                <label class="form-label small">PAX Count (Optional)</label>
-                <input type="number" class="form-control form-control-sm" name="batches[${batchIndex}][pax_count]" 
+                <label class="form-label">PAX Count (Optional)</label>
+                <input type="number" class="form-control" name="batches[${batchIndex}][pax_count]" 
                        value="${batchData?.pax_count || ''}" placeholder="Number of passengers" min="0">
             </div>
             <div class="col-md-6 mb-2">
-                <label class="form-label small">Batch Name (Optional)</label>
-                <input type="text" class="form-control form-control-sm" name="batches[${batchIndex}][batch_name]" 
+                <label class="form-label">Batch Name (Optional)</label>
+                <input type="text" class="form-control" name="batches[${batchIndex}][batch_name]" 
                        value="${batchData?.batch_name || ''}" placeholder="e.g., Group A, Family 1">
             </div>
         </div>
