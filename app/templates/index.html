@@ -87,7 +87,7 @@ body {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
-/* Primary Tile - New Itinerary */
+/* Primary Tile - New Inbound Request */
 .hub-tile.primary {
     background: linear-gradient(135deg, #e8d5ff 0%, #d5b3ff 100%);
     border: 2px solid #a855f7;
@@ -221,12 +221,12 @@ body {
     
     <!-- Hub Grid -->
     <div class="hub-grid">
-        <!-- New Itinerary - Primary -->
+        <!-- New Inbound Request - Primary -->
         <a href="{{ url_for('inbound.new_request') }}" class="hub-tile primary">
             <div class="tile-icon">
-                <i class="fas fa-route"></i>
+                <i class="fas fa-plane-arrival"></i>
             </div>
-            <p class="tile-label">New Itinerary</p>
+            <p class="tile-label">New Inbound Request</p>
         </a>
         
         <!-- View Bookings -->
