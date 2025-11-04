@@ -2998,50 +2998,15 @@ body {
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <label class="form-label fw-bold">Date</label>
                                 <input type="date" id="newItemDate" class="form-control" 
                                        value="{{ request.arrival_date.strftime('%Y-%m-%d') if request.arrival_date else '' }}">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-10">
                                 <label class="form-label fw-bold">Description</label>
                                 <input type="text" id="newItemDescription" class="form-control" 
-                                       placeholder="Enter daily activities">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-bold">Service Flags</label>
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="newItemHotel">
-                                        <label class="form-check-label" for="newItemHotel">
-                                            <i class="fas fa-bed text-danger"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="newItemTransport">
-                                        <label class="form-check-label" for="newItemTransport">
-                                            <i class="fas fa-car text-info"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="newItemMeal">
-                                        <label class="form-check-label" for="newItemMeal">
-                                            <i class="fas fa-utensils text-warning"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="newItemGuide">
-                                        <label class="form-check-label" for="newItemGuide">
-                                            <i class="fas fa-user-tie text-success"></i>
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="newItemAirport">
-                                        <label class="form-check-label" for="newItemAirport">
-                                            <i class="fas fa-plane text-secondary"></i>
-                                        </label>
-                                    </div>
-                                </div>
+                                       placeholder="Enter daily tour activities">
                             </div>
                         </div>
                         <div class="row g-3 mt-2">
@@ -3073,11 +3038,10 @@ body {
                     <table class="table table-hover" style="font-size: 0.9rem;">
                         <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
                             <tr>
-                                <th style="width: 8%; font-weight: 600; color: #475569;">Date</th>
-                                <th style="width: 35%; font-weight: 600; color: #475569;">Description</th>
-                                <th style="width: 12%; font-weight: 600; color: #475569;">Services</th>
-                                <th style="width: 12%; font-weight: 600; color: #475569;">Restaurant</th>
-                                <th style="width: 10%; font-weight: 600; color: #475569;">Cash Exp.</th>
+                                <th style="width: 10%; font-weight: 600; color: #475569;">Date</th>
+                                <th style="width: 40%; font-weight: 600; color: #475569;">Description</th>
+                                <th style="width: 15%; font-weight: 600; color: #475569;">Restaurant</th>
+                                <th style="width: 12%; font-weight: 600; color: #475569;">Cash Exp.</th>
                                 <th style="width: 15%; font-weight: 600; color: #475569;">Comment</th>
                                 <th style="width: 8%; font-weight: 600; color: #475569;">Actions</th>
                             </tr>
@@ -3089,15 +3053,6 @@ body {
                                     {{ row.date.strftime('%-m/%-d') }}
                                 </td>
                                 <td style="color: #1e293b;">{{ row.description }}</td>
-                                <td>
-                                    <div class="d-flex gap-1 flex-wrap">
-                                        {% if row.flag_airport %}<i class="fas fa-plane text-secondary"></i>{% endif %}
-                                        {% if row.flag_hotel %}<i class="fas fa-bed text-danger"></i>{% endif %}
-                                        {% if row.flag_transport %}<i class="fas fa-car text-info"></i>{% endif %}
-                                        {% if row.flag_meal %}<i class="fas fa-utensils text-warning"></i>{% endif %}
-                                        {% if row.flag_guide %}<i class="fas fa-user-tie text-success"></i>{% endif %}
-                                    </div>
-                                </td>
                                 <td style="color: #64748b; font-size: 0.85rem;">{{ row.restaurant or '-' }}</td>
                                 <td style="color: #64748b;">
                                     {% if row.cash_expense and row.cash_expense > 0 %}
@@ -6035,12 +5990,6 @@ function addItineraryItem() {
     const cashExpense = document.getElementById('newItemCashExpense').value;
     const comment = document.getElementById('newItemComment').value;
     
-    const flagHotel = document.getElementById('newItemHotel').checked;
-    const flagTransport = document.getElementById('newItemTransport').checked;
-    const flagMeal = document.getElementById('newItemMeal').checked;
-    const flagGuide = document.getElementById('newItemGuide').checked;
-    const flagAirport = document.getElementById('newItemAirport').checked;
-    
     if (!date || !description) {
         showNotification('Please fill in Date and Description', 'error');
         return;
@@ -6051,12 +6000,7 @@ function addItineraryItem() {
         description: description,
         restaurant: restaurant,
         cash_expense: parseFloat(cashExpense) || 0,
-        comment: comment,
-        flag_hotel: flagHotel,
-        flag_transport: flagTransport,
-        flag_meal: flagMeal,
-        flag_guide: flagGuide,
-        flag_airport: flagAirport
+        comment: comment
     };
     
     fetch('/inbound/api/{{ request.id }}/add-itinerary-row', {

@@ -3469,26 +3469,18 @@ def api_add_itinerary_row(request_id):
         
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
         
-        # Create new itinerary row
+        # Create new itinerary row (for tours and restaurants only)
         new_row = ItineraryRow(
             request_id=request_id,
             date=date_obj,
             description=data.get('description', ''),
             restaurant=data.get('restaurant', ''),
             cash_expense=float(data.get('cash_expense', 0)),
-            comment=data.get('comment', ''),
-            flag_hotel=bool(data.get('flag_hotel', False)),
-            flag_transport=bool(data.get('flag_transport', False)),
-            flag_meal=bool(data.get('flag_meal', False)),
-            flag_guide=bool(data.get('flag_guide', False)),
-            flag_airport=bool(data.get('flag_airport', False))
+            comment=data.get('comment', '')
         )
         
         db.session.add(new_row)
         db.session.commit()
-        
-        # Auto-generate linked services if flags are set
-        request_obj._auto_generate_services()
         
         return jsonify({'success': True, 'message': 'Itinerary item added successfully'})
     
@@ -3511,9 +3503,6 @@ def api_delete_itinerary_row(request_id, row_id):
         # Delete the row
         db.session.delete(row)
         db.session.commit()
-        
-        # Regenerate services to remove any auto-generated ones
-        request_obj._auto_generate_services()
         
         return jsonify({'success': True, 'message': 'Itinerary item deleted successfully'})
     
