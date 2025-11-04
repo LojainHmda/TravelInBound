@@ -189,11 +189,110 @@ class ServiceConfigManager {
             this.serviceConfigModal.hide();
         }
         
-        // Show success message
+        // Show success message (before auto-save so it doesn't block)
         const appliedCount = ['hotel', 'guide'].includes(this.currentServiceType) ? 
             document.querySelectorAll('.itinerary-row').length : this.selectedRows.length;
         
-        alert(`${this.currentServiceType.charAt(0).toUpperCase() + this.currentServiceType.slice(1)} service added to ${appliedCount} day(s) successfully!`);
+        console.log(`${this.currentServiceType.charAt(0).toUpperCase() + this.currentServiceType.slice(1)} service added to ${appliedCount} day(s)`);
+        
+        // Auto-save the itinerary after applying service
+        this.autoSaveItinerary();
+    }
+    
+    autoSaveItinerary() {
+        console.log('Auto-saving itinerary after service application');
+        
+        // Get current itinerary rows
+        const rows = this.getCurrentItineraryRows();
+        const requestId = this.getRequestId();
+        
+        if (!requestId) {
+            console.error('Request ID not found, cannot save');
+            return;
+        }
+        
+        // Save to database
+        fetch(`/inbound/api/${requestId}/itinerary`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+            },
+            body: JSON.stringify({ rows: rows })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Itinerary auto-saved successfully:', data);
+            // Reload page to show updated services
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        })
+        .catch(error => {
+            console.error('Error auto-saving itinerary:', error);
+        });
+    }
+    
+    getCurrentItineraryRows() {
+        const rows = [];
+        const form = document.getElementById('itineraryForm');
+        if (!form) {
+            console.error('Itinerary form not found');
+            return rows;
+        }
+        
+        const formData = new FormData(form);
+        const dates = formData.getAll('date[]');
+        const descriptions = formData.getAll('description[]');
+        const restaurants = formData.getAll('restaurant[]');
+        const cashExpenses = formData.getAll('cash_expense[]');
+        const comments = formData.getAll('comment[]');
+        
+        for (let i = 0; i < dates.length; i++) {
+            const rowData = {
+                date: dates[i],
+                description: descriptions[i],
+                restaurant: restaurants[i] || '',
+                cash_expense: parseFloat(cashExpenses[i]) || 0,
+                comment: comments[i] || '',
+                flag_hotel: formData.get(`flag_hotel_${i}`) === '1',
+                flag_guide: formData.get(`flag_guide_${i}`) === '1',
+                flag_transport: formData.get(`flag_transport_${i}`) === '1',
+                flag_meal: formData.get(`flag_meal_${i}`) === '1',
+                flag_airport: formData.get(`flag_airport_${i}`) === '1',
+                hotel_single_rooms: parseInt(document.getElementById(`single_${i}_input`)?.value) || 0,
+                hotel_double_rooms: parseInt(document.getElementById(`double_${i}_input`)?.value) || 0,
+                hotel_triple_rooms: parseInt(document.getElementById(`triple_${i}_input`)?.value) || 0,
+                hotel_other_rooms: parseInt(document.getElementById(`other_${i}_input`)?.value) || 0
+            };
+            rows.push(rowData);
+        }
+        
+        console.log('Collected rows:', rows);
+        return rows;
+    }
+    
+    getRequestId() {
+        // Try to extract request ID from URL
+        const urlParts = window.location.pathname.split('/');
+        const requestIndex = urlParts.indexOf('request');
+        if (requestIndex >= 0 && urlParts[requestIndex + 1]) {
+            return urlParts[requestIndex + 1];
+        }
+        
+        // Try to get from a data attribute
+        const form = document.getElementById('itineraryForm');
+        if (form && form.dataset.requestId) {
+            return form.dataset.requestId;
+        }
+        
+        console.error('Could not determine request ID');
+        return null;
     }
     
     collectServiceData() {
