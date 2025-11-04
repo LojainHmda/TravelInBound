@@ -159,9 +159,9 @@ class ServiceConfigManager {
             this.serviceConfigModal.hide();
         }
         
-        // Auto-save and reload
+        // Auto-save ONLY (no reload) to preserve multi-hotel DOM state
         console.log(`${this.currentServiceType} service applied to ${targetDates.length} day(s)`);
-        this.autoSave();
+        this.autoSaveOnly();
     }
     
     getAllItineraryDates() {
@@ -258,6 +258,28 @@ class ServiceConfigManager {
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
+        }
+    }
+    
+    autoSaveOnly() {
+        console.log('Auto-saving itinerary without reload...');
+        
+        // Get the form and trigger submission
+        const form = document.getElementById('itineraryForm');
+        if (form) {
+            // Create a synthetic submit event
+            const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            });
+            
+            // Dispatch the event which will trigger saveItinerary(event)
+            form.dispatchEvent(submitEvent);
+            
+            // Show success message without reload
+            console.log('Itinerary saved! Modal will stay open to preserve multi-hotel state.');
+        } else {
+            console.log('Itinerary form not found, skipping auto-save');
         }
     }
 }
