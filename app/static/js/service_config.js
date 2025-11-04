@@ -31,12 +31,14 @@ class ServiceConfigManager {
         
         // Event delegation for all clicks
         document.addEventListener('click', (e) => {
-            // Service button clicks
-            if (e.target.closest('[data-service]')) {
-                const button = e.target.closest('[data-service]');
+            // Service button clicks - check for service-icon-button class specifically
+            if (e.target.closest('.service-icon-button') || e.target.closest('[data-service]')) {
+                const button = e.target.closest('.service-icon-button') || e.target.closest('[data-service]');
                 const serviceType = button.getAttribute('data-service');
+                console.log('SERVICE BUTTON CLICKED:', serviceType);
                 this.openServiceModal(serviceType);
                 e.preventDefault();
+                e.stopPropagation();
                 return;
             }
             
@@ -239,12 +241,20 @@ class ServiceConfigManager {
     autoSave() {
         console.log('Auto-saving itinerary...');
         
-        // Trigger the existing save function
-        if (typeof saveItinerary === 'function') {
-            saveItinerary();
+        // Get the form and trigger submission
+        const form = document.getElementById('itineraryForm');
+        if (form) {
+            // Create a synthetic submit event
+            const submitEvent = new Event('submit', {
+                bubbles: true,
+                cancelable: true
+            });
+            
+            // Dispatch the event which will trigger saveItinerary(event)
+            form.dispatchEvent(submitEvent);
         } else {
-            console.error('saveItinerary function not found');
-            // Reload page after a short delay to show changes
+            console.error('Itinerary form not found');
+            // Reload page as fallback
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
@@ -275,8 +285,10 @@ function removeServiceFromRow(button, serviceType) {
     }
     
     // Auto-save
-    if (typeof saveItinerary === 'function') {
-        saveItinerary();
+    const form = document.getElementById('itineraryForm');
+    if (form) {
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        form.dispatchEvent(submitEvent);
     }
 }
 
