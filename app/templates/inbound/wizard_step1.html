@@ -115,7 +115,35 @@
     color: #6b7280;
 }
 
-@media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } .wizard-progress { max-width: 500px; } .step-label { font-size: 0.65rem; max-width: 60px; } }
+/* Two-column layout for arrival and departure */
+.arrival-departure-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.arrival-column, .departure-column {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+}
+
+.arrival-column {
+    border-top: 4px solid #10b981;
+}
+
+.departure-column {
+    border-top: 4px solid #ef4444;
+}
+
+@media (max-width: 768px) { 
+    .form-row { grid-template-columns: 1fr; } 
+    .wizard-progress { max-width: 500px; } 
+    .step-label { font-size: 0.65rem; max-width: 60px; }
+    .arrival-departure-container { grid-template-columns: 1fr; }
+}
 </style>
 
 <div class="wizard-container">
@@ -242,129 +270,130 @@
                 </div>
             </div>
 
-            <!-- Arrival Section -->
-            <div class="section-header" style="margin-top: 2rem;">
-                <i class="fas fa-plane-arrival"></i> Arrival Information
-            </div>
+            <!-- Arrival and Departure Sections - Side by Side -->
+            <div class="arrival-departure-container">
+                <!-- Arrival Column -->
+                <div class="arrival-column">
+                    <div class="section-header" style="margin-top: 0; border-color: #10b981;">
+                        <i class="fas fa-plane-arrival"></i> Arrival Information
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">
-                        Arrival Point (Border/Airport)<span class="required">*</span>
-                    </label>
-                    <select name="arrival_point" class="form-select" required>
-                        <option value="">Select arrival point</option>
-                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
-                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">
-                        Arrival Date<span class="required">*</span>
-                    </label>
-                    <input type="date" name="arrival_date" class="form-control" 
-                           value="{{ wizard_data.arrival_date or '' }}" required id="arrivalDate">
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Arrival Point (Border/Airport)<span class="required">*</span>
+                        </label>
+                        <select name="arrival_point" class="form-select" required>
+                            <option value="">Select arrival point</option>
+                            <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
+                            <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                            <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Arrival Time</label>
-                    <input type="time" name="arrival_time" class="form-control" 
-                           value="{{ wizard_data.arrival_time or '' }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Arrival Flight/Bus Number</label>
-                    <input type="text" name="arrival_reference" class="form-control" 
-                           placeholder="e.g., RJ123, Bus 456" 
-                           value="{{ wizard_data.arrival_reference or '' }}">
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            Arrival Date<span class="required">*</span>
+                        </label>
+                        <input type="date" name="arrival_date" class="form-control" 
+                               value="{{ wizard_data.arrival_date or '' }}" required id="arrivalDate">
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Arrival Driver Name</label>
-                    <input type="text" name="arrival_driver" class="form-control" 
-                           placeholder="Driver name for arrival transfer" 
-                           value="{{ wizard_data.arrival_driver or '' }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Arrival Vehicle Type</label>
-                    <select name="arrival_vehicle" class="form-select">
-                        <option value="">Select vehicle</option>
-                        <option value="Bus">Bus</option>
-                        <option value="Mini Bus">Mini Bus</option>
-                        <option value="Van">Van</option>
-                        <option value="Car">Car</option>
-                        <option value="SUV">SUV</option>
-                        <option value="Coaster">Coaster</option>
-                    </select>
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="time" name="arrival_time" class="form-control" 
+                               value="{{ wizard_data.arrival_time or '' }}">
+                    </div>
 
-            <!-- Departure Section -->
-            <div class="section-header" style="margin-top: 2rem;">
-                <i class="fas fa-plane-departure"></i> Departure Information
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">Arrival Flight/Bus Number</label>
+                        <input type="text" name="arrival_reference" class="form-control" 
+                               placeholder="e.g., RJ123, Bus 456" 
+                               value="{{ wizard_data.arrival_reference or '' }}">
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">
-                        Departure Point (Border/Airport)<span class="required">*</span>
-                    </label>
-                    <select name="departure_point" class="form-select" required>
-                        <option value="">Select departure point</option>
-                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
-                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">
-                        Departure Date<span class="required">*</span>
-                    </label>
-                    <input type="date" name="departure_date" class="form-control" 
-                           value="{{ wizard_data.departure_date or '' }}" required id="departureDate">
-                </div>
-            </div>
+                    <div class="form-group">
+                        <label class="form-label">Arrival Driver Name</label>
+                        <input type="text" name="arrival_driver" class="form-control" 
+                               placeholder="Driver name for arrival transfer" 
+                               value="{{ wizard_data.arrival_driver or '' }}">
+                    </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Departure Time</label>
-                    <input type="time" name="departure_time" class="form-control" 
-                           value="{{ wizard_data.departure_time or '' }}">
+                    <div class="form-group">
+                        <label class="form-label">Arrival Vehicle Type</label>
+                        <select name="arrival_vehicle" class="form-select">
+                            <option value="">Select vehicle</option>
+                            <option value="Bus">Bus</option>
+                            <option value="Mini Bus">Mini Bus</option>
+                            <option value="Van">Van</option>
+                            <option value="Car">Car</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Coaster">Coaster</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Departure Flight/Bus Number</label>
-                    <input type="text" name="departure_reference" class="form-control" 
-                           placeholder="e.g., RJ456, Bus 789" 
-                           value="{{ wizard_data.departure_reference or '' }}">
-                </div>
-            </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Departure Driver Name</label>
-                    <input type="text" name="departure_driver" class="form-control" 
-                           placeholder="Driver name for departure transfer" 
-                           value="{{ wizard_data.departure_driver or '' }}">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Departure Vehicle Type</label>
-                    <select name="departure_vehicle" class="form-select">
-                        <option value="">Select vehicle</option>
-                        <option value="Bus">Bus</option>
-                        <option value="Mini Bus">Mini Bus</option>
-                        <option value="Van">Van</option>
-                        <option value="Car">Car</option>
-                        <option value="SUV">SUV</option>
-                        <option value="Coaster">Coaster</option>
-                    </select>
+                <!-- Departure Column -->
+                <div class="departure-column">
+                    <div class="section-header" style="margin-top: 0; border-color: #ef4444;">
+                        <i class="fas fa-plane-departure"></i> Departure Information
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Departure Point (Border/Airport)<span class="required">*</span>
+                        </label>
+                        <select name="departure_point" class="form-select" required>
+                            <option value="">Select departure point</option>
+                            <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
+                            <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                            <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Departure Date<span class="required">*</span>
+                        </label>
+                        <input type="date" name="departure_date" class="form-control" 
+                               value="{{ wizard_data.departure_date or '' }}" required id="departureDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Departure Time</label>
+                        <input type="time" name="departure_time" class="form-control" 
+                               value="{{ wizard_data.departure_time or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Departure Flight/Bus Number</label>
+                        <input type="text" name="departure_reference" class="form-control" 
+                               placeholder="e.g., RJ456, Bus 789" 
+                               value="{{ wizard_data.departure_reference or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Departure Driver Name</label>
+                        <input type="text" name="departure_driver" class="form-control" 
+                               placeholder="Driver name for departure transfer" 
+                               value="{{ wizard_data.departure_driver or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Departure Vehicle Type</label>
+                        <select name="departure_vehicle" class="form-select">
+                            <option value="">Select vehicle</option>
+                            <option value="Bus">Bus</option>
+                            <option value="Mini Bus">Mini Bus</option>
+                            <option value="Van">Van</option>
+                            <option value="Car">Car</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Coaster">Coaster</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
