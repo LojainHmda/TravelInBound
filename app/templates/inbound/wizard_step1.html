@@ -276,6 +276,23 @@
         <form method="POST" id="step1Form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
+            <!-- Datalist for arrival/departure point autocomplete -->
+            <datalist id="pointsList">
+                <option value="Queen Alia International Airport (Amman)">
+                <option value="King Hussein Bridge (Allenby)">
+                <option value="Sheikh Hussein Bridge">
+                <option value="Wadi Araba Crossing (Aqaba)">
+                <option value="Aqaba Airport">
+                <option value="Amman - Hotel">
+                <option value="Petra">
+                <option value="Wadi Rum">
+                <option value="Aqaba">
+                <option value="Dead Sea">
+                <option value="Jerash">
+                <option value="Madaba">
+                <option value="Mount Nebo">
+            </datalist>
+
             <!-- Contact & Group Information - FIRST SECTION -->
             <div class="section-header">
                 <i class="fas fa-users"></i> Contact & Group Information
@@ -702,14 +719,8 @@ $(document).ready(function() {
                 
                 <div class="form-group">
                     <label class="form-label">Arrival Point (Border/Airport)<span class="required">*</span></label>
-                    <select name="arrivals[${index}][point]" class="form-select" required>
-                        <option value="">Select arrival point</option>
-                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
-                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <input type="text" name="arrivals[${index}][point]" class="form-control" 
+                           list="pointsList" placeholder="Type or select arrival point..." required>
                 </div>
                 
                 <div class="form-group">
@@ -780,14 +791,8 @@ $(document).ready(function() {
                 
                 <div class="form-group">
                     <label class="form-label">Departure Point (Border/Airport)<span class="required">*</span></label>
-                    <select name="departures[${index}][point]" class="form-select" required>
-                        <option value="">Select departure point</option>
-                        <option value="Queen Alia International Airport">Queen Alia International Airport (Amman)</option>
-                        <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                        <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba)</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <input type="text" name="departures[${index}][point]" class="form-control" 
+                           list="pointsList" placeholder="Type or select departure point..." required>
                 </div>
                 
                 <div class="form-group">
