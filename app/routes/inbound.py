@@ -2554,37 +2554,81 @@ def run_down_export_pdf():
                          current_time=datetime.now())
 
 
-# WIZARD DISABLED - User requested NO wizard workflow
-# @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
-# @login_required
-def wizard_step1_DISABLED():
-    """Wizard Step 1: Arrival & Departure Details"""
+@inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
+@login_required
+def wizard_step1():
+    """Wizard Step 1: Arrival & Departure Batches"""
     from flask import session
     
     if request.method == 'POST':
-        # Get arrival and departure dates
-        arrival_date = request.form.get('arrival_date')
-        departure_date = request.form.get('departure_date')
+        # Parse arrival batches
+        arrivals = []
+        departures = []
         
-        # Calculate number of days
-        from_dt = datetime.strptime(arrival_date, '%Y-%m-%d').date()
-        to_dt = datetime.strptime(departure_date, '%Y-%m-%d').date()
-        no_of_days = (to_dt - from_dt).days + 1
+        # Parse arrivals[INDEX][FIELD] format
+        arrival_indices = set()
+        for key in request.form.keys():
+            if key.startswith('arrivals['):
+                index = key.split('[')[1].split(']')[0]
+                arrival_indices.add(index)
+        
+        for index in arrival_indices:
+            arrival_data = {
+                'point': request.form.get(f'arrivals[{index}][point]'),
+                'pax': int(request.form.get(f'arrivals[{index}][pax]', 0)),
+                'date': request.form.get(f'arrivals[{index}][date]'),
+                'time': request.form.get(f'arrivals[{index}][time]', ''),
+                'reference': request.form.get(f'arrivals[{index}][reference]', ''),
+                'driver': request.form.get(f'arrivals[{index}][driver]', ''),
+                'vehicle': request.form.get(f'arrivals[{index}][vehicle]', '')
+            }
+            arrivals.append(arrival_data)
+        
+        # Parse departures[INDEX][FIELD] format
+        departure_indices = set()
+        for key in request.form.keys():
+            if key.startswith('departures['):
+                index = key.split('[')[1].split(']')[0]
+                departure_indices.add(index)
+        
+        for index in departure_indices:
+            departure_data = {
+                'point': request.form.get(f'departures[{index}][point]'),
+                'pax': int(request.form.get(f'departures[{index}][pax]', 0)),
+                'date': request.form.get(f'departures[{index}][date]'),
+                'time': request.form.get(f'departures[{index}][time]', ''),
+                'reference': request.form.get(f'departures[{index}][reference]', ''),
+                'driver': request.form.get(f'departures[{index}][driver]', ''),
+                'vehicle': request.form.get(f'departures[{index}][vehicle]', '')
+            }
+            departures.append(departure_data)
+        
+        # Calculate date range from first arrival to last departure
+        all_dates = []
+        for arrival in arrivals:
+            if arrival['date']:
+                all_dates.append(datetime.strptime(arrival['date'], '%Y-%m-%d').date())
+        for departure in departures:
+            if departure['date']:
+                all_dates.append(datetime.strptime(departure['date'], '%Y-%m-%d').date())
+        
+        if all_dates:
+            from_date = min(all_dates)
+            to_date = max(all_dates)
+            no_of_days = (to_date - from_date).days + 1
+        else:
+            from_date = datetime.now().date()
+            to_date = from_date + timedelta(days=1)
+            no_of_days = 1
         
         # Get customer_id if selected, otherwise use contact_name
         customer_id = request.form.get('customer_id', '')
         
         # Store wizard data in session
         session['wizard_data'] = {
-            # Arrival/Departure info
-            'arrival_point': request.form.get('arrival_point'),
-            'arrival_date': arrival_date,
-            'arrival_time': request.form.get('arrival_time', ''),
-            'arrival_reference': request.form.get('arrival_reference', ''),
-            'departure_point': request.form.get('departure_point'),
-            'departure_date': departure_date,
-            'departure_time': request.form.get('departure_time', ''),
-            'departure_reference': request.form.get('departure_reference', ''),
+            # Arrival/Departure batches
+            'arrivals': arrivals,
+            'departures': departures,
             
             # Contact & Group info
             'customer_id': customer_id if customer_id else None,
@@ -2596,8 +2640,8 @@ def wizard_step1_DISABLED():
             'special_note': request.form.get('special_note', ''),
             
             # Calculated fields
-            'from_date': arrival_date,  # Use arrival as start
-            'to_date': departure_date,   # Use departure as end
+            'from_date': from_date.strftime('%Y-%m-%d'),
+            'to_date': to_date.strftime('%Y-%m-%d'),
             'no_of_days': no_of_days,
             
             # Initialize service collections
@@ -2614,9 +2658,9 @@ def wizard_step1_DISABLED():
     return render_template('inbound/wizard_step1.html', wizard_data=wizard_data)
 
 
-# @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
-# @login_required
-def wizard_step2_DISABLED():
+@inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
+@login_required
+def wizard_step2():
     """Wizard Step 2: Add All Services"""
     from flask import session
     
@@ -2670,9 +2714,9 @@ def wizard_step2_DISABLED():
     return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
 
 
-# @inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
-# @login_required
-def wizard_step3_DISABLED():
+@inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
+@login_required
+def wizard_step3():
     """Wizard Step 3: Review & Create"""
     from flask import session
     
