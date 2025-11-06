@@ -1877,7 +1877,8 @@ body {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Arrival Point</label>
-                                <input type="text" class="form-control" name="arrival_point" value="{{ request.arrival_point or '' }}" placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
+                                <input type="text" class="form-control" name="arrival_point" value="{{ request.arrival_point or '' }}" 
+                                       list="arrival-points-list" placeholder="Type or select arrival point...">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Arrival Time</label>
@@ -1888,7 +1889,8 @@ body {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Departure Point</label>
-                                <input type="text" class="form-control" name="departure_point" value="{{ request.departure_point or '' }}" placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                                <input type="text" class="form-control" name="departure_point" value="{{ request.departure_point or '' }}" 
+                                       list="departure-points-list" placeholder="Type or select departure point...">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Departure Time</label>
@@ -5339,7 +5341,8 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                     <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
                                     <input type="text" class="form-control mb-3" id="itinerary_departure_point" 
                                            value="{{ request.departure_point or '' }}" 
-                                           placeholder="e.g., Queen Alia Airport, Aqaba Airport">
+                                           list="departure-points-list"
+                                           placeholder="Type or select departure point...">
                                     <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
                                     <input type="time" class="form-control" id="itinerary_departure_time" 
                                            value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
@@ -5655,22 +5658,51 @@ function convertToInvoice() {
 
 <!-- Arrival/Departure Modal -->
 <div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header" style="background: #1e3a8a; color: white;">
                 <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Batches</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <button type="button" class="btn btn-success btn-sm" onclick="addArrivalDepartureBatch()">
-                        <i class="fas fa-plus me-1"></i>Add Batch
-                    </button>
-                    <small class="text-muted ms-2">Add separate arrival/departure batches for different groups</small>
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-3" id="batchTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="arrivals-tab" data-bs-toggle="tab" data-bs-target="#arrivals-pane" type="button" role="tab">
+                            <i class="fas fa-plane-arrival me-2" style="color: #10b981;"></i>Arrivals
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="departures-tab" data-bs-toggle="tab" data-bs-target="#departures-pane" type="button" role="tab">
+                            <i class="fas fa-plane-departure me-2" style="color: #f59e0b;"></i>Departures
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="batchTabContent">
+                    <!-- Arrivals Tab -->
+                    <div class="tab-pane fade show active" id="arrivals-pane" role="tabpanel">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-success btn-sm" onclick="addArrivalBatch()">
+                                <i class="fas fa-plus me-1"></i>Add Arrival Batch
+                            </button>
+                            <small class="text-muted ms-2">Add different arrival batches for groups arriving at different times or locations</small>
+                        </div>
+                        <div id="arrivalBatchesContainer"></div>
+                    </div>
+
+                    <!-- Departures Tab -->
+                    <div class="tab-pane fade" id="departures-pane" role="tabpanel">
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-warning btn-sm" onclick="addDepartureBatch()">
+                                <i class="fas fa-plus me-1"></i>Add Departure Batch
+                            </button>
+                            <small class="text-muted ms-2">Add different departure batches for groups leaving at different times or locations</small>
+                        </div>
+                        <div id="departureBatchesContainer"></div>
+                    </div>
                 </div>
-                
-                <!-- Container for arrival/departure batch cards -->
-                <div id="arrivalDepartureBatchesContainer"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -5710,178 +5742,263 @@ function convertToInvoice() {
 </datalist>
 
 <script>
-// Arrival/Departure Batch Management
-function addArrivalDepartureBatch(batchData = null) {
-    const container = document.getElementById('arrivalDepartureBatchesContainer');
+// Arrival/Departure Batch Management - Separate Functions for Each Tab
+
+// Add Arrival Batch
+function addArrivalBatch(batchData = null) {
+    const container = document.getElementById('arrivalBatchesContainer');
     const batchIndex = container.children.length;
     
     const batchCard = document.createElement('div');
-    batchCard.className = 'arrival-departure-batch-card mb-3';
-    batchCard.style.cssText = 'border: 2px solid #1e3a8a; border-radius: 8px; padding: 15px; background-color: #f8f9fa;';
+    batchCard.className = 'batch-card arrival-batch mb-3';
+    batchCard.style.cssText = 'border: 2px solid #10b981; border-radius: 8px; padding: 15px; background-color: #f0fdf4;';
     
     batchCard.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0 text-primary">✈️ Batch ${batchIndex + 1}</h6>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeArrivalDepartureBatch(this)" ${batchIndex === 0 ? 'style="display: none;"' : ''}>
+            <h6 class="mb-0" style="color: #10b981;"><i class="fas fa-plane-arrival me-2"></i>Arrival Batch ${batchIndex + 1}</h6>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeArrivalBatch(this)">
                 <i class="fas fa-trash"></i>
             </button>
         </div>
         
-        <!-- Arrival Section -->
-        <div class="mb-3 p-2" style="background: #f0f9ff; border-radius: 6px; border-left: 3px solid #0284c7;">
-            <h6 class="text-primary mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-arrival me-1"></i>Arrival</h6>
-            <div class="row">
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Arrival Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" name="batches[${batchIndex}][arrival_date]" 
-                           value="${batchData?.arrival_date || ''}" required>
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Arrival Point</label>
-                    <input type="text" class="form-control" name="batches[${batchIndex}][arrival_point]" 
-                           value="${batchData?.arrival_point || ''}" placeholder="Select or type location"
-                           list="arrival-points-list">
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Arrival Time</label>
-                    <input type="time" class="form-control" name="batches[${batchIndex}][arrival_time]" 
-                           value="${batchData?.arrival_time || ''}">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Visa Type</label>
-                    <select class="form-select" name="batches[${batchIndex}][visa_type]">
-                        <option value="NOT_INCLUDED" ${!batchData || batchData.visa_type === 'NOT_INCLUDED' ? 'selected' : ''}>Not Included</option>
-                        <option value="FREE" ${batchData?.visa_type === 'FREE' ? 'selected' : ''}>Free</option>
-                        <option value="RESTRICTED" ${batchData?.visa_type === 'RESTRICTED' ? 'selected' : ''}>Restricted</option>
-                        <option value="INCLUDED" ${batchData?.visa_type === 'INCLUDED' ? 'selected' : ''}>Included</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Driver Name</label>
-                    <input type="text" class="form-control" name="batches[${batchIndex}][arrival_driver_name]" 
-                           value="${batchData?.arrival_driver_name || ''}" placeholder="Driver name">
-                </div>
-            </div>
-        </div>
-        
-        <!-- Departure Section -->
-        <div class="mb-2 p-2" style="background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
-            <h6 class="text-warning mb-2" style="font-size: 0.9rem;"><i class="fas fa-plane-departure me-1"></i>Departure</h6>
-            <div class="row">
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Departure Date <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" name="batches[${batchIndex}][departure_date]" 
-                           value="${batchData?.departure_date || ''}" required>
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Departure Point</label>
-                    <input type="text" class="form-control" name="batches[${batchIndex}][departure_point]" 
-                           value="${batchData?.departure_point || ''}" placeholder="Select or type location"
-                           list="departure-points-list">
-                </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Departure Time</label>
-                    <input type="time" class="form-control" name="batches[${batchIndex}][departure_time]" 
-                           value="${batchData?.departure_time || ''}">
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Meeting & Assistance</label>
-                    <select class="form-select" name="batches[${batchIndex}][meeting_assistance]">
-                        <option value="0" ${!batchData || !batchData.meeting_assistance ? 'selected' : ''}>No</option>
-                        <option value="1" ${batchData?.meeting_assistance ? 'selected' : ''}>Yes</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-2">
-                    <label class="form-label">Departure Tax</label>
-                    <select class="form-select" name="batches[${batchIndex}][departure_tax]">
-                        <option value="NOT_INCLUDED" ${!batchData || batchData.departure_tax === 'NOT_INCLUDED' ? 'selected' : ''}>Not Included</option>
-                        <option value="INCLUDED" ${batchData?.departure_tax === 'INCLUDED' ? 'selected' : ''}>Included</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Optional PAX Count -->
         <div class="row">
-            <div class="col-md-6 mb-2">
-                <label class="form-label">PAX Count (Optional)</label>
-                <input type="number" class="form-control" name="batches[${batchIndex}][pax_count]" 
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Arrival Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="arrivals[${batchIndex}][date]" 
+                       value="${batchData?.arrival_date || ''}" required>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Arrival Point</label>
+                <input type="text" class="form-control" name="arrivals[${batchIndex}][point]" 
+                       value="${batchData?.arrival_point || ''}" placeholder="Type or select location"
+                       list="arrival-points-list">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Arrival Time</label>
+                <input type="time" class="form-control" name="arrivals[${batchIndex}][time]" 
+                       value="${batchData?.arrival_time || ''}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Flight/Bus Number</label>
+                <input type="text" class="form-control" name="arrivals[${batchIndex}][reference]" 
+                       value="${batchData?.reference || ''}" placeholder="e.g., RJ123">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Driver Name</label>
+                <input type="text" class="form-control" name="arrivals[${batchIndex}][driver]" 
+                       value="${batchData?.arrival_driver_name || ''}" placeholder="Driver name">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Vehicle Type</label>
+                <select class="form-select" name="arrivals[${batchIndex}][vehicle]">
+                    <option value="">Select vehicle</option>
+                    <option value="Bus">Bus</option>
+                    <option value="Mini Bus">Mini Bus</option>
+                    <option value="Van">Van</option>
+                    <option value="Car">Car</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Coaster">Coaster</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">PAX Count</label>
+                <input type="number" class="form-control" name="arrivals[${batchIndex}][pax]" 
                        value="${batchData?.pax_count || ''}" placeholder="Number of passengers" min="0">
             </div>
-            <div class="col-md-6 mb-2">
-                <label class="form-label">Batch Name (Optional)</label>
-                <input type="text" class="form-control" name="batches[${batchIndex}][batch_name]" 
-                       value="${batchData?.batch_name || ''}" placeholder="e.g., Group A, Family 1">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Visa Type</label>
+                <select class="form-select" name="arrivals[${batchIndex}][visa_type]">
+                    <option value="Not Included">Not Included</option>
+                    <option value="Free">Free</option>
+                    <option value="Restricted">Restricted</option>
+                    <option value="Included">Included</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Batch Name</label>
+                <input type="text" class="form-control" name="arrivals[${batchIndex}][batch_name]" 
+                       value="${batchData?.batch_name || ''}" placeholder="e.g., Group A">
             </div>
         </div>
     `;
     
     container.appendChild(batchCard);
-    updateBatchNumbers();
 }
 
-function removeArrivalDepartureBatch(button) {
-    const batchCard = button.closest('.arrival-departure-batch-card');
+function removeArrivalBatch(button) {
+    const batchCard = button.closest('.batch-card');
     batchCard.remove();
-    updateBatchNumbers();
+    updateArrivalBatchNumbers();
 }
 
-function updateBatchNumbers() {
-    const container = document.getElementById('arrivalDepartureBatchesContainer');
-    const batchCards = container.querySelectorAll('.arrival-departure-batch-card');
+// Add Departure Batch
+function addDepartureBatch(batchData = null) {
+    const container = document.getElementById('departureBatchesContainer');
+    const batchIndex = container.children.length;
     
-    batchCards.forEach((card, index) => {
-        // Update batch title
-        const title = card.querySelector('h6');
-        title.textContent = `✈️ Batch ${index + 1}`;
+    const batchCard = document.createElement('div');
+    batchCard.className = 'batch-card departure-batch mb-3';
+    batchCard.style.cssText = 'border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; background-color: #fffbeb;';
+    
+    batchCard.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0" style="color: #f59e0b;"><i class="fas fa-plane-departure me-2"></i>Departure Batch ${batchIndex + 1}</h6>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeDepartureBatch(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
         
-        // Update input names
-        const inputs = card.querySelectorAll('input, select');
-        inputs.forEach(input => {
-            const name = input.getAttribute('name');
-            if (name && name.includes('batches[')) {
-                const newName = name.replace(/batches\[\d+\]/, `batches[${index}]`);
-                input.setAttribute('name', newName);
-            }
-        });
-        
-        // Show/hide delete button (first batch can't be deleted)
-        const deleteButton = card.querySelector('.btn-outline-danger');
-        if (index === 0) {
-            deleteButton.style.display = 'none';
-        } else {
-            deleteButton.style.display = 'inline-block';
-        }
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Departure Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" name="departures[${batchIndex}][date]" 
+                       value="${batchData?.departure_date || ''}" required>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Departure Point</label>
+                <input type="text" class="form-control" name="departures[${batchIndex}][point]" 
+                       value="${batchData?.departure_point || ''}" placeholder="Type or select location"
+                       list="departure-points-list">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Departure Time</label>
+                <input type="time" class="form-control" name="departures[${batchIndex}][time]" 
+                       value="${batchData?.departure_time || ''}">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Flight/Bus Number</label>
+                <input type="text" class="form-control" name="departures[${batchIndex}][reference]" 
+                       value="${batchData?.reference || ''}" placeholder="e.g., RJ456">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Driver Name</label>
+                <input type="text" class="form-control" name="departures[${batchIndex}][driver]" 
+                       value="${batchData?.departure_driver_name || ''}" placeholder="Driver name">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Vehicle Type</label>
+                <select class="form-select" name="departures[${batchIndex}][vehicle]">
+                    <option value="">Select vehicle</option>
+                    <option value="Bus">Bus</option>
+                    <option value="Mini Bus">Mini Bus</option>
+                    <option value="Van">Van</option>
+                    <option value="Car">Car</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Coaster">Coaster</option>
+                </select>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">PAX Count</label>
+                <input type="number" class="form-control" name="departures[${batchIndex}][pax]" 
+                       value="${batchData?.pax_count || ''}" placeholder="Number of passengers" min="0">
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Meeting & Assistance</label>
+                <select class="form-select" name="departures[${batchIndex}][meeting_assistance]">
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                </select>
+            </div>
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Batch Name</label>
+                <input type="text" class="form-control" name="departures[${batchIndex}][batch_name]" 
+                       value="${batchData?.batch_name || ''}" placeholder="e.g., Group B">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-2">
+                <label class="form-label">Departure Tax</label>
+                <select class="form-select" name="departures[${batchIndex}][departure_tax]">
+                    <option value="Not Included">Not Included</option>
+                    <option value="Included">Included</option>
+                </select>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(batchCard);
+}
+
+function removeDepartureBatch(button) {
+    const batchCard = button.closest('.batch-card');
+    batchCard.remove();
+    updateDepartureBatchNumbers();
+}
+
+function updateArrivalBatchNumbers() {
+    const container = document.getElementById('arrivalBatchesContainer');
+    const batches = container.querySelectorAll('.arrival-batch');
+    batches.forEach((batch, index) => {
+        const heading = batch.querySelector('h6');
+        heading.innerHTML = `<i class="fas fa-plane-arrival me-2"></i>Arrival Batch ${index + 1}`;
+    });
+}
+
+function updateDepartureBatchNumbers() {
+    const container = document.getElementById('departureBatchesContainer');
+    const batches = container.querySelectorAll('.departure-batch');
+    batches.forEach((batch, index) => {
+        const heading = batch.querySelector('h6');
+        heading.innerHTML = `<i class="fas fa-plane-departure me-2"></i>Departure Batch ${index + 1}`;
     });
 }
 
 function saveArrivalDepartureBatches() {
-    const container = document.getElementById('arrivalDepartureBatchesContainer');
-    const batchCards = container.querySelectorAll('.arrival-departure-batch-card');
+    const arrivalContainer = document.getElementById('arrivalBatchesContainer');
+    const departureContainer = document.getElementById('departureBatchesContainer');
     
-    const batches = [];
-    batchCards.forEach((card, index) => {
+    const arrivals = [];
+    const departures = [];
+    
+    // Collect arrival batches
+    arrivalContainer.querySelectorAll('.arrival-batch').forEach((card, index) => {
         const inputs = card.querySelectorAll('input, select');
         const batchData = {};
         
         inputs.forEach(input => {
             const name = input.getAttribute('name');
             if (name) {
-                const field = name.match(/\[(\w+)\]$/)?.[1];
+                const field = name.match(/arrivals\[\d+\]\[(\w+)\]$/)?.[1];
                 if (field) {
                     batchData[field] = input.value;
                 }
             }
         });
         
-        batches.push(batchData);
+        if (Object.keys(batchData).length > 0) {
+            arrivals.push(batchData);
+        }
     });
     
-    console.log('Saving batches:', batches);
+    // Collect departure batches
+    departureContainer.querySelectorAll('.departure-batch').forEach((card, index) => {
+        const inputs = card.querySelectorAll('input, select');
+        const batchData = {};
+        
+        inputs.forEach(input => {
+            const name = input.getAttribute('name');
+            if (name) {
+                const field = name.match(/departures\[\d+\]\[(\w+)\]$/)?.[1];
+                if (field) {
+                    batchData[field] = input.value;
+                }
+            }
+        });
+        
+        if (Object.keys(batchData).length > 0) {
+            departures.push(batchData);
+        }
+    });
+    
+    console.log('Saving batches - Arrivals:', arrivals, 'Departures:', departures);
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalDepartureModal'));
@@ -5896,7 +6013,7 @@ function saveArrivalDepartureBatches() {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
         },
-        body: JSON.stringify({ batches: batches })
+        body: JSON.stringify({ arrivals: arrivals, departures: departures })
     })
     .then(response => {
         if (!response.ok) {
