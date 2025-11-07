@@ -4911,6 +4911,11 @@ function handleCustomerSelectionInView(customerId, customerName) {
 .modal-header-dark * {
     color: white !important;
 }
+
+/* Ensure close buttons are white in dark headers */
+.modal-header-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
 </style>
 
 <!-- Service Configuration Modal -->
