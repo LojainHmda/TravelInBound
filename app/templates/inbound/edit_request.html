@@ -709,22 +709,22 @@ const requestId = {{ request.id }};
 let paxCount = {{ request.pax }};
 let itineraryData = [];
 
-// Event listeners setup
+// Event listeners setup using event delegation
 document.addEventListener('DOMContentLoaded', function() {
     loadItinerary();
     
-    // Event listeners with null checks
-    const generateByDaysBtn = document.getElementById('generateByDays');
-    if (generateByDaysBtn) generateByDaysBtn.addEventListener('click', generateByDays);
-    
-    const generateBySectionsBtn = document.getElementById('generateBySections');
-    if (generateBySectionsBtn) generateBySectionsBtn.addEventListener('click', generateBySections);
-    
-    const addRowBtn = document.getElementById('addRow');
-    if (addRowBtn) addRowBtn.addEventListener('click', addRow);
-    
-    const saveItineraryBtn = document.getElementById('saveItinerary');
-    if (saveItineraryBtn) saveItineraryBtn.addEventListener('click', saveItinerary);
+    // Use event delegation to handle dynamically recreated buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#generateByDays')) {
+            generateByDays();
+        } else if (e.target.closest('#generateBySections')) {
+            generateBySections();
+        } else if (e.target.closest('#addRow')) {
+            addRow();
+        } else if (e.target.closest('#saveItinerary')) {
+            saveItinerary();
+        }
+    });
 });
 
 // Calculate days when dates change
