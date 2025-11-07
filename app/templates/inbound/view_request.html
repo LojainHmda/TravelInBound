@@ -177,7 +177,6 @@ body {
 
 .room-modal-header {
     background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
     padding: 0.75rem 1rem;
     border-bottom: none;
 }
@@ -2937,7 +2936,7 @@ body {
 <div class="modal fade" id="roomDistributionModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content room-modal-content">
-            <div class="modal-header room-modal-header">
+            <div class="modal-header room-modal-header modal-header-dark">
                 <h6 class="modal-title mb-0">
                     <i class="fas fa-bed me-2"></i> Room Distribution
                 </h6>
@@ -3020,7 +3019,7 @@ body {
 <div class="modal fade" id="tripItineraryModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #1e40af, #3b82f6); color: white;">
+            <div class="modal-header modal-header-dark" style="background: linear-gradient(135deg, #1e40af, #3b82f6);">
                 <h5 class="modal-title">
                     <i class="fas fa-calendar-alt me-2"></i> Trip Itinerary Manager
                 </h5>
@@ -4906,13 +4905,26 @@ function handleCustomerSelectionInView(customerId, customerName) {
     border-radius: 12px;
     overflow: hidden;
 }
+
+/* Dark modal header styling */
+.modal-header-dark {
+    color: white;
+}
+
+.modal-header-dark h5,
+.modal-header-dark h6,
+.modal-header-dark .modal-title,
+.modal-header-dark i,
+.modal-header-dark span {
+    color: white;
+}
 </style>
 
 <!-- Service Configuration Modal -->
 <div class="modal fade" id="serviceConfigModal" tabindex="-1" aria-labelledby="serviceConfigModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 98%; margin: 1rem auto;">
         <div class="modal-content" style="max-height: 95vh; display: flex; flex-direction: column;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
+            <div class="modal-header modal-header-dark" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
                 <h5 class="modal-title" id="serviceConfigModalLabel">
                     <i class="fas fa-cog me-2"></i>
                     <span id="serviceTypeTitle">Service</span> Configuration
@@ -5707,7 +5719,7 @@ function convertToInvoice() {
 <div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header" style="background: #1e3a8a; color: white;">
+            <div class="modal-header modal-header-dark" style="background: #1e3a8a;">
                 <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Batches</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
