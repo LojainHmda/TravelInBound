@@ -4919,6 +4919,41 @@ function handleCustomerSelectionInView(customerId, customerName) {
     --bs-btn-close-opacity: 1 !important;
     opacity: 1 !important;
 }
+
+/* Individual Room Status Grid Styles */
+.room-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.room-status-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: 2px solid #dee2e6;
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.room-status-card:hover {
+    border-color: #FFBF00;
+    background: linear-gradient(135deg, #fff8e1, #fffbf0);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.2);
+}
+
+.room-status-card .form-select {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.room-status-card .form-select:focus {
+    border-color: #FFBF00;
+    box-shadow: 0 0 0 0.2rem rgba(255, 191, 0, 0.25);
+}
 </style>
 
 <!-- Service Configuration Modal -->
@@ -5057,68 +5092,31 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                             </span>
                                         </div>
                                         <div class="card-body py-2">
-                                            <div class="row g-3">
-                                                <div class="col-md-6">
+                                            <!-- Room Count Configuration -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Single Rooms</label>
-                                                    <div class="row g-2">
-                                                        <div class="col-6">
-                                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateMasterFromSummary()">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <select id="hotelSingleStatus" name="hotel_single_status" class="form-control" onchange="updateConfirmationStatus()">
-                                                                <option value="pending">Pending</option>
-                                                                <option value="requested">Requested</option>
-                                                                <option value="confirmed">Confirmed</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
+                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateIndividualRoomGrid()">
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Double Rooms</label>
-                                                    <div class="row g-2">
-                                                        <div class="col-6">
-                                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <select id="hotelDoubleStatus" name="hotel_double_status" class="form-control" onchange="updateConfirmationStatus()">
-                                                                <option value="pending">Pending</option>
-                                                                <option value="requested">Requested</option>
-                                                                <option value="confirmed">Confirmed</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
+                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Triple Rooms</label>
-                                                    <div class="row g-2">
-                                                        <div class="col-6">
-                                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <select id="hotelTripleStatus" name="hotel_triple_status" class="form-control" onchange="updateConfirmationStatus()">
-                                                                <option value="pending">Pending</option>
-                                                                <option value="requested">Requested</option>
-                                                                <option value="confirmed">Confirmed</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
+                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-3">
                                                     <label class="form-label">Other Rooms</label>
-                                                    <div class="row g-2">
-                                                        <div class="col-6">
-                                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
-                                                        </div>
-                                                        <div class="col-6">
-                                                            <select id="hotelOtherStatus" name="hotel_other_status" class="form-control" onchange="updateConfirmationStatus()">
-                                                                <option value="pending">Pending</option>
-                                                                <option value="requested">Requested</option>
-                                                                <option value="confirmed">Confirmed</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
+                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                                 </div>
                                             </div>
+
+                                            <!-- Individual Room Status Grid -->
+                                            <div id="individualRoomGrid" class="mb-3">
+                                                <!-- Will be populated dynamically -->
+                                            </div>
+
                                             <div class="text-center mt-3">
                                                 <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary(this)">
                                                     <i class="fas fa-table me-1"></i>Generate Room Table
@@ -6383,46 +6381,91 @@ function printItinerary() {
     }, 250);
 }
 
-// Room Distribution Summary Functions (stub implementations)
-function updateMasterFromSummary() {
-    // This function syncs the summary counts with master configuration
-    // Currently just a stub to prevent errors
-    console.log('Room distribution updated from summary');
-    updateConfirmationStatus();
-}
-
-function updateConfirmationStatus() {
-    // Check if all room types with rooms > 0 have confirmed status
+// Room Distribution Summary Functions
+function updateIndividualRoomGrid() {
+    const gridContainer = document.getElementById('individualRoomGrid');
+    if (!gridContainer) return;
+    
     const singleRooms = parseInt(document.getElementById('hotelSingleRooms')?.value || 0);
     const doubleRooms = parseInt(document.getElementById('hotelDoubleRooms')?.value || 0);
     const tripleRooms = parseInt(document.getElementById('hotelTripleRooms')?.value || 0);
     const otherRooms = parseInt(document.getElementById('hotelOtherRooms')?.value || 0);
     
-    const singleStatus = document.getElementById('hotelSingleStatus')?.value;
-    const doubleStatus = document.getElementById('hotelDoubleStatus')?.value;
-    const tripleStatus = document.getElementById('hotelTripleStatus')?.value;
-    const otherStatus = document.getElementById('hotelOtherStatus')?.value;
+    gridContainer.innerHTML = '';
     
+    const roomTypes = [
+        { name: 'Single', count: singleRooms, icon: 'fa-user' },
+        { name: 'Double', count: doubleRooms, icon: 'fa-users' },
+        { name: 'Triple', count: tripleRooms, icon: 'fa-bed' },
+        { name: 'Other', count: otherRooms, icon: 'fa-home' }
+    ];
+    
+    roomTypes.forEach(roomType => {
+        if (roomType.count > 0) {
+            const sectionHeader = document.createElement('h6');
+            sectionHeader.className = 'mt-3 mb-2';
+            sectionHeader.style.color = '#1f2937';
+            sectionHeader.style.fontWeight = '600';
+            sectionHeader.innerHTML = `<i class="fas ${roomType.icon} me-2"></i>${roomType.name} Rooms`;
+            gridContainer.appendChild(sectionHeader);
+            
+            const grid = document.createElement('div');
+            grid.className = 'room-status-grid';
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(250px, 1fr))';
+            grid.style.gap = '1rem';
+            grid.style.marginBottom = '1.5rem';
+            
+            for (let i = 1; i <= roomType.count; i++) {
+                const roomCard = document.createElement('div');
+                roomCard.className = 'room-status-card';
+                roomCard.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">${roomType.name} Room ${i}</span>
+                        <select class="form-select form-select-sm" 
+                                name="room_status_${roomType.name.toLowerCase()}_${i}" 
+                                onchange="updateConfirmationStatus()"
+                                style="width: auto; min-width: 110px;">
+                            <option value="pending">Pending</option>
+                            <option value="requested">Requested</option>
+                            <option value="confirmed">Confirmed</option>
+                        </select>
+                    </div>
+                `;
+                grid.appendChild(roomCard);
+            }
+            
+            gridContainer.appendChild(grid);
+        }
+    });
+    
+    updateConfirmationStatus();
+}
+
+function updateMasterFromSummary() {
+    updateIndividualRoomGrid();
+}
+
+function updateConfirmationStatus() {
     const badge = document.getElementById('allConfirmedBadge');
     if (!badge) return;
     
-    // Build array of room types that have rooms
-    const roomsToCheck = [];
-    if (singleRooms > 0) roomsToCheck.push(singleStatus);
-    if (doubleRooms > 0) roomsToCheck.push(doubleStatus);
-    if (tripleRooms > 0) roomsToCheck.push(tripleStatus);
-    if (otherRooms > 0) roomsToCheck.push(otherStatus);
+    const allStatuses = document.querySelectorAll('#individualRoomGrid select[name^="room_status_"]');
     
-    // Check if all room types are confirmed
-    const allConfirmed = roomsToCheck.length > 0 && roomsToCheck.every(status => status === 'confirmed');
-    
-    // Show or hide badge
-    if (allConfirmed) {
-        badge.style.display = 'inline-block';
-    } else {
+    if (allStatuses.length === 0) {
         badge.style.display = 'none';
+        return;
     }
+    
+    const allConfirmed = Array.from(allStatuses).every(select => select.value === 'confirmed');
+    
+    badge.style.display = allConfirmed ? 'inline-block' : 'none';
 }
+
+// Initialize grid on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateIndividualRoomGrid();
+});
 
 function regenerateRoomTableFromSummary(button) {
     // Find the hotel card this button belongs to
