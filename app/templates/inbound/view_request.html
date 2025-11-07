@@ -5037,26 +5037,73 @@ function handleCustomerSelectionInView(customerId, customerName) {
                             <div class="row mb-4">
                                 <div class="col-12">
                                     <div class="card">
-                                        <div class="card-header py-2" style="background-color: #1f2937; color: white;">
+                                        <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background-color: #1f2937; color: white;">
                                             <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
+                                            <span id="allConfirmedBadge" class="badge bg-success" style="display: none;">
+                                                <i class="fas fa-check-circle me-1"></i>All Confirmed
+                                            </span>
                                         </div>
                                         <div class="card-body py-2">
                                             <div class="row g-3">
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <label class="form-label">Single Rooms</label>
-                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateMasterFromSummary()">
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateMasterFromSummary()">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <select id="hotelSingleStatus" name="hotel_single_status" class="form-control" onchange="updateConfirmationStatus()">
+                                                                <option value="pending">Pending</option>
+                                                                <option value="requested">Requested</option>
+                                                                <option value="confirmed">Confirmed</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <label class="form-label">Double Rooms</label>
-                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <select id="hotelDoubleStatus" name="hotel_double_status" class="form-control" onchange="updateConfirmationStatus()">
+                                                                <option value="pending">Pending</option>
+                                                                <option value="requested">Requested</option>
+                                                                <option value="confirmed">Confirmed</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <label class="form-label">Triple Rooms</label>
-                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <select id="hotelTripleStatus" name="hotel_triple_status" class="form-control" onchange="updateConfirmationStatus()">
+                                                                <option value="pending">Pending</option>
+                                                                <option value="requested">Requested</option>
+                                                                <option value="confirmed">Confirmed</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-3">
+                                                <div class="col-md-6">
                                                     <label class="form-label">Other Rooms</label>
-                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                    <div class="row g-2">
+                                                        <div class="col-6">
+                                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateMasterFromSummary()">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <select id="hotelOtherStatus" name="hotel_other_status" class="form-control" onchange="updateConfirmationStatus()">
+                                                                <option value="pending">Pending</option>
+                                                                <option value="requested">Requested</option>
+                                                                <option value="confirmed">Confirmed</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="text-center mt-3">
@@ -6328,6 +6375,40 @@ function updateMasterFromSummary() {
     // This function syncs the summary counts with master configuration
     // Currently just a stub to prevent errors
     console.log('Room distribution updated from summary');
+    updateConfirmationStatus();
+}
+
+function updateConfirmationStatus() {
+    // Check if all room types with rooms > 0 have confirmed status
+    const singleRooms = parseInt(document.getElementById('hotelSingleRooms')?.value || 0);
+    const doubleRooms = parseInt(document.getElementById('hotelDoubleRooms')?.value || 0);
+    const tripleRooms = parseInt(document.getElementById('hotelTripleRooms')?.value || 0);
+    const otherRooms = parseInt(document.getElementById('hotelOtherRooms')?.value || 0);
+    
+    const singleStatus = document.getElementById('hotelSingleStatus')?.value;
+    const doubleStatus = document.getElementById('hotelDoubleStatus')?.value;
+    const tripleStatus = document.getElementById('hotelTripleStatus')?.value;
+    const otherStatus = document.getElementById('hotelOtherStatus')?.value;
+    
+    const badge = document.getElementById('allConfirmedBadge');
+    if (!badge) return;
+    
+    // Build array of room types that have rooms
+    const roomsToCheck = [];
+    if (singleRooms > 0) roomsToCheck.push(singleStatus);
+    if (doubleRooms > 0) roomsToCheck.push(doubleStatus);
+    if (tripleRooms > 0) roomsToCheck.push(tripleStatus);
+    if (otherRooms > 0) roomsToCheck.push(otherStatus);
+    
+    // Check if all room types are confirmed
+    const allConfirmed = roomsToCheck.length > 0 && roomsToCheck.every(status => status === 'confirmed');
+    
+    // Show or hide badge
+    if (allConfirmed) {
+        badge.style.display = 'inline-block';
+    } else {
+        badge.style.display = 'none';
+    }
 }
 
 function regenerateRoomTableFromSummary(button) {
