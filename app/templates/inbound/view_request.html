@@ -4280,7 +4280,11 @@ function saveChanges(event) {
         from_date: formData.get('from_date'),
         to_date: formData.get('to_date'),
         pax: parseInt(formData.get('pax')),
-        special_note: formData.get('special_note')
+        special_note: formData.get('special_note'),
+        arrival_point: formData.get('arrival_point'),
+        arrival_time: formData.get('arrival_time'),
+        departure_point: formData.get('departure_point'),
+        departure_time: formData.get('departure_time')
     };
     
     fetch('/inbound/api/{{ request.id }}/update', {
@@ -4299,12 +4303,36 @@ function saveChanges(event) {
     })
     .then(data => {
         if (data.success) {
-            showNotification('Master details saved successfully!', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
+            showNotification('Master details saved successfully! Generating days...', 'success');
+            
+            // Auto-generate days after saving
+            return fetch('/inbound/api/{{ request.id }}/generate-days', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+                }
+            });
         } else {
-            showNotification(data.message || 'Error saving master details', 'error');
+            throw new Error(data.message || 'Error saving master details');
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showNotification('Days generated! Enabling edit mode...', 'success');
+            
+            // Reload with parameter to start edit mode
+            setTimeout(() => {
+                window.location.href = window.location.pathname + '?auto_edit=1';
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Error generating days');
         }
     })
     .catch(error => {
@@ -6484,6 +6512,21 @@ function updateConfirmationStatus() {
 // Initialize grid on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateIndividualRoomGrid();
+    
+    // Check for auto_edit parameter and start itinerary edit mode if present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auto_edit') === '1') {
+        // Start itinerary edit mode if not already in it
+        if (!isItineraryEditMode && typeof toggleItineraryEditMode === 'function') {
+            setTimeout(() => {
+                toggleItineraryEditMode();
+                
+                // Remove the parameter from URL to avoid repeated toggles
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }, 500);
+        }
+    }
 });
 
 function regenerateRoomTableFromSummary(button) {
