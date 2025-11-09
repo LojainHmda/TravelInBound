@@ -1637,7 +1637,7 @@ body {
                     <!-- Ultra Modern Status Flow for Inbound Requests -->
                     <div class="status-flow">
                         <!-- Request Stage -->
-                        <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-paper-plane"></i>
                             </div>
@@ -1648,10 +1648,24 @@ body {
                         </div>
                         
                         <!-- Connection Line 1 -->
-                        <div class="status-connector {% if request.status in ['QUOTED', 'CONFIRMED', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
+                        <div class="status-connector {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}confirmed{% endif %}"></div>
+                        
+                        <!-- Supplier Confirmed Stage -->
+                        <div class="status-step {% if request.status == 'CONFIRMED' %}confirmed{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
+                            <div class="status-circle">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="status-label">
+                                <div class="status-title">Supplier Confirmed</div>
+                                <div class="status-subtitle">Services booked</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Connection Line 2 -->
+                        <div class="status-connector {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
                         
                         <!-- Quoted Stage -->
-                        <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
+                        <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </div>
@@ -1661,35 +1675,35 @@ body {
                             </div>
                         </div>
                         
-                        <!-- Connection Line 2 -->
-                        <div class="status-connector {% if request.status in ['CONFIRMED', 'PROCESSING', 'COMPLETED'] %}confirmed{% endif %}"></div>
+                        <!-- Connection Line 3 -->
+                        <div class="status-connector {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
                         
-                        <!-- Confirmed Stage -->
-                        <div class="status-step {% if request.status == 'CONFIRMED' %}confirmed{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}">
+                        <!-- Perform Invoice Stage -->
+                        <div class="status-step {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
-                                <i class="fas fa-shield-alt"></i>
+                                <i class="fas fa-file-invoice"></i>
                             </div>
                             <div class="status-label">
-                                <div class="status-title">Confirmed</div>
-                                <div class="status-subtitle">Services booked</div>
+                                <div class="status-title">Perform Invoice</div>
+                                <div class="status-subtitle">Invoice ready</div>
                             </div>
                         </div>
                         
-                        <!-- Connection Line 3 -->
+                        <!-- Connection Line 4 -->
                         <div class="status-connector {% if request.status in ['PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
                         
-                        <!-- Processing Stage -->
+                        <!-- In Process Stage -->
                         <div class="status-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}">
                             <div class="status-circle">
                                 <i class="fas fa-sync-alt"></i>
                             </div>
                             <div class="status-label">
-                                <div class="status-title">Processing</div>
+                                <div class="status-title">In Process</div>
                                 <div class="status-subtitle">Operations active</div>
                             </div>
                         </div>
                         
-                        <!-- Connection Line 4 -->
+                        <!-- Connection Line 5 -->
                         <div class="status-connector {% if request.status == 'COMPLETED' %}confirmed{% endif %}"></div>
                         
                         <!-- Completed Stage -->
@@ -1727,12 +1741,16 @@ body {
                                 <strong>Status:</strong><br>
                                 {% if request.status == 'REQUEST' %}
                                     <span class="badge bg-warning">Request</span>
-                                {% elif request.status == 'BOOKED' %}
-                                    <span class="badge bg-info">Booked</span>
-                                {% elif request.status == 'IN_PROGRESS' %}
-                                    <span class="badge bg-primary">In Progress</span>
                                 {% elif request.status == 'CONFIRMED' %}
-                                    <span class="badge bg-success">Confirmed</span>
+                                    <span class="badge bg-success">Supplier Confirmed</span>
+                                {% elif request.status == 'QUOTED' %}
+                                    <span class="badge bg-info">Quoted</span>
+                                {% elif request.status == 'INVOICE' %}
+                                    <span class="badge bg-primary">Perform Invoice</span>
+                                {% elif request.status == 'PROCESSING' %}
+                                    <span class="badge bg-primary">In Process</span>
+                                {% elif request.status == 'COMPLETED' %}
+                                    <span class="badge bg-dark">Completed</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -2242,10 +2260,11 @@ body {
                                 <label class="form-label">New Status</label>
                                 <select name="status" class="form-select" required>
                                     <option value="">Select Status</option>
-                                    <option value="REQUEST">New Request</option>
+                                    <option value="REQUEST">Request</option>
+                                    <option value="CONFIRMED">Supplier Confirmed</option>
                                     <option value="QUOTED">Quoted</option>
-                                    <option value="CONFIRMED">Confirmed</option>
-                                    <option value="PROCESSING">Processing</option>
+                                    <option value="INVOICE">Perform Invoice</option>
+                                    <option value="PROCESSING">In Process</option>
                                     <option value="COMPLETED">Completed</option>
                                 </select>
                             </div>
