@@ -2372,7 +2372,8 @@ body {
                                                 <input type="text" class="form-control form-control-sm" 
                                                        name="restaurant[]" 
                                                        value="{{ row.restaurant or '' }}" 
-                                                       placeholder="Restaurant name">
+                                                       placeholder="Type or select restaurant"
+                                                       list="jordan-restaurants">
                                             </td>
                                             <td style="display: none;">
                                                 <input type="number" class="form-control form-control-sm" 
@@ -5273,7 +5274,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Restaurant:</label>
-                                    <input type="text" id="mealRestaurant" class="form-control" placeholder="Restaurant name">
+                                    <input type="text" id="mealRestaurant" class="form-control" placeholder="Type or select restaurant" list="jordan-restaurants">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Cost per Person:</label>
@@ -5371,6 +5372,73 @@ function handleCustomerSelectionInView(customerId, customerName) {
     </div>
 </div>
 
+
+<!-- Jordanian Restaurants Datalist -->
+<datalist id="jordan-restaurants">
+    <!-- Amman Restaurants -->
+    <option value="Hashem Restaurant - Downtown Amman">
+    <option value="Sufra Restaurant - Rainbow Street">
+    <option value="Fakhr El-Din Restaurant - Amman">
+    <option value="Kan Zaman Restaurant - Amman">
+    <option value="Tawaheen Al Hawa - Amman">
+    <option value="Levant Restaurant - Amman">
+    <option value="Fakhreldin Restaurant - Amman">
+    <option value="Blue Fig Restaurant - Amman">
+    <option value="Romero Restaurant - Amman">
+    <option value="Wild Jordan Center Restaurant - Amman">
+    <option value="Reem Al Bawadi - Amman">
+    <option value="Al Quds Restaurant - Amman">
+    <option value="Jabri Restaurant - Amman">
+    <option value="Shams El Balad - Amman">
+    <option value="Mijana Restaurant - Amman">
+    <option value="Bonita Inn Restaurant - Amman">
+    
+    <!-- Petra Restaurants -->
+    <option value="Al Qantarah Restaurant - Petra">
+    <option value="Red Cave Restaurant - Petra">
+    <option value="The Basin Restaurant - Petra">
+    <option value="My Mom's Recipe Restaurant - Petra">
+    <option value="Al Wadi Restaurant - Petra">
+    <option value="Al Arabi Restaurant - Petra">
+    <option value="Cave Bar - Petra">
+    
+    <!-- Aqaba Restaurants -->
+    <option value="Ali Baba Restaurant - Aqaba">
+    <option value="Captain's Restaurant - Aqaba">
+    <option value="Syrian Palace Restaurant - Aqaba">
+    <option value="Rakwet Kanaan - Aqaba">
+    <option value="Bourj Al Hamam - Aqaba">
+    <option value="Floka Restaurant - Aqaba">
+    <option value="Papaya Restaurant - Aqaba">
+    
+    <!-- Wadi Rum -->
+    <option value="Rest House - Wadi Rum">
+    <option value="Bedouin Camp Dining - Wadi Rum">
+    <option value="Al Rashid Camp - Wadi Rum">
+    
+    <!-- Dead Sea -->
+    <option value="Main Restaurant - Dead Sea">
+    <option value="Burj Al Hamam - Dead Sea">
+    <option value="Bab Al Yam - Dead Sea">
+    
+    <!-- Jerash & Madaba -->
+    <option value="Lebanese House Restaurant - Jerash">
+    <option value="Green Valley Restaurant - Jerash">
+    <option value="Haret Jdoudna - Madaba">
+    <option value="Adonis Restaurant - Madaba">
+    
+    <!-- Bedouin & Traditional -->
+    <option value="Bedouin Traditional Meal">
+    <option value="Zarb (Bedouin BBQ)">
+    <option value="Local Bedouin Camp">
+    
+    <!-- International Chains -->
+    <option value="Buffalo Wings & Rings">
+    <option value="Chili's">
+    <option value="P.F. Chang's">
+    <option value="Applebee's">
+    <option value="Texas Roadhouse">
+</datalist>
 
 <!-- Service Configuration JavaScript - All logic moved to external file -->
 
