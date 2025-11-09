@@ -2892,7 +2892,7 @@ body {
                 <h6 class="modal-title mb-0">
                     <i class="fas fa-bed me-2"></i> Room Distribution
                 </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-3">
                 <div class="row g-2">
@@ -2975,7 +2975,7 @@ body {
                 <h5 class="modal-title">
                     <i class="fas fa-calendar-alt me-2"></i> Trip Itinerary Manager
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Editable Itinerary Grid -->
@@ -4892,12 +4892,14 @@ function handleCustomerSelectionInView(customerId, customerName) {
     color: white !important;
 }
 
-/* Ensure close buttons are white in dark headers */
+/* Close buttons in dark headers - background matches header, X icon is white */
 .modal-header-dark .btn-close {
-    background-color: transparent !important;
+    background-color: #1e3a8a !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") !important;
     --bs-btn-close-opacity: 1 !important;
     opacity: 1 !important;
+    border-radius: 4px !important;
+    padding: 0.5rem !important;
 }
 
 /* Individual Room Status Grid Styles */
@@ -4945,7 +4947,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <i class="fas fa-cog me-2"></i>
                     <span id="serviceTypeTitle">Service</span> Configuration
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" style="overflow-y: auto; flex: 1;">
                 <!-- Date Range Selection -->
@@ -5767,7 +5769,7 @@ function convertToInvoice() {
         <div class="modal-content">
             <div class="modal-header modal-header-dark" style="background: #1e3a8a;">
                 <h5 class="modal-title"><i class="fas fa-plane me-2"></i>Arrival & Departure Batches</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="background-image: url('data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27%231e3a8a%27%3e%3cpath d=%27M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z%27/%3e%3c/svg%3e'); opacity: 1;"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <!-- Tab Navigation -->
