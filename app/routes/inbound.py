@@ -3696,40 +3696,33 @@ def api_confirm_all_transports(request_id):
 
 def check_and_update_request_status(request_id):
     """
-    Check if all hotels and transports are RESERVED.
-    If yes, automatically update InboundRequest status to CONFIRMED.
+    Check if all hotels are RESERVED.
+    If yes, automatically update InboundRequest status to CONFIRMED (Supplier Confirmed).
     """
     try:
         request_obj = InboundRequest.query.get(request_id)
         if not request_obj:
             return
         
-        # Get all hotels and transports
+        # Get all hotels
         hotels = InboundHotel.query.filter_by(request_id=request_id).all()
-        transports = InboundTransport.query.filter_by(request_id=request_id).all()
         
-        # If there are no hotels AND no transports, don't auto-update
-        if not hotels and not transports:
+        # If there are no hotels, don't auto-update
+        if not hotels:
             return
         
         # Check if ALL hotels are RESERVED or CONFIRMED
         all_hotels_confirmed = all(
             hotel.status in [STATUS_RESERVED, STATUS_CONFIRMED] 
             for hotel in hotels
-        ) if hotels else True
+        )
         
-        # Check if ALL transports are RESERVED or CONFIRMED
-        all_transports_confirmed = all(
-            transport.status in [STATUS_RESERVED, STATUS_CONFIRMED] 
-            for transport in transports
-        ) if transports else True
-        
-        # If all services are confirmed, update request to CONFIRMED
-        if all_hotels_confirmed and all_transports_confirmed:
+        # If all hotels are confirmed, update request to CONFIRMED (Supplier Confirmed)
+        if all_hotels_confirmed:
             if request_obj.status != STATUS_CONFIRMED:
                 request_obj.status = STATUS_CONFIRMED
                 db.session.commit()
-                print(f"✅ All services confirmed! InboundRequest {request_id} auto-updated to CONFIRMED status")
+                print(f"✅ All hotels confirmed! InboundRequest {request_id} auto-updated to CONFIRMED (Supplier Confirmed) status")
         
     except Exception as e:
         print(f"Error checking request status: {e}")
