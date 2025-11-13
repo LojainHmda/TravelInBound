@@ -50,15 +50,16 @@ def create_app():
     db.init_app(app)
     csrf.init_app(app)
     
-    # Ensure CSRF token is always generated for every request
+    # Ensure CSRF token is always generated and session is created
     @app.before_request
     def ensure_csrf_token():
         from flask_wtf.csrf import generate_csrf
         from flask import session
-        # Generate CSRF token and mark session as modified to ensure it's saved
-        token = generate_csrf()
-        if '_csrf_token' not in session:
-            session.modified = True
+        # Force session creation by accessing it
+        if 'init' not in session:
+            session['init'] = True
+        # Generate CSRF token - this will store it in the session
+        generate_csrf()
     
     with app.app_context():
         # Import models to ensure tables are created
