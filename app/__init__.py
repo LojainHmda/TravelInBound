@@ -27,6 +27,21 @@ def create_app():
         "pool_pre_ping": True,
     }
     
+    # CSRF Configuration
+    app.config['WTF_CSRF_ENABLED'] = True
+    app.config['WTF_CSRF_TIME_LIMIT'] = None
+    app.config['WTF_CSRF_SSL_STRICT'] = False
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    
+    # Session Configuration
+    app.config['SESSION_COOKIE_SECURE'] = False
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    
+    # Suppress CSRF logging
+    import logging
+    logging.getLogger('flask_wtf.csrf').setLevel(logging.ERROR)
+    
     # Initialize extensions
     db.init_app(app)
     login_manager.init_app(app)
