@@ -28,8 +28,14 @@ def create_app():
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
     
     # Configure CSRF protection to accept tokens from headers
-    app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']
+    app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken', 'X-CSRF-Token']
     app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    app.config['WTF_CSRF_TIME_LIMIT'] = None  # Disable CSRF token expiration
+    
+    # Session configuration for proper CSRF token storage
+    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     
     # Configure the database
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///travel_booking.db")
@@ -42,6 +48,12 @@ def create_app():
     # Initialize extensions with app
     db.init_app(app)
     csrf.init_app(app)
+    
+    # Ensure CSRF token is always generated for every request
+    @app.before_request
+    def csrf_protect():
+        from flask_wtf.csrf import generate_csrf
+        generate_csrf()
     
     with app.app_context():
         # Import models to ensure tables are created
