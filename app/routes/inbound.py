@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import json
 import os
 
-from app import db
+from app import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundCashExpense, InboundQuotation, 
@@ -234,6 +234,7 @@ def view_request(id):
 
 # API Route for updating request details
 @inbound_bp.route('/api/<int:request_id>/update', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_update_request(request_id):
     """Update inbound request master details"""
@@ -275,6 +276,7 @@ def api_update_request(request_id):
 
 # API Route for saving itinerary
 @inbound_bp.route('/api/<int:request_id>/save-itinerary', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_save_itinerary(request_id):
     """Save itinerary data for inbound request - auto-generates days if empty"""
@@ -362,6 +364,7 @@ def api_save_itinerary(request_id):
 
 # API Routes for AJAX operations
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['GET'])
+@csrf.exempt
 @login_required
 def api_get_itinerary(request_id):
     """Get itinerary rows for a request"""
@@ -394,6 +397,7 @@ def api_get_itinerary(request_id):
     return jsonify({'rows': rows, 'total': request_obj.calculate_total()})
 
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_save_itinerary_original(request_id):
     """Save itinerary rows for a request (original version)"""
@@ -538,6 +542,7 @@ def api_save_itinerary_original(request_id):
     return jsonify({'success': True, 'total': request_obj.total_amount})
 
 @inbound_bp.route('/api/<int:request_id>/generate-days', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_generate_by_days(request_id):
     """Generate itinerary rows by days"""
@@ -572,6 +577,7 @@ def api_generate_by_days(request_id):
     return jsonify({'success': True})
 
 @inbound_bp.route('/api/<int:request_id>/generate-sections', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_generate_by_sections(request_id):
     """Generate itinerary rows by service sections"""
@@ -706,6 +712,7 @@ def _auto_generate_services(request_obj, itinerary_row):
         db.session.add(guide)
 
 @inbound_bp.route('/api/<int:request_id>/update-master-details', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_update_master_details(request_id):
     """Update master details"""
@@ -764,6 +771,7 @@ def api_update_master_details(request_id):
     })
 
 @inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_update_status(request_id):
     """Update request status"""
@@ -784,6 +792,7 @@ def api_update_status(request_id):
     return jsonify({'success': True, 'status': new_status})
 
 @inbound_bp.route('/api/<int:request_id>/generate-services', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_generate_services(request_id):
     """Generate services and create normal booking"""
@@ -989,6 +998,7 @@ def generate_voucher(request_id):
         return error_html
 
 @inbound_bp.route('/api/<int:request_id>/create-booking', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_create_booking(request_id):
     """Create a booking from an inbound request"""
@@ -1031,6 +1041,7 @@ def api_create_booking(request_id):
         }), 500
 
 @inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['GET'])
+@csrf.exempt
 @login_required
 def api_get_arrival_departure_batches(request_id):
     """Get all arrival/departure batches for a request"""
@@ -1073,6 +1084,7 @@ def api_get_arrival_departure_batches(request_id):
     return jsonify({'batches': batches_data})
 
 @inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_save_arrival_departure_batches(request_id):
     """Save arrival/departure batches for a request"""
@@ -1213,6 +1225,7 @@ def api_save_arrival_departure_batches(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_generate_quote(request_id):
     """Generate a quote from an inbound request (creates booking with QUOTED status)"""
@@ -1343,6 +1356,7 @@ def api_generate_quote(request_id):
         }), 500
 
 @inbound_bp.route('/api/<int:request_id>/generate-proforma', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_generate_proforma(request_id):
     """Generate a proforma invoice for a quoted booking"""
@@ -1553,6 +1567,7 @@ def preview_proforma(request_id):
                          invoice=invoice_data)
 
 @inbound_bp.route('/api/<int:request_id>/update-proforma-prices', methods=['POST'])
+@csrf.exempt
 @login_required
 def update_proforma_prices(request_id):
     """Update pricing for proforma invoice service items"""
@@ -1612,6 +1627,7 @@ def update_proforma_prices(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/update-pricing-mode', methods=['POST'])
+@csrf.exempt
 @login_required
 def update_pricing_mode(request_id):
     """Update pricing mode for proforma invoice (ITEMIZED or LUMPSUM)"""
@@ -1637,6 +1653,7 @@ def update_pricing_mode(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
+@csrf.exempt
 @login_required
 def api_export_proforma_doc(request_id):
     """Export proforma invoice as Word document with service line items"""
@@ -1759,6 +1776,7 @@ def api_export_proforma_doc(request_id):
         return redirect(url_for('inbound.view_request', request_id=request_id))
 
 @inbound_bp.route('/api/<int:request_id>/export-voucher-doc', methods=['GET'])
+@csrf.exempt
 @login_required
 def api_export_voucher_doc(request_id):
     """Export trip voucher as Word document with full itinerary"""
@@ -2034,6 +2052,7 @@ def api_export_voucher_doc(request_id):
         return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/api/<int:request_id>/confirm-booking', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_confirm_booking(request_id):
     """Confirm a booking after proforma invoice is generated"""
@@ -2086,6 +2105,7 @@ def api_confirm_booking(request_id):
         }), 500
 
 @inbound_bp.route('/api/<int:request_id>/start-processing', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_start_processing(request_id):
     """Start processing an itinerary - change status from CONFIRMED to PROCESSING"""
@@ -3497,6 +3517,7 @@ def api_search_hotels():
     return jsonify({'results': results})
 
 @inbound_bp.route('/api/<int:request_id>/update-itinerary-bulk', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_update_itinerary_bulk(request_id):
     """API endpoint to bulk update itinerary rows"""
@@ -3528,6 +3549,7 @@ def api_update_itinerary_bulk(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/add-itinerary-row', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_add_itinerary_row(request_id):
     """API endpoint to add a new itinerary row"""
@@ -3566,6 +3588,7 @@ def api_add_itinerary_row(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/delete-itinerary-row/<int:row_id>', methods=['DELETE'])
+@csrf.exempt
 @login_required
 def api_delete_itinerary_row(request_id, row_id):
     """API endpoint to delete an itinerary row"""
@@ -3589,6 +3612,7 @@ def api_delete_itinerary_row(request_id, row_id):
 
 # Supplier Confirmation Status Endpoints
 @inbound_bp.route('/api/hotel/<int:hotel_id>/mark-reserved', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_mark_hotel_reserved(hotel_id):
     """Mark a single hotel as RESERVED (Supplier Confirmed)"""
@@ -3613,6 +3637,7 @@ def api_mark_hotel_reserved(hotel_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/transport/<int:transport_id>/mark-reserved', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_mark_transport_reserved(transport_id):
     """Mark a single transport as RESERVED (Supplier Confirmed)"""
@@ -3637,6 +3662,7 @@ def api_mark_transport_reserved(transport_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/confirm-all-hotels', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_confirm_all_hotels(request_id):
     """Mark ALL hotels in a request as RESERVED (Supplier Confirmed)"""
@@ -3666,6 +3692,7 @@ def api_confirm_all_hotels(request_id):
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/confirm-all-transports', methods=['POST'])
+@csrf.exempt
 @login_required
 def api_confirm_all_transports(request_id):
     """Mark ALL transports in a request as RESERVED (Supplier Confirmed)"""
