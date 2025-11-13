@@ -27,6 +27,10 @@ def create_app():
     # Configure the app
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
     
+    # Configure CSRF protection to accept tokens from headers
+    app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken']
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    
     # Configure the database
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///travel_booking.db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
