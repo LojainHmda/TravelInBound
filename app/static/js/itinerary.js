@@ -237,10 +237,22 @@ class ItineraryManager {
 
     async saveItinerary() {
         try {
+            // Collect arrival/departure data from the form
+            const arrival_point = document.getElementById('itinerary_arrival_point')?.value || '';
+            const arrival_time = document.getElementById('itinerary_arrival_time')?.value || '';
+            const departure_point = document.getElementById('itinerary_departure_point')?.value || '';
+            const departure_time = document.getElementById('itinerary_departure_time')?.value || '';
+            
             const response = await fetch(`/inbound/api/${this.requestId}/itinerary`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({rows: this.itineraryData})
+                body: JSON.stringify({
+                    rows: this.itineraryData,
+                    arrival_point: arrival_point,
+                    arrival_time: arrival_time,
+                    departure_point: departure_point,
+                    departure_time: departure_time
+                })
             });
             
             const result = await response.json();

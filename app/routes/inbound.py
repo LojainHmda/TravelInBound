@@ -387,6 +387,7 @@ def api_get_itinerary(request_id):
             'flag_transport': row.flag_transport,
             'flag_meal': row.flag_meal,
             'flag_airport': row.flag_airport,
+            'flag_drive': getattr(row, 'flag_drive', False),
             'hotel_single_rooms': getattr(row, 'hotel_single_rooms', 0),
             'hotel_double_rooms': getattr(row, 'hotel_double_rooms', 0),
             'hotel_triple_rooms': getattr(row, 'hotel_triple_rooms', 0),
@@ -484,6 +485,7 @@ def api_save_itinerary_original(request_id):
             row.flag_transport = row_data.get('flag_transport', False)
             row.flag_meal = row_data.get('flag_meal', False)
             row.flag_airport = row_data.get('flag_airport', False)
+            row.flag_drive = row_data.get('flag_drive', False)
             row.hotel_single_rooms = int(row_data.get('hotel_single_rooms', 0))
             row.hotel_double_rooms = int(row_data.get('hotel_double_rooms', 0))
             row.hotel_triple_rooms = int(row_data.get('hotel_triple_rooms', 0))
@@ -505,6 +507,7 @@ def api_save_itinerary_original(request_id):
                 flag_transport=row_data.get('flag_transport', False),
                 flag_meal=row_data.get('flag_meal', False),
                 flag_airport=row_data.get('flag_airport', False),
+                flag_drive=row_data.get('flag_drive', False),
                 hotel_single_rooms=int(row_data.get('hotel_single_rooms', 0)),
                 hotel_double_rooms=int(row_data.get('hotel_double_rooms', 0)),
                 hotel_triple_rooms=int(row_data.get('hotel_triple_rooms', 0)),

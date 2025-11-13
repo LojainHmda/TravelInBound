@@ -145,6 +145,7 @@ class ItineraryRow(db.Model):
     flag_transport = db.Column(db.Boolean, default=False)
     flag_meal = db.Column(db.Boolean, default=False)
     flag_airport = db.Column(db.Boolean, default=False)
+    flag_drive = db.Column(db.Boolean, default=False)
     
     # Hotel room distribution (when flag_hotel is True)
     hotel_single_rooms = db.Column(db.Integer, default=0)
@@ -204,8 +205,49 @@ class InboundHotel(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationships
+    rooms = db.relationship('HotelRoom', backref='hotel', lazy=True, cascade='all, delete-orphan')
+    
     def __repr__(self):
         return f'<InboundHotel {self.hotel_name} - {self.check_in_date}>'
+    
+    def get_aggregate_status(self):
+        """Calculate aggregate status from room statuses"""
+        if not self.rooms:
+            return self.status
+        
+        room_statuses = [room.status for room in self.rooms]
+        
+        # If all rooms are CONFIRMED, hotel is CONFIRMED
+        if all(s == STATUS_CONFIRMED for s in room_statuses):
+            return STATUS_CONFIRMED
+        # If any room is RESERVED or CONFIRMED, hotel is RESERVED
+        elif any(s in [STATUS_RESERVED, STATUS_CONFIRMED] for s in room_statuses):
+            return STATUS_RESERVED
+        # Otherwise, hotel is REQUEST
+        else:
+            return STATUS_REQUEST
+
+class HotelRoom(db.Model):
+    """Individual hotel rooms for room-level confirmation tracking"""
+    __tablename__ = 'hotel_room'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    hotel_id = db.Column(db.Integer, db.ForeignKey('inbound_hotel.id', ondelete='CASCADE'), nullable=False)
+    room_type = db.Column(db.String(50), nullable=False)  # SINGLE, DOUBLE, TRIPLE, OTHER
+    room_count = db.Column(db.Integer, nullable=False, default=1)
+    status = db.Column(db.String(20), default=STATUS_REQUEST)
+    supplier_name = db.Column(db.String(200), nullable=True)
+    cost_per_room = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(3), default='USD')
+    notes = db.Column(db.Text, nullable=True)
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<HotelRoom {self.room_type} x{self.room_count} - {self.status}>'
 
 class InboundTransport(db.Model):
     """Transport services generated from itinerary flags"""
