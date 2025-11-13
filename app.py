@@ -62,10 +62,12 @@ def create_app():
     
     # Register blueprints
     try:
+        from app.routes.auth import auth_bp
         from app.routes.voucher import voucher_bp
         from app.routes.booking import booking_bp
         from app.routes.api import api_bp
         from app.routes.inbound import inbound_bp
+        app.register_blueprint(auth_bp, url_prefix='/auth')
         app.register_blueprint(voucher_bp)
         app.register_blueprint(booking_bp, url_prefix='/booking')
         app.register_blueprint(api_bp)
