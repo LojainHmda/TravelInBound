@@ -31,12 +31,17 @@ def create_app():
     app.config['WTF_CSRF_ENABLED'] = True
     app.config['WTF_CSRF_TIME_LIMIT'] = None
     app.config['WTF_CSRF_SSL_STRICT'] = False
-    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = False  # Don't check by default, only when token is present
+    app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']
     
     # Session Configuration
+    app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_COOKIE_SECURE'] = False
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_PATH'] = '/'
+    app.config['SESSION_COOKIE_DOMAIN'] = None
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
     
     # Suppress CSRF logging
     import logging
