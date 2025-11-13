@@ -36,6 +36,7 @@ def create_app():
     app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
     
     # Configure the database
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///travel_booking.db")
@@ -51,9 +52,13 @@ def create_app():
     
     # Ensure CSRF token is always generated for every request
     @app.before_request
-    def csrf_protect():
+    def ensure_csrf_token():
         from flask_wtf.csrf import generate_csrf
-        generate_csrf()
+        from flask import session
+        # Generate CSRF token and mark session as modified to ensure it's saved
+        token = generate_csrf()
+        if '_csrf_token' not in session:
+            session.modified = True
     
     with app.app_context():
         # Import models to ensure tables are created
