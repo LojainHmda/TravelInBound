@@ -25,18 +25,19 @@ def create_app():
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     
     # Configure the app
-    app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+    # Ensure we have a strong secret key
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production-12345678")
     
-    # Configure CSRF protection to accept tokens from headers
-    app.config['WTF_CSRF_HEADERS'] = ['X-CSRFToken', 'X-CSRF-Token']
-    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    # Configure CSRF protection
+    app.config['WTF_CSRF_ENABLED'] = True
     app.config['WTF_CSRF_TIME_LIMIT'] = None  # Disable CSRF token expiration
     
-    # Session configuration for proper CSRF token storage
-    app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+    # Session configuration
+    app.config['SESSION_COOKIE_SECURE'] = False
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+    app.config['SESSION_COOKIE_NAME'] = 'travel_session'
+    app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
     
     # Configure the database
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///travel_booking.db")
@@ -49,17 +50,6 @@ def create_app():
     # Initialize extensions with app
     db.init_app(app)
     csrf.init_app(app)
-    
-    # Ensure CSRF token is always generated and session is created
-    @app.before_request
-    def ensure_csrf_token():
-        from flask_wtf.csrf import generate_csrf
-        from flask import session
-        # Force session creation by accessing it
-        if 'init' not in session:
-            session['init'] = True
-        # Generate CSRF token - this will store it in the session
-        generate_csrf()
     
     with app.app_context():
         # Import models to ensure tables are created
