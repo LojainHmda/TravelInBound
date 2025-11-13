@@ -3084,6 +3084,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function generateItinerary() {
     fetch('/inbound/api/{{ request.id }}/generate-days', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
@@ -3133,6 +3134,7 @@ function updateStatus(event) {
     };
     
     fetch('/booking/{{ request.booking_id }}/update_status', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3164,6 +3166,7 @@ function generateInvoice() {
     }
     
     fetch('/booking/{{ request.booking_id }}/generate_invoice', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3236,6 +3239,7 @@ function addPayment(event) {
     };
     
     fetch('/booking/{{ request.booking_id }}/add_payment', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3264,6 +3268,7 @@ function addPayment(event) {
 
 function loadPaymentHistory() {
     fetch('/booking/{{ request.booking_id }}/payments', {
+        credentials: 'same-origin',
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -3303,6 +3308,7 @@ function loadPaymentHistory() {
 
 function updatePaymentSummary() {
     fetch('/booking/{{ request.booking_id }}/payment_summary', {
+        credentials: 'same-origin',
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -3335,6 +3341,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Generate Quote Function
 function generateQuote() {
     fetch('/inbound/api/{{ request.id }}/generate-quote', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3363,6 +3370,7 @@ function generateQuote() {
 // Generate Proforma Invoice Function
 function generateProformaInvoice() {
     fetch('/inbound/api/{{ request.id }}/generate-proforma', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3394,6 +3402,7 @@ function generateProformaInvoice() {
 // Confirm Booking Function
 function confirmBooking() {
     fetch('/inbound/api/{{ request.id }}/confirm-booking', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3425,6 +3434,7 @@ function startProcessing() {
     }
     
     fetch('/inbound/api/{{ request.id }}/start-processing', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3496,6 +3506,7 @@ function saveChanges(event) {
     
     // Send update request
     fetch('/inbound/api/{{ request.id }}/update', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3635,6 +3646,7 @@ function saveRoomDistribution() {
     const departureTime = document.getElementById('itinerary_departure_time')?.value || '';
     
     fetch('/inbound/api/{{ request.id }}/itinerary', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -3899,6 +3911,7 @@ function saveServiceSelection() {
     const departureTime = document.getElementById('itinerary_departure_time')?.value || '';
     
     fetch('/inbound/api/{{ request.id }}/itinerary', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -4186,6 +4199,7 @@ window.saveItinerary = function(event) {
     
     // Send update request (auto-generates services)
     fetch('/inbound/api/{{ request.id }}/itinerary', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -4248,6 +4262,7 @@ function generateDays() {
     console.log('generateDays called');
     
     fetch('/inbound/api/{{ request.id }}/generate-days', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -4308,6 +4323,7 @@ function saveChanges(event) {
     };
     
     fetch('/inbound/api/{{ request.id }}/update', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -4327,6 +4343,7 @@ function saveChanges(event) {
             
             // Auto-generate days after saving
             return fetch('/inbound/api/{{ request.id }}/generate-days', {
+                credentials: 'same-origin',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -5506,6 +5523,7 @@ function updateRequestStatus(newStatus) {
         document.querySelector(`[data-status="${newStatus}"]`).style.opacity = '0.5';
         
         fetch(`/inbound/api/${requestId}/update-status`, {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5658,6 +5676,7 @@ function addCreditMemo() {
     const amount = prompt('Enter credit memo amount:');
     if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         fetch(`/booking/${bookingId}/credit-memo`, {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5694,6 +5713,7 @@ function addDebitMemo() {
     const amount = prompt('Enter debit memo amount:');
     if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
         fetch(`/booking/${bookingId}/debit-memo`, {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -5728,6 +5748,7 @@ function generateProformaInvoice() {
     }
     
     fetch(`/booking/${bookingId}/generate-proforma-invoice`, {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
@@ -5759,6 +5780,7 @@ function convertToInvoice() {
     
     if (confirm('Convert proforma invoice to final invoice? This action cannot be undone.')) {
         fetch(`/booking/${bookingId}/convert-to-invoice`, {
+            credentials: 'same-origin',
             method: 'POST',
             headers: {
                 'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
@@ -6139,6 +6161,7 @@ function saveArrivalDepartureBatches() {
     
     // Save to database
     fetch('/inbound/api/{{ request.id }}/arrival-departure-batches', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -6227,6 +6250,7 @@ function saveAllItineraryEdits() {
     });
     
     fetch('/inbound/api/{{ request.id }}/update-itinerary-bulk', {
+        credentials: 'same-origin',
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -6258,6 +6282,7 @@ function deleteItineraryRow(rowId) {
     }
     
     fetch('/inbound/api/{{ request.id }}/delete-itinerary-row/' + rowId, {
+        credentials: 'same-origin',
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
@@ -6913,6 +6938,7 @@ function markHotelAsReserved(hotelId) {
     
     fetch(`/inbound/api/hotel/${hotelId}/mark-reserved`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
@@ -6940,6 +6966,7 @@ function markTransportAsReserved(transportId) {
     
     fetch(`/inbound/api/transport/${transportId}/mark-reserved`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
@@ -6969,6 +6996,7 @@ function confirmAllHotels() {
     
     fetch(`/inbound/api/${requestId}/confirm-all-hotels`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
@@ -6998,6 +7026,7 @@ function confirmAllTransports() {
     
     fetch(`/inbound/api/${requestId}/confirm-all-transports`, {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
