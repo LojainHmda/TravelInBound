@@ -136,14 +136,27 @@ class ServiceConfigManager {
             return;
         }
         
+        // For transport, just save without date selection (has its own from/to dates)
+        if (this.currentServiceType === 'transport') {
+            console.log('Transport service - using form dates, no row selection needed');
+            if (this.serviceConfigModal) {
+                this.serviceConfigModal.hide();
+            }
+            this.autoSaveOnly();
+            return;
+        }
+        
         // For hotel and guide, apply to ALL days (no selection needed)
         let targetDates = this.selectedDates;
         if (['hotel', 'guide'].includes(this.currentServiceType)) {
             targetDates = this.getAllItineraryDates();
         }
         
+        // Only show date selection alert for meal and airport services
         if (targetDates.length === 0) {
-            alert('Please select at least one date by clicking on the itinerary rows.');
+            if (['meal', 'airport'].includes(this.currentServiceType)) {
+                alert('Please select at least one date by clicking on the itinerary rows.');
+            }
             return;
         }
         
