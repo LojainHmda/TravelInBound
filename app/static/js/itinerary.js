@@ -36,6 +36,25 @@ class ItineraryManager {
             }
             
             this.itineraryData = data.rows || [];
+            
+            // Update arrival/departure inputs if they exist in the response
+            if ('arrival_point' in data) {
+                const arrivalPointInput = document.getElementById('itinerary_arrival_point');
+                if (arrivalPointInput) arrivalPointInput.value = data.arrival_point || '';
+            }
+            if ('arrival_time' in data) {
+                const arrivalTimeInput = document.getElementById('itinerary_arrival_time');
+                if (arrivalTimeInput) arrivalTimeInput.value = data.arrival_time || '';
+            }
+            if ('departure_point' in data) {
+                const departurePointInput = document.getElementById('itinerary_departure_point');
+                if (departurePointInput) departurePointInput.value = data.departure_point || '';
+            }
+            if ('departure_time' in data) {
+                const departureTimeInput = document.getElementById('itinerary_departure_time');
+                if (departureTimeInput) departureTimeInput.value = data.departure_time || '';
+            }
+            
             this.renderItineraryTable();
             this.updatePricingSummary();
             this.updateServiceCounts();
