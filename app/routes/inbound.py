@@ -1108,14 +1108,7 @@ def api_save_hotels(request_id):
         for hotel_data in hotels_data:
             hotel = InboundHotel(
                 request_id=request_id,
-                name=hotel_data.get('hotel_name', ''),
-                # Store room distribution
-                single_rooms=hotel_data.get('hotel_single_rooms', 0),
-                double_rooms=hotel_data.get('hotel_double_rooms', 0),
-                triple_rooms=hotel_data.get('hotel_triple_rooms', 0),
-                other_rooms=hotel_data.get('hotel_other_rooms', 0),
-                # Store detailed room data as JSON
-                room_details=json.dumps(hotel_data.get('rooms', [])),
+                hotel_name=hotel_data.get('hotel_name', ''),
                 status='REQUEST'
             )
             
@@ -1126,9 +1119,19 @@ def api_save_hotels(request_id):
                 check_outs = [r['check_out'] for r in rooms if r.get('check_out')]
                 
                 if check_ins:
-                    hotel.check_in = datetime.strptime(min(check_ins), '%Y-%m-%d').date()
+                    hotel.check_in_date = datetime.strptime(min(check_ins), '%Y-%m-%d').date()
                 if check_outs:
-                    hotel.check_out = datetime.strptime(max(check_outs), '%Y-%m-%d').date()
+                    hotel.check_out_date = datetime.strptime(max(check_outs), '%Y-%m-%d').date()
+                    
+                # Calculate nights
+                if hotel.check_in_date and hotel.check_out_date:
+                    hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+                    
+            # If no room dates, use a default
+            if not hotel.check_in_date:
+                hotel.check_in_date = datetime.now().date()
+            if not hotel.check_out_date:
+                hotel.check_out_date = datetime.now().date() + timedelta(days=1)
             
             db.session.add(hotel)
         

@@ -165,6 +165,9 @@ class ServiceConfigManager {
             return;
         }
         
+        // Initialize targetDates variable
+        let targetDates = this.selectedDates;
+        
         // For hotel, collect and save hotel data first
         if (this.currentServiceType === 'hotel') {
             console.log('Collecting hotel configuration data...');
