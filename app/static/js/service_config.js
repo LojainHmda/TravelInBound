@@ -136,9 +136,28 @@ class ServiceConfigManager {
             return;
         }
         
-        // For transport, just save without date selection (has its own from/to dates)
+        // For transport, apply to dates between from/to in transport form
         if (this.currentServiceType === 'transport') {
-            console.log('Transport service - using form dates, no row selection needed');
+            console.log('Transport service - applying to date range');
+            
+            // Get the transport from/to dates from the form
+            const fromDateInputs = document.querySelectorAll('input[name="transport_from_date[]"]');
+            const toDateInputs = document.querySelectorAll('input[name="transport_to_date[]"]');
+            
+            // Apply transport flag to all dates between from/to dates
+            for (let i = 0; i < fromDateInputs.length; i++) {
+                const fromDate = fromDateInputs[i]?.value;
+                const toDate = toDateInputs[i]?.value;
+                
+                if (fromDate && toDate) {
+                    // Get all itinerary dates within this range
+                    const datesInRange = this.getDatesInRange(fromDate, toDate);
+                    datesInRange.forEach(dateStr => {
+                        this.setServiceFlag(dateStr, 'transport', true);
+                    });
+                }
+            }
+            
             if (this.serviceConfigModal) {
                 this.serviceConfigModal.hide();
             }
@@ -175,6 +194,26 @@ class ServiceConfigManager {
         // Auto-save ONLY (no reload) to preserve multi-hotel DOM state
         console.log(`${this.currentServiceType} service applied to ${targetDates.length} day(s)`);
         this.autoSaveOnly();
+    }
+    
+    getDatesInRange(fromDateStr, toDateStr) {
+        const dates = [];
+        const fromDate = new Date(fromDateStr);
+        const toDate = new Date(toDateStr);
+        
+        // Get all itinerary dates
+        document.querySelectorAll('input[name="date[]"]').forEach(input => {
+            if (input.value) {
+                const date = new Date(input.value);
+                // Check if this date is within the range (inclusive)
+                if (date >= fromDate && date <= toDate) {
+                    dates.push(input.value);
+                }
+            }
+        });
+        
+        console.log(`Found ${dates.length} dates in range ${fromDateStr} to ${toDateStr}`);
+        return dates;
     }
     
     getAllItineraryDates() {
