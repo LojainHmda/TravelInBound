@@ -2351,6 +2351,11 @@ body {
                                     <i class="fas fa-utensils mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Meal</span>
                                 </button>
+                                <button type="button" class="service-icon-button" data-service="drive"
+                                        style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
+                                    <i class="fas fa-road mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 600;">Drive</span>
+                                </button>
                                 <button type="button" onclick="openTripItineraryModal()"
                                         style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); min-width: 100px; font-weight: 600;">
                                     <i class="fas fa-calendar-alt mb-1" style="font-size: 1.2rem; display: block;"></i>
@@ -2474,6 +2479,14 @@ body {
                                                             </button>
                                                         </span>
                                                     {% endif %}
+                                                    {% if row.flag_drive %}
+                                                        <span class="badge bg-primary service-badge-removable" data-service="drive">
+                                                            <i class="fas fa-road"></i> Drive
+                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'drive')">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        </span>
+                                                    {% endif %}
                                                 </div>
                                                 <!-- Hidden inputs for form submission -->
                                                 <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{% if row.flag_hotel %}1{% endif %}">
@@ -2481,6 +2494,7 @@ body {
                                                 <input type="hidden" name="flag_transport_{{ loop.index0 }}" value="{% if row.flag_transport %}1{% endif %}">
                                                 <input type="hidden" name="flag_meal_{{ loop.index0 }}" value="{% if row.flag_meal %}1{% endif %}">
                                                 <input type="hidden" name="flag_airport_{{ loop.index0 }}" value="{% if row.flag_airport %}1{% endif %}">
+                                                <input type="hidden" name="flag_drive_{{ loop.index0 }}" value="{% if row.flag_drive %}1{% endif %}">
                                                 <!-- Hidden room data -->
                                                 <input type="hidden" id="single_{{ loop.index0 }}_input" name="hotel_single_rooms[]" value="{{ row.hotel_single_rooms or 0 }}">
                                                 <input type="hidden" id="double_{{ loop.index0 }}_input" name="hotel_double_rooms[]" value="{{ row.hotel_double_rooms or 0 }}">
@@ -4545,7 +4559,8 @@ function createServiceBadge(serviceType, rowIndex) {
         guide: { class: 'bg-success', icon: 'user-tie', text: 'Guide' },
         transport: { class: 'bg-info', icon: 'car', text: 'Transport' },
         meal: { class: 'bg-warning text-dark', icon: 'utensils', text: 'Meal' },
-        airport: { class: 'bg-secondary', icon: 'plane', text: 'Airport' }
+        airport: { class: 'bg-secondary', icon: 'plane', text: 'Airport' },
+        drive: { class: 'bg-primary', icon: 'road', text: 'Drive' }
     };
     
     const config = serviceConfig[serviceType];
