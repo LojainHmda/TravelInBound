@@ -1085,6 +1085,67 @@ def api_create_booking(request_id):
             'message': f'Error creating booking: {str(e)}'
         }), 500
 
+@inbound_bp.route('/api/<int:request_id>/save-hotels', methods=['POST'])
+@csrf.exempt  
+def api_save_hotels(request_id):
+    """Save hotel configuration data including rooms"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    hotels_data = data.get('hotels', [])
+    
+    from app.models.inbound import InboundHotel
+    import json
+    
+    try:
+        # Delete existing hotels for this request
+        InboundHotel.query.filter_by(request_id=request_id).delete()
+        
+        # Create new hotel records
+        for hotel_data in hotels_data:
+            hotel = InboundHotel(
+                request_id=request_id,
+                name=hotel_data.get('hotel_name', ''),
+                # Store room distribution
+                single_rooms=hotel_data.get('hotel_single_rooms', 0),
+                double_rooms=hotel_data.get('hotel_double_rooms', 0),
+                triple_rooms=hotel_data.get('hotel_triple_rooms', 0),
+                other_rooms=hotel_data.get('hotel_other_rooms', 0),
+                # Store detailed room data as JSON
+                room_details=json.dumps(hotel_data.get('rooms', [])),
+                status='REQUEST'
+            )
+            
+            # Calculate check-in/out from first/last room
+            rooms = hotel_data.get('rooms', [])
+            if rooms:
+                check_ins = [r['check_in'] for r in rooms if r.get('check_in')]
+                check_outs = [r['check_out'] for r in rooms if r.get('check_out')]
+                
+                if check_ins:
+                    hotel.check_in = datetime.strptime(min(check_ins), '%Y-%m-%d').date()
+                if check_outs:
+                    hotel.check_out = datetime.strptime(max(check_outs), '%Y-%m-%d').date()
+            
+            db.session.add(hotel)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Saved {len(hotels_data)} hotel(s) successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving hotels: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/arrivals', methods=['GET'])
 @csrf.exempt
 def api_get_arrivals(request_id):

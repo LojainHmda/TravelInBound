@@ -165,9 +165,23 @@ class ServiceConfigManager {
             return;
         }
         
-        // For hotel and guide, apply to ALL days (no selection needed)
-        let targetDates = this.selectedDates;
-        if (['hotel', 'guide'].includes(this.currentServiceType)) {
+        // For hotel, collect and save hotel data first
+        if (this.currentServiceType === 'hotel') {
+            console.log('Collecting hotel configuration data...');
+            
+            // Collect hotel room data
+            const hotelData = this.collectHotelData();
+            if (hotelData) {
+                // Save hotel data via API
+                this.saveHotelData(hotelData);
+            }
+            
+            // Apply hotel flag to all dates
+            targetDates = this.getAllItineraryDates();
+        }
+        
+        // For guide, apply to ALL days (no selection needed)
+        if (this.currentServiceType === 'guide') {
             targetDates = this.getAllItineraryDates();
         }
         
@@ -333,6 +347,81 @@ class ServiceConfigManager {
         } else {
             console.log('Itinerary form not found, skipping auto-save');
         }
+    }
+    
+    collectHotelData() {
+        console.log('Collecting hotel data from form...');
+        
+        const hotels = [];
+        const hotelCards = document.querySelectorAll('.hotel-card');
+        
+        hotelCards.forEach((card, hotelIndex) => {
+            const hotelData = {
+                hotel_index: hotelIndex,
+                hotel_name: card.querySelector('[name*="hotel_name"]')?.value || '',
+                hotel_single_rooms: parseInt(card.querySelector('[name*="hotel_single_rooms"]')?.value || 0),
+                hotel_double_rooms: parseInt(card.querySelector('[name*="hotel_double_rooms"]')?.value || 0),
+                hotel_triple_rooms: parseInt(card.querySelector('[name*="hotel_triple_rooms"]')?.value || 0),
+                hotel_other_rooms: parseInt(card.querySelector('[name*="hotel_other_rooms"]')?.value || 0),
+                rooms: []
+            };
+            
+            // Collect room details
+            const roomRows = card.querySelectorAll('.hotel-room-row');
+            roomRows.forEach(row => {
+                const roomData = {
+                    room_category: row.querySelector('[name*="room_category"]')?.value || '',
+                    hotel_room_option: row.querySelector('[name*="hotel_room_option"]')?.value || '',
+                    board_basis: row.querySelector('[name*="board_basis"]')?.value || '',
+                    dietary_requirements: row.querySelector('[name*="dietary_requirements"]')?.value || '',
+                    check_in: row.querySelector('[name*="check_in"]')?.value || '',
+                    check_out: row.querySelector('[name*="check_out"]')?.value || '',
+                    adults: parseInt(row.querySelector('[name*="adults"]')?.value || 0),
+                    children: parseInt(row.querySelector('[name*="children"]')?.value || 0),
+                    lead_passenger: row.querySelector('[name*="lead_passenger"]')?.value || ''
+                };
+                hotelData.rooms.push(roomData);
+            });
+            
+            hotels.push(hotelData);
+        });
+        
+        console.log('Collected hotel data:', hotels);
+        return hotels;
+    }
+    
+    saveHotelData(hotelData) {
+        console.log('Saving hotel data to backend...');
+        
+        // Get request ID from URL or page
+        const pathParts = window.location.pathname.split('/');
+        const requestId = pathParts[pathParts.indexOf('inbound') + 1];
+        
+        if (!requestId) {
+            console.error('Request ID not found');
+            return;
+        }
+        
+        // Save via API
+        fetch(`/inbound/api/${requestId}/save-hotels`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+            },
+            body: JSON.stringify({ hotels: hotelData })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Hotels saved successfully');
+            } else {
+                console.error('Error saving hotels:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error saving hotels:', error);
+        });
     }
 }
 
