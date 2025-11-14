@@ -254,6 +254,27 @@ def api_update_request(request_id):
         request_obj.pax = int(data.get('pax', request_obj.pax))
         request_obj.special_note = data.get('special_note', request_obj.special_note)
         
+        # Update arrival/departure details
+        request_obj.arrival_point = data.get('arrival_point', request_obj.arrival_point)
+        request_obj.departure_point = data.get('departure_point', request_obj.departure_point)
+        
+        # Handle arrival/departure time updates
+        if data.get('arrival_time'):
+            try:
+                request_obj.arrival_time = datetime.strptime(data.get('arrival_time'), '%H:%M').time()
+            except:
+                pass  # Invalid time format, skip
+        elif data.get('arrival_time') == '':
+            request_obj.arrival_time = None
+            
+        if data.get('departure_time'):
+            try:
+                request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
+            except:
+                pass  # Invalid time format, skip
+        elif data.get('departure_time') == '':
+            request_obj.departure_time = None
+        
         # Update dates
         from_date_str = data.get('from_date')
         to_date_str = data.get('to_date')
