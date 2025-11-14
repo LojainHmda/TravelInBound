@@ -485,7 +485,7 @@ class DepartureBatch(db.Model):
     vehicle_details = db.Column(db.String(200), nullable=True)
     pax_count = db.Column(db.Integer, default=0)
     flight_number = db.Column(db.String(50), nullable=True)
-    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')
+    meet_greet = db.Column(db.Boolean, default=False)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

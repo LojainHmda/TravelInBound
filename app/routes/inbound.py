@@ -1139,7 +1139,7 @@ def api_get_departures(request_id):
             'vehicle_details': batch.vehicle_details or '',
             'pax_count': batch.pax_count or 0,
             'flight_number': batch.flight_number or '',
-            'departure_tax': batch.departure_tax or 'NOT_INCLUDED'
+            'meet_greet': batch.meet_greet if hasattr(batch, 'meet_greet') else False
         })
     
     return jsonify({'success': True, 'batches': batches_data})
@@ -1273,6 +1273,11 @@ def api_save_departures(request_id):
                 except:
                     pax_count = 0
             
+            # Parse meet_greet boolean
+            meet_greet = False
+            if batch_data.get('meet_greet'):
+                meet_greet = batch_data['meet_greet'] in ['true', 'True', True, 1, '1']
+            
             batch = DepartureBatch(
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -1283,7 +1288,7 @@ def api_save_departures(request_id):
                 vehicle_details=batch_data.get('vehicle_details') or None,
                 pax_count=pax_count,
                 flight_number=batch_data.get('flight_number') or None,
-                departure_tax=batch_data.get('departure_tax') or 'NOT_INCLUDED'
+                meet_greet=meet_greet
             )
             db.session.add(batch)
         

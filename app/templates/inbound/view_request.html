@@ -5897,11 +5897,13 @@ function convertToInvoice() {
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Departure Tax</label>
-                            <select class="form-control" name="departure_tax">
-                                <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="INCLUDED">Included</option>
-                            </select>
+                            <label class="form-label">Meet & Greet Service</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="meet_greet" id="meet_greet">
+                                <label class="form-check-label" for="meet_greet">
+                                    Yes
+                                </label>
+                            </div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Vehicle Type</label>
@@ -6271,7 +6273,7 @@ function renderDeparturesTable() {
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
-                    <th>Tax</th>
+                    <th>Meet & Greet</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -6291,7 +6293,7 @@ function renderDeparturesTable() {
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
-                <td>${batch.departure_tax || 'NOT_INCLUDED'}</td>
+                <td>${batch.meet_greet ? 'Yes' : 'No'}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
                             onclick="${isNew ? `removeNewDeparture(${deleteIndex})` : `deleteDeparture(${deleteIndex})`}">
@@ -6374,9 +6376,18 @@ document.getElementById('departureForm')?.addEventListener('submit', function(e)
     e.preventDefault();
     const formData = new FormData(e.target);
     const newDeparture = {};
+    
+    // Handle checkbox for meet_greet
+    const meetGreetCheckbox = e.target.querySelector('[name="meet_greet"]');
+    newDeparture['meet_greet'] = meetGreetCheckbox ? meetGreetCheckbox.checked : false;
+    
+    // Handle other form fields
     formData.forEach((value, key) => {
-        newDeparture[key] = value;
+        if (key !== 'meet_greet') {
+            newDeparture[key] = value;
+        }
     });
+    
     newDepartures.push(newDeparture);
     renderDeparturesTable();  // Just update display
     e.target.reset();
