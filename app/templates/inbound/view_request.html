@@ -6216,6 +6216,7 @@ function openArrivalDepartureBatchModal() {
 // Load existing batches when modal opens
 document.getElementById('arrivalDepartureModal')?.addEventListener('shown.bs.modal', function() {
     const container = document.getElementById('arrivalDepartureBatchesContainer');
+    if (!container) return; // Exit if container doesn't exist
     
     // Only load if container is empty
     if (container.children.length === 0) {
