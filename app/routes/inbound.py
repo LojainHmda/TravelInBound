@@ -1539,20 +1539,120 @@ def api_generate_quote(request_id):
             'message': f'Error generating quote: {str(e)}'
         }), 500
 
-@inbound_bp.route('/api/<int:request_id>/generate-proforma', methods=['POST'])
+@inbound_bp.route('/api/<int:request_id>/confirm-all-suppliers', methods=['POST'])
 @csrf.exempt
-
-def api_generate_proforma(request_id):
-    """Generate a proforma invoice for a quoted booking"""
+def api_confirm_all_suppliers(request_id):
+    """Confirm all services with suppliers - changes all to RESERVED and updates request status"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
+    from app.models import STATUS_RESERVED
+    from app.models.inbound import InboundHotel, InboundTransport
+    
+    from app.models import STATUS_QUOTED
+    
+    try:
+        # Update all hotels to RESERVED (individual services)
+        for hotel in request_obj.hotels:
+            hotel.status = STATUS_RESERVED
+        
+        # Update all transports to RESERVED (individual services)
+        for transport in request_obj.transports:
+            transport.status = STATUS_RESERVED
+        
+        # Update parent request status to QUOTED (after supplier confirmation)
+        request_obj.status = STATUS_QUOTED
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'All services confirmed with suppliers. Status updated to QUOTED.',
+            'new_status': STATUS_QUOTED
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/service/<int:service_id>/confirm-supplier', methods=['POST'])
+@csrf.exempt
+def api_confirm_supplier(request_id, service_id):
+    """Confirm a service with supplier - changes status to RESERVED"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models import STATUS_RESERVED, STATUS_QUOTED
+    from app.models.inbound import InboundHotel, InboundTransport
+    
+    service_type = request.json.get('service_type')
+    
+    try:
+        # Find and update the service
+        if service_type == 'hotel':
+            service = InboundHotel.query.filter_by(id=service_id, request_id=request_id).first()
+        elif service_type == 'transport':
+            service = InboundTransport.query.filter_by(id=service_id, request_id=request_id).first()
+        else:
+            return jsonify({'error': 'Invalid service type'}), 400
+        
+        if not service:
+            return jsonify({'error': 'Service not found'}), 404
+        
+        # Update status to RESERVED (supplier confirmed)
+        service.status = STATUS_RESERVED
+        db.session.commit()
+        
+        # Check if all services are confirmed
+        all_confirmed = True
+        for hotel in request_obj.hotels:
+            if hotel.status != STATUS_RESERVED and hotel.status != STATUS_QUOTED:
+                all_confirmed = False
+                break
+        
+        for transport in request_obj.transports:
+            if transport.status != STATUS_RESERVED and transport.status != STATUS_QUOTED:
+                all_confirmed = False
+                break
+        
+        return jsonify({
+            'success': True,
+            'message': 'Supplier confirmation recorded',
+            'new_status': STATUS_RESERVED,
+            'all_confirmed': all_confirmed
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/generate-proforma', methods=['POST'])
+@csrf.exempt
+
+def api_generate_proforma(request_id):
+    """Generate a proforma invoice for a confirmed booking - changes status to QUOTED"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models import STATUS_QUOTED, STATUS_CONFIRMED
+    
+    # Check if status is QUOTED (suppliers confirmed)
+    if request_obj.status != STATUS_QUOTED:
+        return jsonify({
+            'success': False,
+            'message': 'Please confirm all services with suppliers first. Status must be QUOTED to generate proforma invoice.'
+        }), 400
+    
     if not request_obj.booking_id:
         return jsonify({
             'success': False,
-            'message': 'No quote found. Please generate a quote first.'
+            'message': 'No booking found. Please create a booking first.'
         }), 400
     
     try:
@@ -1563,19 +1663,13 @@ def api_generate_proforma(request_id):
                 'message': 'Booking not found'
             }), 404
         
-        if booking.status != 'QUOTED':
-            return jsonify({
-                'success': False,
-                'message': 'Booking must be in QUOTED status to generate proforma invoice'
-            }), 400
-        
         # Generate proforma invoice number if not exists
         if not booking.invoice_number:
             booking.generate_invoice_number()
         
-        # Update status to QUOTED when proforma invoice generated
-        booking.status = 'QUOTED'
-        request_obj.status = 'QUOTED'
+        # Status remains QUOTED (already set during supplier confirmation)
+        booking.status = STATUS_QUOTED
+        # request_obj.status already STATUS_QUOTED from supplier confirmation
         
         db.session.commit()
         
