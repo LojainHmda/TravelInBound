@@ -1894,24 +1894,24 @@ body {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Arrival Point</label>
-                                <input type="text" class="form-control" name="arrival_point" value="{{ request.arrival_point or '' }}" 
+                                <input type="text" class="form-control" id="itinerary_arrival_point" name="arrival_point" value="{{ request.arrival_point or '' }}" 
                                        list="arrival-points-list" placeholder="Type or select arrival point...">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Arrival Time</label>
-                                <input type="time" class="form-control" name="arrival_time" value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                                <input type="time" class="form-control" id="itinerary_arrival_time" name="arrival_time" value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Departure Point</label>
-                                <input type="text" class="form-control" name="departure_point" value="{{ request.departure_point or '' }}" 
+                                <input type="text" class="form-control" id="itinerary_departure_point" name="departure_point" value="{{ request.departure_point or '' }}" 
                                        list="departure-points-list" placeholder="Type or select departure point...">
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Departure Time</label>
-                                <input type="time" class="form-control" name="departure_time" value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                                <input type="time" class="form-control" id="itinerary_departure_time" name="departure_time" value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
                             </div>
                         </div>
 
@@ -5423,21 +5423,21 @@ function handleCustomerSelectionInView(customerId, customerName) {
                             <div class="row">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
-                                    <input type="text" class="form-control mb-3" id="itinerary_arrival_point" 
+                                    <input type="text" class="form-control mb-3" id="modal_arrival_point" 
                                            value="{{ request.arrival_point or '' }}" 
                                            placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
                                     <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
-                                    <input type="time" class="form-control" id="itinerary_arrival_time" 
+                                    <input type="time" class="form-control" id="modal_arrival_time" 
                                            value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
-                                    <input type="text" class="form-control mb-3" id="itinerary_departure_point" 
+                                    <input type="text" class="form-control mb-3" id="modal_departure_point" 
                                            value="{{ request.departure_point or '' }}" 
                                            list="departure-points-list"
                                            placeholder="Type or select departure point...">
                                     <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
-                                    <input type="time" class="form-control" id="itinerary_departure_time" 
+                                    <input type="time" class="form-control" id="modal_departure_time" 
                                            value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
                                 </div>
                             </div>
