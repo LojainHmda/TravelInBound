@@ -59,10 +59,11 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page'
-    login_manager.login_message_category = 'warning'
+    # Login disabled - removed authentication requirement
+    # login_manager.init_app(app)
+    # login_manager.login_view = 'auth.login'
+    # login_manager.login_message = 'Please log in to access this page'
+    # login_manager.login_message_category = 'warning'
     
     # Initialize CSRF protection
     csrf.init_app(app)
@@ -88,6 +89,23 @@ def create_app():
     def pprint_filter(value):
         import pprint
         return pprint.pformat(value)
+    
+    # Mock current_user for templates (authentication disabled)
+    class MockUser:
+        is_authenticated = True
+        id = 1
+        username = 'admin'
+        role = 'admin'
+        
+        def can_access_finance(self):
+            return True
+        
+        def is_admin(self):
+            return True
+    
+    @app.context_processor
+    def inject_mock_user():
+        return {'current_user': MockUser()}
     
     with app.app_context():
         # Import models to ensure they are registered with SQLAlchemy
@@ -154,11 +172,11 @@ def create_app():
         from app.routes.inbound import inbound_bp
         app.register_blueprint(inbound_bp)
         
-        # Set up login manager
-        from app.models import User
-        @login_manager.user_loader
-        def load_user(user_id):
-            return User.query.get(int(user_id))
+        # Login manager disabled - authentication removed
+        # from app.models import User
+        # @login_manager.user_loader
+        # def load_user(user_id):
+        #     return User.query.get(int(user_id))
         
         # Create database tables
         try:

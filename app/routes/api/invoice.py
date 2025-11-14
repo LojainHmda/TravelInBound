@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, send_file, request
-from flask_login import login_required
 from app import db
 from app.models.booking import Booking
 from app.models.customer import Customer
@@ -16,7 +15,7 @@ from datetime import datetime
 invoice_api = Blueprint('invoice_api', __name__)
 
 @invoice_api.route('/api/invoice/<int:booking_id>/generate', methods=['POST'])
-@login_required
+
 def generate_invoice_pdf(booking_id):
     """Generate PDF invoice for a booking"""
     try:
@@ -135,7 +134,7 @@ def generate_invoice_pdf(booking_id):
         return jsonify({'error': f'Failed to generate invoice: {str(e)}'}), 500
 
 @invoice_api.route('/api/invoice/<int:booking_id>/download')
-@login_required
+
 def download_invoice(booking_id):
     """Quick download link for invoice"""
     return generate_invoice_pdf(booking_id)

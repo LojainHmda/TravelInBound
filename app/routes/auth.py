@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash
 from app import db
 from app.models.user import User, create_test_data
@@ -8,59 +7,24 @@ auth_bp = Blueprint('auth', __name__)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-    
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        if not username or not password:
-            flash('Please enter both username and password', 'error')
-            return render_template('auth/login.html')
-        
-        user = User.query.filter_by(username=username).first()
-        
-        if user and user.check_password(password):
-            if user.active:
-                login_user(user, remember=True)
-                next_page = request.args.get('next')
-                
-                # Redirect to home page for all users
-                if next_page:
-                    return redirect(next_page)
-                else:
-                    return redirect(url_for('main.index'))
-            else:
-                flash('Your account has been deactivated. Please contact an administrator.', 'error')
-        else:
-            flash('Invalid username or password', 'error')
-    
-    return render_template('auth/login.html')
+    # Authentication disabled - redirect to home page
+    return redirect(url_for('main.index'))
 
 @auth_bp.route('/logout')
-@login_required
 def logout():
-    logout_user()
-    flash('You have been logged out successfully', 'success')
-    return redirect(url_for('auth.login'))
+    # Authentication disabled - redirect to home page
+    flash('Logout disabled - authentication removed', 'info')
+    return redirect(url_for('main.index'))
 
 @auth_bp.route('/admin/users')
-@login_required
 def admin_users():
-    if not current_user.is_admin():
-        flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('main.dashboard'))
-    
+    # Authentication disabled - all users have admin access
     users = User.query.all()
     return render_template('auth/admin_users.html', users=users)
 
 @auth_bp.route('/admin/users/new', methods=['GET', 'POST'])
-@login_required
 def create_user():
-    if not current_user.is_admin():
-        flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('main.dashboard'))
+    # Authentication disabled - all users have admin access
     
     if request.method == 'POST':
         username = request.form.get('username')
@@ -104,16 +68,12 @@ def create_user():
     return render_template('auth/create_user.html')
 
 @auth_bp.route('/admin/users/<int:user_id>/toggle-status')
-@login_required
 def toggle_user_status(user_id):
-    if not current_user.is_admin():
-        flash('Access denied. Admin privileges required.', 'error')
-        return redirect(url_for('main.dashboard'))
-    
+    # Authentication disabled - all users have admin access
     user = User.query.get_or_404(user_id)
     
-    if user.id == current_user.id:
-        flash('You cannot deactivate your own account', 'error')
+    if user.id == 1:
+        flash('You cannot deactivate the admin account', 'error')
         return redirect(url_for('auth.admin_users'))
     
     user.active = not user.active

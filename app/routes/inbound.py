@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, send_file
-from flask_login import current_user, login_required
 from datetime import datetime, timedelta
 import json
 import os
@@ -26,10 +25,10 @@ from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
 inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 
 @inbound_bp.route('/')
-@login_required
+
 def index():
     """List all inbound requests with filtering and run-down plan"""
-    query = InboundRequest.query.filter_by(user_id=current_user.id)
+    query = InboundRequest.query.filter_by(user_id=1)
     
     # Apply filters
     request_number = request.args.get('request_number', '')
@@ -73,7 +72,7 @@ def get_run_down_data_by_date():
     
     # Get all confirmed requests with their itinerary rows
     confirmed_requests = InboundRequest.query.filter(
-        InboundRequest.user_id == current_user.id,
+        InboundRequest.user_id == 1,
         InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
     ).all()
     
@@ -181,7 +180,7 @@ def get_run_down_data_by_date():
     return sorted_data
 
 @inbound_bp.route('/new')
-@login_required
+
 def new_request():
     """Create new inbound request and go directly to itinerary creation"""
     # Create a new request with default values
@@ -193,7 +192,7 @@ def new_request():
         contact_name='TBA',  # Default value
         nationality='TBA',  # Default value to avoid null constraint
         pax=1,
-        user_id=current_user.id,
+        user_id=1,
         status=STATUS_REQUEST
     )
     request_obj.calculate_days()
@@ -206,13 +205,13 @@ def new_request():
     return redirect(url_for('inbound.view_request', id=request_obj.id))
 
 @inbound_bp.route('/<int:id>/edit')
-@login_required
+
 def edit_request(id):
     """Edit inbound request with full itinerary interface"""
     request_obj = InboundRequest.query.get_or_404(id)
     
     # Check ownership
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         flash('Access denied.', 'error')
         return redirect(url_for('inbound.index'))
     
@@ -235,12 +234,12 @@ def view_request(id):
 # API Route for updating request details
 @inbound_bp.route('/api/<int:request_id>/update', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_update_request(request_id):
     """Update inbound request master details"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     try:
@@ -277,12 +276,12 @@ def api_update_request(request_id):
 # API Route for saving itinerary
 @inbound_bp.route('/api/<int:request_id>/save-itinerary', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_save_itinerary(request_id):
     """Save itinerary data for inbound request - auto-generates days if empty"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     try:
@@ -365,12 +364,12 @@ def api_save_itinerary(request_id):
 # API Routes for AJAX operations
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['GET'])
 @csrf.exempt
-@login_required
+
 def api_get_itinerary(request_id):
     """Get itinerary rows for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     rows = []
@@ -399,14 +398,14 @@ def api_get_itinerary(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_save_itinerary_original(request_id):
     """Save itinerary rows for a request (original version)"""
     print(f"[DEBUG] api_save_itinerary_original called for request_id: {request_id}")
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
-        print(f"[DEBUG] Access denied: user {current_user.id} != owner {request_obj.user_id}")
+    if request_obj.user_id != 1:
+        print(f"[DEBUG] Access denied: user {1} != owner {request_obj.user_id}")
         return jsonify({'error': 'Access denied'}), 403
     
     data = request.get_json()
@@ -546,12 +545,12 @@ def api_save_itinerary_original(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/generate-days', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_generate_by_days(request_id):
     """Generate itinerary rows by days"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     # Clear existing rows
@@ -581,12 +580,12 @@ def api_generate_by_days(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/generate-sections', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_generate_by_sections(request_id):
     """Generate itinerary rows by service sections"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     # Clear existing rows
@@ -716,12 +715,12 @@ def _auto_generate_services(request_obj, itinerary_row):
 
 @inbound_bp.route('/api/<int:request_id>/update-master-details', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_update_master_details(request_id):
     """Update master details"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     data = request.get_json()
@@ -775,12 +774,12 @@ def api_update_master_details(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_update_status(request_id):
     """Update request status"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     data = request.get_json()
@@ -796,13 +795,13 @@ def api_update_status(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/generate-services', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_generate_services(request_id):
     """Generate services and create normal booking"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
         
-        if request_obj.user_id != current_user.id:
+        if request_obj.user_id != 1:
             return jsonify({'error': 'Access denied'}), 403
         
         # Import the necessary models
@@ -932,12 +931,12 @@ def api_generate_services(request_id):
 # Removed view_services route - no longer needed since we redirect to normal booking page
 
 @inbound_bp.route('/<int:request_id>/invoice')
-@login_required
+
 def generate_invoice(request_id):
     """Generate invoice for the request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     if request_obj.status == STATUS_REQUEST:
@@ -956,7 +955,7 @@ def generate_voucher(request_id):
     request_obj = InboundRequest.query.get_or_404(request_id)
     
     # Temporarily disabled user validation for testing
-    # if request_obj.user_id != current_user.id:
+    # if request_obj.user_id != 1:
     #     abort(403)
     
     # Allow voucher generation for testing/preview
@@ -1002,12 +1001,12 @@ def generate_voucher(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/create-booking', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_create_booking(request_id):
     """Create a booking from an inbound request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     # Check if booking already exists by looking for existing services
@@ -1045,12 +1044,12 @@ def api_create_booking(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['GET'])
 @csrf.exempt
-@login_required
+
 def api_get_arrival_departure_batches(request_id):
     """Get all arrival/departure batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     # Import the ArrivalDeparture model
@@ -1088,12 +1087,12 @@ def api_get_arrival_departure_batches(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/arrival-departure-batches', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_save_arrival_departure_batches(request_id):
     """Save arrival/departure batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     data = request.get_json()
@@ -1229,7 +1228,7 @@ def api_save_arrival_departure_batches(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_generate_quote(request_id):
     """Generate a quote from an inbound request (creates booking with QUOTED status)"""
     # Import the necessary models
@@ -1238,7 +1237,7 @@ def api_generate_quote(request_id):
     
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     # Check if quote already exists
@@ -1360,12 +1359,12 @@ def api_generate_quote(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/generate-proforma', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_generate_proforma(request_id):
     """Generate a proforma invoice for a quoted booking"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     if not request_obj.booking_id:
@@ -1414,12 +1413,12 @@ def api_generate_proforma(request_id):
         }), 500
 
 @inbound_bp.route('/<int:request_id>/preview-proforma', methods=['GET'])
-@login_required
+
 def preview_proforma(request_id):
     """Preview proforma invoice on a web page before exporting to Word"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     # CREATE BOOKING IF IT DOESN'T EXIST
@@ -1571,12 +1570,12 @@ def preview_proforma(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/update-proforma-prices', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def update_proforma_prices(request_id):
     """Update pricing for proforma invoice service items"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
@@ -1631,12 +1630,12 @@ def update_proforma_prices(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/update-pricing-mode', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def update_pricing_mode(request_id):
     """Update pricing mode for proforma invoice (ITEMIZED or LUMPSUM)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
@@ -1657,12 +1656,12 @@ def update_pricing_mode(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/export-proforma-doc', methods=['GET'])
 @csrf.exempt
-@login_required
+
 def api_export_proforma_doc(request_id):
     """Export proforma invoice as Word document with service line items"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     try:
@@ -1780,12 +1779,12 @@ def api_export_proforma_doc(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/export-voucher-doc', methods=['GET'])
 @csrf.exempt
-@login_required
+
 def api_export_voucher_doc(request_id):
     """Export trip voucher as Word document with full itinerary"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     try:
@@ -2056,12 +2055,12 @@ def api_export_voucher_doc(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/confirm-booking', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_confirm_booking(request_id):
     """Confirm a booking after proforma invoice is generated"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     if not request_obj.booking_id:
@@ -2109,12 +2108,12 @@ def api_confirm_booking(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/start-processing', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_start_processing(request_id):
     """Start processing an itinerary - change status from CONFIRMED to PROCESSING"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
     if request_obj.status != 'CONFIRMED':
@@ -2165,22 +2164,22 @@ def get_status_color(status):
     return status_colors.get(status, '#94a3b8')
 
 @inbound_bp.route('/run-down')
-@login_required
+
 def run_down_plan():
     """Run-down plan dashboard showing all PROCESSING itineraries"""
     # Get all PROCESSING itineraries for current user
     processing_requests = InboundRequest.query.filter_by(
-        user_id=current_user.id,
+        user_id=1,
         status='PROCESSING'
     ).order_by(InboundRequest.from_date).all()
     
     # Get counts by status for stats bar
     status_counts = {
-        'REQUEST': InboundRequest.query.filter_by(user_id=current_user.id, status='REQUEST').count(),
-        'QUOTED': InboundRequest.query.filter_by(user_id=current_user.id, status='QUOTED').count(),
-        'CONFIRMED': InboundRequest.query.filter_by(user_id=current_user.id, status='CONFIRMED').count(),
-        'PROCESSING': InboundRequest.query.filter_by(user_id=current_user.id, status='PROCESSING').count(),
-        'COMPLETED': InboundRequest.query.filter_by(user_id=current_user.id, status='COMPLETED').count()
+        'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
+        'QUOTED': InboundRequest.query.filter_by(user_id=1, status='QUOTED').count(),
+        'CONFIRMED': InboundRequest.query.filter_by(user_id=1, status='CONFIRMED').count(),
+        'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
+        'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
     }
     
     return render_template('inbound/run_down.html',
@@ -2188,7 +2187,7 @@ def run_down_plan():
                          status_counts=status_counts)
 
 @inbound_bp.route('/api/run-down-data')
-@login_required
+
 def api_run_down_data():
     """API endpoint for run-down plan data"""
     from app.models.customer import Customer
@@ -2239,7 +2238,7 @@ def api_run_down_data():
     ).outerjoin(
         InboundRequest, Booking.id == InboundRequest.booking_id
     ).filter(
-        Booking.user_id == current_user.id
+        Booking.user_id == 1
     ).filter(
         and_(
             ServiceItem.start_date >= date_from,
@@ -2313,7 +2312,7 @@ def api_run_down_data():
     })
 
 @inbound_bp.route('/run-down-export-excel')
-@login_required
+
 def run_down_export_excel():
     """Export run-down plan to Excel"""
     from app.models.customer import Customer
@@ -2370,7 +2369,7 @@ def run_down_export_excel():
     ).outerjoin(
         InboundRequest, Booking.id == InboundRequest.booking_id
     ).filter(
-        Booking.user_id == current_user.id
+        Booking.user_id == 1
     ).filter(
         and_(
             ServiceItem.start_date >= date_from,
@@ -2468,7 +2467,7 @@ def run_down_export_excel():
     )
 
 @inbound_bp.route('/run-down-export-pdf')
-@login_required
+
 def run_down_export_pdf():
     """Export run-down plan to PDF"""
     from app.models.customer import Customer
@@ -2515,7 +2514,7 @@ def run_down_export_pdf():
     ).outerjoin(
         InboundRequest, Booking.id == InboundRequest.booking_id
     ).filter(
-        Booking.user_id == current_user.id
+        Booking.user_id == 1
     ).filter(
         and_(
             ServiceItem.start_date >= date_from,
@@ -2578,7 +2577,7 @@ def run_down_export_pdf():
 
 
 @inbound_bp.route('/wizard/step1', methods=['GET', 'POST'])
-@login_required
+
 def wizard_step1():
     """Wizard Step 1: Arrival & Departure Batches"""
     from flask import session
@@ -2682,7 +2681,7 @@ def wizard_step1():
 
 
 @inbound_bp.route('/wizard/step2', methods=['GET', 'POST'])
-@login_required
+
 def wizard_step2():
     """Wizard Step 2: Add All Services"""
     from flask import session
@@ -2738,7 +2737,7 @@ def wizard_step2():
 
 
 @inbound_bp.route('/wizard/step3', methods=['GET', 'POST'])
-@login_required
+
 def wizard_step3():
     """Wizard Step 3: Review & Create"""
     from flask import session
@@ -2806,7 +2805,7 @@ def wizard_step3():
                 nationality=wizard_data['nationality'],
                 pax=wizard_data['pax'],
                 special_note=wizard_data.get('special_note', ''),
-                user_id=current_user.id,
+                user_id=1,
                 status=STATUS_REQUEST
             )
             
@@ -3166,7 +3165,7 @@ def wizard_step3():
     wizard_data = session.get('wizard_data', {})
     return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
 @inbound_bp.route('/api/<int:request_id>/export-expense-report')
-@login_required
+
 def api_export_expense_report(request_id):
     """Export cash expense report in Windows of Jordan Excel format"""
     from openpyxl import Workbook
@@ -3176,7 +3175,7 @@ def api_export_expense_report(request_id):
     
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     try:
@@ -3260,12 +3259,12 @@ def api_export_expense_report(request_id):
         return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/add-cash-expense', methods=['POST'])
-@login_required
+
 def add_cash_expense(request_id):
     """Add a cash expense item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     try:
@@ -3326,12 +3325,12 @@ def add_cash_expense(request_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/update-cash-expense/<int:expense_id>', methods=['POST'])
-@login_required
+
 def update_cash_expense(request_id, expense_id):
     """Update a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     expense = InboundCashExpense.query.get_or_404(expense_id)
@@ -3357,12 +3356,12 @@ def update_cash_expense(request_id, expense_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-cash-expense/<int:expense_id>', methods=['POST'])
-@login_required
+
 def delete_cash_expense(request_id, expense_id):
     """Delete a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     expense = InboundCashExpense.query.get_or_404(expense_id)
@@ -3381,12 +3380,12 @@ def delete_cash_expense(request_id, expense_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/add-meal', methods=['POST'])
-@login_required
+
 def add_meal(request_id):
     """Add a meal item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     try:
@@ -3455,12 +3454,12 @@ def add_meal(request_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-meal/<int:meal_id>', methods=['POST'])
-@login_required
+
 def delete_meal(request_id, meal_id):
     """Delete a meal item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         abort(403)
     
     meal = InboundMeal.query.get_or_404(meal_id)
@@ -3479,7 +3478,7 @@ def delete_meal(request_id, meal_id):
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/api/hotels/search')
-@login_required
+
 def api_search_hotels():
     """API endpoint to search hotels for autocomplete"""
     query = request.args.get('query', '').strip()
@@ -3521,12 +3520,12 @@ def api_search_hotels():
 
 @inbound_bp.route('/api/<int:request_id>/update-itinerary-bulk', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_update_itinerary_bulk(request_id):
     """API endpoint to bulk update itinerary rows"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
@@ -3553,12 +3552,12 @@ def api_update_itinerary_bulk(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/add-itinerary-row', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_add_itinerary_row(request_id):
     """API endpoint to add a new itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
@@ -3592,12 +3591,12 @@ def api_add_itinerary_row(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/delete-itinerary-row/<int:row_id>', methods=['DELETE'])
 @csrf.exempt
-@login_required
+
 def api_delete_itinerary_row(request_id, row_id):
     """API endpoint to delete an itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != current_user.id:
+    if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
@@ -3616,14 +3615,14 @@ def api_delete_itinerary_row(request_id, row_id):
 # Supplier Confirmation Status Endpoints
 @inbound_bp.route('/api/hotel/<int:hotel_id>/mark-reserved', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_mark_hotel_reserved(hotel_id):
     """Mark a single hotel as RESERVED (Supplier Confirmed)"""
     try:
         hotel = InboundHotel.query.get_or_404(hotel_id)
         request_obj = InboundRequest.query.get_or_404(hotel.request_id)
         
-        if request_obj.user_id != current_user.id:
+        if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
         # Update hotel status to RESERVED
@@ -3641,14 +3640,14 @@ def api_mark_hotel_reserved(hotel_id):
 
 @inbound_bp.route('/api/transport/<int:transport_id>/mark-reserved', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_mark_transport_reserved(transport_id):
     """Mark a single transport as RESERVED (Supplier Confirmed)"""
     try:
         transport = InboundTransport.query.get_or_404(transport_id)
         request_obj = InboundRequest.query.get_or_404(transport.request_id)
         
-        if request_obj.user_id != current_user.id:
+        if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
         # Update transport status to RESERVED
@@ -3666,13 +3665,13 @@ def api_mark_transport_reserved(transport_id):
 
 @inbound_bp.route('/api/<int:request_id>/confirm-all-hotels', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_confirm_all_hotels(request_id):
     """Mark ALL hotels in a request as RESERVED (Supplier Confirmed)"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
         
-        if request_obj.user_id != current_user.id:
+        if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
         # Update all hotels to RESERVED
@@ -3696,13 +3695,13 @@ def api_confirm_all_hotels(request_id):
 
 @inbound_bp.route('/api/<int:request_id>/confirm-all-transports', methods=['POST'])
 @csrf.exempt
-@login_required
+
 def api_confirm_all_transports(request_id):
     """Mark ALL transports in a request as RESERVED (Supplier Confirmed)"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
         
-        if request_obj.user_id != current_user.id:
+        if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
         # Update all transports to RESERVED

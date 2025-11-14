@@ -3,7 +3,6 @@ Voucher generation routes
 """
 
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, send_file
-from flask_login import login_required, current_user
 from app.services.airline_voucher_generator import AirlineVoucherGenerator
 from app.models import Booking
 import tempfile
@@ -12,7 +11,7 @@ import os
 voucher_bp = Blueprint('voucher', __name__)
 
 @voucher_bp.route('/booking/<int:booking_id>/voucher/preview')
-@login_required
+
 def voucher_preview(booking_id):
     """Show voucher preview page"""
     booking = Booking.query.get_or_404(booking_id)
@@ -69,7 +68,7 @@ def _generate_voucher_internal(booking_id):
 
 
 @voucher_bp.route('/api/booking/<int:booking_id>/voucher', methods=['POST'])
-@login_required
+
 def api_generate_voucher(booking_id):
     """API endpoint to generate airline-style voucher"""
     try:

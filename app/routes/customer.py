@@ -5,7 +5,6 @@ from flask import (
     Blueprint, render_template, request, redirect, 
     url_for, flash, jsonify, current_app, send_file
 )
-from flask_login import login_required
 from werkzeug.utils import secure_filename
 from app import db
 from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearchForm
@@ -246,7 +245,7 @@ def view_document(customer_id, document_id):
     return send_file(file_path)
 
 @customer_bp.route('/api/list')
-@login_required
+
 def api_list_customers():
     """API endpoint to return customers as JSON"""
     try:
@@ -323,7 +322,7 @@ def scan_passport():
         }), 500
 
 @customer_bp.route('/api/search')
-@login_required
+
 def api_search_customers():
     """API endpoint to search customers with filters"""
     # Get search parameters
@@ -367,7 +366,7 @@ def api_search_customers():
     return jsonify({'results': results})
 
 @customer_bp.route('/api/create', methods=['POST'])
-@login_required
+
 def api_create_customer():
     """API endpoint to create a new customer via AJAX"""
     data = request.json

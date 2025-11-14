@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
 from app.models.customer import Customer
 from app.models.booking import Booking
 from app import db
@@ -9,7 +8,7 @@ from sqlalchemy import func
 customers_api_bp = Blueprint('customers_api', __name__)
 
 @customers_api_bp.route('/customers')
-@login_required
+
 def get_customers():
     """Get all customers with booking stats for selection modal"""
     try:
@@ -46,7 +45,7 @@ def get_customers():
         }), 500
 
 @customers_api_bp.route('/customers/<int:customer_id>')
-@login_required
+
 def get_customer(customer_id):
     """Get single customer details"""
     try:

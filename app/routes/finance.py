@@ -10,7 +10,6 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, 
     flash, jsonify, current_app, send_file, Response
 )
-from flask_login import login_required, current_user
 
 from app import db
 from app.models import (
@@ -28,22 +27,15 @@ from app.forms.expense import (
 finance = Blueprint('finance', __name__, url_prefix='/finance')
 
 @finance.route('/')
-@login_required
 def index():
-    """Finance module home with financial KPIs - Admin only access"""
-    if not current_user.can_access_finance():
-        flash('Access denied. Finance dashboard requires admin privileges.', 'error')
-        return redirect(url_for('main.dashboard'))
-    
+    """Finance module home with financial KPIs"""
+    # Authentication disabled - all users have access
     return dashboard()
 
 @finance.route('/dashboard')
-@login_required  
 def dashboard():
     """Finance dashboard with financial KPIs"""
-    if not current_user.can_access_finance():
-        flash('Access denied. Finance dashboard requires admin privileges.', 'error')
-        return redirect(url_for('main.dashboard'))
+    # Authentication disabled - all users have access
     # Get selected month from query parameter or default to current
     today = date.today()
     selected_month = request.args.get('month', 'current')
@@ -344,7 +336,7 @@ def dashboard():
     )
 
 @finance.route('/expenses')
-@login_required
+
 def expenses():
     """List and manage expenses"""
     filter_form = ExpenseFilterForm()
@@ -416,7 +408,7 @@ def expenses():
     )
 
 @finance.route('/cash-flow')
-@login_required
+
 def cash_flow():
     """Cash flow dashboard showing payments in and out"""
     try:
@@ -471,7 +463,7 @@ def cash_flow():
         return redirect(url_for('finance.index'))
 
 @finance.route('/expenses/new', methods=['GET', 'POST'])
-@login_required
+
 def new_expense():
     """Create a new expense"""
     form = ExpenseForm()
@@ -506,7 +498,7 @@ def new_expense():
     return render_template('finance/expense_form.html', form=form, expense=None)
 
 @finance.route('/expenses/<int:expense_id>/edit', methods=['GET', 'POST'])
-@login_required
+
 def edit_expense(expense_id):
     """Edit an existing expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -526,7 +518,7 @@ def edit_expense(expense_id):
     return render_template('finance/expense_form.html', form=form, expense=expense)
 
 @finance.route('/expenses/<int:expense_id>/delete', methods=['POST'])
-@login_required
+
 def delete_expense(expense_id):
     """Delete an expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -538,7 +530,7 @@ def delete_expense(expense_id):
     return redirect(url_for('finance.expenses'))
 
 @finance.route('/expenses/<int:expense_id>/attachments/upload', methods=['POST'])
-@login_required
+
 def upload_attachment(expense_id):
     """Upload attachment for an expense"""
     expense = Expense.query.get_or_404(expense_id)
@@ -575,14 +567,14 @@ def upload_attachment(expense_id):
     return redirect(url_for('finance.edit_expense', expense_id=expense_id))
 
 @finance.route('/categories')
-@login_required
+
 def expense_categories():
     """List and manage expense categories"""
     categories = ExpenseCategory.query.all()
     return render_template('finance/categories.html', categories=categories)
 
 @finance.route('/categories/new', methods=['GET', 'POST'])
-@login_required
+
 def new_category():
     """Create a new expense category"""
     form = ExpenseCategoryForm()
@@ -604,7 +596,7 @@ def new_category():
     return render_template('finance/category_form.html', form=form, category=None)
 
 @finance.route('/categories/<int:category_id>/edit', methods=['GET', 'POST'])
-@login_required
+
 def edit_category(category_id):
     """Edit an existing expense category"""
     category = ExpenseCategory.query.get_or_404(category_id)
@@ -620,7 +612,7 @@ def edit_category(category_id):
     return render_template('finance/category_form.html', form=form, category=category)
 
 @finance.route('/reports')
-@login_required
+
 def reports():
     """Financial reports landing page"""
     form = FinancialReportFilterForm()
@@ -636,7 +628,7 @@ def reports():
     return render_template('finance/reports.html', form=form)
 
 @finance.route('/reports/generate', methods=['GET', 'POST'])
-@login_required
+
 def generate_report():
     """Generate financial reports based on filters"""
     form = FinancialReportFilterForm()
@@ -846,7 +838,7 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     pass
 
 @finance.route('/suppliers')
-@login_required
+
 def list_suppliers():
     """List all suppliers with prepayment data - same as supplier costs"""
     # Get all prepayment lines with supplier info
@@ -901,7 +893,7 @@ def list_suppliers():
     return render_template('finance/suppliers_simple.html', supplier_stats=final_stats)
 
 @finance.route('/new-supplier', methods=['GET', 'POST'])
-@login_required
+
 def new_supplier():
     """Create a new supplier"""
     from app.forms.supplier import SupplierForm
@@ -965,7 +957,7 @@ def new_supplier():
     return render_template('finance/new_supplier.html', form=form, is_new=True)
 
 @finance.route('/supplier-costs')
-@login_required
+
 def supplier_costs():
     """Supplier costs view - shows prepayment lines across all suppliers"""
     # Get filter parameters
@@ -1021,7 +1013,7 @@ def supplier_costs():
     )
 
 @finance.route('/supplier/<int:supplier_id>')
-@login_required
+
 def supplier_details(supplier_id):
     """Show supplier details and payment history"""
     from app.models.supplier import Supplier, SupplierPrepaymentLine

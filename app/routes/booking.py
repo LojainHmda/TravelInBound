@@ -13,7 +13,6 @@ from app.models.booking import Booking, Payment
 from app.models.customer import Customer
 from app.models.service import ServiceItem, Document
 from app.models import STATUS_REQUEST, STATUS_IN_PROGRESS, STATUS_CONFIRMED
-from flask_login import current_user, login_required
 from app.utils.openai_helper import analyze_flight_ticket
 
 from app.forms.booking import BookingRequestForm, ServiceItemForm
@@ -1989,7 +1988,7 @@ def invoice_details(booking_id):
     return render_template('booking/invoice_details.html', booking=booking)
 
 @booking_bp.route('/<int:booking_id>/proforma-invoice')
-@login_required
+
 def proforma_invoice_details(booking_id):
     """Display proforma invoice details for a booking"""
     booking = Booking.query.get_or_404(booking_id)
@@ -2551,7 +2550,7 @@ def add_credit_line(booking_id):
 
 
 @booking_bp.route('/scan-flight-document', methods=['POST'])
-@login_required
+
 def scan_flight_document():
     """API endpoint to scan flight confirmation documents using AI"""
     try:
