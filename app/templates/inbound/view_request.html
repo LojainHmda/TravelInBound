@@ -5260,34 +5260,31 @@ function handleCustomerSelectionInView(customerId, customerName) {
                             <h6 class="mb-0"><i class="fas fa-car me-2"></i>Transport Configuration</h6>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label class="form-label">Vehicle Type:</label>
-                                    <select id="transportVehicleType" class="form-select">
-                                        <option value="car">Car</option>
-                                        <option value="van">Van</option>
-                                        <option value="bus">Bus</option>
-                                        <option value="luxury">Luxury Vehicle</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Pickup Time:</label>
-                                    <input type="time" id="transportPickupTime" class="form-control">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cost:</label>
-                                    <input type="number" id="transportCost" class="form-control" step="0.01" min="0">
-                                </div>
-                            </div>
-                            <div class="row mt-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Pickup Location:</label>
-                                    <input type="text" id="transportPickupLocation" class="form-control" placeholder="Enter pickup location">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Drop-off Location:</label>
-                                    <input type="text" id="transportDropoffLocation" class="form-control" placeholder="Enter drop-off location">
-                                </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead style="background-color: #f8f9fa;">
+                                        <tr>
+                                            <th style="width: 100px;">From Date</th>
+                                            <th style="width: 100px;">To Date</th>
+                                            <th style="width: 60px;">PAX</th>
+                                            <th style="width: 100px;">Vech Type</th>
+                                            <th style="width: 120px;">SUPPLIER</th>
+                                            <th style="width: 100px;">Driver</th>
+                                            <th style="width: 120px;">Pickup Point</th>
+                                            <th style="width: 80px;">Pickup Time</th>
+                                            <th style="width: 120px;">Drop off Point</th>
+                                            <th style="width: 150px;">Note</th>
+                                            <th style="width: 120px;">STATUS</th>
+                                            <th style="width: 60px;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="transportTableBody">
+                                        <!-- Rows will be added dynamically -->
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn btn-success btn-sm mt-2" onclick="addTransportRow()">
+                                    <i class="fas fa-plus me-1"></i>Add Transport
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -5844,22 +5841,51 @@ function convertToInvoice() {
                             <input type="time" class="form-control" name="arrival_time">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Location</label>
-                            <input type="text" class="form-control" name="arrival_point" placeholder="e.g., Queen Alia Airport">
+                            <label class="form-label">Arrival Point <span class="text-danger">*</span></label>
+                            <select class="form-control" name="arrival_point" required>
+                                <option value="">Select arrival point...</option>
+                                <optgroup label="Airports">
+                                    <option value="Queen Alia International Airport">Queen Alia International Airport (AMM)</option>
+                                    <option value="King Hussein International Airport">King Hussein International Airport - Aqaba</option>
+                                    <option value="Marka Civil Airport">Marka Civil Airport - Amman</option>
+                                </optgroup>
+                                <optgroup label="Land Borders">
+                                    <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                                    <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge (Jordan River)</option>
+                                    <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba-Eilat)</option>
+                                    <option value="Jaber Border">Jaber Border (Syria)</option>
+                                    <option value="Omari Border">Omari Border (Saudi Arabia)</option>
+                                    <option value="Mudawara Border">Mudawara Border (Saudi Arabia)</option>
+                                    <option value="Karameh Border">Karameh Border (Iraq)</option>
+                                </optgroup>
+                            </select>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Flight Number</label>
+                            <label class="form-label">Flight/Bus Number</label>
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Driver Name</label>
-                            <input type="text" class="form-control" name="driver_name">
+                            <label class="form-label">Visa Type</label>
+                            <select class="form-control" name="visa_type">
+                                <option value="NOT_INCLUDED">Not Included</option>
+                                <option value="FREE">Free</option>
+                                <option value="RESTRICTED">Restricted</option>
+                                <option value="INCLUDED">Included</option>
+                            </select>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Vehicle</label>
-                            <input type="text" class="form-control" name="vehicle_details" placeholder="e.g., Van">
+                            <label class="form-label">Vehicle Type</label>
+                            <select class="form-control" name="vehicle_details">
+                                <option value="">Select vehicle...</option>
+                                <option value="Sedan">Sedan (1-3 pax)</option>
+                                <option value="SUV">SUV (4-6 pax)</option>
+                                <option value="Van">Van (7-14 pax)</option>
+                                <option value="Minibus">Minibus (15-25 pax)</option>
+                                <option value="Coach">Coach Bus (26-50 pax)</option>
+                                <option value="Large Coach">Large Coach (50+ pax)</option>
+                            </select>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label class="form-label">PAX Count</label>
@@ -5867,9 +5893,20 @@ function convertToInvoice() {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Driver Name</label>
+                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
+                        </div>
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Batch Name</label>
                             <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Meeting Assistance</label>
+                            <select class="form-control" name="meeting_assistance">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success">
@@ -6064,6 +6101,109 @@ document.getElementById('arrivalsModal')?.addEventListener('shown.bs.modal', fun
 });
 </script>
 
+<script>
+// Transport Table Functions
+let transportRowCount = 0;
+
+function addTransportRow() {
+    const tbody = document.getElementById('transportTableBody');
+    const rowId = `transport_row_${transportRowCount++}`;
+    
+    const row = document.createElement('tr');
+    row.id = rowId;
+    row.innerHTML = `
+        <td><input type="date" class="form-control form-control-sm" name="transport_from_date_${rowId}"></td>
+        <td><input type="date" class="form-control form-control-sm" name="transport_to_date_${rowId}"></td>
+        <td><input type="number" class="form-control form-control-sm" name="transport_pax_${rowId}" min="1" style="width: 60px;"></td>
+        <td>
+            <select class="form-select form-select-sm" name="transport_vehicle_${rowId}">
+                <option value="">Select</option>
+                <option value="BUS">BUS</option>
+                <option value="CAR">CAR</option>
+                <option value="VAN">VAN</option>
+                <option value="V">V</option>
+            </select>
+        </td>
+        <td>
+            <select class="form-select form-select-sm" name="transport_supplier_${rowId}">
+                <option value="">Select</option>
+                <option value="ALPHA">ALPHA</option>
+                <option value="SAMI">SAMI</option>
+                <option value="ORTTY">ORTTY</option>
+                <option value="OTHER">OTHER</option>
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" name="transport_driver_${rowId}" placeholder="Driver"></td>
+        <td>
+            <select class="form-select form-select-sm" name="transport_pickup_${rowId}">
+                <option value="">Select</option>
+                <option value="QAIA">QAIA</option>
+                <option value="AMM">AMM</option>
+                <option value="AQJ">AQJ</option>
+                <option value="KHB">KHB</option>
+                <option value="OTHER">OTHER</option>
+            </select>
+        </td>
+        <td><input type="time" class="form-control form-control-sm" name="transport_time_${rowId}"></td>
+        <td>
+            <select class="form-select form-select-sm" name="transport_dropoff_${rowId}">
+                <option value="">Select</option>
+                <option value="QAIA">QAIA</option>
+                <option value="AMM">AMM</option>
+                <option value="AQJ">AQJ</option>
+                <option value="KHB">KHB</option>
+                <option value="OTHER">OTHER</option>
+            </select>
+        </td>
+        <td><input type="text" class="form-control form-control-sm" name="transport_note_${rowId}" placeholder="Note"></td>
+        <td>
+            <select class="form-select form-select-sm" name="transport_status_${rowId}">
+                <option value="REQUESTED">REQUESTED</option>
+                <option value="CONFIRMED">CONFIRMED</option>
+            </select>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeTransportRow('${rowId}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+function removeTransportRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+    }
+}
+
+function saveTransportData() {
+    const rows = document.querySelectorAll('#transportTableBody tr');
+    const transports = [];
+    
+    rows.forEach(row => {
+        const rowId = row.id;
+        const transport = {
+            from_date: document.querySelector(`[name="transport_from_date_${rowId}"]`)?.value || '',
+            to_date: document.querySelector(`[name="transport_to_date_${rowId}"]`)?.value || '',
+            pax: document.querySelector(`[name="transport_pax_${rowId}"]`)?.value || '',
+            vehicle_type: document.querySelector(`[name="transport_vehicle_${rowId}"]`)?.value || '',
+            supplier: document.querySelector(`[name="transport_supplier_${rowId}"]`)?.value || '',
+            driver: document.querySelector(`[name="transport_driver_${rowId}"]`)?.value || '',
+            pickup_point: document.querySelector(`[name="transport_pickup_${rowId}"]`)?.value || '',
+            pickup_time: document.querySelector(`[name="transport_time_${rowId}"]`)?.value || '',
+            dropoff_point: document.querySelector(`[name="transport_dropoff_${rowId}"]`)?.value || '',
+            note: document.querySelector(`[name="transport_note_${rowId}"]`)?.value || '',
+            status: document.querySelector(`[name="transport_status_${rowId}"]`)?.value || ''
+        };
+        transports.push(transport);
+    });
+    
+    return transports;
+}
+</script>
 
 <!-- Datalist for Arrival/Departure Points (autocomplete with free text) -->
 <datalist id="arrival-points-list">
