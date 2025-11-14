@@ -1097,11 +1097,11 @@ def api_save_hotels(request_id):
     data = request.get_json()
     hotels_data = data.get('hotels', [])
     
-    from app.models.inbound import InboundHotel
+    from app.models.inbound import InboundHotel, HotelRoom
     import json
     
     try:
-        # Delete existing hotels for this request
+        # Delete existing hotels and their rooms for this request
         InboundHotel.query.filter_by(request_id=request_id).delete()
         
         # Create new hotel records
@@ -1134,6 +1134,41 @@ def api_save_hotels(request_id):
                 hotel.check_out_date = datetime.now().date() + timedelta(days=1)
             
             db.session.add(hotel)
+            db.session.flush()  # Get the hotel ID before creating rooms
+            
+            # Create HotelRoom records for each room with detailed data
+            for room_data in rooms:
+                # Determine room type
+                room_category = room_data.get('room_category', 'Single Room')
+                if 'Single' in room_category:
+                    room_type = 'SINGLE'
+                elif 'Double' in room_category:
+                    room_type = 'DOUBLE'
+                elif 'Triple' in room_category:
+                    room_type = 'TRIPLE'
+                else:
+                    room_type = 'OTHER'
+                
+                # Store additional room details as JSON in notes field
+                room_details = {
+                    'hotel_room_option': room_data.get('hotel_room_option', ''),
+                    'board_basis': room_data.get('board_basis', 'BB'),
+                    'dietary_requirements': room_data.get('dietary_requirements', ''),
+                    'lead_passenger': room_data.get('lead_passenger', ''),
+                    'adults': room_data.get('adults', 1),
+                    'children': room_data.get('children', 0),
+                    'check_in': room_data.get('check_in', ''),
+                    'check_out': room_data.get('check_out', '')
+                }
+                
+                hotel_room = HotelRoom(
+                    hotel_id=hotel.id,
+                    room_type=room_type,
+                    room_count=1,
+                    status='REQUEST',
+                    notes=json.dumps(room_details)  # Store detailed data as JSON
+                )
+                db.session.add(hotel_room)
         
         db.session.commit()
         
