@@ -5997,6 +5997,7 @@ function deleteArrival(arrivalId) {
     }
 }
 
+// Cache-busting version: v2
 function saveAllArrivals() {
     if (newArrivals.length === 0) {
         showNotification('No new arrivals to save', 'info');
@@ -6026,6 +6027,14 @@ function saveAllArrivals() {
     });
 }
 
+// Remove the old event listener if it exists
+const oldForm = document.getElementById('arrivalForm');
+if (oldForm) {
+    const newForm = oldForm.cloneNode(true);
+    oldForm.parentNode.replaceChild(newForm, oldForm);
+}
+
+// Add the new event listener
 document.getElementById('arrivalForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -6033,10 +6042,21 @@ document.getElementById('arrivalForm')?.addEventListener('submit', function(e) {
     formData.forEach((value, key) => {
         newArrival[key] = value;
     });
+    // Just add to the local array, don't save to database
     newArrivals.push(newArrival);
-    renderArrivalsTable();  // Just update display, don't save yet
+    renderArrivalsTable();  // Just update display
     e.target.reset();
-    showNotification('Arrival added. Click "Save All Arrivals" to save.', 'info');
+    // Show a message reminding user to save
+    const saveBtn = document.querySelector('[onclick="saveAllArrivals()"]');
+    if (saveBtn) {
+        saveBtn.classList.add('btn-warning');
+        saveBtn.classList.remove('btn-primary');
+        setTimeout(() => {
+            saveBtn.classList.remove('btn-warning');
+            saveBtn.classList.add('btn-primary');
+        }, 500);
+    }
+    showNotification('Arrival added locally. Click "Save All Arrivals" to save to database.', 'info');
 });
 
 document.getElementById('arrivalsModal')?.addEventListener('shown.bs.modal', function() {
