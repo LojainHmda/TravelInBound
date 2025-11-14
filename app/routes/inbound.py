@@ -394,7 +394,29 @@ def api_get_itinerary(request_id):
             'row_cost': row.calculate_row_cost(request_obj.pax)
         })
     
-    return jsonify({'rows': rows, 'total': request_obj.calculate_total()})
+    # Handle arrival/departure times - could be datetime.time, string, or None
+    arrival_time_str = ''
+    if request_obj.arrival_time:
+        if hasattr(request_obj.arrival_time, 'strftime'):
+            arrival_time_str = request_obj.arrival_time.strftime('%H:%M')
+        elif isinstance(request_obj.arrival_time, str):
+            arrival_time_str = request_obj.arrival_time
+    
+    departure_time_str = ''
+    if request_obj.departure_time:
+        if hasattr(request_obj.departure_time, 'strftime'):
+            departure_time_str = request_obj.departure_time.strftime('%H:%M')
+        elif isinstance(request_obj.departure_time, str):
+            departure_time_str = request_obj.departure_time
+    
+    return jsonify({
+        'rows': rows,
+        'total': request_obj.calculate_total(),
+        'arrival_point': request_obj.arrival_point or '',
+        'arrival_time': arrival_time_str,
+        'departure_point': request_obj.departure_point or '',
+        'departure_time': departure_time_str
+    })
 
 @inbound_bp.route('/api/<int:request_id>/itinerary', methods=['POST'])
 @csrf.exempt
