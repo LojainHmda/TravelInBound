@@ -5878,6 +5878,9 @@ function convertToInvoice() {
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveAllArrivals()">
+                    <i class="fas fa-save me-1"></i>Save All Arrivals
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -5886,6 +5889,7 @@ function convertToInvoice() {
 
 <script>
 let arrivalBatches = [];
+let newArrivals = [];  // Track new arrivals to be added
 
 function loadArrivals() {
     fetch('/inbound/api/{{ request.id }}/arrivals')
@@ -5893,6 +5897,7 @@ function loadArrivals() {
         .then(data => {
             if (data.success) {
                 arrivalBatches = data.batches || [];
+                newArrivals = [];  // Clear new arrivals after loading
                 renderArrivalsTable();
             }
         })
@@ -5905,7 +5910,9 @@ function renderArrivalsTable() {
     const container = document.getElementById('arrivalsTableContainer');
     if (!container) return;
     
-    if (arrivalBatches.length === 0) {
+    const allArrivals = [...arrivalBatches, ...newArrivals];
+    
+    if (allArrivals.length === 0) {
         container.innerHTML = '<p class="text-muted"><i class="fas fa-info-circle me-2"></i>No arrivals added yet. Use the form below to add your first arrival.</p>';
         return;
     }
@@ -5928,9 +5935,11 @@ function renderArrivalsTable() {
             <tbody>
     `;
     
-    arrivalBatches.forEach((batch, index) => {
+    allArrivals.forEach((batch, index) => {
+        const isNew = index >= arrivalBatches.length;
+        const deleteIndex = isNew ? index - arrivalBatches.length : batch.id;
         html += `
-            <tr>
+            <tr ${isNew ? 'style="background-color: #f0fdf4;"' : ''}>
                 <td>${batch.arrival_date || '-'}</td>
                 <td>${batch.arrival_time || '-'}</td>
                 <td>${batch.arrival_point || '-'}</td>
@@ -5940,39 +5949,73 @@ function renderArrivalsTable() {
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
                 <td>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteArrival(${index})">
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="${isNew ? `removeNewArrival(${deleteIndex})` : `deleteArrival(${deleteIndex})`}">
                         <i class="fas fa-trash"></i>
                     </button>
+                    ${isNew ? '<span class="badge bg-success ms-2">New</span>' : ''}
                 </td>
             </tr>
         `;
     });
     
     html += '</tbody></table>';
+    if (newArrivals.length > 0) {
+        html += '<div class="alert alert-info mt-2"><i class="fas fa-info-circle me-2"></i>You have unsaved arrivals. Click "Save All Arrivals" to save them.</div>';
+    }
     container.innerHTML = html;
 }
 
-function deleteArrival(index) {
-    if (confirm('Delete this arrival?')) {
-        arrivalBatches.splice(index, 1);
-        saveArrivals();
+function removeNewArrival(index) {
+    if (confirm('Remove this unsaved arrival?')) {
+        newArrivals.splice(index, 1);
+        renderArrivalsTable();
     }
 }
 
-function saveArrivals() {
+function deleteArrival(arrivalId) {
+    if (confirm('Delete this arrival permanently?')) {
+        fetch(`/inbound/api/{{ request.id }}/arrivals/${arrivalId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Arrival deleted successfully!', 'success');
+                loadArrivals();  // Reload to get updated list
+            } else {
+                showNotification(data.error || 'Error deleting arrival', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting arrival', 'error');
+        });
+    }
+}
+
+function saveAllArrivals() {
+    if (newArrivals.length === 0) {
+        showNotification('No new arrivals to save', 'info');
+        return;
+    }
+    
     fetch('/inbound/api/{{ request.id }}/arrivals', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
         },
-        body: JSON.stringify({ batches: arrivalBatches })
+        body: JSON.stringify({ batches: newArrivals })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
             showNotification('Arrivals saved successfully!', 'success');
-            loadArrivals();
+            loadArrivals();  // Reload to get updated list with IDs
         } else {
             showNotification(data.message || 'Error saving arrivals', 'error');
         }
@@ -5990,9 +6033,10 @@ document.getElementById('arrivalForm')?.addEventListener('submit', function(e) {
     formData.forEach((value, key) => {
         newArrival[key] = value;
     });
-    arrivalBatches.push(newArrival);
-    saveArrivals();
+    newArrivals.push(newArrival);
+    renderArrivalsTable();  // Just update display, don't save yet
     e.target.reset();
+    showNotification('Arrival added. Click "Save All Arrivals" to save.', 'info');
 });
 
 document.getElementById('arrivalsModal')?.addEventListener('shown.bs.modal', function() {
