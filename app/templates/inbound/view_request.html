@@ -2621,7 +2621,7 @@ body {
                                     </thead>
                                     <tbody>
                                         {% for row in request.itinerary_rows %}
-                                        {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport %}
+                                        {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport or row.flag_drive %}
                                         <tr style="border-bottom: 1px solid #f1f5f9; cursor: pointer;" 
                                             onclick="scrollToEditMode({{ loop.index0 }})"
                                             onmouseover="this.style.backgroundColor='#f8fafc'" 
@@ -2637,6 +2637,7 @@ body {
                                                     {% if row.flag_transport %}<span class="badge bg-info" style="font-size: 0.7rem;"><i class="fas fa-car"></i> Transport</span>{% endif %}
                                                     {% if row.flag_meal %}<span class="badge bg-warning text-dark" style="font-size: 0.7rem;"><i class="fas fa-utensils"></i> Meal</span>{% endif %}
                                                     {% if row.flag_guide %}<span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-user-tie"></i> Guide</span>{% endif %}
+                                                    {% if row.flag_drive %}<span class="badge bg-primary" style="font-size: 0.7rem;"><i class="fas fa-road"></i> Drive</span>{% endif %}
                                                 </div>
                                             </td>
                                             <td style="color: #64748b;">{{ row.restaurant or '-' }}</td>
@@ -6459,13 +6460,14 @@ function printItinerary() {
                         <td class="date-col">{{ row.date.strftime('%-m/%-d') }}</td>
                         <td class="activities-col">
                             {{ row.description }}
-                            {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport %}
+                            {% if row.flag_hotel or row.flag_transport or row.flag_meal or row.flag_guide or row.flag_airport or row.flag_drive %}
                             <div style="margin-top: 4px;">
                                 {% if row.flag_airport %}<span class="badge badge-secondary">✈ Airport</span>{% endif %}
                                 {% if row.flag_hotel %}<span class="badge badge-danger">🏨 Hotel</span>{% endif %}
                                 {% if row.flag_transport %}<span class="badge badge-info">🚗 Transport</span>{% endif %}
                                 {% if row.flag_meal %}<span class="badge badge-warning">🍽 Meal</span>{% endif %}
                                 {% if row.flag_guide %}<span class="badge badge-success">👔 Guide</span>{% endif %}
+                                {% if row.flag_drive %}<span class="badge badge-primary">🚙 Drive</span>{% endif %}
                             </div>
                             {% endif %}
                         </td>
