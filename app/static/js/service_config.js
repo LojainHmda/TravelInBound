@@ -377,8 +377,8 @@ class ServiceConfigManager {
                     hotel_room_option: row.querySelector(`[name="rooms[${roomIndex}][hotel_room_option]"]`)?.value || '',
                     board_basis: row.querySelector(`[name="rooms[${roomIndex}][board_basis]"]`)?.value || '',
                     dietary_requirements: row.querySelector(`[name="rooms[${roomIndex}][dietary_requirements]"]`)?.value || '',
-                    check_in: row.querySelector(`[name="rooms[${roomIndex}][check_in_date]"]`)?.value || '',
-                    check_out: row.querySelector(`[name="rooms[${roomIndex}][check_out_date]"]`)?.value || '',
+                    check_in: row.querySelector(`[name="rooms[${roomIndex}][check_in]"]`)?.value || '',
+                    check_out: row.querySelector(`[name="rooms[${roomIndex}][check_out]"]`)?.value || '',
                     adults: parseInt(row.querySelector(`[name="rooms[${roomIndex}][adults]"]`)?.value || 0),
                     children: parseInt(row.querySelector(`[name="rooms[${roomIndex}][children]"]`)?.value || 0),
                     lead_passenger: row.querySelector(`[name="rooms[${roomIndex}][lead_passenger]"]`)?.value || ''
