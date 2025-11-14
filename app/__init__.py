@@ -23,8 +23,18 @@ def create_app():
     app.secret_key = os.environ.get("SESSION_SECRET", "dev-key-for-testing")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
+        "pool_recycle": 280,
         "pool_pre_ping": True,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_timeout": 30,
+        "connect_args": {
+            "connect_timeout": 10,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        }
     }
     
     # CSRF Configuration
