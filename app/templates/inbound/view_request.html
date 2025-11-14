@@ -6124,50 +6124,68 @@ function saveArrivalDepartureBatches() {
     const arrivalContainer = document.getElementById('arrivalBatchesContainer');
     const departureContainer = document.getElementById('departureBatchesContainer');
     
-    const arrivals = [];
-    const departures = [];
+    const batches = [];
     
     // Collect arrival batches
     arrivalContainer.querySelectorAll('.arrival-batch').forEach((card, index) => {
         const inputs = card.querySelectorAll('input, select');
-        const batchData = {};
+        const rawData = {};
         
         inputs.forEach(input => {
             const name = input.getAttribute('name');
             if (name) {
                 const field = name.match(/arrivals\[\d+\]\[(\w+)\]$/)?.[1];
                 if (field) {
-                    batchData[field] = input.value;
+                    rawData[field] = input.value;
                 }
             }
         });
         
-        if (Object.keys(batchData).length > 0) {
-            arrivals.push(batchData);
+        if (Object.keys(rawData).length > 0 && rawData.date) {
+            // Map field names to backend format
+            const batchData = {
+                arrival_date: rawData.date || '',
+                arrival_point: rawData.point || '',
+                arrival_time: rawData.time || '',
+                arrival_driver_name: rawData.driver || '',
+                visa_type: rawData.visa_type || 'NOT_INCLUDED',
+                pax_count: rawData.pax || '',
+                batch_name: rawData.batch_name || ''
+            };
+            batches.push(batchData);
         }
     });
     
     // Collect departure batches
     departureContainer.querySelectorAll('.departure-batch').forEach((card, index) => {
         const inputs = card.querySelectorAll('input, select');
-        const batchData = {};
+        const rawData = {};
         
         inputs.forEach(input => {
             const name = input.getAttribute('name');
             if (name) {
                 const field = name.match(/departures\[\d+\]\[(\w+)\]$/)?.[1];
                 if (field) {
-                    batchData[field] = input.value;
+                    rawData[field] = input.value;
                 }
             }
         });
         
-        if (Object.keys(batchData).length > 0) {
-            departures.push(batchData);
+        if (Object.keys(rawData).length > 0 && rawData.date) {
+            // Map field names to backend format
+            const batchData = {
+                departure_date: rawData.date || '',
+                departure_point: rawData.point || '',
+                departure_time: rawData.time || '',
+                arrival_driver_name: rawData.driver || '',
+                meeting_assistance: rawData.meeting_assistance === 'Yes' ? true : false,
+                departure_tax: rawData.departure_tax || 'NOT_INCLUDED',
+                pax_count: rawData.pax || '',
+                batch_name: rawData.batch_name || ''
+            };
+            batches.push(batchData);
         }
     });
-    
-    console.log('Saving batches - Arrivals:', arrivals, 'Departures:', departures);
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalDepartureModal'));
@@ -6175,7 +6193,7 @@ function saveArrivalDepartureBatches() {
         modal.hide();
     }
     
-    // Save to database
+    // Save to database with correct format
     fetch('/inbound/api/{{ request.id }}/arrival-departure-batches', {
         credentials: 'same-origin',
         method: 'POST',
@@ -6183,7 +6201,7 @@ function saveArrivalDepartureBatches() {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
         },
-        body: JSON.stringify({ arrivals: arrivals, departures: departures })
+        body: JSON.stringify({ batches: batches })
     })
     .then(response => {
         if (!response.ok) {
