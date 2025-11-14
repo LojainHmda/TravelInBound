@@ -1647,21 +1647,26 @@ def api_confirm_all_suppliers(request_id):
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
-    from app.models import STATUS_RESERVED
-    from app.models.inbound import InboundHotel, InboundTransport
-    
-    from app.models import STATUS_QUOTED
+    from app.models import STATUS_RESERVED, STATUS_QUOTED
     
     try:
         # Update all hotels to RESERVED (individual services)
-        for hotel in request_obj.hotels:
+        for hotel in request_obj.inbound_hotels:
             hotel.status = STATUS_RESERVED
         
         # Update all transports to RESERVED (individual services)
-        for transport in request_obj.transports:
+        for transport in request_obj.inbound_transports:
             transport.status = STATUS_RESERVED
         
-        # Update parent request status to QUOTED (after supplier confirmation)
+        # Update all meals to RESERVED (individual services)
+        for meal in request_obj.inbound_meals:
+            meal.status = STATUS_RESERVED
+        
+        # Update all guides to RESERVED (individual services)
+        for guide in request_obj.inbound_guides:
+            guide.status = STATUS_RESERVED
+        
+        # Update parent request status to QUOTED (after all suppliers are confirmed)
         request_obj.status = STATUS_QUOTED
         
         db.session.commit()
@@ -1674,7 +1679,7 @@ def api_confirm_all_suppliers(request_id):
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/service/<int:service_id>/confirm-supplier', methods=['POST'])
 @csrf.exempt
@@ -1974,17 +1979,56 @@ def update_proforma_prices(request_id):
             if index < len(all_services):
                 service_type, service = all_services[index]
                 
+                # Parse dates if provided
+                from datetime import datetime as dt
+                date_from = None
+                date_to = None
+                if item.get('date_from'):
+                    try:
+                        date_from = dt.strptime(item['date_from'], '%Y-%m-%d').date()
+                    except:
+                        pass
+                if item.get('date_to'):
+                    try:
+                        date_to = dt.strptime(item['date_to'], '%Y-%m-%d').date()
+                    except:
+                        pass
+                
                 if service_type == 'hotel':
                     service.cost_per_night = item['unit_price']
                     service.total_cost = item['total']
+                    if item.get('description'):
+                        service.hotel_name = item['description']
+                    if date_from:
+                        service.check_in_date = date_from
+                    if date_to:
+                        service.check_out_date = date_to
                 elif service_type == 'transport':
                     service.cost = item['unit_price']
+                    if item.get('description'):
+                        service.notes = item['description']
+                    if date_from:
+                        service.date = date_from
+                    if date_to:
+                        service.end_date = date_to
                 elif service_type == 'meal':
                     service.cost_per_person = item['unit_price']
                     service.total_cost = item['total']
+                    if item.get('description'):
+                        service.restaurant = item['description']
+                    if date_from:
+                        service.date = date_from
+                    if date_to:
+                        service.end_date = date_to
                 elif service_type == 'guide':
                     service.cost_per_day = item['unit_price']
                     service.total_cost = item['total']
+                    if item.get('description'):
+                        service.guide_name = item['description']
+                    if date_from:
+                        service.date = date_from
+                    if date_to:
+                        service.end_date = date_to
         
         # Recalculate total
         total = sum(item['total'] for item in items)

@@ -126,9 +126,18 @@
                                         <span class="badge bg-secondary">{{ item.type }}</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ item.description }}</td>
-                                    <td>{{ item.date_from.strftime('%d %b %Y') if item.date_from else 'N/A' }}</td>
-                                    <td>{{ item.date_to.strftime('%d %b %Y') if item.date_to else 'N/A' }}</td>
+                                    <td>
+                                        <span class="view-mode">{{ item.description }}</span>
+                                        <textarea class="form-control form-control-sm edit-mode d-none description-input" rows="2" style="min-width: 200px;">{{ item.description }}</textarea>
+                                    </td>
+                                    <td>
+                                        <span class="view-mode">{{ item.date_from.strftime('%d %b %Y') if item.date_from else 'N/A' }}</span>
+                                        <input type="date" class="form-control form-control-sm edit-mode d-none date-from-input" value="{{ item.date_from.strftime('%Y-%m-%d') if item.date_from else '' }}" style="width: 140px;">
+                                    </td>
+                                    <td>
+                                        <span class="view-mode">{{ item.date_to.strftime('%d %b %Y') if item.date_to else 'N/A' }}</span>
+                                        <input type="date" class="form-control form-control-sm edit-mode d-none date-to-input" value="{{ item.date_to.strftime('%Y-%m-%d') if item.date_to else '' }}" style="width: 140px;">
+                                    </td>
                                     <td>
                                         <span class="view-mode">{{ item.pax }}</span>
                                         <input type="number" class="form-control form-control-sm edit-mode d-none pax-input" value="{{ item.pax }}" min="1" style="width: 80px;">
@@ -191,12 +200,13 @@
     body.lumpsum-mode .price-column {
         display: none !important;
     }
-    body.lumpsum-mode .total-label-cell {
-        colspan: 7 !important;
-    }
     
     @media print {
         .btn, .d-flex {
+            display: none !important;
+        }
+        
+        body.lumpsum-mode .price-column {
             display: none !important;
         }
     }
@@ -236,18 +246,24 @@ function recalculateTotals() {
         grandTotal += total;
     });
     
-    document.querySelector('tfoot .total-cell').textContent = `$${grandTotal.toFixed(2)}`;
+    document.querySelector('tfoot .total-value-cell').textContent = `$${grandTotal.toFixed(2)}`;
 }
 
 function savePrices() {
     const items = [];
     document.querySelectorAll('tbody tr').forEach(row => {
         const index = row.getAttribute('data-index');
+        const description = row.querySelector('.description-input').value;
+        const dateFrom = row.querySelector('.date-from-input').value;
+        const dateTo = row.querySelector('.date-to-input').value;
         const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
         const price = parseFloat(row.querySelector('.price-input').value) || 0;
         
         items.push({
             index: parseInt(index),
+            description: description,
+            date_from: dateFrom,
+            date_to: dateTo,
             pax: pax,
             unit_price: price,
             total: pax * price
@@ -264,14 +280,14 @@ function savePrices() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Prices updated successfully!');
+            alert('Invoice updated successfully!');
             location.reload();
         } else {
             alert('Error: ' + data.message);
         }
     })
     .catch(error => {
-        alert('Error saving prices');
+        alert('Error saving changes');
         console.error(error);
     });
 }
@@ -279,12 +295,21 @@ function savePrices() {
 function togglePricingMode() {
     const checkbox = document.getElementById('lumpsumModeCheckbox');
     const isLumpsum = checkbox.checked;
+    const totalLabelCell = document.querySelector('.total-label-cell');
     
     // Toggle body class to hide/show price columns
     if (isLumpsum) {
         document.body.classList.add('lumpsum-mode');
+        // Adjust colspan for GRAND TOTAL row to span all visible columns (hide Price and Total columns)
+        if (totalLabelCell) {
+            totalLabelCell.setAttribute('colspan', '7');
+        }
     } else {
         document.body.classList.remove('lumpsum-mode');
+        // Restore original colspan (show Price and Total columns)
+        if (totalLabelCell) {
+            totalLabelCell.setAttribute('colspan', '6');
+        }
     }
     
     // Save pricing mode to database
@@ -316,6 +341,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkbox = document.getElementById('lumpsumModeCheckbox');
     if (checkbox.checked) {
         document.body.classList.add('lumpsum-mode');
+        // Adjust colspan for GRAND TOTAL row
+        const totalLabelCell = document.querySelector('.total-label-cell');
+        if (totalLabelCell) {
+            totalLabelCell.setAttribute('colspan', '7');
+        }
     }
 });
 </script>
