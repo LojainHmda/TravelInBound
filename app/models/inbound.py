@@ -470,6 +470,29 @@ class ArrivalBatch(db.Model):
     def __repr__(self):
         return f'<ArrivalBatch {self.batch_name or self.id}>'
 
+class DepartureBatch(db.Model):
+    """Simple departures-only batch management"""
+    __tablename__ = 'departure_batch'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    batch_name = db.Column(db.String(100), nullable=True)
+    departure_date = db.Column(db.Date, nullable=False)
+    departure_point = db.Column(db.String(200), nullable=True)
+    departure_time = db.Column(db.Time, nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)
+    vehicle_details = db.Column(db.String(200), nullable=True)
+    pax_count = db.Column(db.Integer, default=0)
+    flight_number = db.Column(db.String(50), nullable=True)
+    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<DepartureBatch {self.batch_name or self.id}>'
+
 class InboundQuotation(db.Model):
     """Quotation header for inbound requests"""
     __tablename__ = 'inbound_quotation'

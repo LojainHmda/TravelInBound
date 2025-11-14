@@ -1114,6 +1114,36 @@ def api_get_arrivals(request_id):
     
     return jsonify({'success': True, 'batches': batches_data})
 
+@inbound_bp.route('/api/<int:request_id>/departures', methods=['GET'])
+@csrf.exempt
+def api_get_departures(request_id):
+    """Get all departure batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import DepartureBatch
+    
+    batches = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
+    
+    batches_data = []
+    for batch in batches:
+        batches_data.append({
+            'id': batch.id,
+            'batch_name': batch.batch_name or '',
+            'departure_date': batch.departure_date.strftime('%Y-%m-%d') if batch.departure_date else '',
+            'departure_point': batch.departure_point or '',
+            'departure_time': batch.departure_time.strftime('%H:%M') if batch.departure_time else '',
+            'driver_name': batch.driver_name or '',
+            'vehicle_details': batch.vehicle_details or '',
+            'pax_count': batch.pax_count or 0,
+            'flight_number': batch.flight_number or '',
+            'departure_tax': batch.departure_tax or 'NOT_INCLUDED'
+        })
+    
+    return jsonify({'success': True, 'batches': batches_data})
+
 @inbound_bp.route('/api/<int:request_id>/arrivals/<int:arrival_id>', methods=['DELETE'])
 @csrf.exempt
 def api_delete_arrival(request_id, arrival_id):
@@ -1153,6 +1183,136 @@ def api_delete_arrival(request_id, arrival_id):
             
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/departures/<int:departure_id>', methods=['DELETE'])
+@csrf.exempt
+def api_delete_departure(request_id, departure_id):
+    """Delete a specific departure batch"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import DepartureBatch, ItineraryRow
+    
+    try:
+        # Find and delete the specific departure
+        departure = DepartureBatch.query.filter_by(id=departure_id, request_id=request_id).first()
+        if departure:
+            db.session.delete(departure)
+            db.session.commit()
+            
+            # Re-calculate flags for remaining departures
+            ItineraryRow.query.filter_by(request_id=request_id).update({'flag_drive': False})
+            
+            all_departures = DepartureBatch.query.filter_by(request_id=request_id).all()
+            for dep in all_departures:
+                if dep.departure_date:
+                    departure_rows = ItineraryRow.query.filter_by(
+                        request_id=request_id,
+                        date=dep.departure_date
+                    ).all()
+                    for row in departure_rows:
+                        row.flag_drive = True
+            
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Departure deleted successfully'})
+        else:
+            return jsonify({'error': 'Departure not found'}), 404
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/departures', methods=['POST'])
+@csrf.exempt
+def api_save_departures(request_id):
+    """Save departure batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    batches_data = data.get('batches', [])
+    
+    from app.models.inbound import DepartureBatch, ItineraryRow
+    
+    try:
+        # Don't delete existing batches - just add new ones
+        # This allows multiple departures to be saved
+        
+        # Create new batches
+        for batch_data in batches_data:
+            # Parse date
+            departure_date = None
+            if batch_data.get('departure_date'):
+                try:
+                    departure_date = datetime.strptime(batch_data['departure_date'], '%Y-%m-%d').date()
+                except:
+                    continue
+            
+            if not departure_date:
+                continue
+            
+            # Parse time
+            departure_time = None
+            if batch_data.get('departure_time'):
+                try:
+                    departure_time = datetime.strptime(batch_data['departure_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Parse pax count
+            pax_count = 0
+            if batch_data.get('pax_count'):
+                try:
+                    pax_count = int(batch_data['pax_count'])
+                except:
+                    pax_count = 0
+            
+            batch = DepartureBatch(
+                request_id=request_id,
+                batch_name=batch_data.get('batch_name') or None,
+                departure_date=departure_date,
+                departure_point=batch_data.get('departure_point') or None,
+                departure_time=departure_time,
+                driver_name=batch_data.get('driver_name') or None,
+                vehicle_details=batch_data.get('vehicle_details') or None,
+                pax_count=pax_count,
+                flight_number=batch_data.get('flight_number') or None,
+                departure_tax=batch_data.get('departure_tax') or 'NOT_INCLUDED'
+            )
+            db.session.add(batch)
+        
+        db.session.commit()
+        
+        # Auto-flag itinerary rows with flag_drive for ALL departure dates
+        # First, clear all drive flags for this request
+        ItineraryRow.query.filter_by(request_id=request_id).update({'flag_drive': False})
+        
+        # Then, set flags for ALL saved departures (not just current batch)
+        all_departures = DepartureBatch.query.filter_by(request_id=request_id).all()
+        for departure in all_departures:
+            if departure.departure_date:
+                departure_rows = ItineraryRow.query.filter_by(
+                    request_id=request_id,
+                    date=departure.departure_date
+                ).all()
+                for row in departure_rows:
+                    row.flag_drive = True
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Departures saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving departures: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/arrivals', methods=['POST'])

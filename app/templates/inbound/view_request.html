@@ -2356,6 +2356,11 @@ body::-webkit-scrollbar-thumb:hover {
                                     <i class="fas fa-plane-arrival mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Arrivals</span>
                                 </button>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#departuresModal"
+                                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); min-width: 100px; font-weight: 600;">
+                                    <i class="fas fa-plane-departure mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 600;">Departures</span>
+                                </button>
                                 <button type="button" class="service-icon-button" data-service="hotel"
                                         style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
                                     <i class="fas fa-bed mb-1" style="font-size: 1.2rem; display: block;"></i>
@@ -5843,6 +5848,103 @@ function convertToInvoice() {
 }
 </script>
 
+<!-- Departures Modal -->
+<div class="modal fade" id="departuresModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-plane-departure me-2"></i>Manage Departures</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="departuresTableContainer"></div>
+                <hr class="my-4">
+                <h6 class="mb-3"><i class="fas fa-plus-circle me-2"></i>Add New Departure</h6>
+                <form id="departureForm">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="departure_date" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Time</label>
+                            <input type="time" class="form-control" name="departure_time">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Departure Point <span class="text-danger">*</span></label>
+                            <select class="form-control" name="departure_point" required>
+                                <option value="">Select departure point...</option>
+                                <optgroup label="Airports">
+                                    <option value="Queen Alia International Airport">Queen Alia International Airport (AMM)</option>
+                                    <option value="King Hussein International Airport">King Hussein International Airport - Aqaba</option>
+                                    <option value="Marka Civil Airport">Marka Civil Airport - Amman</option>
+                                </optgroup>
+                                <optgroup label="Land Borders">
+                                    <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
+                                    <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge (Jordan River)</option>
+                                    <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba-Eilat)</option>
+                                    <option value="Jaber Border">Jaber Border (Syria)</option>
+                                    <option value="Omari Border">Omari Border (Saudi Arabia)</option>
+                                    <option value="Mudawara Border">Mudawara Border (Saudi Arabia)</option>
+                                    <option value="Karameh Border">Karameh Border (Iraq)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Flight/Bus Number</label>
+                            <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Departure Tax</label>
+                            <select class="form-control" name="departure_tax">
+                                <option value="NOT_INCLUDED">Not Included</option>
+                                <option value="INCLUDED">Included</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Vehicle Type</label>
+                            <select class="form-control" name="vehicle_details">
+                                <option value="">Select vehicle...</option>
+                                <option value="Sedan">Sedan (1-3 pax)</option>
+                                <option value="SUV">SUV (4-6 pax)</option>
+                                <option value="Van">Van (7-14 pax)</option>
+                                <option value="Minibus">Minibus (15-25 pax)</option>
+                                <option value="Coach">Coach Bus (26-50 pax)</option>
+                                <option value="Large Coach">Large Coach (50+ pax)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">PAX Count</label>
+                            <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Driver Name</label>
+                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Batch Name</label>
+                            <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Add Departure
+                    </button>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="saveAllDepartures()">
+                    <i class="fas fa-save me-1"></i>Save All Departures
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Arrivals Modal -->
 <div class="modal fade" id="arrivalsModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
@@ -6123,6 +6225,166 @@ document.getElementById('arrivalForm')?.addEventListener('submit', function(e) {
 
 document.getElementById('arrivalsModal')?.addEventListener('shown.bs.modal', function() {
     loadArrivals();
+});
+</script>
+
+<script>
+// Departure Management Functions
+let departureBatches = [];
+let newDepartures = [];  // Track new departures to be added
+
+function loadDepartures() {
+    fetch('/inbound/api/{{ request.id }}/departures')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                departureBatches = data.batches || [];
+                newDepartures = [];  // Clear new departures after loading
+                renderDeparturesTable();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading departures:', error);
+        });
+}
+
+function renderDeparturesTable() {
+    const container = document.getElementById('departuresTableContainer');
+    if (!container) return;
+    
+    const allDepartures = [...departureBatches, ...newDepartures];
+    
+    if (allDepartures.length === 0) {
+        container.innerHTML = '<p class="text-muted"><i class="fas fa-info-circle me-2"></i>No departures added yet. Use the form below to add your first departure.</p>';
+        return;
+    }
+    
+    let html = `
+        <table class="table table-hover">
+            <thead style="background: #f3f4f6;">
+                <tr>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Location</th>
+                    <th>Flight</th>
+                    <th>Driver</th>
+                    <th>Vehicle</th>
+                    <th>PAX</th>
+                    <th>Batch Name</th>
+                    <th>Tax</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    allDepartures.forEach((batch, index) => {
+        const isNew = index >= departureBatches.length;
+        const deleteIndex = isNew ? index - departureBatches.length : batch.id;
+        html += `
+            <tr ${isNew ? 'style="background-color: #fee2e2;"' : ''}>
+                <td>${batch.departure_date || '-'}</td>
+                <td>${batch.departure_time || '-'}</td>
+                <td>${batch.departure_point || '-'}</td>
+                <td>${batch.flight_number || '-'}</td>
+                <td>${batch.driver_name || '-'}</td>
+                <td>${batch.vehicle_details || '-'}</td>
+                <td>${batch.pax_count || 0}</td>
+                <td>${batch.batch_name || '-'}</td>
+                <td>${batch.departure_tax || 'NOT_INCLUDED'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="${isNew ? `removeNewDeparture(${deleteIndex})` : `deleteDeparture(${deleteIndex})`}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    ${isNew ? '<span class="badge bg-danger ms-2">New</span>' : ''}
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table>';
+    if (newDepartures.length > 0) {
+        html += '<div class="alert alert-warning mt-2"><i class="fas fa-info-circle me-2"></i>You have unsaved departures. Click "Save All Departures" to save them.</div>';
+    }
+    container.innerHTML = html;
+}
+
+function removeNewDeparture(index) {
+    if (confirm('Remove this unsaved departure?')) {
+        newDepartures.splice(index, 1);
+        renderDeparturesTable();
+    }
+}
+
+function deleteDeparture(departureId) {
+    if (confirm('Delete this departure permanently?')) {
+        fetch(`/inbound/api/{{ request.id }}/departures/${departureId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Departure deleted successfully!', 'success');
+                loadDepartures();  // Reload to get updated list
+            } else {
+                showNotification(data.error || 'Error deleting departure', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting departure', 'error');
+        });
+    }
+}
+
+function saveAllDepartures() {
+    if (newDepartures.length === 0) {
+        showNotification('No new departures to save', 'info');
+        return;
+    }
+    
+    fetch('/inbound/api/{{ request.id }}/departures', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ batches: newDepartures })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Departures saved successfully!', 'success');
+            loadDepartures();  // Reload to get updated list with IDs
+        } else {
+            showNotification(data.message || 'Error saving departures', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving departures', 'error');
+    });
+}
+
+document.getElementById('departureForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newDeparture = {};
+    formData.forEach((value, key) => {
+        newDeparture[key] = value;
+    });
+    newDepartures.push(newDeparture);
+    renderDeparturesTable();  // Just update display
+    e.target.reset();
+    showNotification('Departure added. Click "Save All Departures" to save.', 'info');
+});
+
+document.getElementById('departuresModal')?.addEventListener('shown.bs.modal', function() {
+    loadDepartures();
 });
 </script>
 
