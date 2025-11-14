@@ -1114,6 +1114,47 @@ def api_get_arrivals(request_id):
     
     return jsonify({'success': True, 'batches': batches_data})
 
+@inbound_bp.route('/api/<int:request_id>/arrivals/<int:arrival_id>', methods=['DELETE'])
+@csrf.exempt
+def api_delete_arrival(request_id, arrival_id):
+    """Delete a specific arrival batch"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import ArrivalBatch, ItineraryRow
+    
+    try:
+        # Find and delete the specific arrival
+        arrival = ArrivalBatch.query.filter_by(id=arrival_id, request_id=request_id).first()
+        if arrival:
+            db.session.delete(arrival)
+            db.session.commit()
+            
+            # Re-calculate flags for remaining arrivals
+            ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
+            
+            all_arrivals = ArrivalBatch.query.filter_by(request_id=request_id).all()
+            for arr in all_arrivals:
+                if arr.arrival_date:
+                    arrival_rows = ItineraryRow.query.filter_by(
+                        request_id=request_id,
+                        date=arr.arrival_date
+                    ).all()
+                    for row in arrival_rows:
+                        row.flag_airport = True
+            
+            db.session.commit()
+            
+            return jsonify({'success': True, 'message': 'Arrival deleted successfully'})
+        else:
+            return jsonify({'error': 'Arrival not found'}), 404
+            
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/arrivals', methods=['POST'])
 @csrf.exempt
 def api_save_arrivals(request_id):
@@ -1129,8 +1170,8 @@ def api_save_arrivals(request_id):
     from app.models.inbound import ArrivalBatch, ItineraryRow
     
     try:
-        # Delete existing batches
-        ArrivalBatch.query.filter_by(request_id=request_id).delete()
+        # Don't delete existing batches - just add new ones
+        # This allows multiple arrivals to be saved
         
         # Create new batches
         for batch_data in batches_data:
@@ -1176,21 +1217,20 @@ def api_save_arrivals(request_id):
         
         db.session.commit()
         
-        # Auto-flag itinerary rows with flag_airport for arrival dates
+        # Auto-flag itinerary rows with flag_airport for ALL arrival dates
+        # First, clear all airport flags for this request
         ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
         
-        for batch_data in batches_data:
-            if batch_data.get('arrival_date'):
-                try:
-                    arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
-                    arrival_rows = ItineraryRow.query.filter_by(
-                        request_id=request_id,
-                        date=arrival_date
-                    ).all()
-                    for row in arrival_rows:
-                        row.flag_airport = True
-                except:
-                    pass
+        # Then, set flags for ALL saved arrivals (not just current batch)
+        all_arrivals = ArrivalBatch.query.filter_by(request_id=request_id).all()
+        for arrival in all_arrivals:
+            if arrival.arrival_date:
+                arrival_rows = ItineraryRow.query.filter_by(
+                    request_id=request_id,
+                    date=arrival.arrival_date
+                ).all()
+                for row in arrival_rows:
+                    row.flag_airport = True
         
         db.session.commit()
         
