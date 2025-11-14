@@ -1269,6 +1269,124 @@ def api_save_arrival_departure_batches(request_id):
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/arrivals', methods=['GET'])
+@csrf.exempt
+def api_get_arrivals(request_id):
+    """Get all arrival batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import ArrivalBatch
+    
+    batches = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
+    
+    batches_data = []
+    for batch in batches:
+        batches_data.append({
+            'id': batch.id,
+            'batch_name': batch.batch_name or '',
+            'arrival_date': batch.arrival_date.strftime('%Y-%m-%d') if batch.arrival_date else '',
+            'arrival_point': batch.arrival_point or '',
+            'arrival_time': batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '',
+            'driver_name': batch.driver_name or '',
+            'vehicle_details': batch.vehicle_details or '',
+            'pax_count': batch.pax_count or 0,
+            'flight_number': batch.flight_number or ''
+        })
+    
+    return jsonify({'success': True, 'batches': batches_data})
+
+@inbound_bp.route('/api/<int:request_id>/arrivals', methods=['POST'])
+@csrf.exempt
+def api_save_arrivals(request_id):
+    """Save arrival batches for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    batches_data = data.get('batches', [])
+    
+    from app.models.inbound import ArrivalBatch, ItineraryRow
+    
+    try:
+        # Delete existing batches
+        ArrivalBatch.query.filter_by(request_id=request_id).delete()
+        
+        # Create new batches
+        for batch_data in batches_data:
+            # Parse date
+            arrival_date = None
+            if batch_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
+                except:
+                    continue
+            
+            if not arrival_date:
+                continue
+            
+            # Parse time
+            arrival_time = None
+            if batch_data.get('arrival_time'):
+                try:
+                    arrival_time = datetime.strptime(batch_data['arrival_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Parse pax count
+            pax_count = 0
+            if batch_data.get('pax_count'):
+                try:
+                    pax_count = int(batch_data['pax_count'])
+                except:
+                    pax_count = 0
+            
+            batch = ArrivalBatch(
+                request_id=request_id,
+                batch_name=batch_data.get('batch_name') or None,
+                arrival_date=arrival_date,
+                arrival_point=batch_data.get('arrival_point') or None,
+                arrival_time=arrival_time,
+                driver_name=batch_data.get('driver_name') or None,
+                vehicle_details=batch_data.get('vehicle_details') or None,
+                pax_count=pax_count,
+                flight_number=batch_data.get('flight_number') or None
+            )
+            db.session.add(batch)
+        
+        db.session.commit()
+        
+        # Auto-flag itinerary rows with flag_airport for arrival dates
+        ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
+        
+        for batch_data in batches_data:
+            if batch_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
+                    arrival_rows = ItineraryRow.query.filter_by(
+                        request_id=request_id,
+                        date=arrival_date
+                    ).all()
+                    for row in arrival_rows:
+                        row.flag_airport = True
+                except:
+                    pass
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Arrivals saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving arrivals: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
 @csrf.exempt
 
