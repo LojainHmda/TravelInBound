@@ -2197,60 +2197,141 @@ body::-webkit-scrollbar-thumb:hover {
     <div class="row mt-4">
         <div class="col-12">
             <div class="action-buttons-bar">
-                <!-- Status Workflow Display -->
-                <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 8px;">
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="fw-bold">Status:</span>
-                        <span class="badge {% if request.status == 'REQUEST' %}bg-secondary{% elif request.status == 'RESERVED' %}bg-success{% elif request.status == 'QUOTED' %}bg-warning text-dark{% elif request.status == 'CONFIRMED' %}bg-primary{% else %}bg-info{% endif %}" 
-                              style="font-size: 0.9rem; padding: 8px 12px;">
-                            {{ request.status }}
-                        </span>
-                        <span class="text-muted">
-                            {% if request.status == 'REQUEST' %}
-                                → Awaiting supplier confirmations
-                            {% elif request.status == 'QUOTED' %}
-                                → Suppliers confirmed, ready to generate proforma invoice
-                            {% elif request.status == 'CONFIRMED' %}
-                                → Client confirmed, ready to proceed
-                            {% endif %}
-                        </span>
+                <!-- Workflow Progress Stepper -->
+                <div class="mb-4 p-4" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div class="d-flex align-items-center justify-content-between" style="position: relative;">
+                        <!-- Progress Line -->
+                        <div style="position: absolute; top: 20px; left: 50px; right: 50px; height: 3px; background: #e2e8f0; z-index: 0;"></div>
+                        
+                        <!-- Step 1: Request -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'REQUEST' %}bg-warning{% elif request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    {% if request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-alt text-white"></i>{% endif %}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'REQUEST' %}#f59e0b{% elif request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                                REQUEST
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Quoted -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'QUOTED' %}bg-info{% elif request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    {% if request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-invoice text-white"></i>{% endif %}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'QUOTED' %}#0ea5e9{% elif request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                                QUOTED
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Reserved (Suppliers Confirmed) -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'RESERVED' %}bg-success{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-clipboard-check text-white"></i>{% endif %}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'RESERVED' %}#10b981{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                                RESERVED
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Confirmed -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'CONFIRMED' %}bg-primary{% elif request.status in ['IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    {% if request.status in ['IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-handshake text-white"></i>{% endif %}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'CONFIRMED' %}#3b82f6{% elif request.status in ['IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                                CONFIRMED
+                            </div>
+                        </div>
+                        
+                        <!-- Step 5: In Progress -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'IN_PROGRESS' %}bg-info{% elif request.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    {% if request.status == 'COMPLETED' %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-tasks text-white"></i>{% endif %}
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'IN_PROGRESS' %}#0ea5e9{% elif request.status == 'COMPLETED' %}#10b981{% else %}#6b7280{% endif %};">
+                                IN PROGRESS
+                            </div>
+                        </div>
+                        
+                        <!-- Step 6: Completed -->
+                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
+                            <div class="mb-2">
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'COMPLETED' %}bg-success{% else %}bg-secondary{% endif %}" 
+                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+                                    <i class="fas fa-flag-checkered text-white"></i>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'COMPLETED' %}#10b981{% else %}#6b7280{% endif %};">
+                                COMPLETED
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Status Workflow Buttons based on backend status -->
-                {% if request.status == 'REQUEST' %}
-                <!-- Step 1: Confirm Suppliers -->
-                <button type="button" class="action-btn" onclick="confirmAllSuppliers()" 
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 600; border: none;">
-                    <i class="fas fa-check-circle"></i> Confirm All Suppliers
-                </button>
-                <button type="button" class="action-btn" disabled
-                        style="background: #9ca3af; text-decoration: none; color: white; font-weight: 600; cursor: not-allowed; border: none;"
-                        title="Confirm suppliers first">
-                    <i class="fas fa-file-invoice"></i> Generate Proforma (Confirm Suppliers First)
-                </button>
+                <!-- Action Buttons Based on Current Status -->
+                <div class="mb-3">
+                    {% if request.status == 'REQUEST' %}
+                    <!-- Step 1: Confirm Suppliers -->
+                    <button type="button" class="btn btn-success btn-lg me-2 mb-2" onclick="confirmAllSuppliers()">
+                        <i class="fas fa-check-circle"></i> Confirm All Suppliers
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg mb-2" disabled title="Confirm suppliers first">
+                        <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
+                    </button>
+                    
+                    {% elif request.status == 'QUOTED' %}
+                    <!-- Step 2: Suppliers Confirmed, Generate Proforma -->
+                    <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="btn btn-info btn-lg me-2 mb-2" style="text-decoration: none;">
+                        <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
+                    </a>
+                    
+                    {% elif request.status == 'RESERVED' %}
+                    <!-- Step 3: Proforma Generated, Await Client Confirmation -->
+                    <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="btn btn-outline-info btn-lg me-2 mb-2" style="text-decoration: none;">
+                        <i class="fas fa-eye"></i> View Proforma Invoice
+                    </a>
+                    {% if request.booking_id and request.booking.invoice_number %}
+                    <button type="button" class="btn btn-primary btn-lg mb-2" onclick="confirmBooking()">
+                        <i class="fas fa-handshake"></i> Mark as Client Confirmed
+                    </button>
+                    {% endif %}
+                    
+                    {% elif request.status == 'CONFIRMED' %}
+                    <!-- Step 4: Client Confirmed, Start Processing -->
+                    <button type="button" class="btn btn-info btn-lg mb-2" onclick="startProcessing()">
+                        <i class="fas fa-play-circle"></i> Start Processing Trip
+                    </button>
+                    
+                    {% elif request.status == 'IN_PROGRESS' %}
+                    <!-- Step 5: Complete Trip -->
+                    <button type="button" class="btn btn-success btn-lg mb-2" onclick="completeTrip()">
+                        <i class="fas fa-check-double"></i> Mark Trip as Completed
+                    </button>
+                    
+                    {% elif request.status == 'COMPLETED' %}
+                    <!-- Trip Completed -->
+                    <div class="alert alert-success d-inline-block mb-2">
+                        <i class="fas fa-check-circle"></i> Trip Completed Successfully
+                    </div>
+                    {% endif %}
+                </div>
                 
-                {% elif request.status == 'QUOTED' %}
-                <!-- Step 2: Generate Proforma (suppliers confirmed, status is QUOTED) -->
-                <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="action-btn" 
-                   style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); text-decoration: none; color: #1f2937; font-weight: 600;">
-                    <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
-                </a>
-                <!-- Step 3: Client can confirm after proforma is generated -->
-                {% if request.booking_id and request.booking.invoice_number %}
-                <button type="button" class="action-btn" onclick="confirmBooking()"
-                        style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; font-weight: 600; border: none;">
-                    <i class="fas fa-handshake"></i> Client Confirmation
-                </button>
-                <span class="text-muted ms-3">Proforma invoice generated - awaiting client confirmation</span>
-                {% endif %}
-                
-                {% elif request.status == 'CONFIRMED' %}
-                <!-- Status CONFIRMED - ready to proceed -->
-                <span class="badge bg-primary" style="font-size: 1rem; padding: 10px 15px;">
-                    <i class="fas fa-check-double"></i> Booking Confirmed - Ready to Proceed
-                </span>
-                {% endif %}
+                <!-- Additional Action Buttons -->
                 
                 <!-- Export Voucher/Trip Plan Word Document Button (always available) -->
                 <a href="/inbound/api/{{ request.id }}/export-voucher-doc" class="action-btn action-btn-export" style="text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
