@@ -19,6 +19,7 @@
     <!-- AI Chat CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ai-chat.css', v=1) }}">
     
+    {% block extra_css %}{% endblock %}
     {% block styles %}{% endblock %}
     
     <style>
