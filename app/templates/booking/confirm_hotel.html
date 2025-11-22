@@ -44,11 +44,19 @@
 
 <!-- Hotel Basic Information -->
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label">Hotel Name</label>
         <input type="text" name="hotel_name" class="form-control" value="{{ confirmation_data.hotel_name|default('') }}" required>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <label class="form-label">Check-in Date</label>
+        <input type="date" id="hotel_check_in" name="hotel_check_in" class="form-control" value="{{ service_item.start_date.strftime('%Y-%m-%d') }}" required>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Check-out Date</label>
+        <input type="date" id="hotel_check_out" name="hotel_check_out" class="form-control" value="{{ service_item.end_date.strftime('%Y-%m-%d') }}" required>
+    </div>
+    <div class="col-md-2">
         <label class="form-label">Status</label>
         <select name="status" class="form-select">
             <option value="confirmed" {% if confirmation_data.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
@@ -65,12 +73,6 @@
                 <option value="EUR" {% if confirmation_data.currency == 'EUR' %}selected{% endif %}>EUR</option>
                 <option value="GBP" {% if confirmation_data.currency == 'GBP' %}selected{% endif %}>GBP</option>
             </select>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">&nbsp;</label>
-        <div class="d-grid">
-            <small class="text-muted mb-1">Use table below</small>
         </div>
     </div>
 </div>
@@ -153,8 +155,8 @@
                 
                 // Create table header with expanded layout and dietary information
                 let tableHtml = `
-                    <div class="table-responsive" style="width: 100%; overflow-x: auto;">
-                        <table class="table table-bordered table-hover" style="min-width: 1800px; width: 100%;">
+                    <div class="table-responsive" style="width: calc(100vw - 2rem); margin-left: calc(50% - 50vw + 1rem); overflow-x: auto;">
+                        <table class="table table-bordered table-hover" style="width: 100%;">
                             <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; font-weight: bold;">
                                 <tr>
                                     <th style="min-width: 70px; color: white; font-weight: bold;">Room #</th>
@@ -247,6 +249,26 @@
                 
                 // Global room counter for new rooms
                 window.roomCounter = roomData.length;
+                
+                // Add event listeners to cascade hotel-level dates to all rooms
+                const hotelCheckIn = document.getElementById('hotel_check_in');
+                const hotelCheckOut = document.getElementById('hotel_check_out');
+                
+                function updateAllRoomDates() {
+                    const checkInValue = hotelCheckIn.value;
+                    const checkOutValue = hotelCheckOut.value;
+                    
+                    // Update all existing room date inputs
+                    document.querySelectorAll('input[name*="[check_in]"]').forEach(input => {
+                        input.value = checkInValue;
+                    });
+                    document.querySelectorAll('input[name*="[check_out]"]').forEach(input => {
+                        input.value = checkOutValue;
+                    });
+                }
+                
+                hotelCheckIn.addEventListener('change', updateAllRoomDates);
+                hotelCheckOut.addEventListener('change', updateAllRoomDates);
             });
             
             // Function to add room to table
