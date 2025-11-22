@@ -7375,21 +7375,16 @@ function toggleStatusFlow() {
 }
 
 function toggleLeftSidebar() {
-    const sidebarContainer = document.getElementById('leftSidebarContainer');
-    const mainContent = document.getElementById('mainContentContainer');
+    const sidebarContent = document.getElementById('leftSidebarContent');
     const icon = document.getElementById('sidebarToggleIcon');
     
-    if (sidebarContainer.classList.contains('d-none')) {
-        // Show sidebar
-        sidebarContainer.classList.remove('d-none');
-        mainContent.classList.remove('col-lg-12');
-        mainContent.classList.add('col-lg-10');
+    if (sidebarContent.style.display === 'none') {
+        // Show sidebar content
+        sidebarContent.style.display = 'block';
         icon.className = 'fas fa-chevron-left';
     } else {
-        // Hide sidebar
-        sidebarContainer.classList.add('d-none');
-        mainContent.classList.remove('col-lg-10');
-        mainContent.classList.add('col-lg-12');
+        // Hide sidebar content (but keep the column in the grid)
+        sidebarContent.style.display = 'none';
         icon.className = 'fas fa-chevron-right';
     }
 }
