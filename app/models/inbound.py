@@ -242,7 +242,6 @@ class HotelRoom(db.Model):
     currency = db.Column(db.String(3), default='USD')
     notes = db.Column(db.Text, nullable=True)
     confirmation = db.Column(db.String(200), nullable=True)  # Confirmation code/number from supplier
-    check_in_date = db.Column(db.Date, nullable=True)  # Cascaded from hotel configuration
     
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

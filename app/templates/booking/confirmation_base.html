@@ -121,23 +121,28 @@
                         </a>
                     </div>
                     <div class="btn-group" role="group">
-                        <!-- Step 1: Save as Quote -->
-                        <button type="submit" name="action" value="save_request" class="btn btn-sm btn-outline-warning status-btn" data-status="QUOTED" title="Save quotation">
+                        <!-- Step 1: Send Quote -->
+                        <button type="submit" name="action" value="quoted" class="btn btn-sm btn-outline-warning status-btn" data-status="QUOTED" title="Send quotation to client">
                             <i class="fas fa-quote-left"></i> <span class="d-none d-sm-inline">Quote</span>
                         </button>
                         
-                        <!-- Step 2: Supplier Confirmation -->
-                        <button type="submit" name="action" value="confirm" class="btn btn-sm btn-outline-info status-btn" data-status="CONFIRMED" title="Confirm with supplier" disabled>
-                            <i class="fas fa-handshake"></i> <span class="d-none d-sm-inline">Confirm</span>
+                        <!-- Step 2: Supplier Confirms -->
+                        <button type="submit" name="action" value="reserved" class="btn btn-sm btn-outline-secondary status-btn" data-status="RESERVED" title="Supplier confirmation received" disabled>
+                            <i class="fas fa-check"></i> <span class="d-none d-sm-inline">Reserved</span>
                         </button>
                         
-                        <!-- Step 3: Generate Proforma Invoice -->
-                        <button type="submit" name="action" value="generate_proforma" class="btn btn-sm btn-outline-success status-btn" data-status="PENDING" title="Generate proforma invoice (hotel & transport must be confirmed)" disabled>
-                            <i class="fas fa-file-invoice"></i> <span class="d-none d-sm-inline">Proforma</span>
+                        <!-- Step 3: Final Confirmation -->
+                        <button type="submit" name="action" value="confirmed" class="btn btn-sm btn-outline-info status-btn" data-status="CONFIRMED" title="Final booking confirmation" disabled>
+                            <i class="fas fa-handshake"></i> <span class="d-none d-sm-inline">Confirmed</span>
                         </button>
                         
-                        <!-- Step 4: Complete -->
-                        <button type="submit" name="action" value="complete" class="btn btn-sm btn-primary status-btn" data-status="COMPLETED" title="Mark as completed" disabled>
+                        <!-- Step 4: In Progress -->
+                        <button type="submit" name="action" value="in_progress" class="btn btn-sm btn-outline-primary status-btn" data-status="IN_PROGRESS" title="Operations in progress" disabled>
+                            <i class="fas fa-hourglass-half"></i> <span class="d-none d-sm-inline">Progress</span>
+                        </button>
+                        
+                        <!-- Step 5: Complete -->
+                        <button type="submit" name="action" value="completed" class="btn btn-sm btn-primary status-btn" data-status="COMPLETED" title="Tour completed" disabled>
                             <i class="fas fa-check-double"></i> <span class="d-none d-sm-inline">Complete</span>
                         </button>
                     </div>
