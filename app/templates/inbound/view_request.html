@@ -1824,34 +1824,6 @@ body::-webkit-scrollbar-thumb:hover {
                                 {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
                             </div>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Arrival:</strong><br>
-                                {% if request.arrival_point %}
-                                    <i class="fas fa-map-marker-alt text-primary"></i> {{ request.arrival_point }}
-                                    {% if request.arrival_time %} at {{ request.arrival_time.strftime('%H:%M') }}{% endif %}
-                                {% else %}
-                                    <span class="text-muted">Not specified</span>
-                                {% endif %}
-                            </div>
-                            <div class="col-6">
-                                <strong>Departure:</strong><br>
-                                {% if request.departure_point %}
-                                    <i class="fas fa-map-marker-alt text-danger"></i> {{ request.departure_point }}
-                                    {% if request.departure_time %} at {{ request.departure_time.strftime('%H:%M') }}{% endif %}
-                                {% else %}
-                                    <span class="text-muted">Not specified</span>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        {% if request.special_note %}
-                        <div class="mb-3">
-                            <strong>Special Notes:</strong><br>
-                            <div class="bg-light p-2 rounded">{{ request.special_note }}</div>
-                        </div>
-                        {% endif %}
                     </div>
 
                     <!-- Edit Mode -->
@@ -1914,35 +1886,6 @@ body::-webkit-scrollbar-thumb:hover {
                                 <label class="form-label">Pax</label>
                                 <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
                             </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Arrival Point</label>
-                                <input type="text" class="form-control" id="itinerary_arrival_point" name="arrival_point" value="{{ request.arrival_point or '' }}" 
-                                       list="arrival-points-list" placeholder="Type or select arrival point...">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Arrival Time</label>
-                                <input type="time" class="form-control" id="itinerary_arrival_time" name="arrival_time" value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <label class="form-label">Departure Point</label>
-                                <input type="text" class="form-control" id="itinerary_departure_point" name="departure_point" value="{{ request.departure_point or '' }}" 
-                                       list="departure-points-list" placeholder="Type or select departure point...">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Departure Time</label>
-                                <input type="time" class="form-control" id="itinerary_departure_time" name="departure_time" value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Special Notes</label>
-                            <textarea class="form-control" name="special_note" rows="3">{{ request.special_note or '' }}</textarea>
                         </div>
 
                         <div id="editModeButtons" class="d-flex gap-2 edit-mode-hidden">
