@@ -2117,6 +2117,18 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
 
+
+    <!-- Itinerary Details -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Itinerary Details (Edit Mode)</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="scrollToTripItinerary()" style="padding: 6px 16px;">
+                        <i class="fas fa-calendar-alt me-1"></i> View Trip Itinerary
+                    </button>
+                </div>
+                <div class="card-body">
     <!-- Pricing Summary and Cash Expenses Tabs -->
     <div class="row mb-2">
         <div class="col-12">
@@ -2251,18 +2263,6 @@ body::-webkit-scrollbar-thumb:hover {
             </div>
         </div>
     </div>
-
-    <!-- Itinerary Details -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Itinerary Details (Edit Mode)</h5>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="scrollToTripItinerary()" style="padding: 6px 16px;">
-                        <i class="fas fa-calendar-alt me-1"></i> View Trip Itinerary
-                    </button>
-                </div>
-                <div class="card-body">
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
