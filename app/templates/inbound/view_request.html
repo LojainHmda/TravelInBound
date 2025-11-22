@@ -1646,101 +1646,78 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Horizontal Status Flow at Top -->
+    <!-- Vertical Collapsible Status Flow in Sidebar -->
     <div class="row mb-2">
-        <div class="col-12">
+        <div class="col-12 col-lg-2 mb-2 mb-lg-0">
             <div class="card shadow-sm">
-                <div class="card-body py-2" style="background: #f8fafc;">
-                    <!-- Ultra Modern Status Flow for Inbound Requests -->
-                    <div class="status-flow" style="padding: 0.75rem 0;">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="toggleStatusFlow()">
+                    <h6 class="mb-0 small">Status</h6>
+                    <i class="fas fa-chevron-down" id="statusFlowIcon"></i>
+                </div>
+                <div class="card-body p-2" id="statusFlowContent" style="background: #f8fafc;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                         <!-- Request Stage -->
-                        <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
-                            <div class="status-circle">
+                        <div class="d-flex align-items-center gap-2 {% if request.status == 'REQUEST' %}text-primary{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'REQUEST' %}#007bff{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
                                 <i class="fas fa-paper-plane"></i>
                             </div>
-                            <div class="status-label">
-                                <div class="status-title">Request</div>
-                                <div class="status-subtitle">Initial inquiry</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="fw-bold small">Request</div>
                             </div>
                         </div>
+                        <div style="width: 2px; height: 12px; background: {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
                         
-                        <!-- Connection Line 1 -->
-                        <div class="status-connector {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}confirmed{% endif %}"></div>
-                        
-                        <!-- Supplier Confirmed Stage -->
-                        <div class="status-step {% if request.status == 'CONFIRMED' %}confirmed{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
-                            <div class="status-circle">
+                        <!-- Confirmed Stage -->
+                        <div class="d-flex align-items-center gap-2 {% if request.status == 'CONFIRMED' %}text-primary{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'CONFIRMED' %}#007bff{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
-                            <div class="status-label">
-                                <div class="status-title">Supplier Confirmed</div>
-                                <div class="status-subtitle">Services booked</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="fw-bold small">Confirmed</div>
                             </div>
                         </div>
-                        
-                        <!-- Connection Line 2 -->
-                        <div class="status-connector {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
+                        <div style="width: 2px; height: 12px; background: {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
                         
                         <!-- Quoted Stage -->
-                        <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
-                            <div class="status-circle">
+                        <div class="d-flex align-items-center gap-2 {% if request.status == 'QUOTED' %}text-primary{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'QUOTED' %}#007bff{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </div>
-                            <div class="status-label">
-                                <div class="status-title">Quoted</div>
-                                <div class="status-subtitle">Proposal sent</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="fw-bold small">Quoted</div>
                             </div>
                         </div>
-                        
-                        <!-- Connection Line 3 -->
-                        <div class="status-connector {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
-                        
-                        <!-- Perform Invoice Stage -->
-                        <div class="status-step {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}">
-                            <div class="status-circle">
-                                <i class="fas fa-file-invoice"></i>
-                            </div>
-                            <div class="status-label">
-                                <div class="status-title">Perform Invoice</div>
-                                <div class="status-subtitle">Invoice ready</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Connection Line 4 -->
-                        <div class="status-connector {% if request.status in ['PROCESSING', 'COMPLETED'] %}active{% endif %}"></div>
+                        <div style="width: 2px; height: 12px; background: {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
                         
                         <!-- In Process Stage -->
-                        <div class="status-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}">
-                            <div class="status-circle">
+                        <div class="d-flex align-items-center gap-2 {% if request.status == 'PROCESSING' %}text-primary{% elif request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'PROCESSING' %}#007bff{% elif request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
                                 <i class="fas fa-sync-alt"></i>
                             </div>
-                            <div class="status-label">
-                                <div class="status-title">In Process</div>
-                                <div class="status-subtitle">Operations active</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="fw-bold small">In Process</div>
                             </div>
                         </div>
-                        
-                        <!-- Connection Line 5 -->
-                        <div class="status-connector {% if request.status == 'COMPLETED' %}confirmed{% endif %}"></div>
+                        <div style="width: 2px; height: 12px; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
                         
                         <!-- Completed Stage -->
-                        <div class="status-step {% if request.status == 'COMPLETED' %}final{% endif %}">
-                            <div class="status-circle">
+                        <div class="d-flex align-items-center gap-2 {% if request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
                                 <i class="fas fa-crown"></i>
                             </div>
-                            <div class="status-label">
-                                <div class="status-title">Completed</div>
-                                <div class="status-subtitle">Journey delivered</div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="fw-bold small">Completed</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+        <div class="col-12 col-lg-10">
 
     <div class="row mb-2">
         <!-- Request Information -->
+        <div class="col-12">
         <div class="col-12">
             <div class="card">
                 <div class="card-header py-2">
@@ -6067,6 +6044,9 @@ function convertToInvoice() {
     </div>
 </div>
 
+        </div>
+    </div>
+
 <script>
 let arrivalBatches = [];
 let newArrivals = [];  // Track new arrivals to be added
@@ -7370,6 +7350,19 @@ function confirmAllTransports() {
         console.error('Error:', error);
         showNotification('Error updating transport statuses', 'error');
     });
+}
+
+function toggleStatusFlow() {
+    const content = document.getElementById('statusFlowContent');
+    const icon = document.getElementById('statusFlowIcon');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.className = 'fas fa-chevron-down';
+    } else {
+        content.style.display = 'none';
+        icon.className = 'fas fa-chevron-right';
+    }
 }
 </script>
 
