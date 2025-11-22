@@ -1856,10 +1856,8 @@ body::-webkit-scrollbar-thumb:hover {
             </div>
         </div>
         <div class="col-12 col-lg-10" id="mainContentContainer">
-    <div class="row mb-2">
-        <!-- Request Information -->
-        <div class="col-12">
-            <div class="card">
+            <!-- Request Information -->
+            <div class="card mb-2">
                 <div class="card-header py-2">
                     <h6 class="mb-0">Request Information</h6>
                 </div>
@@ -2245,23 +2243,16 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
 
-    <!-- Operations Dashboard Link (visible when status = PROCESSING) -->
-    {% if request.status == 'PROCESSING' %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="alert" style="background: #fef3c7; border: 2px solid #fde68a; border-radius: 8px;">
+            <!-- Operations Dashboard Link (visible when status = PROCESSING) -->
+            {% if request.status == 'PROCESSING' %}
+            <div class="alert mb-2" style="background: #fef3c7; border: 2px solid #fde68a; border-radius: 8px;">
                 <h6 class="mb-1" style="color: #92400e;"><i class="fas fa-calendar-check me-2"></i>Operations Dashboard Available</h6>
                 <p class="mb-0" style="color: #78350f;">This itinerary is now in active operations. View the daily timeline and calendar on the <a href="{{ url_for('inbound.run_down_plan') }}" style="color: #1e40af; font-weight: 600; text-decoration: underline;">Run-Down dashboard</a>.</p>
             </div>
-        </div>
-    </div>
-    {% endif %}
+            {% endif %}
 
-
-    <!-- Itinerary Details -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
+            <!-- Itinerary Details -->
+            <div class="card mb-2">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Itinerary Details (Edit Mode)</h5>
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="scrollToTripItinerary()" style="padding: 6px 16px;">
@@ -7381,15 +7372,15 @@ function toggleLeftSidebar() {
     const mainContent = document.getElementById('mainContentContainer');
     const icon = document.getElementById('sidebarToggleIcon');
     
-    if (sidebarContainer.style.display === 'none') {
+    if (sidebarContainer.classList.contains('d-none')) {
         // Show sidebar
-        sidebarContainer.style.display = 'block';
+        sidebarContainer.classList.remove('d-none');
         mainContent.classList.remove('col-lg-12');
         mainContent.classList.add('col-lg-10');
         icon.className = 'fas fa-chevron-left';
     } else {
         // Hide sidebar
-        sidebarContainer.style.display = 'none';
+        sidebarContainer.classList.add('d-none');
         mainContent.classList.remove('col-lg-10');
         mainContent.classList.add('col-lg-12');
         icon.className = 'fas fa-chevron-right';
