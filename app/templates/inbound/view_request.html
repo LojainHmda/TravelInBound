@@ -1855,7 +1855,7 @@ body::-webkit-scrollbar-thumb:hover {
                 </div>
             </div>
         </div>
-        <div class="col-12 col-lg-10">
+        <div class="col-12 col-lg-10" id="mainContentContainer">
     <div class="row mb-2">
         <!-- Request Information -->
         <div class="col-12">
@@ -7377,21 +7377,21 @@ function toggleStatusFlow() {
 }
 
 function toggleLeftSidebar() {
-    const container = document.getElementById('leftSidebarContainer');
-    const content = document.getElementById('leftSidebarContent');
+    const sidebarContainer = document.getElementById('leftSidebarContainer');
+    const mainContent = document.getElementById('mainContentContainer');
     const icon = document.getElementById('sidebarToggleIcon');
     
-    if (content.style.display === 'none') {
+    if (sidebarContainer.style.display === 'none') {
         // Show sidebar
-        content.style.display = 'block';
-        container.classList.remove('col-lg-0');
-        container.classList.add('col-lg-2');
+        sidebarContainer.style.display = 'block';
+        mainContent.classList.remove('col-lg-12');
+        mainContent.classList.add('col-lg-10');
         icon.className = 'fas fa-chevron-left';
     } else {
         // Hide sidebar
-        content.style.display = 'none';
-        container.classList.remove('col-lg-2');
-        container.classList.add('col-lg-0');
+        sidebarContainer.style.display = 'none';
+        mainContent.classList.remove('col-lg-10');
+        mainContent.classList.add('col-lg-12');
         icon.className = 'fas fa-chevron-right';
     }
 }
