@@ -2206,12 +2206,12 @@ body::-webkit-scrollbar-thumb:hover {
                         <!-- Step 1: Request -->
                         <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
                             <div class="mb-2">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'REQUEST' %}bg-warning{% elif request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'REQUEST' %}bg-warning{% elif request.status in ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
                                      style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                                    {% if request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-alt text-white"></i>{% endif %}
+                                    {% if request.status in ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-alt text-white"></i>{% endif %}
                                 </div>
                             </div>
-                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'REQUEST' %}#f59e0b{% elif request.status in ['QUOTED', 'RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'REQUEST' %}#f59e0b{% elif request.status in ['QUOTED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
                                 REQUEST
                             </div>
                         </div>
@@ -2219,30 +2219,17 @@ body::-webkit-scrollbar-thumb:hover {
                         <!-- Step 2: Quoted -->
                         <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
                             <div class="mb-2">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'QUOTED' %}bg-info{% elif request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
+                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'QUOTED' %}bg-info{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
                                      style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                                    {% if request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-invoice text-white"></i>{% endif %}
+                                    {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-file-invoice text-white"></i>{% endif %}
                                 </div>
                             </div>
-                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'QUOTED' %}#0ea5e9{% elif request.status in ['RESERVED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
+                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'QUOTED' %}#0ea5e9{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
                                 QUOTED
                             </div>
                         </div>
                         
-                        <!-- Step 3: Reserved (Suppliers Confirmed) -->
-                        <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
-                            <div class="mb-2">
-                                <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'RESERVED' %}bg-success{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
-                                     style="width: 40px; height: 40px; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
-                                    {% if request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}<i class="fas fa-check text-white"></i>{% else %}<i class="fas fa-clipboard-check text-white"></i>{% endif %}
-                                </div>
-                            </div>
-                            <div style="font-size: 0.75rem; font-weight: 600; color: {% if request.status == 'RESERVED' %}#10b981{% elif request.status in ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] %}#10b981{% else %}#6b7280{% endif %};">
-                                RESERVED
-                            </div>
-                        </div>
-                        
-                        <!-- Step 4: Confirmed -->
+                        <!-- Step 3: Confirmed -->
                         <div class="text-center" style="position: relative; z-index: 1; flex: 1;">
                             <div class="mb-2">
                                 <div class="rounded-circle d-inline-flex align-items-center justify-content-center {% if request.status == 'CONFIRMED' %}bg-primary{% elif request.status in ['IN_PROGRESS', 'COMPLETED'] %}bg-success{% else %}bg-secondary{% endif %}" 
