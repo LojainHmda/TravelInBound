@@ -1865,11 +1865,11 @@ body::-webkit-scrollbar-thumb:hover {
                     <!-- View Mode -->
                     <div id="viewMode">
                         <div class="row mb-2">
-                            <div class="col-3">
+                            <div class="col-6">
                                 <strong>Request #:</strong><br>
                                 <span class="text-primary">{{ request.request_number }}</span>
                             </div>
-                            <div class="col-3">
+                            <div class="col-6">
                                 <strong>Status:</strong><br>
                                 {% if request.status == 'REQUEST' %}
                                     <span class="badge bg-warning">Request</span>
@@ -1885,11 +1885,14 @@ body::-webkit-scrollbar-thumb:hover {
                                     <span class="badge bg-dark">Completed</span>
                                 {% endif %}
                             </div>
-                            <div class="col-3">
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-6">
                                 <strong>Customer Type:</strong><br>
                                 <span class="badge bg-primary">{{ request.customer_type or 'AGENCY' }}</span>
                             </div>
-                            <div class="col-3">
+                            <div class="col-6">
                                 <strong>Duration & Pax:</strong><br>
                                 {{ request.no_of_days }} days | {{ request.pax }} pax
                             </div>
