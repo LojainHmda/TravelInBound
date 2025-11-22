@@ -1723,6 +1723,124 @@ body::-webkit-scrollbar-thumb:hover {
                     </div>
                 </div>
             </div>
+            
+            <!-- Pricing Sidebar below Status -->
+            <div class="card shadow-sm mt-2">
+                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="cursor: pointer; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white;" onclick="togglePricingPane()">
+                    <small class="mb-0 fw-bold">Pricing</small>
+                    <i class="fas fa-chevron-down small" id="pricingPaneIcon"></i>
+                </div>
+                <div class="card-body p-2" id="pricingPaneContent" style="background: #f8fafc;">
+                    <!-- Pricing/Expenses Tabs -->
+                    <ul class="nav nav-pills nav-fill mb-2" id="summaryTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-1 px-1" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing-content" type="button" role="tab" style="font-size: 0.85rem;">
+                                <i class="fas fa-chart-line"></i> Price
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-1 px-1" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab" style="font-size: 0.85rem;">
+                                <i class="fas fa-money-bill-wave"></i> Cash
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="summaryTabContent">
+                        <!-- Pricing Summary Tab -->
+                        <div class="tab-pane fade show active" id="pricing-content" role="tabpanel">
+                            <div class="row text-center g-1 mb-2">
+                                <div class="col-6">
+                                    <div class="border rounded p-1" style="background: white;">
+                                        <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ request.itinerary_rows|length }}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">Items</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded p-1" style="background: white;">
+                                        <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ "%.2f"|format(request.total_amount) }}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">{{ request.total_currency }}</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded p-1" style="background: white;">
+                                        <div class="fw-bold text-info" style="font-size: 1.1rem;">{% if request.pax > 0 %}{{ "%.2f"|format(request.total_amount / request.pax) }}{% else %}0.00{% endif %}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">Per Person</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border rounded p-1" style="background: white;">
+                                        <div class="fw-bold text-warning" style="font-size: 1.1rem;">{{ request.pax }}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">Passengers</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Service Summary -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; font-size: 0.75rem;">
+                                <div><i class="fas fa-bed text-primary"></i> Hotels: {{ request.inbound_hotels|length }}</div>
+                                <div><i class="fas fa-car text-info"></i> Transport: {{ request.inbound_transports|length }}</div>
+                                <div><i class="fas fa-utensils text-warning"></i> Meals: {{ request.inbound_meals|length }}</div>
+                                <div><i class="fas fa-user-tie text-success"></i> Guides: {{ request.inbound_guides|length }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Cash Expenses Tab -->
+                        <div class="tab-pane fade" id="expenses-content" role="tabpanel">
+                            {% if request.inbound_cash_expenses %}
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-1" style="font-size: 0.75rem;">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Desc</th>
+                                            <th>Amt</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
+                                        <tr>
+                                            <td style="font-size: 0.7rem;">{{ expense.date.strftime('%m/%d') }}</td>
+                                            <td style="font-size: 0.7rem;">{{ expense.description[:15] }}...</td>
+                                            <td style="font-size: 0.7rem;">{{ expense.amount }}</td>
+                                            <td>
+                                                <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger py-0 px-1" onclick="return confirm('Delete?')" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-1" style="font-size: 0.75rem;">No expenses</p>
+                            {% endif %}
+
+                            <!-- Add New Cash Expense Form -->
+                            <form method="POST" action="{{ url_for('inbound.add_cash_expense', request_id=request.id) }}" class="mt-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="mb-1">
+                                    <input type="date" name="date" class="form-control form-control-sm" style="font-size: 0.75rem;" required>
+                                </div>
+                                <div class="mb-1">
+                                    <input type="text" name="description" class="form-control form-control-sm" placeholder="Description" style="font-size: 0.75rem;" required>
+                                </div>
+                                <div class="mb-1">
+                                    <input type="text" name="driver_name" class="form-control form-control-sm" placeholder="Driver" style="font-size: 0.75rem;">
+                                </div>
+                                <div class="mb-1">
+                                    <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount" style="font-size: 0.75rem;" required>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-success w-100" style="font-size: 0.75rem;">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-12 col-lg-10">
     <div class="row mb-2">
@@ -2138,130 +2256,6 @@ body::-webkit-scrollbar-thumb:hover {
                     </button>
                 </div>
                 <div class="card-body">
-                    <!-- Two-column layout: Pricing sidebar + Main content -->
-                    <div class="row">
-                        <!-- Left: Collapsible Pricing/Expenses Sidebar -->
-                        <div class="col-12 col-lg-3 mb-2 mb-lg-0">
-                            <div class="card shadow-sm" style="position: sticky; top: 10px;">
-                                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="cursor: pointer; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white;" onclick="togglePricingPane()">
-                                    <small class="mb-0 fw-bold">Pricing</small>
-                                    <i class="fas fa-chevron-down small" id="pricingPaneIcon"></i>
-                                </div>
-                                <div class="card-body p-2" id="pricingPaneContent" style="background: #f8fafc;">
-                                    <!-- Pricing/Expenses Tabs -->
-                                    <ul class="nav nav-pills nav-fill mb-2" id="summaryTabs" role="tablist">
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link active py-1 px-1" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing-content" type="button" role="tab" style="font-size: 0.85rem;">
-                                                <i class="fas fa-chart-line"></i> Price
-                                            </button>
-                                        </li>
-                                        <li class="nav-item" role="presentation">
-                                            <button class="nav-link py-1 px-1" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab" style="font-size: 0.85rem;">
-                                                <i class="fas fa-money-bill-wave"></i> Cash
-                                            </button>
-                                        </li>
-                                    </ul>
-                                    <div class="tab-content" id="summaryTabContent">
-                                        <!-- Pricing Summary Tab -->
-                                        <div class="tab-pane fade show active" id="pricing-content" role="tabpanel">
-                                            <div class="row text-center g-1 mb-2">
-                                                <div class="col-6">
-                                                    <div class="border rounded p-1" style="background: white;">
-                                                        <div class="fw-bold text-primary" style="font-size: 1.1rem;">{{ request.itinerary_rows|length }}</div>
-                                                        <small class="text-muted" style="font-size: 0.7rem;">Items</small>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="border rounded p-1" style="background: white;">
-                                                        <div class="fw-bold text-success" style="font-size: 1.1rem;">{{ "%.2f"|format(request.total_amount) }}</div>
-                                                        <small class="text-muted" style="font-size: 0.7rem;">{{ request.total_currency }}</small>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="border rounded p-1" style="background: white;">
-                                                        <div class="fw-bold text-info" style="font-size: 1.1rem;">{% if request.pax > 0 %}{{ "%.2f"|format(request.total_amount / request.pax) }}{% else %}0.00{% endif %}</div>
-                                                        <small class="text-muted" style="font-size: 0.7rem;">Per Person</small>
-                                                    </div>
-                                                </div>
-                                                <div class="col-6">
-                                                    <div class="border rounded p-1" style="background: white;">
-                                                        <div class="fw-bold text-warning" style="font-size: 1.1rem;">{{ request.pax }}</div>
-                                                        <small class="text-muted" style="font-size: 0.7rem;">Passengers</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <!-- Service Summary -->
-                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.25rem; font-size: 0.75rem;">
-                                                <div><i class="fas fa-bed text-primary"></i> Hotels: {{ request.inbound_hotels|length }}</div>
-                                                <div><i class="fas fa-car text-info"></i> Transport: {{ request.inbound_transports|length }}</div>
-                                                <div><i class="fas fa-utensils text-warning"></i> Meals: {{ request.inbound_meals|length }}</div>
-                                                <div><i class="fas fa-user-tie text-success"></i> Guides: {{ request.inbound_guides|length }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Cash Expenses Tab -->
-                                        <div class="tab-pane fade" id="expenses-content" role="tabpanel">
-                                            {% if request.inbound_cash_expenses %}
-                                            <div style="max-height: 300px; overflow-y: auto;">
-                                                <table class="table table-sm table-hover mb-1" style="font-size: 0.75rem;">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Date</th>
-                                                            <th>Desc</th>
-                                                            <th>Amt</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
-                                                        <tr>
-                                                            <td style="font-size: 0.7rem;">{{ expense.date.strftime('%m/%d') }}</td>
-                                                            <td style="font-size: 0.7rem;">{{ expense.description[:15] }}...</td>
-                                                            <td style="font-size: 0.7rem;">{{ expense.amount }}</td>
-                                                            <td>
-                                                                <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                                    <button type="submit" class="btn btn-sm btn-danger py-0 px-1" onclick="return confirm('Delete?')" style="font-size: 0.7rem;">
-                                                                        <i class="fas fa-trash"></i>
-                                                                    </button>
-                                                                </form>
-                                                            </td>
-                                                        </tr>
-                                                        {% endfor %}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            {% else %}
-                                            <p class="text-muted mb-1" style="font-size: 0.75rem;">No expenses</p>
-                                            {% endif %}
-
-                                            <!-- Add New Cash Expense Form -->
-                                            <form method="POST" action="{{ url_for('inbound.add_cash_expense', request_id=request.id) }}" class="mt-2">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <div class="mb-1">
-                                                    <input type="date" name="date" class="form-control form-control-sm" style="font-size: 0.75rem;" required>
-                                                </div>
-                                                <div class="mb-1">
-                                                    <input type="text" name="description" class="form-control form-control-sm" placeholder="Description" style="font-size: 0.75rem;" required>
-                                                </div>
-                                                <div class="mb-1">
-                                                    <input type="text" name="driver_name" class="form-control form-control-sm" placeholder="Driver" style="font-size: 0.75rem;">
-                                                </div>
-                                                <div class="mb-1">
-                                                    <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount" style="font-size: 0.75rem;" required>
-                                                </div>
-                                                <button type="submit" class="btn btn-sm btn-success w-100" style="font-size: 0.75rem;">
-                                                    <i class="fas fa-plus"></i> Add
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right: Main Itinerary Content -->
-                        <div class="col-12 col-lg-9">
                     {% if request.itinerary_rows %}
                     <!-- Editable Itinerary -->
                     <div id="itineraryEditMode">
