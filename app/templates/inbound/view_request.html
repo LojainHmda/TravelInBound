@@ -1626,6 +1626,13 @@ body::-webkit-scrollbar-thumb:hover {
 .service-icon-item[data-service="airport"] i {
     color: white !important;
 }
+
+/* Force Bootstrap Grid to work properly */
+#leftSidebarContainer,
+#mainContentContainer {
+    display: block !important;
+    position: relative !important;
+}
 </style>
 {% endblock %}
 
@@ -1646,9 +1653,9 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Collapsible Left Sidebar Navigation -->
-    <div class="row mb-2">
-        <div class="col-12 col-lg-2 mb-2 mb-lg-0" id="leftSidebarContainer">
+    <!-- Main Layout: Sidebar + Content -->
+    <div class="row g-3">
+        <div class="col-12 col-lg-2" id="leftSidebarContainer">
             <div style="background: #334155; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative;">
                 <!-- Collapse Toggle Button -->
                 <button onclick="toggleLeftSidebar()" style="position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); border: none; color: white; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10;" title="Toggle Sidebar">
