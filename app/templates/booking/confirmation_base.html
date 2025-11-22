@@ -3,46 +3,6 @@
 {% block title %}{% block confirmation_title %}Service Confirmation{% endblock %}{% endblock %}
 
 {% block content %}
-<style>
-.workflow-buttons {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-}
-
-.workflow-btn {
-    min-width: 38px !important;
-    width: 38px !important;
-    height: 38px !important;
-    padding: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 12px !important;
-    border-radius: 4px !important;
-}
-
-.workflow-btn i {
-    margin-right: 0 !important;
-    font-size: 14px !important;
-}
-
-.workflow-btn span {
-    display: none !important;
-}
-
-@media (min-width: 576px) {
-    .workflow-btn {
-        min-width: auto !important;
-        width: auto !important;
-        padding: 4px 8px !important;
-    }
-    
-    .workflow-btn span {
-        display: inline !important;
-    }
-}
-</style>
 <div class="container mt-4">
     <div class="row">
         <div class="col-12">
@@ -151,42 +111,38 @@
                     <textarea class="form-control" name="notes" rows="3" placeholder="Enter any notes or special requirements...">{{ confirmation_data.notes|default('') }}</textarea>
                 </div>
                 
-                <!-- Status tracking for workflow -->
-                <input type="hidden" id="current_status" value="{{ service_item.status|default('REQUEST') }}">
-                
-                <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+                <div class="d-flex justify-content-between mt-4">
                     <div>
-                        <a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}" class="btn btn-outline-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back
+                        <a href="{{ url_for('booking.details', booking_id=service_item.booking_id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Booking
                         </a>
                     </div>
-                    <div class="workflow-buttons">
-                        <!-- Step 1: Send Quote -->
-                        <button type="submit" name="action" value="quoted" class="btn workflow-btn btn-outline-warning" data-status="QUOTED" title="Send quotation">
-                            <i class="fas fa-quote-left"></i> <span>Quote</span>
-                        </button>
-                        
-                        <!-- Step 2: Final Confirmation -->
-                        <button type="submit" name="action" value="confirmed" class="btn workflow-btn btn-outline-info" data-status="CONFIRMED" title="Final confirmation" disabled>
-                            <i class="fas fa-handshake"></i> <span>Confirmed</span>
-                        </button>
-                        
-                        <!-- Step 3: In Progress -->
-                        <button type="submit" name="action" value="in_progress" class="btn workflow-btn btn-outline-primary" data-status="IN_PROGRESS" title="Operations progress" disabled>
-                            <i class="fas fa-hourglass-half"></i> <span>Progress</span>
-                        </button>
-                        
-                        <!-- Step 4: Complete -->
-                        <button type="submit" name="action" value="completed" class="btn workflow-btn btn-primary" data-status="COMPLETED" title="Tour completed" disabled>
-                            <i class="fas fa-check-double"></i> <span>Complete</span>
-                        </button>
-                    </div>
-                    
-                    <!-- Additional options -->
                     <div>
-                        <a href="{{ url_for('confirmation.add_supplier_confirmation', item_id=service_item.id) }}" class="btn btn-outline-secondary btn-sm" title="Add supplier costs">
-                            <i class="fas fa-dollar-sign"></i>
+                        <!-- Submit buttons with different action values -->
+                        <button type="submit" name="action" value="save_request" class="btn btn-outline-warning me-2">
+                            <i class="fas fa-save"></i> Save Request
+                        </button>
+                        
+                        <!-- Direct confirmation button -->
+                        <button type="submit" name="action" value="confirm" class="btn btn-primary me-2">
+                            <i class="fas fa-check-circle"></i> 
+                            {% if confirmation_doc %}Update Confirmation{% else %}Confirm Service{% endif %}
+                        </button>
+                        
+                        <!-- Link to supplier costs page -->
+                        <a href="{{ url_for('confirmation.add_supplier_confirmation', item_id=service_item.id) }}" class="btn btn-outline-info ms-2">
+                            <i class="fas fa-dollar-sign"></i> Add Supplier Costs
                         </a>
+
+                        <!-- Check if there are other services that need confirmation -->
+                        {% set other_items = service_item.booking.service_items|selectattr('status', 'equalto', 'IN_PROGRESS')|list %}
+                        {% set next_item = other_items|selectattr('id', '!=', service_item.id)|first %}
+                        
+                        {% if next_item %}
+                        <button type="submit" name="action" value="next" class="btn btn-info ms-2">
+                            <i class="fas fa-arrow-right"></i> Save & Next Service
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
             </form>
