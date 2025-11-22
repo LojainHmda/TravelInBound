@@ -1667,13 +1667,13 @@ body::-webkit-scrollbar-thumb:hover {
                         </div>
                         <div style="width: 2px; height: 8px; background: {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
-                        <!-- Confirmed Stage -->
+                        <!-- Supplier Confirmed Stage -->
                         <div class="d-flex align-items-center gap-1 {% if request.status == 'CONFIRMED' %}text-primary{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
                             <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'CONFIRMED' %}#007bff{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <small class="fw-bold">Confirmed</small>
+                                <small class="fw-bold">Supplier Conf.</small>
                             </div>
                         </div>
                         <div style="width: 2px; height: 8px; background: {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
@@ -1688,6 +1688,17 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
                         <div style="width: 2px; height: 8px; background: {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
+                        
+                        <!-- Perform Invoice Stage -->
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'INVOICE' %}text-primary{% elif request.status in ['PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'INVOICE' %}#007bff{% elif request.status in ['PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <small class="fw-bold">Perform Inv.</small>
+                            </div>
+                        </div>
+                        <div style="width: 2px; height: 8px; background: {% if request.status in ['PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
                         <!-- In Process Stage -->
                         <div class="d-flex align-items-center gap-1 {% if request.status == 'PROCESSING' %}text-primary{% elif request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
