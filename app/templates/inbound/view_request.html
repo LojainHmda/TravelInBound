@@ -1864,60 +1864,50 @@ body::-webkit-scrollbar-thumb:hover {
                 <div class="card-body py-2">
                     <!-- View Mode -->
                     <div id="viewMode">
-                        <div class="row g-3">
-                            <div class="col-lg-3">
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <small class="text-muted d-block mb-1">Request #</small>
-                                    <div class="fw-semibold text-primary">{{ request.request_number }}</div>
-                                </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Request #</div>
+                                <div class="fw-bold text-primary">{{ request.request_number }}</div>
                             </div>
-                            <div class="col-lg-3">
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <small class="text-muted d-block mb-1">Status</small>
-                                    {% if request.status == 'REQUEST' %}
-                                        <span class="badge bg-warning">Request</span>
-                                    {% elif request.status == 'CONFIRMED' %}
-                                        <span class="badge bg-success">Supplier Confirmed</span>
-                                    {% elif request.status == 'QUOTED' %}
-                                        <span class="badge bg-info">Quoted</span>
-                                    {% elif request.status == 'INVOICE' %}
-                                        <span class="badge bg-primary">Perform Invoice</span>
-                                    {% elif request.status == 'PROCESSING' %}
-                                        <span class="badge bg-primary">In Process</span>
-                                    {% elif request.status == 'COMPLETED' %}
-                                        <span class="badge bg-dark">Completed</span>
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Status</div>
+                                {% if request.status == 'REQUEST' %}
+                                    <span class="badge bg-warning">Request</span>
+                                {% elif request.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                {% elif request.status == 'QUOTED' %}
+                                    <span class="badge bg-info">Quoted</span>
+                                {% elif request.status == 'INVOICE' %}
+                                    <span class="badge bg-primary">Invoice</span>
+                                {% elif request.status == 'PROCESSING' %}
+                                    <span class="badge bg-primary">Processing</span>
+                                {% elif request.status == 'COMPLETED' %}
+                                    <span class="badge bg-dark">Completed</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Type</div>
+                                <div class="fw-bold">{{ request.customer_type or 'AGENCY' }}</div>
+                            </div>
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Duration</div>
+                                <div class="fw-bold">{{ request.no_of_days }} days | {{ request.pax }} pax</div>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Customer</div>
+                                <div class="fw-bold">
+                                    {% if request.customer %}
+                                        {{ request.customer.name }}
+                                    {% else %}
+                                        <span class="text-muted">Not selected</span>
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="col-lg-3">
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <small class="text-muted d-block mb-1">Type</small>
-                                    <div class="fw-semibold"><span class="badge bg-primary">{{ request.customer_type or 'AGENCY' }}</span></div>
-                                </div>
-                            </div>
-                            <div class="col-lg-3">
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <small class="text-muted d-block mb-1">Duration & Pax</small>
-                                    <div class="fw-semibold">{{ request.no_of_days }}d | {{ request.pax }}pax</div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div style="padding: 0.75rem 0; border-bottom: 1px solid #e2e8f0;">
-                                    <small class="text-muted d-block mb-1">Customer</small>
-                                    <div class="fw-semibold">
-                                        {% if request.customer %}
-                                            {{ request.customer.name }}{% if request.customer.company_name %} ({{ request.customer.company_name }}){% endif %}
-                                        {% else %}
-                                            <span class="text-muted">No customer selected</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div style="padding: 0.75rem 0;">
-                                    <small class="text-muted d-block mb-1">Travel Dates</small>
-                                    <div class="fw-semibold">{{ request.from_date.strftime('%d %b %Y') }} – {{ request.to_date.strftime('%d %b %Y') }}</div>
-                                </div>
+                            <div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Travel Dates</div>
+                                <div class="fw-bold">{{ request.from_date.strftime('%d %b %Y') }} to {{ request.to_date.strftime('%d %b %Y') }}</div>
                             </div>
                         </div>
                     </div>
