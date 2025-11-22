@@ -1650,63 +1650,63 @@ body::-webkit-scrollbar-thumb:hover {
     <div class="row mb-2">
         <div class="col-12 col-lg-2 mb-2 mb-lg-0">
             <div class="card shadow-sm">
-                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="toggleStatusFlow()">
-                    <h6 class="mb-0 small">Status</h6>
-                    <i class="fas fa-chevron-down" id="statusFlowIcon"></i>
+                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="cursor: pointer; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;" onclick="toggleStatusFlow()">
+                    <small class="mb-0 fw-bold">Status</small>
+                    <i class="fas fa-chevron-down small" id="statusFlowIcon"></i>
                 </div>
-                <div class="card-body p-2" id="statusFlowContent" style="background: #f8fafc;">
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div class="card-body p-1" id="statusFlowContent" style="background: #f8fafc;">
+                    <div style="display: flex; flex-direction: column; gap: 0.25rem;">
                         <!-- Request Stage -->
-                        <div class="d-flex align-items-center gap-2 {% if request.status == 'REQUEST' %}text-primary{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'REQUEST' %}#007bff{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'REQUEST' %}text-primary{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'REQUEST' %}#007bff{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-paper-plane"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <div class="fw-bold small">Request</div>
+                                <small class="fw-bold">Request</small>
                             </div>
                         </div>
-                        <div style="width: 2px; height: 12px; background: {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
+                        <div style="width: 2px; height: 8px; background: {% if request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
                         <!-- Confirmed Stage -->
-                        <div class="d-flex align-items-center gap-2 {% if request.status == 'CONFIRMED' %}text-primary{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'CONFIRMED' %}#007bff{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'CONFIRMED' %}text-primary{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'CONFIRMED' %}#007bff{% elif request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-shield-alt"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <div class="fw-bold small">Confirmed</div>
+                                <small class="fw-bold">Confirmed</small>
                             </div>
                         </div>
-                        <div style="width: 2px; height: 12px; background: {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
+                        <div style="width: 2px; height: 8px; background: {% if request.status in ['QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
                         <!-- Quoted Stage -->
-                        <div class="d-flex align-items-center gap-2 {% if request.status == 'QUOTED' %}text-primary{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'QUOTED' %}#007bff{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'QUOTED' %}text-primary{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'QUOTED' %}#007bff{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-file-invoice-dollar"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <div class="fw-bold small">Quoted</div>
+                                <small class="fw-bold">Quoted</small>
                             </div>
                         </div>
-                        <div style="width: 2px; height: 12px; background: {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
+                        <div style="width: 2px; height: 8px; background: {% if request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
                         <!-- In Process Stage -->
-                        <div class="d-flex align-items-center gap-2 {% if request.status == 'PROCESSING' %}text-primary{% elif request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'PROCESSING' %}#007bff{% elif request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'PROCESSING' %}text-primary{% elif request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'PROCESSING' %}#007bff{% elif request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-sync-alt"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <div class="fw-bold small">In Process</div>
+                                <small class="fw-bold">In Process</small>
                             </div>
                         </div>
-                        <div style="width: 2px; height: 12px; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 13px;"></div>
+                        <div style="width: 2px; height: 8px; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#dee2e6{% endif %}; margin-left: 10px;"></div>
                         
                         <!-- Completed Stage -->
-                        <div class="d-flex align-items-center gap-2 {% if request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
-                            <div style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 11px; flex-shrink: 0;">
+                        <div class="d-flex align-items-center gap-1 {% if request.status == 'COMPLETED' %}text-success{% else %}text-muted{% endif %}">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: {% if request.status == 'COMPLETED' %}#28a745{% else %}#e9ecef{% endif %}; color: white; font-size: 10px; flex-shrink: 0;">
                                 <i class="fas fa-crown"></i>
                             </div>
                             <div style="flex: 1; min-width: 0;">
-                                <div class="fw-bold small">Completed</div>
+                                <small class="fw-bold">Completed</small>
                             </div>
                         </div>
                     </div>
