@@ -1647,20 +1647,12 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
 
     <!-- Horizontal Status Flow at Top -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
-                    <h5 class="mb-0 fw-bold text-dark">
-                        <i class="fas fa-tasks me-2 text-primary"></i>Booking Status Flow
-                    </h5>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleHorizontalWorkflow()" id="horizontalWorkflowToggle">
-                        <i class="fas fa-chevron-up" id="horizontalToggleIcon"></i>
-                    </button>
-                </div>
-                <div class="card-body py-4" id="horizontalWorkflowContent" style="display: block !important; visibility: visible !important; background: #f8fafc; border: 1px solid #d1d5db;">
+                <div class="card-body py-2" style="background: #f8fafc;">
                     <!-- Ultra Modern Status Flow for Inbound Requests -->
-                    <div class="status-flow">
+                    <div class="status-flow" style="padding: 0.75rem 0;">
                         <!-- Request Stage -->
                         <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}">
                             <div class="status-circle">
@@ -1747,181 +1739,22 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Pricing Summary and Cash Expenses Tabs -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header p-0">
-                    <ul class="nav nav-tabs" id="summaryTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing-content" type="button" role="tab">
-                                <i class="fas fa-chart-line me-1"></i> Pricing Summary
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab">
-                                <i class="fas fa-money-bill-wave me-1"></i> Cash Expenses
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    <div class="tab-content" id="summaryTabContent">
-                        <!-- Pricing Summary Tab -->
-                        <div class="tab-pane fade show active" id="pricing-content" role="tabpanel">
-                            <div class="row text-center mb-4">
-                                <div class="col-4">
-                                    <div class="border rounded p-3">
-                                        <div class="h4 text-primary mb-1">{{ request.itinerary_rows|length }}</div>
-                                        <small class="text-muted">Itinerary Items</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="border rounded p-3">
-                                        <div class="h4 text-success mb-1">{{ "%.2f"|format(request.total_amount) }}</div>
-                                        <small class="text-muted">{{ request.total_currency }}</small>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="border rounded p-3">
-                                        <div class="h4 text-info mb-1">{% if request.pax > 0 %}{{ "%.2f"|format(request.total_amount / request.pax) }}{% else %}0.00{% endif %}</div>
-                                        <small class="text-muted">Per Person</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Service Summary -->
-                            <div class="row">
-                                <div class="col-6">
-                                    <div class="mb-2">
-                                        <i class="fas fa-bed text-primary"></i>
-                                        <span class="ms-2">Hotels: {{ request.inbound_hotels|length }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <i class="fas fa-car text-info"></i>
-                                        <span class="ms-2">Transport: {{ request.inbound_transports|length }}</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="mb-2">
-                                        <i class="fas fa-utensils text-warning"></i>
-                                        <span class="ms-2">Meals: {{ request.inbound_meals|length }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <i class="fas fa-user-tie text-success"></i>
-                                        <span class="ms-2">Guides: {{ request.inbound_guides|length }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cash Expenses Tab -->
-                        <div class="tab-pane fade" id="expenses-content" role="tabpanel">
-                            <!-- Existing Cash Expenses -->
-                            {% if request.inbound_cash_expenses %}
-                            <table class="table table-sm table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Description</th>
-                                        <th>Driver</th>
-                                        <th>Amount</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
-                                    <tr>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="date" name="date" value="{{ expense.date.strftime('%Y-%m-%d') }}" class="form-control form-control-sm" style="width:120px; display:inline;">
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="text" name="description" value="{{ expense.description }}" class="form-control form-control-sm">
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="text" name="driver_name" value="{{ expense.driver_name or '' }}" class="form-control form-control-sm" style="width:100px;">
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" class="form-control form-control-sm" style="width:90px;">
-                                            </form>
-                                        </td>
-                                        <td>
-                                            <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this expense?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            {% else %}
-                            <p class="text-muted">No cash expenses recorded.</p>
-                            {% endif %}
-
-                            <!-- Add New Cash Expense Form -->
-                            <hr>
-                            <form method="POST" action="{{ url_for('inbound.add_cash_expense', request_id=request.id) }}" class="row g-2">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <div class="col-md-3">
-                                    <label class="form-label">Date</label>
-                                    <input type="date" name="date" class="form-control form-control-sm" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Description</label>
-                                    <input type="text" name="description" class="form-control form-control-sm" placeholder="e.g., Tips, Entrance fee" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Driver</label>
-                                    <input type="text" name="driver_name" class="form-control form-control-sm" placeholder="Driver name">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Amount</label>
-                                    <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="0.00" required>
-                                </div>
-                                <div class="col-md-1">
-                                    <label class="form-label">&nbsp;</label>
-                                    <button type="submit" class="btn btn-sm btn-success w-100">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
+    <div class="row mb-2">
         <!-- Request Information -->
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Request Information</h5>
+                <div class="card-header py-2">
+                    <h6 class="mb-0">Request Information</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-2">
                     <!-- View Mode -->
                     <div id="viewMode">
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Request Number:</strong><br>
+                        <div class="row mb-2">
+                            <div class="col-3">
+                                <strong>Request #:</strong><br>
                                 <span class="text-primary">{{ request.request_number }}</span>
                             </div>
-                            <div class="col-6">
+                            <div class="col-3">
                                 <strong>Status:</strong><br>
                                 {% if request.status == 'REQUEST' %}
                                     <span class="badge bg-warning">Request</span>
@@ -1937,9 +1770,17 @@ body::-webkit-scrollbar-thumb:hover {
                                     <span class="badge bg-dark">Completed</span>
                                 {% endif %}
                             </div>
+                            <div class="col-3">
+                                <strong>Customer Type:</strong><br>
+                                <span class="badge bg-primary">{{ request.customer_type or 'AGENCY' }}</span>
+                            </div>
+                            <div class="col-3">
+                                <strong>Duration & Pax:</strong><br>
+                                {{ request.no_of_days }} days | {{ request.pax }} pax
+                            </div>
                         </div>
 
-                        <div class="row mb-3">
+                        <div class="row mb-2">
                             <div class="col-6">
                                 <strong>Customer:</strong><br>
                                 {% if request.customer %}
@@ -1950,35 +1791,6 @@ body::-webkit-scrollbar-thumb:hover {
                                 {% endif %}
                             </div>
                             <div class="col-6">
-                                <strong>Customer Type:</strong><br>
-                                <span class="badge bg-primary">{{ request.customer_type or 'AGENCY' }}</span>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Contact Name:</strong><br>
-                                {{ request.contact_name }}
-                            </div>
-                            <div class="col-6">
-                                <strong>Agent Reference:</strong><br>
-                                {{ request.agent_ref or '-' }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Nationality:</strong><br>
-                                {{ request.nationality }}
-                            </div>
-                            <div class="col-6">
-                                <strong>Duration & Pax:</strong><br>
-                                {{ request.no_of_days }} days | {{ request.pax }} pax
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-12">
                                 <strong>Travel Dates:</strong><br>
                                 {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
                             </div>
@@ -2328,8 +2140,143 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
 
+    <!-- Pricing Summary and Cash Expenses Tabs -->
+    <div class="row mb-2">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="summaryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing-content" type="button" role="tab">
+                        <i class="fas fa-chart-line me-1"></i> Pricing
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab">
+                        <i class="fas fa-money-bill-wave me-1"></i> Cash Expenses
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content border border-top-0 p-3" id="summaryTabContent" style="background: #fff;">
+                <!-- Pricing Summary Tab -->
+                <div class="tab-pane fade show active" id="pricing-content" role="tabpanel">
+                    <div class="row text-center mb-3">
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-primary mb-0">{{ request.itinerary_rows|length }}</div>
+                                <small class="text-muted">Items</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-success mb-0">{{ "%.2f"|format(request.total_amount) }}</div>
+                                <small class="text-muted">{{ request.total_currency }}</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-info mb-0">{% if request.pax > 0 %}{{ "%.2f"|format(request.total_amount / request.pax) }}{% else %}0.00{% endif %}</div>
+                                <small class="text-muted">Per Person</small>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="border rounded p-2">
+                                <div class="h5 text-warning mb-0">{{ request.pax }}</div>
+                                <small class="text-muted">Passengers</small>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Service Summary -->
+                    <div class="d-flex gap-3 justify-content-center">
+                        <span><i class="fas fa-bed text-primary"></i> Hotels: {{ request.inbound_hotels|length }}</span>
+                        <span><i class="fas fa-car text-info"></i> Transport: {{ request.inbound_transports|length }}</span>
+                        <span><i class="fas fa-utensils text-warning"></i> Meals: {{ request.inbound_meals|length }}</span>
+                        <span><i class="fas fa-user-tie text-success"></i> Guides: {{ request.inbound_guides|length }}</span>
+                    </div>
+                </div>
+
+                <!-- Cash Expenses Tab -->
+                <div class="tab-pane fade" id="expenses-content" role="tabpanel">
+                    {% if request.inbound_cash_expenses %}
+                    <table class="table table-sm table-hover mb-2">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Driver</th>
+                                <th>Amount</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in request.inbound_cash_expenses|sort(attribute='date') %}
+                            <tr>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="date" name="date" value="{{ expense.date.strftime('%Y-%m-%d') }}" class="form-control form-control-sm" style="width:120px;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="description" value="{{ expense.description }}" class="form-control form-control-sm">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="driver_name" value="{{ expense.driver_name or '' }}" class="form-control form-control-sm" style="width:100px;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.update_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="number" step="0.01" name="amount" value="{{ expense.amount }}" class="form-control form-control-sm" style="width:90px;">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('inbound.delete_cash_expense', request_id=request.id, expense_id=expense.id) }}" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this expense?')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-2">No cash expenses recorded.</p>
+                    {% endif %}
+
+                    <!-- Add New Cash Expense Form -->
+                    <form method="POST" action="{{ url_for('inbound.add_cash_expense', request_id=request.id) }}" class="row g-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="col-md-3">
+                            <input type="date" name="date" class="form-control form-control-sm" placeholder="Date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" name="description" class="form-control form-control-sm" placeholder="Description" required>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" name="driver_name" class="form-control form-control-sm" placeholder="Driver">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" step="0.01" name="amount" class="form-control form-control-sm" placeholder="Amount" required>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Itinerary Details -->
-    <div class="row mt-4">
+    <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
