@@ -7358,12 +7358,12 @@ function toggleStatusFlow() {
     const content = document.getElementById('statusFlowContent');
     const icon = document.getElementById('statusFlowIcon');
     
-    if (content.style.display === 'none') {
+    if (content.style.display === 'none' || content.style.display === '') {
         content.style.display = 'block';
-        icon.className = 'fas fa-chevron-down';
+        icon.className = 'fas fa-chevron-down small text-white';
     } else {
         content.style.display = 'none';
-        icon.className = 'fas fa-chevron-right';
+        icon.className = 'fas fa-chevron-right small text-white';
     }
 }
 
@@ -7391,12 +7391,12 @@ function togglePricingPane() {
     const content = document.getElementById('pricingPaneContent');
     const icon = document.getElementById('pricingPaneIcon');
     
-    if (content.style.display === 'none') {
+    if (content.style.display === 'none' || content.style.display === '') {
         content.style.display = 'block';
-        icon.className = 'fas fa-chevron-down small';
+        icon.className = 'fas fa-chevron-down small text-white';
     } else {
         content.style.display = 'none';
-        icon.className = 'fas fa-chevron-right small';
+        icon.className = 'fas fa-chevron-right small text-white';
     }
 }
 </script>
