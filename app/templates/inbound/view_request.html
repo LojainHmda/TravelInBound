@@ -1627,37 +1627,45 @@ body::-webkit-scrollbar-thumb:hover {
     color: white !important;
 }
 
-/* Force sidebar to be visible and properly positioned */
-#leftSidebarContainer {
-    transform: none !important;
-    position: static !important;
-    display: block !important;
+/* Request Layout - Two Column Design */
+.request-layout-row {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: 1.5rem;
 }
 
-#mainContentContainer {
-    transform: none !important;
-    position: static !important;
-    display: block !important;
+/* Mobile: Stack vertically */
+@media (max-width: 991.98px) {
+    .request-layout-row {
+        flex-direction: column;
+    }
+    #leftSidebarContainer,
+    #mainContentContainer {
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
+    }
 }
 
-/* Ensure Bootstrap grid columns work properly */
-.row {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    flex-direction: row !important;
-}
-
+/* Desktop: Side by side layout */
 @media (min-width: 992px) {
+    .request-layout-row {
+        display: flex;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        align-items: flex-start;
+    }
+    
     #leftSidebarContainer {
-        flex: 0 0 16.666667% !important;
-        max-width: 16.666667% !important;
-        width: 16.666667% !important;
+        flex: 0 0 16.6667%;
+        max-width: 16.6667%;
+        width: 16.6667%;
     }
     
     #mainContentContainer {
-        flex: 0 0 83.333333% !important;
-        max-width: 83.333333% !important;
-        width: 83.333333% !important;
+        flex: 0 0 83.3333%;
+        max-width: 83.3333%;
+        width: 83.3333%;
     }
 }
 </style>
@@ -1681,7 +1689,7 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
 
     <!-- Main Layout: Sidebar + Content -->
-    <div class="row g-3">
+    <div class="row g-3 request-layout-row">
         <div class="col-lg-2" id="leftSidebarContainer">
             <div style="background: #334155; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative;">
                 <!-- Collapse Toggle Button -->
