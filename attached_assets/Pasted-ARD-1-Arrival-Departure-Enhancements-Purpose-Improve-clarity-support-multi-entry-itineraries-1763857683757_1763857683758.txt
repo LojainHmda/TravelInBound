@@ -1,0 +1,155 @@
+ARD 1 — Arrival & Departure Enhancements
+
+Purpose: Improve clarity + support multi-entry itineraries.
+
+✔ Arrival Requirements
+
+Show arrival date, departure date, and number of days together.
+
+Arrival fields include:
+
+Visa Status: Visa-free / Restricted / Included / Not Included.
+
+Arrival driver name removed from main UI.
+
+Support multiple arrivals (multi-entry itineraries).
+
+✔ Departure Requirements
+
+Fields:
+
+Meet & Assist: Yes / No
+
+Must include Representative Name.
+
+Departure Tax: Included / Not Included.
+
+Departure driver name removed from main UI.
+
+Support multiple departures (multi-exit itineraries).
+
+Departure points should be predefined/configurable.
+
+✔ Other
+
+Arrival/Departure dates restricted to itinerary date range.
+
+“Save All Departure” and “Save & Close” options required.
+
+CARD 2 — Hotels & Rooms
+
+Purpose: More flexible room setup and multi-hotel itineraries.
+
+✔ Room Types
+
+Add Single room type.
+
+Room type options: Twin, King, Triple, Single.
+
+✔ Hotel Categories
+
+Support custom hotel categories (admin-defined).
+
+✔ Multi-Hotel Support
+
+Allow multiple hotels in same itinerary.
+
+Auto-generate room table, with:
+
+Ability to show/hide
+
+Add Hotel button
+
+From/To dates linked automatically to itinerary summary.
+
+✔ Hotel Status
+
+Status should be per hotel (not global booking status).
+
+✔ Check-in/out
+
+Hotel check-in / check-out stored at hotel level.
+
+CARD 3 — Transport (Including Arrival/Departure)
+
+Purpose: Unify transport logic and improve data fields.
+
+✔ Transport Requirements
+
+Transport module should include arrival & departure transfers.
+
+Fields:
+
+From Date / To Date
+
+Pax
+
+Vehicle type
+
+Supplier
+
+Driver Name + Driver Phone Number
+
+Pickup point (remove hotel default)
+
+Pickup time
+
+Drop-off point
+
+Notes
+
+Status: REQUESTED / CONFIRMED / CANCELLED
+
+✔ Multiple entries allowed
+
+Transport rows must allow multiple entries exactly like the table you provided.
+
+CARD 4 — Guides
+
+Purpose: Structured guide profiles + multi-guide support.
+
+✔ Guide Fields
+
+Full guide profile:
+
+Name
+
+Telephone Number
+
+Language
+
+National ID
+
+Tax Number
+
+Profile Photo
+
+✔ Features
+
+Filter guides by language.
+
+Allow multiple guides per itinerary.
+
+Remove:
+
+Duration
+
+Meeting point
+
+Add:
+
+Additional comments
+
+Internal comments (not printed)
+
+CARD 5 — Optional (Extras)
+
+Purpose: Add tours purchased by passenger independently.
+
+✔ Optional Rules
+
+Optional items are outside itinerary dates (flexible).
+
+Not restricted to itinerary start/end.
+
+Treated separately from main itinerary flow.

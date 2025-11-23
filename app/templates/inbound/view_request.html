@@ -1180,18 +1180,72 @@ body::-webkit-scrollbar-thumb:hover {
                                 <label class="form-label">Nationality</label>
                                 <select class="form-select" name="nationality" required>
                                     <option value="">Select Nationality</option>
+                                    <option value="Afghan" {% if request.nationality == 'Afghan' %}selected{% endif %}>Afghan</option>
+                                    <option value="Albanian" {% if request.nationality == 'Albanian' %}selected{% endif %}>Albanian</option>
+                                    <option value="Algerian" {% if request.nationality == 'Algerian' %}selected{% endif %}>Algerian</option>
                                     <option value="American" {% if request.nationality == 'American' %}selected{% endif %}>American</option>
+                                    <option value="Argentinian" {% if request.nationality == 'Argentinian' %}selected{% endif %}>Argentinian</option>
+                                    <option value="Australian" {% if request.nationality == 'Australian' %}selected{% endif %}>Australian</option>
+                                    <option value="Austrian" {% if request.nationality == 'Austrian' %}selected{% endif %}>Austrian</option>
+                                    <option value="Bangladeshi" {% if request.nationality == 'Bangladeshi' %}selected{% endif %}>Bangladeshi</option>
+                                    <option value="Belgian" {% if request.nationality == 'Belgian' %}selected{% endif %}>Belgian</option>
+                                    <option value="Brazilian" {% if request.nationality == 'Brazilian' %}selected{% endif %}>Brazilian</option>
                                     <option value="British" {% if request.nationality == 'British' %}selected{% endif %}>British</option>
+                                    <option value="Bulgarian" {% if request.nationality == 'Bulgarian' %}selected{% endif %}>Bulgarian</option>
                                     <option value="Canadian" {% if request.nationality == 'Canadian' %}selected{% endif %}>Canadian</option>
+                                    <option value="Chilean" {% if request.nationality == 'Chilean' %}selected{% endif %}>Chilean</option>
                                     <option value="Chinese" {% if request.nationality == 'Chinese' %}selected{% endif %}>Chinese</option>
+                                    <option value="Colombian" {% if request.nationality == 'Colombian' %}selected{% endif %}>Colombian</option>
+                                    <option value="Croatian" {% if request.nationality == 'Croatian' %}selected{% endif %}>Croatian</option>
+                                    <option value="Czech" {% if request.nationality == 'Czech' %}selected{% endif %}>Czech</option>
+                                    <option value="Danish" {% if request.nationality == 'Danish' %}selected{% endif %}>Danish</option>
+                                    <option value="Dutch" {% if request.nationality == 'Dutch' %}selected{% endif %}>Dutch</option>
+                                    <option value="Egyptian" {% if request.nationality == 'Egyptian' %}selected{% endif %}>Egyptian</option>
+                                    <option value="Filipino" {% if request.nationality == 'Filipino' %}selected{% endif %}>Filipino</option>
+                                    <option value="Finnish" {% if request.nationality == 'Finnish' %}selected{% endif %}>Finnish</option>
                                     <option value="French" {% if request.nationality == 'French' %}selected{% endif %}>French</option>
                                     <option value="German" {% if request.nationality == 'German' %}selected{% endif %}>German</option>
+                                    <option value="Greek" {% if request.nationality == 'Greek' %}selected{% endif %}>Greek</option>
+                                    <option value="Hungarian" {% if request.nationality == 'Hungarian' %}selected{% endif %}>Hungarian</option>
                                     <option value="Indian" {% if request.nationality == 'Indian' %}selected{% endif %}>Indian</option>
+                                    <option value="Indonesian" {% if request.nationality == 'Indonesian' %}selected{% endif %}>Indonesian</option>
+                                    <option value="Iranian" {% if request.nationality == 'Iranian' %}selected{% endif %}>Iranian</option>
+                                    <option value="Iraqi" {% if request.nationality == 'Iraqi' %}selected{% endif %}>Iraqi</option>
+                                    <option value="Irish" {% if request.nationality == 'Irish' %}selected{% endif %}>Irish</option>
+                                    <option value="Israeli" {% if request.nationality == 'Israeli' %}selected{% endif %}>Israeli</option>
                                     <option value="Italian" {% if request.nationality == 'Italian' %}selected{% endif %}>Italian</option>
                                     <option value="Japanese" {% if request.nationality == 'Japanese' %}selected{% endif %}>Japanese</option>
+                                    <option value="Jordanian" {% if request.nationality == 'Jordanian' %}selected{% endif %}>Jordanian</option>
+                                    <option value="Korean" {% if request.nationality == 'Korean' %}selected{% endif %}>Korean</option>
+                                    <option value="Lebanese" {% if request.nationality == 'Lebanese' %}selected{% endif %}>Lebanese</option>
+                                    <option value="Malaysian" {% if request.nationality == 'Malaysian' %}selected{% endif %}>Malaysian</option>
+                                    <option value="Mexican" {% if request.nationality == 'Mexican' %}selected{% endif %}>Mexican</option>
+                                    <option value="Moroccan" {% if request.nationality == 'Moroccan' %}selected{% endif %}>Moroccan</option>
+                                    <option value="New Zealander" {% if request.nationality == 'New Zealander' %}selected{% endif %}>New Zealander</option>
+                                    <option value="Nigerian" {% if request.nationality == 'Nigerian' %}selected{% endif %}>Nigerian</option>
+                                    <option value="Norwegian" {% if request.nationality == 'Norwegian' %}selected{% endif %}>Norwegian</option>
+                                    <option value="Pakistani" {% if request.nationality == 'Pakistani' %}selected{% endif %}>Pakistani</option>
+                                    <option value="Palestinian" {% if request.nationality == 'Palestinian' %}selected{% endif %}>Palestinian</option>
+                                    <option value="Peruvian" {% if request.nationality == 'Peruvian' %}selected{% endif %}>Peruvian</option>
+                                    <option value="Polish" {% if request.nationality == 'Polish' %}selected{% endif %}>Polish</option>
+                                    <option value="Portuguese" {% if request.nationality == 'Portuguese' %}selected{% endif %}>Portuguese</option>
+                                    <option value="Romanian" {% if request.nationality == 'Romanian' %}selected{% endif %}>Romanian</option>
                                     <option value="Russian" {% if request.nationality == 'Russian' %}selected{% endif %}>Russian</option>
+                                    <option value="Saudi" {% if request.nationality == 'Saudi' %}selected{% endif %}>Saudi</option>
+                                    <option value="Serbian" {% if request.nationality == 'Serbian' %}selected{% endif %}>Serbian</option>
+                                    <option value="Singaporean" {% if request.nationality == 'Singaporean' %}selected{% endif %}>Singaporean</option>
+                                    <option value="South African" {% if request.nationality == 'South African' %}selected{% endif %}>South African</option>
                                     <option value="Spanish" {% if request.nationality == 'Spanish' %}selected{% endif %}>Spanish</option>
-                                    <option value="Other" {% if request.nationality not in ['American', 'British', 'Canadian', 'Chinese', 'French', 'German', 'Indian', 'Italian', 'Japanese', 'Russian', 'Spanish'] %}selected{% endif %}>{{ request.nationality or 'Other' }}</option>
+                                    <option value="Sri Lankan" {% if request.nationality == 'Sri Lankan' %}selected{% endif %}>Sri Lankan</option>
+                                    <option value="Swedish" {% if request.nationality == 'Swedish' %}selected{% endif %}>Swedish</option>
+                                    <option value="Swiss" {% if request.nationality == 'Swiss' %}selected{% endif %}>Swiss</option>
+                                    <option value="Syrian" {% if request.nationality == 'Syrian' %}selected{% endif %}>Syrian</option>
+                                    <option value="Thai" {% if request.nationality == 'Thai' %}selected{% endif %}>Thai</option>
+                                    <option value="Turkish" {% if request.nationality == 'Turkish' %}selected{% endif %}>Turkish</option>
+                                    <option value="Ukrainian" {% if request.nationality == 'Ukrainian' %}selected{% endif %}>Ukrainian</option>
+                                    <option value="Emirati" {% if request.nationality == 'Emirati' %}selected{% endif %}>Emirati (UAE)</option>
+                                    <option value="Venezuelan" {% if request.nationality == 'Venezuelan' %}selected{% endif %}>Venezuelan</option>
+                                    <option value="Vietnamese" {% if request.nationality == 'Vietnamese' %}selected{% endif %}>Vietnamese</option>
                                 </select>
                             </div>
                             <div class="col-6">
