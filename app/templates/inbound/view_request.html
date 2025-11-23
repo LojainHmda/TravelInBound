@@ -1089,7 +1089,7 @@ body::-webkit-scrollbar-thumb:hover {
                 </div>
                 <div class="card-body py-2">
                     <!-- View Mode -->
-                    <div id="viewMode">
+                    <div id="viewMode" class="edit-mode-hidden">
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                             <div>
                                 <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Request #</div>
@@ -1139,7 +1139,7 @@ body::-webkit-scrollbar-thumb:hover {
                     </div>
 
                     <!-- Edit Mode -->
-                    <form id="editMode" class="edit-mode-hidden" onsubmit="saveChanges(event)">
+                    <form id="editMode" onsubmit="saveChanges(event)">
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Customer</label>
@@ -1178,7 +1178,21 @@ body::-webkit-scrollbar-thumb:hover {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Nationality</label>
-                                <input type="text" class="form-control" name="nationality" value="{{ request.nationality }}" required>
+                                <select class="form-select" name="nationality" required>
+                                    <option value="">Select Nationality</option>
+                                    <option value="American" {% if request.nationality == 'American' %}selected{% endif %}>American</option>
+                                    <option value="British" {% if request.nationality == 'British' %}selected{% endif %}>British</option>
+                                    <option value="Canadian" {% if request.nationality == 'Canadian' %}selected{% endif %}>Canadian</option>
+                                    <option value="Chinese" {% if request.nationality == 'Chinese' %}selected{% endif %}>Chinese</option>
+                                    <option value="French" {% if request.nationality == 'French' %}selected{% endif %}>French</option>
+                                    <option value="German" {% if request.nationality == 'German' %}selected{% endif %}>German</option>
+                                    <option value="Indian" {% if request.nationality == 'Indian' %}selected{% endif %}>Indian</option>
+                                    <option value="Italian" {% if request.nationality == 'Italian' %}selected{% endif %}>Italian</option>
+                                    <option value="Japanese" {% if request.nationality == 'Japanese' %}selected{% endif %}>Japanese</option>
+                                    <option value="Russian" {% if request.nationality == 'Russian' %}selected{% endif %}>Russian</option>
+                                    <option value="Spanish" {% if request.nationality == 'Spanish' %}selected{% endif %}>Spanish</option>
+                                    <option value="Other" {% if request.nationality not in ['American', 'British', 'Canadian', 'Chinese', 'French', 'German', 'Indian', 'Italian', 'Japanese', 'Russian', 'Spanish'] %}selected{% endif %}>{{ request.nationality or 'Other' }}</option>
+                                </select>
                             </div>
                             <div class="col-6">
                                 <!-- Space for additional field if needed -->
@@ -1200,12 +1214,9 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <div id="editModeButtons" class="d-flex gap-2 edit-mode-hidden">
+                        <div id="editModeButtons" class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-save"></i> Save Changes
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
-                                <i class="fas fa-times"></i> Cancel
                             </button>
                         </div>
                     </form>
