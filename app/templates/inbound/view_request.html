@@ -5237,6 +5237,9 @@ function convertToInvoice() {
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveAndCloseDepartures()">
+                    <i class="fas fa-check me-1"></i>Save & Close
+                </button>
                 <button type="button" class="btn btn-primary" onclick="saveAllDepartures()">
                     <i class="fas fa-save me-1"></i>Save All Departures
                 </button>
@@ -5332,6 +5335,9 @@ function convertToInvoice() {
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="saveAndCloseArrivals()">
+                    <i class="fas fa-check me-1"></i>Save & Close
+                </button>
                 <button type="button" class="btn btn-primary" onclick="saveAllArrivals()">
                     <i class="fas fa-save me-1"></i>Save All Arrivals
                 </button>
@@ -5382,7 +5388,7 @@ function renderArrivalsTable() {
                     <th>Time</th>
                     <th>Location</th>
                     <th>Flight</th>
-                    <th>Driver</th>
+                    <th>Visa Status</th>
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
@@ -5395,13 +5401,19 @@ function renderArrivalsTable() {
     allArrivals.forEach((batch, index) => {
         const isNew = index >= arrivalBatches.length;
         const deleteIndex = isNew ? index - arrivalBatches.length : batch.id;
+        const visaStatusDisplay = {
+            'VISA_FREE': '<span class="badge bg-success">Visa-free</span>',
+            'RESTRICTED': '<span class="badge bg-warning">Restricted</span>',
+            'INCLUDED': '<span class="badge bg-info">Included</span>',
+            'NOT_INCLUDED': '<span class="badge bg-secondary">Not Included</span>'
+        };
         html += `
             <tr ${isNew ? 'style="background-color: #f0fdf4;"' : ''}>
                 <td>${batch.arrival_date || '-'}</td>
                 <td>${batch.arrival_time || '-'}</td>
                 <td>${batch.arrival_point || '-'}</td>
                 <td>${batch.flight_number || '-'}</td>
-                <td>${batch.driver_name || '-'}</td>
+                <td>${visaStatusDisplay[batch.visa_status] || visaStatusDisplay['NOT_INCLUDED']}</td>
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
@@ -5484,6 +5496,59 @@ function saveAllArrivals() {
     });
 }
 
+function saveAndCloseArrivals() {
+    // Find the Save & Close button and disable it to prevent double submissions
+    const saveCloseBtn = document.querySelector('[onclick="saveAndCloseArrivals()"]');
+    if (saveCloseBtn) {
+        saveCloseBtn.disabled = true;
+        saveCloseBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    }
+    
+    if (newArrivals.length === 0) {
+        showNotification('No new arrivals to save', 'info');
+        // Close modal even if nothing to save
+        const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalsModal'));
+        if (modal) modal.hide();
+        if (saveCloseBtn) saveCloseBtn.disabled = false;
+        return;
+    }
+    
+    fetch('/inbound/api/{{ request.id }}/arrivals', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ batches: newArrivals })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Arrivals saved successfully!', 'success');
+            loadArrivals();  // Reload to get updated list with IDs
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalsModal'));
+            if (modal) modal.hide();
+        } else {
+            showNotification(data.message || 'Error saving arrivals', 'error');
+            // Re-enable button on error
+            if (saveCloseBtn) {
+                saveCloseBtn.disabled = false;
+                saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving arrivals', 'error');
+        // Re-enable button on error
+        if (saveCloseBtn) {
+            saveCloseBtn.disabled = false;
+            saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
+        }
+    });
+}
+
 // Remove the old event listener if it exists
 const oldForm = document.getElementById('arrivalForm');
 if (oldForm) {
@@ -5560,11 +5625,12 @@ function renderDeparturesTable() {
                     <th>Time</th>
                     <th>Location</th>
                     <th>Flight</th>
-                    <th>Driver</th>
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
-                    <th>Meet & Greet</th>
+                    <th>Meet & Assist</th>
+                    <th>Representative</th>
+                    <th>Departure Tax</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -5574,17 +5640,22 @@ function renderDeparturesTable() {
     allDepartures.forEach((batch, index) => {
         const isNew = index >= departureBatches.length;
         const deleteIndex = isNew ? index - departureBatches.length : batch.id;
+        const depTaxDisplay = {
+            'INCLUDED': '<span class="badge bg-success">Included</span>',
+            'NOT_INCLUDED': '<span class="badge bg-secondary">Not Included</span>'
+        };
         html += `
             <tr ${isNew ? 'style="background-color: #fee2e2;"' : ''}>
                 <td>${batch.departure_date || '-'}</td>
                 <td>${batch.departure_time || '-'}</td>
                 <td>${batch.departure_point || '-'}</td>
                 <td>${batch.flight_number || '-'}</td>
-                <td>${batch.driver_name || '-'}</td>
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
-                <td>${batch.meet_greet ? 'Yes' : 'No'}</td>
+                <td>${batch.meet_assist ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                <td>${batch.representative_name || '-'}</td>
+                <td>${depTaxDisplay[batch.departure_tax] || depTaxDisplay['NOT_INCLUDED']}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
                             onclick="${isNew ? `removeNewDeparture(${deleteIndex})` : `deleteDeparture(${deleteIndex})`}">
@@ -5663,18 +5734,71 @@ function saveAllDepartures() {
     });
 }
 
+function saveAndCloseDepartures() {
+    // Find the Save & Close button and disable it to prevent double submissions
+    const saveCloseBtn = document.querySelector('[onclick="saveAndCloseDepartures()"]');
+    if (saveCloseBtn) {
+        saveCloseBtn.disabled = true;
+        saveCloseBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    }
+    
+    if (newDepartures.length === 0) {
+        showNotification('No new departures to save', 'info');
+        // Close modal even if nothing to save
+        const modal = bootstrap.Modal.getInstance(document.getElementById('departuresModal'));
+        if (modal) modal.hide();
+        if (saveCloseBtn) saveCloseBtn.disabled = false;
+        return;
+    }
+    
+    fetch('/inbound/api/{{ request.id }}/departures', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ batches: newDepartures })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Departures saved successfully!', 'success');
+            loadDepartures();  // Reload to get updated list with IDs
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('departuresModal'));
+            if (modal) modal.hide();
+        } else {
+            showNotification(data.message || 'Error saving departures', 'error');
+            // Re-enable button on error
+            if (saveCloseBtn) {
+                saveCloseBtn.disabled = false;
+                saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving departures', 'error');
+        // Re-enable button on error
+        if (saveCloseBtn) {
+            saveCloseBtn.disabled = false;
+            saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
+        }
+    });
+}
+
 document.getElementById('departureForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const newDeparture = {};
     
-    // Handle checkbox for meet_greet
-    const meetGreetCheckbox = e.target.querySelector('[name="meet_greet"]');
-    newDeparture['meet_greet'] = meetGreetCheckbox ? meetGreetCheckbox.checked : false;
+    // Handle checkbox for meet_assist
+    const meetAssistCheckbox = e.target.querySelector('[name="meet_assist"]');
+    newDeparture['meet_assist'] = meetAssistCheckbox ? meetAssistCheckbox.checked : false;
     
     // Handle other form fields
     formData.forEach((value, key) => {
-        if (key !== 'meet_greet') {
+        if (key !== 'meet_assist') {
             newDeparture[key] = value;
         }
     });
