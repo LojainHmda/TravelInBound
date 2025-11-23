@@ -1208,7 +1208,8 @@ def api_get_arrivals(request_id):
             'driver_name': batch.driver_name or '',
             'vehicle_details': batch.vehicle_details or '',
             'pax_count': batch.pax_count or 0,
-            'flight_number': batch.flight_number or ''
+            'flight_number': batch.flight_number or '',
+            'visa_status': getattr(batch, 'visa_status', 'NOT_INCLUDED')
         })
     
     return jsonify({'success': True, 'batches': batches_data})
@@ -1238,7 +1239,10 @@ def api_get_departures(request_id):
             'vehicle_details': batch.vehicle_details or '',
             'pax_count': batch.pax_count or 0,
             'flight_number': batch.flight_number or '',
-            'meet_greet': batch.meet_greet if hasattr(batch, 'meet_greet') else False
+            'meet_greet': batch.meet_greet if hasattr(batch, 'meet_greet') else False,
+            'meet_assist': getattr(batch, 'meet_assist', False),
+            'representative_name': getattr(batch, 'representative_name', ''),
+            'departure_tax': getattr(batch, 'departure_tax', 'NOT_INCLUDED')
         })
     
     return jsonify({'success': True, 'batches': batches_data})
@@ -1377,6 +1381,11 @@ def api_save_departures(request_id):
             if batch_data.get('meet_greet'):
                 meet_greet = batch_data['meet_greet'] in ['true', 'True', True, 1, '1']
             
+            # Parse meet_assist boolean
+            meet_assist = False
+            if batch_data.get('meet_assist'):
+                meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1']
+            
             batch = DepartureBatch(
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -1387,7 +1396,10 @@ def api_save_departures(request_id):
                 vehicle_details=batch_data.get('vehicle_details') or None,
                 pax_count=pax_count,
                 flight_number=batch_data.get('flight_number') or None,
-                meet_greet=meet_greet
+                meet_greet=meet_greet,
+                meet_assist=meet_assist,
+                representative_name=batch_data.get('representative_name') or None,
+                departure_tax=batch_data.get('departure_tax', 'NOT_INCLUDED')
             )
             db.session.add(batch)
         
@@ -1475,7 +1487,8 @@ def api_save_arrivals(request_id):
                 driver_name=batch_data.get('driver_name') or None,
                 vehicle_details=batch_data.get('vehicle_details') or None,
                 pax_count=pax_count,
-                flight_number=batch_data.get('flight_number') or None
+                flight_number=batch_data.get('flight_number') or None,
+                visa_status=batch_data.get('visa_status', 'NOT_INCLUDED')
             )
             db.session.add(batch)
         

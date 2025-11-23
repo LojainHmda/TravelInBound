@@ -5173,14 +5173,27 @@ function convertToInvoice() {
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Meet & Greet Service</label>
+                            <label class="form-label">Meet & Assist</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="meet_greet" id="meet_greet">
-                                <label class="form-check-label" for="meet_greet">
+                                <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
+                                <label class="form-check-label" for="meet_assist_dep">
                                     Yes
                                 </label>
                             </div>
                         </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Representative Name</label>
+                            <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Departure Tax</label>
+                            <select class="form-control" name="departure_tax">
+                                <option value="NOT_INCLUDED">Not Included</option>
+                                <option value="INCLUDED">Included</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Vehicle Type</label>
                             <select class="form-control" name="vehicle_details">
@@ -5196,12 +5209,6 @@ function convertToInvoice() {
                         <div class="col-md-3 mb-3">
                             <label class="form-label">PAX Count</label>
                             <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Driver Name</label>
-                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Batch Name</label>
@@ -5272,10 +5279,10 @@ function convertToInvoice() {
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Visa Type</label>
-                            <select class="form-control" name="visa_type">
+                            <label class="form-label">Visa Status</label>
+                            <select class="form-control" name="visa_status">
                                 <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="FREE">Free</option>
+                                <option value="VISA_FREE">Visa-free</option>
                                 <option value="RESTRICTED">Restricted</option>
                                 <option value="INCLUDED">Included</option>
                             </select>
@@ -5298,20 +5305,9 @@ function convertToInvoice() {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Driver Name</label>
-                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
-                        </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label">Batch Name</label>
                             <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Meeting Assistance</label>
-                            <select class="form-control" name="meeting_assistance">
-                                <option value="0">No</option>
-                                <option value="1">Yes</option>
-                            </select>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success">

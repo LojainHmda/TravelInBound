@@ -68,6 +68,7 @@ class InboundRequest(db.Model):
     inbound_meals = db.relationship('InboundMeal', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_guides = db.relationship('InboundGuide', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_cash_expenses = db.relationship('InboundCashExpense', backref='request', lazy=True, cascade="all, delete-orphan")
+    inbound_optionals = db.relationship('InboundOptional', backref='request', lazy=True, cascade="all, delete-orphan")
     arrival_departures = db.relationship('ArrivalDeparture', backref='request', lazy=True, cascade="all, delete-orphan")
     quotations = db.relationship('InboundQuotation', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
@@ -186,6 +187,7 @@ class InboundHotel(db.Model):
     # Hotel details
     hotel_name = db.Column(db.String(200), nullable=True)
     location = db.Column(db.String(200), nullable=True)
+    hotel_category = db.Column(db.String(100), nullable=True)  # Custom admin-defined category
     check_in_date = db.Column(db.Date, nullable=False)
     check_out_date = db.Column(db.Date, nullable=False)
     nights = db.Column(db.Integer, nullable=False, default=1)
@@ -262,14 +264,15 @@ class InboundTransport(db.Model):
     source_itinerary_id = db.Column(db.Integer, db.ForeignKey('itinerary_row.id'), nullable=True)
     
     # Transport details
-    date = db.Column(db.Date, nullable=False)
-    end_date = db.Column(db.Date, nullable=True)  # For multi-day transport services
+    date = db.Column(db.Date, nullable=False)  # From Date
+    end_date = db.Column(db.Date, nullable=True)  # To Date (for multi-day transport services)
     pax = db.Column(db.Integer, default=0)  # Passenger count
     vehicle_type = db.Column(db.String(100), nullable=True)
     supplier = db.Column(db.String(200), nullable=True)  # Supplier/company name
     driver_name = db.Column(db.String(200), nullable=True)  # Driver assigned to this transport
-    pickup_location = db.Column(db.String(200), nullable=True)
-    dropoff_location = db.Column(db.String(200), nullable=True)
+    driver_phone = db.Column(db.String(50), nullable=True)  # Driver phone number
+    pickup_location = db.Column(db.String(200), nullable=True)  # Pickup point
+    dropoff_location = db.Column(db.String(200), nullable=True)  # Drop-off point
     pickup_time = db.Column(db.Time, nullable=True)
     note = db.Column(db.Text, nullable=True)  # Additional notes
     is_airport_transfer = db.Column(db.Boolean, default=False)
@@ -340,12 +343,18 @@ class InboundGuide(db.Model):
     # Guide details
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day guide services
-    guide_name = db.Column(db.String(100), nullable=True)
-    language = db.Column(db.String(50), nullable=True)
+    guide_name = db.Column(db.String(100), nullable=True)  # Name
+    telephone_number = db.Column(db.String(50), nullable=True)  # Telephone Number
+    language = db.Column(db.String(50), nullable=True)  # Language
+    national_id = db.Column(db.String(100), nullable=True)  # National ID
+    tax_number = db.Column(db.String(100), nullable=True)  # Tax Number
+    profile_photo = db.Column(db.String(500), nullable=True)  # Profile Photo URL/path
     service_type = db.Column(db.String(100), nullable=True)  # Meet & Greet, Tour Guide, etc.
-    duration_hours = db.Column(db.Float, nullable=True)
-    meeting_point = db.Column(db.String(200), nullable=True)
+    duration_hours = db.Column(db.Float, nullable=True)  # Keep for legacy, hide in UI
+    meeting_point = db.Column(db.String(200), nullable=True)  # Keep for legacy, hide in UI
     meeting_time = db.Column(db.Time, nullable=True)
+    additional_comments = db.Column(db.Text, nullable=True)  # Additional comments
+    internal_comments = db.Column(db.Text, nullable=True)  # Internal comments (not printed)
     
     # Costing
     cost = db.Column(db.Float, default=0.0)
@@ -418,14 +427,17 @@ class ArrivalDeparture(db.Model):
     arrival_date = db.Column(db.Date, nullable=True)  # Which itinerary day for arrival
     arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport"
     arrival_time = db.Column(db.Time, nullable=True)
-    visa_type = db.Column(db.String(50), default='NOT_INCLUDED')  # FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    visa_type = db.Column(db.String(50), default='NOT_INCLUDED')  # Legacy field for backward compatibility
     arrival_driver_name = db.Column(db.String(200), nullable=True)
     
     # Departure details
     departure_date = db.Column(db.Date, nullable=True)  # Which itinerary day for departure
     departure_point = db.Column(db.String(150), nullable=True)
     departure_time = db.Column(db.Time, nullable=True)
-    meeting_assistance = db.Column(db.Boolean, default=False)
+    meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist for departure
+    meeting_assistance = db.Column(db.Boolean, default=False)  # Legacy field
+    representative_name = db.Column(db.String(200), nullable=True)  # Representative name for Meet & Assist
     departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
     
     # Legacy fields (for backwards compatibility)
@@ -460,10 +472,13 @@ class ArrivalBatch(db.Model):
     arrival_date = db.Column(db.Date, nullable=False)
     arrival_point = db.Column(db.String(200), nullable=True)
     arrival_time = db.Column(db.Time, nullable=True)
-    driver_name = db.Column(db.String(200), nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)  # Keep for legacy but hide in UI
     vehicle_details = db.Column(db.String(200), nullable=True)
     pax_count = db.Column(db.Integer, default=0)
     flight_number = db.Column(db.String(50), nullable=True)
+    
+    # NEW FIELDS for ARD 1
+    visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -482,17 +497,71 @@ class DepartureBatch(db.Model):
     departure_date = db.Column(db.Date, nullable=False)
     departure_point = db.Column(db.String(200), nullable=True)
     departure_time = db.Column(db.Time, nullable=True)
-    driver_name = db.Column(db.String(200), nullable=True)
+    driver_name = db.Column(db.String(200), nullable=True)  # Keep for legacy but hide in UI
     vehicle_details = db.Column(db.String(200), nullable=True)
     pax_count = db.Column(db.Integer, default=0)
     flight_number = db.Column(db.String(50), nullable=True)
-    meet_greet = db.Column(db.Boolean, default=False)
+    meet_greet = db.Column(db.Boolean, default=False)  # Legacy field
+    
+    # NEW FIELDS for ARD 1
+    meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
+    representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
+    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def __repr__(self):
         return f'<DepartureBatch {self.batch_name or self.id}>'
+
+class InboundOptional(db.Model):
+    """Optional/Extra services purchased independently by passenger - not restricted to itinerary dates"""
+    __tablename__ = 'inbound_optional'
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    # Optional service details
+    service_name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    date = db.Column(db.Date, nullable=True)  # Optional - flexible dates outside itinerary
+    location = db.Column(db.String(200), nullable=True)
+    supplier = db.Column(db.String(200), nullable=True)
+    
+    # Costing
+    cost_per_person = db.Column(db.Float, default=0.0)
+    total_cost = db.Column(db.Float, default=0.0)
+    currency = db.Column(db.String(3), default='USD')
+    
+    # Status
+    status = db.Column(db.String(20), default=STATUS_REQUEST)
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<InboundOptional {self.service_name}>'
+
+class HotelCategory(db.Model):
+    """Admin-defined hotel categories for classification"""
+    __tablename__ = 'hotel_category'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)  # e.g., "5-Star", "4-Star", "Boutique", "Budget"
+    description = db.Column(db.Text, nullable=True)
+    sort_order = db.Column(db.Integer, default=0)  # For custom ordering
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<HotelCategory {self.name}>'
 
 class InboundQuotation(db.Model):
     """Quotation header for inbound requests"""
