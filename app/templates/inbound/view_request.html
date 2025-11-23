@@ -2720,7 +2720,7 @@ function startProcessing() {
 }
 
 // Toggle Edit Mode Function
-let isEditMode = false;
+let isEditMode = true;  // Start in edit mode by default
 
 function toggleEditMode() {
     console.log('toggleEditMode called, current isEditMode:', isEditMode);
@@ -2762,6 +2762,22 @@ function toggleEditMode() {
     
     console.log('Toggle complete');
 }
+
+// Initialize edit mode on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Show edit mode by default
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editMode');
+    const editModeButtons = document.getElementById('editModeButtons');
+    const editModeText = document.getElementById('editModeText');
+    
+    if (viewMode && editMode && editModeButtons && editModeText) {
+        viewMode.classList.add('edit-mode-hidden');
+        editMode.classList.remove('edit-mode-hidden');
+        editModeButtons.classList.remove('edit-mode-hidden');
+        editModeText.textContent = 'Cancel';
+    }
+});
 
 // Cancel Edit Function
 function cancelEdit() {

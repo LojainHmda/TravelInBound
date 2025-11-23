@@ -5,7 +5,10 @@ TravelBookPro is a Flask-based web application for travel agencies, designed to 
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-**IMPORTANT**: NO WIZARD WORKFLOW - Wizard routes completely disabled per user request. Users create new requests via `/inbound/new` which goes directly to the unified view/edit page.
+**IMPORTANT**: 
+- NO WIZARD WORKFLOW - Wizard routes completely disabled per user request. Users create new requests via `/inbound/new` which goes directly to the unified view/edit page.
+- AUTO EDIT MODE - Forms load automatically in edit mode (no toggle needed) for immediate data entry.
+- Nationality field uses comprehensive dropdown with 60+ countries.
 
 ## System Architecture
 
