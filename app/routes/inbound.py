@@ -4188,3 +4188,506 @@ def check_and_update_request_status(request_id):
     except Exception as e:
         print(f"Error checking request status: {e}")
         db.session.rollback()
+
+# ============================================================
+# ANALYTICS DASHBOARD - COMPREHENSIVE RUN DOWNS
+# ============================================================
+
+@inbound_bp.route('/analytics')
+def analytics_dashboard():
+    """Comprehensive analytics dashboard with search across all services"""
+    from app.models import ArrivalBatch, DepartureBatch
+    from app.models.inbound import InboundOptional
+    
+    # Get filter parameters
+    search_query = request.args.get('search', '').strip()
+    service_type = request.args.get('service_type', '')
+    status_filter = request.args.get('status', '')
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    request_number = request.args.get('request_number', '')
+    
+    # Parse dates
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
+    
+    # Collect all services from all tables
+    all_services = []
+    
+    # 1. Hotels
+    if not service_type or service_type == 'HOTEL':
+        hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
+        if date_to_str:
+            hotels_query = hotels_query.filter(InboundHotel.check_in_date <= date_to)
+        if status_filter:
+            hotels_query = hotels_query.filter(InboundHotel.status == status_filter)
+        if request_number:
+            hotels_query = hotels_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            hotels_query = hotels_query.filter(
+                db.or_(
+                    InboundHotel.hotel_name.contains(search_query),
+                    InboundHotel.location.contains(search_query),
+                    InboundHotel.hotel_category.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for hotel in hotels_query.all():
+            all_services.append({
+                'date': hotel.check_in_date,
+                'service_type': 'HOTEL',
+                'request_number': hotel.request.request_number,
+                'request_id': hotel.request_id,
+                'contact_name': hotel.request.contact_name,
+                'pax': hotel.request.pax,
+                'description': f"{hotel.hotel_name} - {hotel.location or ''} ({hotel.nights} nights)",
+                'details': f"Category: {hotel.hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
+                'status': hotel.status,
+                'cost': hotel.total_cost,
+                'currency': hotel.currency
+            })
+    
+    # 2. Transport
+    if not service_type or service_type == 'TRANSPORT':
+        transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            transport_query = transport_query.filter(InboundTransport.date >= date_from)
+        if date_to_str:
+            transport_query = transport_query.filter(InboundTransport.date <= date_to)
+        if status_filter:
+            transport_query = transport_query.filter(InboundTransport.status == status_filter)
+        if request_number:
+            transport_query = transport_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            transport_query = transport_query.filter(
+                db.or_(
+                    InboundTransport.vehicle_type.contains(search_query),
+                    InboundTransport.supplier.contains(search_query),
+                    InboundTransport.driver_name.contains(search_query),
+                    InboundTransport.pickup_location.contains(search_query),
+                    InboundTransport.dropoff_location.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for transport in transport_query.all():
+            all_services.append({
+                'date': transport.date,
+                'service_type': 'TRANSPORT',
+                'request_number': transport.request.request_number,
+                'request_id': transport.request_id,
+                'contact_name': transport.request.contact_name,
+                'pax': transport.pax or transport.request.pax,
+                'description': f"{transport.vehicle_type or 'Transport'} - {transport.supplier or 'TBA'}",
+                'details': f"From: {transport.pickup_location or 'N/A'}, To: {transport.dropoff_location or 'N/A'}, Driver: {transport.driver_name or 'TBA'}",
+                'status': transport.status,
+                'cost': transport.cost,
+                'currency': transport.currency
+            })
+    
+    # 3. Guides
+    if not service_type or service_type == 'GUIDE':
+        guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            guides_query = guides_query.filter(InboundGuide.date >= date_from)
+        if date_to_str:
+            guides_query = guides_query.filter(InboundGuide.date <= date_to)
+        if status_filter:
+            guides_query = guides_query.filter(InboundGuide.status == status_filter)
+        if request_number:
+            guides_query = guides_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            guides_query = guides_query.filter(
+                db.or_(
+                    InboundGuide.guide_name.contains(search_query),
+                    InboundGuide.language.contains(search_query),
+                    InboundGuide.service_type.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for guide in guides_query.all():
+            all_services.append({
+                'date': guide.date,
+                'service_type': 'GUIDE',
+                'request_number': guide.request.request_number,
+                'request_id': guide.request_id,
+                'contact_name': guide.request.contact_name,
+                'pax': guide.request.pax,
+                'description': f"{guide.guide_name or 'Guide'} - {guide.language or 'N/A'}",
+                'details': f"Service: {guide.service_type or 'N/A'}, Tel: {guide.telephone_number or 'N/A'}",
+                'status': guide.status,
+                'cost': guide.cost,
+                'currency': guide.currency
+            })
+    
+    # 4. Meals
+    if not service_type or service_type == 'MEAL':
+        meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            meals_query = meals_query.filter(InboundMeal.date >= date_from)
+        if date_to_str:
+            meals_query = meals_query.filter(InboundMeal.date <= date_to)
+        if status_filter:
+            meals_query = meals_query.filter(InboundMeal.status == status_filter)
+        if request_number:
+            meals_query = meals_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            meals_query = meals_query.filter(
+                db.or_(
+                    InboundMeal.restaurant.contains(search_query),
+                    InboundMeal.meal_type.contains(search_query),
+                    InboundMeal.location.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for meal in meals_query.all():
+            all_services.append({
+                'date': meal.date,
+                'service_type': 'MEAL',
+                'request_number': meal.request.request_number,
+                'request_id': meal.request_id,
+                'contact_name': meal.request.contact_name,
+                'pax': meal.request.pax,
+                'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'TBA'}",
+                'details': f"Location: {meal.location or 'N/A'}",
+                'status': meal.status,
+                'cost': meal.total_cost,
+                'currency': meal.currency
+            })
+    
+    # 5. Optional Services
+    if not service_type or service_type == 'OPTIONAL':
+        optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str and date_to_str:
+            optionals_query = optionals_query.filter(
+                db.or_(
+                    InboundOptional.date == None,
+                    db.and_(InboundOptional.date >= date_from, InboundOptional.date <= date_to)
+                )
+            )
+        if status_filter:
+            optionals_query = optionals_query.filter(InboundOptional.status == status_filter)
+        if request_number:
+            optionals_query = optionals_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            optionals_query = optionals_query.filter(
+                db.or_(
+                    InboundOptional.service_name.contains(search_query),
+                    InboundOptional.description.contains(search_query),
+                    InboundOptional.supplier.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for optional in optionals_query.all():
+            all_services.append({
+                'date': optional.date or date_from,
+                'service_type': 'OPTIONAL',
+                'request_number': optional.request.request_number,
+                'request_id': optional.request_id,
+                'contact_name': optional.request.contact_name,
+                'pax': optional.request.pax,
+                'description': optional.service_name,
+                'details': f"{optional.description or ''}, Supplier: {optional.supplier or 'N/A'}",
+                'status': optional.status,
+                'cost': optional.total_cost,
+                'currency': optional.currency
+            })
+    
+    # Sort by date
+    all_services.sort(key=lambda x: x['date'])
+    
+    # Get status counts
+    status_counts = {
+        'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
+        'QUOTED': InboundRequest.query.filter_by(user_id=1, status='QUOTED').count(),
+        'CONFIRMED': InboundRequest.query.filter_by(user_id=1, status='CONFIRMED').count(),
+        'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
+        'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
+    }
+    
+    return render_template('inbound/analytics.html',
+                         services=all_services,
+                         status_counts=status_counts,
+                         search_query=search_query,
+                         service_type=service_type,
+                         status_filter=status_filter,
+                         date_from=date_from,
+                         date_to=date_to,
+                         request_number=request_number)
+
+@inbound_bp.route('/analytics/export-excel')
+def analytics_export_excel():
+    """Export analytics data to Excel"""
+    from app.models.inbound import InboundOptional
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
+    # Get same filters as analytics dashboard
+    search_query = request.args.get('search', '').strip()
+    service_type = request.args.get('service_type', '')
+    status_filter = request.args.get('status', '')
+    date_from_str = request.args.get('date_from', '')
+    date_to_str = request.args.get('date_to', '')
+    request_number = request.args.get('request_number', '')
+    
+    # Parse dates
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
+    
+    # Collect all services (same logic as analytics_dashboard)
+    all_services = []
+    
+    # Hotels
+    if not service_type or service_type == 'HOTEL':
+        hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
+        if date_to_str:
+            hotels_query = hotels_query.filter(InboundHotel.check_in_date <= date_to)
+        if status_filter:
+            hotels_query = hotels_query.filter(InboundHotel.status == status_filter)
+        if request_number:
+            hotels_query = hotels_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            hotels_query = hotels_query.filter(
+                db.or_(
+                    InboundHotel.hotel_name.contains(search_query),
+                    InboundHotel.location.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for hotel in hotels_query.all():
+            all_services.append({
+                'date': hotel.check_in_date,
+                'service_type': 'HOTEL',
+                'request_number': hotel.request.request_number,
+                'contact_name': hotel.request.contact_name,
+                'pax': hotel.request.pax,
+                'description': f"{hotel.hotel_name} - {hotel.location or ''} ({hotel.nights} nights)",
+                'details': f"Category: {hotel.hotel_category or 'N/A'}, Meal: {hotel.meal_plan}",
+                'status': hotel.status,
+                'cost': hotel.total_cost,
+                'currency': hotel.currency
+            })
+    
+    # Transport
+    if not service_type or service_type == 'TRANSPORT':
+        transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            transport_query = transport_query.filter(InboundTransport.date >= date_from)
+        if date_to_str:
+            transport_query = transport_query.filter(InboundTransport.date <= date_to)
+        if status_filter:
+            transport_query = transport_query.filter(InboundTransport.status == status_filter)
+        if request_number:
+            transport_query = transport_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            transport_query = transport_query.filter(
+                db.or_(
+                    InboundTransport.vehicle_type.contains(search_query),
+                    InboundTransport.supplier.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for transport in transport_query.all():
+            all_services.append({
+                'date': transport.date,
+                'service_type': 'TRANSPORT',
+                'request_number': transport.request.request_number,
+                'contact_name': transport.request.contact_name,
+                'pax': transport.pax or transport.request.pax,
+                'description': f"{transport.vehicle_type or 'Transport'} - {transport.supplier or 'TBA'}",
+                'details': f"From: {transport.pickup_location or 'N/A'}, To: {transport.dropoff_location or 'N/A'}",
+                'status': transport.status,
+                'cost': transport.cost,
+                'currency': transport.currency
+            })
+    
+    # Guides
+    if not service_type or service_type == 'GUIDE':
+        guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            guides_query = guides_query.filter(InboundGuide.date >= date_from)
+        if date_to_str:
+            guides_query = guides_query.filter(InboundGuide.date <= date_to)
+        if status_filter:
+            guides_query = guides_query.filter(InboundGuide.status == status_filter)
+        if request_number:
+            guides_query = guides_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            guides_query = guides_query.filter(
+                db.or_(
+                    InboundGuide.guide_name.contains(search_query),
+                    InboundGuide.language.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for guide in guides_query.all():
+            all_services.append({
+                'date': guide.date,
+                'service_type': 'GUIDE',
+                'request_number': guide.request.request_number,
+                'contact_name': guide.request.contact_name,
+                'pax': guide.request.pax,
+                'description': f"{guide.guide_name or 'Guide'} - {guide.language or 'N/A'}",
+                'details': f"Service: {guide.service_type or 'N/A'}",
+                'status': guide.status,
+                'cost': guide.cost,
+                'currency': guide.currency
+            })
+    
+    # Meals
+    if not service_type or service_type == 'MEAL':
+        meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str:
+            meals_query = meals_query.filter(InboundMeal.date >= date_from)
+        if date_to_str:
+            meals_query = meals_query.filter(InboundMeal.date <= date_to)
+        if status_filter:
+            meals_query = meals_query.filter(InboundMeal.status == status_filter)
+        if request_number:
+            meals_query = meals_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            meals_query = meals_query.filter(
+                db.or_(
+                    InboundMeal.restaurant.contains(search_query),
+                    InboundMeal.meal_type.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for meal in meals_query.all():
+            all_services.append({
+                'date': meal.date,
+                'service_type': 'MEAL',
+                'request_number': meal.request.request_number,
+                'contact_name': meal.request.contact_name,
+                'pax': meal.request.pax,
+                'description': f"{meal.meal_type or 'Meal'} at {meal.restaurant or 'TBA'}",
+                'details': f"Location: {meal.location or 'N/A'}",
+                'status': meal.status,
+                'cost': meal.total_cost,
+                'currency': meal.currency
+            })
+    
+    # Optionals
+    if not service_type or service_type == 'OPTIONAL':
+        optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+        if date_from_str and date_to_str:
+            optionals_query = optionals_query.filter(
+                db.or_(
+                    InboundOptional.date == None,
+                    db.and_(InboundOptional.date >= date_from, InboundOptional.date <= date_to)
+                )
+            )
+        if status_filter:
+            optionals_query = optionals_query.filter(InboundOptional.status == status_filter)
+        if request_number:
+            optionals_query = optionals_query.filter(InboundRequest.request_number.contains(request_number))
+        if search_query:
+            optionals_query = optionals_query.filter(
+                db.or_(
+                    InboundOptional.service_name.contains(search_query),
+                    InboundRequest.contact_name.contains(search_query)
+                )
+            )
+        
+        for optional in optionals_query.all():
+            all_services.append({
+                'date': optional.date or date_from,
+                'service_type': 'OPTIONAL',
+                'request_number': optional.request.request_number,
+                'contact_name': optional.request.contact_name,
+                'pax': optional.request.pax,
+                'description': optional.service_name,
+                'details': optional.description or '',
+                'status': optional.status,
+                'cost': optional.total_cost,
+                'currency': optional.currency
+            })
+    
+    # Sort by date
+    all_services.sort(key=lambda x: x['date'])
+    
+    # Create Excel workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Services Analytics"
+    
+    # Header styling
+    header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
+    header_font = Font(bold=True, color="000000", size=12)
+    header_alignment = Alignment(horizontal="center", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # Title
+    ws.merge_cells('A1:J1')
+    ws['A1'] = f"Services Analytics: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal="center")
+    
+    # Headers
+    headers = ['Date', 'Request #', 'Contact', 'PAX', 'Service Type', 'Description', 'Details', 'Status', 'Cost', 'Currency']
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=3, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    # Data rows
+    row = 4
+    for service in all_services:
+        ws.cell(row=row, column=1, value=service['date'].strftime('%Y-%m-%d')).border = thin_border
+        ws.cell(row=row, column=2, value=service['request_number']).border = thin_border
+        ws.cell(row=row, column=3, value=service['contact_name']).border = thin_border
+        ws.cell(row=row, column=4, value=service['pax']).border = thin_border
+        ws.cell(row=row, column=5, value=service['service_type']).border = thin_border
+        ws.cell(row=row, column=6, value=service['description']).border = thin_border
+        ws.cell(row=row, column=7, value=service['details']).border = thin_border
+        ws.cell(row=row, column=8, value=service['status']).border = thin_border
+        ws.cell(row=row, column=9, value=service['cost']).border = thin_border
+        ws.cell(row=row, column=10, value=service['currency']).border = thin_border
+        row += 1
+    
+    # Adjust column widths
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 15
+    ws.column_dimensions['C'].width = 20
+    ws.column_dimensions['D'].width = 6
+    ws.column_dimensions['E'].width = 12
+    ws.column_dimensions['F'].width = 35
+    ws.column_dimensions['G'].width = 40
+    ws.column_dimensions['H'].width = 12
+    ws.column_dimensions['I'].width = 10
+    ws.column_dimensions['J'].width = 8
+    
+    # Save to bytes
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    
+    filename = f"Services_Analytics_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
+    )
