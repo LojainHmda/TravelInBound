@@ -1254,15 +1254,19 @@ body::-webkit-scrollbar-thumb:hover {
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="form-label">From Date</label>
-                                <input type="date" class="form-control" name="from_date" value="{{ request.from_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
+                                <input type="date" class="form-control" name="from_date" id="fromDate" value="{{ request.from_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" oninput="calculateDays()" required>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
                                 <label class="form-label">To Date</label>
-                                <input type="date" class="form-control" name="to_date" value="{{ request.to_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
+                                <input type="date" class="form-control" name="to_date" id="toDate" value="{{ request.to_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" oninput="calculateDays()" required>
                             </div>
-                            <div class="col-4">
+                            <div class="col-3">
+                                <label class="form-label">No. of Days</label>
+                                <input type="number" class="form-control bg-light" name="no_of_days" id="noOfDays" value="{{ request.no_of_days }}" readonly style="background-color: #e9ecef !important; cursor: not-allowed;">
+                            </div>
+                            <div class="col-3">
                                 <label class="form-label">Pax</label>
                                 <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
                             </div>
@@ -3391,6 +3395,7 @@ function capitalizeFirst(str) {
 function calculateDays() {
     const fromDate = document.querySelector('input[name="from_date"]').value;
     const toDate = document.querySelector('input[name="to_date"]').value;
+    const noOfDaysField = document.getElementById('noOfDays');
     
     if (fromDate && toDate) {
         const from = new Date(fromDate);
@@ -3398,7 +3403,11 @@ function calculateDays() {
         const timeDiff = to.getTime() - from.getTime();
         const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
         
-        // Display calculated days (you can add a display element if needed)
+        // Update the no_of_days field
+        if (noOfDaysField) {
+            noOfDaysField.value = days;
+        }
+        
         console.log('Calculated days:', days);
     }
 }
