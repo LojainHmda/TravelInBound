@@ -5170,13 +5170,39 @@ function updateRequestStatus(newStatus) {
 
 // Update Status UI immediately for better UX
 function updateStatusUI(newStatus) {
+    console.log('updateStatusUI called with status:', newStatus);
+    
     // Remove active class from all stages (both horizontal and vertical)
     document.querySelectorAll('.status-stage, .status-stage-vertical').forEach(stage => {
         stage.classList.remove('active');
         // Remove any existing check marks
-        const existingCheck = stage.querySelector('.circle-check');
-        if (existingCheck) {
-            existingCheck.remove();
+        const existingChecks = stage.querySelectorAll('.circle-check, .fa-check');
+        existingChecks.forEach(check => {
+            if (check.parentElement && check.parentElement.classList.contains('circle-check')) {
+                check.parentElement.remove();
+            } else if (check.classList.contains('circle-check')) {
+                check.remove();
+            }
+        });
+        
+        // Reset circle icons to original state
+        const circle = stage.querySelector('.status-circle, .status-circle-vertical');
+        if (circle) {
+            const icon = circle.querySelector('i');
+            if (icon && icon.classList.contains('fa-check')) {
+                // Reset to original icon based on stage
+                const stageStatus = stage.getAttribute('data-status');
+                const iconMap = {
+                    'REQUEST': 'fa-clipboard',
+                    'QUOTED': 'fa-calculator',
+                    'SUPPLIER_CONFIRMED': 'fa-check-double',
+                    'CONFIRMED': 'fa-handshake',
+                    'INVOICE': 'fa-file-invoice',
+                    'PROCESSING': 'fa-cogs',
+                    'COMPLETED': 'fa-check-circle'
+                };
+                icon.className = 'fas ' + (iconMap[stageStatus] || 'fa-circle');
+            }
         }
     });
     
@@ -5184,24 +5210,29 @@ function updateStatusUI(newStatus) {
     const stageOrder = ['REQUEST', 'QUOTED', 'SUPPLIER_CONFIRMED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
     const currentIndex = stageOrder.indexOf(newStatus);
     
+    console.log('Current stage index:', currentIndex, 'of', stageOrder.length);
+    
     // Add active class to new status and checkmarks to completed stages
     document.querySelectorAll('[data-status]').forEach(stage => {
         const stageStatus = stage.getAttribute('data-status');
         const stageIndex = stageOrder.indexOf(stageStatus);
         
+        console.log(`Processing stage: ${stageStatus}, index: ${stageIndex}, should have checkmark: ${stageIndex < currentIndex && stageIndex !== -1}`);
+        
         if (stageStatus === newStatus) {
             // This is the current/active stage
             stage.classList.add('active');
-        } else if (stageIndex < currentIndex && stageIndex !== -1) {
+            console.log(`Set ${stageStatus} as active`);
+        } else if (stageIndex < currentIndex && stageIndex !== -1 && currentIndex !== -1) {
             // This stage is completed (before current stage)
             const circle = stage.querySelector('.status-circle, .status-circle-vertical');
-            if (circle && !circle.querySelector('.circle-check')) {
-                const checkMark = document.createElement('div');
-                checkMark.className = 'circle-check';
-                checkMark.innerHTML = '<i class="fas fa-check"></i>';
-                checkMark.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem;';
-                circle.style.position = 'relative';
-                circle.appendChild(checkMark);
+            if (circle) {
+                const icon = circle.querySelector('i');
+                if (icon) {
+                    // Change icon to checkmark
+                    icon.className = 'fas fa-check';
+                    console.log(`Added checkmark to ${stageStatus}`);
+                }
             }
         }
     });
@@ -5272,6 +5303,15 @@ function toggleWorkflowSidebar() {
     
     console.log('New collapsed state:', sidebarCol.classList.contains('collapsed'));
 }
+
+// Initialize workflow on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the workflow status UI with current status
+    const currentStatus = '{{ request.status }}';
+    if (currentStatus) {
+        updateStatusUI(currentStatus);
+    }
+});
 
 // Toggle Horizontal Workflow visibility
 function toggleHorizontalWorkflow() {

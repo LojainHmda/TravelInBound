@@ -16,7 +16,7 @@ Preferred communication style: Simple, everyday language.
 - **CARD 3 - Transport Unified**: Comprehensive transport table with driver phone numbers, pickup/drop-off points, status tracking (REQUESTED/CONFIRMED/CANCELLED)
 - **CARD 4 - Guides Enhanced**: Full guide profiles with telephone, national ID, tax number, language filtering, additional comments and internal comments (hidden duration/meeting point fields)
 - **CARD 5 - Optional Extras**: New tab for services outside itinerary dates with flexible date handling
-- **Collapsible Vertical Workflow Sidebar**: Left-side vertical status timeline showing all 6 workflow stages (REQUEST → CONFIRMED → QUOTED → INVOICE → PROCESSING → COMPLETED) with collapse/expand functionality and progress checkmarks
+- **Compact Collapsible Vertical Workflow Sidebar**: Left-side vertical status timeline showing all 7 workflow stages (REQUEST → QUOTED → SUPPLIER_CONFIRMED → CONFIRMED → INVOICE → PROCESSING → COMPLETED) with ultra-compact design (240px expanded, 50px collapsed), smaller fonts (0.8rem titles, 0.7rem descriptions), 32px status circles, and collapse/expand functionality with progress checkmarks
 - **Automatic Day Calculation**: Number of days field automatically calculates from travel dates (readonly field with instant updates)
 
 ## System Architecture
