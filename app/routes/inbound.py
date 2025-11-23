@@ -667,13 +667,17 @@ def _auto_generate_services(request_obj, itinerary_row):
     """Auto-generate service records based on itinerary row flags"""
     
     if itinerary_row.flag_hotel:
-        # Generate hotel record
+        # Generate hotel record - auto-inherit check-in/out from request dates
+        check_in = request_obj.from_date
+        check_out = request_obj.to_date
+        nights = (check_out - check_in).days
+        
         hotel = InboundHotel(
             request_id=request_obj.id,
             source_itinerary_id=itinerary_row.id,
-            check_in_date=itinerary_row.date,
-            check_out_date=itinerary_row.date + timedelta(days=1),  # Default 1 night
-            nights=1,
+            check_in_date=check_in,
+            check_out_date=check_out,
+            nights=nights,
             meal_plan='BB',
             cost_per_night=itinerary_row.base_cost if itinerary_row.cost_unit == COST_UNIT_PER_PERSON else itinerary_row.base_cost / request_obj.pax,
             total_cost=itinerary_row.calculate_row_cost(request_obj.pax),
@@ -1127,11 +1131,15 @@ def api_save_hotels(request_id):
                 if hotel.check_in_date and hotel.check_out_date:
                     hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
                     
-            # If no room dates, use a default
+            # If no room dates, auto-inherit from request dates
             if not hotel.check_in_date:
-                hotel.check_in_date = datetime.now().date()
+                hotel.check_in_date = request_obj.from_date
             if not hotel.check_out_date:
-                hotel.check_out_date = datetime.now().date() + timedelta(days=1)
+                hotel.check_out_date = request_obj.to_date
+            
+            # Recalculate nights based on actual dates
+            if hotel.check_in_date and hotel.check_out_date:
+                hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
             
             db.session.add(hotel)
             db.session.flush()  # Get the hotel ID before creating rooms
