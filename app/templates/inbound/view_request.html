@@ -1056,7 +1056,7 @@ body::-webkit-scrollbar-thumb:hover {
     color: white !important;
 }
 
-/* Vertical Workflow Sidebar Styles */
+/* Vertical Workflow Sidebar Styles - Compact Version */
 .status-timeline-vertical {
     display: flex;
     flex-direction: column;
@@ -1068,14 +1068,14 @@ body::-webkit-scrollbar-thumb:hover {
     align-items: flex-start;
     cursor: pointer;
     transition: all 0.3s ease;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.25rem;
 }
 
 .status-stage-vertical:hover {
     background: rgba(102, 126, 234, 0.05);
-    transform: translateX(4px);
+    transform: translateX(3px);
 }
 
 .status-stage-vertical.active {
@@ -1086,20 +1086,20 @@ body::-webkit-scrollbar-thumb:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-right: 1rem;
+    margin-right: 0.65rem;
     position: relative;
 }
 
 .status-circle-vertical {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #64748b;
-    font-size: 1rem;
+    font-size: 0.85rem;
     transition: all 0.3s ease;
     z-index: 2;
 }
@@ -1107,14 +1107,14 @@ body::-webkit-scrollbar-thumb:hover {
 .status-stage-vertical.active .status-circle-vertical {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
 }
 
 .status-line-vertical {
-    width: 3px;
-    height: 40px;
+    width: 2px;
+    height: 28px;
     background: #e2e8f0;
-    margin-top: 4px;
+    margin-top: 3px;
 }
 
 .status-stage-vertical:last-child .status-line-vertical {
@@ -1123,14 +1123,15 @@ body::-webkit-scrollbar-thumb:hover {
 
 .stage-content {
     flex: 1;
-    padding-top: 6px;
+    padding-top: 4px;
 }
 
 .stage-title {
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 0.8rem;
     color: #1e293b;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
 }
 
 .status-stage-vertical.active .stage-title {
@@ -1138,23 +1139,24 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 .stage-description {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #64748b;
+    line-height: 1.2;
 }
 
 /* Collapsed sidebar state */
 #workflowSidebarCol {
-    max-width: 280px;
+    max-width: 240px;
 }
 
 #workflowSidebarCol.collapsed {
-    max-width: 60px !important;
-    min-width: 60px !important;
+    max-width: 50px !important;
+    min-width: 50px !important;
 }
 
 #workflowSidebarCol.collapsed #workflowSidebar {
-    width: 60px !important;
-    min-width: 60px !important;
+    width: 50px !important;
+    min-width: 50px !important;
 }
 
 #workflowSidebarCol.collapsed #workflowSidebarContent {
@@ -1193,14 +1195,14 @@ body::-webkit-scrollbar-thumb:hover {
     <div class="row g-3">
         <!-- Collapsible Vertical Workflow Sidebar -->
         <div class="col-auto" id="workflowSidebarCol" style="transition: all 0.3s ease;">
-            <div id="workflowSidebar" class="card" style="width: 280px; position: sticky; top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div id="workflowSidebar" class="card" style="width: 240px; position: sticky; top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h6 class="mb-0"><i class="fas fa-route"></i> Workflow Status</h6>
-                    <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" style="padding: 0.25rem 0.5rem;">
-                        <i class="fas fa-chevron-left" id="workflowToggleIcon"></i>
+                    <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-route"></i> Workflow</h6>
+                    <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" style="padding: 0.2rem 0.4rem;">
+                        <i class="fas fa-chevron-left" id="workflowToggleIcon" style="font-size: 0.85rem;"></i>
                     </button>
                 </div>
-                <div class="card-body p-3" id="workflowSidebarContent">
+                <div class="card-body p-2" id="workflowSidebarContent">
                     <!-- Vertical Status Timeline -->
                     <div class="status-timeline-vertical">
                         <!-- Stage 1: REQUEST -->
@@ -1217,21 +1219,7 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <!-- Stage 2: CONFIRMED -->
-                        <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
-                            <div class="stage-indicator">
-                                <div class="status-circle-vertical">
-                                    <i class="fas fa-handshake"></i>
-                                </div>
-                                <div class="status-line-vertical"></div>
-                            </div>
-                            <div class="stage-content">
-                                <div class="stage-title">Confirmed</div>
-                                <div class="stage-description">Suppliers confirmed</div>
-                            </div>
-                        </div>
-
-                        <!-- Stage 3: QUOTED -->
+                        <!-- Stage 2: QUOTED -->
                         <div class="status-stage-vertical {% if request.status == 'QUOTED' %}active{% endif %}" data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
                             <div class="stage-indicator">
                                 <div class="status-circle-vertical">
@@ -1245,7 +1233,35 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <!-- Stage 4: INVOICE -->
+                        <!-- Stage 3: SUPPLIER_CONFIRMED -->
+                        <div class="status-stage-vertical {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% endif %}" data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Suppliers OK</div>
+                                <div class="stage-description">Suppliers confirmed</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 4: CONFIRMED -->
+                        <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Confirmed</div>
+                                <div class="stage-description">Client confirmed</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 5: INVOICE -->
                         <div class="status-stage-vertical {% if request.status == 'INVOICE' %}active{% endif %}" data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
                             <div class="stage-indicator">
                                 <div class="status-circle-vertical">
@@ -1259,7 +1275,7 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <!-- Stage 5: PROCESSING -->
+                        <!-- Stage 6: PROCESSING -->
                         <div class="status-stage-vertical {% if request.status == 'PROCESSING' %}active{% endif %}" data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
                             <div class="stage-indicator">
                                 <div class="status-circle-vertical">
@@ -1273,7 +1289,7 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <!-- Stage 6: COMPLETED -->
+                        <!-- Stage 7: COMPLETED -->
                         <div class="status-stage-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
                             <div class="stage-indicator">
                                 <div class="status-circle-vertical">
@@ -1312,10 +1328,12 @@ body::-webkit-scrollbar-thumb:hover {
                                 <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Status</div>
                                 {% if request.status == 'REQUEST' %}
                                     <span class="badge bg-warning">Request</span>
-                                {% elif request.status == 'CONFIRMED' %}
-                                    <span class="badge bg-success">Confirmed</span>
                                 {% elif request.status == 'QUOTED' %}
                                     <span class="badge bg-info">Quoted</span>
+                                {% elif request.status == 'SUPPLIER_CONFIRMED' %}
+                                    <span class="badge bg-success">Suppliers OK</span>
+                                {% elif request.status == 'CONFIRMED' %}
+                                    <span class="badge bg-success">Confirmed</span>
                                 {% elif request.status == 'INVOICE' %}
                                     <span class="badge bg-primary">Invoice</span>
                                 {% elif request.status == 'PROCESSING' %}
@@ -5162,8 +5180,8 @@ function updateStatusUI(newStatus) {
         }
     });
     
-    // Define stage order for progress tracking
-    const stageOrder = ['REQUEST', 'CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
+    // Define stage order for progress tracking (7-stage workflow with SUPPLIER_CONFIRMED)
+    const stageOrder = ['REQUEST', 'QUOTED', 'SUPPLIER_CONFIRMED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
     const currentIndex = stageOrder.indexOf(newStatus);
     
     // Add active class to new status and checkmarks to completed stages
@@ -5181,7 +5199,7 @@ function updateStatusUI(newStatus) {
                 const checkMark = document.createElement('div');
                 checkMark.className = 'circle-check';
                 checkMark.innerHTML = '<i class="fas fa-check"></i>';
-                checkMark.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.9rem;';
+                checkMark.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem;';
                 circle.style.position = 'relative';
                 circle.appendChild(checkMark);
             }
@@ -5192,11 +5210,12 @@ function updateStatusUI(newStatus) {
     const progressFill = document.getElementById('progressFill');
     if (progressFill) {
         const progressWidths = {
-            'REQUEST': '16%',
-            'CONFIRMED': '33%',
-            'QUOTED': '50%',
-            'INVOICE': '66%',
-            'PROCESSING': '83%',
+            'REQUEST': '14%',
+            'QUOTED': '28%',
+            'SUPPLIER_CONFIRMED': '43%',
+            'CONFIRMED': '57%',
+            'INVOICE': '71%',
+            'PROCESSING': '85%',
             'COMPLETED': '100%'
         };
         progressFill.style.width = progressWidths[newStatus] || '0%';
