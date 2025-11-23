@@ -1056,13 +1056,126 @@ body::-webkit-scrollbar-thumb:hover {
     color: white !important;
 }
 
+/* Vertical Workflow Sidebar Styles */
+.status-timeline-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.status-stage-vertical {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.status-stage-vertical:hover {
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateX(4px);
+}
+
+.status-stage-vertical.active {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.stage-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 1rem;
+    position: relative;
+}
+
+.status-circle-vertical {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.status-stage-vertical.active .status-circle-vertical {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.status-line-vertical {
+    width: 3px;
+    height: 40px;
+    background: #e2e8f0;
+    margin-top: 4px;
+}
+
+.status-stage-vertical:last-child .status-line-vertical {
+    display: none;
+}
+
+.stage-content {
+    flex: 1;
+    padding-top: 6px;
+}
+
+.stage-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.status-stage-vertical.active .stage-title {
+    color: #667eea;
+}
+
+.stage-description {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+/* Collapsed sidebar state */
+#workflowSidebarCol {
+    max-width: 280px;
+}
+
+#workflowSidebarCol.collapsed {
+    max-width: 60px !important;
+    min-width: 60px !important;
+}
+
+#workflowSidebarCol.collapsed #workflowSidebar {
+    width: 60px !important;
+    min-width: 60px !important;
+}
+
+#workflowSidebarCol.collapsed #workflowSidebarContent {
+    display: none !important;
+}
+
+#workflowSidebarCol.collapsed .card-header h6 {
+    display: none !important;
+}
+
+#workflowSidebar {
+    transition: all 0.3s ease;
+}
+
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" style="max-width: 100%; padding: 1rem 1rem;">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2><i class="fas fa-eye"></i> {{ request.request_number }}</h2>
             <div class="text-muted">
@@ -1076,9 +1189,109 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Main Layout: Content Only (Sidebar removed per user request) -->
+    <!-- Main Layout: Vertical Workflow Sidebar + Content -->
     <div class="row g-3">
-        <div class="col-12" id="mainContentContainer">
+        <!-- Collapsible Vertical Workflow Sidebar -->
+        <div class="col-auto" id="workflowSidebarCol" style="transition: all 0.3s ease;">
+            <div id="workflowSidebar" class="card" style="width: 280px; position: sticky; top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h6 class="mb-0"><i class="fas fa-route"></i> Workflow Status</h6>
+                    <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" style="padding: 0.25rem 0.5rem;">
+                        <i class="fas fa-chevron-left" id="workflowToggleIcon"></i>
+                    </button>
+                </div>
+                <div class="card-body p-3" id="workflowSidebarContent">
+                    <!-- Vertical Status Timeline -->
+                    <div class="status-timeline-vertical">
+                        <!-- Stage 1: REQUEST -->
+                        <div class="status-stage-vertical {% if request.status == 'REQUEST' %}active{% endif %}" data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Request</div>
+                                <div class="stage-description">Initial inquiry</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 2: CONFIRMED -->
+                        <div class="status-stage-vertical {% if request.status == 'CONFIRMED' %}active{% endif %}" data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Confirmed</div>
+                                <div class="stage-description">Suppliers confirmed</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 3: QUOTED -->
+                        <div class="status-stage-vertical {% if request.status == 'QUOTED' %}active{% endif %}" data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Quoted</div>
+                                <div class="stage-description">Price calculated</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 4: INVOICE -->
+                        <div class="status-stage-vertical {% if request.status == 'INVOICE' %}active{% endif %}" data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Invoice</div>
+                                <div class="stage-description">Proforma sent</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 5: PROCESSING -->
+                        <div class="status-stage-vertical {% if request.status == 'PROCESSING' %}active{% endif %}" data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Processing</div>
+                                <div class="stage-description">Operations active</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 6: COMPLETED -->
+                        <div class="status-stage-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Completed</div>
+                                <div class="stage-description">Trip finished</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col" id="mainContentContainer">
             <!-- Request Information -->
             <div class="card mb-2">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center">
@@ -4939,8 +5152,8 @@ function updateRequestStatus(newStatus) {
 
 // Update Status UI immediately for better UX
 function updateStatusUI(newStatus) {
-    // Remove active class from all stages
-    document.querySelectorAll('.status-stage').forEach(stage => {
+    // Remove active class from all stages (both horizontal and vertical)
+    document.querySelectorAll('.status-stage, .status-stage-vertical').forEach(stage => {
         stage.classList.remove('active');
         // Remove any existing check marks
         const existingCheck = stage.querySelector('.circle-check');
@@ -4949,29 +5162,41 @@ function updateStatusUI(newStatus) {
         }
     });
     
-    // Add active class to new status
-    const newActiveStage = document.querySelector(`[data-status="${newStatus}"]`);
-    if (newActiveStage) {
-        newActiveStage.classList.add('active');
-        
-        // Add check mark
-        const circle = newActiveStage.querySelector('.status-circle');
-        if (circle && !circle.querySelector('.circle-check')) {
-            const checkMark = document.createElement('div');
-            checkMark.className = 'circle-check';
-            checkMark.innerHTML = '<i class="fas fa-check"></i>';
-            circle.appendChild(checkMark);
-        }
-    }
+    // Define stage order for progress tracking
+    const stageOrder = ['REQUEST', 'CONFIRMED', 'QUOTED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
+    const currentIndex = stageOrder.indexOf(newStatus);
     
-    // Update progress fill
+    // Add active class to new status and checkmarks to completed stages
+    document.querySelectorAll('[data-status]').forEach(stage => {
+        const stageStatus = stage.getAttribute('data-status');
+        const stageIndex = stageOrder.indexOf(stageStatus);
+        
+        if (stageStatus === newStatus) {
+            // This is the current/active stage
+            stage.classList.add('active');
+        } else if (stageIndex < currentIndex && stageIndex !== -1) {
+            // This stage is completed (before current stage)
+            const circle = stage.querySelector('.status-circle, .status-circle-vertical');
+            if (circle && !circle.querySelector('.circle-check')) {
+                const checkMark = document.createElement('div');
+                checkMark.className = 'circle-check';
+                checkMark.innerHTML = '<i class="fas fa-check"></i>';
+                checkMark.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.9rem;';
+                circle.style.position = 'relative';
+                circle.appendChild(checkMark);
+            }
+        }
+    });
+    
+    // Update progress fill if exists
     const progressFill = document.getElementById('progressFill');
     if (progressFill) {
         const progressWidths = {
-            'REQUEST': '20%',
-            'QUOTED': '40%',
-            'CONFIRMED': '60%',
-            'PROCESSING': '80%',
+            'REQUEST': '16%',
+            'CONFIRMED': '33%',
+            'QUOTED': '50%',
+            'INVOICE': '66%',
+            'PROCESSING': '83%',
             'COMPLETED': '100%'
         };
         progressFill.style.width = progressWidths[newStatus] || '0%';
@@ -4995,6 +5220,38 @@ function showAlert(message, type) {
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
+}
+
+// Toggle Vertical Workflow Sidebar
+function toggleWorkflowSidebar() {
+    console.log('toggleWorkflowSidebar called');
+    const sidebarCol = document.getElementById('workflowSidebarCol');
+    const icon = document.getElementById('workflowToggleIcon');
+    
+    console.log('sidebarCol:', sidebarCol);
+    console.log('icon:', icon);
+    
+    if (!sidebarCol || !icon) {
+        console.error('Workflow sidebar elements not found');
+        return;
+    }
+    
+    const isCollapsed = sidebarCol.classList.contains('collapsed');
+    console.log('Current collapsed state:', isCollapsed);
+    
+    if (isCollapsed) {
+        // Expand sidebar
+        sidebarCol.classList.remove('collapsed');
+        icon.className = 'fas fa-chevron-left';
+        console.log('Sidebar expanded');
+    } else {
+        // Collapse sidebar
+        sidebarCol.classList.add('collapsed');
+        icon.className = 'fas fa-chevron-right';
+        console.log('Sidebar collapsed');
+    }
+    
+    console.log('New collapsed state:', sidebarCol.classList.contains('collapsed'));
 }
 
 // Toggle Horizontal Workflow visibility
