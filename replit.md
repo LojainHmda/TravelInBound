@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
 - **CARD 5 - Optional Extras**: New tab for services outside itinerary dates with flexible date handling
 - **Overlay Workflow Sidebar**: Hidden-by-default overlay panel with floating toggle button, showing all 7 workflow stages (REQUEST → QUOTED → SUPPLIER_CONFIRMED → CONFIRMED → INVOICE → PROCESSING → COMPLETED). Features slide-in animation from left, semi-transparent backdrop, compact design (280px width), smaller fonts (0.8rem titles, 0.7rem descriptions), 32px status circles, and progress checkmarks. Completely hidden when not in use to maximize screen space
 - **Automatic Day Calculation**: Number of days field automatically calculates from travel dates (readonly field with instant updates)
+- **Hotel Date Auto-Inheritance**: Hotels automatically inherit check-in/check-out dates from request from_date and to_date. When services are generated with hotel flags, the system creates hotel records with check_in_date = request.from_date, check_out_date = request.to_date, and automatically calculates nights
 
 ## System Architecture
 
