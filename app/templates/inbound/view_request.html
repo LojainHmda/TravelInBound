@@ -1842,6 +1842,13 @@ body::-webkit-scrollbar-thumb:hover {
                             </button>
                         </li>
                         {% endif %}
+                        {% if request.inbound_optionals %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="optionals-tab" data-bs-toggle="tab" data-bs-target="#optionals" type="button" role="tab">
+                                <i class="fas fa-star"></i> Optional Extras ({{ request.inbound_optionals|length }})
+                            </button>
+                        </li>
+                        {% endif %}
                     </ul>
 
                     <div class="tab-content mt-3" id="servicesTabContent">
@@ -1914,10 +1921,12 @@ body::-webkit-scrollbar-thumb:hover {
                                     <thead class="table-light">
                                         <tr>
                                             <th>Hotel</th>
+                                            <th>Category</th>
+                                            <th>Location</th>
                                             <th>Check-in</th>
                                             <th>Check-out</th>
                                             <th>Nights</th>
-                                            <th>Room Type</th>
+                                            <th>Rooms</th>
                                             <th>Meal Plan</th>
                                             <th>Cost</th>
                                             <th>Status</th>
@@ -1927,26 +1936,34 @@ body::-webkit-scrollbar-thumb:hover {
                                     <tbody>
                                         {% for hotel in request.inbound_hotels %}
                                         <tr>
-                                            <td>{{ hotel.hotel_name or '-' }}</td>
-                                            <td>{{ hotel.check_in_date.strftime('%d %b %Y') }}</td>
-                                            <td>{{ hotel.check_out_date.strftime('%d %b %Y') }}</td>
+                                            <td><strong>{{ hotel.hotel_name or '-' }}</strong></td>
+                                            <td>{{ hotel.hotel_category or '-' }}</td>
+                                            <td>{{ hotel.location or '-' }}</td>
+                                            <td>{{ hotel.check_in_date.strftime('%d %b') }}</td>
+                                            <td>{{ hotel.check_out_date.strftime('%d %b') }}</td>
                                             <td>{{ hotel.nights }}</td>
-                                            <td>{{ hotel.room_type or '-' }}</td>
+                                            <td>
+                                                {% set room_count = hotel.rooms|length if hotel.rooms else 0 %}
+                                                {% if room_count > 0 %}
+                                                    <span class="badge bg-info">{{ room_count }} room{{ 's' if room_count != 1 else '' }}</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary ms-1" onclick="viewHotelRooms({{ hotel.id }})">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                {% else %}
+                                                    {{ hotel.room_type or '-' }}
+                                                {% endif %}
+                                            </td>
                                             <td>{{ hotel.meal_plan }}</td>
                                             <td>{{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</td>
                                             <td>
                                                 <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}">
-                                                    {% if hotel.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ hotel.status }}{% endif %}
+                                                    {{ hotel.get_aggregate_status() }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {% if hotel.status not in ['RESERVED', 'CONFIRMED'] %}
-                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markHotelAsReserved({{ hotel.id }})">
-                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editHotel({{ hotel.id }})">
+                                                    <i class="fas fa-edit"></i>
                                                 </button>
-                                                {% else %}
-                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
-                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -1970,14 +1987,15 @@ body::-webkit-scrollbar-thumb:hover {
                                             <th>From Date</th>
                                             <th>To Date</th>
                                             <th>Pax</th>
-                                            <th>Vech Type</th>
-                                            <th>SUPPLIER</th>
-                                            <th>Driver</th>
-                                            <th>Pickup Port</th>
+                                            <th>Vehicle Type</th>
+                                            <th>Supplier</th>
+                                            <th>Driver Name</th>
+                                            <th>Driver Phone</th>
+                                            <th>Pickup Point</th>
                                             <th>Pickup Time</th>
-                                            <th>Drop Off Point</th>
+                                            <th>Drop-off Point</th>
                                             <th>Note</th>
-                                            <th>STATUS</th>
+                                            <th>Status</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -1990,23 +2008,20 @@ body::-webkit-scrollbar-thumb:hover {
                                             <td>{{ transport.vehicle_type or '-' }}</td>
                                             <td>{{ transport.supplier or '-' }}</td>
                                             <td>{{ transport.driver_name or '-' }}</td>
+                                            <td>{{ transport.driver_phone or '-' }}</td>
                                             <td>{{ transport.pickup_location or '-' }}</td>
                                             <td>{{ transport.pickup_time.strftime('%H:%M') if transport.pickup_time else '-' }}</td>
                                             <td>{{ transport.dropoff_location or '-' }}</td>
-                                            <td>{{ transport.note or '-' }}</td>
+                                            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">{{ transport.note or '-' }}</td>
                                             <td>
-                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'RESERVED' %}info{% elif transport.status == 'REQUESTED' or transport.status == 'REQUEST' %}warning{% else %}secondary{% endif %}">
-                                                    {% if transport.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ transport.status }}{% endif %}
+                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'REQUESTED' or transport.status == 'REQUEST' %}warning{% elif transport.status == 'CANCELLED' %}danger{% else %}secondary{% endif %}">
+                                                    {{ transport.status }}
                                                 </span>
                                             </td>
                                             <td>
-                                                {% if transport.status not in ['RESERVED', 'CONFIRMED'] %}
-                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markTransportAsReserved({{ transport.id }})">
-                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editTransport({{ transport.id }})">
+                                                    <i class="fas fa-edit"></i>
                                                 </button>
-                                                {% else %}
-                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
-                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -2051,29 +2066,102 @@ body::-webkit-scrollbar-thumb:hover {
 
                         {% if request.inbound_guides %}
                         <div class="tab-pane fade" id="guides" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-filter me-1"></i>Filter by Language:</label>
+                                <select class="form-select form-select-sm" style="width: 200px; display: inline-block;" id="guideLanguageFilter" onchange="filterGuidesByLanguage()">
+                                    <option value="">All Languages</option>
+                                    {% set languages = request.inbound_guides | map(attribute='language') | select('defined') | unique | list %}
+                                    {% for lang in languages %}
+                                    <option value="{{ lang }}">{{ lang }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                             <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
+                                <table class="table table-sm table-hover" id="guidesTable">
+                                    <thead class="table-light">
                                         <tr>
                                             <th>Date</th>
-                                            <th>Guide</th>
+                                            <th>Guide Name</th>
+                                            <th>Telephone</th>
                                             <th>Language</th>
+                                            <th>National ID</th>
+                                            <th>Tax Number</th>
                                             <th>Service Type</th>
-                                            <th>Duration</th>
-                                            <th>Meeting Point</th>
+                                            <th>Additional Comments</th>
                                             <th>Cost</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for guide in request.inbound_guides %}
-                                        <tr>
-                                            <td>{{ guide.date.strftime('%d %b %Y') }}</td>
-                                            <td>{{ guide.guide_name or '-' }}</td>
-                                            <td>{{ guide.language or '-' }}</td>
+                                        <tr data-language="{{ guide.language or '' }}">
+                                            <td>{{ guide.date.strftime('%d %b') if guide.date else '-' }}</td>
+                                            <td><strong>{{ guide.guide_name or '-' }}</strong></td>
+                                            <td>{{ guide.telephone_number or '-' }}</td>
+                                            <td><span class="badge bg-primary">{{ guide.language or '-' }}</span></td>
+                                            <td>{{ guide.national_id or '-' }}</td>
+                                            <td>{{ guide.tax_number or '-' }}</td>
                                             <td>{{ guide.service_type or '-' }}</td>
-                                            <td>{{ guide.duration_hours or '-' }} hrs</td>
-                                            <td>{{ guide.meeting_point or '-' }}</td>
+                                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
+                                                {{ guide.additional_comments or '-' }}
+                                                {% if guide.internal_comments %}
+                                                <span class="badge bg-warning text-dark" title="Has internal comments"><i class="fas fa-lock"></i></span>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ "%.2f"|format(guide.cost) }} {{ guide.currency }}</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editGuide({{ guide.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if request.inbound_optionals %}
+                        <div class="tab-pane fade" id="optionals" role="tabpanel">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i><strong>Optional Extras:</strong> These items are purchased independently by passengers and are <strong>not restricted to itinerary dates</strong>.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Service Name</th>
+                                            <th>Description</th>
+                                            <th>Date</th>
+                                            <th>Location</th>
+                                            <th>Supplier</th>
+                                            <th>Per Person</th>
+                                            <th>Total Cost</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for optional in request.inbound_optionals %}
+                                        <tr>
+                                            <td><strong>{{ optional.service_name }}</strong></td>
+                                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">{{ optional.description or '-' }}</td>
+                                            <td>{{ optional.date.strftime('%d %b %Y') if optional.date else '<span class="badge bg-secondary">Flexible</span>' | safe }}</td>
+                                            <td>{{ optional.location or '-' }}</td>
+                                            <td>{{ optional.supplier or '-' }}</td>
+                                            <td>{{ "%.2f"|format(optional.cost_per_person) }} {{ optional.currency }}</td>
+                                            <td>{{ "%.2f"|format(optional.total_cost) }} {{ optional.currency }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if optional.status == 'CONFIRMED' %}success{% elif optional.status == 'REQUESTED' or optional.status == 'REQUEST' %}warning{% else %}secondary{% endif %}">
+                                                    {{ optional.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editOptional({{ optional.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -6711,6 +6799,43 @@ function markTransportAsReserved(transportId) {
         console.error('Error:', error);
         showNotification('Error updating transport status', 'error');
     });
+}
+
+// Guide Language Filter Function
+function filterGuidesByLanguage() {
+    const filter = document.getElementById('guideLanguageFilter').value;
+    const rows = document.querySelectorAll('#guidesTable tbody tr');
+    
+    rows.forEach(row => {
+        const language = row.getAttribute('data-language');
+        if (filter === '' || language === filter) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Hotel Room View Function
+function viewHotelRooms(hotelId) {
+    showNotification('Hotel room details feature coming soon!', 'info');
+}
+
+// Edit Functions (placeholders for modals to be implemented)
+function editHotel(hotelId) {
+    showNotification('Hotel edit feature coming soon!', 'info');
+}
+
+function editTransport(transportId) {
+    showNotification('Transport edit feature coming soon!', 'info');
+}
+
+function editGuide(guideId) {
+    showNotification('Guide edit feature coming soon!', 'info');
+}
+
+function editOptional(optionalId) {
+    showNotification('Optional service edit feature coming soon!', 'info');
 }
 
 function confirmAllHotels() {

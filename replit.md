@@ -10,6 +10,13 @@ Preferred communication style: Simple, everyday language.
 - AUTO EDIT MODE - Forms load automatically in edit mode (no toggle needed) for immediate data entry.
 - Nationality field uses comprehensive dropdown with 60+ countries.
 
+## Recent Updates (November 2025)
+- **ARD 1 Complete**: Enhanced Arrivals/Departures with visa status tracking, Meet & Assist, representative names, departure tax, and predefined location dropdowns
+- **CARD 2 - Hotels Enhanced**: Added hotel categories, room type distribution (Single/Twin/King/Triple), multi-hotel support, hotel-level status tracking
+- **CARD 3 - Transport Unified**: Comprehensive transport table with driver phone numbers, pickup/drop-off points, status tracking (REQUESTED/CONFIRMED/CANCELLED)
+- **CARD 4 - Guides Enhanced**: Full guide profiles with telephone, national ID, tax number, language filtering, additional comments and internal comments (hidden duration/meeting point fields)
+- **CARD 5 - Optional Extras**: New tab for services outside itinerary dates with flexible date handling
+
 ## System Architecture
 
 ### Backend
@@ -31,9 +38,9 @@ Preferred communication style: Simple, everyday language.
 - **Connection Pooling**: Configured with pool recycling and pre-ping.
 
 ### Key Features & Design Patterns
-- **Core Models**: User, Agent, OAuth, Booking, ServiceItem, Document, Customer, Supplier, Payment, Expense, FinancialMetric, ServiceConfirmation, InboundRequest, ItineraryRow, ArrivalDeparture.
-- **Booking Workflow**: Status progression (REQUEST → QUOTED → RESERVED → CONFIRMED → IN-PROGRESS). Individual service-level status tracking (RESERVED for supplier confirmation).
-- **Service Types**: Flight, Hotel, Transport, Visa, Insurance, Restaurant, Guide, Meal.
+- **Core Models**: User, Agent, OAuth, Booking, ServiceItem, Document, Customer, Supplier, Payment, Expense, FinancialMetric, ServiceConfirmation, InboundRequest, ItineraryRow, ArrivalDeparture, ArrivalBatch, DepartureBatch, InboundHotel, HotelRoom, InboundTransport, InboundGuide, InboundMeal, InboundOptional, HotelCategory.
+- **Booking Workflow**: Status progression (REQUEST → QUOTED → CONFIRMED → PROCESSING → COMPLETED). Individual service-level status tracking.
+- **Service Types**: Flight, Hotel, Transport, Visa, Insurance, Restaurant, Guide, Meal, Optional Extras.
 - **Financial Operations**: Invoice generation, payment tracking, supplier cost management, Excel expense report export.
 - **Document Management**: File uploads, AI-powered ticket/voucher analysis, document categorization.
 - **Modular Design**: Blueprint structure for core functionalities.
