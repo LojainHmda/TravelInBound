@@ -1144,31 +1144,46 @@ body::-webkit-scrollbar-thumb:hover {
     line-height: 1.2;
 }
 
-/* Collapsed sidebar state */
-#workflowSidebarCol {
-    max-width: 240px;
+/* Overlay Workflow Sidebar Styles */
+#workflowSidebarOverlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    background: white;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    z-index: 1050;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
 }
 
-#workflowSidebarCol.collapsed {
-    max-width: 50px !important;
-    min-width: 50px !important;
+#workflowSidebarOverlay.open {
+    transform: translateX(0);
 }
 
-#workflowSidebarCol.collapsed #workflowSidebar {
-    width: 50px !important;
-    min-width: 50px !important;
+#workflowFloatingToggle:hover {
+    box-shadow: 3px 0 15px rgba(102, 126, 234, 0.4);
+    padding-left: 0.6rem;
 }
 
-#workflowSidebarCol.collapsed #workflowSidebarContent {
-    display: none !important;
+/* Backdrop for overlay */
+#workflowBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1049;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-#workflowSidebarCol.collapsed .card-header h6 {
-    display: none !important;
-}
-
-#workflowSidebar {
-    transition: all 0.3s ease;
+#workflowBackdrop.show {
+    display: block;
+    opacity: 1;
 }
 
 </style>
@@ -1191,18 +1206,35 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Main Layout: Vertical Workflow Sidebar + Content -->
-    <div class="row g-3">
-        <!-- Collapsible Vertical Workflow Sidebar -->
-        <div class="col-auto" id="workflowSidebarCol" style="transition: all 0.3s ease;">
-            <div id="workflowSidebar" class="card" style="width: 240px; position: sticky; top: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                <div class="card-header d-flex justify-content-between align-items-center py-2" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-route"></i> Workflow</h6>
-                    <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" style="padding: 0.2rem 0.4rem;">
-                        <i class="fas fa-chevron-left" id="workflowToggleIcon" style="font-size: 0.85rem;"></i>
-                    </button>
-                </div>
-                <div class="card-body p-2" id="workflowSidebarContent">
+    <!-- Floating Workflow Toggle Button -->
+    <button id="workflowFloatingToggle" onclick="toggleWorkflowSidebar()" 
+            style="position: fixed; left: 0; top: 50%; transform: translateY(-50%); 
+                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                   color: white; border: none; padding: 1rem 0.5rem; 
+                   border-radius: 0 8px 8px 0; box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+                   z-index: 1049; cursor: pointer; transition: all 0.3s ease;
+                   writing-mode: vertical-rl; font-size: 0.75rem; font-weight: 600;
+                   letter-spacing: 1px;">
+        <i class="fas fa-route"></i> WORKFLOW
+    </button>
+
+    <!-- Backdrop (click to close sidebar) -->
+    <div id="workflowBackdrop" onclick="toggleWorkflowSidebar()"></div>
+
+    <!-- Overlay Workflow Sidebar -->
+    <div id="workflowSidebarOverlay" style="position: fixed; left: 0; top: 0; bottom: 0; 
+         width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+         z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+        <div id="workflowSidebar" class="h-100 d-flex flex-column">
+            <div class="card-header d-flex justify-content-between align-items-center py-2" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-route"></i> Workflow Status</h6>
+                <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" 
+                        style="padding: 0.2rem 0.4rem;">
+                    <i class="fas fa-times" id="workflowToggleIcon" style="font-size: 0.9rem;"></i>
+                </button>
+            </div>
+            <div class="card-body p-2 flex-grow-1 overflow-auto" id="workflowSidebarContent">
                     <!-- Vertical Status Timeline -->
                     <div class="status-timeline-vertical">
                         <!-- Stage 1: REQUEST -->
@@ -1305,9 +1337,11 @@ body::-webkit-scrollbar-thumb:hover {
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Main Content -->
-        <div class="col" id="mainContentContainer">
+    <!-- Main Content (Full Width) -->
+    <div class="row g-3">
+        <div class="col-12" id="mainContentContainer">
             <!-- Request Information -->
             <div class="card mb-2">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center">
@@ -5272,36 +5306,34 @@ function showAlert(message, type) {
     }, 3000);
 }
 
-// Toggle Vertical Workflow Sidebar
+// Toggle Overlay Workflow Sidebar
 function toggleWorkflowSidebar() {
     console.log('toggleWorkflowSidebar called');
-    const sidebarCol = document.getElementById('workflowSidebarCol');
-    const icon = document.getElementById('workflowToggleIcon');
+    const overlay = document.getElementById('workflowSidebarOverlay');
+    const backdrop = document.getElementById('workflowBackdrop');
+    const floatingBtn = document.getElementById('workflowFloatingToggle');
     
-    console.log('sidebarCol:', sidebarCol);
-    console.log('icon:', icon);
-    
-    if (!sidebarCol || !icon) {
-        console.error('Workflow sidebar elements not found');
+    if (!overlay) {
+        console.error('Workflow sidebar overlay not found');
         return;
     }
     
-    const isCollapsed = sidebarCol.classList.contains('collapsed');
-    console.log('Current collapsed state:', isCollapsed);
+    const isOpen = overlay.classList.contains('open');
+    console.log('Current open state:', isOpen);
     
-    if (isCollapsed) {
-        // Expand sidebar
-        sidebarCol.classList.remove('collapsed');
-        icon.className = 'fas fa-chevron-left';
-        console.log('Sidebar expanded');
+    if (isOpen) {
+        // Close sidebar
+        overlay.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('show');
+        if (floatingBtn) floatingBtn.style.display = 'block';
+        console.log('Sidebar closed');
     } else {
-        // Collapse sidebar
-        sidebarCol.classList.add('collapsed');
-        icon.className = 'fas fa-chevron-right';
-        console.log('Sidebar collapsed');
+        // Open sidebar
+        overlay.classList.add('open');
+        if (backdrop) backdrop.classList.add('show');
+        if (floatingBtn) floatingBtn.style.display = 'none';
+        console.log('Sidebar opened');
     }
-    
-    console.log('New collapsed state:', sidebarCol.classList.contains('collapsed'));
 }
 
 // Initialize workflow on page load
