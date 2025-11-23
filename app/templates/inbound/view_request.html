@@ -2658,21 +2658,44 @@ function startProcessing() {
 let isEditMode = false;
 
 function toggleEditMode() {
+    console.log('toggleEditMode called, current isEditMode:', isEditMode);
+    
+    const viewMode = document.getElementById('viewMode');
+    const editMode = document.getElementById('editMode');
+    const editModeButtons = document.getElementById('editModeButtons');
+    const editModeText = document.getElementById('editModeText');
+    
+    console.log('Elements found:', {
+        viewMode: !!viewMode,
+        editMode: !!editMode,
+        editModeButtons: !!editModeButtons,
+        editModeText: !!editModeText
+    });
+    
+    if (!viewMode || !editMode || !editModeButtons || !editModeText) {
+        console.error('Required elements not found!');
+        return;
+    }
+    
     isEditMode = !isEditMode;
     
     if (isEditMode) {
+        console.log('Switching to edit mode');
         // Show edit mode, hide view mode
-        document.getElementById('viewMode').classList.add('edit-mode-hidden');
-        document.getElementById('editMode').classList.remove('edit-mode-hidden');
-        document.getElementById('editModeButtons').classList.remove('edit-mode-hidden');
-        document.getElementById('editModeText').textContent = 'Cancel';
+        viewMode.classList.add('edit-mode-hidden');
+        editMode.classList.remove('edit-mode-hidden');
+        editModeButtons.classList.remove('edit-mode-hidden');
+        editModeText.textContent = 'Cancel';
     } else {
+        console.log('Switching to view mode');
         // Show view mode, hide edit mode
-        document.getElementById('viewMode').classList.remove('edit-mode-hidden');
-        document.getElementById('editMode').classList.add('edit-mode-hidden');
-        document.getElementById('editModeButtons').classList.add('edit-mode-hidden');
-        document.getElementById('editModeText').textContent = 'Edit';
+        viewMode.classList.remove('edit-mode-hidden');
+        editMode.classList.add('edit-mode-hidden');
+        editModeButtons.classList.add('edit-mode-hidden');
+        editModeText.textContent = 'Edit';
     }
+    
+    console.log('Toggle complete');
 }
 
 // Cancel Edit Function
@@ -3569,21 +3592,6 @@ function saveChanges(event) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error saving master details', 'error');
-    });
-}
-
-
-function toggleEditMode() {
-    // Toggle between edit and view mode
-    const editForms = document.querySelectorAll('.edit-form');
-    const viewSections = document.querySelectorAll('.view-section');
-    
-    editForms.forEach(form => {
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    });
-    
-    viewSections.forEach(section => {
-        section.style.display = section.style.display === 'none' ? 'block' : 'none';
     });
 }
 
