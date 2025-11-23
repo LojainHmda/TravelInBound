@@ -218,7 +218,7 @@ class InboundHotel(db.Model):
         if not self.rooms:
             return self.status
         
-        room_statuses = [room.status for room in list(self.rooms)]
+        room_statuses = [room.status for room in self.rooms]  # type: ignore
         
         # If all rooms are CONFIRMED, hotel is CONFIRMED
         if all(s == STATUS_CONFIRMED for s in room_statuses):
