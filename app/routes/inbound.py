@@ -4196,7 +4196,6 @@ def check_and_update_request_status(request_id):
 @inbound_bp.route('/analytics')
 def analytics_dashboard():
     """Comprehensive analytics dashboard with search across all services"""
-    from app.models import ArrivalBatch, DepartureBatch
     from app.models.inbound import InboundOptional
     
     # Get filter parameters
