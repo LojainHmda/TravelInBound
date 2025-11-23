@@ -1186,6 +1186,35 @@ body::-webkit-scrollbar-thumb:hover {
     opacity: 1;
 }
 
+/* Compact Hotel Booking Card Styles */
+.hotel-booking-card {
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.hotel-booking-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    transform: translateY(-2px);
+}
+
+.hotel-booking-card .badge {
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hotel-booking-card .col-md-3,
+    .hotel-booking-card .col-md-2 {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hotel-booking-card .row {
+        text-align: left !important;
+    }
+}
+
 </style>
 {% endblock %}
 
@@ -2182,63 +2211,138 @@ body::-webkit-scrollbar-thumb:hover {
                         <div class="tab-pane fade {% if not request.itinerary_rows %}show active{% endif %}" id="hotels" role="tabpanel">
                             <div class="mb-3 text-end">
                                 <button type="button" class="btn btn-success btn-sm" onclick="confirmAllHotels()">
-                                    <i class="fas fa-check-double me-1"></i>Mark All Hotels as Supplier Confirmed
+                                    <i class="fas fa-check-double me-1"></i>Confirm All Hotels
                                 </button>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Hotel</th>
-                                            <th>Category</th>
-                                            <th>Location</th>
-                                            <th>Check-in</th>
-                                            <th>Check-out</th>
-                                            <th>Nights</th>
-                                            <th>Rooms</th>
-                                            <th>Meal Plan</th>
-                                            <th>Cost</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for hotel in request.inbound_hotels %}
-                                        <tr>
-                                            <td><strong>{{ hotel.hotel_name or '-' }}</strong></td>
-                                            <td>{{ hotel.hotel_category or '-' }}</td>
-                                            <td>{{ hotel.location or '-' }}</td>
-                                            <td>{{ hotel.check_in_date.strftime('%d %b') }}</td>
-                                            <td>{{ hotel.check_out_date.strftime('%d %b') }}</td>
-                                            <td>{{ hotel.nights }}</td>
-                                            <td>
-                                                {% set room_count = hotel.rooms|length if hotel.rooms else 0 %}
-                                                {% if room_count > 0 %}
-                                                    <span class="badge bg-info">{{ room_count }} room{{ 's' if room_count != 1 else '' }}</span>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary ms-1" onclick="viewHotelRooms({{ hotel.id }})">
-                                                        <i class="fas fa-eye"></i>
+                            
+                            <!-- Compact Hotel Cards Layout -->
+                            <div class="row g-2">
+                                {% for hotel in request.inbound_hotels %}
+                                <div class="col-12">
+                                    <div class="card hotel-booking-card" style="border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                        <div class="card-body p-3">
+                                            <div class="row align-items-center g-2">
+                                                <!-- Hotel Name & Category -->
+                                                <div class="col-md-3">
+                                                    <div class="d-flex align-items-start">
+                                                        <i class="fas fa-hotel text-primary me-2" style="font-size: 1.2rem; margin-top: 2px;"></i>
+                                                        <div style="flex: 1; min-width: 0;">
+                                                            <div class="fw-bold text-truncate" style="font-size: 0.95rem; color: #1e293b;">
+                                                                {{ hotel.hotel_name or 'Unnamed Hotel' }}
+                                                            </div>
+                                                            <div class="text-muted small">
+                                                                <i class="fas fa-star text-warning" style="font-size: 0.7rem;"></i>
+                                                                {{ hotel.hotel_category or 'Standard' }}
+                                                            </div>
+                                                            {% if hotel.location %}
+                                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                                <i class="fas fa-map-marker-alt" style="font-size: 0.65rem;"></i> {{ hotel.location }}
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Dates & Duration -->
+                                                <div class="col-md-3">
+                                                    <div style="background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #e2e8f0;">
+                                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Check-in</span>
+                                                            <span class="fw-semibold" style="font-size: 0.85rem; color: #0f172a;">{{ hotel.check_in_date.strftime('%d %b') }}</span>
+                                                        </div>
+                                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Check-out</span>
+                                                            <span class="fw-semibold" style="font-size: 0.85rem; color: #0f172a;">{{ hotel.check_out_date.strftime('%d %b') }}</span>
+                                                        </div>
+                                                        <div class="text-center mt-1 pt-1" style="border-top: 1px solid #e2e8f0;">
+                                                            <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 0.75rem;">
+                                                                <i class="fas fa-moon"></i> {{ hotel.nights }} night{{ 's' if hotel.nights != 1 else '' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Rooms & Meal Plan -->
+                                                <div class="col-md-2">
+                                                    <div class="small">
+                                                        <div class="mb-2">
+                                                            {% set room_count = hotel.rooms|length if hotel.rooms else 0 %}
+                                                            {% if room_count > 0 %}
+                                                                <span class="badge bg-info" style="font-size: 0.75rem;">
+                                                                    <i class="fas fa-door-open"></i> {{ room_count }} room{{ 's' if room_count != 1 else '' }}
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary ms-1" style="padding: 0.1rem 0.4rem; font-size: 0.7rem;" onclick="viewHotelRooms({{ hotel.id }})">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                            {% else %}
+                                                                <span class="text-muted" style="font-size: 0.8rem;">
+                                                                    <i class="fas fa-bed"></i> {{ hotel.room_type or 'Standard' }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div>
+                                                            <span class="badge bg-success" style="font-size: 0.75rem;">
+                                                                <i class="fas fa-utensils"></i> {{ hotel.meal_plan or 'BB' }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Cost & Status -->
+                                                <div class="col-md-2">
+                                                    <div class="text-center">
+                                                        <div class="fw-bold" style="font-size: 1.1rem; color: #0f172a;">
+                                                            {{ "%.2f"|format(hotel.total_cost) }}
+                                                        </div>
+                                                        <div class="text-muted" style="font-size: 0.75rem;">{{ hotel.currency }}</div>
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}" style="font-size: 0.7rem;">
+                                                                {{ hotel.get_aggregate_status() }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Actions -->
+                                                <div class="col-md-2 text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" style="font-size: 0.8rem;" onclick="editHotel({{ hotel.id }})">
+                                                        <i class="fas fa-edit"></i> Edit
                                                     </button>
-                                                {% else %}
-                                                    {{ hotel.room_type or '-' }}
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ hotel.meal_plan }}</td>
-                                            <td>{{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</td>
-                                            <td>
-                                                <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}">
-                                                    {{ hotel.get_aggregate_status() }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editHotel({{ hotel.id }})">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
+                            
+                            <!-- Summary Stats -->
+                            {% if request.inbound_hotels|length > 1 %}
+                            <div class="card mt-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <div class="card-body p-2">
+                                    <div class="row text-center g-2">
+                                        <div class="col-md-4">
+                                            <div class="small text-muted">Total Hotels</div>
+                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">{{ request.inbound_hotels|length }}</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="small text-muted">Total Nights</div>
+                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">
+                                                {% set total_nights = request.inbound_hotels|sum(attribute='nights') %}
+                                                {{ total_nights }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="small text-muted">Total Cost</div>
+                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">
+                                                {% set total_cost = request.inbound_hotels|sum(attribute='total_cost') %}
+                                                {{ "%.2f"|format(total_cost) }} {{ request.total_currency }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endif %}
 
