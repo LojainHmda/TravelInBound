@@ -2020,10 +2020,8 @@ def update_proforma_prices(request_id):
                     service.total_cost = item['total']
                     if item.get('description'):
                         service.hotel_name = item['description']
-                    if date_from:
-                        service.check_in_date = date_from
-                    if date_to:
-                        service.check_out_date = date_to
+                    # Note: check_in_date and check_out_date are managed at InboundHotel level only
+                    # Rooms cascade dates from parent hotel via @property methods (read-only)
                 elif service_type == 'transport':
                     service.cost = item['unit_price']
                     if item.get('description'):
