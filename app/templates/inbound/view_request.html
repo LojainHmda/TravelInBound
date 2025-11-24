@@ -4732,6 +4732,80 @@ function handleCustomerSelectionInView(customerId, customerName) {
 }
 </style>
 
+<!-- Hotel Edit Modal -->
+<div class="modal fade" id="hotelEditModal" tabindex="-1" aria-labelledby="hotelEditModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                <h5 class="modal-title" id="hotelEditModalLabel">
+                    <i class="fas fa-bed me-2"></i>Edit Hotel Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Hotel Name</label>
+                        <input type="text" id="editHotelName" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Supplier</label>
+                        <input type="text" id="editHotelSupplier" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar-check text-success me-2"></i>Check-in Date</label>
+                        <input type="date" id="editHotelCheckIn" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold"><i class="fas fa-calendar-times text-danger me-2"></i>Check-out Date</label>
+                        <input type="date" id="editHotelCheckOut" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select id="editHotelStatus" class="form-select">
+                            <option value="REQUEST">REQUEST</option>
+                            <option value="QUOTED">QUOTED</option>
+                            <option value="SUPPLIER_CONFIRMED">SUPPLIER_CONFIRMED</option>
+                            <option value="CONFIRMED">CONFIRMED</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cost</label>
+                        <div class="input-group">
+                            <input type="number" id="editHotelCost" class="form-control" step="0.01" min="0">
+                            <select id="editHotelCurrency" class="form-select" style="max-width: 80px;">
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                                <option value="GBP">GBP</option>
+                                <option value="JOD">JOD</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Location / Confirmation Notes</label>
+                        <textarea id="editHotelNotes" class="form-control" rows="2" placeholder="Hotel location or special notes"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveHotelChanges()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Service Configuration Modal -->
 <div class="modal fade" id="serviceConfigModal" tabindex="-1" aria-labelledby="serviceConfigModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 98%; margin: 1rem auto;">
@@ -7303,109 +7377,94 @@ function viewHotelRooms(hotelId) {
     showNotification('Hotel room details feature coming soon!', 'info');
 }
 
+// Store current editing hotel ID
+let currentEditingHotelId = null;
+
 // Edit Functions
 function editHotel(hotelId) {
-    const requestId = {{ request.id }};
+    currentEditingHotelId = hotelId;
     
-    // Fetch hotel data
-    fetch(`/inbound/api/hotel/${hotelId}`, {
-        method: 'GET',
-        credentials: 'same-origin'
+    // Find hotel data from the DOM (hotels are displayed on page)
+    const hotelCard = document.querySelector(`[data-hotel-id="${hotelId}"]`) || 
+                      event.target.closest('[onclick*="editHotel"]')?.parentElement?.parentElement?.parentElement;
+    
+    // Use inline hotel data from cards if available
+    const hotelName = hotelCard?.querySelector('[data-hotel-name]')?.textContent || 'Hotel';
+    
+    // Populate fields with current values or from inline data
+    document.getElementById('editHotelName').value = hotelName;
+    document.getElementById('editHotelSupplier').value = '';
+    document.getElementById('editHotelStatus').value = 'REQUEST';
+    document.getElementById('editHotelCost').value = '0';
+    document.getElementById('editHotelCurrency').value = 'USD';
+    document.getElementById('editHotelNotes').value = '';
+    document.getElementById('editHotelCheckIn').value = '';
+    document.getElementById('editHotelCheckOut').value = '';
+    
+    // Try to load current values from hotel data
+    const hotelElements = document.querySelectorAll('.hotel-booking-card');
+    hotelElements.forEach(card => {
+        if (card.textContent.includes(hotelName)) {
+            const statusBadge = card.querySelector('.badge');
+            if (statusBadge) {
+                document.getElementById('editHotelStatus').value = statusBadge.textContent.trim() || 'REQUEST';
+            }
+        }
+    });
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('hotelEditModal'));
+    modal.show();
+}
+
+function saveHotelChanges() {
+    if (!currentEditingHotelId) {
+        showNotification('Error: No hotel selected', 'error');
+        return;
+    }
+    
+    const checkInDate = document.getElementById('editHotelCheckIn').value;
+    const checkOutDate = document.getElementById('editHotelCheckOut').value;
+    
+    if (!checkInDate || !checkOutDate) {
+        showNotification('Please select both check-in and check-out dates', 'warning');
+        return;
+    }
+    
+    const updateData = {
+        hotel_id: currentEditingHotelId,
+        supplier_name: document.getElementById('editHotelSupplier').value,
+        status: document.getElementById('editHotelStatus').value,
+        total_cost: parseFloat(document.getElementById('editHotelCost').value) || 0,
+        currency: document.getElementById('editHotelCurrency').value,
+        notes: document.getElementById('editHotelNotes').value,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate
+    };
+    
+    fetch(`/inbound/api/hotel/${currentEditingHotelId}/update`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+        },
+        body: JSON.stringify(updateData)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const hotel = data.hotel;
-            
-            // Populate basic hotel fields
-            document.getElementById('hotelName').value = hotel.hotel_name || '';
-            document.getElementById('hotelSupplier').value = hotel.supplier_name || '';
-            document.getElementById('hotelStatus').value = hotel.status || 'pending';
-            document.getElementById('hotelCost').value = hotel.total_cost || 0;
-            document.getElementById('hotelCurrency').value = hotel.currency || 'USD';
-            document.getElementById('hotelConfirmationNumber').value = hotel.confirmation_status || '';
-            document.getElementById('hotelPickupLocation').value = hotel.location || '';
-            document.getElementById('hotelPhoneNumber').value = hotel.notes || '';
-            document.getElementById('hotelSpecialNotes').value = hotel.notes || '';
-            
-            // Populate check-in and check-out dates
-            if (hotel.check_in_date) {
-                document.getElementById('hotelCheckInDate').value = hotel.check_in_date;
-            }
-            if (hotel.check_out_date) {
-                document.getElementById('hotelCheckOutDate').value = hotel.check_out_date;
-            }
-            
-            // Populate room data if exists
-            if (hotel.rooms && hotel.rooms.length > 0) {
-                const roomsTableBody = document.getElementById('hotelRoomsTableBody');
-                roomsTableBody.innerHTML = '';
-                
-                hotel.rooms.forEach((room, index) => {
-                    const row = document.createElement('tr');
-                    row.className = 'hotel-room-row';
-                    row.innerHTML = `
-                        <td><strong class="text-primary">Room ${index + 1}</strong></td>
-                        <td>
-                            <select name="rooms[${index}][room_category]" class="form-control" onchange="updateRoomDistribution()">
-                                <option value="Single Room" ${room.room_type === 'Single' ? 'selected' : ''}>Single</option>
-                                <option value="Double Room" ${room.room_type === 'Double' ? 'selected' : ''}>Double</option>
-                                <option value="Triple Room" ${room.room_type === 'Triple' ? 'selected' : ''}>Triple</option>
-                                <option value="Other" ${room.room_type === 'Other' ? 'selected' : ''}>Other</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="rooms[${index}][hotel_room_option]" class="form-control" value="${room.meal_plan || ''}" placeholder="Premium, Premier Sea View">
-                        </td>
-                        <td>
-                            <select name="rooms[${index}][board_basis]" class="form-control">
-                                <option value="Room Only" ${room.meal_plan === 'Room Only' ? 'selected' : ''}>Room Only</option>
-                                <option value="Bed & Breakfast" ${room.meal_plan === 'BB' ? 'selected' : ''}>Bed & Breakfast</option>
-                                <option value="Half Board" ${room.meal_plan === 'HB' ? 'selected' : ''}>Half Board</option>
-                                <option value="Full Board" ${room.meal_plan === 'FB' ? 'selected' : ''}>Full Board</option>
-                                <option value="All Inclusive" ${room.meal_plan === 'AI' ? 'selected' : ''}>All Inclusive</option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal">
-                        </td>
-                        <td>
-                            <input type="date" name="rooms[${index}][check_in]" class="form-control" value="${hotel.check_in_date || ''}">
-                        </td>
-                        <td>
-                            <input type="date" name="rooms[${index}][check_out]" class="form-control" value="${hotel.check_out_date || ''}">
-                        </td>
-                        <td>
-                            <input type="number" name="rooms[${index}][adults]" class="form-control" value="1" min="1" max="8">
-                        </td>
-                        <td>
-                            <input type="number" name="rooms[${index}][children]" class="form-control" value="0" min="0" max="8">
-                        </td>
-                        <td>
-                            <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `;
-                    roomsTableBody.appendChild(row);
-                });
-            }
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
-            modal.show();
-            
-            showNotification('Hotel details loaded for editing', 'info');
+            showNotification('Hotel updated successfully!', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('hotelEditModal'));
+            modal.hide();
+            setTimeout(() => window.location.reload(), 1000);
         } else {
-            showNotification('Error loading hotel data: ' + (data.message || 'Unknown error'), 'error');
+            showNotification('Error: ' + (data.message || 'Failed to update hotel'), 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error loading hotel data', 'error');
+        showNotification('Error updating hotel', 'error');
     });
 }
 
