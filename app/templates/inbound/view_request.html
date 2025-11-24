@@ -1146,20 +1146,30 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Overlay Workflow Sidebar Styles */
 #workflowSidebarOverlay {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 280px;
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    width: 280px !important;
     background: white;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    z-index: 1050;
+    z-index: 1050 !important;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    overflow-y: auto;
 }
 
 #workflowSidebarOverlay.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
+}
+
+#workflowFloatingToggle {
+    position: fixed !important;
+    left: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 1049 !important;
 }
 
 #workflowFloatingToggle:hover {
@@ -1169,21 +1179,21 @@ body::-webkit-scrollbar-thumb:hover {
 
 /* Backdrop for overlay */
 #workflowBackdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     background: rgba(0, 0, 0, 0.3);
-    z-index: 1049;
+    z-index: 1049 !important;
     display: none;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 #workflowBackdrop.show {
-    display: block;
-    opacity: 1;
+    display: block !important;
+    opacity: 1 !important;
 }
 
 /* Compact Hotel Booking Card Styles */
@@ -1237,11 +1247,10 @@ body::-webkit-scrollbar-thumb:hover {
 
     <!-- Floating Workflow Toggle Button -->
     <button id="workflowFloatingToggle" onclick="toggleWorkflowSidebar()" 
-            style="position: fixed; left: 0; top: 50%; transform: translateY(-50%); 
-                   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                    color: white; border: none; padding: 1rem 0.5rem; 
                    border-radius: 0 8px 8px 0; box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-                   z-index: 1049; cursor: pointer; transition: all 0.3s ease;
+                   cursor: pointer; transition: all 0.3s ease;
                    writing-mode: vertical-rl; font-size: 0.75rem; font-weight: 600;
                    letter-spacing: 1px;">
         <i class="fas fa-route"></i> WORKFLOW
@@ -1251,9 +1260,7 @@ body::-webkit-scrollbar-thumb:hover {
     <div id="workflowBackdrop" onclick="toggleWorkflowSidebar()"></div>
 
     <!-- Overlay Workflow Sidebar -->
-    <div id="workflowSidebarOverlay" style="position: fixed; left: 0; top: 0; bottom: 0; 
-         width: 280px; background: white; box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-         z-index: 1050; transform: translateX(-100%); transition: transform 0.3s ease;">
+    <div id="workflowSidebarOverlay">
         <div id="workflowSidebar" class="h-100 d-flex flex-column">
             <div class="card-header d-flex justify-content-between align-items-center py-2" 
                  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
