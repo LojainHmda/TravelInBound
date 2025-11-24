@@ -4857,6 +4857,20 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                 </div>
                             </div>
 
+                            <!-- Hotel Check-in/Check-out Dates -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"><i class="fas fa-calendar-check text-primary me-2"></i>Check-in Date</label>
+                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control" required>
+                                    <small class="text-muted">Applies to all rooms in this hotel</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold"><i class="fas fa-calendar-times text-danger me-2"></i>Check-out Date</label>
+                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control" required>
+                                    <small class="text-muted">Applies to all rooms in this hotel</small>
+                                </div>
+                            </div>
+
                             <!-- Room Distribution Summary - PRIMARY CONTROL -->
                             <div class="row mb-4">
                                 <div class="col-12">
@@ -7289,9 +7303,110 @@ function viewHotelRooms(hotelId) {
     showNotification('Hotel room details feature coming soon!', 'info');
 }
 
-// Edit Functions (placeholders for modals to be implemented)
+// Edit Functions
 function editHotel(hotelId) {
-    showNotification('Hotel edit feature coming soon!', 'info');
+    const requestId = {{ request.id }};
+    
+    // Fetch hotel data
+    fetch(`/inbound/api/hotel/${hotelId}`, {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const hotel = data.hotel;
+            
+            // Populate basic hotel fields
+            document.getElementById('hotelName').value = hotel.hotel_name || '';
+            document.getElementById('hotelSupplier').value = hotel.supplier_name || '';
+            document.getElementById('hotelStatus').value = hotel.status || 'pending';
+            document.getElementById('hotelCost').value = hotel.total_cost || 0;
+            document.getElementById('hotelCurrency').value = hotel.currency || 'USD';
+            document.getElementById('hotelConfirmationNumber').value = hotel.confirmation_status || '';
+            document.getElementById('hotelPickupLocation').value = hotel.location || '';
+            document.getElementById('hotelPhoneNumber').value = hotel.notes || '';
+            document.getElementById('hotelSpecialNotes').value = hotel.notes || '';
+            
+            // Populate check-in and check-out dates
+            if (hotel.check_in_date) {
+                document.getElementById('hotelCheckInDate').value = hotel.check_in_date;
+            }
+            if (hotel.check_out_date) {
+                document.getElementById('hotelCheckOutDate').value = hotel.check_out_date;
+            }
+            
+            // Populate room data if exists
+            if (hotel.rooms && hotel.rooms.length > 0) {
+                const roomsTableBody = document.getElementById('hotelRoomsTableBody');
+                roomsTableBody.innerHTML = '';
+                
+                hotel.rooms.forEach((room, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'hotel-room-row';
+                    row.innerHTML = `
+                        <td><strong class="text-primary">Room ${index + 1}</strong></td>
+                        <td>
+                            <select name="rooms[${index}][room_category]" class="form-control" onchange="updateRoomDistribution()">
+                                <option value="Single Room" ${room.room_type === 'Single' ? 'selected' : ''}>Single</option>
+                                <option value="Double Room" ${room.room_type === 'Double' ? 'selected' : ''}>Double</option>
+                                <option value="Triple Room" ${room.room_type === 'Triple' ? 'selected' : ''}>Triple</option>
+                                <option value="Other" ${room.room_type === 'Other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${index}][hotel_room_option]" class="form-control" value="${room.meal_plan || ''}" placeholder="Premium, Premier Sea View">
+                        </td>
+                        <td>
+                            <select name="rooms[${index}][board_basis]" class="form-control">
+                                <option value="Room Only" ${room.meal_plan === 'Room Only' ? 'selected' : ''}>Room Only</option>
+                                <option value="Bed & Breakfast" ${room.meal_plan === 'BB' ? 'selected' : ''}>Bed & Breakfast</option>
+                                <option value="Half Board" ${room.meal_plan === 'HB' ? 'selected' : ''}>Half Board</option>
+                                <option value="Full Board" ${room.meal_plan === 'FB' ? 'selected' : ''}>Full Board</option>
+                                <option value="All Inclusive" ${room.meal_plan === 'AI' ? 'selected' : ''}>All Inclusive</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal">
+                        </td>
+                        <td>
+                            <input type="date" name="rooms[${index}][check_in]" class="form-control" value="${hotel.check_in_date || ''}">
+                        </td>
+                        <td>
+                            <input type="date" name="rooms[${index}][check_out]" class="form-control" value="${hotel.check_out_date || ''}">
+                        </td>
+                        <td>
+                            <input type="number" name="rooms[${index}][adults]" class="form-control" value="1" min="1" max="8">
+                        </td>
+                        <td>
+                            <input type="number" name="rooms[${index}][children]" class="form-control" value="0" min="0" max="8">
+                        </td>
+                        <td>
+                            <input type="text" name="rooms[${index}][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    roomsTableBody.appendChild(row);
+                });
+            }
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('serviceConfigModal'));
+            modal.show();
+            
+            showNotification('Hotel details loaded for editing', 'info');
+        } else {
+            showNotification('Error loading hotel data: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error loading hotel data', 'error');
+    });
 }
 
 function editTransport(transportId) {
