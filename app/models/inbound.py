@@ -265,8 +265,13 @@ class HotelRoom(db.Model):
     
     @property
     def nights(self):
-        """Cascade nights from parent hotel"""
-        return self.hotel.nights if self.hotel else 0
+        """Cascade nights from parent hotel, calculated from dates if hotel reference missing"""
+        if self.hotel:
+            return self.hotel.nights
+        # Fallback: calculate from dates if somehow hotel reference is missing
+        if self.check_in_date and self.check_out_date:
+            return (self.check_out_date - self.check_in_date).days
+        return None
     
     def __repr__(self):
         return f'<HotelRoom {self.room_type} x{self.room_count} - {self.status}>'

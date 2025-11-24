@@ -12,13 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Updates (November 2025)
 - **ARD 1 Complete**: Enhanced Arrivals/Departures with visa status tracking, Meet & Assist, representative names, departure tax, and predefined location dropdowns
-- **CARD 2 - Hotels Enhanced**: Added hotel categories, room type distribution (Single/Twin/King/Triple), multi-hotel support, hotel-level status tracking
+- **CARD 2 - Hotels Enhanced**: Added hotel categories, room type distribution (Single/Twin/King/Triple), multi-hotel support, hotel-level status tracking, **hotel date cascading** (check-in/check-out managed at hotel level, automatically cascade to all rooms)
 - **CARD 3 - Transport Unified**: Comprehensive transport table with driver phone numbers, pickup/drop-off points, status tracking (REQUESTED/CONFIRMED/CANCELLED)
 - **CARD 4 - Guides Enhanced**: Full guide profiles with telephone, national ID, tax number, language filtering, additional comments and internal comments (hidden duration/meeting point fields)
 - **CARD 5 - Optional Extras**: New tab for services outside itinerary dates with flexible date handling
-- **Overlay Workflow Sidebar**: Hidden-by-default overlay panel with floating toggle button, showing all 7 workflow stages (REQUEST → QUOTED → SUPPLIER_CONFIRMED → CONFIRMED → INVOICE → PROCESSING → COMPLETED). Features slide-in animation from left, semi-transparent backdrop, compact design (280px width), smaller fonts (0.8rem titles, 0.7rem descriptions), 32px status circles, and progress checkmarks. Completely hidden when not in use to maximize screen space
+- **Overlay Workflow Sidebar**: Hidden-by-default overlay panel with floating toggle button, showing all 7 workflow stages (REQUEST → QUOTED → SUPPLIER_CONFIRMED → CONFIRMED → INVOICE → PROCESSING → COMPLETED). Features slide-in animation from left, semi-transparent backdrop, compact design (280px width), smaller fonts (0.8rem titles, 0.7rem descriptions), 32px status circles, and progress checkmarks. Completely hidden when not in use to maximize screen space. Fixed positioning ensures sidebar slides in from LEFT (not bottom)
 - **Automatic Day Calculation**: Number of days field automatically calculates from travel dates (readonly field with instant updates)
 - **Hotel Date Auto-Inheritance**: Hotels automatically inherit check-in/check-out dates from request from_date and to_date. When services are generated with hotel flags, the system creates hotel records with check_in_date = request.from_date, check_out_date = request.to_date, and automatically calculates nights
+- **Hotel Date Cascading**: Check-in and check-out dates are now managed exclusively at hotel level (InboundHotel). All rooms (HotelRoom) access hotel dates via @property methods for single source of truth. Removed redundant date columns from hotel_room table. Rooms automatically inherit parent hotel's check_in_date, check_out_date, and nights
 
 ## System Architecture
 
