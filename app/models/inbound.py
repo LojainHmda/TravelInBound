@@ -61,6 +61,9 @@ class InboundRequest(db.Model):
     total_currency = db.Column(db.String(3), default='USD')
     pricing_mode = db.Column(db.String(20), default='ITEMIZED')  # ITEMIZED or LUMPSUM
     
+    # Comments
+    comments = db.Column(db.Text, nullable=True)
+    
     # Relationships
     itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_hotels = db.relationship('InboundHotel', backref='request', lazy=True, cascade="all, delete-orphan")
@@ -203,6 +206,9 @@ class InboundHotel(db.Model):
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     is_locked = db.Column(db.Boolean, default=False)  # Lock when status >= CONFIRMED
     
+    # Comments
+    comments = db.Column(db.Text, nullable=True)
+    
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -311,6 +317,9 @@ class InboundTransport(db.Model):
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     is_locked = db.Column(db.Boolean, default=False)
     
+    # Comments
+    comments = db.Column(db.Text, nullable=True)
+    
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -345,6 +354,9 @@ class InboundMeal(db.Model):
     # Status
     status = db.Column(db.String(20), default=STATUS_REQUEST)
     is_locked = db.Column(db.Boolean, default=False)
+    
+    # Comments
+    comments = db.Column(db.Text, nullable=True)
     
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
