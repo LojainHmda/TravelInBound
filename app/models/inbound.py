@@ -231,7 +231,11 @@ class InboundHotel(db.Model):
             return STATUS_REQUEST
 
 class HotelRoom(db.Model):
-    """Individual hotel rooms for room-level confirmation tracking"""
+    """Individual hotel rooms for room-level confirmation tracking
+    
+    Note: Check-in and check-out dates cascade from the parent hotel level.
+    Use room.check_in_date and room.check_out_date properties to access hotel dates.
+    """
     __tablename__ = 'hotel_room'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -248,6 +252,21 @@ class HotelRoom(db.Model):
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @property
+    def check_in_date(self):
+        """Cascade check-in date from parent hotel"""
+        return self.hotel.check_in_date if self.hotel else None
+    
+    @property
+    def check_out_date(self):
+        """Cascade check-out date from parent hotel"""
+        return self.hotel.check_out_date if self.hotel else None
+    
+    @property
+    def nights(self):
+        """Cascade nights from parent hotel"""
+        return self.hotel.nights if self.hotel else 0
     
     def __repr__(self):
         return f'<HotelRoom {self.room_type} x{self.room_count} - {self.status}>'
