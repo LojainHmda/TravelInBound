@@ -1119,30 +1119,23 @@ def api_save_hotels(request_id):
                 status='REQUEST'
             )
             
-            # Calculate check-in/out from first/last room
-            rooms = hotel_data.get('rooms', [])
-            if rooms:
-                check_ins = [r['check_in'] for r in rooms if r.get('check_in')]
-                check_outs = [r['check_out'] for r in rooms if r.get('check_out')]
-                
-                if check_ins:
-                    hotel.check_in_date = datetime.strptime(min(check_ins), '%Y-%m-%d').date()
-                if check_outs:
-                    hotel.check_out_date = datetime.strptime(max(check_outs), '%Y-%m-%d').date()
+            # Get check-in/out from hotel-level date inputs (NOT from rooms)
+            if hotel_data.get('check_in_date'):
+                hotel.check_in_date = datetime.strptime(hotel_data['check_in_date'], '%Y-%m-%d').date()
+            if hotel_data.get('check_out_date'):
+                hotel.check_out_date = datetime.strptime(hotel_data['check_out_date'], '%Y-%m-%d').date()
                     
-                # Calculate nights
-                if hotel.check_in_date and hotel.check_out_date:
-                    hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-                    
-            # If no room dates, auto-inherit from request dates
+            # If no hotel-level dates provided, auto-inherit from request dates
             if not hotel.check_in_date:
                 hotel.check_in_date = request_obj.from_date
             if not hotel.check_out_date:
                 hotel.check_out_date = request_obj.to_date
             
-            # Recalculate nights based on actual dates
+            # Calculate nights based on hotel-level dates
             if hotel.check_in_date and hotel.check_out_date:
                 hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+            
+            rooms = hotel_data.get('rooms', [])
             
             db.session.add(hotel)
             db.session.flush()  # Get the hotel ID before creating rooms
@@ -1161,15 +1154,14 @@ def api_save_hotels(request_id):
                     room_type = 'OTHER'
                 
                 # Store additional room details as JSON in notes field
+                # Note: check_in/check_out are at HOTEL level only, rooms inherit via @property
                 room_details = {
                     'hotel_room_option': room_data.get('hotel_room_option', ''),
                     'board_basis': room_data.get('board_basis', 'BB'),
                     'dietary_requirements': room_data.get('dietary_requirements', ''),
                     'lead_passenger': room_data.get('lead_passenger', ''),
                     'adults': room_data.get('adults', 1),
-                    'children': room_data.get('children', 0),
-                    'check_in': room_data.get('check_in', ''),
-                    'check_out': room_data.get('check_out', '')
+                    'children': room_data.get('children', 0)
                 }
                 
                 hotel_room = HotelRoom(

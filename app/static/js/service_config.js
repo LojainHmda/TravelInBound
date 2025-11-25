@@ -362,6 +362,9 @@ class ServiceConfigManager {
             const hotelData = {
                 hotel_index: hotelIndex,
                 hotel_name: card.querySelector('[name*="hotel_name"]')?.value || '',
+                // Hotel-level check-in/check-out dates (dates are managed at hotel level ONLY)
+                check_in_date: card.querySelector('[name="check_in_date"]')?.value || '',
+                check_out_date: card.querySelector('[name="check_out_date"]')?.value || '',
                 hotel_single_rooms: parseInt(card.querySelector('[name*="hotel_single_rooms"]')?.value || 0),
                 hotel_double_rooms: parseInt(card.querySelector('[name*="hotel_double_rooms"]')?.value || 0),
                 hotel_triple_rooms: parseInt(card.querySelector('[name*="hotel_triple_rooms"]')?.value || 0),
@@ -369,7 +372,7 @@ class ServiceConfigManager {
                 rooms: []
             };
             
-            // Collect room details
+            // Collect room details (no check_in/check_out - rooms inherit from hotel level)
             const roomRows = card.querySelectorAll('.hotel-room-row');
             roomRows.forEach((row, roomIndex) => {
                 const roomData = {
@@ -377,8 +380,6 @@ class ServiceConfigManager {
                     hotel_room_option: row.querySelector(`[name="rooms[${roomIndex}][hotel_room_option]"]`)?.value || '',
                     board_basis: row.querySelector(`[name="rooms[${roomIndex}][board_basis]"]`)?.value || '',
                     dietary_requirements: row.querySelector(`[name="rooms[${roomIndex}][dietary_requirements]"]`)?.value || '',
-                    check_in: row.querySelector(`[name="rooms[${roomIndex}][check_in]"]`)?.value || '',
-                    check_out: row.querySelector(`[name="rooms[${roomIndex}][check_out]"]`)?.value || '',
                     adults: parseInt(row.querySelector(`[name="rooms[${roomIndex}][adults]"]`)?.value || 0),
                     children: parseInt(row.querySelector(`[name="rooms[${roomIndex}][children]"]`)?.value || 0),
                     lead_passenger: row.querySelector(`[name="rooms[${roomIndex}][lead_passenger]"]`)?.value || ''

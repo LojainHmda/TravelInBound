@@ -5001,7 +5001,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                 <div style="width: 100%;">
                                     <!-- Initial room table -->
                                     <div class="table-responsive" style="width: 100%; overflow-x: auto;">
-                                        <table class="table table-bordered table-hover" style="min-width: 1800px; width: 100%;">
+                                        <table class="table table-bordered table-hover" style="min-width: 1400px; width: 100%;">
                                             <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; font-weight: bold;">
                                                 <tr>
                                                     <th style="min-width: 70px; color: white; font-weight: bold;">Room #</th>
@@ -5009,8 +5009,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                                     <th style="min-width: 170px; color: white; font-weight: bold;">Hotel Room Option</th>
                                                     <th style="min-width: 150px; color: white; font-weight: bold;">Board Basis / Meals</th>
                                                     <th style="min-width: 140px; color: white; font-weight: bold;">Dietary Requirements</th>
-                                                    <th style="min-width: 110px; color: white; font-weight: bold;">Check-in</th>
-                                                    <th style="min-width: 110px; color: white; font-weight: bold;">Check-out</th>
                                                     <th style="min-width: 70px; color: white; font-weight: bold;">Adults</th>
                                                     <th style="min-width: 80px; color: white; font-weight: bold;">Children</th>
                                                     <th style="min-width: 200px; color: white; font-weight: bold;">Lead Passenger Name</th>
@@ -5044,12 +5042,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                                     </td>
                                                     <td>
                                                         <input type="text" name="rooms[0][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
-                                                    </td>
-                                                    <td>
-                                                        <input type="date" name="rooms[0][check_in]" class="form-control" id="hotelDefaultCheckin">
-                                                    </td>
-                                                    <td>
-                                                        <input type="date" name="rooms[0][check_out]" class="form-control" id="hotelDefaultCheckout">
                                                     </td>
                                                     <td>
                                                         <input type="number" name="rooms[0][adults]" class="form-control" value="1" min="1" max="8">
@@ -7030,12 +7022,6 @@ function addRoomRow(tableBody, index, roomType) {
         </td>
         <td>
             <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
-        </td>
-        <td>
-            <input type="date" name="rooms[${index}][check_in]" class="form-control" id="hotelDefaultCheckin">
-        </td>
-        <td>
-            <input type="date" name="rooms[${index}][check_out]" class="form-control" id="hotelDefaultCheckout">
         </td>
         <td>
             <input type="number" name="rooms[${index}][adults]" class="form-control" value="${adults}" min="1" max="8">
