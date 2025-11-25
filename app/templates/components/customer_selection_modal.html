@@ -332,9 +332,9 @@ window.quickAddCustomer = function() {
         nationality: formData.get('nationality')
     };
     
-    // Validate required fields
-    if (!data.first_name || !data.email || !data.phone) {
-        alert('Please fill in all required fields (Name, Email, Phone)');
+    // Validate required fields (only first name is required)
+    if (!data.first_name) {
+        alert('Please fill in the first name (required)');
         return;
     }
     
@@ -349,7 +349,7 @@ window.quickAddCustomer = function() {
                      document.querySelector('input[name="csrf_token"]')?.value || '';
     
     // Send to API
-    fetch('/customer/api/create', {
+    fetch('/customers/api/create', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -452,16 +452,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="email" class="form-label">
-                            Email <span class="text-danger">*</span>
-                        </label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email">
                     </div>
                     <div class="mb-3">
-                        <label for="phone" class="form-label">
-                            Phone <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" class="form-control" id="phone" name="phone" required>
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone">
                     </div>
                     <div class="mb-3">
                         <label for="company_name" class="form-label">Company Name</label>
