@@ -4849,52 +4849,67 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <!-- Multiple Hotels Container -->
                     <div id="hotelsContainer">
                     
-                    <!-- Hotel Card Template (first hotel) -->
-                    <div class="hotel-card mb-4" data-hotel-index="0">
+                    <!-- Hotel Card Template (first hotel) - COMPACT -->
+                    <div class="hotel-card mb-2" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span> Configuration</h6>
+                        <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0" style="font-size: 0.9rem;"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span></h6>
                             <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
-                                <i class="fas fa-times"></i> Remove
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
-                        <div class="card-body">
-                            <!-- Hotel Basic Information -->
-                            <div class="row mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label">Hotel Name</label>
-                                    <input type="text" name="hotel_name" id="hotelName" class="form-control hotel-autocomplete" placeholder="Start typing hotel name..." required>
+                        <div class="card-body py-2 px-3">
+                            <!-- Row 1: Hotel Name, Supplier, Status, Check-in, Check-out -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-1">Hotel Name</label>
+                                    <input type="text" name="hotel_name" id="hotelName" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." required>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Supplier</label>
-                                    <select name="supplier" id="hotelSupplier" class="form-select">
-                                        <option value="">Select Supplier</option>
-                                        <option value="Direct Booking">Direct Booking</option>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Supplier</label>
+                                    <select name="supplier" id="hotelSupplier" class="form-select form-select-sm">
+                                        <option value="">Select</option>
+                                        <option value="Direct Booking">Direct</option>
                                         <option value="Booking.com">Booking.com</option>
                                         <option value="Expedia">Expedia</option>
-                                        <option value="Hotels.com">Hotels.com</option>
-                                        <option value="Agoda">Agoda</option>
                                         <option value="Local Partner">Local Partner</option>
-                                        <option value="Travel Agent">Travel Agent</option>
                                         <option value="Hotel Direct">Hotel Direct</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" id="hotelStatus" class="form-select">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Status</label>
+                                    <select name="status" id="hotelStatus" class="form-select form-select-sm">
                                         <option value="confirmed">Confirmed</option>
                                         <option value="pending">Pending</option>
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1"><i class="fas fa-calendar-check text-success me-1"></i>Check-in</label>
+                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control form-control-sm" 
+                                           value="{{ request.from_date.strftime('%Y-%m-%d') }}"
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1"><i class="fas fa-calendar-times text-danger me-1"></i>Check-out</label>
+                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control form-control-sm" 
+                                           value="{{ request.to_date.strftime('%Y-%m-%d') }}"
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
+                                </div>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <span class="badge bg-secondary" id="nightsCount">{{ (request.to_date - request.from_date).days }} nts</span>
+                                </div>
                             </div>
 
-                            <div class="row mb-4">
-                                <div class="col-md-3">
-                                    <label class="form-label">Cost</label>
-                                    <div class="input-group">
+                            <!-- Row 2: Cost, Confirmation, Pickup, Phone -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Cost</label>
+                                    <div class="input-group input-group-sm">
                                         <input type="number" name="cost" id="hotelCost" step="0.01" class="form-control" placeholder="0.00">
-                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 100px;">
+                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 70px;">
                                             <option value="USD">USD</option>
                                             <option value="EUR">EUR</option>
                                             <option value="GBP">GBP</option>
@@ -4902,97 +4917,68 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Confirmation Number</label>
-                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control" placeholder="Hotel confirmation #">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Confirmation #</label>
+                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control form-control-sm" placeholder="Conf #">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Pickup Location</label>
-                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control" placeholder="Address or landmark">
+                                    <label class="form-label small mb-1">Pickup Location</label>
+                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control form-control-sm" placeholder="Address">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Phone</label>
+                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control form-control-sm" placeholder="Phone">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label">Phone Number</label>
-                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control" placeholder="Hotel contact number">
+                                    <label class="form-label small mb-1">Notes</label>
+                                    <input type="text" name="special_notes" id="hotelSpecialNotes" class="form-control form-control-sm" placeholder="Special notes">
                                 </div>
                             </div>
 
-                            <div class="row mb-4">
-                                <div class="col-md-12">
-                                    <label class="form-label">Special Notes</label>
-                                    <textarea name="special_notes" id="hotelSpecialNotes" class="form-control" rows="2" placeholder="Special requirements or notes"></textarea>
+                            <!-- Room Distribution - Compact Inline -->
+                            <div class="card mb-2">
+                                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="background-color: #1f2937; color: white;">
+                                    <span style="font-size: 0.8rem;"><i class="fas fa-bed me-1"></i>Room Distribution</span>
+                                    <span id="allConfirmedBadge" class="badge bg-success" style="display: none; font-size: 0.7rem;">
+                                        <i class="fas fa-check-circle me-1"></i>All Confirmed
+                                    </span>
                                 </div>
-                            </div>
-
-                            <!-- Hotel Check-in/Check-out Dates - Default to itinerary dates -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold"><i class="fas fa-calendar-check text-primary me-2"></i>Check-in Date</label>
-                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control" 
-                                           value="{{ request.from_date.strftime('%Y-%m-%d') }}"
-                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
-                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
-                                    <small class="text-muted">Applies to all rooms</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold"><i class="fas fa-calendar-times text-danger me-2"></i>Check-out Date</label>
-                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control" 
-                                           value="{{ request.to_date.strftime('%Y-%m-%d') }}"
-                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
-                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
-                                    <small class="text-muted">Applies to all rooms</small>
-                                </div>
-                            </div>
-
-                            <!-- Room Distribution Summary - PRIMARY CONTROL -->
-                            <div class="row mb-4">
-                                <div class="col-12">
-                                    <div class="card">
-                                        <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background-color: #1f2937; color: white;">
-                                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
-                                            <span id="allConfirmedBadge" class="badge bg-success" style="display: none;">
-                                                <i class="fas fa-check-circle me-1"></i>All Confirmed
-                                            </span>
+                                <div class="card-body py-2 px-2">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col">
+                                            <label class="form-label small mb-0">Single</label>
+                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control form-control-sm" min="0" value="1" onchange="updateIndividualRoomGrid()">
                                         </div>
-                                        <div class="card-body py-2">
-                                            <!-- Room Count Configuration -->
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Single Rooms</label>
-                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateIndividualRoomGrid()">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Double Rooms</label>
-                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Triple Rooms</label>
-                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label class="form-label">Other Rooms</label>
-                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
-                                                </div>
-                                            </div>
-
-                                            <!-- Individual Room Status Grid -->
-                                            <div id="individualRoomGrid" class="mb-3">
-                                                <!-- Will be populated dynamically -->
-                                            </div>
-
-                                            <div class="text-center mt-3">
-                                                <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary(this)">
-                                                    <i class="fas fa-table me-1"></i>Generate Room Table
-                                                </button>
-                                            </div>
+                                        <div class="col">
+                                            <label class="form-label small mb-0">Double</label>
+                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                         </div>
+                                        <div class="col">
+                                            <label class="form-label small mb-0">Triple</label>
+                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label small mb-0">Other</label>
+                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" class="btn btn-primary btn-sm" onclick="regenerateRoomTableFromSummary(this)">
+                                                <i class="fas fa-table me-1"></i>Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div id="individualRoomGrid" class="mt-2">
+                                        <!-- Will be populated dynamically -->
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Room Configuration Section -->
-                            <div class="mb-3">
-                                <h5 class="text-primary">Room Details & Lead Passengers</h5>
-                                <small class="text-muted">Configure individual room details below. Use Master Configuration above to add/remove rooms.</small>
+                            <!-- Room Configuration Section - Compact -->
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-primary" style="font-size: 0.85rem;"><i class="fas fa-list me-1"></i>Room Details</span>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Configure individual rooms below</small>
+                                </div>
                             </div>
 
                             <div id="hotelRoomsContainer">
