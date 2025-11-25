@@ -4131,6 +4131,52 @@ def api_confirm_all_hotels(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/hotel/<int:hotel_id>/update', methods=['POST'])
+@csrf.exempt
+def api_update_hotel(hotel_id):
+    """Update hotel details including check-in/check-out dates"""
+    try:
+        hotel = InboundHotel.query.get_or_404(hotel_id)
+        request_obj = InboundRequest.query.get_or_404(hotel.request_id)
+        
+        if request_obj.user_id != 1:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        data = request.get_json()
+        
+        # Update hotel fields
+        if 'supplier_name' in data:
+            hotel.supplier_name = data['supplier_name']
+        if 'status' in data:
+            hotel.status = data['status']
+        if 'total_cost' in data:
+            hotel.total_cost = float(data['total_cost']) if data['total_cost'] else 0
+        if 'currency' in data:
+            hotel.currency = data['currency']
+        if 'notes' in data:
+            hotel.notes = data['notes']
+        
+        # Update check-in/check-out dates
+        if 'check_in_date' in data and data['check_in_date']:
+            hotel.check_in_date = datetime.strptime(data['check_in_date'], '%Y-%m-%d').date()
+        if 'check_out_date' in data and data['check_out_date']:
+            hotel.check_out_date = datetime.strptime(data['check_out_date'], '%Y-%m-%d').date()
+            
+            # Recalculate nights if both dates are set
+            if hotel.check_in_date and hotel.check_out_date:
+                hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+        
+        db.session.commit()
+        
+        # Check if all services are confirmed
+        check_and_update_request_status(request_obj.id)
+        
+        return jsonify({'success': True, 'message': 'Hotel updated successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/confirm-all-transports', methods=['POST'])
 @csrf.exempt
 
