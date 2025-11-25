@@ -175,10 +175,13 @@ window.loadCustomers = function() {
     document.getElementById('noCustomersFound').classList.add('d-none');
     
     // Fetch customers from API
-    fetch('/api/customers')
+    fetch('/customers/api/list')
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
+            // API returns array directly, not {success, customers}
+            if (Array.isArray(data)) {
+                allCustomers = data;
+            } else if (data.success) {
                 allCustomers = data.customers || [];
             } else {
                 allCustomers = [];
