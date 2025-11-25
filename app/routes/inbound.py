@@ -184,10 +184,13 @@ def get_run_down_data_by_date():
 def new_request():
     """Create new inbound request and go directly to itinerary creation"""
     # Create a new request with default values
+    from_date = datetime.now().date()
+    to_date = (datetime.now() + timedelta(days=3)).date()
+    
     request_obj = InboundRequest(
-        request_number=InboundRequest.generate_request_number(),
-        from_date=datetime.now().date(),
-        to_date=(datetime.now() + timedelta(days=3)).date(),
+        request_number=InboundRequest.generate_request_number(from_date),
+        from_date=from_date,
+        to_date=to_date,
         customer_type='AGENCY',  # Default customer type
         contact_name='TBA',  # Default value
         nationality='TBA',  # Default value to avoid null constraint

@@ -77,12 +77,13 @@ class InboundRequest(db.Model):
         return f'<InboundRequest {self.request_number}>'
     
     @classmethod
-    def generate_request_number(cls):
-        """Generate auto request number in format INB-YYYYMM-####"""
-        now = datetime.now()
-        prefix = f"INB-{now.strftime('%Y%m')}"
+    def generate_request_number(cls, from_date=None):
+        """Generate auto request number in format IN-MM-#### based on trip start month"""
+        # Use provided from_date or current date
+        date_to_use = from_date if from_date else datetime.now().date()
+        prefix = f"IN-{date_to_use.strftime('%m')}"
         
-        # Find the highest number for current month
+        # Find the highest number for this month
         latest = cls.query.filter(
             cls.request_number.like(f"{prefix}-%")
         ).order_by(cls.request_number.desc()).first()
