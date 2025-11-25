@@ -4131,6 +4131,36 @@ def api_confirm_all_hotels(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/hotel/<int:hotel_id>', methods=['GET'])
+@csrf.exempt
+def api_get_hotel(hotel_id):
+    """Get hotel details for editing"""
+    try:
+        hotel = InboundHotel.query.get_or_404(hotel_id)
+        request_obj = InboundRequest.query.get_or_404(hotel.request_id)
+        
+        if request_obj.user_id != 1:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        return jsonify({
+            'success': True,
+            'hotel': {
+                'id': hotel.id,
+                'name': hotel.name or 'Hotel',
+                'supplier_name': hotel.supplier_name or '',
+                'status': hotel.status or 'REQUEST',
+                'total_cost': float(hotel.total_cost) if hotel.total_cost else 0,
+                'currency': hotel.currency or 'USD',
+                'notes': hotel.notes or '',
+                'check_in_date': hotel.check_in_date.strftime('%Y-%m-%d') if hotel.check_in_date else '',
+                'check_out_date': hotel.check_out_date.strftime('%Y-%m-%d') if hotel.check_out_date else '',
+                'nights': hotel.nights or 0
+            }
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/hotel/<int:hotel_id>/update', methods=['POST'])
 @csrf.exempt
 def api_update_hotel(hotel_id):

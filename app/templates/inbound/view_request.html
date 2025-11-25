@@ -7389,37 +7389,36 @@ let currentEditingHotelId = null;
 function editHotel(hotelId) {
     currentEditingHotelId = hotelId;
     
-    // Find hotel data from the DOM (hotels are displayed on page)
-    const hotelCard = document.querySelector(`[data-hotel-id="${hotelId}"]`) || 
-                      event.target.closest('[onclick*="editHotel"]')?.parentElement?.parentElement?.parentElement;
-    
-    // Use inline hotel data from cards if available
-    const hotelName = hotelCard?.querySelector('[data-hotel-name]')?.textContent || 'Hotel';
-    
-    // Populate fields with current values or from inline data
-    document.getElementById('editHotelName').value = hotelName;
-    document.getElementById('editHotelSupplier').value = '';
-    document.getElementById('editHotelStatus').value = 'REQUEST';
-    document.getElementById('editHotelCost').value = '0';
-    document.getElementById('editHotelCurrency').value = 'USD';
-    document.getElementById('editHotelNotes').value = '';
-    document.getElementById('editHotelCheckIn').value = '';
-    document.getElementById('editHotelCheckOut').value = '';
-    
-    // Try to load current values from hotel data
-    const hotelElements = document.querySelectorAll('.hotel-booking-card');
-    hotelElements.forEach(card => {
-        if (card.textContent.includes(hotelName)) {
-            const statusBadge = card.querySelector('.badge');
-            if (statusBadge) {
-                document.getElementById('editHotelStatus').value = statusBadge.textContent.trim() || 'REQUEST';
-            }
+    // Fetch hotel data from backend
+    fetch(`/inbound/api/hotel/${hotelId}`, {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.hotel) {
+            const hotel = data.hotel;
+            // Populate modal with actual hotel data
+            document.getElementById('editHotelName').value = hotel.name || 'Hotel';
+            document.getElementById('editHotelSupplier').value = hotel.supplier_name || '';
+            document.getElementById('editHotelStatus').value = hotel.status || 'REQUEST';
+            document.getElementById('editHotelCost').value = hotel.total_cost || '0';
+            document.getElementById('editHotelCurrency').value = hotel.currency || 'USD';
+            document.getElementById('editHotelNotes').value = hotel.notes || '';
+            document.getElementById('editHotelCheckIn').value = hotel.check_in_date || '';
+            document.getElementById('editHotelCheckOut').value = hotel.check_out_date || '';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('hotelEditModal'));
+            modal.show();
+        } else {
+            showNotification('Error loading hotel data: ' + (data.message || 'Unknown error'), 'error');
         }
+    })
+    .catch(error => {
+        console.error('Error fetching hotel data:', error);
+        showNotification('Error loading hotel data', 'error');
     });
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('hotelEditModal'));
-    modal.show();
 }
 
 function saveHotelChanges() {
