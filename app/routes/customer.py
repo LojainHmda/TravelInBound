@@ -6,7 +6,7 @@ from flask import (
     url_for, flash, jsonify, current_app, send_file
 )
 from werkzeug.utils import secure_filename
-from app import db
+from app import db, csrf
 from app.forms.customer import CustomerForm, CustomerDocumentForm, CustomerSearchForm
 from app.models.customer import Customer, CustomerDocument
 from app.services.passport_scanner import PassportScanner
@@ -366,38 +366,40 @@ def api_search_customers():
     return jsonify({'results': results})
 
 @customer_bp.route('/api/create', methods=['POST'])
-
+@csrf.exempt
 def api_create_customer():
     """API endpoint to create a new customer via AJAX"""
     data = request.json
     
-    # Validate required fields
-    if not data or not data.get('first_name') or not data.get('email') or not data.get('phone'):
+    # Validate required fields (email is now optional)
+    if not data or not data.get('first_name'):
         return jsonify({
             'success': False,
-            'error': 'First name, email, and phone are required'
+            'error': 'First name is required'
         }), 400
     
-    # Check if customer with this email already exists
-    existing_customer = Customer.query.filter_by(email=data.get('email')).first()
-    if existing_customer:
-        return jsonify({
-            'success': False,
-            'error': 'A customer with this email already exists',
-            'customer': {
-                'id': existing_customer.id,
-                'name': existing_customer.name,
-                'email': existing_customer.email
-            }
-        }), 400
+    # Check if customer with this email already exists (only if email provided)
+    if data.get('email'):
+        existing_customer = Customer.query.filter_by(email=data.get('email')).first()
+        if existing_customer:
+            return jsonify({
+                'success': False,
+                'error': 'A customer with this email already exists',
+                'customer': {
+                    'id': existing_customer.id,
+                    'name': existing_customer.name,
+                    'email': existing_customer.email
+                }
+            }), 400
     
-    # Check if customer with this phone already exists
-    existing_phone = Customer.query.filter_by(phone=data.get('phone')).first()
-    if existing_phone:
-        return jsonify({
-            'success': False,
-            'error': 'A customer with this phone number already exists'
-        }), 400
+    # Check if customer with this phone already exists (only if phone provided)
+    if data.get('phone'):
+        existing_phone = Customer.query.filter_by(phone=data.get('phone')).first()
+        if existing_phone:
+            return jsonify({
+                'success': False,
+                'error': 'A customer with this phone number already exists'
+            }), 400
     
     # Create a new customer
     try:
