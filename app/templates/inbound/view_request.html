@@ -4846,14 +4846,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                 <!-- Hotel Service Configuration -->
                 <div id="hotelServiceConfig" class="service-config-section d-none">
-                    <!-- Add Hotel Button -->
-                    <div class="mb-3 text-end">
-                        <button type="button" class="btn btn-success" onclick="addAnotherHotel()">
-                            <i class="fas fa-plus me-1"></i>Add Another Hotel
-                        </button>
-                        <small class="text-muted d-block mt-1">For groups splitting into multiple hotels</small>
-                    </div>
-                    
                     <!-- Multiple Hotels Container -->
                     <div id="hotelsContainer">
                     
@@ -4931,17 +4923,23 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                 </div>
                             </div>
 
-                            <!-- Hotel Check-in/Check-out Dates -->
-                            <div class="row mb-4">
+                            <!-- Hotel Check-in/Check-out Dates - Default to itinerary dates -->
+                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold"><i class="fas fa-calendar-check text-primary me-2"></i>Check-in Date</label>
-                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control" required>
-                                    <small class="text-muted">Applies to all rooms in this hotel</small>
+                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control" 
+                                           value="{{ request.from_date.strftime('%Y-%m-%d') }}"
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
+                                    <small class="text-muted">Applies to all rooms</small>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold"><i class="fas fa-calendar-times text-danger me-2"></i>Check-out Date</label>
-                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control" required>
-                                    <small class="text-muted">Applies to all rooms in this hotel</small>
+                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control" 
+                                           value="{{ request.to_date.strftime('%Y-%m-%d') }}"
+                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
+                                    <small class="text-muted">Applies to all rooms</small>
                                 </div>
                             </div>
 
@@ -5072,6 +5070,13 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     
                     </div>
                     <!-- End of hotels container -->
+                    
+                    <!-- Add Another Hotel Button - Below Hotels -->
+                    <div class="text-center mt-2 mb-2">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Another Hotel
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Transport Service Configuration -->
