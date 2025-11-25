@@ -1724,6 +1724,11 @@ body::-webkit-scrollbar-thumb:hover {
                 
                 <!-- Additional Action Buttons -->
                 
+                <!-- Run-Down Plan / Analytics Button -->
+                <a href="{{ url_for('inbound.run_down_plan') }}" class="btn" style="text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
+                    <i class="fas fa-chart-line"></i> Run-Down Plan & Analytics
+                </a>
+                
                 <!-- Export Voucher/Trip Plan Word Document Button (always available) -->
                 <a href="/inbound/api/{{ request.id }}/export-voucher-doc" class="btn" style="text-decoration: none; background: #2c3e50; color: white; padding: 0.5rem 1rem;">
                     <i class="fas fa-file-word"></i> Export Voucher (Word)
