@@ -11,14 +11,14 @@
             <div class="modal-body">
                 <!-- Search Filter -->
                 <div class="mb-3">
-                    <div class="input-group">
-                        <span class="input-group-text">
+                    <div class="input-group search-input-group">
+                        <span class="input-group-text search-icon">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input type="text" class="form-control" id="customerSelectionSearchInput" 
+                        <input type="text" class="form-control search-field" id="customerSelectionSearchInput" 
                                placeholder="Search by name, email, phone, or company..." 
                                autocomplete="off">
-                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                        <button class="btn btn-clear-search" type="button" id="clearSearchBtn">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -136,9 +136,65 @@
     border-color: #0d6efd;
 }
 
-#customerSelectionSearchInput:focus {
+.search-input-group {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.search-input-group:focus-within {
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
+.search-icon {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-right: none;
+    color: #495057;
+    font-weight: 500;
+}
+
+.search-field {
+    border: 1px solid #dee2e6;
+    border-left: none;
+    border-right: none;
+    background-color: #ffffff;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-field::placeholder {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.search-field:focus {
     border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    background-color: #ffffff;
+    box-shadow: none;
+    outline: none;
+}
+
+.btn-clear-search {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-left: none;
+    color: #495057;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-search:hover {
+    background-color: #e9ecef;
+    color: #212529;
+    border-color: #adb5bd;
+}
+
+.btn-clear-search:focus {
+    box-shadow: none;
+    outline: none;
 }
 </style>
 
