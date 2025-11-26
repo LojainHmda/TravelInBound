@@ -198,6 +198,40 @@ body {
     margin-bottom: 16px;
     opacity: 0.5;
 }
+
+/* Search field styling - lighter/grey */
+.filters-card input[type="text"],
+.filters-card input[type="date"] {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
+    font-size: 14px;
+}
+
+.filters-card input[type="text"]::placeholder {
+    color: #9ca3af;
+}
+
+.filters-card input[type="text"]:focus,
+.filters-card input[type="date"]:focus {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    box-shadow: 0 0 0 3px rgba(229, 231, 235, 0.5);
+}
+
+/* Service type filter styling */
+.filters-card .form-select {
+    background-color: #f3f4f6;
+    border-color: #e5e7eb;
+    color: #374151;
+    font-size: 14px;
+}
+
+.filters-card .form-select:focus {
+    background-color: #f9fafb;
+    border-color: #d1d5db;
+    box-shadow: 0 0 0 3px rgba(229, 231, 235, 0.5);
+}
 </style>
 
 <div class="container-fluid" style="max-width: 1400px; padding: 20px;">
@@ -240,14 +274,14 @@ body {
                     <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search hotels, transport, guides, contacts...">
                 </div>
                 <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-filter me-1"></i>Service Type</label>
-                    <select class="form-select" name="service_type">
-                        <option value="">All Services</option>
-                        <option value="HOTEL" {% if service_type == 'HOTEL' %}selected{% endif %}>Hotels</option>
-                        <option value="TRANSPORT" {% if service_type == 'TRANSPORT' %}selected{% endif %}>Transport</option>
-                        <option value="GUIDE" {% if service_type == 'GUIDE' %}selected{% endif %}>Guides</option>
-                        <option value="MEAL" {% if service_type == 'MEAL' %}selected{% endif %}>Meals</option>
-                        <option value="OPTIONAL" {% if service_type == 'OPTIONAL' %}selected{% endif %}>Optionals</option>
+                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-service me-1"></i>Service Type</label>
+                    <select class="form-select service-type-select" name="service_type">
+                        <option value="">🔍 All Services</option>
+                        <option value="HOTEL" {% if service_type == 'HOTEL' %}selected{% endif %}>🛏️ Hotels</option>
+                        <option value="TRANSPORT" {% if service_type == 'TRANSPORT' %}selected{% endif %}>🚗 Transport</option>
+                        <option value="GUIDE" {% if service_type == 'GUIDE' %}selected{% endif %}>👨‍💼 Guides</option>
+                        <option value="MEAL" {% if service_type == 'MEAL' %}selected{% endif %}>🍽️ Meals</option>
+                        <option value="OPTIONAL" {% if service_type == 'OPTIONAL' %}selected{% endif %}>⭐ Optionals</option>
                     </select>
                 </div>
                 <div>
