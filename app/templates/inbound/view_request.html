@@ -1962,14 +1962,17 @@ body::-webkit-scrollbar-thumb:hover {
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                                     {% if row.flag_hotel %}
                                                         <div class="hotel-badge-container service-badge-removable" data-service="hotel">
-                                                            <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
-                                                                  onclick="openRoomDistributionModal({{ loop.index0 }})" 
-                                                                  style="cursor: pointer;">
+                                                            <span class="badge bg-danger" data-service="hotel" style="display: flex; align-items: center; gap: 6px;">
                                                                 <i class="fas fa-bed"></i> Hotel
-                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')">
+                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')" title="Remove hotel">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
                                                             </span>
+                                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
+                                                                    onclick="openRoomDistributionModal({{ loop.index0 }})"
+                                                                    title="Manage room distribution">
+                                                                <i class="fas fa-door-open"></i> Rooms
+                                                            </button>
                                                             {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
                                                                 <div class="room-distribution-display">
                                                                     {% if row.hotel_single_rooms and row.hotel_single_rooms > 0 %}
