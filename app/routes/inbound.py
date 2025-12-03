@@ -249,7 +249,17 @@ def api_update_request(request_id):
         data = request.get_json()
         
         # Update master details
-        request_obj.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        # Properly handle customer_id - convert to int if provided, keep existing if not provided
+        customer_id_value = data.get('customer_id')
+        if customer_id_value and str(customer_id_value).strip():
+            try:
+                request_obj.customer_id = int(customer_id_value)
+            except (ValueError, TypeError):
+                pass  # Keep existing value if conversion fails
+        elif customer_id_value == '' or customer_id_value is None:
+            # Only reset if explicitly set to empty
+            if 'customer_id' in data:
+                request_obj.customer_id = None
         request_obj.customer_type = data.get('customer_type', request_obj.customer_type)
         request_obj.contact_name = data.get('contact_name', request_obj.contact_name)
         request_obj.agent_ref = data.get('agent_ref', request_obj.agent_ref)
@@ -782,7 +792,16 @@ def api_update_master_details(request_id):
     request_obj.nationality = data.get('nationality', request_obj.nationality)
     request_obj.pax = data.get('pax', request_obj.pax)
     request_obj.special_note = data.get('special_note', request_obj.special_note)
-    request_obj.customer_id = data.get('customer_id') if data.get('customer_id') else None
+    # Properly handle customer_id - convert to int if provided
+    customer_id_value = data.get('customer_id')
+    if customer_id_value and str(customer_id_value).strip():
+        try:
+            request_obj.customer_id = int(customer_id_value)
+        except (ValueError, TypeError):
+            pass  # Keep existing value if conversion fails
+    elif customer_id_value == '' or customer_id_value is None:
+        if 'customer_id' in data:
+            request_obj.customer_id = None
     
     # Update arrival/departure details
     request_obj.arrival_point = data.get('arrival_point', request_obj.arrival_point)
