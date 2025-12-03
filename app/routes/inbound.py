@@ -3227,7 +3227,7 @@ def wizard_step3():
             
             # Create InboundRequest
             request_obj = InboundRequest(
-                request_number=InboundRequest.generate_request_number(),
+                request_number=InboundRequest.generate_request_number(from_date),
                 from_date=from_date,
                 to_date=to_date,
                 no_of_days=wizard_data['no_of_days'],
