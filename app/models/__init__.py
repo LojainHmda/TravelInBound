@@ -41,7 +41,7 @@ from app.models.finance import (
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundQuotation, InboundQuotationItem, 
-    QuotationAttachment, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
+    QuotationAttachment, InboundDocument, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
     SERVICE_FLAG_HOTEL, SERVICE_FLAG_GUIDE, SERVICE_FLAG_TRANSPORT, 
     SERVICE_FLAG_MEAL, SERVICE_FLAG_AIRPORT
 )

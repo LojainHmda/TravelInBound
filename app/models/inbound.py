@@ -72,6 +72,7 @@ class InboundRequest(db.Model):
     inbound_optionals = db.relationship('InboundOptional', backref='request', lazy=True, cascade="all, delete-orphan")
     arrival_departures = db.relationship('ArrivalDeparture', backref='request', lazy=True, cascade="all, delete-orphan")
     quotations = db.relationship('InboundQuotation', backref='request', lazy=True, cascade="all, delete-orphan")
+    documents = db.relationship('InboundDocument', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
     
     def __repr__(self):
@@ -744,3 +745,47 @@ class QuotationAttachment(db.Model):
     
     def __repr__(self):
         return f'<QuotationAttachment {self.filename}>'
+
+
+class InboundDocument(db.Model):
+    """Document attachments for inbound requests (passports, confirmations, tickets, etc.)"""
+    __tablename__ = 'inbound_document'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    
+    # Document type categorization
+    document_type = db.Column(db.String(50), nullable=False, default='OTHER')  # PASSPORT, VISA, TICKET, CONFIRMATION, VOUCHER, CONTRACT, OTHER
+    
+    # File details
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)  # Original uploaded filename
+    filepath = db.Column(db.String(500), nullable=False)  # Relative path in uploads/inbound_documents/
+    file_size = db.Column(db.Integer, nullable=True)  # File size in bytes
+    mime_type = db.Column(db.String(100), nullable=True)
+    
+    # Metadata
+    description = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<InboundDocument {self.document_type}: {self.original_filename}>'
+    
+    @property
+    def file_extension(self):
+        """Get file extension"""
+        if self.original_filename:
+            return self.original_filename.rsplit('.', 1)[-1].lower() if '.' in self.original_filename else ''
+        return ''
+    
+    @property
+    def is_image(self):
+        """Check if document is an image"""
+        return self.file_extension in ['jpg', 'jpeg', 'png', 'gif', 'webp']
+    
+    @property
+    def is_pdf(self):
+        """Check if document is a PDF"""
+        return self.file_extension == 'pdf'

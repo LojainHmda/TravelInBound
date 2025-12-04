@@ -10,6 +10,9 @@ Preferred communication style: Simple, everyday language.
 - AUTO EDIT MODE - Forms load automatically in edit mode (no toggle needed) for immediate data entry.
 - Nationality field uses comprehensive dropdown with 60+ countries.
 
+## Recent Updates (December 2025)
+- **Document Attachments**: New Documents tab in inbound requests for attaching passports, visas, tickets, confirmations, vouchers, contracts, and other files. Supports PDF, images, and office documents with drag-and-drop upload, categorization, and inline viewing.
+
 ## Recent Updates (November 2025)
 - **ARD 1 Complete**: Enhanced Arrivals/Departures with visa status tracking, Meet & Assist, representative names, departure tax, and predefined location dropdowns
 - **CARD 2 - Hotels Enhanced**: Added hotel categories, room type distribution (Single/Twin/King/Triple), multi-hotel support, hotel-level status tracking, **hotel date cascading** (check-in/check-out managed at hotel level, automatically cascade to all rooms)
@@ -42,7 +45,7 @@ Preferred communication style: Simple, everyday language.
 - **Connection Pooling**: Configured with pool recycling and pre-ping.
 
 ### Key Features & Design Patterns
-- **Core Models**: User, Agent, OAuth, Booking, ServiceItem, Document, Customer, Supplier, Payment, Expense, FinancialMetric, ServiceConfirmation, InboundRequest, ItineraryRow, ArrivalDeparture, ArrivalBatch, DepartureBatch, InboundHotel, HotelRoom, InboundTransport, InboundGuide, InboundMeal, InboundOptional, HotelCategory.
+- **Core Models**: User, Agent, OAuth, Booking, ServiceItem, Document, Customer, Supplier, Payment, Expense, FinancialMetric, ServiceConfirmation, InboundRequest, ItineraryRow, ArrivalDeparture, ArrivalBatch, DepartureBatch, InboundHotel, HotelRoom, InboundTransport, InboundGuide, InboundMeal, InboundOptional, InboundDocument, HotelCategory.
 - **Booking Workflow**: Status progression (REQUEST → QUOTED → CONFIRMED → PROCESSING → COMPLETED). Individual service-level status tracking.
 - **Service Types**: Flight, Hotel, Transport, Visa, Insurance, Restaurant, Guide, Meal, Optional Extras.
 - **Financial Operations**: Invoice generation, payment tracking, supplier cost management, Excel expense report export.

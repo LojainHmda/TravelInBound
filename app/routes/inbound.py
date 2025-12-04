@@ -7,9 +7,11 @@ from app import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundCashExpense, InboundQuotation, 
-    InboundQuotationItem, QuotationAttachment,
+    InboundQuotationItem, QuotationAttachment, InboundDocument,
     COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
+from werkzeug.utils import secure_filename
+import uuid
 from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
 from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
 from app.models.booking import Booking
@@ -4789,3 +4791,139 @@ def analytics_export_excel():
         as_attachment=True,
         download_name=filename
     )
+
+
+# ==================== DOCUMENT MANAGEMENT ====================
+
+ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "gif", "doc", "docx", "xls", "xlsx", "txt"}
+
+def allowed_document_file(filename):
+    """Check if file extension is allowed"""
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_DOCUMENT_EXTENSIONS
+
+@inbound_bp.route("/api/<int:request_id>/documents", methods=["GET"])
+def api_list_documents(request_id):
+    """List all documents for a request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    documents = InboundDocument.query.filter_by(request_id=request_id).order_by(InboundDocument.uploaded_at.desc()).all()
+    
+    return jsonify({
+        "success": True,
+        "documents": [{
+            "id": doc.id,
+            "document_type": doc.document_type,
+            "original_filename": doc.original_filename,
+            "file_size": doc.file_size,
+            "mime_type": doc.mime_type,
+            "description": doc.description,
+            "uploaded_at": doc.uploaded_at.strftime("%Y-%m-%d %H:%M") if doc.uploaded_at else None,
+            "is_image": doc.is_image,
+            "is_pdf": doc.is_pdf
+        } for doc in documents]
+    })
+
+@inbound_bp.route("/api/<int:request_id>/documents/upload", methods=["POST"])
+@csrf.exempt
+def api_upload_document(request_id):
+    """Upload a document attachment"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if "file" not in request.files:
+        return jsonify({"success": False, "message": "No file provided"}), 400
+    
+    file = request.files["file"]
+    
+    if file.filename == "":
+        return jsonify({"success": False, "message": "No file selected"}), 400
+    
+    if not allowed_document_file(file.filename):
+        return jsonify({"success": False, "message": "File type not allowed"}), 400
+    
+    try:
+        # Generate unique filename
+        original_filename = secure_filename(file.filename)
+        file_ext = original_filename.rsplit(".", 1)[1].lower() if "." in original_filename else ""
+        unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
+        
+        # Create upload directory
+        upload_folder = os.path.join("app", "static", "uploads", "inbound_documents", str(request_id))
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Save file
+        filepath = os.path.join(upload_folder, unique_filename)
+        file.save(filepath)
+        
+        # Get file info
+        file_size = os.path.getsize(filepath)
+        mime_type = file.content_type or "application/octet-stream"
+        
+        # Get document type from form
+        document_type = request.form.get("document_type", "OTHER")
+        description = request.form.get("description", "")
+        
+        # Create database record
+        doc = InboundDocument(
+            request_id=request_id,
+            document_type=document_type,
+            filename=unique_filename,
+            original_filename=original_filename,
+            filepath=f"uploads/inbound_documents/{request_id}/{unique_filename}",
+            file_size=file_size,
+            mime_type=mime_type,
+            description=description,
+            uploaded_by=1  # Default user
+        )
+        db.session.add(doc)
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": "Document uploaded successfully",
+            "document": {
+                "id": doc.id,
+                "document_type": doc.document_type,
+                "original_filename": doc.original_filename,
+                "file_size": doc.file_size,
+                "is_image": doc.is_image,
+                "is_pdf": doc.is_pdf
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@inbound_bp.route("/api/documents/<int:doc_id>/delete", methods=["POST"])
+@csrf.exempt
+def api_delete_document(doc_id):
+    """Delete a document"""
+    doc = InboundDocument.query.get_or_404(doc_id)
+    
+    try:
+        # Delete file from filesystem
+        full_path = os.path.join("app", "static", doc.filepath)
+        if os.path.exists(full_path):
+            os.remove(full_path)
+        
+        # Delete database record
+        db.session.delete(doc)
+        db.session.commit()
+        
+        return jsonify({"success": True, "message": "Document deleted successfully"})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@inbound_bp.route("/documents/<int:doc_id>/view")
+def view_document(doc_id):
+    """View/download a document"""
+    doc = InboundDocument.query.get_or_404(doc_id)
+    
+    full_path = os.path.join("app", "static", doc.filepath)
+    if not os.path.exists(full_path):
+        abort(404)
+    
+    return send_file(full_path, download_name=doc.original_filename)
+
