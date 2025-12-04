@@ -4982,206 +4982,120 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <!-- Multiple Hotels Container -->
                     <div id="hotelsContainer">
                     
-                    <!-- Hotel Card Template (first hotel) - COMPACT -->
+                    <!-- Hotel Card Template (first hotel) - ULTRA COMPACT -->
                     <div class="hotel-card mb-2" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0" style="font-size: 0.9rem;"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span></h6>
-                            <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
-                                <i class="fas fa-times"></i>
-                            </button>
+                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-bed me-1"></i>Hotel #<span class="hotel-number">1</span></h6>
+                            <div class="d-flex align-items-center gap-1">
+                                <button type="button" class="btn btn-sm btn-dark py-0 px-2" style="font-size: 0.75rem;" onclick="openRoomingListModal(this)">
+                                    <i class="fas fa-list-alt me-1"></i>Rooming List
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger py-0 px-1 remove-hotel-btn d-none" onclick="removeHotelCard(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div class="card-body py-2 px-3">
-                            <!-- Row 1: Hotel Name, Supplier, Status, Check-in, Check-out -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Hotel Name</label>
-                                    <input type="text" name="hotel_name" id="hotelName" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." required>
+                        <div class="card-body py-2 px-2">
+                            <!-- Single Compact Row: All fields inline -->
+                            <div class="row g-1 align-items-end">
+                                <div class="col">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Hotel</label>
+                                    <input type="text" name="hotel_name" id="hotelName" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." style="font-size: 0.8rem;" required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Supplier</label>
-                                    <select name="supplier" id="hotelSupplier" class="form-select form-select-sm">
+                                <div class="col-auto" style="width: 100px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Supplier</label>
+                                    <select name="supplier" id="hotelSupplier" class="form-select form-select-sm" style="font-size: 0.8rem;">
                                         <option value="">Select</option>
-                                        <option value="Direct Booking">Direct</option>
+                                        <option value="Direct">Direct</option>
                                         <option value="Booking.com">Booking.com</option>
                                         <option value="Expedia">Expedia</option>
-                                        <option value="Local Partner">Local Partner</option>
-                                        <option value="Hotel Direct">Hotel Direct</option>
+                                        <option value="Local Partner">Partner</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Status</label>
-                                    <select name="status" id="hotelStatus" class="form-select form-select-sm">
+                                <div class="col-auto" style="width: 95px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Status</label>
+                                    <select name="status" id="hotelStatus" class="form-select form-select-sm" style="font-size: 0.8rem;">
                                         <option value="confirmed">Confirmed</option>
                                         <option value="pending">Pending</option>
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-calendar-check text-success me-1"></i>Check-in</label>
-                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control form-control-sm" 
+                                <div class="col-auto" style="width: 120px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;"><i class="fas fa-sign-in-alt text-success"></i> In</label>
+                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control form-control-sm" style="font-size: 0.8rem;"
                                            value="{{ request.from_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-calendar-times text-danger me-1"></i>Check-out</label>
-                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control form-control-sm" 
+                                <div class="col-auto" style="width: 120px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;"><i class="fas fa-sign-out-alt text-danger"></i> Out</label>
+                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control form-control-sm" style="font-size: 0.8rem;"
                                            value="{{ request.to_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-md-1 d-flex align-items-end">
-                                    <span class="badge bg-secondary" id="nightsCount">{{ (request.to_date - request.from_date).days }} nts</span>
+                                <div class="col-auto">
+                                    <span class="badge bg-primary" id="nightsCount" style="font-size: 0.75rem;">{{ (request.to_date - request.from_date).days }}n</span>
                                 </div>
-                            </div>
-
-                            <!-- Row 2: Cost, Confirmation, Pickup, Phone -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Cost</label>
+                                <div class="col-auto" style="width: 100px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Cost</label>
                                     <div class="input-group input-group-sm">
-                                        <input type="number" name="cost" id="hotelCost" step="0.01" class="form-control" placeholder="0.00">
-                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 70px;">
-                                            <option value="USD">USD</option>
-                                            <option value="EUR">EUR</option>
-                                            <option value="GBP">GBP</option>
-                                            <option value="JOD">JOD</option>
+                                        <input type="number" name="cost" id="hotelCost" step="0.01" class="form-control" placeholder="0" style="font-size: 0.8rem;">
+                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 55px; font-size: 0.75rem;">
+                                            <option value="USD">$</option>
+                                            <option value="EUR">€</option>
+                                            <option value="JOD">JD</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Confirmation #</label>
-                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control form-control-sm" placeholder="Conf #">
+                                <div class="col-auto" style="width: 90px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Conf #</label>
+                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control form-control-sm" placeholder="Conf #" style="font-size: 0.8rem;">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Pickup Location</label>
-                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control form-control-sm" placeholder="Address">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Phone</label>
-                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control form-control-sm" placeholder="Phone">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Notes</label>
-                                    <input type="text" name="special_notes" id="hotelSpecialNotes" class="form-control form-control-sm" placeholder="Special notes">
+                                <div class="col-auto" style="width: 100px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Phone</label>
+                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control form-control-sm" placeholder="Phone" style="font-size: 0.8rem;">
                                 </div>
                             </div>
-
-                            <!-- Room Distribution - Compact Inline -->
-                            <div class="card mb-2">
-                                <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="background-color: #1f2937; color: white;">
-                                    <span style="font-size: 0.8rem;"><i class="fas fa-bed me-1"></i>Room Distribution</span>
-                                    <span id="allConfirmedBadge" class="badge bg-success" style="display: none; font-size: 0.7rem;">
-                                        <i class="fas fa-check-circle me-1"></i>All Confirmed
-                                    </span>
+                            <!-- Row 2: Pickup, Notes, Room Summary -->
+                            <div class="row g-1 mt-1 align-items-end">
+                                <div class="col-auto" style="width: 180px;">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Pickup Location</label>
+                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control form-control-sm" placeholder="Address" style="font-size: 0.8rem;">
                                 </div>
-                                <div class="card-body py-2 px-2">
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col">
-                                            <label class="form-label small mb-0">Single</label>
-                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control form-control-sm" min="0" value="1" onchange="updateIndividualRoomGrid()">
+                                <div class="col">
+                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Notes</label>
+                                    <input type="text" name="special_notes" id="hotelSpecialNotes" class="form-control form-control-sm" placeholder="Special notes" style="font-size: 0.8rem;">
+                                </div>
+                                <div class="col-auto">
+                                    <div class="d-flex align-items-center gap-1 p-1 rounded" style="background: #f1f5f9;">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size: 0.7rem; color: #64748b;">SGL:</span>
+                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="1" onchange="updateIndividualRoomGrid()">
                                         </div>
-                                        <div class="col">
-                                            <label class="form-label small mb-0">Double</label>
-                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size: 0.7rem; color: #64748b;">DBL:</span>
+                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                         </div>
-                                        <div class="col">
-                                            <label class="form-label small mb-0">Triple</label>
-                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size: 0.7rem; color: #64748b;">TRP:</span>
+                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                         </div>
-                                        <div class="col">
-                                            <label class="form-label small mb-0">Other</label>
-                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control form-control-sm" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span style="font-size: 0.7rem; color: #64748b;">OTH:</span>
+                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
                                         </div>
-                                        <div class="col-auto">
-                                            <button type="button" class="btn btn-primary btn-sm" onclick="regenerateRoomTableFromSummary(this)">
-                                                <i class="fas fa-table me-1"></i>Generate
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div id="individualRoomGrid" class="mt-2">
-                                        <!-- Will be populated dynamically -->
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Room Configuration Section - Compact -->
-                            <div class="mb-2">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="fw-semibold text-primary" style="font-size: 0.85rem;"><i class="fas fa-list me-1"></i>Room Details</span>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Configure individual rooms below</small>
-                                </div>
+                            <!-- Hidden room data container -->
+                            <div id="hotelRoomsContainer" class="d-none">
+                                <div id="individualRoomGrid"></div>
+                                <table class="d-none">
+                                    <tbody id="hotelRoomsTableBody"></tbody>
+                                </table>
                             </div>
-
-                            <div id="hotelRoomsContainer">
-                                <div style="width: 100%;">
-                                    <!-- Initial room table -->
-                                    <div class="table-responsive" style="width: 100%; overflow-x: auto;">
-                                        <table class="table table-bordered table-hover" style="min-width: 1400px; width: 100%;">
-                                            <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; font-weight: bold;">
-                                                <tr>
-                                                    <th style="min-width: 70px; color: white; font-weight: bold;">Room #</th>
-                                                    <th style="min-width: 130px; color: white; font-weight: bold;">Room Category</th>
-                                                    <th style="min-width: 170px; color: white; font-weight: bold;">Hotel Room Option</th>
-                                                    <th style="min-width: 150px; color: white; font-weight: bold;">Board Basis / Meals</th>
-                                                    <th style="min-width: 140px; color: white; font-weight: bold;">Dietary Requirements</th>
-                                                    <th style="min-width: 70px; color: white; font-weight: bold;">Adults</th>
-                                                    <th style="min-width: 80px; color: white; font-weight: bold;">Children</th>
-                                                    <th style="min-width: 200px; color: white; font-weight: bold;">Lead Passenger Name</th>
-                                                    <th style="min-width: 80px; color: white; font-weight: bold;">Action</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="hotelRoomsTableBody">
-                                                <!-- Default single room -->
-                                                <tr class="hotel-room-row">
-                                                    <td><strong class="text-primary">Room 1</strong></td>
-                                                    <td>
-                                                        <select name="rooms[0][room_category]" class="form-control" onchange="updateRoomDistribution()">
-                                                            <option value="Single Room" selected>Single</option>
-                                                            <option value="Double Room">Double</option>
-                                                            <option value="Triple Room">Triple</option>
-                                                            <option value="Other">Other</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="rooms[0][hotel_room_option]" class="form-control" placeholder="Premium, Premier Sea View">
-                                                    </td>
-                                                    <td>
-                                                        <select name="rooms[0][board_basis]" class="form-control">
-                                                            <option value="Room Only">Room Only</option>
-                                                            <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
-                                                            <option value="Half Board">Half Board (Breakfast + Dinner)</option>
-                                                            <option value="Full Board">Full Board (All Meals)</option>
-                                                            <option value="All Inclusive">All Inclusive</option>
-                                                            <option value="Ultra All Inclusive">Ultra All Inclusive</option>
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="rooms[0][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="rooms[0][adults]" class="form-control" value="1" min="1" max="8">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number" name="rooms[0][children]" class="form-control" value="0" min="0" max="8">
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" name="rooms[0][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
-                                                    </td>
-                                                    <td>
-                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelTableRoom(this)" style="display: none;">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-
                         </div>
                     </div>
                     </div>
@@ -5190,10 +5104,10 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     </div>
                     <!-- End of hotels container -->
                     
-                    <!-- Add Another Hotel Button - Below Hotels -->
-                    <div class="text-center mt-2 mb-2">
-                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addAnotherHotel()">
-                            <i class="fas fa-plus me-1"></i>Add Another Hotel
+                    <!-- Add Another Hotel Button -->
+                    <div class="text-center mt-1">
+                        <button type="button" class="btn btn-outline-success btn-sm py-0" style="font-size: 0.8rem;" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Hotel
                         </button>
                     </div>
                 </div>
@@ -6102,6 +6016,68 @@ function convertToInvoice() {
                     <i class="fas fa-save me-1"></i>Save All Arrivals
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rooming List Modal -->
+<div class="modal fade" id="roomingListModal" tabindex="-1" aria-labelledby="roomingListModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header py-2" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: white;">
+                <h6 class="modal-title mb-0" id="roomingListModalLabel">
+                    <i class="fas fa-list-alt me-2"></i>Rooming List - <span id="roomingListHotelName">Hotel</span>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-2">
+                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+                    <div class="d-flex gap-3">
+                        <div class="text-center">
+                            <small class="text-muted d-block">Check-in</small>
+                            <strong id="roomingListCheckIn">-</strong>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted d-block">Check-out</small>
+                            <strong id="roomingListCheckOut">-</strong>
+                        </div>
+                        <div class="text-center">
+                            <small class="text-muted d-block">Nights</small>
+                            <span class="badge bg-primary" id="roomingListNights">0</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-success btn-sm" onclick="addRoomToRoomingList()">
+                        <i class="fas fa-plus me-1"></i>Add Room
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover table-sm mb-0" style="font-size: 0.85rem;">
+                        <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th style="width: 100px;">Category</th>
+                                <th style="width: 160px;">Room Option</th>
+                                <th style="width: 130px;">Board Basis</th>
+                                <th style="width: 140px;">Dietary Req.</th>
+                                <th style="width: 60px;">Adults</th>
+                                <th style="width: 60px;">Child</th>
+                                <th>Lead Passenger</th>
+                                <th style="width: 60px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roomingListTableBody">
+                            <!-- Rooms will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <span class="me-auto text-muted small" id="roomingListSummary">0 rooms configured</span>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="saveRoomingList()">
+                    <i class="fas fa-save me-1"></i>Save Rooms
+                </button>
             </div>
         </div>
     </div>
@@ -7186,6 +7162,191 @@ function removeHotelTableRoom(button) {
             }
         });
     }
+}
+
+// Rooming List Modal Functions
+let currentHotelCard = null;
+
+function openRoomingListModal(button) {
+    currentHotelCard = button.closest('.hotel-card');
+    if (!currentHotelCard) return;
+    
+    const hotelName = currentHotelCard.querySelector('input[name="hotel_name"]')?.value || 'Hotel';
+    const checkIn = currentHotelCard.querySelector('input[name="check_in_date"]')?.value || '';
+    const checkOut = currentHotelCard.querySelector('input[name="check_out_date"]')?.value || '';
+    
+    // Calculate nights
+    let nights = 0;
+    if (checkIn && checkOut) {
+        const d1 = new Date(checkIn);
+        const d2 = new Date(checkOut);
+        nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+    }
+    
+    // Update modal header info
+    document.getElementById('roomingListHotelName').textContent = hotelName || 'Unnamed Hotel';
+    document.getElementById('roomingListCheckIn').textContent = checkIn ? new Date(checkIn).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-';
+    document.getElementById('roomingListCheckOut').textContent = checkOut ? new Date(checkOut).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-';
+    document.getElementById('roomingListNights').textContent = nights + 'n';
+    
+    // Get room counts from hotel card
+    const singleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_single_rooms"]')?.value) || 0;
+    const doubleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_double_rooms"]')?.value) || 0;
+    const tripleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_triple_rooms"]')?.value) || 0;
+    const otherRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_other_rooms"]')?.value) || 0;
+    
+    // Populate rooming list table
+    populateRoomingListTable(singleRooms, doubleRooms, tripleRooms, otherRooms);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('roomingListModal'));
+    modal.show();
+}
+
+function populateRoomingListTable(single, double, triple, other) {
+    const tbody = document.getElementById('roomingListTableBody');
+    tbody.innerHTML = '';
+    
+    let roomNum = 1;
+    
+    // Add single rooms
+    for (let i = 0; i < single; i++) {
+        addRoomRow(tbody, roomNum++, 'Single Room');
+    }
+    // Add double rooms
+    for (let i = 0; i < double; i++) {
+        addRoomRow(tbody, roomNum++, 'Double Room');
+    }
+    // Add triple rooms
+    for (let i = 0; i < triple; i++) {
+        addRoomRow(tbody, roomNum++, 'Triple Room');
+    }
+    // Add other rooms
+    for (let i = 0; i < other; i++) {
+        addRoomRow(tbody, roomNum++, 'Other');
+    }
+    
+    updateRoomingListSummary();
+}
+
+function addRoomRow(tbody, roomNum, category) {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td class="text-center"><strong class="text-primary">${roomNum}</strong></td>
+        <td>
+            <select name="room_category" class="form-select form-select-sm" style="font-size: 0.8rem;">
+                <option value="Single Room" ${category === 'Single Room' ? 'selected' : ''}>Single</option>
+                <option value="Double Room" ${category === 'Double Room' ? 'selected' : ''}>Double</option>
+                <option value="Triple Room" ${category === 'Triple Room' ? 'selected' : ''}>Triple</option>
+                <option value="Other" ${category === 'Other' ? 'selected' : ''}>Other</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="room_option" class="form-control form-control-sm" placeholder="Sea View, Premium" style="font-size: 0.8rem;">
+        </td>
+        <td>
+            <select name="board_basis" class="form-select form-select-sm" style="font-size: 0.8rem;">
+                <option value="Room Only">Room Only</option>
+                <option value="Bed & Breakfast" selected>B&B</option>
+                <option value="Half Board">Half Board</option>
+                <option value="Full Board">Full Board</option>
+                <option value="All Inclusive">All Inclusive</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" name="dietary" class="form-control form-control-sm" placeholder="Vegetarian, Halal" style="font-size: 0.8rem;">
+        </td>
+        <td>
+            <input type="number" name="adults" class="form-control form-control-sm text-center" value="${category === 'Single Room' ? 1 : 2}" min="1" max="6" style="font-size: 0.8rem;">
+        </td>
+        <td>
+            <input type="number" name="children" class="form-control form-control-sm text-center" value="0" min="0" max="6" style="font-size: 0.8rem;">
+        </td>
+        <td>
+            <input type="text" name="lead_passenger" class="form-control form-control-sm" placeholder="Lead passenger" style="font-size: 0.8rem;">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeRoomingListRow(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(row);
+}
+
+function addRoomToRoomingList() {
+    const tbody = document.getElementById('roomingListTableBody');
+    const currentRows = tbody.querySelectorAll('tr').length;
+    addRoomRow(tbody, currentRows + 1, 'Single Room');
+    updateRoomingListSummary();
+}
+
+function removeRoomingListRow(button) {
+    const row = button.closest('tr');
+    if (row) {
+        row.remove();
+        // Renumber rooms
+        const tbody = document.getElementById('roomingListTableBody');
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((r, index) => {
+            const numCell = r.querySelector('td:first-child strong');
+            if (numCell) numCell.textContent = index + 1;
+        });
+        updateRoomingListSummary();
+    }
+}
+
+function updateRoomingListSummary() {
+    const tbody = document.getElementById('roomingListTableBody');
+    const rows = tbody.querySelectorAll('tr');
+    let single = 0, double = 0, triple = 0, other = 0;
+    
+    rows.forEach(row => {
+        const cat = row.querySelector('select[name="room_category"]')?.value || '';
+        if (cat.includes('Single')) single++;
+        else if (cat.includes('Double')) double++;
+        else if (cat.includes('Triple')) triple++;
+        else other++;
+    });
+    
+    let summary = `${rows.length} room${rows.length !== 1 ? 's' : ''}`;
+    const parts = [];
+    if (single) parts.push(`${single} SGL`);
+    if (double) parts.push(`${double} DBL`);
+    if (triple) parts.push(`${triple} TRP`);
+    if (other) parts.push(`${other} OTH`);
+    if (parts.length) summary += ` (${parts.join(', ')})`;
+    
+    document.getElementById('roomingListSummary').textContent = summary;
+}
+
+function saveRoomingList() {
+    if (!currentHotelCard) return;
+    
+    const tbody = document.getElementById('roomingListTableBody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    // Count rooms by category
+    let single = 0, double = 0, triple = 0, other = 0;
+    rows.forEach(row => {
+        const cat = row.querySelector('select[name="room_category"]')?.value || '';
+        if (cat.includes('Single')) single++;
+        else if (cat.includes('Double')) double++;
+        else if (cat.includes('Triple')) triple++;
+        else other++;
+    });
+    
+    // Update hotel card room counts
+    currentHotelCard.querySelector('input[name="hotel_single_rooms"]').value = single;
+    currentHotelCard.querySelector('input[name="hotel_double_rooms"]').value = double;
+    currentHotelCard.querySelector('input[name="hotel_triple_rooms"]').value = triple;
+    currentHotelCard.querySelector('input[name="hotel_other_rooms"]').value = other;
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('roomingListModal'));
+    if (modal) modal.hide();
+    
+    showNotification('Rooming list saved!', 'success');
 }
 
 // Multi-Hotel Management Functions
