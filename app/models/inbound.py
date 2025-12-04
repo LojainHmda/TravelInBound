@@ -21,7 +21,8 @@ class InboundRequest(db.Model):
         super().__init__(**kwargs)
     
     id = db.Column(db.Integer, primary_key=True)
-    request_number = db.Column(db.String(20), unique=True, nullable=False)  # INB-YYYYMM-####
+    request_number = db.Column(db.String(20), unique=True, nullable=False)  # Internal reference (IN-MM-####)
+    document_sequence = db.Column(db.String(20), unique=True, nullable=True)  # Official sequence (INB-MM-XXXX) - generated on save
     
     # Header fields
     from_date = db.Column(db.Date, nullable=False)
@@ -99,6 +100,36 @@ class InboundRequest(db.Model):
             next_num = 1
         
         return f"{prefix}-{next_num:04d}"
+    
+    @classmethod
+    def generate_document_sequence(cls, from_date=None):
+        """Generate official document sequence in format INB-MM-XXXX based on trip start month"""
+        # Use provided from_date or current date
+        date_to_use = from_date if from_date else datetime.now().date()
+        prefix = f"INB-{date_to_use.strftime('%m')}"
+        
+        # Find the highest sequence number for this month
+        latest = cls.query.filter(
+            cls.document_sequence.like(f"{prefix}-%")
+        ).order_by(cls.document_sequence.desc()).first()
+        
+        if latest and latest.document_sequence:
+            # Extract the number and increment
+            try:
+                last_num = int(latest.document_sequence.split('-')[-1])
+                next_num = last_num + 1
+            except:
+                next_num = 1
+        else:
+            next_num = 1
+        
+        return f"{prefix}-{next_num:04d}"
+    
+    def assign_document_sequence(self):
+        """Assign document sequence if not already assigned - call this when saving"""
+        if not self.document_sequence:
+            self.document_sequence = InboundRequest.generate_document_sequence(self.from_date)
+        return self.document_sequence
     
     def calculate_total(self):
         """Calculate total amount from all itinerary rows"""

@@ -300,8 +300,11 @@ def api_update_request(request_id):
         if from_date_str or to_date_str:
             request_obj.calculate_days()
         
+        # Generate document sequence on save if not already assigned
+        request_obj.assign_document_sequence()
+        
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Request updated successfully'})
+        return jsonify({'success': True, 'message': 'Request updated successfully', 'document_sequence': request_obj.document_sequence})
         
     except Exception as e:
         db.session.rollback()
