@@ -63,6 +63,7 @@ class InboundRequest(db.Model):
     pricing_mode = db.Column(db.String(20), default='ITEMIZED')  # ITEMIZED or LUMPSUM
     
     # Relationships
+    customer = db.relationship('Customer', backref='inbound_requests', lazy=True)
     itinerary_rows = db.relationship('ItineraryRow', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_hotels = db.relationship('InboundHotel', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_transports = db.relationship('InboundTransport', backref='request', lazy=True, cascade="all, delete-orphan")
