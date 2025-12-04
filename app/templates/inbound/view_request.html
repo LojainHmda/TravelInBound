@@ -4982,118 +4982,126 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <!-- Multiple Hotels Container -->
                     <div id="hotelsContainer">
                     
-                    <!-- Hotel Card Template (first hotel) - ULTRA COMPACT -->
-                    <div class="hotel-card mb-2" data-hotel-index="0">
+                    <!-- Hotel Card Template (first hotel) -->
+                    <div class="hotel-card mb-3" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header py-1 px-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                            <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-bed me-1"></i>Hotel #<span class="hotel-number">1</span></h6>
-                            <div class="d-flex align-items-center gap-1">
-                                <button type="button" class="btn btn-sm btn-dark py-0 px-2" style="font-size: 0.75rem;" onclick="openRoomingListModal(this)">
+                        <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0" style="font-size: 0.9rem;"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span></h6>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-dark" style="font-size: 0.8rem;" onclick="openRoomingListModal(this)">
                                     <i class="fas fa-list-alt me-1"></i>Rooming List
                                 </button>
-                                <button type="button" class="btn btn-sm btn-danger py-0 px-1 remove-hotel-btn d-none" onclick="removeHotelCard(this)">
+                                <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body py-2 px-2">
-                            <!-- Single Compact Row: All fields inline -->
-                            <div class="row g-1 align-items-end">
-                                <div class="col">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Hotel</label>
-                                    <input type="text" name="hotel_name" id="hotelName" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." style="font-size: 0.8rem;" required>
+                        <div class="card-body py-3 px-3">
+                            <!-- Row 1: Hotel Name, Supplier, Status, Dates -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-1">Hotel Name</label>
+                                    <input type="text" name="hotel_name" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." required>
                                 </div>
-                                <div class="col-auto" style="width: 100px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Supplier</label>
-                                    <select name="supplier" id="hotelSupplier" class="form-select form-select-sm" style="font-size: 0.8rem;">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Supplier</label>
+                                    <select name="supplier" class="form-select form-select-sm">
                                         <option value="">Select</option>
                                         <option value="Direct">Direct</option>
                                         <option value="Booking.com">Booking.com</option>
                                         <option value="Expedia">Expedia</option>
-                                        <option value="Local Partner">Partner</option>
+                                        <option value="Local Partner">Local Partner</option>
                                     </select>
                                 </div>
-                                <div class="col-auto" style="width: 95px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Status</label>
-                                    <select name="status" id="hotelStatus" class="form-select form-select-sm" style="font-size: 0.8rem;">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Status</label>
+                                    <select name="status" class="form-select form-select-sm">
                                         <option value="confirmed">Confirmed</option>
                                         <option value="pending">Pending</option>
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
-                                <div class="col-auto" style="width: 120px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;"><i class="fas fa-sign-in-alt text-success"></i> In</label>
-                                    <input type="date" name="check_in_date" id="hotelCheckInDate" class="form-control form-control-sm" style="font-size: 0.8rem;"
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1"><i class="fas fa-sign-in-alt text-success me-1"></i>Check-in</label>
+                                    <input type="date" name="check_in_date" class="form-control form-control-sm"
                                            value="{{ request.from_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-auto" style="width: 120px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;"><i class="fas fa-sign-out-alt text-danger"></i> Out</label>
-                                    <input type="date" name="check_out_date" id="hotelCheckOutDate" class="form-control form-control-sm" style="font-size: 0.8rem;"
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1"><i class="fas fa-sign-out-alt text-danger me-1"></i>Check-out</label>
+                                    <input type="date" name="check_out_date" class="form-control form-control-sm"
                                            value="{{ request.to_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-auto">
-                                    <span class="badge bg-primary" id="nightsCount" style="font-size: 0.75rem;">{{ (request.to_date - request.from_date).days }}n</span>
+                                <div class="col-md-1 d-flex align-items-end">
+                                    <span class="badge bg-primary nights-badge">{{ (request.to_date - request.from_date).days }} nts</span>
                                 </div>
-                                <div class="col-auto" style="width: 100px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Cost</label>
+                            </div>
+
+                            <!-- Row 2: Cost, Confirmation, Phone, Pickup, Notes -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Cost</label>
                                     <div class="input-group input-group-sm">
-                                        <input type="number" name="cost" id="hotelCost" step="0.01" class="form-control" placeholder="0" style="font-size: 0.8rem;">
-                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 55px; font-size: 0.75rem;">
-                                            <option value="USD">$</option>
-                                            <option value="EUR">€</option>
-                                            <option value="JOD">JD</option>
+                                        <input type="number" name="cost" step="0.01" class="form-control" placeholder="0.00">
+                                        <select name="currency" class="form-select" style="max-width: 65px;">
+                                            <option value="USD">USD</option>
+                                            <option value="EUR">EUR</option>
+                                            <option value="JOD">JOD</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-auto" style="width: 90px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Conf #</label>
-                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control form-control-sm" placeholder="Conf #" style="font-size: 0.8rem;">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Conf #</label>
+                                    <input type="text" name="confirmation_number" class="form-control form-control-sm" placeholder="Confirmation #">
                                 </div>
-                                <div class="col-auto" style="width: 100px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Phone</label>
-                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control form-control-sm" placeholder="Phone" style="font-size: 0.8rem;">
+                                <div class="col-md-2">
+                                    <label class="form-label small mb-1">Phone</label>
+                                    <input type="text" name="phone_number" class="form-control form-control-sm" placeholder="Phone number">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-1">Pickup Location</label>
+                                    <input type="text" name="pickup_location" class="form-control form-control-sm" placeholder="Hotel address">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small mb-1">Notes</label>
+                                    <input type="text" name="special_notes" class="form-control form-control-sm" placeholder="Special notes">
                                 </div>
                             </div>
-                            <!-- Row 2: Pickup, Notes, Room Summary -->
-                            <div class="row g-1 mt-1 align-items-end">
-                                <div class="col-auto" style="width: 180px;">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Pickup Location</label>
-                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control form-control-sm" placeholder="Address" style="font-size: 0.8rem;">
-                                </div>
-                                <div class="col">
-                                    <label class="form-label mb-0" style="font-size: 0.7rem;">Notes</label>
-                                    <input type="text" name="special_notes" id="hotelSpecialNotes" class="form-control form-control-sm" placeholder="Special notes" style="font-size: 0.8rem;">
-                                </div>
-                                <div class="col-auto">
-                                    <div class="d-flex align-items-center gap-1 p-1 rounded" style="background: #f1f5f9;">
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span style="font-size: 0.7rem; color: #64748b;">SGL:</span>
-                                            <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="1" onchange="updateIndividualRoomGrid()">
+
+                            <!-- Row 3: Room Distribution Summary -->
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="text-muted small"><i class="fas fa-bed me-1"></i>Rooms:</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-1">SGL</span>
+                                            <input type="number" name="hotel_single_rooms" class="form-control form-control-sm text-center" style="width: 50px;" min="0" value="1">
                                         </div>
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span style="font-size: 0.7rem; color: #64748b;">DBL:</span>
-                                            <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-1">DBL</span>
+                                            <input type="number" name="hotel_double_rooms" class="form-control form-control-sm text-center" style="width: 50px;" min="0" value="0">
                                         </div>
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span style="font-size: 0.7rem; color: #64748b;">TRP:</span>
-                                            <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-1">TRP</span>
+                                            <input type="number" name="hotel_triple_rooms" class="form-control form-control-sm text-center" style="width: 50px;" min="0" value="0">
                                         </div>
-                                        <div class="d-flex align-items-center gap-1">
-                                            <span style="font-size: 0.7rem; color: #64748b;">OTH:</span>
-                                            <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control form-control-sm text-center" style="width: 40px; font-size: 0.8rem;" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge bg-secondary me-1">OTH</span>
+                                            <input type="number" name="hotel_other_rooms" class="form-control form-control-sm text-center" style="width: 50px;" min="0" value="0">
                                         </div>
                                     </div>
                                 </div>
+                                <span class="badge bg-info room-total-badge">1 room total</span>
                             </div>
+                            
                             <!-- Hidden room data container -->
-                            <div id="hotelRoomsContainer" class="d-none">
-                                <div id="individualRoomGrid"></div>
+                            <div class="hotel-rooms-container d-none">
+                                <div class="individual-room-grid"></div>
                                 <table class="d-none">
-                                    <tbody id="hotelRoomsTableBody"></tbody>
+                                    <tbody class="hotel-rooms-table-body"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -5105,9 +5113,9 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <!-- End of hotels container -->
                     
                     <!-- Add Another Hotel Button -->
-                    <div class="text-center mt-1">
-                        <button type="button" class="btn btn-outline-success btn-sm py-0" style="font-size: 0.8rem;" onclick="addAnotherHotel()">
-                            <i class="fas fa-plus me-1"></i>Add Hotel
+                    <div class="text-center mt-2">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Another Hotel
                         </button>
                     </div>
                 </div>
@@ -7169,7 +7177,10 @@ let currentHotelCard = null;
 
 function openRoomingListModal(button) {
     currentHotelCard = button.closest('.hotel-card');
-    if (!currentHotelCard) return;
+    if (!currentHotelCard) {
+        console.error('Hotel card not found');
+        return;
+    }
     
     const hotelName = currentHotelCard.querySelector('input[name="hotel_name"]')?.value || 'Hotel';
     const checkIn = currentHotelCard.querySelector('input[name="check_in_date"]')?.value || '';
@@ -7194,6 +7205,8 @@ function openRoomingListModal(button) {
     const doubleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_double_rooms"]')?.value) || 0;
     const tripleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_triple_rooms"]')?.value) || 0;
     const otherRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_other_rooms"]')?.value) || 0;
+    
+    console.log('Opening rooming list for hotel:', hotelName, 'Rooms:', singleRooms, doubleRooms, tripleRooms, otherRooms);
     
     // Populate rooming list table
     populateRoomingListTable(singleRooms, doubleRooms, tripleRooms, otherRooms);
@@ -7321,7 +7334,10 @@ function updateRoomingListSummary() {
 }
 
 function saveRoomingList() {
-    if (!currentHotelCard) return;
+    if (!currentHotelCard) {
+        console.error('No hotel card selected');
+        return;
+    }
     
     const tbody = document.getElementById('roomingListTableBody');
     const rows = tbody.querySelectorAll('tr');
@@ -7336,11 +7352,25 @@ function saveRoomingList() {
         else other++;
     });
     
+    console.log('Saving rooms:', single, 'SGL,', double, 'DBL,', triple, 'TRP,', other, 'OTH');
+    
     // Update hotel card room counts
-    currentHotelCard.querySelector('input[name="hotel_single_rooms"]').value = single;
-    currentHotelCard.querySelector('input[name="hotel_double_rooms"]').value = double;
-    currentHotelCard.querySelector('input[name="hotel_triple_rooms"]').value = triple;
-    currentHotelCard.querySelector('input[name="hotel_other_rooms"]').value = other;
+    const singleInput = currentHotelCard.querySelector('input[name="hotel_single_rooms"]');
+    const doubleInput = currentHotelCard.querySelector('input[name="hotel_double_rooms"]');
+    const tripleInput = currentHotelCard.querySelector('input[name="hotel_triple_rooms"]');
+    const otherInput = currentHotelCard.querySelector('input[name="hotel_other_rooms"]');
+    
+    if (singleInput) singleInput.value = single;
+    if (doubleInput) doubleInput.value = double;
+    if (tripleInput) tripleInput.value = triple;
+    if (otherInput) otherInput.value = other;
+    
+    // Update total badge
+    const total = single + double + triple + other;
+    const totalBadge = currentHotelCard.querySelector('.room-total-badge');
+    if (totalBadge) {
+        totalBadge.textContent = `${total} room${total !== 1 ? 's' : ''} total`;
+    }
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('roomingListModal'));
