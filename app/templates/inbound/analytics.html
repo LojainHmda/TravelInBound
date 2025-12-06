@@ -12,31 +12,235 @@ body {
 .analytics-header {
     background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
     color: #1f2937;
-    padding: 24px 32px;
-    border-radius: 16px;
+    padding: 20px 28px;
+    border-radius: 14px;
     margin-bottom: 20px;
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .analytics-header h1 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
-    margin: 0 0 4px 0;
-}
-
-.analytics-header p {
-    font-size: 14px;
-    opacity: 0.8;
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Shopping-style filter bar */
+.analytics-header .subtitle {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.date-period {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.9);
+    padding: 8px 14px;
+    border-radius: 8px;
+}
+
+.date-period label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+.date-period input {
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 130px;
+}
+
+.date-period .to-text {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* Service Performance Dashboard Cards */
+.performance-section {
+    margin-bottom: 24px;
+}
+
+.performance-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.performance-title .record-count {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .performance-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.perf-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid #f3f4f6;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.perf-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.perf-card.selected {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.perf-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.perf-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.perf-icon.hotel { background: #dbeafe; color: #2563eb; }
+.perf-icon.transport { background: #ffedd5; color: #ea580c; }
+.perf-icon.guide { background: #e0e7ff; color: #4f46e5; }
+.perf-icon.meal { background: #fae8ff; color: #a855f7; }
+.perf-icon.optional { background: #dcfce7; color: #16a34a; }
+
+.share-badge {
+    text-align: right;
+}
+
+.share-label {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.share-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.perf-service-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.perf-count {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.perf-count-label {
+    font-size: 13px;
+    color: #6b7280;
+    margin-left: 4px;
+}
+
+.perf-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.confirmed-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.confirmed-label {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.confirmed-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.confirmed-pct {
+    font-size: 12px;
+    color: #10b981;
+    margin-left: 4px;
+}
+
+.pax-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pax-icon {
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.pax-label {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.pax-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* Filter bar */
 .filter-bar {
     background: white;
     border-radius: 12px;
-    padding: 16px 20px;
+    padding: 14px 18px;
     margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -45,36 +249,33 @@ body {
 
 .search-box {
     flex: 1;
-    min-width: 280px;
+    min-width: 250px;
     position: relative;
 }
 
 .search-box input {
     width: 100%;
-    padding: 10px 16px 10px 40px;
+    padding: 10px 16px 10px 38px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     font-size: 14px;
     background: #f9fafb;
-    transition: all 0.2s;
 }
 
 .search-box input:focus {
     outline: none;
     border-color: #fbbf24;
     background: white;
-    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
 .search-box i {
     position: absolute;
-    left: 14px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #9ca3af;
 }
 
-/* Filter dropdown buttons */
 .filter-dropdown {
     position: relative;
 }
@@ -83,7 +284,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 10px 14px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     background: white;
@@ -91,7 +292,6 @@ body {
     font-weight: 500;
     color: #374151;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 .filter-btn:hover {
@@ -105,24 +305,15 @@ body {
     color: #b45309;
 }
 
-.filter-btn .plus-icon {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: #f3f4f6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    color: #6b7280;
+.filter-btn .badge-count {
+    background: #f59e0b;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
 }
 
-.filter-btn.active .plus-icon {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-/* Dropdown menu */
 .filter-menu {
     position: absolute;
     top: 100%;
@@ -148,7 +339,6 @@ body {
     gap: 10px;
     padding: 10px 14px;
     cursor: pointer;
-    transition: background 0.15s;
     font-size: 14px;
     color: #374151;
 }
@@ -162,57 +352,42 @@ body {
     color: #b45309;
 }
 
-.filter-menu-item i {
-    width: 20px;
+.filter-menu-item .check-icon {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: transparent;
+}
+
+.filter-menu-item.selected .check-icon {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.filter-menu-item i.service-icon {
+    width: 18px;
     text-align: center;
     color: #6b7280;
 }
 
-.filter-menu-item.selected i {
-    color: #f59e0b;
-}
-
-/* Date range picker */
-.date-range {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.date-input {
-    padding: 10px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    background: #f9fafb;
-    width: 140px;
-}
-
-.date-input:focus {
-    outline: none;
-    border-color: #fbbf24;
-    background: white;
-}
-
-.date-separator {
-    color: #9ca3af;
-    font-size: 13px;
-}
-
-/* Export button */
 .btn-export {
     background: #10b981;
     color: white;
     border: none;
-    padding: 10px 18px;
+    padding: 10px 16px;
     border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: background 0.2s;
+    gap: 6px;
 }
 
 .btn-export:hover {
@@ -220,17 +395,17 @@ body {
     color: white;
 }
 
-/* Active filter tags */
+/* Active filters */
 .active-filters {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 20px 16px 20px;
+    padding: 0 18px 14px 18px;
     flex-wrap: wrap;
 }
 
 .filter-label {
-    font-size: 13px;
+    font-size: 12px;
     color: #6b7280;
     font-weight: 500;
 }
@@ -239,30 +414,21 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
-    background: #374151;
+    padding: 5px 10px;
+    background: #059669;
     color: white;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 500;
 }
 
-.filter-tag.service-tag {
-    background: #059669;
-}
-
 .filter-tag.status-tag {
     background: #6366f1;
-}
-
-.filter-tag.date-tag {
-    background: #0891b2;
 }
 
 .filter-tag .remove-tag {
     cursor: pointer;
     opacity: 0.8;
-    margin-left: 2px;
 }
 
 .filter-tag .remove-tag:hover {
@@ -282,225 +448,12 @@ body {
     text-decoration: underline;
 }
 
-/* Stats cards */
-.stats-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.stat-card {
-    flex: 1;
-    min-width: 120px;
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border: 1px solid #f3f4f6;
-}
-
-.stat-card .stat-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1f2937;
-}
-
-.stat-card .stat-label {
-    font-size: 11px;
-    color: #6b7280;
-    margin-top: 2px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-/* Service cards grid */
-.services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 16px;
-}
-
-.service-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    overflow: hidden;
-    transition: all 0.2s;
-    border: 1px solid #f3f4f6;
-}
-
-.service-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
-}
-
-.service-card-header {
+/* Results section */
+.results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid #f3f4f6;
-    background: #fafafa;
-}
-
-.service-date {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.request-link {
-    font-size: 13px;
-    color: #2563eb;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.request-link:hover {
-    text-decoration: underline;
-}
-
-.service-card-body {
-    padding: 16px;
-}
-
-.service-top-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-}
-
-.contact-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.contact-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #e5e7eb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    color: #374151;
-}
-
-.contact-name {
-    font-weight: 500;
-    font-size: 14px;
-    color: #1f2937;
-}
-
-.pax-badge {
-    background: #f3f4f6;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
-}
-
-.service-type-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-}
-
-.service-type-icon.hotel { background: #fee2e2; color: #dc2626; }
-.service-type-icon.transport { background: #dbeafe; color: #2563eb; }
-.service-type-icon.guide { background: #dcfce7; color: #16a34a; }
-.service-type-icon.meal { background: #fef3c7; color: #d97706; }
-.service-type-icon.optional { background: #f3e8ff; color: #9333ea; }
-
-.service-description {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 4px;
-}
-
-.service-details {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.4;
-}
-
-.service-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: #fafafa;
-    border-top: 1px solid #f3f4f6;
-}
-
-.status-badge {
-    padding: 5px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-request { background: #f3f4f6; color: #374151; }
-.status-quoted { background: #dbeafe; color: #1e40af; }
-.status-confirmed { background: #dcfce7; color: #166534; }
-.status-processing { background: #fef3c7; color: #92400e; }
-.status-completed { background: #d1fae5; color: #065f46; }
-.status-reserved { background: #e0e7ff; color: #4338ca; }
-.status-requested { background: #fce7f3; color: #be185d; }
-.status-cancelled { background: #fee2e2; color: #dc2626; }
-
-.cost-display {
-    font-size: 16px;
-    font-weight: 700;
-    color: #059669;
-}
-
-/* Empty state */
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-}
-
-.empty-state i {
-    font-size: 48px;
-    color: #d1d5db;
-    margin-bottom: 16px;
-}
-
-.empty-state h3 {
-    color: #374151;
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    color: #6b7280;
-}
-
-/* Results count */
-.results-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding: 0 4px;
+    margin-bottom: 14px;
 }
 
 .results-count {
@@ -532,7 +485,159 @@ body {
     color: white;
 }
 
-/* List view table */
+/* Service cards grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 14px;
+}
+
+.service-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    overflow: hidden;
+    border: 1px solid #f3f4f6;
+    transition: all 0.2s;
+}
+
+.service-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.service-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+
+.service-date {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.request-link {
+    font-size: 12px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.request-link:hover {
+    text-decoration: underline;
+}
+
+.service-card-body {
+    padding: 14px;
+}
+
+.service-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.contact-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.contact-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+}
+
+.contact-name {
+    font-weight: 500;
+    font-size: 13px;
+    color: #1f2937;
+}
+
+.pax-badge {
+    background: #f3f4f6;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.service-type-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+.service-type-icon.hotel { background: #dbeafe; color: #2563eb; }
+.service-type-icon.transport { background: #ffedd5; color: #ea580c; }
+.service-type-icon.guide { background: #e0e7ff; color: #4f46e5; }
+.service-type-icon.meal { background: #fae8ff; color: #a855f7; }
+.service-type-icon.optional { background: #dcfce7; color: #16a34a; }
+
+.service-description {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 3px;
+}
+
+.service-details {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.service-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #fafafa;
+    border-top: 1px solid #f3f4f6;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-request { background: #f3f4f6; color: #374151; }
+.status-quoted { background: #dbeafe; color: #1e40af; }
+.status-confirmed { background: #dcfce7; color: #166534; }
+.status-processing { background: #fef3c7; color: #92400e; }
+.status-completed { background: #d1fae5; color: #065f46; }
+.status-reserved { background: #e0e7ff; color: #4338ca; }
+.status-requested { background: #fce7f3; color: #be185d; }
+.status-cancelled { background: #fee2e2; color: #dc2626; }
+
+.cost-display {
+    font-size: 15px;
+    font-weight: 700;
+    color: #059669;
+}
+
+/* Table view */
 .service-table {
     background: white;
     border-radius: 12px;
@@ -552,9 +657,9 @@ body {
 
 .service-table th {
     background: #f9fafb;
-    padding: 12px 16px;
+    padding: 10px 14px;
     text-align: left;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #6b7280;
     text-transform: uppercase;
@@ -563,8 +668,8 @@ body {
 }
 
 .service-table td {
-    padding: 14px 16px;
-    font-size: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
     color: #1f2937;
     border-bottom: 1px solid #f3f4f6;
 }
@@ -576,107 +681,256 @@ body {
 .service-type-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 12px;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
     font-weight: 500;
 }
 
-.service-type-badge.hotel { background: #fee2e2; color: #991b1b; }
-.service-type-badge.transport { background: #dbeafe; color: #1e40af; }
-.service-type-badge.guide { background: #dcfce7; color: #166534; }
-.service-type-badge.meal { background: #fef3c7; color: #92400e; }
-.service-type-badge.optional { background: #f3e8ff; color: #6b21a8; }
+.service-type-badge.hotel { background: #dbeafe; color: #1e40af; }
+.service-type-badge.transport { background: #ffedd5; color: #c2410c; }
+.service-type-badge.guide { background: #e0e7ff; color: #4338ca; }
+.service-type-badge.meal { background: #fae8ff; color: #7e22ce; }
+.service-type-badge.optional { background: #dcfce7; color: #166534; }
 
-@media (max-width: 768px) {
-    .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .search-box {
-        min-width: 100%;
-    }
-    
-    .services-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .date-range {
-        flex-wrap: wrap;
-    }
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    background: white;
+    border-radius: 12px;
+}
+
+.empty-state i {
+    font-size: 40px;
+    color: #d1d5db;
+    margin-bottom: 14px;
+}
+
+.empty-state h3 {
+    color: #374151;
+    margin-bottom: 6px;
+    font-size: 18px;
+}
+
+.empty-state p {
+    color: #6b7280;
+    font-size: 14px;
 }
 </style>
 
 <div class="container-fluid" style="max-width: 1400px; padding: 20px;">
-    <!-- Header -->
-    <div class="analytics-header">
-        <h1><i class="fas fa-chart-line me-2"></i>Services Run-Down</h1>
-        <p>View and filter all services across hotels, transport, guides, meals, and optionals</p>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-value">{{ status_counts.REQUEST }}</div>
-            <div class="stat-label">REQUEST</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ status_counts.QUOTED }}</div>
-            <div class="stat-label">QUOTED</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ status_counts.CONFIRMED }}</div>
-            <div class="stat-label">CONFIRMED</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ status_counts.PROCESSING }}</div>
-            <div class="stat-label">PROCESSING</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">{{ status_counts.COMPLETED }}</div>
-            <div class="stat-label">COMPLETED</div>
-        </div>
-    </div>
-
-    <!-- Filter Bar -->
     <form method="GET" action="{{ url_for('inbound.analytics_dashboard') }}" id="filterForm">
+        <!-- Header with Date Range -->
+        <div class="analytics-header">
+            <div>
+                <h1>
+                    <i class="fas fa-chart-pie"></i>
+                    InboundTravel
+                </h1>
+                <div class="subtitle">OPERATIONS DASHBOARD</div>
+            </div>
+            <div class="date-period">
+                <label>RUN DOWN PERIOD:</label>
+                <input type="date" name="date_from" id="dateFrom" value="{{ date_from }}">
+                <span class="to-text">to</span>
+                <input type="date" name="date_to" id="dateTo" value="{{ date_to }}">
+            </div>
+        </div>
+
+        <!-- Service Performance Cards -->
+        <div class="performance-section">
+            <div class="performance-title">
+                Service Performance <span class="record-count">{{ total_services }} records</span>
+            </div>
+            <div class="performance-grid">
+                <!-- Hotel Card -->
+                <div class="perf-card {% if 'HOTEL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('HOTEL')">
+                    <div class="perf-card-header">
+                        <div class="perf-icon hotel">
+                            <i class="fas fa-hotel"></i>
+                        </div>
+                        <div class="share-badge">
+                            <div class="share-label">SHARE</div>
+                            <div class="share-value">{{ service_stats.HOTEL.share }}%</div>
+                        </div>
+                    </div>
+                    <div class="perf-service-name">HOTEL</div>
+                    <div class="perf-count">{{ service_stats.HOTEL.total }}<span class="perf-count-label">Reqs</span></div>
+                    <div class="perf-card-footer">
+                        <div class="confirmed-stat">
+                            <span class="confirmed-label">CONFIRMED</span>
+                            <span class="confirmed-value">{{ service_stats.HOTEL.confirmed }}<span class="confirmed-pct">{{ service_stats.HOTEL.confirmed_pct }}%</span></span>
+                        </div>
+                        <div class="pax-stat">
+                            <i class="fas fa-users pax-icon"></i>
+                            <div>
+                                <div class="pax-label">PAX</div>
+                                <div class="pax-value">{{ service_stats.HOTEL.pax }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transport Card -->
+                <div class="perf-card {% if 'TRANSPORT' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('TRANSPORT')">
+                    <div class="perf-card-header">
+                        <div class="perf-icon transport">
+                            <i class="fas fa-shuttle-van"></i>
+                        </div>
+                        <div class="share-badge">
+                            <div class="share-label">SHARE</div>
+                            <div class="share-value">{{ service_stats.TRANSPORT.share }}%</div>
+                        </div>
+                    </div>
+                    <div class="perf-service-name">TRANSPORT</div>
+                    <div class="perf-count">{{ service_stats.TRANSPORT.total }}<span class="perf-count-label">Reqs</span></div>
+                    <div class="perf-card-footer">
+                        <div class="confirmed-stat">
+                            <span class="confirmed-label">CONFIRMED</span>
+                            <span class="confirmed-value">{{ service_stats.TRANSPORT.confirmed }}<span class="confirmed-pct">{{ service_stats.TRANSPORT.confirmed_pct }}%</span></span>
+                        </div>
+                        <div class="pax-stat">
+                            <i class="fas fa-users pax-icon"></i>
+                            <div>
+                                <div class="pax-label">PAX</div>
+                                <div class="pax-value">{{ service_stats.TRANSPORT.pax }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Guide Card -->
+                <div class="perf-card {% if 'GUIDE' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('GUIDE')">
+                    <div class="perf-card-header">
+                        <div class="perf-icon guide">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="share-badge">
+                            <div class="share-label">SHARE</div>
+                            <div class="share-value">{{ service_stats.GUIDE.share }}%</div>
+                        </div>
+                    </div>
+                    <div class="perf-service-name">GUIDE</div>
+                    <div class="perf-count">{{ service_stats.GUIDE.total }}<span class="perf-count-label">Reqs</span></div>
+                    <div class="perf-card-footer">
+                        <div class="confirmed-stat">
+                            <span class="confirmed-label">CONFIRMED</span>
+                            <span class="confirmed-value">{{ service_stats.GUIDE.confirmed }}<span class="confirmed-pct">{{ service_stats.GUIDE.confirmed_pct }}%</span></span>
+                        </div>
+                        <div class="pax-stat">
+                            <i class="fas fa-users pax-icon"></i>
+                            <div>
+                                <div class="pax-label">PAX</div>
+                                <div class="pax-value">{{ service_stats.GUIDE.pax }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meal Card -->
+                <div class="perf-card {% if 'MEAL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('MEAL')">
+                    <div class="perf-card-header">
+                        <div class="perf-icon meal">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="share-badge">
+                            <div class="share-label">SHARE</div>
+                            <div class="share-value">{{ service_stats.MEAL.share }}%</div>
+                        </div>
+                    </div>
+                    <div class="perf-service-name">MEAL</div>
+                    <div class="perf-count">{{ service_stats.MEAL.total }}<span class="perf-count-label">Reqs</span></div>
+                    <div class="perf-card-footer">
+                        <div class="confirmed-stat">
+                            <span class="confirmed-label">CONFIRMED</span>
+                            <span class="confirmed-value">{{ service_stats.MEAL.confirmed }}<span class="confirmed-pct">{{ service_stats.MEAL.confirmed_pct }}%</span></span>
+                        </div>
+                        <div class="pax-stat">
+                            <i class="fas fa-users pax-icon"></i>
+                            <div>
+                                <div class="pax-label">PAX</div>
+                                <div class="pax-value">{{ service_stats.MEAL.pax }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optional Card -->
+                <div class="perf-card {% if 'OPTIONAL' in service_types %}selected{% endif %}" onclick="toggleServiceFilter('OPTIONAL')">
+                    <div class="perf-card-header">
+                        <div class="perf-icon optional">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="share-badge">
+                            <div class="share-label">SHARE</div>
+                            <div class="share-value">{{ service_stats.OPTIONAL.share }}%</div>
+                        </div>
+                    </div>
+                    <div class="perf-service-name">OPTIONAL</div>
+                    <div class="perf-count">{{ service_stats.OPTIONAL.total }}<span class="perf-count-label">Reqs</span></div>
+                    <div class="perf-card-footer">
+                        <div class="confirmed-stat">
+                            <span class="confirmed-label">CONFIRMED</span>
+                            <span class="confirmed-value">{{ service_stats.OPTIONAL.confirmed }}<span class="confirmed-pct">{{ service_stats.OPTIONAL.confirmed_pct }}%</span></span>
+                        </div>
+                        <div class="pax-stat">
+                            <i class="fas fa-users pax-icon"></i>
+                            <div>
+                                <div class="pax-label">PAX</div>
+                                <div class="pax-value">{{ service_stats.OPTIONAL.pax }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
         <div class="filter-bar">
-            <!-- Search Box -->
             <div class="search-box">
                 <i class="fas fa-search"></i>
                 <input type="text" name="search" value="{{ search_query }}" placeholder="Search ID, Name, or Description and press Enter...">
             </div>
 
-            <!-- Service Type Dropdown -->
+            <!-- Service Multi-Select Dropdown -->
             <div class="filter-dropdown">
-                <button type="button" class="filter-btn {% if service_type %}active{% endif %}" onclick="toggleDropdown('serviceMenu')">
+                <button type="button" class="filter-btn {% if service_types %}active{% endif %}" onclick="toggleDropdown('serviceMenu')">
                     <i class="fas fa-concierge-bell"></i>
                     Service
-                    <span class="plus-icon">+</span>
+                    {% if service_types|length > 0 %}
+                    <span class="badge-count">{{ service_types|length }}</span>
+                    {% endif %}
                 </button>
                 <div class="filter-menu" id="serviceMenu">
-                    <div class="filter-menu-item {% if service_type == '' %}selected{% endif %}" onclick="selectService('')">
-                        <i class="fas fa-list"></i> All Services
+                    <div class="filter-menu-item {% if 'HOTEL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('HOTEL')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        <i class="fas fa-bed service-icon"></i> Hotels
                     </div>
-                    <div class="filter-menu-item {% if service_type == 'HOTEL' %}selected{% endif %}" onclick="selectService('HOTEL')">
-                        <i class="fas fa-bed"></i> Hotels
+                    <div class="filter-menu-item {% if 'TRANSPORT' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('TRANSPORT')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        <i class="fas fa-car service-icon"></i> Transport
                     </div>
-                    <div class="filter-menu-item {% if service_type == 'TRANSPORT' %}selected{% endif %}" onclick="selectService('TRANSPORT')">
-                        <i class="fas fa-car"></i> Transport
+                    <div class="filter-menu-item {% if 'GUIDE' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('GUIDE')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        <i class="fas fa-user-tie service-icon"></i> Guides
                     </div>
-                    <div class="filter-menu-item {% if service_type == 'GUIDE' %}selected{% endif %}" onclick="selectService('GUIDE')">
-                        <i class="fas fa-user-tie"></i> Guides
+                    <div class="filter-menu-item {% if 'MEAL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('MEAL')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        <i class="fas fa-utensils service-icon"></i> Meals
                     </div>
-                    <div class="filter-menu-item {% if service_type == 'MEAL' %}selected{% endif %}" onclick="selectService('MEAL')">
-                        <i class="fas fa-utensils"></i> Meals
-                    </div>
-                    <div class="filter-menu-item {% if service_type == 'OPTIONAL' %}selected{% endif %}" onclick="selectService('OPTIONAL')">
-                        <i class="fas fa-star"></i> Optionals
+                    <div class="filter-menu-item {% if 'OPTIONAL' in service_types %}selected{% endif %}" onclick="toggleServiceCheckbox('OPTIONAL')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        <i class="fas fa-star service-icon"></i> Optionals
                     </div>
                 </div>
-                <input type="hidden" name="service_type" id="serviceTypeInput" value="{{ service_type }}">
+            </div>
+
+            <!-- Hidden inputs for service types -->
+            <div id="serviceTypeInputs">
+                {% for st in service_types %}
+                <input type="hidden" name="service_type" value="{{ st }}">
+                {% endfor %}
             </div>
 
             <!-- Status Dropdown -->
@@ -684,96 +938,72 @@ body {
                 <button type="button" class="filter-btn {% if status_filter %}active{% endif %}" onclick="toggleDropdown('statusMenu')">
                     <i class="fas fa-flag"></i>
                     Status
-                    <span class="plus-icon">+</span>
+                    {% if status_filter %}<span class="badge-count">1</span>{% endif %}
                 </button>
                 <div class="filter-menu" id="statusMenu">
-                    <div class="filter-menu-item {% if status_filter == '' %}selected{% endif %}" onclick="selectStatus('')">
-                        <i class="fas fa-list"></i> All Statuses
+                    <div class="filter-menu-item" onclick="selectStatus('')">
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        All Statuses
                     </div>
                     <div class="filter-menu-item {% if status_filter == 'REQUEST' %}selected{% endif %}" onclick="selectStatus('REQUEST')">
-                        <i class="fas fa-inbox"></i> Request
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'QUOTED' %}selected{% endif %}" onclick="selectStatus('QUOTED')">
-                        <i class="fas fa-file-invoice-dollar"></i> Quoted
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        Request
                     </div>
                     <div class="filter-menu-item {% if status_filter == 'CONFIRMED' %}selected{% endif %}" onclick="selectStatus('CONFIRMED')">
-                        <i class="fas fa-check-circle"></i> Confirmed
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        Confirmed
                     </div>
                     <div class="filter-menu-item {% if status_filter == 'PROCESSING' %}selected{% endif %}" onclick="selectStatus('PROCESSING')">
-                        <i class="fas fa-spinner"></i> Processing
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        Processing
                     </div>
                     <div class="filter-menu-item {% if status_filter == 'COMPLETED' %}selected{% endif %}" onclick="selectStatus('COMPLETED')">
-                        <i class="fas fa-check-double"></i> Completed
-                    </div>
-                    <div class="filter-menu-item {% if status_filter == 'CANCELLED' %}selected{% endif %}" onclick="selectStatus('CANCELLED')">
-                        <i class="fas fa-times-circle"></i> Cancelled
+                        <span class="check-icon"><i class="fas fa-check"></i></span>
+                        Completed
                     </div>
                 </div>
                 <input type="hidden" name="status" id="statusInput" value="{{ status_filter }}">
             </div>
 
-            <!-- Date Range -->
-            <div class="date-range">
-                <input type="date" class="date-input" name="date_from" id="dateFrom" value="{{ date_from }}">
-                <span class="date-separator">to</span>
-                <input type="date" class="date-input" name="date_to" id="dateTo" value="{{ date_to }}">
-            </div>
-
-            <!-- Hidden request number input -->
             <input type="hidden" name="request_number" value="{{ request_number }}">
 
-            <!-- Export Button -->
-            <a href="{{ url_for('inbound.analytics_export_excel', search=search_query, service_type=service_type, status=status_filter, date_from=date_from, date_to=date_to, request_number=request_number) }}" class="btn-export">
+            <a href="{{ url_for('inbound.analytics_export_excel', search=search_query, status=status_filter, date_from=date_from, date_to=date_to, request_number=request_number) }}" class="btn-export">
                 <i class="fas fa-download"></i>
                 Export
             </a>
         </div>
 
         <!-- Active Filter Tags -->
-        {% if service_type or status_filter or search_query or request_number %}
+        {% if service_types or status_filter or search_query %}
         <div class="active-filters">
             <span class="filter-label">FILTERS:</span>
-            
-            {% if service_type %}
-            <span class="filter-tag service-tag">
-                SERVICE: {{ service_type }}
-                <span class="remove-tag" onclick="removeFilter('service_type')">&times;</span>
+            {% for st in service_types %}
+            <span class="filter-tag">
+                SERVICE: {{ st }}
+                <span class="remove-tag" onclick="removeServiceFilter('{{ st }}')">&times;</span>
             </span>
-            {% endif %}
-            
+            {% endfor %}
             {% if status_filter %}
             <span class="filter-tag status-tag">
                 STATUS: {{ status_filter }}
                 <span class="remove-tag" onclick="removeFilter('status')">&times;</span>
             </span>
             {% endif %}
-            
             {% if search_query %}
-            <span class="filter-tag">
+            <span class="filter-tag" style="background:#374151;">
                 SEARCH: "{{ search_query }}"
                 <span class="remove-tag" onclick="removeFilter('search')">&times;</span>
             </span>
             {% endif %}
-            
-            {% if request_number %}
-            <span class="filter-tag">
-                REQUEST #: {{ request_number }}
-                <span class="remove-tag" onclick="removeFilter('request_number')">&times;</span>
-            </span>
-            {% endif %}
-            
             <a href="{{ url_for('inbound.analytics_dashboard') }}" class="clear-all">Clear all</a>
         </div>
         {% endif %}
     </form>
 
-    <!-- Results Info -->
-    <div class="results-info">
+    <!-- Results -->
+    <div class="results-header">
         <span class="results-count">
             <strong>{{ services|length }}</strong> services found
-            {% if date_from and date_to %}
-            <span style="color: #9ca3af;"> | {{ date_from }} to {{ date_to }}</span>
-            {% endif %}
         </span>
         <div class="view-toggle">
             <button type="button" class="active" id="cardViewBtn" onclick="setView('card')">
@@ -785,8 +1015,8 @@ body {
         </div>
     </div>
 
-    <!-- Services Cards View -->
     {% if services %}
+    <!-- Card View -->
     <div class="services-grid" id="cardView">
         {% for service in services %}
         <div class="service-card">
@@ -810,23 +1040,19 @@ body {
                     </div>
                 </div>
                 <div class="service-description">{{ service.description or service.service_type }}</div>
-                <div class="service-details">{{ service.details[:100] }}{% if service.details|length > 100 %}...{% endif %}</div>
+                <div class="service-details">{{ service.details[:80] }}{% if service.details|length > 80 %}...{% endif %}</div>
             </div>
             <div class="service-card-footer">
                 <span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span>
                 <span class="cost-display">
-                    {% if service.cost %}
-                        ${{ "%.2f"|format(service.cost) }}
-                    {% else %}
-                        -
-                    {% endif %}
+                    {% if service.cost %}${{ "%.2f"|format(service.cost) }}{% else %}-{% endif %}
                 </span>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <!-- Services Table View -->
+    <!-- Table View -->
     <div class="service-table" id="listView">
         <table>
             <thead>
@@ -839,18 +1065,13 @@ body {
                     <th>Description</th>
                     <th>Status</th>
                     <th>Cost</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for service in services %}
                 <tr>
-                    <td style="font-weight: 600;">{{ service.date.strftime('%d %b %Y') }}</td>
-                    <td>
-                        <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="request-link">
-                            {{ service.request_number }}
-                        </a>
-                    </td>
+                    <td style="font-weight:600;">{{ service.date.strftime('%d %b %Y') }}</td>
+                    <td><a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="request-link">{{ service.request_number }}</a></td>
                     <td>{{ service.contact_name }}</td>
                     <td><span class="pax-badge">{{ service.pax }}</span></td>
                     <td>
@@ -859,22 +1080,9 @@ body {
                             {{ service.service_type }}
                         </span>
                     </td>
-                    <td style="max-width: 250px;">{{ service.description }}</td>
-                    <td>
-                        <span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span>
-                    </td>
-                    <td style="font-weight: 600; color: #059669;">
-                        {% if service.cost %}
-                            ${{ "%.2f"|format(service.cost) }}
-                        {% else %}
-                            -
-                        {% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                    </td>
+                    <td style="max-width:220px;">{{ service.description }}</td>
+                    <td><span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span></td>
+                    <td style="font-weight:600;color:#059669;">{% if service.cost %}${{ "%.2f"|format(service.cost) }}{% else %}-{% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -890,39 +1098,15 @@ body {
 </div>
 
 <script>
-// Set default date range to current month on page load if not set
-document.addEventListener('DOMContentLoaded', function() {
-    const dateFrom = document.getElementById('dateFrom');
-    const dateTo = document.getElementById('dateTo');
-    
-    // Only set defaults if both are empty
-    if (!dateFrom.value && !dateTo.value) {
-        const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        
-        dateFrom.value = firstDay.toISOString().split('T')[0];
-        dateTo.value = lastDay.toISOString().split('T')[0];
-    }
-    
-    // Auto-submit on date change
-    dateFrom.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-    dateTo.addEventListener('change', function() {
-        document.getElementById('filterForm').submit();
-    });
-});
+// Track selected service types
+let selectedServices = {{ service_types | tojson | safe }};
 
-// Toggle dropdown menus
+// Toggle dropdown
 function toggleDropdown(menuId) {
     const menu = document.getElementById(menuId);
-    const allMenus = document.querySelectorAll('.filter-menu');
-    
-    allMenus.forEach(m => {
+    document.querySelectorAll('.filter-menu').forEach(m => {
         if (m.id !== menuId) m.classList.remove('show');
     });
-    
     menu.classList.toggle('show');
 }
 
@@ -933,10 +1117,51 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Select service type
-function selectService(value) {
-    document.getElementById('serviceTypeInput').value = value;
+// Toggle service filter from checkbox menu
+function toggleServiceCheckbox(serviceType) {
+    const idx = selectedServices.indexOf(serviceType);
+    if (idx > -1) {
+        selectedServices.splice(idx, 1);
+    } else {
+        selectedServices.push(serviceType);
+    }
+    updateServiceInputs();
     document.getElementById('filterForm').submit();
+}
+
+// Toggle service filter from card click
+function toggleServiceFilter(serviceType) {
+    const idx = selectedServices.indexOf(serviceType);
+    if (idx > -1) {
+        selectedServices.splice(idx, 1);
+    } else {
+        selectedServices.push(serviceType);
+    }
+    updateServiceInputs();
+    document.getElementById('filterForm').submit();
+}
+
+// Remove single service filter
+function removeServiceFilter(serviceType) {
+    const idx = selectedServices.indexOf(serviceType);
+    if (idx > -1) {
+        selectedServices.splice(idx, 1);
+    }
+    updateServiceInputs();
+    document.getElementById('filterForm').submit();
+}
+
+// Update hidden inputs for service types
+function updateServiceInputs() {
+    const container = document.getElementById('serviceTypeInputs');
+    container.innerHTML = '';
+    selectedServices.forEach(st => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'service_type';
+        input.value = st;
+        container.appendChild(input);
+    });
 }
 
 // Select status
@@ -945,14 +1170,14 @@ function selectStatus(value) {
     document.getElementById('filterForm').submit();
 }
 
-// Remove individual filter
+// Remove filter
 function removeFilter(filterName) {
     const url = new URL(window.location.href);
     url.searchParams.delete(filterName);
     window.location.href = url.toString();
 }
 
-// Toggle view (card/list)
+// View toggle
 function setView(view) {
     const cardView = document.getElementById('cardView');
     const listView = document.getElementById('listView');
@@ -970,17 +1195,22 @@ function setView(view) {
         cardBtn.classList.remove('active');
         listBtn.classList.add('active');
     }
-    
     localStorage.setItem('analyticsView', view);
 }
 
 // Restore view preference
 const savedView = localStorage.getItem('analyticsView');
-if (savedView === 'list') {
-    setView('list');
-}
+if (savedView === 'list') setView('list');
 
-// Submit form on Enter key in search
+// Auto-submit on date change
+document.getElementById('dateFrom').addEventListener('change', function() {
+    document.getElementById('filterForm').submit();
+});
+document.getElementById('dateTo').addEventListener('change', function() {
+    document.getElementById('filterForm').submit();
+});
+
+// Submit on Enter in search
 document.querySelector('.search-box input').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();

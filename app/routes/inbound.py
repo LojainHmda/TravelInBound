@@ -4301,7 +4301,10 @@ def analytics_dashboard():
     
     # Get filter parameters
     search_query = request.args.get('search', '').strip()
-    service_type = request.args.get('service_type', '')
+    # Support multi-select: get list of service types
+    service_types = request.args.getlist('service_type')
+    # Filter out empty strings
+    service_types = [st for st in service_types if st]
     status_filter = request.args.get('status', '')
     date_from_str = request.args.get('date_from', '')
     date_to_str = request.args.get('date_to', '')
@@ -4317,11 +4320,104 @@ def analytics_dashboard():
     date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day_of_month
     date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day_of_month
     
+    # Calculate service performance stats for dashboard cards
+    service_stats = {}
+    
+    # Hotels stats
+    hotel_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    if date_from_str:
+        hotel_query = hotel_query.filter(InboundHotel.check_in_date >= date_from)
+    if date_to_str:
+        hotel_query = hotel_query.filter(InboundHotel.check_in_date <= date_to)
+    hotels_all = hotel_query.all()
+    hotel_confirmed = sum(1 for h in hotels_all if h.status in ['CONFIRMED', 'RESERVED'])
+    hotel_pax = sum(h.request.pax or 0 for h in hotels_all)
+    service_stats['HOTEL'] = {
+        'total': len(hotels_all),
+        'confirmed': hotel_confirmed,
+        'pax': hotel_pax
+    }
+    
+    # Transport stats
+    transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    if date_from_str:
+        transport_query = transport_query.filter(InboundTransport.date >= date_from)
+    if date_to_str:
+        transport_query = transport_query.filter(InboundTransport.date <= date_to)
+    transports_all = transport_query.all()
+    transport_confirmed = sum(1 for t in transports_all if t.status in ['CONFIRMED', 'RESERVED'])
+    transport_pax = sum(t.pax or t.request.pax or 0 for t in transports_all)
+    service_stats['TRANSPORT'] = {
+        'total': len(transports_all),
+        'confirmed': transport_confirmed,
+        'pax': transport_pax
+    }
+    
+    # Guides stats
+    guide_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    if date_from_str:
+        guide_query = guide_query.filter(InboundGuide.date >= date_from)
+    if date_to_str:
+        guide_query = guide_query.filter(InboundGuide.date <= date_to)
+    guides_all = guide_query.all()
+    guide_confirmed = sum(1 for g in guides_all if g.status in ['CONFIRMED', 'RESERVED'])
+    guide_pax = sum(g.request.pax or 0 for g in guides_all)
+    service_stats['GUIDE'] = {
+        'total': len(guides_all),
+        'confirmed': guide_confirmed,
+        'pax': guide_pax
+    }
+    
+    # Meals stats
+    meal_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    if date_from_str:
+        meal_query = meal_query.filter(InboundMeal.date >= date_from)
+    if date_to_str:
+        meal_query = meal_query.filter(InboundMeal.date <= date_to)
+    meals_all = meal_query.all()
+    meal_confirmed = sum(1 for m in meals_all if m.status in ['CONFIRMED', 'RESERVED'])
+    meal_pax = sum(m.request.pax or 0 for m in meals_all)
+    service_stats['MEAL'] = {
+        'total': len(meals_all),
+        'confirmed': meal_confirmed,
+        'pax': meal_pax
+    }
+    
+    # Optionals stats
+    optional_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
+    if date_from_str and date_to_str:
+        optional_query = optional_query.filter(
+            db.or_(
+                InboundOptional.date == None,
+                db.and_(InboundOptional.date >= date_from, InboundOptional.date <= date_to)
+            )
+        )
+    optionals_all = optional_query.all()
+    optional_confirmed = sum(1 for o in optionals_all if o.status in ['CONFIRMED', 'RESERVED'])
+    optional_pax = sum(o.request.pax or 0 for o in optionals_all)
+    service_stats['OPTIONAL'] = {
+        'total': len(optionals_all),
+        'confirmed': optional_confirmed,
+        'pax': optional_pax
+    }
+    
+    # Calculate share percentages
+    total_services = sum(s['total'] for s in service_stats.values())
+    for stype in service_stats:
+        if total_services > 0:
+            service_stats[stype]['share'] = round((service_stats[stype]['total'] / total_services) * 100)
+        else:
+            service_stats[stype]['share'] = 0
+        if service_stats[stype]['total'] > 0:
+            service_stats[stype]['confirmed_pct'] = round((service_stats[stype]['confirmed'] / service_stats[stype]['total']) * 100)
+        else:
+            service_stats[stype]['confirmed_pct'] = 0
+    
     # Collect all services from all tables
     all_services = []
     
     # 1. Hotels
-    if not service_type or service_type == 'HOTEL':
+    if not service_types or 'HOTEL' in service_types:
         hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
         if date_from_str:
             hotels_query = hotels_query.filter(InboundHotel.check_in_date >= date_from)
@@ -4357,7 +4453,7 @@ def analytics_dashboard():
             })
     
     # 2. Transport
-    if not service_type or service_type == 'TRANSPORT':
+    if not service_types or 'TRANSPORT' in service_types:
         transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
         if date_from_str:
             transport_query = transport_query.filter(InboundTransport.date >= date_from)
@@ -4395,7 +4491,7 @@ def analytics_dashboard():
             })
     
     # 3. Guides
-    if not service_type or service_type == 'GUIDE':
+    if not service_types or 'GUIDE' in service_types:
         guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
         if date_from_str:
             guides_query = guides_query.filter(InboundGuide.date >= date_from)
@@ -4431,7 +4527,7 @@ def analytics_dashboard():
             })
     
     # 4. Meals
-    if not service_type or service_type == 'MEAL':
+    if not service_types or 'MEAL' in service_types:
         meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
         if date_from_str:
             meals_query = meals_query.filter(InboundMeal.date >= date_from)
@@ -4467,7 +4563,7 @@ def analytics_dashboard():
             })
     
     # 5. Optional Services
-    if not service_type or service_type == 'OPTIONAL':
+    if not service_types or 'OPTIONAL' in service_types:
         optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
         if date_from_str and date_to_str:
             optionals_query = optionals_query.filter(
@@ -4520,8 +4616,10 @@ def analytics_dashboard():
     return render_template('inbound/analytics.html',
                          services=all_services,
                          status_counts=status_counts,
+                         service_stats=service_stats,
+                         total_services=total_services,
                          search_query=search_query,
-                         service_type=service_type,
+                         service_types=service_types,
                          status_filter=status_filter,
                          date_from=date_from,
                          date_to=date_to,
