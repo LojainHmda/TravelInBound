@@ -6,77 +6,543 @@
 <style>
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-    background: #f5f5f7;
+    background: #f8fafc;
 }
 
 .analytics-header {
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
     color: #1f2937;
-    padding: 30px;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    padding: 24px 32px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .analytics-header h1 {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
-    margin: 0 0 8px 0;
+    margin: 0 0 4px 0;
 }
 
 .analytics-header p {
-    font-size: 15px;
-    opacity: 0.9;
+    font-size: 14px;
+    opacity: 0.8;
     margin: 0;
 }
 
-.filters-card {
+/* Shopping-style filter bar */
+.filter-bar {
     background: white;
     border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.filter-row {
-    display: grid;
-    grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 1.5fr 1fr;
-    gap: 12px;
-    margin-bottom: 12px;
+.search-box {
+    flex: 1;
+    min-width: 280px;
+    position: relative;
 }
 
-.stats-bar {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
+.search-box input {
+    width: 100%;
+    padding: 10px 16px 10px 40px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f9fafb;
+    transition: all 0.2s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #fbbf24;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
+
+/* Filter dropdown buttons */
+.filter-dropdown {
+    position: relative;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+
+.filter-btn.active {
+    border-color: #f59e0b;
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.filter-btn .plus-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.filter-btn.active .plus-icon {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+/* Dropdown menu */
+.filter-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    min-width: 200px;
+    z-index: 100;
+    display: none;
+    overflow: hidden;
+}
+
+.filter-menu.show {
+    display: block;
+}
+
+.filter-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 14px;
+    color: #374151;
+}
+
+.filter-menu-item:hover {
+    background: #f9fafb;
+}
+
+.filter-menu-item.selected {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.filter-menu-item i {
+    width: 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.filter-menu-item.selected i {
+    color: #f59e0b;
+}
+
+/* Date range picker */
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.date-input {
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    background: #f9fafb;
+    width: 140px;
+}
+
+.date-input:focus {
+    outline: none;
+    border-color: #fbbf24;
+    background: white;
+}
+
+.date-separator {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* Export button */
+.btn-export {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-export:hover {
+    background: #059669;
+    color: white;
+}
+
+/* Active filter tags */
+.active-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 20px 16px 20px;
+    flex-wrap: wrap;
+}
+
+.filter-label {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: #374151;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.filter-tag.service-tag {
+    background: #059669;
+}
+
+.filter-tag.status-tag {
+    background: #6366f1;
+}
+
+.filter-tag.date-tag {
+    background: #0891b2;
+}
+
+.filter-tag .remove-tag {
+    cursor: pointer;
+    opacity: 0.8;
+    margin-left: 2px;
+}
+
+.filter-tag .remove-tag:hover {
+    opacity: 1;
+}
+
+.clear-all {
+    font-size: 13px;
+    color: #f59e0b;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.clear-all:hover {
+    color: #d97706;
+    text-decoration: underline;
+}
+
+/* Stats cards */
+.stats-row {
+    display: flex;
     gap: 12px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
 }
 
 .stat-card {
+    flex: 1;
+    min-width: 120px;
     background: white;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 16px;
     text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid #f3f4f6;
 }
 
 .stat-card .stat-value {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 700;
     color: #1f2937;
 }
 
 .stat-card .stat-label {
-    font-size: 13px;
+    font-size: 11px;
     color: #6b7280;
-    margin-top: 4px;
+    margin-top: 2px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
 }
 
+/* Service cards grid */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 16px;
+}
+
+.service-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: all 0.2s;
+    border: 1px solid #f3f4f6;
+}
+
+.service-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.service-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+
+.service-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.request-link {
+    font-size: 13px;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.request-link:hover {
+    text-decoration: underline;
+}
+
+.service-card-body {
+    padding: 16px;
+}
+
+.service-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.contact-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.contact-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+}
+
+.contact-name {
+    font-weight: 500;
+    font-size: 14px;
+    color: #1f2937;
+}
+
+.pax-badge {
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.service-type-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.service-type-icon.hotel { background: #fee2e2; color: #dc2626; }
+.service-type-icon.transport { background: #dbeafe; color: #2563eb; }
+.service-type-icon.guide { background: #dcfce7; color: #16a34a; }
+.service-type-icon.meal { background: #fef3c7; color: #d97706; }
+.service-type-icon.optional { background: #f3e8ff; color: #9333ea; }
+
+.service-description {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.service-details {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+.service-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fafafa;
+    border-top: 1px solid #f3f4f6;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-request { background: #f3f4f6; color: #374151; }
+.status-quoted { background: #dbeafe; color: #1e40af; }
+.status-confirmed { background: #dcfce7; color: #166534; }
+.status-processing { background: #fef3c7; color: #92400e; }
+.status-completed { background: #d1fae5; color: #065f46; }
+.status-reserved { background: #e0e7ff; color: #4338ca; }
+.status-requested { background: #fce7f3; color: #be185d; }
+.status-cancelled { background: #fee2e2; color: #dc2626; }
+
+.cost-display {
+    font-size: 16px;
+    font-weight: 700;
+    color: #059669;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #d1d5db;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #6b7280;
+}
+
+/* Results count */
+.results-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 4px;
+}
+
+.results-count {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.results-count strong {
+    color: #1f2937;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 4px;
+}
+
+.view-toggle button {
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.view-toggle button.active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+/* List view table */
 .service-table {
     background: white;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    display: none;
+}
+
+.service-table.show {
+    display: block;
 }
 
 .service-table table {
@@ -88,161 +554,70 @@ body {
     background: #f9fafb;
     padding: 12px 16px;
     text-align: left;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #374151;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     border-bottom: 1px solid #e5e7eb;
 }
 
 .service-table td {
-    padding: 12px 16px;
+    padding: 14px 16px;
     font-size: 14px;
     color: #1f2937;
     border-bottom: 1px solid #f3f4f6;
 }
 
 .service-table tr:hover {
-    background: #f9fafb;
+    background: #fefce8;
 }
 
-.badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.badge-hotel {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.badge-transport {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.badge-guide {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.badge-meal {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.badge-optional {
-    background: #e9d5ff;
-    color: #6b21a8;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.status-request {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.status-quoted {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.status-confirmed {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.status-processing {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-completed {
-    background: #d1fae5;
-    color: #065f46;
-}
-
-.btn-export {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
+.service-type-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
 }
 
-.btn-export:hover {
-    background: #059669;
-}
+.service-type-badge.hotel { background: #fee2e2; color: #991b1b; }
+.service-type-badge.transport { background: #dbeafe; color: #1e40af; }
+.service-type-badge.guide { background: #dcfce7; color: #166534; }
+.service-type-badge.meal { background: #fef3c7; color: #92400e; }
+.service-type-badge.optional { background: #f3e8ff; color: #6b21a8; }
 
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6b7280;
-}
-
-.empty-state i {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-}
-
-/* Search field styling - lighter/grey */
-.filters-card input[type="text"],
-.filters-card input[type="date"] {
-    background-color: #f3f4f6;
-    border-color: #e5e7eb;
-    color: #374151;
-    font-size: 14px;
-}
-
-.filters-card input[type="text"]::placeholder {
-    color: #9ca3af;
-}
-
-.filters-card input[type="text"]:focus,
-.filters-card input[type="date"]:focus {
-    background-color: #f9fafb;
-    border-color: #d1d5db;
-    box-shadow: 0 0 0 3px rgba(229, 231, 235, 0.5);
-}
-
-/* Service type filter styling */
-.filters-card .form-select {
-    background-color: #f3f4f6;
-    border-color: #e5e7eb;
-    color: #374151;
-    font-size: 14px;
-}
-
-.filters-card .form-select:focus {
-    background-color: #f9fafb;
-    border-color: #d1d5db;
-    box-shadow: 0 0 0 3px rgba(229, 231, 235, 0.5);
+@media (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        min-width: 100%;
+    }
+    
+    .services-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-range {
+        flex-wrap: wrap;
+    }
 }
 </style>
 
 <div class="container-fluid" style="max-width: 1400px; padding: 20px;">
     <!-- Header -->
     <div class="analytics-header">
-        <h1><i class="fas fa-chart-line me-2"></i>Services Analytics Dashboard</h1>
-        <p>Comprehensive run-down view across all hotels, transport, guides, meals, and optional services with smart search and filters</p>
+        <h1><i class="fas fa-chart-line me-2"></i>Services Run-Down</h1>
+        <p>View and filter all services across hotels, transport, guides, meals, and optionals</p>
     </div>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar">
+    <!-- Stats Row -->
+    <div class="stats-row">
         <div class="stat-card">
             <div class="stat-value">{{ status_counts.REQUEST }}</div>
             <div class="stat-label">REQUEST</div>
@@ -265,72 +640,194 @@ body {
         </div>
     </div>
 
-    <!-- Filters Card -->
-    <div class="filters-card">
-        <form method="GET" action="{{ url_for('inbound.analytics_dashboard') }}">
-            <div class="filter-row">
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-search me-1"></i>Search All Fields</label>
-                    <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search hotels, transport, guides, contacts...">
-                </div>
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-service me-1"></i>Service Type</label>
-                    <select class="form-select service-type-select" name="service_type">
-                        <option value="">🔍 All Services</option>
-                        <option value="HOTEL" {% if service_type == 'HOTEL' %}selected{% endif %}>🛏️ Hotels</option>
-                        <option value="TRANSPORT" {% if service_type == 'TRANSPORT' %}selected{% endif %}>🚗 Transport</option>
-                        <option value="GUIDE" {% if service_type == 'GUIDE' %}selected{% endif %}>👨‍💼 Guides</option>
-                        <option value="MEAL" {% if service_type == 'MEAL' %}selected{% endif %}>🍽️ Meals</option>
-                        <option value="OPTIONAL" {% if service_type == 'OPTIONAL' %}selected{% endif %}>⭐ Optionals</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-flag me-1"></i>Status</label>
-                    <select class="form-select" name="status">
-                        <option value="">All Statuses</option>
-                        <option value="REQUEST" {% if status_filter == 'REQUEST' %}selected{% endif %}>REQUEST</option>
-                        <option value="QUOTED" {% if status_filter == 'QUOTED' %}selected{% endif %}>QUOTED</option>
-                        <option value="CONFIRMED" {% if status_filter == 'CONFIRMED' %}selected{% endif %}>CONFIRMED</option>
-                        <option value="RESERVED" {% if status_filter == 'RESERVED' %}selected{% endif %}>RESERVED</option>
-                        <option value="REQUESTED" {% if status_filter == 'REQUESTED' %}selected{% endif %}>REQUESTED</option>
-                        <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>CANCELLED</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-calendar me-1"></i>From Date</label>
-                    <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
-                </div>
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-calendar me-1"></i>To Date</label>
-                    <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
-                </div>
-                <div>
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;">&nbsp;</label>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search me-1"></i>Filter
-                    </button>
-                </div>
+    <!-- Filter Bar -->
+    <form method="GET" action="{{ url_for('inbound.analytics_dashboard') }}" id="filterForm">
+        <div class="filter-bar">
+            <!-- Search Box -->
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search ID, Name, or Description and press Enter...">
             </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <label class="form-label mb-1" style="font-size: 13px; font-weight: 600;"><i class="fas fa-hashtag me-1"></i>Request Number</label>
-                    <input type="text" class="form-control" name="request_number" value="{{ request_number }}" placeholder="INB-202511-0001">
+
+            <!-- Service Type Dropdown -->
+            <div class="filter-dropdown">
+                <button type="button" class="filter-btn {% if service_type %}active{% endif %}" onclick="toggleDropdown('serviceMenu')">
+                    <i class="fas fa-concierge-bell"></i>
+                    Service
+                    <span class="plus-icon">+</span>
+                </button>
+                <div class="filter-menu" id="serviceMenu">
+                    <div class="filter-menu-item {% if service_type == '' %}selected{% endif %}" onclick="selectService('')">
+                        <i class="fas fa-list"></i> All Services
+                    </div>
+                    <div class="filter-menu-item {% if service_type == 'HOTEL' %}selected{% endif %}" onclick="selectService('HOTEL')">
+                        <i class="fas fa-bed"></i> Hotels
+                    </div>
+                    <div class="filter-menu-item {% if service_type == 'TRANSPORT' %}selected{% endif %}" onclick="selectService('TRANSPORT')">
+                        <i class="fas fa-car"></i> Transport
+                    </div>
+                    <div class="filter-menu-item {% if service_type == 'GUIDE' %}selected{% endif %}" onclick="selectService('GUIDE')">
+                        <i class="fas fa-user-tie"></i> Guides
+                    </div>
+                    <div class="filter-menu-item {% if service_type == 'MEAL' %}selected{% endif %}" onclick="selectService('MEAL')">
+                        <i class="fas fa-utensils"></i> Meals
+                    </div>
+                    <div class="filter-menu-item {% if service_type == 'OPTIONAL' %}selected{% endif %}" onclick="selectService('OPTIONAL')">
+                        <i class="fas fa-star"></i> Optionals
+                    </div>
                 </div>
-                <div class="col-md-9 d-flex align-items-end">
-                    <a href="{{ url_for('inbound.analytics_dashboard') }}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-times me-1"></i>Clear Filters
-                    </a>
-                    <a href="{{ url_for('inbound.analytics_export_excel', search=search_query, service_type=service_type, status=status_filter, date_from=date_from, date_to=date_to, request_number=request_number) }}" class="btn-export">
-                        <i class="fas fa-file-excel"></i>Export to Excel
-                    </a>
-                </div>
+                <input type="hidden" name="service_type" id="serviceTypeInput" value="{{ service_type }}">
             </div>
-        </form>
+
+            <!-- Status Dropdown -->
+            <div class="filter-dropdown">
+                <button type="button" class="filter-btn {% if status_filter %}active{% endif %}" onclick="toggleDropdown('statusMenu')">
+                    <i class="fas fa-flag"></i>
+                    Status
+                    <span class="plus-icon">+</span>
+                </button>
+                <div class="filter-menu" id="statusMenu">
+                    <div class="filter-menu-item {% if status_filter == '' %}selected{% endif %}" onclick="selectStatus('')">
+                        <i class="fas fa-list"></i> All Statuses
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'REQUEST' %}selected{% endif %}" onclick="selectStatus('REQUEST')">
+                        <i class="fas fa-inbox"></i> Request
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'QUOTED' %}selected{% endif %}" onclick="selectStatus('QUOTED')">
+                        <i class="fas fa-file-invoice-dollar"></i> Quoted
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'CONFIRMED' %}selected{% endif %}" onclick="selectStatus('CONFIRMED')">
+                        <i class="fas fa-check-circle"></i> Confirmed
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'PROCESSING' %}selected{% endif %}" onclick="selectStatus('PROCESSING')">
+                        <i class="fas fa-spinner"></i> Processing
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'COMPLETED' %}selected{% endif %}" onclick="selectStatus('COMPLETED')">
+                        <i class="fas fa-check-double"></i> Completed
+                    </div>
+                    <div class="filter-menu-item {% if status_filter == 'CANCELLED' %}selected{% endif %}" onclick="selectStatus('CANCELLED')">
+                        <i class="fas fa-times-circle"></i> Cancelled
+                    </div>
+                </div>
+                <input type="hidden" name="status" id="statusInput" value="{{ status_filter }}">
+            </div>
+
+            <!-- Date Range -->
+            <div class="date-range">
+                <input type="date" class="date-input" name="date_from" id="dateFrom" value="{{ date_from }}">
+                <span class="date-separator">to</span>
+                <input type="date" class="date-input" name="date_to" id="dateTo" value="{{ date_to }}">
+            </div>
+
+            <!-- Hidden request number input -->
+            <input type="hidden" name="request_number" value="{{ request_number }}">
+
+            <!-- Export Button -->
+            <a href="{{ url_for('inbound.analytics_export_excel', search=search_query, service_type=service_type, status=status_filter, date_from=date_from, date_to=date_to, request_number=request_number) }}" class="btn-export">
+                <i class="fas fa-download"></i>
+                Export
+            </a>
+        </div>
+
+        <!-- Active Filter Tags -->
+        {% if service_type or status_filter or search_query or request_number %}
+        <div class="active-filters">
+            <span class="filter-label">FILTERS:</span>
+            
+            {% if service_type %}
+            <span class="filter-tag service-tag">
+                SERVICE: {{ service_type }}
+                <span class="remove-tag" onclick="removeFilter('service_type')">&times;</span>
+            </span>
+            {% endif %}
+            
+            {% if status_filter %}
+            <span class="filter-tag status-tag">
+                STATUS: {{ status_filter }}
+                <span class="remove-tag" onclick="removeFilter('status')">&times;</span>
+            </span>
+            {% endif %}
+            
+            {% if search_query %}
+            <span class="filter-tag">
+                SEARCH: "{{ search_query }}"
+                <span class="remove-tag" onclick="removeFilter('search')">&times;</span>
+            </span>
+            {% endif %}
+            
+            {% if request_number %}
+            <span class="filter-tag">
+                REQUEST #: {{ request_number }}
+                <span class="remove-tag" onclick="removeFilter('request_number')">&times;</span>
+            </span>
+            {% endif %}
+            
+            <a href="{{ url_for('inbound.analytics_dashboard') }}" class="clear-all">Clear all</a>
+        </div>
+        {% endif %}
+    </form>
+
+    <!-- Results Info -->
+    <div class="results-info">
+        <span class="results-count">
+            <strong>{{ services|length }}</strong> services found
+            {% if date_from and date_to %}
+            <span style="color: #9ca3af;"> | {{ date_from }} to {{ date_to }}</span>
+            {% endif %}
+        </span>
+        <div class="view-toggle">
+            <button type="button" class="active" id="cardViewBtn" onclick="setView('card')">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <button type="button" id="listViewBtn" onclick="setView('list')">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
     </div>
 
-    <!-- Services Table -->
+    <!-- Services Cards View -->
     {% if services %}
-    <div class="service-table">
+    <div class="services-grid" id="cardView">
+        {% for service in services %}
+        <div class="service-card">
+            <div class="service-card-header">
+                <span class="service-date">{{ service.date.strftime('%d %b %Y') }}</span>
+                <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="request-link">
+                    {{ service.request_number }}
+                </a>
+            </div>
+            <div class="service-card-body">
+                <div class="service-top-row">
+                    <div class="contact-info">
+                        <div class="contact-avatar">{{ service.contact_name[:2].upper() if service.contact_name else 'NA' }}</div>
+                        <div>
+                            <div class="contact-name">{{ service.contact_name or 'No Contact' }}</div>
+                            <span class="pax-badge">{{ service.pax }} PAX</span>
+                        </div>
+                    </div>
+                    <div class="service-type-icon {{ service.service_type.lower() }}">
+                        <i class="fas fa-{% if service.service_type == 'HOTEL' %}bed{% elif service.service_type == 'TRANSPORT' %}car{% elif service.service_type == 'GUIDE' %}user-tie{% elif service.service_type == 'MEAL' %}utensils{% else %}star{% endif %}"></i>
+                    </div>
+                </div>
+                <div class="service-description">{{ service.description or service.service_type }}</div>
+                <div class="service-details">{{ service.details[:100] }}{% if service.details|length > 100 %}...{% endif %}</div>
+            </div>
+            <div class="service-card-footer">
+                <span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span>
+                <span class="cost-display">
+                    {% if service.cost %}
+                        ${{ "%.2f"|format(service.cost) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Services Table View -->
+    <div class="service-table" id="listView">
         <table>
             <thead>
                 <tr>
@@ -340,39 +837,35 @@ body {
                     <th>PAX</th>
                     <th>Service</th>
                     <th>Description</th>
-                    <th>Details</th>
                     <th>Status</th>
                     <th>Cost</th>
-                    <th>Actions</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for service in services %}
                 <tr>
-                    <td style="font-weight: 600;">{{ service.date.strftime('%m/%d/%Y') }}</td>
+                    <td style="font-weight: 600;">{{ service.date.strftime('%d %b %Y') }}</td>
                     <td>
-                        <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                        <a href="{{ url_for('inbound.view_request', id=service.request_id) }}" class="request-link">
                             {{ service.request_number }}
                         </a>
                     </td>
                     <td>{{ service.contact_name }}</td>
-                    <td><span class="badge bg-secondary">{{ service.pax }} PAX</span></td>
+                    <td><span class="pax-badge">{{ service.pax }}</span></td>
                     <td>
-                        <span class="badge badge-{{ service.service_type.lower() }}">
-                            <i class="fas fa-{% if service.service_type == 'HOTEL' %}bed{% elif service.service_type == 'TRANSPORT' %}car{% elif service.service_type == 'GUIDE' %}user-tie{% elif service.service_type == 'MEAL' %}utensils{% else %}star{% endif %} me-1"></i>
+                        <span class="service-type-badge {{ service.service_type.lower() }}">
+                            <i class="fas fa-{% if service.service_type == 'HOTEL' %}bed{% elif service.service_type == 'TRANSPORT' %}car{% elif service.service_type == 'GUIDE' %}user-tie{% elif service.service_type == 'MEAL' %}utensils{% else %}star{% endif %}"></i>
                             {{ service.service_type }}
                         </span>
                     </td>
                     <td style="max-width: 250px;">{{ service.description }}</td>
-                    <td style="max-width: 300px; font-size: 13px; color: #6b7280;">{{ service.details }}</td>
                     <td>
-                        <span class="status-badge status-{{ service.status.lower() }}">
-                            {{ service.status }}
-                        </span>
+                        <span class="status-badge status-{{ service.status.lower() }}">{{ service.status }}</span>
                     </td>
-                    <td style="font-weight: 600;">
+                    <td style="font-weight: 600; color: #059669;">
                         {% if service.cost %}
-                            {{ "%.2f"|format(service.cost) }} {{ service.currency }}
+                            ${{ "%.2f"|format(service.cost) }}
                         {% else %}
                             -
                         {% endif %}
@@ -387,17 +880,113 @@ body {
             </tbody>
         </table>
     </div>
-
-    <div class="mt-3 text-center" style="color: #6b7280; font-size: 14px;">
-        <strong>{{ services|length }}</strong> services found
-    </div>
     {% else %}
     <div class="empty-state">
         <i class="fas fa-search"></i>
         <h3>No Services Found</h3>
-        <p>Try adjusting your filters or search criteria</p>
+        <p>Try adjusting your filters or date range</p>
     </div>
     {% endif %}
 </div>
+
+<script>
+// Set default date range to current month on page load if not set
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    // Only set defaults if both are empty
+    if (!dateFrom.value && !dateTo.value) {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        dateFrom.value = firstDay.toISOString().split('T')[0];
+        dateTo.value = lastDay.toISOString().split('T')[0];
+    }
+    
+    // Auto-submit on date change
+    dateFrom.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+    dateTo.addEventListener('change', function() {
+        document.getElementById('filterForm').submit();
+    });
+});
+
+// Toggle dropdown menus
+function toggleDropdown(menuId) {
+    const menu = document.getElementById(menuId);
+    const allMenus = document.querySelectorAll('.filter-menu');
+    
+    allMenus.forEach(m => {
+        if (m.id !== menuId) m.classList.remove('show');
+    });
+    
+    menu.classList.toggle('show');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.filter-dropdown')) {
+        document.querySelectorAll('.filter-menu').forEach(m => m.classList.remove('show'));
+    }
+});
+
+// Select service type
+function selectService(value) {
+    document.getElementById('serviceTypeInput').value = value;
+    document.getElementById('filterForm').submit();
+}
+
+// Select status
+function selectStatus(value) {
+    document.getElementById('statusInput').value = value;
+    document.getElementById('filterForm').submit();
+}
+
+// Remove individual filter
+function removeFilter(filterName) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete(filterName);
+    window.location.href = url.toString();
+}
+
+// Toggle view (card/list)
+function setView(view) {
+    const cardView = document.getElementById('cardView');
+    const listView = document.getElementById('listView');
+    const cardBtn = document.getElementById('cardViewBtn');
+    const listBtn = document.getElementById('listViewBtn');
+    
+    if (view === 'card') {
+        cardView.style.display = 'grid';
+        listView.classList.remove('show');
+        cardBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        cardView.style.display = 'none';
+        listView.classList.add('show');
+        cardBtn.classList.remove('active');
+        listBtn.classList.add('active');
+    }
+    
+    localStorage.setItem('analyticsView', view);
+}
+
+// Restore view preference
+const savedView = localStorage.getItem('analyticsView');
+if (savedView === 'list') {
+    setView('list');
+}
+
+// Submit form on Enter key in search
+document.querySelector('.search-box input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('filterForm').submit();
+    }
+});
+</script>
 
 {% endblock %}

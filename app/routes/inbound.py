@@ -4307,9 +4307,15 @@ def analytics_dashboard():
     date_to_str = request.args.get('date_to', '')
     request_number = request.args.get('request_number', '')
     
-    # Parse dates
-    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
-    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
+    # Default to current month if dates not provided
+    import calendar
+    today = datetime.now().date()
+    first_day_of_month = today.replace(day=1)
+    last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    
+    # Parse dates with current month defaults
+    date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day_of_month
+    date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day_of_month
     
     # Collect all services from all tables
     all_services = []
