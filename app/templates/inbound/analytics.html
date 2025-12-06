@@ -64,43 +64,49 @@ body {
     font-size: 13px;
 }
 
-/* Service Performance Dashboard Cards */
+/* Service Performance Dashboard Cards - Compact */
 .performance-section {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .performance-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: #1f2937;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .performance-title .record-count {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
     color: #6b7280;
 }
 
 .performance-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
     .performance-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .performance-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 .perf-card {
     background: white;
-    border-radius: 14px;
-    padding: 20px;
+    border-radius: 10px;
+    padding: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     border: 1px solid #f3f4f6;
     transition: all 0.2s;
@@ -108,8 +114,8 @@ body {
 }
 
 .perf-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
 }
 
 .perf-card.selected {
@@ -121,17 +127,17 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .perf-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 16px;
 }
 
 .perf-icon.hotel { background: #dbeafe; color: #2563eb; }
@@ -145,46 +151,46 @@ body {
 }
 
 .share-label {
-    font-size: 11px;
+    font-size: 9px;
     color: #9ca3af;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .share-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #1f2937;
 }
 
 .perf-service-name {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
     color: #374151;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
 }
 
 .perf-count {
-    font-size: 32px;
+    font-size: 22px;
     font-weight: 700;
     color: #1f2937;
     line-height: 1;
 }
 
 .perf-count-label {
-    font-size: 13px;
+    font-size: 11px;
     color: #6b7280;
-    margin-left: 4px;
+    margin-left: 3px;
 }
 
 .perf-card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 14px;
-    padding-top: 14px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid #f3f4f6;
 }
 
@@ -194,42 +200,42 @@ body {
 }
 
 .confirmed-label {
-    font-size: 11px;
+    font-size: 9px;
     color: #9ca3af;
     text-transform: uppercase;
 }
 
 .confirmed-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #1f2937;
 }
 
 .confirmed-pct {
-    font-size: 12px;
+    font-size: 10px;
     color: #10b981;
-    margin-left: 4px;
+    margin-left: 2px;
 }
 
 .pax-stat {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .pax-icon {
     color: #9ca3af;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .pax-label {
-    font-size: 11px;
+    font-size: 9px;
     color: #9ca3af;
     text-transform: uppercase;
 }
 
 .pax-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: #1f2937;
 }
