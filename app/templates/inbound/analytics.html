@@ -323,10 +323,11 @@ body {
     margin-top: 4px;
     background: white;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-    min-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    min-width: 160px;
     z-index: 100;
+    padding: 4px 0;
     display: none;
     overflow: hidden;
 }
@@ -338,10 +339,10 @@ body {
 .filter-menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
+    gap: 8px;
+    padding: 6px 12px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     color: #374151;
 }
 
@@ -355,15 +356,16 @@ body {
 }
 
 .filter-menu-item .check-icon {
-    width: 18px;
-    height: 18px;
-    border: 2px solid #d1d5db;
-    border-radius: 4px;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 3px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
+    font-size: 8px;
     color: transparent;
+    flex-shrink: 0;
 }
 
 .filter-menu-item.selected .check-icon {
@@ -373,7 +375,8 @@ body {
 }
 
 .filter-menu-item i.service-icon {
-    width: 18px;
+    width: 14px;
+    font-size: 12px;
     text-align: center;
     color: #6b7280;
 }
