@@ -3378,6 +3378,13 @@ document.addEventListener('DOMContentLoaded', function() {
         editModeButtons.classList.remove('edit-mode-hidden');
         editModeText.textContent = 'Cancel';
     }
+    
+    // Initialize date validation - set min date on to_date based on from_date
+    const fromDateInput = document.querySelector('input[name="from_date"]');
+    const toDateInput = document.querySelector('input[name="to_date"]');
+    if (fromDateInput && toDateInput && fromDateInput.value) {
+        toDateInput.min = fromDateInput.value;
+    }
 });
 
 // Cancel Edit Function
@@ -3902,13 +3909,34 @@ function capitalizeFirst(str) {
 
 // Calculate Days Function
 function calculateDays() {
-    const fromDate = document.querySelector('input[name="from_date"]').value;
-    const toDate = document.querySelector('input[name="to_date"]').value;
+    const fromDateInput = document.querySelector('input[name="from_date"]');
+    const toDateInput = document.querySelector('input[name="to_date"]');
     const noOfDaysField = document.getElementById('noOfDays');
+    
+    const fromDate = fromDateInput?.value;
+    const toDate = toDateInput?.value;
     
     if (fromDate && toDate) {
         const from = new Date(fromDate);
         const to = new Date(toDate);
+        
+        // Validate: To Date must be greater than or equal to From Date
+        if (to < from) {
+            toDateInput.setCustomValidity('To Date must be after From Date');
+            toDateInput.classList.add('is-invalid');
+            if (noOfDaysField) {
+                noOfDaysField.value = '';
+            }
+            // Show alert
+            alert('To Date must be after From Date. Please correct the dates.');
+            // Reset to_date to from_date
+            toDateInput.value = fromDate;
+            return;
+        } else {
+            toDateInput.setCustomValidity('');
+            toDateInput.classList.remove('is-invalid');
+        }
+        
         const timeDiff = to.getTime() - from.getTime();
         const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
         
@@ -3918,6 +3946,11 @@ function calculateDays() {
         }
         
         console.log('Calculated days:', days);
+    }
+    
+    // Also set min date on to_date field
+    if (fromDate && toDateInput) {
+        toDateInput.min = fromDate;
     }
 }
 
@@ -4867,7 +4900,7 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
 <!-- Hotel Edit Modal -->
 <div class="modal fade" id="hotelEditModal" tabindex="-1" aria-labelledby="hotelEditModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl" style="max-width: 900px;">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
                 <h5 class="modal-title" id="hotelEditModalLabel">
