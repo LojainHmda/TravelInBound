@@ -463,15 +463,21 @@ def api_get_itinerary(request_id):
 def api_save_itinerary_original(request_id):
     """Save itinerary rows for a request (original version)"""
     print(f"[DEBUG] api_save_itinerary_original called for request_id: {request_id}")
-    request_obj = InboundRequest.query.get_or_404(request_id)
     
-    if request_obj.user_id != 1:
-        print(f"[DEBUG] Access denied: user {1} != owner {request_obj.user_id}")
-        return jsonify({'error': 'Access denied'}), 403
-    
-    data = request.get_json()
-    print(f"[DEBUG] Received data: {data}")
-    rows_data = data.get('rows', [])
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        if request_obj.user_id != 1:
+            print(f"[DEBUG] Access denied: user {1} != owner {request_obj.user_id}")
+            return jsonify({'error': 'Access denied'}), 403
+        
+        data = request.get_json()
+        if not data:
+            print("[DEBUG] No JSON data received")
+            return jsonify({'success': False, 'message': 'No data received'}), 400
+            
+        print(f"[DEBUG] Received data keys: {data.keys() if data else 'None'}")
+        rows_data = data.get('rows', [])
     print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
     
     # Update arrival/departure details if provided
