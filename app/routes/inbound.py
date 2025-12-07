@@ -478,137 +478,142 @@ def api_save_itinerary_original(request_id):
             
         print(f"[DEBUG] Received data keys: {data.keys() if data else 'None'}")
         rows_data = data.get('rows', [])
-    print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
-    
-    # Update arrival/departure details if provided
-    if 'arrival_point' in data:
-        request_obj.arrival_point = data.get('arrival_point') or None
-    if 'departure_point' in data:
-        request_obj.departure_point = data.get('departure_point') or None
-    if 'arrival_time' in data and data.get('arrival_time'):
-        try:
-            request_obj.arrival_time = datetime.strptime(data.get('arrival_time'), '%H:%M').time()
-        except:
+        print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
+        
+        # Update arrival/departure details if provided
+        if 'arrival_point' in data:
+            request_obj.arrival_point = data.get('arrival_point') or None
+        if 'departure_point' in data:
+            request_obj.departure_point = data.get('departure_point') or None
+        if 'arrival_time' in data and data.get('arrival_time'):
+            try:
+                request_obj.arrival_time = datetime.strptime(data.get('arrival_time'), '%H:%M').time()
+            except:
+                request_obj.arrival_time = None
+        elif 'arrival_time' in data and not data.get('arrival_time'):
             request_obj.arrival_time = None
-    elif 'arrival_time' in data and not data.get('arrival_time'):
-        request_obj.arrival_time = None
-    if 'departure_time' in data and data.get('departure_time'):
-        try:
-            request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
-        except:
+        if 'departure_time' in data and data.get('departure_time'):
+            try:
+                request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
+            except:
+                request_obj.departure_time = None
+        elif 'departure_time' in data and not data.get('departure_time'):
             request_obj.departure_time = None
-    elif 'departure_time' in data and not data.get('departure_time'):
-        request_obj.departure_time = None
-    
-    # Update new arrival/departure fields
-    if 'visa_type' in data:
-        request_obj.visa_type = data.get('visa_type') or 'NOT_INCLUDED'
-    if 'arrival_driver_name' in data:
-        request_obj.arrival_driver_name = data.get('arrival_driver_name') or None
-    if 'meeting_assistance' in data:
-        # Properly parse boolean from various input types
-        ma_value = data.get('meeting_assistance')
-        if isinstance(ma_value, bool):
-            request_obj.meeting_assistance = ma_value
-        elif isinstance(ma_value, str):
-            request_obj.meeting_assistance = ma_value.lower() in ('true', '1', 'yes')
-        elif isinstance(ma_value, (int, float)):
-            request_obj.meeting_assistance = bool(ma_value)
-        else:
-            request_obj.meeting_assistance = False
-    if 'departure_tax' in data:
-        request_obj.departure_tax = data.get('departure_tax') or 'NOT_INCLUDED'
-    
-    # Update or create rows using row IDs for matching (handles multiple rows per date)
-    # Get existing rows indexed by ID
-    existing_rows_dict = {row.id: row for row in ItineraryRow.query.filter_by(request_id=request_id).all()}
-    submitted_ids = set()
-    
-    # Import models needed for service deletion
-    from app.models.inbound import InboundHotel, InboundTransport, InboundMeal, InboundGuide
-    
-    # Process each row from the submitted data
-    for row_data in rows_data:
-        row_date = datetime.strptime(row_data['date'], '%Y-%m-%d').date()
-        row_id = row_data.get('id')  # May be None for new rows
         
-        # Update existing row or create new one
-        if row_id and row_id in existing_rows_dict:
-            # Update existing row by ID
-            submitted_ids.add(row_id)
-            row = existing_rows_dict[row_id]
-            # Update all fields
-            row.date = row_date
-            row.description = row_data['description']
-            row.restaurant = row_data.get('restaurant', '')
-            row.cash_expense = float(row_data.get('cash_expense', 0))
-            row.comment = row_data.get('comment', '')
-            row.base_cost = float(row_data.get('base_cost', 0))
-            row.cost_unit = row_data.get('cost_unit', COST_UNIT_PER_PERSON)
-            row.currency = row_data.get('currency', 'USD')
-            row.flag_hotel = row_data.get('flag_hotel', False)
-            row.flag_guide = row_data.get('flag_guide', False)
-            row.flag_transport = row_data.get('flag_transport', False)
-            row.flag_meal = row_data.get('flag_meal', False)
-            row.flag_airport = row_data.get('flag_airport', False)
-            row.flag_drive = row_data.get('flag_drive', False)
-            row.hotel_single_rooms = int(row_data.get('hotel_single_rooms', 0))
-            row.hotel_double_rooms = int(row_data.get('hotel_double_rooms', 0))
-            row.hotel_triple_rooms = int(row_data.get('hotel_triple_rooms', 0))
-            row.hotel_other_rooms = int(row_data.get('hotel_other_rooms', 0))
-        else:
-            # Create new row (no ID or ID not found)
-            row = ItineraryRow(
-                request_id=request_id,
-                date=row_date,
-                description=row_data['description'],
-                restaurant=row_data.get('restaurant', ''),
-                cash_expense=float(row_data.get('cash_expense', 0)),
-                comment=row_data.get('comment', ''),
-                base_cost=float(row_data.get('base_cost', 0)),
-                cost_unit=row_data.get('cost_unit', COST_UNIT_PER_PERSON),
-                currency=row_data.get('currency', 'USD'),
-                flag_hotel=row_data.get('flag_hotel', False),
-                flag_guide=row_data.get('flag_guide', False),
-                flag_transport=row_data.get('flag_transport', False),
-                flag_meal=row_data.get('flag_meal', False),
-                flag_airport=row_data.get('flag_airport', False),
-                flag_drive=row_data.get('flag_drive', False),
-                hotel_single_rooms=int(row_data.get('hotel_single_rooms', 0)),
-                hotel_double_rooms=int(row_data.get('hotel_double_rooms', 0)),
-                hotel_triple_rooms=int(row_data.get('hotel_triple_rooms', 0)),
-                hotel_other_rooms=int(row_data.get('hotel_other_rooms', 0))
-            )
-            db.session.add(row)
+        # Update new arrival/departure fields
+        if 'visa_type' in data:
+            request_obj.visa_type = data.get('visa_type') or 'NOT_INCLUDED'
+        if 'arrival_driver_name' in data:
+            request_obj.arrival_driver_name = data.get('arrival_driver_name') or None
+        if 'meeting_assistance' in data:
+            # Properly parse boolean from various input types
+            ma_value = data.get('meeting_assistance')
+            if isinstance(ma_value, bool):
+                request_obj.meeting_assistance = ma_value
+            elif isinstance(ma_value, str):
+                request_obj.meeting_assistance = ma_value.lower() in ('true', '1', 'yes')
+            elif isinstance(ma_value, (int, float)):
+                request_obj.meeting_assistance = bool(ma_value)
+            else:
+                request_obj.meeting_assistance = False
+        if 'departure_tax' in data:
+            request_obj.departure_tax = data.get('departure_tax') or 'NOT_INCLUDED'
         
-        db.session.flush()  # Get the ID for new rows
+        # Update or create rows using row IDs for matching (handles multiple rows per date)
+        # Get existing rows indexed by ID
+        existing_rows_dict = {row.id: row for row in ItineraryRow.query.filter_by(request_id=request_id).all()}
+        submitted_ids = set()
         
-        # Delete existing auto-generated services for this row to avoid duplicates
-        InboundHotel.query.filter_by(source_itinerary_id=row.id).delete()
-        InboundTransport.query.filter_by(source_itinerary_id=row.id).delete()
-        InboundMeal.query.filter_by(source_itinerary_id=row.id).delete()
-        InboundGuide.query.filter_by(source_itinerary_id=row.id).delete()
+        # Import models needed for service deletion
+        from app.models.inbound import InboundHotel, InboundTransport, InboundMeal, InboundGuide
         
-        # Regenerate service records based on current flags
-        _auto_generate_services(request_obj, row)
+        # Process each row from the submitted data
+        for row_data in rows_data:
+            row_date = datetime.strptime(row_data['date'], '%Y-%m-%d').date()
+            row_id = row_data.get('id')  # May be None for new rows
+            
+            # Update existing row or create new one
+            if row_id and row_id in existing_rows_dict:
+                # Update existing row by ID
+                submitted_ids.add(row_id)
+                row = existing_rows_dict[row_id]
+                # Update all fields
+                row.date = row_date
+                row.description = row_data['description']
+                row.restaurant = row_data.get('restaurant', '')
+                row.cash_expense = float(row_data.get('cash_expense', 0))
+                row.comment = row_data.get('comment', '')
+                row.base_cost = float(row_data.get('base_cost', 0))
+                row.cost_unit = row_data.get('cost_unit', COST_UNIT_PER_PERSON)
+                row.currency = row_data.get('currency', 'USD')
+                row.flag_hotel = row_data.get('flag_hotel', False)
+                row.flag_guide = row_data.get('flag_guide', False)
+                row.flag_transport = row_data.get('flag_transport', False)
+                row.flag_meal = row_data.get('flag_meal', False)
+                row.flag_airport = row_data.get('flag_airport', False)
+                row.flag_drive = row_data.get('flag_drive', False)
+                row.hotel_single_rooms = int(row_data.get('hotel_single_rooms', 0))
+                row.hotel_double_rooms = int(row_data.get('hotel_double_rooms', 0))
+                row.hotel_triple_rooms = int(row_data.get('hotel_triple_rooms', 0))
+                row.hotel_other_rooms = int(row_data.get('hotel_other_rooms', 0))
+            else:
+                # Create new row (no ID or ID not found)
+                row = ItineraryRow(
+                    request_id=request_id,
+                    date=row_date,
+                    description=row_data['description'],
+                    restaurant=row_data.get('restaurant', ''),
+                    cash_expense=float(row_data.get('cash_expense', 0)),
+                    comment=row_data.get('comment', ''),
+                    base_cost=float(row_data.get('base_cost', 0)),
+                    cost_unit=row_data.get('cost_unit', COST_UNIT_PER_PERSON),
+                    currency=row_data.get('currency', 'USD'),
+                    flag_hotel=row_data.get('flag_hotel', False),
+                    flag_guide=row_data.get('flag_guide', False),
+                    flag_transport=row_data.get('flag_transport', False),
+                    flag_meal=row_data.get('flag_meal', False),
+                    flag_airport=row_data.get('flag_airport', False),
+                    flag_drive=row_data.get('flag_drive', False),
+                    hotel_single_rooms=int(row_data.get('hotel_single_rooms', 0)),
+                    hotel_double_rooms=int(row_data.get('hotel_double_rooms', 0)),
+                    hotel_triple_rooms=int(row_data.get('hotel_triple_rooms', 0)),
+                    hotel_other_rooms=int(row_data.get('hotel_other_rooms', 0))
+                )
+                db.session.add(row)
+            
+            db.session.flush()  # Get the ID for new rows
+            
+            # Delete existing auto-generated services for this row to avoid duplicates
+            InboundHotel.query.filter_by(source_itinerary_id=row.id).delete()
+            InboundTransport.query.filter_by(source_itinerary_id=row.id).delete()
+            InboundMeal.query.filter_by(source_itinerary_id=row.id).delete()
+            InboundGuide.query.filter_by(source_itinerary_id=row.id).delete()
+            
+            # Regenerate service records based on current flags
+            _auto_generate_services(request_obj, row)
+        
+        # Delete orphaned rows (rows whose IDs are no longer in the submitted data)
+        orphaned_rows = [row for row in existing_rows_dict.values() if row.id not in submitted_ids]
+        for orphaned_row in orphaned_rows:
+            # Delete services first to avoid foreign key violations
+            InboundHotel.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
+            InboundTransport.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
+            InboundMeal.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
+            InboundGuide.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
+            # Now delete the row itself
+            db.session.delete(orphaned_row)
+        
+        # Recalculate total
+        request_obj.calculate_total()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'total': request_obj.total_amount})
     
-    # Delete orphaned rows (rows whose IDs are no longer in the submitted data)
-    orphaned_rows = [row for row in existing_rows_dict.values() if row.id not in submitted_ids]
-    for orphaned_row in orphaned_rows:
-        # Delete services first to avoid foreign key violations
-        InboundHotel.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
-        InboundTransport.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
-        InboundMeal.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
-        InboundGuide.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
-        # Now delete the row itself
-        db.session.delete(orphaned_row)
-    
-    # Recalculate total
-    request_obj.calculate_total()
-    
-    db.session.commit()
-    
-    return jsonify({'success': True, 'total': request_obj.total_amount})
+    except Exception as e:
+        db.session.rollback()
+        print(f"[DEBUG] Error saving itinerary: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/generate-days', methods=['POST'])
 @csrf.exempt
