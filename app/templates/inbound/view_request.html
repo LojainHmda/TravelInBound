@@ -1144,56 +1144,177 @@ body::-webkit-scrollbar-thumb:hover {
     line-height: 1.2;
 }
 
-/* Overlay Workflow Sidebar Styles */
+/* E-commerce Style Overlay Workflow Sidebar */
 #workflowSidebarOverlay {
     position: fixed !important;
     left: 0 !important;
     top: 0 !important;
     bottom: 0 !important;
     height: 100vh !important;
-    width: 280px !important;
-    background: white;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+    width: 320px !important;
+    background: #ffffff;
+    box-shadow: 5px 0 25px rgba(0,0,0,0.2);
     z-index: 1050 !important;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #workflowSidebarOverlay.open {
     transform: translateX(0) !important;
 }
 
+/* E-commerce Style Floating Toggle Button */
 #workflowFloatingToggle {
     position: fixed !important;
     left: 0 !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
     z-index: 1049 !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    padding: 16px 10px;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 3px 0 15px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #workflowFloatingToggle:hover {
-    box-shadow: 3px 0 15px rgba(102, 126, 234, 0.4);
-    padding-left: 0.6rem;
+    padding-left: 14px;
+    box-shadow: 5px 0 25px rgba(102, 126, 234, 0.5);
+    background: linear-gradient(180deg, #7c8ef5 0%, #8b5cb8 100%);
 }
 
-/* Backdrop for overlay */
+#workflowFloatingToggle .toggle-icon {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+}
+
+#workflowFloatingToggle .toggle-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: white;
+    text-transform: uppercase;
+}
+
+#workflowFloatingToggle .status-badge {
+    background: #fbbf24;
+    color: #1e293b;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    writing-mode: horizontal-tb;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Pulse animation for active status */
+@keyframes statusPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+#workflowFloatingToggle .status-badge {
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+/* Backdrop for overlay - Smooth fade */
 #workflowBackdrop {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
     z-index: 1049 !important;
-    display: none;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
 }
 
 #workflowBackdrop.show {
-    display: block !important;
     opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Sidebar Header Styling */
+.workflow-sidebar-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.workflow-sidebar-header h5 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.workflow-sidebar-header .close-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.workflow-sidebar-header .close-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+}
+
+/* Current Status Indicator in Sidebar */
+.current-status-indicator {
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.current-status-indicator .status-dot {
+    width: 12px;
+    height: 12px;
+    background: #fbbf24;
+    border-radius: 50%;
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+.current-status-indicator .status-text {
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 /* Compact Hotel Booking Card Styles */
@@ -1245,32 +1366,53 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Floating Workflow Toggle Button -->
-    <button id="workflowFloatingToggle" onclick="toggleWorkflowSidebar()" 
-            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                   color: white; border: none; padding: 1rem 0.5rem; 
-                   border-radius: 0 8px 8px 0; box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-                   cursor: pointer; transition: all 0.3s ease;
-                   writing-mode: vertical-rl; font-size: 0.75rem; font-weight: 600;
-                   letter-spacing: 1px;">
-        <i class="fas fa-route"></i> WORKFLOW
+    <!-- E-commerce Style Floating Workflow Toggle Button -->
+    <button id="workflowFloatingToggle" onclick="toggleWorkflowSidebar()">
+        <div class="toggle-icon">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <span class="toggle-text">Status</span>
+        <span class="status-badge" id="floatingStatusBadge">
+            {% if request.status == 'REQUEST' %}REQ
+            {% elif request.status == 'QUOTED' %}QTD
+            {% elif request.status == 'SUPPLIER_CONFIRMED' %}SUP
+            {% elif request.status == 'CONFIRMED' %}CNF
+            {% elif request.status == 'INVOICE' %}INV
+            {% elif request.status == 'PROCESSING' %}PRC
+            {% elif request.status == 'COMPLETED' %}DON
+            {% else %}{{ request.status[:3] }}{% endif %}
+        </span>
     </button>
 
     <!-- Backdrop (click to close sidebar) -->
     <div id="workflowBackdrop" onclick="toggleWorkflowSidebar()"></div>
 
-    <!-- Overlay Workflow Sidebar -->
+    <!-- E-commerce Style Overlay Workflow Sidebar -->
     <div id="workflowSidebarOverlay">
         <div id="workflowSidebar" class="h-100 d-flex flex-column">
-            <div class="card-header d-flex justify-content-between align-items-center py-2" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <h6 class="mb-0" style="font-size: 0.85rem;"><i class="fas fa-route"></i> Workflow Status</h6>
-                <button type="button" class="btn btn-sm text-white" onclick="toggleWorkflowSidebar()" 
-                        style="padding: 0.2rem 0.4rem;">
-                    <i class="fas fa-times" id="workflowToggleIcon" style="font-size: 0.9rem;"></i>
-                </button>
+            <!-- Sidebar Header -->
+            <div class="workflow-sidebar-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-tasks"></i> Status Flow</h5>
+                    <button type="button" class="close-btn" onclick="toggleWorkflowSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="current-status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="currentStatusText">
+                        {% if request.status == 'REQUEST' %}Request Pending
+                        {% elif request.status == 'QUOTED' %}Quoted
+                        {% elif request.status == 'SUPPLIER_CONFIRMED' %}Supplier Confirmed
+                        {% elif request.status == 'CONFIRMED' %}Confirmed
+                        {% elif request.status == 'INVOICE' %}Invoice Sent
+                        {% elif request.status == 'PROCESSING' %}Processing
+                        {% elif request.status == 'COMPLETED' %}Completed
+                        {% else %}{{ request.status }}{% endif %}
+                    </span>
+                </div>
             </div>
-            <div class="card-body p-2 flex-grow-1 overflow-auto" id="workflowSidebarContent">
+            <div class="card-body p-3 flex-grow-1 overflow-auto" id="workflowSidebarContent">
                     <!-- Vertical Status Timeline -->
                     <div class="status-timeline-vertical">
                         <!-- Stage 1: REQUEST -->
@@ -5503,6 +5645,9 @@ function updateRequestStatus(newStatus) {
                 // Update the UI immediately
                 updateStatusUI(newStatus);
                 
+                // Update floating badge and header status text
+                updateStatusBadgeAndText(newStatus);
+                
                 // Show success message
                 showAlert('Status updated successfully!', 'success');
                 
@@ -5627,33 +5772,77 @@ function showAlert(message, type) {
     }, 3000);
 }
 
-// Toggle Overlay Workflow Sidebar
+// Toggle Overlay Workflow Sidebar - E-commerce Style
 function toggleWorkflowSidebar() {
-    console.log('toggleWorkflowSidebar called');
     const overlay = document.getElementById('workflowSidebarOverlay');
     const backdrop = document.getElementById('workflowBackdrop');
     const floatingBtn = document.getElementById('workflowFloatingToggle');
     
-    if (!overlay) {
-        console.error('Workflow sidebar overlay not found');
-        return;
-    }
+    if (!overlay) return;
     
     const isOpen = overlay.classList.contains('open');
-    console.log('Current open state:', isOpen);
     
     if (isOpen) {
-        // Close sidebar
+        // Close sidebar with smooth animation
         overlay.classList.remove('open');
         if (backdrop) backdrop.classList.remove('show');
-        if (floatingBtn) floatingBtn.style.display = 'block';
-        console.log('Sidebar closed');
+        if (floatingBtn) {
+            floatingBtn.style.opacity = '0';
+            floatingBtn.style.transform = 'translateY(-50%) translateX(-20px)';
+            setTimeout(() => {
+                floatingBtn.style.display = 'flex';
+                requestAnimationFrame(() => {
+                    floatingBtn.style.opacity = '1';
+                    floatingBtn.style.transform = 'translateY(-50%) translateX(0)';
+                });
+            }, 200);
+        }
     } else {
-        // Open sidebar
+        // Open sidebar with smooth animation
         overlay.classList.add('open');
         if (backdrop) backdrop.classList.add('show');
-        if (floatingBtn) floatingBtn.style.display = 'none';
-        console.log('Sidebar opened');
+        if (floatingBtn) {
+            floatingBtn.style.opacity = '0';
+            floatingBtn.style.transform = 'translateY(-50%) translateX(-20px)';
+            setTimeout(() => {
+                floatingBtn.style.display = 'none';
+            }, 150);
+        }
+    }
+}
+
+// Update floating badge and current status text
+function updateStatusBadgeAndText(newStatus) {
+    const statusBadgeMap = {
+        'REQUEST': 'REQ',
+        'QUOTED': 'QTD',
+        'SUPPLIER_CONFIRMED': 'SUP',
+        'CONFIRMED': 'CNF',
+        'INVOICE': 'INV',
+        'PROCESSING': 'PRC',
+        'COMPLETED': 'DON'
+    };
+    
+    const statusTextMap = {
+        'REQUEST': 'Request Pending',
+        'QUOTED': 'Quoted',
+        'SUPPLIER_CONFIRMED': 'Supplier Confirmed',
+        'CONFIRMED': 'Confirmed',
+        'INVOICE': 'Invoice Sent',
+        'PROCESSING': 'Processing',
+        'COMPLETED': 'Completed'
+    };
+    
+    // Update floating badge
+    const floatingBadge = document.getElementById('floatingStatusBadge');
+    if (floatingBadge) {
+        floatingBadge.textContent = statusBadgeMap[newStatus] || newStatus.slice(0, 3);
+    }
+    
+    // Update current status text in sidebar header
+    const statusText = document.getElementById('currentStatusText');
+    if (statusText) {
+        statusText.textContent = statusTextMap[newStatus] || newStatus;
     }
 }
 
