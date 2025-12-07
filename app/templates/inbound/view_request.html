@@ -1192,15 +1192,19 @@ body::-webkit-scrollbar-thumb:hover {
 }
 
 #workflowFloatingToggle .toggle-icon {
-    width: 28px;
-    height: 28px;
-    background: rgba(255,255,255,0.2);
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.25);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 14px;
+    color: white !important;
+    font-size: 15px;
+}
+
+#workflowFloatingToggle .toggle-icon i {
+    color: white !important;
 }
 
 #workflowFloatingToggle .toggle-text {
@@ -1283,9 +1287,14 @@ body::-webkit-scrollbar-thumb:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: white !important;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.workflow-sidebar-header .close-btn i {
+    color: white !important;
 }
 
 .workflow-sidebar-header .close-btn:hover {
@@ -1429,21 +1438,7 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
-                        <!-- Stage 2: QUOTED -->
-                        <div class="status-stage-vertical {% if request.status == 'QUOTED' %}active{% endif %}" data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
-                            <div class="stage-indicator">
-                                <div class="status-circle-vertical">
-                                    <i class="fas fa-calculator"></i>
-                                </div>
-                                <div class="status-line-vertical"></div>
-                            </div>
-                            <div class="stage-content">
-                                <div class="stage-title">Quoted</div>
-                                <div class="stage-description">Price calculated</div>
-                            </div>
-                        </div>
-
-                        <!-- Stage 3: SUPPLIER_CONFIRMED -->
+                        <!-- Stage 2: SUPPLIER_CONFIRMED -->
                         <div class="status-stage-vertical {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% endif %}" data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
                             <div class="stage-indicator">
                                 <div class="status-circle-vertical">
@@ -1454,6 +1449,20 @@ body::-webkit-scrollbar-thumb:hover {
                             <div class="stage-content">
                                 <div class="stage-title">Suppliers OK</div>
                                 <div class="stage-description">Suppliers confirmed</div>
+                            </div>
+                        </div>
+
+                        <!-- Stage 3: QUOTED -->
+                        <div class="status-stage-vertical {% if request.status == 'QUOTED' %}active{% endif %}" data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
+                            <div class="stage-indicator">
+                                <div class="status-circle-vertical">
+                                    <i class="fas fa-calculator"></i>
+                                </div>
+                                <div class="status-line-vertical"></div>
+                            </div>
+                            <div class="stage-content">
+                                <div class="stage-title">Quoted</div>
+                                <div class="stage-description">Price calculated</div>
                             </div>
                         </div>
 
@@ -5707,7 +5716,7 @@ function updateStatusUI(newStatus) {
     });
     
     // Define stage order for progress tracking (7-stage workflow with SUPPLIER_CONFIRMED)
-    const stageOrder = ['REQUEST', 'QUOTED', 'SUPPLIER_CONFIRMED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
+    const stageOrder = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
     const currentIndex = stageOrder.indexOf(newStatus);
     
     console.log('Current stage index:', currentIndex, 'of', stageOrder.length);
@@ -5742,8 +5751,8 @@ function updateStatusUI(newStatus) {
     if (progressFill) {
         const progressWidths = {
             'REQUEST': '14%',
-            'QUOTED': '28%',
-            'SUPPLIER_CONFIRMED': '43%',
+            'SUPPLIER_CONFIRMED': '28%',
+            'QUOTED': '43%',
             'CONFIRMED': '57%',
             'INVOICE': '71%',
             'PROCESSING': '85%',
