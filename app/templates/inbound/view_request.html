@@ -3779,6 +3779,57 @@ function openRoomDistributionFromService() {
     roomModal.show();
 }
 
+// Get current itinerary rows data from the DOM
+function getCurrentItineraryRows() {
+    const rows = [];
+    const tableRows = document.querySelectorAll('#itineraryTableBody tr[data-row-index]');
+    
+    tableRows.forEach((tr, index) => {
+        const rowIndex = parseInt(tr.dataset.rowIndex);
+        const rowId = tr.querySelector('input[name="row_id[]"]')?.value || null;
+        const date = tr.querySelector('input[name="date[]"]')?.value || tr.dataset.date;
+        const description = tr.querySelector('input[name="description[]"]')?.value || '';
+        const comment = tr.querySelector('input[name="comment[]"]')?.value || '';
+        const restaurant = tr.querySelector('input[name="restaurant[]"]')?.value || '';
+        const cashExpense = parseFloat(tr.querySelector('input[name="cash_expense[]"]')?.value) || 0;
+        
+        // Get service flags from hidden inputs
+        const flagHotel = tr.querySelector(`input[name="flag_hotel_${rowIndex}"]`)?.value === '1';
+        const flagGuide = tr.querySelector(`input[name="flag_guide_${rowIndex}"]`)?.value === '1';
+        const flagTransport = tr.querySelector(`input[name="flag_transport_${rowIndex}"]`)?.value === '1';
+        const flagMeal = tr.querySelector(`input[name="flag_meal_${rowIndex}"]`)?.value === '1';
+        const flagAirport = tr.querySelector(`input[name="flag_airport_${rowIndex}"]`)?.value === '1';
+        const flagDrive = tr.querySelector(`input[name="flag_drive_${rowIndex}"]`)?.value === '1';
+        
+        // Get room distribution data
+        const hotelSingleRooms = parseInt(tr.querySelector(`input[id="single_${rowIndex}_input"]`)?.value) || 0;
+        const hotelDoubleRooms = parseInt(tr.querySelector(`input[id="double_${rowIndex}_input"]`)?.value) || 0;
+        const hotelTripleRooms = parseInt(tr.querySelector(`input[id="triple_${rowIndex}_input"]`)?.value) || 0;
+        const hotelOtherRooms = parseInt(tr.querySelector(`input[id="other_${rowIndex}_input"]`)?.value) || 0;
+        
+        rows.push({
+            id: rowId ? parseInt(rowId) : null,
+            date: date,
+            description: description,
+            comment: comment,
+            restaurant: restaurant,
+            cash_expense: cashExpense,
+            flag_hotel: flagHotel,
+            flag_guide: flagGuide,
+            flag_transport: flagTransport,
+            flag_meal: flagMeal,
+            flag_airport: flagAirport,
+            flag_drive: flagDrive,
+            hotel_single_rooms: hotelSingleRooms,
+            hotel_double_rooms: hotelDoubleRooms,
+            hotel_triple_rooms: hotelTripleRooms,
+            hotel_other_rooms: hotelOtherRooms
+        });
+    });
+    
+    return rows;
+}
+
 // Save service selection
 function saveServiceSelection() {
     if (currentServiceRowIndex < 0) return;
