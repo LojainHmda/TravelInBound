@@ -1117,3 +1117,210 @@ p, span, div, label, td, th {
         right: -6px;
     }
 }
+
+/* ========================================
+   CONSISTENT MODAL FORM STYLES
+   ======================================== */
+
+/* Modal form container */
+.modal-form {
+    padding: 0;
+}
+
+.modal-form .form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.modal-form .form-group {
+    flex: 1;
+    min-width: 140px;
+}
+
+.modal-form .form-group.sm {
+    flex: 0 0 100px;
+    min-width: 100px;
+}
+
+.modal-form .form-group.md {
+    flex: 0 0 150px;
+    min-width: 150px;
+}
+
+.modal-form .form-group.lg {
+    flex: 2;
+    min-width: 200px;
+}
+
+.modal-form .form-group.full {
+    flex: 0 0 100%;
+}
+
+.modal-form .form-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.modal-form .form-control,
+.modal-form .form-select {
+    height: 38px;
+    padding: 6px 12px;
+    font-size: 0.875rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.modal-form .form-control:focus,
+.modal-form .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.modal-form .form-check {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    padding-left: 0;
+}
+
+.modal-form .form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+}
+
+.modal-form .form-check-label {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+/* Modal section headers */
+.modal-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.modal-section-title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-section-title i {
+    color: #667eea;
+}
+
+/* Modal action buttons */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 16px;
+}
+
+/* Modal table styling */
+.modal-table {
+    width: 100%;
+    font-size: 0.8rem;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 16px;
+}
+
+.modal-table thead th {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    color: white;
+    font-weight: 600;
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.modal-table thead th:first-child {
+    border-radius: 6px 0 0 0;
+}
+
+.modal-table thead th:last-child {
+    border-radius: 0 6px 0 0;
+}
+
+.modal-table tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.modal-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.modal-table tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 6px;
+}
+
+.modal-table tbody tr:last-child td:last-child {
+    border-radius: 0 0 6px 0;
+}
+
+/* Badge styles for modals */
+.modal-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.modal-badge.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.modal-badge.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.modal-badge.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.modal-badge.secondary {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .modal-form .form-row {
+        flex-direction: column;
+    }
+    
+    .modal-form .form-group,
+    .modal-form .form-group.sm,
+    .modal-form .form-group.md,
+    .modal-form .form-group.lg {
+        flex: 0 0 100%;
+        min-width: 100%;
+    }
+}

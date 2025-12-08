@@ -5460,26 +5460,25 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     <div class="hotel-card mb-3" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                            <h6 class="mb-0" style="font-size: 0.9rem; color: white !important;"><i class="fas fa-bed me-2" style="color: white !important;"></i>Hotel #<span class="hotel-number">1</span></h6>
+                            <h6 class="mb-0" style="font-size: 0.85rem; color: white !important;"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span></h6>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-dark" style="font-size: 0.8rem;" onclick="openRoomingListModal(this)">
-                                    <i class="fas fa-list-alt me-1"></i>Rooming List
+                                <button type="button" class="btn btn-sm btn-dark" style="font-size: 0.75rem; padding: 4px 8px;" onclick="openRoomingListModal(this)">
+                                    <i class="fas fa-list-alt me-1"></i>Rooming
                                 </button>
                                 <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="card-body py-3 px-3">
-                            <!-- Row 1: Hotel Name, Supplier, Status, Dates -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Hotel Name</label>
-                                    <input type="text" name="hotel_name" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." required>
+                        <div class="card-body py-2 px-3 modal-form">
+                            <div class="form-row">
+                                <div class="form-group lg">
+                                    <label class="form-label">Hotel Name *</label>
+                                    <input type="text" name="hotel_name" class="form-control hotel-autocomplete" placeholder="Hotel name..." required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Supplier</label>
-                                    <select name="supplier" class="form-select form-select-sm">
+                                <div class="form-group">
+                                    <label class="form-label">Supplier</label>
+                                    <select name="supplier" class="form-select">
                                         <option value="">Select</option>
                                         <option value="Direct">Direct</option>
                                         <option value="Booking.com">Booking.com</option>
@@ -5487,88 +5486,90 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                         <option value="Local Partner">Local Partner</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Status</label>
-                                    <select name="status" class="form-select form-select-sm">
+                                <div class="form-group sm">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" class="form-select">
                                         <option value="confirmed">Confirmed</option>
                                         <option value="pending">Pending</option>
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-sign-in-alt text-success me-1"></i>Check-in</label>
-                                    <input type="date" name="check_in_date" class="form-control form-control-sm"
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group md">
+                                    <label class="form-label">Check-in *</label>
+                                    <input type="date" name="check_in_date" class="form-control"
                                            value="{{ request.from_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-sign-out-alt text-danger me-1"></i>Check-out</label>
-                                    <input type="date" name="check_out_date" class="form-control form-control-sm"
+                                <div class="form-group md">
+                                    <label class="form-label">Check-out *</label>
+                                    <input type="date" name="check_out_date" class="form-control"
                                            value="{{ request.to_date.strftime('%Y-%m-%d') }}"
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
                                 </div>
-                                <div class="col-md-1 d-flex align-items-end">
-                                    <span class="badge bg-primary nights-badge">{{ (request.to_date - request.from_date).days }} nts</span>
+                                <div class="form-group sm" style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                    <span class="badge bg-primary nights-badge" style="padding: 8px 12px;">{{ (request.to_date - request.from_date).days }} nts</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Conf #</label>
+                                    <input type="text" name="confirmation_number" class="form-control" placeholder="Conf #">
                                 </div>
                             </div>
-
-                            <!-- Row 2: Cost, Confirmation, Phone, Pickup, Notes -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Cost</label>
-                                    <div class="input-group input-group-sm">
+                            <div class="form-row">
+                                <div class="form-group md">
+                                    <label class="form-label">Cost</label>
+                                    <div class="input-group">
                                         <input type="number" name="cost" step="0.01" class="form-control" placeholder="0.00">
-                                        <select name="currency" class="form-select" style="max-width: 65px;">
+                                        <select name="currency" class="form-select" style="max-width: 70px;">
                                             <option value="USD">USD</option>
                                             <option value="EUR">EUR</option>
                                             <option value="JOD">JOD</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Conf #</label>
-                                    <input type="text" name="confirmation_number" class="form-control form-control-sm" placeholder="Confirmation #">
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" name="phone_number" class="form-control" placeholder="Phone">
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Phone</label>
-                                    <input type="text" name="phone_number" class="form-control form-control-sm" placeholder="Phone number">
+                                <div class="form-group lg">
+                                    <label class="form-label">Pickup Location</label>
+                                    <input type="text" name="pickup_location" class="form-control" placeholder="Hotel address">
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Pickup Location</label>
-                                    <input type="text" name="pickup_location" class="form-control form-control-sm" placeholder="Hotel address">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Notes</label>
-                                    <input type="text" name="special_notes" class="form-control form-control-sm" placeholder="Special notes">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group full">
+                                    <label class="form-label">Notes</label>
+                                    <input type="text" name="special_notes" class="form-control" placeholder="Special notes">
                                 </div>
                             </div>
 
-                            <!-- Row 3: Room Distribution Summary -->
-                            <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                                <div class="d-flex align-items-center gap-4">
-                                    <span class="text-muted" style="font-size: 14px;"><i class="fas fa-bed me-2"></i>Rooms:</span>
-                                    <div class="d-flex align-items-center gap-3">
+                            <!-- Room Distribution Summary -->
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded mt-2" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <span class="text-muted" style="font-size: 0.75rem;"><i class="fas fa-bed me-1"></i>Rooms:</span>
+                                    <div class="d-flex align-items-center gap-2">
                                         <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">SGL</span>
-                                            <input type="number" name="hotel_single_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="1">
+                                            <span class="badge bg-secondary me-1" style="font-size: 0.7rem; padding: 4px 6px;">SGL</span>
+                                            <input type="number" name="hotel_single_rooms" class="form-control text-center" style="width: 50px; height: 30px; font-size: 0.8rem;" min="0" value="1">
                                         </div>
                                         <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">DBL</span>
-                                            <input type="number" name="hotel_double_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
+                                            <span class="badge bg-secondary me-1" style="font-size: 0.7rem; padding: 4px 6px;">DBL</span>
+                                            <input type="number" name="hotel_double_rooms" class="form-control text-center" style="width: 50px; height: 30px; font-size: 0.8rem;" min="0" value="0">
                                         </div>
                                         <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">TRP</span>
-                                            <input type="number" name="hotel_triple_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
+                                            <span class="badge bg-secondary me-1" style="font-size: 0.7rem; padding: 4px 6px;">TRP</span>
+                                            <input type="number" name="hotel_triple_rooms" class="form-control text-center" style="width: 50px; height: 30px; font-size: 0.8rem;" min="0" value="0">
                                         </div>
                                         <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">OTH</span>
-                                            <input type="number" name="hotel_other_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
+                                            <span class="badge bg-secondary me-1" style="font-size: 0.7rem; padding: 4px 6px;">OTH</span>
+                                            <input type="number" name="hotel_other_rooms" class="form-control text-center" style="width: 50px; height: 30px; font-size: 0.8rem;" min="0" value="0">
                                         </div>
                                     </div>
                                 </div>
-                                <span class="badge bg-info room-total-badge" style="font-size: 13px; padding: 8px 12px;">1 room total</span>
+                                <span class="badge bg-info room-total-badge" style="font-size: 0.7rem; padding: 6px 10px;">1 room total</span>
                             </div>
                             
                             <!-- Hidden room data container -->
@@ -6226,108 +6227,108 @@ function convertToInvoice() {
 
 <!-- Departures Modal -->
 <div class="modal fade" id="departuresModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
-                <h5 class="modal-title" style="color: white !important;"><i class="fas fa-plane-departure me-2" style="color: white !important;"></i>Manage Departures</h5>
+            <div class="modal-header py-2" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+                <h6 class="modal-title mb-0" style="color: white !important;"><i class="fas fa-plane-departure me-2"></i>Manage Departures</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div id="departuresTableContainer"></div>
-                <hr class="my-4">
-                <h6 class="mb-3"><i class="fas fa-plus-circle me-2"></i>Add New Departure</h6>
-                <form id="departureForm">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="departure_date" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Time</label>
-                            <input type="time" class="form-control" name="departure_time">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Departure Point <span class="text-danger">*</span></label>
-                            <select class="form-control" name="departure_point" required>
-                                <option value="">Select departure point...</option>
-                                <optgroup label="Airports">
-                                    <option value="Queen Alia International Airport">Queen Alia International Airport (AMM)</option>
-                                    <option value="King Hussein International Airport">King Hussein International Airport - Aqaba</option>
-                                    <option value="Marka Civil Airport">Marka Civil Airport - Amman</option>
-                                </optgroup>
-                                <optgroup label="Land Borders">
-                                    <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                                    <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge (Jordan River)</option>
-                                    <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba-Eilat)</option>
-                                    <option value="Jaber Border">Jaber Border (Syria)</option>
-                                    <option value="Omari Border">Omari Border (Saudi Arabia)</option>
-                                    <option value="Mudawara Border">Mudawara Border (Saudi Arabia)</option>
-                                    <option value="Karameh Border">Karameh Border (Iraq)</option>
-                                </optgroup>
-                            </select>
-                        </div>
+            <div class="modal-body p-3">
+                <div id="departuresTableContainer" class="mb-3"></div>
+                
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-plus-circle"></i>Add New Departure
                     </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Flight/Bus Number</label>
-                            <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Meet & Assist</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
-                                <label class="form-check-label" for="meet_assist_dep">
-                                    Yes
-                                </label>
+                    <form id="departureForm" class="modal-form">
+                        <div class="form-row">
+                            <div class="form-group md">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-control" name="departure_date" required>
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">Time</label>
+                                <input type="time" class="form-control" name="departure_time">
+                            </div>
+                            <div class="form-group lg">
+                                <label class="form-label">Departure Point *</label>
+                                <select class="form-select" name="departure_point" required>
+                                    <option value="">Select...</option>
+                                    <optgroup label="Airports">
+                                        <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                        <option value="King Hussein International Airport">King Hussein - Aqaba</option>
+                                        <option value="Marka Civil Airport">Marka - Amman</option>
+                                    </optgroup>
+                                    <optgroup label="Land Borders">
+                                        <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                        <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                        <option value="Jaber Border">Jaber Border</option>
+                                        <option value="Omari Border">Omari Border</option>
+                                        <option value="Mudawara Border">Mudawara Border</option>
+                                        <option value="Karameh Border">Karameh Border</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Representative Name</label>
-                            <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Flight/Bus #</label>
+                                <input type="text" class="form-control" name="flight_number" placeholder="RJ123">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Vehicle</label>
+                                <select class="form-select" name="vehicle_details">
+                                    <option value="">Select...</option>
+                                    <option value="Sedan">Sedan</option>
+                                    <option value="SUV">SUV</option>
+                                    <option value="Van">Van</option>
+                                    <option value="Minibus">Minibus</option>
+                                    <option value="Coach">Coach</option>
+                                </select>
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">PAX</label>
+                                <input type="number" class="form-control" name="pax_count" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Batch</label>
+                                <input type="text" class="form-control" name="batch_name" placeholder="Group A">
+                            </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Departure Tax</label>
-                            <select class="form-control" name="departure_tax">
-                                <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="INCLUDED">Included</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Representative</label>
+                                <input type="text" class="form-control" name="representative_name" placeholder="Name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Departure Tax</label>
+                                <select class="form-select" name="departure_tax">
+                                    <option value="NOT_INCLUDED">Not Included</option>
+                                    <option value="INCLUDED">Included</option>
+                                </select>
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">M&A</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
+                                    <label class="form-check-label" for="meet_assist_dep">Yes</label>
+                                </div>
+                            </div>
+                            <div class="form-group sm" style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-plus me-1"></i>Add
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Vehicle Type</label>
-                            <select class="form-control" name="vehicle_details">
-                                <option value="">Select vehicle...</option>
-                                <option value="Sedan">Sedan (1-3 pax)</option>
-                                <option value="SUV">SUV (4-6 pax)</option>
-                                <option value="Van">Van (7-14 pax)</option>
-                                <option value="Minibus">Minibus (15-25 pax)</option>
-                                <option value="Coach">Coach Bus (26-50 pax)</option>
-                                <option value="Large Coach">Large Coach (50+ pax)</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">PAX Count</label>
-                            <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Batch Name</label>
-                            <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-plus me-1"></i>Add Departure
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="saveAndCloseDepartures()">
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="saveAndCloseDepartures()">
                     <i class="fas fa-check me-1"></i>Save & Close
                 </button>
-                <button type="button" class="btn btn-primary" onclick="saveAllDepartures()">
-                    <i class="fas fa-save me-1"></i>Save All Departures
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -6335,110 +6336,110 @@ function convertToInvoice() {
 
 <!-- Arrivals Modal -->
 <div class="modal fade" id="arrivalsModal" tabindex="-1">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <h5 class="modal-title" style="color: white !important;"><i class="fas fa-plane-arrival me-2" style="color: white !important;"></i>Manage Arrivals</h5>
+            <div class="modal-header py-2" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <h6 class="modal-title mb-0" style="color: white !important;"><i class="fas fa-plane-arrival me-2"></i>Manage Arrivals</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div id="arrivalsTableContainer"></div>
-                <hr class="my-4">
-                <h6 class="mb-3"><i class="fas fa-plus-circle me-2"></i>Add New Arrival</h6>
-                <form id="arrivalForm">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="arrival_date" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Time</label>
-                            <input type="time" class="form-control" name="arrival_time">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Arrival Point <span class="text-danger">*</span></label>
-                            <select class="form-control" name="arrival_point" required>
-                                <option value="">Select arrival point...</option>
-                                <optgroup label="Airports">
-                                    <option value="Queen Alia International Airport">Queen Alia International Airport (AMM)</option>
-                                    <option value="King Hussein International Airport">King Hussein International Airport - Aqaba</option>
-                                    <option value="Marka Civil Airport">Marka Civil Airport - Amman</option>
-                                </optgroup>
-                                <optgroup label="Land Borders">
-                                    <option value="King Hussein Bridge">King Hussein Bridge (Allenby)</option>
-                                    <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge (Jordan River)</option>
-                                    <option value="Wadi Araba Crossing">Wadi Araba Crossing (Aqaba-Eilat)</option>
-                                    <option value="Jaber Border">Jaber Border (Syria)</option>
-                                    <option value="Omari Border">Omari Border (Saudi Arabia)</option>
-                                    <option value="Mudawara Border">Mudawara Border (Saudi Arabia)</option>
-                                    <option value="Karameh Border">Karameh Border (Iraq)</option>
-                                </optgroup>
-                            </select>
-                        </div>
+            <div class="modal-body p-3">
+                <div id="arrivalsTableContainer" class="mb-3"></div>
+                
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-plus-circle"></i>Add New Arrival
                     </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Flight/Bus Number</label>
-                            <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Visa Status</label>
-                            <select class="form-control" name="visa_status">
-                                <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="VISA_FREE">Visa-free</option>
-                                <option value="RESTRICTED">Restricted</option>
-                                <option value="INCLUDED">Included</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Meet & Assist</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_arr">
-                                <label class="form-check-label" for="meet_assist_arr">
-                                    Yes
-                                </label>
+                    <form id="arrivalForm" class="modal-form">
+                        <div class="form-row">
+                            <div class="form-group md">
+                                <label class="form-label">Date *</label>
+                                <input type="date" class="form-control" name="arrival_date" required>
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">Time</label>
+                                <input type="time" class="form-control" name="arrival_time">
+                            </div>
+                            <div class="form-group lg">
+                                <label class="form-label">Arrival Point *</label>
+                                <select class="form-select" name="arrival_point" required>
+                                    <option value="">Select...</option>
+                                    <optgroup label="Airports">
+                                        <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                        <option value="King Hussein International Airport">King Hussein - Aqaba</option>
+                                        <option value="Marka Civil Airport">Marka - Amman</option>
+                                    </optgroup>
+                                    <optgroup label="Land Borders">
+                                        <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                        <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                        <option value="Jaber Border">Jaber Border</option>
+                                        <option value="Omari Border">Omari Border</option>
+                                        <option value="Mudawara Border">Mudawara Border</option>
+                                        <option value="Karameh Border">Karameh Border</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Representative Name</label>
-                            <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Flight/Bus #</label>
+                                <input type="text" class="form-control" name="flight_number" placeholder="RJ123">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Vehicle</label>
+                                <select class="form-select" name="vehicle_details">
+                                    <option value="">Select...</option>
+                                    <option value="Sedan">Sedan</option>
+                                    <option value="SUV">SUV</option>
+                                    <option value="Van">Van</option>
+                                    <option value="Minibus">Minibus</option>
+                                    <option value="Coach">Coach</option>
+                                </select>
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">PAX</label>
+                                <input type="number" class="form-control" name="pax_count" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Batch</label>
+                                <input type="text" class="form-control" name="batch_name" placeholder="Group A">
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Vehicle Type</label>
-                            <select class="form-control" name="vehicle_details">
-                                <option value="">Select vehicle...</option>
-                                <option value="Sedan">Sedan (1-3 pax)</option>
-                                <option value="SUV">SUV (4-6 pax)</option>
-                                <option value="Van">Van (7-14 pax)</option>
-                                <option value="Minibus">Minibus (15-25 pax)</option>
-                                <option value="Coach">Coach Bus (26-50 pax)</option>
-                                <option value="Large Coach">Large Coach (50+ pax)</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Visa Status</label>
+                                <select class="form-select" name="visa_status">
+                                    <option value="NOT_INCLUDED">Not Included</option>
+                                    <option value="VISA_FREE">Visa-free</option>
+                                    <option value="RESTRICTED">Restricted</option>
+                                    <option value="INCLUDED">Included</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Representative</label>
+                                <input type="text" class="form-control" name="representative_name" placeholder="Name">
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label">M&A</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_arr">
+                                    <label class="form-check-label" for="meet_assist_arr">Yes</label>
+                                </div>
+                            </div>
+                            <div class="form-group sm" style="display: flex; align-items: flex-end;">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="fas fa-plus me-1"></i>Add
+                                </button>
+                            </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">PAX Count</label>
-                            <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Batch Name</label>
-                            <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-plus me-1"></i>Add Arrival
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="saveAndCloseArrivals()">
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="saveAndCloseArrivals()">
                     <i class="fas fa-check me-1"></i>Save & Close
                 </button>
-                <button type="button" class="btn btn-primary" onclick="saveAllArrivals()">
-                    <i class="fas fa-save me-1"></i>Save All Arrivals
-                </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
