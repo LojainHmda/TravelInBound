@@ -537,6 +537,8 @@ class ArrivalBatch(db.Model):
     
     # NEW FIELDS for ARD 1
     visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
+    representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
