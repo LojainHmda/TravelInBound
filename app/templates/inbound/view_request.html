@@ -466,6 +466,577 @@ body::-webkit-scrollbar-thumb:hover {
     border: 1px solid #e2e8f0;
 }
 
+/* Status flow styling */
+.status-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.status-step {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.status-step.active {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    color: #1f2937;
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+}
+
+.status-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e5e7eb;
+    color: #6b7280;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.status-step.active .status-icon {
+    background: #1f2937;
+    color: #FFBF00;
+}
+
+.status-content h6 {
+    margin: 0 0 0.25rem 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-content small {
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+/* Interactive Status Flow Styles */
+.status-step-interactive {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.status-step-interactive.clickable {
+    cursor: pointer;
+}
+
+.status-step-interactive.clickable:hover {
+    border-color: #FFBF00;
+    background: #fffbeb;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.15);
+}
+
+.status-step-interactive.active {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    color: #1f2937;
+    box-shadow: 0 4px 12px rgba(255, 191, 0, 0.3);
+}
+
+.status-step-interactive.active .status-icon {
+    background: #1f2937;
+    color: #FFBF00;
+}
+
+.status-check {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #10b981;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+
+.status-step-interactive.clickable .status-content small {
+    color: #f59e0b;
+    font-weight: 500;
+}
+
+/* Status indicator animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Hide/show animation */
+.status-flow-hidden {
+    display: none !important;
+}
+
+/* Elegant Circular Status Flow */
+.elegant-status-flow {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.status-progress-line {
+    position: absolute;
+    top: 3.5rem;
+    left: 3rem;
+    right: 3rem;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    z-index: 1;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFBF00 0%, #FFD700 100%);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+.status-circles-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.status-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 12px;
+}
+
+.status-stage.clickable:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 191, 0, 0.1);
+}
+
+.status-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 3px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+}
+
+.status-stage.active .status-circle {
+    background: linear-gradient(135deg, #FFBF00 0%, #FFD700 100%);
+    border-color: #FFBF00;
+    box-shadow: 0 8px 25px rgba(255, 191, 0, 0.3);
+}
+
+.circle-number {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+
+.status-stage.active .circle-number {
+    color: #1f2937;
+}
+
+.circle-check {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #10b981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.status-label {
+    text-align: center;
+    min-height: 3rem;
+}
+
+.stage-title {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.stage-subtitle {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.status-stage.active .stage-title {
+    color: #FFBF00;
+}
+
+.status-stage.clickable:hover .stage-title {
+    color: #FFBF00;
+}
+
+/* Workflow Styles */
+
+
+/* Horizontal Workflow Styles */
+.horizontal-workflow {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    border: 2px solid #e2e8f0;
+    min-height: 120px;
+}
+
+.horizontal-stage {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1;
+    min-width: 140px;
+    z-index: 1;
+}
+
+.stage-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.stage-light {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #d1d5db;
+    margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 3px rgba(209, 213, 219, 0.1);
+    border: 2px solid #9ca3af;
+}
+
+.stage-light.active-light {
+    background: #3b82f6 !important;
+    border-color: #1d4ed8 !important;
+    box-shadow: 
+        0 0 0 4px rgba(59, 130, 246, 0.3),
+        0 0 16px rgba(59, 130, 246, 0.5),
+        0 0 24px rgba(59, 130, 246, 0.3);
+    animation: lightPulse 2s infinite;
+}
+
+/* REQUEST and QUOTED - Yellow/Orange */
+.horizontal-stage[data-status="REQUEST"] .stage-light.active-light,
+.horizontal-stage[data-status="QUOTED"] .stage-light.active-light {
+    background: #FFC107;
+    box-shadow: 
+        0 0 0 3px rgba(255, 193, 7, 0.2),
+        0 0 12px rgba(255, 193, 7, 0.4),
+        0 0 20px rgba(255, 193, 7, 0.2);
+}
+
+/* CONFIRMED - Green */
+.horizontal-stage[data-status="CONFIRMED"] .stage-light.active-light {
+    background: #28a745;
+    box-shadow: 
+        0 0 0 3px rgba(40, 167, 69, 0.2),
+        0 0 12px rgba(40, 167, 69, 0.4),
+        0 0 20px rgba(40, 167, 69, 0.2);
+}
+
+/* PROCESSING - Yellow/Orange */
+.horizontal-stage[data-status="PROCESSING"] .stage-light.active-light {
+    background: #FFC107;
+    box-shadow: 
+        0 0 0 3px rgba(255, 193, 7, 0.2),
+        0 0 12px rgba(255, 193, 7, 0.4),
+        0 0 20px rgba(255, 193, 7, 0.2);
+}
+
+/* COMPLETED - Grey */
+.horizontal-stage[data-status="COMPLETED"] .stage-light.active-light {
+    background: #6c757d;
+    box-shadow: 
+        0 0 0 3px rgba(108, 117, 125, 0.2),
+        0 0 12px rgba(108, 117, 125, 0.4),
+        0 0 20px rgba(108, 117, 125, 0.2);
+}
+
+@keyframes lightPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}
+
+.stage-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+}
+
+.horizontal-stage.active .stage-circle {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+    transform: scale(1.1);
+}
+
+/* REQUEST and QUOTED - Yellow/Orange circles */
+.horizontal-stage.active[data-status="REQUEST"] .stage-circle,
+.horizontal-stage.active[data-status="QUOTED"] .stage-circle {
+    background: #FFC107;
+    border-color: #FFC107;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* CONFIRMED - Green circle */
+.horizontal-stage.active[data-status="CONFIRMED"] .stage-circle {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* PROCESSING - Yellow/Orange circle */
+.horizontal-stage.active[data-status="PROCESSING"] .stage-circle {
+    background: #FFC107;
+    border-color: #FFC107;
+    color: #333;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+/* COMPLETED - Grey circle */
+.horizontal-stage.active[data-status="COMPLETED"] .stage-circle {
+    background: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.stage-content {
+    text-align: center;
+    min-height: 60px;
+}
+
+.stage-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.stage-description {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+.horizontal-stage.active .stage-title {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.horizontal-stage.active .stage-description {
+    color: #374151;
+}
+
+.stage-connector {
+    position: absolute;
+    top: 30px;
+    left: calc(50% + 24px);
+    width: calc(100% - 48px);
+    height: 2px;
+    background: #e5e7eb;
+    z-index: 0;
+}
+
+.horizontal-stage:last-child .stage-connector {
+    display: none;
+}
+
+.horizontal-stage.active .stage-connector {
+    background: #3b82f6;
+}
+
+/* Active connectors matching circle colors */
+.horizontal-stage.active[data-status="REQUEST"] .stage-connector,
+.horizontal-stage.active[data-status="QUOTED"] .stage-connector,
+.horizontal-stage.active[data-status="PROCESSING"] .stage-connector {
+    background: #FFC107;
+    box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+}
+
+.horizontal-stage.active[data-status="CONFIRMED"] .stage-connector {
+    background: #28a745;
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+}
+
+.horizontal-stage.active[data-status="COMPLETED"] .stage-connector {
+    background: #6c757d;
+    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+}
+
+.horizontal-workflow-hidden {
+    display: none !important;
+}
+
+/* Responsive design for horizontal workflow */
+@media (max-width: 768px) {
+    .horizontal-workflow {
+        padding: 0 1rem;
+        gap: 0.5rem;
+    }
+    
+    .horizontal-stage {
+        min-width: 100px;
+    }
+    
+    .stage-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .stage-title {
+        font-size: 0.85rem;
+    }
+    
+    .stage-description {
+        font-size: 0.75rem;
+    }
+}
+
+.workflow-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+/* Stage-specific colors matching the reference design */
+.workflow-stage[data-status="REQUEST"] .workflow-circle {
+    background: #3b82f6;
+    color: white;
+}
+
+.workflow-stage[data-status="QUOTED"] .workflow-circle {
+    background: #f97316;
+    color: white;
+}
+
+.workflow-stage[data-status="CONFIRMED"] .workflow-circle,
+.workflow-stage[data-status="PROCESSING"] .workflow-circle,
+.workflow-stage[data-status="COMPLETED"] .workflow-circle {
+    background: #d1d5db;
+    color: #6b7280;
+}
+
+
+
+
+.workflow-hidden {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    transition: all 0.3s ease;
+}
+
+.workflow-content-visible {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .status-circles-container {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .status-progress-line {
+        display: none;
+    }
+    
+    .status-stage {
+        flex-direction: row;
+        text-align: left;
+    }
+    
+    .status-circle {
+        margin-bottom: 0;
+        margin-right: 1rem;
+    }
+    
+    .status-sidebar {
+        width: 100vw;
+        right: -100vw;
+    }
+}
 
 .service-bar-title {
     color: #1f2937;
@@ -1056,413 +1627,17 @@ body::-webkit-scrollbar-thumb:hover {
     color: white !important;
 }
 
-/* Vertical Workflow Sidebar Styles - Compact Version */
-.status-timeline-vertical {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.status-stage-vertical {
-    display: flex;
-    align-items: flex-start;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 0.4rem 0.5rem;
-    border-radius: 6px;
-    margin-bottom: 0.25rem;
-}
-
-.status-stage-vertical:hover {
-    background: rgba(102, 126, 234, 0.05);
-    transform: translateX(3px);
-}
-
-.status-stage-vertical.active {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-}
-
-.stage-indicator {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-right: 0.65rem;
-    position: relative;
-}
-
-.status-circle-vertical {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #64748b;
-    font-size: 0.85rem;
-    transition: all 0.3s ease;
-    z-index: 2;
-}
-
-.status-stage-vertical.active .status-circle-vertical {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
-}
-
-.status-line-vertical {
-    width: 2px;
-    height: 28px;
-    background: #e2e8f0;
-    margin-top: 3px;
-}
-
-.status-stage-vertical:last-child .status-line-vertical {
-    display: none;
-}
-
-.stage-content {
-    flex: 1;
-    padding-top: 4px;
-}
-
-.stage-title {
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: #1e293b;
-    margin-bottom: 0.15rem;
-    line-height: 1.2;
-}
-
-.status-stage-vertical.active .stage-title {
-    color: #667eea;
-}
-
-.stage-description {
-    font-size: 0.7rem;
-    color: #64748b;
-    line-height: 1.2;
-}
-
-/* Right Sidebar Status Flow - Expandable */
-.status-sidebar-toggle {
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1050;
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-    color: #333;
-    border: none;
-    border-radius: 8px 0 0 8px;
-    padding: 12px 14px;
-    cursor: pointer;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.15);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    overflow: hidden;
-    min-width: 44px;
-}
-
-.status-sidebar-toggle:hover {
-    padding-right: 16px;
-    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
-    min-width: auto;
-}
-
-.status-sidebar-toggle:hover .toggle-text {
-    max-width: 80px;
-    opacity: 1;
-    margin-left: 8px;
-}
-
-.status-sidebar-toggle .toggle-icon {
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.status-sidebar-toggle .toggle-text {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    max-width: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.status-sidebar-toggle .status-badge {
-    display: none;
-}
-
-/* Sidebar Overlay */
-.status-sidebar-overlay {
-    position: fixed;
-    top: 0;
-    right: -320px;
-    width: 320px;
-    height: 100vh;
-    background: white;
-    z-index: 1060;
-    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-    transition: right 0.3s ease;
-    display: flex;
-    flex-direction: column;
-}
-
-.status-sidebar-overlay.open {
-    right: 0;
-}
-
-.status-sidebar-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.3);
-    z-index: 1055;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.status-sidebar-backdrop.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Sidebar Header */
-.status-sidebar-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 16px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.status-sidebar-header h5 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.status-sidebar-close {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.status-sidebar-close:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-/* Sidebar Content */
-.status-sidebar-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-}
-
-/* Vertical Status Steps */
-.status-step-vertical {
-    display: flex;
-    align-items: flex-start;
-    position: relative;
-    padding-bottom: 24px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.status-step-vertical:last-child {
-    padding-bottom: 0;
-}
-
-.status-step-vertical:hover {
-    opacity: 0.85;
-}
-
-/* Vertical Line */
-.status-step-vertical::before {
-    content: '';
-    position: absolute;
-    left: 18px;
-    top: 40px;
-    width: 3px;
-    height: calc(100% - 40px);
-    background: #e2e8f0;
-}
-
-.status-step-vertical:last-child::before {
-    display: none;
-}
-
-.status-step-vertical.completed::before {
-    background: #10b981;
-}
-
-.status-step-vertical.active::before {
-    background: linear-gradient(180deg, #667eea 0%, #e2e8f0 100%);
-}
-
-/* Step Icon */
-.status-step-icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #f1f5f9;
-    border: 3px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 14px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
-    transition: all 0.3s ease;
-}
-
-.status-step-vertical.completed .status-step-icon {
-    background: #10b981;
-    border-color: #10b981;
-    color: white;
-}
-
-.status-step-vertical.active .status-step-icon {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
-    color: white;
-    box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
-    transform: scale(1.1);
-}
-
-/* Step Content */
-.status-step-content {
-    margin-left: 14px;
-    padding-top: 6px;
-}
-
-.status-step-label {
-    font-size: 14px;
-    font-weight: 600;
-    color: #475569;
-    margin-bottom: 2px;
-}
-
-.status-step-vertical.completed .status-step-label {
-    color: #10b981;
-}
-
-.status-step-vertical.active .status-step-label {
-    color: #667eea;
-}
-
-.status-step-desc {
-    font-size: 11px;
-    color: #94a3b8;
-}
-
-/* Pulse animation for active */
-@keyframes sidebarPulse {
-    0%, 100% { box-shadow: 0 0 15px rgba(102, 126, 234, 0.5); }
-    50% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.8); }
-}
-
-.status-step-vertical.active .status-step-icon {
-    animation: sidebarPulse 2s ease-in-out infinite;
-}
-
-/* Saved Badge Animation */
-@keyframes badgePulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-.pulse-animation {
-    animation: badgePulse 0.5s ease-in-out 3;
-}
-
-/* Tab Styling */
-#requestTabs .nav-link {
-    border: none;
-    border-bottom: 3px solid transparent;
-    color: #64748b;
-    font-weight: 500;
-    padding: 0.75rem 1.25rem;
-    transition: all 0.2s ease;
-}
-
-#requestTabs .nav-link:hover {
-    color: #475569;
-    border-bottom-color: #e2e8f0;
-}
-
-#requestTabs .nav-link.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
-    background: transparent;
-}
-
-#requestTabs .nav-link .badge {
-    font-size: 0.7rem;
-    padding: 0.25em 0.5em;
-}
-
-/* Compact Hotel Booking Card Styles */
-.hotel-booking-card {
-    transition: all 0.2s ease;
-    border-radius: 8px;
-}
-
-.hotel-booking-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-    transform: translateY(-2px);
-}
-
-.hotel-booking-card .badge {
-    font-weight: 500;
-    padding: 0.25rem 0.5rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .hotel-booking-card .col-md-3,
-    .hotel-booking-card .col-md-2 {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    .hotel-booking-card .row {
-        text-align: left !important;
-    }
-}
-
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="max-width: 100%; padding: 1rem 1rem;">
+<div class="container-fluid">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2><i class="fas fa-eye"></i> {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}</h2>
+            <h2><i class="fas fa-eye"></i> {{ request.request_number }}</h2>
             <div class="text-muted">
-                {% if request.document_sequence %}<span class="small">Internal: {{ request.request_number }}</span> | {% endif %}Created on {{ request.created_at.strftime('%d %b %Y at %H:%M') }}
+                Created on {{ request.created_at.strftime('%d %b %Y at %H:%M') }}
             </div>
         </div>
         <div class="d-flex gap-2">
@@ -1498,41 +1673,30 @@ body::-webkit-scrollbar-thumb:hover {
     <div class="tab-content" id="requestTabContent">
         <!-- Request Master Tab Pane -->
         <div class="tab-pane fade show active" id="request-master-pane" role="tabpanel">
+            <!-- Main Layout: Content Only (Sidebar removed per user request) -->
             <div class="row g-3">
                 <div class="col-12" id="mainContentContainer">
                     <!-- Request Information -->
-                    <div class="card mb-2">
-                        <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">Request Information</h6>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditMode()">
-                                <i class="fas fa-edit"></i> <span id="editModeText">Cancel</span>
-                            </button>
-                        </div>
+            <div class="card mb-2">
+                <div class="card-header py-2">
+                    <h6 class="mb-0">Request Information</h6>
+                </div>
                 <div class="card-body py-2">
                     <!-- View Mode -->
-                    <div id="viewMode" class="edit-mode-hidden">
+                    <div id="viewMode">
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem;">
                             <div>
-                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Document #</div>
-                                <div class="fw-bold text-primary">
-                                    {% if request.document_sequence %}
-                                        {{ request.document_sequence }}
-                                    {% else %}
-                                        <span class="text-muted fst-italic">Not assigned</span>
-                                    {% endif %}
-                                </div>
-                                <div class="text-muted" style="font-size: 0.7rem;">Internal: {{ request.request_number }}</div>
+                                <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Request #</div>
+                                <div class="fw-bold text-primary">{{ request.request_number }}</div>
                             </div>
                             <div>
                                 <div class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem;">Status</div>
                                 {% if request.status == 'REQUEST' %}
                                     <span class="badge bg-warning">Request</span>
-                                {% elif request.status == 'QUOTED' %}
-                                    <span class="badge bg-info">Quoted</span>
-                                {% elif request.status == 'SUPPLIER_CONFIRMED' %}
-                                    <span class="badge bg-success">Suppliers OK</span>
                                 {% elif request.status == 'CONFIRMED' %}
                                     <span class="badge bg-success">Confirmed</span>
+                                {% elif request.status == 'QUOTED' %}
+                                    <span class="badge bg-info">Quoted</span>
                                 {% elif request.status == 'INVOICE' %}
                                     <span class="badge bg-primary">Invoice</span>
                                 {% elif request.status == 'PROCESSING' %}
@@ -1569,7 +1733,7 @@ body::-webkit-scrollbar-thumb:hover {
                     </div>
 
                     <!-- Edit Mode -->
-                    <form id="editMode" onsubmit="saveChanges(event)">
+                    <form id="editMode" class="edit-mode-hidden" onsubmit="saveChanges(event)">
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Customer</label>
@@ -1608,75 +1772,7 @@ body::-webkit-scrollbar-thumb:hover {
                         <div class="row mb-3">
                             <div class="col-6">
                                 <label class="form-label">Nationality</label>
-                                <select class="form-select" name="nationality" required>
-                                    <option value="">Select Nationality</option>
-                                    <option value="Afghan" {% if request.nationality == 'Afghan' %}selected{% endif %}>Afghan</option>
-                                    <option value="Albanian" {% if request.nationality == 'Albanian' %}selected{% endif %}>Albanian</option>
-                                    <option value="Algerian" {% if request.nationality == 'Algerian' %}selected{% endif %}>Algerian</option>
-                                    <option value="American" {% if request.nationality == 'American' %}selected{% endif %}>American</option>
-                                    <option value="Argentinian" {% if request.nationality == 'Argentinian' %}selected{% endif %}>Argentinian</option>
-                                    <option value="Australian" {% if request.nationality == 'Australian' %}selected{% endif %}>Australian</option>
-                                    <option value="Austrian" {% if request.nationality == 'Austrian' %}selected{% endif %}>Austrian</option>
-                                    <option value="Bangladeshi" {% if request.nationality == 'Bangladeshi' %}selected{% endif %}>Bangladeshi</option>
-                                    <option value="Belgian" {% if request.nationality == 'Belgian' %}selected{% endif %}>Belgian</option>
-                                    <option value="Brazilian" {% if request.nationality == 'Brazilian' %}selected{% endif %}>Brazilian</option>
-                                    <option value="British" {% if request.nationality == 'British' %}selected{% endif %}>British</option>
-                                    <option value="Bulgarian" {% if request.nationality == 'Bulgarian' %}selected{% endif %}>Bulgarian</option>
-                                    <option value="Canadian" {% if request.nationality == 'Canadian' %}selected{% endif %}>Canadian</option>
-                                    <option value="Chilean" {% if request.nationality == 'Chilean' %}selected{% endif %}>Chilean</option>
-                                    <option value="Chinese" {% if request.nationality == 'Chinese' %}selected{% endif %}>Chinese</option>
-                                    <option value="Colombian" {% if request.nationality == 'Colombian' %}selected{% endif %}>Colombian</option>
-                                    <option value="Croatian" {% if request.nationality == 'Croatian' %}selected{% endif %}>Croatian</option>
-                                    <option value="Czech" {% if request.nationality == 'Czech' %}selected{% endif %}>Czech</option>
-                                    <option value="Danish" {% if request.nationality == 'Danish' %}selected{% endif %}>Danish</option>
-                                    <option value="Dutch" {% if request.nationality == 'Dutch' %}selected{% endif %}>Dutch</option>
-                                    <option value="Egyptian" {% if request.nationality == 'Egyptian' %}selected{% endif %}>Egyptian</option>
-                                    <option value="Filipino" {% if request.nationality == 'Filipino' %}selected{% endif %}>Filipino</option>
-                                    <option value="Finnish" {% if request.nationality == 'Finnish' %}selected{% endif %}>Finnish</option>
-                                    <option value="French" {% if request.nationality == 'French' %}selected{% endif %}>French</option>
-                                    <option value="German" {% if request.nationality == 'German' %}selected{% endif %}>German</option>
-                                    <option value="Greek" {% if request.nationality == 'Greek' %}selected{% endif %}>Greek</option>
-                                    <option value="Hungarian" {% if request.nationality == 'Hungarian' %}selected{% endif %}>Hungarian</option>
-                                    <option value="Indian" {% if request.nationality == 'Indian' %}selected{% endif %}>Indian</option>
-                                    <option value="Indonesian" {% if request.nationality == 'Indonesian' %}selected{% endif %}>Indonesian</option>
-                                    <option value="Iranian" {% if request.nationality == 'Iranian' %}selected{% endif %}>Iranian</option>
-                                    <option value="Iraqi" {% if request.nationality == 'Iraqi' %}selected{% endif %}>Iraqi</option>
-                                    <option value="Irish" {% if request.nationality == 'Irish' %}selected{% endif %}>Irish</option>
-                                    <option value="Israeli" {% if request.nationality == 'Israeli' %}selected{% endif %}>Israeli</option>
-                                    <option value="Italian" {% if request.nationality == 'Italian' %}selected{% endif %}>Italian</option>
-                                    <option value="Japanese" {% if request.nationality == 'Japanese' %}selected{% endif %}>Japanese</option>
-                                    <option value="Jordanian" {% if request.nationality == 'Jordanian' %}selected{% endif %}>Jordanian</option>
-                                    <option value="Korean" {% if request.nationality == 'Korean' %}selected{% endif %}>Korean</option>
-                                    <option value="Lebanese" {% if request.nationality == 'Lebanese' %}selected{% endif %}>Lebanese</option>
-                                    <option value="Malaysian" {% if request.nationality == 'Malaysian' %}selected{% endif %}>Malaysian</option>
-                                    <option value="Mexican" {% if request.nationality == 'Mexican' %}selected{% endif %}>Mexican</option>
-                                    <option value="Moroccan" {% if request.nationality == 'Moroccan' %}selected{% endif %}>Moroccan</option>
-                                    <option value="New Zealander" {% if request.nationality == 'New Zealander' %}selected{% endif %}>New Zealander</option>
-                                    <option value="Nigerian" {% if request.nationality == 'Nigerian' %}selected{% endif %}>Nigerian</option>
-                                    <option value="Norwegian" {% if request.nationality == 'Norwegian' %}selected{% endif %}>Norwegian</option>
-                                    <option value="Pakistani" {% if request.nationality == 'Pakistani' %}selected{% endif %}>Pakistani</option>
-                                    <option value="Palestinian" {% if request.nationality == 'Palestinian' %}selected{% endif %}>Palestinian</option>
-                                    <option value="Peruvian" {% if request.nationality == 'Peruvian' %}selected{% endif %}>Peruvian</option>
-                                    <option value="Polish" {% if request.nationality == 'Polish' %}selected{% endif %}>Polish</option>
-                                    <option value="Portuguese" {% if request.nationality == 'Portuguese' %}selected{% endif %}>Portuguese</option>
-                                    <option value="Romanian" {% if request.nationality == 'Romanian' %}selected{% endif %}>Romanian</option>
-                                    <option value="Russian" {% if request.nationality == 'Russian' %}selected{% endif %}>Russian</option>
-                                    <option value="Saudi" {% if request.nationality == 'Saudi' %}selected{% endif %}>Saudi</option>
-                                    <option value="Serbian" {% if request.nationality == 'Serbian' %}selected{% endif %}>Serbian</option>
-                                    <option value="Singaporean" {% if request.nationality == 'Singaporean' %}selected{% endif %}>Singaporean</option>
-                                    <option value="South African" {% if request.nationality == 'South African' %}selected{% endif %}>South African</option>
-                                    <option value="Spanish" {% if request.nationality == 'Spanish' %}selected{% endif %}>Spanish</option>
-                                    <option value="Sri Lankan" {% if request.nationality == 'Sri Lankan' %}selected{% endif %}>Sri Lankan</option>
-                                    <option value="Swedish" {% if request.nationality == 'Swedish' %}selected{% endif %}>Swedish</option>
-                                    <option value="Swiss" {% if request.nationality == 'Swiss' %}selected{% endif %}>Swiss</option>
-                                    <option value="Syrian" {% if request.nationality == 'Syrian' %}selected{% endif %}>Syrian</option>
-                                    <option value="Thai" {% if request.nationality == 'Thai' %}selected{% endif %}>Thai</option>
-                                    <option value="Turkish" {% if request.nationality == 'Turkish' %}selected{% endif %}>Turkish</option>
-                                    <option value="Ukrainian" {% if request.nationality == 'Ukrainian' %}selected{% endif %}>Ukrainian</option>
-                                    <option value="Emirati" {% if request.nationality == 'Emirati' %}selected{% endif %}>Emirati (UAE)</option>
-                                    <option value="Venezuelan" {% if request.nationality == 'Venezuelan' %}selected{% endif %}>Venezuelan</option>
-                                    <option value="Vietnamese" {% if request.nationality == 'Vietnamese' %}selected{% endif %}>Vietnamese</option>
-                                </select>
+                                <input type="text" class="form-control" name="nationality" value="{{ request.nationality }}" required>
                             </div>
                             <div class="col-6">
                                 <!-- Space for additional field if needed -->
@@ -1684,281 +1780,29 @@ body::-webkit-scrollbar-thumb:hover {
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-3">
+                            <div class="col-4">
                                 <label class="form-label">From Date</label>
-                                <input type="date" class="form-control" name="from_date" id="fromDate" value="{{ request.from_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" oninput="calculateDays()" required>
+                                <input type="date" class="form-control" name="from_date" value="{{ request.from_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <label class="form-label">To Date</label>
-                                <input type="date" class="form-control" name="to_date" id="toDate" value="{{ request.to_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" oninput="calculateDays()" required>
+                                <input type="date" class="form-control" name="to_date" value="{{ request.to_date.strftime('%Y-%m-%d') }}" onchange="calculateDays()" required>
                             </div>
-                            <div class="col-3">
-                                <label class="form-label">No. of Days</label>
-                                <input type="number" class="form-control bg-light" name="no_of_days" id="noOfDays" value="{{ request.no_of_days }}" readonly style="background-color: #e9ecef !important; cursor: not-allowed;">
-                            </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <label class="form-label">Pax</label>
                                 <input type="number" class="form-control" name="pax" value="{{ request.pax }}" min="1" required>
                             </div>
                         </div>
 
-                        <div id="editModeButtons" class="d-flex gap-2">
+                        <div id="editModeButtons" class="d-flex gap-2 edit-mode-hidden">
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
                         </div>
                     </form>
-                </div>
-            </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Itinerary Tab Pane -->
-        <div class="tab-pane fade" id="itinerary-main-pane" role="tabpanel">
-            <div class="card">
-                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-                    <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary Details (Edit Mode)</h6>
-                    <div class="d-flex align-items-center gap-2">
-                        {% if request.itinerary_rows|length > 0 %}
-                        <span class="badge" style="background-color: #1e293b; color: white; padding: 6px 12px; font-size: 0.8rem;">
-                            <i class="fas fa-calendar-check me-1"></i> Generated
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="card-body">
-                    {% if request.itinerary_rows|length > 0 %}
-                    <!-- Service Buttons Bar -->
-                    <div class="mb-3 p-3 bg-light rounded">
-                        <div class="text-muted small mb-2">Click services to add to selected dates:</div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="arrival">
-                                <i class="fas fa-plane-arrival me-1"></i> Arrivals
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="departure">
-                                <i class="fas fa-plane-departure me-1"></i> Departures
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="hotel">
-                                <i class="fas fa-hotel me-1"></i> Hotel
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="guide">
-                                <i class="fas fa-user-tie me-1"></i> Guide
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="transport">
-                                <i class="fas fa-car me-1"></i> Transport
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="meal">
-                                <i class="fas fa-utensils me-1"></i> Meal
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="trip_itinerary">
-                                <i class="fas fa-calendar-alt me-1"></i> Trip Itinerary
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Itinerary Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="itineraryEditTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 100px;">Date</th>
-                                    <th style="width: 250px;">Description</th>
-                                    <th style="width: 200px;">Comment</th>
-                                    <th>Service Flags</th>
-                                    <th style="width: 100px;">Cost</th>
-                                    <th style="width: 80px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for row in request.itinerary_rows|sort(attribute='day_number') %}
-                                <tr data-row-id="{{ row.id }}" data-day="{{ row.day_number }}">
-                                    <td>
-                                        <div class="fw-bold">{{ row.itinerary_date.strftime('%d %b %Y') if row.itinerary_date else '' }}</div>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" 
-                                               value="Day {{ row.day_number }} - {{ row.itinerary_date.strftime('%A, %B %d') if row.itinerary_date else '' }}"
-                                               placeholder="Description">
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control form-control-sm" 
-                                               value="{{ row.notes or '' }}" placeholder="Comment">
-                                    </td>
-                                    <td>
-                                        <div class="d-flex flex-wrap gap-1">
-                                            {% if row.hotel %}
-                                            <button type="button" class="btn btn-sm {% if row.hotel %}btn-info{% else %}btn-outline-secondary{% endif %}" 
-                                                    onclick="toggleServiceFlag({{ row.id }}, 'hotel')">
-                                                <i class="fas fa-hotel"></i> Hotel
-                                            </button>
-                                            {% endif %}
-                                            {% if row.transport %}
-                                            <button type="button" class="btn btn-sm {% if row.transport %}btn-warning{% else %}btn-outline-secondary{% endif %}" 
-                                                    onclick="toggleServiceFlag({{ row.id }}, 'transport')">
-                                                <i class="fas fa-car"></i> Transport
-                                            </button>
-                                            {% endif %}
-                                            {% if row.meal %}
-                                            <button type="button" class="btn btn-sm {% if row.meal %}btn-success{% else %}btn-outline-secondary{% endif %}" 
-                                                    onclick="toggleServiceFlag({{ row.id }}, 'meal')">
-                                                <i class="fas fa-utensils"></i> Meal
-                                            </button>
-                                            {% endif %}
-                                            {% if row.guide %}
-                                            <button type="button" class="btn btn-sm {% if row.guide %}btn-secondary{% else %}btn-outline-secondary{% endif %}" 
-                                                    onclick="toggleServiceFlag({{ row.id }}, 'guide')">
-                                                <i class="fas fa-user-tie"></i> Guide
-                                            </button>
-                                            {% endif %}
-                                            {% if not row.hotel and not row.transport and not row.meal and not row.guide %}
-                                            <span class="text-muted small">No services</span>
-                                            {% endif %}
-                                        </div>
-                                        <!-- Room button if hotel -->
-                                        {% if row.hotel %}
-                                        <div class="mt-2">
-                                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="openRoomModal({{ row.id }})">
-                                                <i class="fas fa-bed"></i> Rooms
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <span class="fw-bold">{{ "%.2f"|format(row.selling_price or 0) }} USD</span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Delete row">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Add row">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-route fa-3x text-muted mb-3"></i>
-                        <h5 class="text-muted">No Itinerary Generated Yet</h5>
-                        <p class="text-muted">Save the request in the Request Master tab first to generate the itinerary.</p>
-                        <button type="button" class="btn btn-primary" onclick="document.getElementById('request-tab').click()">
-                            <i class="fas fa-arrow-left me-1"></i> Go to Request Master
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right Sidebar Toggle Button -->
-    <button class="status-sidebar-toggle" onclick="toggleStatusSidebar()">
-        <i class="fas fa-tasks toggle-icon"></i>
-        <span class="toggle-text">STATUS</span>
-        <span class="status-badge">
-            {% if request.status == 'REQUEST' %}REQ{% elif request.status == 'SUPPLIER_CONFIRMED' %}SUP{% elif request.status == 'QUOTED' %}QTD{% elif request.status == 'CONFIRMED' %}CNF{% elif request.status == 'INVOICE' %}INV{% elif request.status == 'PROCESSING' %}PRC{% elif request.status == 'COMPLETED' %}DONE{% endif %}
-        </span>
-    </button>
-
-    <!-- Status Sidebar Backdrop -->
-    <div class="status-sidebar-backdrop" id="statusSidebarBackdrop" onclick="toggleStatusSidebar()"></div>
-
-    <!-- Status Sidebar Overlay -->
-    <div class="status-sidebar-overlay" id="statusSidebarOverlay">
-        <div class="status-sidebar-header">
-            <h5><i class="fas fa-tasks me-2"></i>Workflow Status</h5>
-            <button class="status-sidebar-close" onclick="toggleStatusSidebar()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="status-sidebar-content">
-            <!-- Step 1: REQUEST -->
-            <div class="status-step-vertical {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
-                <div class="status-step-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Request</div>
-                    <div class="status-step-desc">Initial request received</div>
-                </div>
-            </div>
-            
-            <!-- Step 2: SUPPLIER_CONFIRMED -->
-            <div class="status-step-vertical {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
-                <div class="status-step-icon">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Supplier Confirmed</div>
-                    <div class="status-step-desc">All suppliers confirmed</div>
-                </div>
-            </div>
-            
-            <!-- Step 3: QUOTED -->
-            <div class="status-step-vertical {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
-                <div class="status-step-icon">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Quoted</div>
-                    <div class="status-step-desc">Quote sent to customer</div>
-                </div>
-            </div>
-            
-            <!-- Step 4: CONFIRMED -->
-            <div class="status-step-vertical {% if request.status == 'CONFIRMED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
-                <div class="status-step-icon">
-                    <i class="fas fa-handshake"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Confirmed</div>
-                    <div class="status-step-desc">Customer confirmed booking</div>
-                </div>
-            </div>
-            
-            <!-- Step 5: INVOICE -->
-            <div class="status-step-vertical {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
-                <div class="status-step-icon">
-                    <i class="fas fa-file-invoice"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Proforma Invoice</div>
-                    <div class="status-step-desc">Invoice generated</div>
-                </div>
-            </div>
-            
-            <!-- Step 6: PROCESSING -->
-            <div class="status-step-vertical {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}" 
-                 data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
-                <div class="status-step-icon">
-                    <i class="fas fa-cogs"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Processing</div>
-                    <div class="status-step-desc">Booking being processed</div>
-                </div>
-            </div>
-            
-            <!-- Step 7: COMPLETED -->
-            <div class="status-step-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" 
-                 data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
-                <div class="status-step-icon">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="status-step-content">
-                    <div class="status-step-label">Completed</div>
-                    <div class="status-step-desc">Booking completed</div>
                 </div>
             </div>
         </div>
@@ -2103,11 +1947,6 @@ body::-webkit-scrollbar-thumb:hover {
                 </div>
                 
                 <!-- Additional Action Buttons -->
-                
-                <!-- Run-Down Analytics Button -->
-                <a href="{{ url_for('inbound.analytics_dashboard') }}" class="btn" style="text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
-                    <i class="fas fa-chart-line"></i> Run-Down Analytics
-                </a>
                 
                 <!-- Export Voucher/Trip Plan Word Document Button (always available) -->
                 <a href="/inbound/api/{{ request.id }}/export-voucher-doc" class="btn" style="text-decoration: none; background: #2c3e50; color: white; padding: 0.5rem 1rem;">
@@ -2280,6 +2119,11 @@ body::-webkit-scrollbar-thumb:hover {
                                     <i class="fas fa-utensils mb-1" style="font-size: 1.2rem; display: block;"></i>
                                     <span style="font-size: 0.85rem; font-weight: 600;">Meal</span>
                                 </button>
+                                <button type="button" class="service-icon-button" data-service="drive"
+                                        style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
+                                    <i class="fas fa-road mb-1" style="font-size: 1.2rem; display: block;"></i>
+                                    <span style="font-size: 0.85rem; font-weight: 600;">Drive</span>
+                                </button>
                                 <button type="button" onclick="openTripItineraryModal()"
                                         style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); min-width: 100px; font-weight: 600;">
                                     <i class="fas fa-calendar-alt mb-1" style="font-size: 1.2rem; display: block;"></i>
@@ -2342,17 +2186,14 @@ body::-webkit-scrollbar-thumb:hover {
                                                 <div class="d-flex flex-wrap gap-1 mb-2">
                                                     {% if row.flag_hotel %}
                                                         <div class="hotel-badge-container service-badge-removable" data-service="hotel">
-                                                            <span class="badge bg-danger" data-service="hotel" style="display: flex; align-items: center; gap: 6px;">
+                                                            <span class="badge bg-danger clickable-hotel-badge" data-service="hotel" 
+                                                                  onclick="openRoomDistributionModal({{ loop.index0 }})" 
+                                                                  style="cursor: pointer;">
                                                                 <i class="fas fa-bed"></i> Hotel
-                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')" title="Remove hotel">
+                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')">
                                                                     <i class="fas fa-times"></i>
                                                                 </button>
                                                             </span>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
-                                                                    onclick="openRoomDistributionModal({{ loop.index0 }})"
-                                                                    title="Manage room distribution">
-                                                                <i class="fas fa-door-open"></i> Rooms
-                                                            </button>
                                                             {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
                                                                 <div class="room-distribution-display">
                                                                     {% if row.hotel_single_rooms and row.hotel_single_rooms > 0 %}
@@ -2530,18 +2371,6 @@ body::-webkit-scrollbar-thumb:hover {
                             </button>
                         </li>
                         {% endif %}
-                        {% if request.inbound_optionals %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="optionals-tab" data-bs-toggle="tab" data-bs-target="#optionals" type="button" role="tab">
-                                <i class="fas fa-star"></i> Optional Extras ({{ request.inbound_optionals|length }})
-                            </button>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab">
-                                <i class="fas fa-paperclip"></i> Documents <span id="docCount">({{ request.documents|length }})</span>
-                            </button>
-                        </li>
                     </ul>
 
                     <div class="tab-content mt-3" id="servicesTabContent">
@@ -2606,138 +2435,53 @@ body::-webkit-scrollbar-thumb:hover {
                         <div class="tab-pane fade {% if not request.itinerary_rows %}show active{% endif %}" id="hotels" role="tabpanel">
                             <div class="mb-3 text-end">
                                 <button type="button" class="btn btn-success btn-sm" onclick="confirmAllHotels()">
-                                    <i class="fas fa-check-double me-1"></i>Confirm All Hotels
+                                    <i class="fas fa-check-double me-1"></i>Mark All Hotels as Supplier Confirmed
                                 </button>
                             </div>
-                            
-                            <!-- Compact Hotel Cards Layout -->
-                            <div class="row g-2">
-                                {% for hotel in request.inbound_hotels %}
-                                <div class="col-12">
-                                    <div class="card hotel-booking-card" style="border-left: 4px solid #3b82f6; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                        <div class="card-body p-3">
-                                            <div class="row align-items-center g-2">
-                                                <!-- Hotel Name & Category -->
-                                                <div class="col-md-3">
-                                                    <div class="d-flex align-items-start">
-                                                        <i class="fas fa-hotel text-primary me-2" style="font-size: 1.2rem; margin-top: 2px;"></i>
-                                                        <div style="flex: 1; min-width: 0;">
-                                                            <div class="fw-bold text-truncate" style="font-size: 0.95rem; color: #1e293b;">
-                                                                {{ hotel.hotel_name or 'Unnamed Hotel' }}
-                                                            </div>
-                                                            <div class="text-muted small">
-                                                                <i class="fas fa-star text-warning" style="font-size: 0.7rem;"></i>
-                                                                {{ hotel.hotel_category or 'Standard' }}
-                                                            </div>
-                                                            {% if hotel.location %}
-                                                            <div class="text-muted" style="font-size: 0.75rem;">
-                                                                <i class="fas fa-map-marker-alt" style="font-size: 0.65rem;"></i> {{ hotel.location }}
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Dates & Duration -->
-                                                <div class="col-md-3">
-                                                    <div style="background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 6px; border: 1px solid #e2e8f0;">
-                                                        <div class="d-flex align-items-center justify-content-between mb-1">
-                                                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Check-in</span>
-                                                            <span class="fw-semibold" style="font-size: 0.85rem; color: #0f172a;">{{ hotel.check_in_date.strftime('%d %b') }}</span>
-                                                        </div>
-                                                        <div class="d-flex align-items-center justify-content-between mb-1">
-                                                            <span class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px;">Check-out</span>
-                                                            <span class="fw-semibold" style="font-size: 0.85rem; color: #0f172a;">{{ hotel.check_out_date.strftime('%d %b') }}</span>
-                                                        </div>
-                                                        <div class="text-center mt-1 pt-1" style="border-top: 1px solid #e2e8f0;">
-                                                            <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-size: 0.75rem;">
-                                                                <i class="fas fa-moon"></i> {{ hotel.nights }} night{{ 's' if hotel.nights != 1 else '' }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Rooms & Meal Plan -->
-                                                <div class="col-md-2">
-                                                    <div class="small">
-                                                        <div class="mb-2">
-                                                            {% set room_count = hotel.rooms|length if hotel.rooms else 0 %}
-                                                            {% if room_count > 0 %}
-                                                                <span class="badge bg-info" style="font-size: 0.75rem;">
-                                                                    <i class="fas fa-door-open"></i> {{ room_count }} room{{ 's' if room_count != 1 else '' }}
-                                                                </span>
-                                                                <button type="button" class="btn btn-xs btn-outline-primary ms-1" style="padding: 0.1rem 0.4rem; font-size: 0.7rem;" onclick="viewHotelRooms({{ hotel.id }})">
-                                                                    <i class="fas fa-eye"></i>
-                                                                </button>
-                                                            {% else %}
-                                                                <span class="text-muted" style="font-size: 0.8rem;">
-                                                                    <i class="fas fa-bed"></i> {{ hotel.room_type or 'Standard' }}
-                                                                </span>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div>
-                                                            <span class="badge bg-success" style="font-size: 0.75rem;">
-                                                                <i class="fas fa-utensils"></i> {{ hotel.meal_plan or 'BB' }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Cost & Status -->
-                                                <div class="col-md-2">
-                                                    <div class="text-center">
-                                                        <div class="fw-bold" style="font-size: 1.1rem; color: #0f172a;">
-                                                            {{ "%.2f"|format(hotel.total_cost) }}
-                                                        </div>
-                                                        <div class="text-muted" style="font-size: 0.75rem;">{{ hotel.currency }}</div>
-                                                        <div class="mt-2">
-                                                            <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}" style="font-size: 0.7rem;">
-                                                                {{ hotel.get_aggregate_status() }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Actions -->
-                                                <div class="col-md-2 text-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" style="font-size: 0.8rem;" onclick="editHotel({{ hotel.id }})">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Hotel</th>
+                                            <th>Check-in</th>
+                                            <th>Check-out</th>
+                                            <th>Nights</th>
+                                            <th>Room Type</th>
+                                            <th>Meal Plan</th>
+                                            <th>Cost</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for hotel in request.inbound_hotels %}
+                                        <tr>
+                                            <td>{{ hotel.hotel_name or '-' }}</td>
+                                            <td>{{ hotel.check_in_date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ hotel.check_out_date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ hotel.nights }}</td>
+                                            <td>{{ hotel.room_type or '-' }}</td>
+                                            <td>{{ hotel.meal_plan }}</td>
+                                            <td>{{ "%.2f"|format(hotel.total_cost) }} {{ hotel.currency }}</td>
+                                            <td>
+                                                <span class="badge bg-{% if hotel.status == 'CONFIRMED' %}success{% elif hotel.status == 'RESERVED' %}info{% elif hotel.status == 'QUOTED' %}warning{% else %}secondary{% endif %}">
+                                                    {% if hotel.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ hotel.status }}{% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if hotel.status not in ['RESERVED', 'CONFIRMED'] %}
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markHotelAsReserved({{ hotel.id }})">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </button>
+                                                {% else %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
-                            
-                            <!-- Summary Stats -->
-                            {% if request.inbound_hotels|length > 1 %}
-                            <div class="card mt-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                                <div class="card-body p-2">
-                                    <div class="row text-center g-2">
-                                        <div class="col-md-4">
-                                            <div class="small text-muted">Total Hotels</div>
-                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">{{ request.inbound_hotels|length }}</div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="small text-muted">Total Nights</div>
-                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">
-                                                {% set total_nights = request.inbound_hotels|sum(attribute='nights') %}
-                                                {{ total_nights }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="small text-muted">Total Cost</div>
-                                            <div class="fw-bold text-primary" style="font-size: 1.2rem;">
-                                                {% set total_cost = request.inbound_hotels|sum(attribute='total_cost') %}
-                                                {{ "%.2f"|format(total_cost) }} {{ request.total_currency }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
                         </div>
                         {% endif %}
 
@@ -2755,15 +2499,14 @@ body::-webkit-scrollbar-thumb:hover {
                                             <th>From Date</th>
                                             <th>To Date</th>
                                             <th>Pax</th>
-                                            <th>Vehicle Type</th>
-                                            <th>Supplier</th>
-                                            <th>Driver Name</th>
-                                            <th>Driver Phone</th>
-                                            <th>Pickup Point</th>
+                                            <th>Vech Type</th>
+                                            <th>SUPPLIER</th>
+                                            <th>Driver</th>
+                                            <th>Pickup Port</th>
                                             <th>Pickup Time</th>
-                                            <th>Drop-off Point</th>
+                                            <th>Drop Off Point</th>
                                             <th>Note</th>
-                                            <th>Status</th>
+                                            <th>STATUS</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -2776,20 +2519,23 @@ body::-webkit-scrollbar-thumb:hover {
                                             <td>{{ transport.vehicle_type or '-' }}</td>
                                             <td>{{ transport.supplier or '-' }}</td>
                                             <td>{{ transport.driver_name or '-' }}</td>
-                                            <td>{{ transport.driver_phone or '-' }}</td>
                                             <td>{{ transport.pickup_location or '-' }}</td>
                                             <td>{{ transport.pickup_time.strftime('%H:%M') if transport.pickup_time else '-' }}</td>
                                             <td>{{ transport.dropoff_location or '-' }}</td>
-                                            <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;">{{ transport.note or '-' }}</td>
+                                            <td>{{ transport.note or '-' }}</td>
                                             <td>
-                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'REQUESTED' or transport.status == 'REQUEST' %}warning{% elif transport.status == 'CANCELLED' %}danger{% else %}secondary{% endif %}">
-                                                    {{ transport.status }}
+                                                <span class="badge bg-{% if transport.status == 'CONFIRMED' %}success{% elif transport.status == 'RESERVED' %}info{% elif transport.status == 'REQUESTED' or transport.status == 'REQUEST' %}warning{% else %}secondary{% endif %}">
+                                                    {% if transport.status == 'RESERVED' %}Supplier Confirmed{% else %}{{ transport.status }}{% endif %}
                                                 </span>
                                             </td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editTransport({{ transport.id }})">
-                                                    <i class="fas fa-edit"></i>
+                                                {% if transport.status not in ['RESERVED', 'CONFIRMED'] %}
+                                                <button type="button" class="btn btn-sm btn-outline-success" onclick="markTransportAsReserved({{ transport.id }})">
+                                                    <i class="fas fa-check me-1"></i>Confirm
                                                 </button>
+                                                {% else %}
+                                                <span class="text-success"><i class="fas fa-check-circle"></i></span>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                         {% endfor %}
@@ -2834,54 +2580,29 @@ body::-webkit-scrollbar-thumb:hover {
 
                         {% if request.inbound_guides %}
                         <div class="tab-pane fade" id="guides" role="tabpanel">
-                            <div class="mb-3">
-                                <label class="form-label"><i class="fas fa-filter me-1"></i>Filter by Language:</label>
-                                <select class="form-select form-select-sm" style="width: 200px; display: inline-block;" id="guideLanguageFilter" onchange="filterGuidesByLanguage()">
-                                    <option value="">All Languages</option>
-                                    {% set languages = request.inbound_guides | map(attribute='language') | select('defined') | unique | list %}
-                                    {% for lang in languages %}
-                                    <option value="{{ lang }}">{{ lang }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
                             <div class="table-responsive">
-                                <table class="table table-sm table-hover" id="guidesTable">
-                                    <thead class="table-light">
+                                <table class="table table-sm">
+                                    <thead>
                                         <tr>
                                             <th>Date</th>
-                                            <th>Guide Name</th>
-                                            <th>Telephone</th>
+                                            <th>Guide</th>
                                             <th>Language</th>
-                                            <th>National ID</th>
-                                            <th>Tax Number</th>
                                             <th>Service Type</th>
-                                            <th>Additional Comments</th>
+                                            <th>Duration</th>
+                                            <th>Meeting Point</th>
                                             <th>Cost</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for guide in request.inbound_guides %}
-                                        <tr data-language="{{ guide.language or '' }}">
-                                            <td>{{ guide.date.strftime('%d %b') if guide.date else '-' }}</td>
-                                            <td><strong>{{ guide.guide_name or '-' }}</strong></td>
-                                            <td>{{ guide.telephone_number or '-' }}</td>
-                                            <td><span class="badge bg-primary">{{ guide.language or '-' }}</span></td>
-                                            <td>{{ guide.national_id or '-' }}</td>
-                                            <td>{{ guide.tax_number or '-' }}</td>
+                                        <tr>
+                                            <td>{{ guide.date.strftime('%d %b %Y') }}</td>
+                                            <td>{{ guide.guide_name or '-' }}</td>
+                                            <td>{{ guide.language or '-' }}</td>
                                             <td>{{ guide.service_type or '-' }}</td>
-                                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ guide.additional_comments or '-' }}
-                                                {% if guide.internal_comments %}
-                                                <span class="badge bg-warning text-dark" title="Has internal comments"><i class="fas fa-lock"></i></span>
-                                                {% endif %}
-                                            </td>
+                                            <td>{{ guide.duration_hours or '-' }} hrs</td>
+                                            <td>{{ guide.meeting_point or '-' }}</td>
                                             <td>{{ "%.2f"|format(guide.cost) }} {{ guide.currency }}</td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editGuide({{ guide.id }})">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -2889,172 +2610,6 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
                         {% endif %}
-
-                        {% if request.inbound_optionals %}
-                        <div class="tab-pane fade" id="optionals" role="tabpanel">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i><strong>Optional Extras:</strong> These items are purchased independently by passengers and are <strong>not restricted to itinerary dates</strong>.
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Service Name</th>
-                                            <th>Description</th>
-                                            <th>Date</th>
-                                            <th>Location</th>
-                                            <th>Supplier</th>
-                                            <th>Per Person</th>
-                                            <th>Total Cost</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for optional in request.inbound_optionals %}
-                                        <tr>
-                                            <td><strong>{{ optional.service_name }}</strong></td>
-                                            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">{{ optional.description or '-' }}</td>
-                                            <td>{{ optional.date.strftime('%d %b %Y') if optional.date else '<span class="badge bg-secondary">Flexible</span>' | safe }}</td>
-                                            <td>{{ optional.location or '-' }}</td>
-                                            <td>{{ optional.supplier or '-' }}</td>
-                                            <td>{{ "%.2f"|format(optional.cost_per_person) }} {{ optional.currency }}</td>
-                                            <td>{{ "%.2f"|format(optional.total_cost) }} {{ optional.currency }}</td>
-                                            <td>
-                                                <span class="badge bg-{% if optional.status == 'CONFIRMED' %}success{% elif optional.status == 'REQUESTED' or optional.status == 'REQUEST' %}warning{% else %}secondary{% endif %}">
-                                                    {{ optional.status }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="editOptional({{ optional.id }})">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Documents Tab -->
-                        <div class="tab-pane fade" id="documents" role="tabpanel">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="card border-0" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
-                                        <div class="card-body p-3">
-                                            <h6 class="mb-2"><i class="fas fa-cloud-upload-alt me-2 text-primary"></i>Upload Document</h6>
-                                            <form id="uploadDocForm" enctype="multipart/form-data">
-                                                <div class="row g-2">
-                                                    <div class="col-md-4">
-                                                        <select class="form-select form-select-sm" id="docType" name="document_type">
-                                                            <option value="OTHER">Select Type...</option>
-                                                            <option value="PASSPORT">Passport</option>
-                                                            <option value="VISA">Visa</option>
-                                                            <option value="TICKET">Ticket</option>
-                                                            <option value="CONFIRMATION">Confirmation</option>
-                                                            <option value="VOUCHER">Voucher</option>
-                                                            <option value="CONTRACT">Contract</option>
-                                                            <option value="INVOICE">Invoice</option>
-                                                            <option value="OTHER">Other</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="col-md-5">
-                                                        <input type="file" class="form-control form-control-sm" id="docFile" name="file" 
-                                                               accept=".pdf,.png,.jpg,.jpeg,.gif,.doc,.docx,.xls,.xlsx,.txt">
-                                                    </div>
-                                                    <div class="col-md-3">
-                                                        <button type="button" class="btn btn-primary btn-sm w-100" onclick="uploadDocument()">
-                                                            <i class="fas fa-upload me-1"></i>Upload
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <input type="text" class="form-control form-control-sm" id="docDescription" name="description" 
-                                                           placeholder="Optional description...">
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="alert alert-light border-0 mb-0" style="background: #f8fafc; font-size: 0.85rem;">
-                                        <i class="fas fa-info-circle me-1 text-muted"></i>
-                                        <strong>Supported formats:</strong> PDF, PNG, JPG, GIF, DOC, DOCX, XLS, XLSX, TXT
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div id="documentsListContainer">
-                                <div class="text-center py-4" id="noDocsMessage" {% if request.documents %}style="display: none;"{% endif %}>
-                                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-                                    <p class="text-muted">No documents attached yet</p>
-                                </div>
-                                
-                                <div class="table-responsive" id="docsTableWrapper" {% if not request.documents %}style="display: none;"{% endif %}>
-                                    <table class="table table-sm table-hover" id="docsTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th style="width: 5%;"></th>
-                                                <th>Filename</th>
-                                                <th style="width: 15%;">Type</th>
-                                                <th style="width: 10%;">Size</th>
-                                                <th style="width: 15%;">Uploaded</th>
-                                                <th style="width: 25%;">Description</th>
-                                                <th style="width: 10%;">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="docsTableBody">
-                                            {% for doc in request.documents %}
-                                            <tr data-doc-id="{{ doc.id }}">
-                                                <td>
-                                                    {% if doc.is_image %}
-                                                    <i class="fas fa-image text-success"></i>
-                                                    {% elif doc.is_pdf %}
-                                                    <i class="fas fa-file-pdf text-danger"></i>
-                                                    {% else %}
-                                                    <i class="fas fa-file text-secondary"></i>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <a href="{{ url_for('inbound.view_document', doc_id=doc.id) }}" target="_blank" class="text-decoration-none">
-                                                        {{ doc.original_filename }}
-                                                    </a>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-{% if doc.document_type == 'PASSPORT' %}primary{% elif doc.document_type == 'VISA' %}success{% elif doc.document_type == 'TICKET' %}info{% elif doc.document_type == 'CONFIRMATION' %}warning text-dark{% else %}secondary{% endif %}">
-                                                        {{ doc.document_type }}
-                                                    </span>
-                                                </td>
-                                                <td class="text-muted small">
-                                                    {% if doc.file_size %}
-                                                        {% if doc.file_size > 1048576 %}
-                                                            {{ "%.1f"|format(doc.file_size / 1048576) }} MB
-                                                        {% else %}
-                                                            {{ "%.0f"|format(doc.file_size / 1024) }} KB
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </td>
-                                                <td class="text-muted small">{{ doc.uploaded_at.strftime('%d %b %Y %H:%M') if doc.uploaded_at else '-' }}</td>
-                                                <td class="text-muted small">{{ doc.description or '-' }}</td>
-                                                <td>
-                                                    <div class="btn-group btn-group-sm">
-                                                        <a href="{{ url_for('inbound.view_document', doc_id=doc.id) }}" target="_blank" class="btn btn-outline-primary" title="View/Download">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                        <button type="button" class="btn btn-outline-danger" onclick="deleteDocument({{ doc.id }})" title="Delete">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <!-- End itinerary edit mode -->
                 </div>
@@ -3693,72 +3248,26 @@ function startProcessing() {
     });
 }
 
-// Toggle Edit Mode Function - v2.1 Auto-Edit Mode
-let isEditMode = true;  // Start in edit mode by default
+// Toggle Edit Mode Function
+let isEditMode = false;
 
 function toggleEditMode() {
-    console.log('toggleEditMode called, current isEditMode:', isEditMode);
-    
-    const viewMode = document.getElementById('viewMode');
-    const editMode = document.getElementById('editMode');
-    const editModeButtons = document.getElementById('editModeButtons');
-    const editModeText = document.getElementById('editModeText');
-    
-    console.log('Elements found:', {
-        viewMode: !!viewMode,
-        editMode: !!editMode,
-        editModeButtons: !!editModeButtons,
-        editModeText: !!editModeText
-    });
-    
-    if (!viewMode || !editMode || !editModeButtons || !editModeText) {
-        console.error('Required elements not found!');
-        return;
-    }
-    
     isEditMode = !isEditMode;
     
     if (isEditMode) {
-        console.log('Switching to edit mode');
         // Show edit mode, hide view mode
-        viewMode.classList.add('edit-mode-hidden');
-        editMode.classList.remove('edit-mode-hidden');
-        editModeButtons.classList.remove('edit-mode-hidden');
-        editModeText.textContent = 'Cancel';
+        document.getElementById('viewMode').classList.add('edit-mode-hidden');
+        document.getElementById('editMode').classList.remove('edit-mode-hidden');
+        document.getElementById('editModeButtons').classList.remove('edit-mode-hidden');
+        document.getElementById('editModeText').textContent = 'Cancel';
     } else {
-        console.log('Switching to view mode');
         // Show view mode, hide edit mode
-        viewMode.classList.remove('edit-mode-hidden');
-        editMode.classList.add('edit-mode-hidden');
-        editModeButtons.classList.add('edit-mode-hidden');
-        editModeText.textContent = 'Edit';
+        document.getElementById('viewMode').classList.remove('edit-mode-hidden');
+        document.getElementById('editMode').classList.add('edit-mode-hidden');
+        document.getElementById('editModeButtons').classList.add('edit-mode-hidden');
+        document.getElementById('editModeText').textContent = 'Edit';
     }
-    
-    console.log('Toggle complete');
 }
-
-// Initialize edit mode on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Show edit mode by default
-    const viewMode = document.getElementById('viewMode');
-    const editMode = document.getElementById('editMode');
-    const editModeButtons = document.getElementById('editModeButtons');
-    const editModeText = document.getElementById('editModeText');
-    
-    if (viewMode && editMode && editModeButtons && editModeText) {
-        viewMode.classList.add('edit-mode-hidden');
-        editMode.classList.remove('edit-mode-hidden');
-        editModeButtons.classList.remove('edit-mode-hidden');
-        editModeText.textContent = 'Cancel';
-    }
-    
-    // Initialize date validation - set min date on to_date based on from_date
-    const fromDateInput = document.querySelector('input[name="from_date"]');
-    const toDateInput = document.querySelector('input[name="to_date"]');
-    if (fromDateInput && toDateInput && fromDateInput.value) {
-        toDateInput.min = fromDateInput.value;
-    }
-});
 
 // Cancel Edit Function
 function cancelEdit() {
@@ -4152,57 +3661,6 @@ function openRoomDistributionFromService() {
     roomModal.show();
 }
 
-// Get current itinerary rows data from the DOM
-function getCurrentItineraryRows() {
-    const rows = [];
-    const tableRows = document.querySelectorAll('#itineraryTableBody tr[data-row-index]');
-    
-    tableRows.forEach((tr, index) => {
-        const rowIndex = parseInt(tr.dataset.rowIndex);
-        const rowId = tr.querySelector('input[name="row_id[]"]')?.value || null;
-        const date = tr.querySelector('input[name="date[]"]')?.value || tr.dataset.date;
-        const description = tr.querySelector('input[name="description[]"]')?.value || '';
-        const comment = tr.querySelector('input[name="comment[]"]')?.value || '';
-        const restaurant = tr.querySelector('input[name="restaurant[]"]')?.value || '';
-        const cashExpense = parseFloat(tr.querySelector('input[name="cash_expense[]"]')?.value) || 0;
-        
-        // Get service flags from hidden inputs
-        const flagHotel = tr.querySelector(`input[name="flag_hotel_${rowIndex}"]`)?.value === '1';
-        const flagGuide = tr.querySelector(`input[name="flag_guide_${rowIndex}"]`)?.value === '1';
-        const flagTransport = tr.querySelector(`input[name="flag_transport_${rowIndex}"]`)?.value === '1';
-        const flagMeal = tr.querySelector(`input[name="flag_meal_${rowIndex}"]`)?.value === '1';
-        const flagAirport = tr.querySelector(`input[name="flag_airport_${rowIndex}"]`)?.value === '1';
-        const flagDrive = tr.querySelector(`input[name="flag_drive_${rowIndex}"]`)?.value === '1';
-        
-        // Get room distribution data
-        const hotelSingleRooms = parseInt(tr.querySelector(`input[id="single_${rowIndex}_input"]`)?.value) || 0;
-        const hotelDoubleRooms = parseInt(tr.querySelector(`input[id="double_${rowIndex}_input"]`)?.value) || 0;
-        const hotelTripleRooms = parseInt(tr.querySelector(`input[id="triple_${rowIndex}_input"]`)?.value) || 0;
-        const hotelOtherRooms = parseInt(tr.querySelector(`input[id="other_${rowIndex}_input"]`)?.value) || 0;
-        
-        rows.push({
-            id: rowId ? parseInt(rowId) : null,
-            date: date,
-            description: description,
-            comment: comment,
-            restaurant: restaurant,
-            cash_expense: cashExpense,
-            flag_hotel: flagHotel,
-            flag_guide: flagGuide,
-            flag_transport: flagTransport,
-            flag_meal: flagMeal,
-            flag_airport: flagAirport,
-            flag_drive: flagDrive,
-            hotel_single_rooms: hotelSingleRooms,
-            hotel_double_rooms: hotelDoubleRooms,
-            hotel_triple_rooms: hotelTripleRooms,
-            hotel_other_rooms: hotelOtherRooms
-        });
-    });
-    
-    return rows;
-}
-
 // Save service selection
 function saveServiceSelection() {
     if (currentServiceRowIndex < 0) return;
@@ -4333,48 +3791,17 @@ function capitalizeFirst(str) {
 
 // Calculate Days Function
 function calculateDays() {
-    const fromDateInput = document.querySelector('input[name="from_date"]');
-    const toDateInput = document.querySelector('input[name="to_date"]');
-    const noOfDaysField = document.getElementById('noOfDays');
-    
-    const fromDate = fromDateInput?.value;
-    const toDate = toDateInput?.value;
+    const fromDate = document.querySelector('input[name="from_date"]').value;
+    const toDate = document.querySelector('input[name="to_date"]').value;
     
     if (fromDate && toDate) {
         const from = new Date(fromDate);
         const to = new Date(toDate);
-        
-        // Validate: To Date must be greater than or equal to From Date
-        if (to < from) {
-            toDateInput.setCustomValidity('To Date must be after From Date');
-            toDateInput.classList.add('is-invalid');
-            if (noOfDaysField) {
-                noOfDaysField.value = '';
-            }
-            // Show alert
-            alert('To Date must be after From Date. Please correct the dates.');
-            // Reset to_date to from_date
-            toDateInput.value = fromDate;
-            return;
-        } else {
-            toDateInput.setCustomValidity('');
-            toDateInput.classList.remove('is-invalid');
-        }
-        
         const timeDiff = to.getTime() - from.getTime();
         const days = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
         
-        // Update the no_of_days field
-        if (noOfDaysField) {
-            noOfDaysField.value = days;
-        }
-        
+        // Display calculated days (you can add a display element if needed)
         console.log('Calculated days:', days);
-    }
-    
-    // Also set min date on to_date field
-    if (fromDate && toDateInput) {
-        toDateInput.min = fromDate;
     }
 }
 
@@ -4702,13 +4129,6 @@ function saveChanges(event) {
         if (data.success) {
             showNotification('Master details saved successfully! Generating days...', 'success');
             
-            // Show "Saved" badge
-            const savedBadge = document.getElementById('savedBadge');
-            if (savedBadge) {
-                savedBadge.style.display = 'inline-block';
-                savedBadge.classList.add('pulse-animation');
-            }
-            
             // Auto-generate days after saving
             return fetch('/inbound/api/{{ request.id }}/generate-days', {
                 credentials: 'same-origin',
@@ -4730,16 +4150,12 @@ function saveChanges(event) {
     })
     .then(data => {
         if (data.success) {
-            showNotification('Saved! Itinerary generated successfully.', 'success');
+            showNotification('Days generated! Enabling edit mode...', 'success');
             
-            // Store saved state in session storage so it shows after reload
-            sessionStorage.setItem('requestSaved', 'true');
-            sessionStorage.setItem('itineraryGenerated', 'true');
-            
-            // Reload with parameter to show itinerary tab
+            // Reload with parameter to start edit mode
             setTimeout(() => {
-                window.location.href = window.location.pathname + '?tab=itinerary&saved=1';
-            }, 1500);
+                window.location.href = window.location.pathname + '?auto_edit=1';
+            }, 1000);
         } else {
             throw new Error(data.message || 'Error generating days');
         }
@@ -4747,6 +4163,21 @@ function saveChanges(event) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error saving master details', 'error');
+    });
+}
+
+
+function toggleEditMode() {
+    // Toggle between edit and view mode
+    const editForms = document.querySelectorAll('.edit-form');
+    const viewSections = document.querySelectorAll('.view-section');
+    
+    editForms.forEach(form => {
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    viewSections.forEach(section => {
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
     });
 }
 
@@ -5333,80 +4764,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
 }
 </style>
 
-<!-- Hotel Edit Modal -->
-<div class="modal fade" id="hotelEditModal" tabindex="-1" aria-labelledby="hotelEditModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" style="max-width: 900px;">
-        <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
-                <h5 class="modal-title" id="hotelEditModalLabel">
-                    <i class="fas fa-bed me-2"></i>Edit Hotel Details
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Hotel Name</label>
-                        <input type="text" id="editHotelName" class="form-control" readonly>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Supplier</label>
-                        <input type="text" id="editHotelSupplier" class="form-control">
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold"><i class="fas fa-calendar-check text-success me-2"></i>Check-in Date</label>
-                        <input type="date" id="editHotelCheckIn" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold"><i class="fas fa-calendar-times text-danger me-2"></i>Check-out Date</label>
-                        <input type="date" id="editHotelCheckOut" class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Status</label>
-                        <select id="editHotelStatus" class="form-select">
-                            <option value="REQUEST">REQUEST</option>
-                            <option value="QUOTED">QUOTED</option>
-                            <option value="SUPPLIER_CONFIRMED">SUPPLIER_CONFIRMED</option>
-                            <option value="CONFIRMED">CONFIRMED</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Cost</label>
-                        <div class="input-group">
-                            <input type="number" id="editHotelCost" class="form-control" step="0.01" min="0">
-                            <select id="editHotelCurrency" class="form-select" style="max-width: 80px;">
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
-                                <option value="JOD">JOD</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label fw-semibold">Location / Confirmation Notes</label>
-                        <textarea id="editHotelNotes" class="form-control" rows="2" placeholder="Hotel location or special notes"></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveHotelChanges()">
-                    <i class="fas fa-save me-1"></i>Save Changes
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Service Configuration Modal -->
 <div class="modal fade" id="serviceConfigModal" tabindex="-1" aria-labelledby="serviceConfigModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 98%; margin: 1rem auto;">
@@ -5419,23 +4776,23 @@ function handleCustomerSelectionInView(customerId, customerName) {
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" style="overflow-y: auto; flex: 1;">
-                <!-- Date Range Selection - Compact -->
-                <div class="row mb-3">
+                <!-- Date Range Selection -->
+                <div class="row mb-4">
                     <div class="col-12">
-                        <div class="alert alert-info py-2 px-3 mb-0" style="background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); border: none; border-radius: 8px; font-size: 0.85rem;">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div class="me-3">
-                                    <i class="fas fa-calendar-alt me-1"></i>
-                                    <strong>Itinerary:</strong> {{ request.from_date.strftime('%d %b %Y') }} - {{ request.to_date.strftime('%d %b %Y') }}
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <label class="form-label mb-0 small">From:</label>
-                                    <input type="date" id="serviceFromDate" class="form-control form-control-sm" style="width: 140px;"
+                        <div class="alert alert-info" style="background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); border: none; border-radius: 10px;">
+                            <h6 class="mb-2"><i class="fas fa-calendar-alt me-2"></i>Select Date Range</h6>
+                            <p class="mb-2">Available dates from your itinerary: <strong>{{ request.from_date.strftime('%d %b %Y') }}</strong> to <strong>{{ request.to_date.strftime('%d %b %Y') }}</strong></p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="form-label">From Date:</label>
+                                    <input type="date" id="serviceFromDate" class="form-control" 
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}"
                                            value="{{ request.from_date.strftime('%Y-%m-%d') }}">
-                                    <label class="form-label mb-0 small">To:</label>
-                                    <input type="date" id="serviceToDate" class="form-control form-control-sm" style="width: 140px;"
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">To Date:</label>
+                                    <input type="date" id="serviceToDate" class="form-control" 
                                            min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
                                            max="{{ request.to_date.strftime('%Y-%m-%d') }}"
                                            value="{{ request.to_date.strftime('%Y-%m-%d') }}">
@@ -5447,131 +4804,219 @@ function handleCustomerSelectionInView(customerId, customerName) {
 
                 <!-- Hotel Service Configuration -->
                 <div id="hotelServiceConfig" class="service-config-section d-none">
+                    <!-- Add Hotel Button -->
+                    <div class="mb-3 text-end">
+                        <button type="button" class="btn btn-success" onclick="addAnotherHotel()">
+                            <i class="fas fa-plus me-1"></i>Add Another Hotel
+                        </button>
+                        <small class="text-muted d-block mt-1">For groups splitting into multiple hotels</small>
+                    </div>
+                    
                     <!-- Multiple Hotels Container -->
                     <div id="hotelsContainer">
                     
                     <!-- Hotel Card Template (first hotel) -->
-                    <div class="hotel-card mb-3" data-hotel-index="0">
+                    <div class="hotel-card mb-4" data-hotel-index="0">
                     <div class="card border-0 shadow-sm">
-                        <div class="card-header py-2 px-3 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                            <h6 class="mb-0" style="font-size: 0.9rem; color: white !important;"><i class="fas fa-bed me-2" style="color: white !important;"></i>Hotel #<span class="hotel-number">1</span></h6>
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-dark" style="font-size: 0.8rem;" onclick="openRoomingListModal(this)">
-                                    <i class="fas fa-list-alt me-1"></i>Rooming List
-                                </button>
-                                <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #1f2937;">
+                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Hotel #<span class="hotel-number">1</span> Configuration</h6>
+                            <button type="button" class="btn btn-sm btn-danger remove-hotel-btn d-none" onclick="removeHotelCard(this)">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
                         </div>
-                        <div class="card-body py-3 px-3">
-                            <!-- Row 1: Hotel Name, Supplier, Status, Dates -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-3">
-                                    <label class="form-label small mb-1">Hotel Name</label>
-                                    <input type="text" name="hotel_name" class="form-control form-control-sm hotel-autocomplete" placeholder="Hotel name..." required>
+                        <div class="card-body">
+                            <!-- Hotel Basic Information -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Hotel Name</label>
+                                    <input type="text" name="hotel_name" id="hotelName" class="form-control hotel-autocomplete" placeholder="Start typing hotel name..." required>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Supplier</label>
-                                    <select name="supplier" class="form-select form-select-sm">
-                                        <option value="">Select</option>
-                                        <option value="Direct">Direct</option>
+                                <div class="col-md-4">
+                                    <label class="form-label">Supplier</label>
+                                    <select name="supplier" id="hotelSupplier" class="form-select">
+                                        <option value="">Select Supplier</option>
+                                        <option value="Direct Booking">Direct Booking</option>
                                         <option value="Booking.com">Booking.com</option>
                                         <option value="Expedia">Expedia</option>
+                                        <option value="Hotels.com">Hotels.com</option>
+                                        <option value="Agoda">Agoda</option>
                                         <option value="Local Partner">Local Partner</option>
+                                        <option value="Travel Agent">Travel Agent</option>
+                                        <option value="Hotel Direct">Hotel Direct</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Status</label>
-                                    <select name="status" class="form-select form-select-sm">
+                                <div class="col-md-4">
+                                    <label class="form-label">Status</label>
+                                    <select name="status" id="hotelStatus" class="form-select">
                                         <option value="confirmed">Confirmed</option>
                                         <option value="pending">Pending</option>
                                         <option value="on_request">On Request</option>
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-sign-in-alt text-success me-1"></i>Check-in</label>
-                                    <input type="date" name="check_in_date" class="form-control form-control-sm"
-                                           value="{{ request.from_date.strftime('%Y-%m-%d') }}"
-                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
-                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1"><i class="fas fa-sign-out-alt text-danger me-1"></i>Check-out</label>
-                                    <input type="date" name="check_out_date" class="form-control form-control-sm"
-                                           value="{{ request.to_date.strftime('%Y-%m-%d') }}"
-                                           min="{{ request.from_date.strftime('%Y-%m-%d') }}" 
-                                           max="{{ request.to_date.strftime('%Y-%m-%d') }}" required>
-                                </div>
-                                <div class="col-md-1 d-flex align-items-end">
-                                    <span class="badge bg-primary nights-badge">{{ (request.to_date - request.from_date).days }} nts</span>
-                                </div>
                             </div>
 
-                            <!-- Row 2: Cost, Confirmation, Phone, Pickup, Notes -->
-                            <div class="row g-2 mb-2">
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Cost</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" name="cost" step="0.01" class="form-control" placeholder="0.00">
-                                        <select name="currency" class="form-select" style="max-width: 65px;">
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Cost</label>
+                                    <div class="input-group">
+                                        <input type="number" name="cost" id="hotelCost" step="0.01" class="form-control" placeholder="0.00">
+                                        <select name="currency" id="hotelCurrency" class="form-select" style="max-width: 100px;">
                                             <option value="USD">USD</option>
                                             <option value="EUR">EUR</option>
+                                            <option value="GBP">GBP</option>
                                             <option value="JOD">JOD</option>
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Conf #</label>
-                                    <input type="text" name="confirmation_number" class="form-control form-control-sm" placeholder="Confirmation #">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label small mb-1">Phone</label>
-                                    <input type="text" name="phone_number" class="form-control form-control-sm" placeholder="Phone number">
+                                <div class="col-md-3">
+                                    <label class="form-label">Confirmation Number</label>
+                                    <input type="text" name="confirmation_number" id="hotelConfirmationNumber" class="form-control" placeholder="Hotel confirmation #">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small mb-1">Pickup Location</label>
-                                    <input type="text" name="pickup_location" class="form-control form-control-sm" placeholder="Hotel address">
+                                    <label class="form-label">Pickup Location</label>
+                                    <input type="text" name="pickup_location" id="hotelPickupLocation" class="form-control" placeholder="Address or landmark">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label small mb-1">Notes</label>
-                                    <input type="text" name="special_notes" class="form-control form-control-sm" placeholder="Special notes">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="text" name="phone_number" id="hotelPhoneNumber" class="form-control" placeholder="Hotel contact number">
                                 </div>
                             </div>
 
-                            <!-- Row 3: Room Distribution Summary -->
-                            <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                                <div class="d-flex align-items-center gap-4">
-                                    <span class="text-muted" style="font-size: 14px;"><i class="fas fa-bed me-2"></i>Rooms:</span>
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">SGL</span>
-                                            <input type="number" name="hotel_single_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="1">
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="form-label">Special Notes</label>
+                                    <textarea name="special_notes" id="hotelSpecialNotes" class="form-control" rows="2" placeholder="Special requirements or notes"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Room Distribution Summary - PRIMARY CONTROL -->
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <div class="card">
+                                        <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background-color: #1f2937; color: white;">
+                                            <h6 class="mb-0"><i class="fas fa-bed me-2"></i>Room Distribution Summary</h6>
+                                            <span id="allConfirmedBadge" class="badge bg-success" style="display: none;">
+                                                <i class="fas fa-check-circle me-1"></i>All Confirmed
+                                            </span>
                                         </div>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">DBL</span>
-                                            <input type="number" name="hotel_double_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">TRP</span>
-                                            <input type="number" name="hotel_triple_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
-                                        </div>
-                                        <div class="d-flex align-items-center">
-                                            <span class="badge bg-secondary me-2" style="font-size: 13px; padding: 6px 10px;">OTH</span>
-                                            <input type="number" name="hotel_other_rooms" class="form-control text-center" style="width: 70px; height: 38px; font-size: 15px;" min="0" value="0">
+                                        <div class="card-body py-2">
+                                            <!-- Room Count Configuration -->
+                                            <div class="row g-3 mb-3">
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Single Rooms</label>
+                                                    <input type="number" id="hotelSingleRooms" name="hotel_single_rooms" class="form-control" min="0" value="1" onchange="updateIndividualRoomGrid()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Double Rooms</label>
+                                                    <input type="number" id="hotelDoubleRooms" name="hotel_double_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Triple Rooms</label>
+                                                    <input type="number" id="hotelTripleRooms" name="hotel_triple_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">Other Rooms</label>
+                                                    <input type="number" id="hotelOtherRooms" name="hotel_other_rooms" class="form-control" min="0" value="0" onchange="updateIndividualRoomGrid()">
+                                                </div>
+                                            </div>
+
+                                            <!-- Individual Room Status Grid -->
+                                            <div id="individualRoomGrid" class="mb-3">
+                                                <!-- Will be populated dynamically -->
+                                            </div>
+
+                                            <div class="text-center mt-3">
+                                                <button type="button" class="btn btn-primary" onclick="regenerateRoomTableFromSummary(this)">
+                                                    <i class="fas fa-table me-1"></i>Generate Room Table
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <span class="badge bg-info room-total-badge" style="font-size: 13px; padding: 8px 12px;">1 room total</span>
                             </div>
-                            
-                            <!-- Hidden room data container -->
-                            <div class="hotel-rooms-container d-none">
-                                <div class="individual-room-grid"></div>
-                                <table class="d-none">
-                                    <tbody class="hotel-rooms-table-body"></tbody>
-                                </table>
+
+                            <!-- Room Configuration Section -->
+                            <div class="mb-3">
+                                <h5 class="text-primary">Room Details & Lead Passengers</h5>
+                                <small class="text-muted">Configure individual room details below. Use Master Configuration above to add/remove rooms.</small>
                             </div>
+
+                            <div id="hotelRoomsContainer">
+                                <div style="width: 100%;">
+                                    <!-- Initial room table -->
+                                    <div class="table-responsive" style="width: 100%; overflow-x: auto;">
+                                        <table class="table table-bordered table-hover" style="min-width: 1800px; width: 100%;">
+                                            <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; font-weight: bold;">
+                                                <tr>
+                                                    <th style="min-width: 70px; color: white; font-weight: bold;">Room #</th>
+                                                    <th style="min-width: 130px; color: white; font-weight: bold;">Room Category</th>
+                                                    <th style="min-width: 170px; color: white; font-weight: bold;">Hotel Room Option</th>
+                                                    <th style="min-width: 150px; color: white; font-weight: bold;">Board Basis / Meals</th>
+                                                    <th style="min-width: 140px; color: white; font-weight: bold;">Dietary Requirements</th>
+                                                    <th style="min-width: 110px; color: white; font-weight: bold;">Check-in</th>
+                                                    <th style="min-width: 110px; color: white; font-weight: bold;">Check-out</th>
+                                                    <th style="min-width: 70px; color: white; font-weight: bold;">Adults</th>
+                                                    <th style="min-width: 80px; color: white; font-weight: bold;">Children</th>
+                                                    <th style="min-width: 200px; color: white; font-weight: bold;">Lead Passenger Name</th>
+                                                    <th style="min-width: 80px; color: white; font-weight: bold;">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="hotelRoomsTableBody">
+                                                <!-- Default single room -->
+                                                <tr class="hotel-room-row">
+                                                    <td><strong class="text-primary">Room 1</strong></td>
+                                                    <td>
+                                                        <select name="rooms[0][room_category]" class="form-control" onchange="updateRoomDistribution()">
+                                                            <option value="Single Room" selected>Single</option>
+                                                            <option value="Double Room">Double</option>
+                                                            <option value="Triple Room">Triple</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="rooms[0][hotel_room_option]" class="form-control" placeholder="Premium, Premier Sea View">
+                                                    </td>
+                                                    <td>
+                                                        <select name="rooms[0][board_basis]" class="form-control">
+                                                            <option value="Room Only">Room Only</option>
+                                                            <option value="Bed & Breakfast" selected>Bed & Breakfast</option>
+                                                            <option value="Half Board">Half Board (Breakfast + Dinner)</option>
+                                                            <option value="Full Board">Full Board (All Meals)</option>
+                                                            <option value="All Inclusive">All Inclusive</option>
+                                                            <option value="Ultra All Inclusive">Ultra All Inclusive</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="rooms[0][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
+                                                    </td>
+                                                    <td>
+                                                        <input type="date" name="rooms[0][check_in]" class="form-control" id="hotelDefaultCheckin">
+                                                    </td>
+                                                    <td>
+                                                        <input type="date" name="rooms[0][check_out]" class="form-control" id="hotelDefaultCheckout">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="rooms[0][adults]" class="form-control" value="1" min="1" max="8">
+                                                    </td>
+                                                    <td>
+                                                        <input type="number" name="rooms[0][children]" class="form-control" value="0" min="0" max="8">
+                                                    </td>
+                                                    <td>
+                                                        <input type="text" name="rooms[0][lead_passenger]" class="form-control" placeholder="Lead passenger name" style="min-width: 180px;">
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeHotelTableRoom(this)" style="display: none;">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                     </div>
@@ -5579,13 +5024,6 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     
                     </div>
                     <!-- End of hotels container -->
-                    
-                    <!-- Add Another Hotel Button -->
-                    <div class="text-center mt-2">
-                        <button type="button" class="btn btn-outline-success btn-sm" onclick="addAnotherHotel()">
-                            <i class="fas fa-plus me-1"></i>Add Another Hotel
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Transport Service Configuration -->
@@ -5907,46 +5345,45 @@ function updateRequestStatus(newStatus) {
     }
 }
 
-// Toggle Status Sidebar
-function toggleStatusSidebar() {
-    const sidebar = document.getElementById('statusSidebarOverlay');
-    const backdrop = document.getElementById('statusSidebarBackdrop');
-    
-    if (!sidebar) return;
-    
-    const isOpen = sidebar.classList.contains('open');
-    
-    if (isOpen) {
-        sidebar.classList.remove('open');
-        backdrop.classList.remove('show');
-    } else {
-        sidebar.classList.add('open');
-        backdrop.classList.add('show');
-    }
-}
-
-// Update Status UI immediately for better UX - Sidebar Version
+// Update Status UI immediately for better UX
 function updateStatusUI(newStatus) {
-    console.log('updateStatusUI called with status:', newStatus);
-    
-    // Define stage order for progress tracking
-    const stageOrder = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
-    const currentIndex = stageOrder.indexOf(newStatus);
-    
-    // Update vertical sidebar status steps
-    document.querySelectorAll('.status-step-vertical').forEach(step => {
-        const stepStatus = step.getAttribute('data-status');
-        const stepIndex = stageOrder.indexOf(stepStatus);
-        
-        // Reset classes
-        step.classList.remove('active', 'completed');
-        
-        if (stepStatus === newStatus) {
-            step.classList.add('active');
-        } else if (stepIndex < currentIndex && stepIndex !== -1 && currentIndex !== -1) {
-            step.classList.add('completed');
+    // Remove active class from all stages
+    document.querySelectorAll('.status-stage').forEach(stage => {
+        stage.classList.remove('active');
+        // Remove any existing check marks
+        const existingCheck = stage.querySelector('.circle-check');
+        if (existingCheck) {
+            existingCheck.remove();
         }
     });
+    
+    // Add active class to new status
+    const newActiveStage = document.querySelector(`[data-status="${newStatus}"]`);
+    if (newActiveStage) {
+        newActiveStage.classList.add('active');
+        
+        // Add check mark
+        const circle = newActiveStage.querySelector('.status-circle');
+        if (circle && !circle.querySelector('.circle-check')) {
+            const checkMark = document.createElement('div');
+            checkMark.className = 'circle-check';
+            checkMark.innerHTML = '<i class="fas fa-check"></i>';
+            circle.appendChild(checkMark);
+        }
+    }
+    
+    // Update progress fill
+    const progressFill = document.getElementById('progressFill');
+    if (progressFill) {
+        const progressWidths = {
+            'REQUEST': '20%',
+            'QUOTED': '40%',
+            'CONFIRMED': '60%',
+            'PROCESSING': '80%',
+            'COMPLETED': '100%'
+        };
+        progressFill.style.width = progressWidths[newStatus] || '0%';
+    }
 }
 
 // Show alert messages
@@ -5967,16 +5404,6 @@ function showAlert(message, type) {
         alertDiv.remove();
     }, 3000);
 }
-
-
-// Initialize workflow on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize the workflow status UI with current status
-    const currentStatus = '{{ request.status }}';
-    if (currentStatus) {
-        updateStatusUI(currentStatus);
-    }
-});
 
 // Toggle Horizontal Workflow visibility
 function toggleHorizontalWorkflow() {
@@ -6222,8 +5649,8 @@ function convertToInvoice() {
 <div class="modal fade" id="departuresModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
-                <h5 class="modal-title" style="color: white !important;"><i class="fas fa-plane-departure me-2" style="color: white !important;"></i>Manage Departures</h5>
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-plane-departure me-2"></i>Manage Departures</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -6267,27 +5694,14 @@ function convertToInvoice() {
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Meet & Assist</label>
+                            <label class="form-label">Meet & Greet Service</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
-                                <label class="form-check-label" for="meet_assist_dep">
+                                <input class="form-check-input" type="checkbox" name="meet_greet" id="meet_greet">
+                                <label class="form-check-label" for="meet_greet">
                                     Yes
                                 </label>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Representative Name</label>
-                            <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label class="form-label">Departure Tax</label>
-                            <select class="form-control" name="departure_tax">
-                                <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="INCLUDED">Included</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
                         <div class="col-md-3 mb-3">
                             <label class="form-label">Vehicle Type</label>
                             <select class="form-control" name="vehicle_details">
@@ -6304,6 +5718,12 @@ function convertToInvoice() {
                             <label class="form-label">PAX Count</label>
                             <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Driver Name</label>
+                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
+                        </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Batch Name</label>
                             <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
@@ -6315,9 +5735,6 @@ function convertToInvoice() {
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="saveAndCloseDepartures()">
-                    <i class="fas fa-check me-1"></i>Save & Close
-                </button>
                 <button type="button" class="btn btn-primary" onclick="saveAllDepartures()">
                     <i class="fas fa-save me-1"></i>Save All Departures
                 </button>
@@ -6331,8 +5748,8 @@ function convertToInvoice() {
 <div class="modal fade" id="arrivalsModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                <h5 class="modal-title" style="color: white !important;"><i class="fas fa-plane-arrival me-2" style="color: white !important;"></i>Manage Arrivals</h5>
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                <h5 class="modal-title"><i class="fas fa-plane-arrival me-2"></i>Manage Arrivals</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -6376,10 +5793,10 @@ function convertToInvoice() {
                             <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label class="form-label">Visa Status</label>
-                            <select class="form-control" name="visa_status">
+                            <label class="form-label">Visa Type</label>
+                            <select class="form-control" name="visa_type">
                                 <option value="NOT_INCLUDED">Not Included</option>
-                                <option value="VISA_FREE">Visa-free</option>
+                                <option value="FREE">Free</option>
                                 <option value="RESTRICTED">Restricted</option>
                                 <option value="INCLUDED">Included</option>
                             </select>
@@ -6402,9 +5819,20 @@ function convertToInvoice() {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Driver Name</label>
+                            <input type="text" class="form-control" name="driver_name" placeholder="Driver name">
+                        </div>
+                        <div class="col-md-4 mb-3">
                             <label class="form-label">Batch Name</label>
                             <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Meeting Assistance</label>
+                            <select class="form-control" name="meeting_assistance">
+                                <option value="0">No</option>
+                                <option value="1">Yes</option>
+                            </select>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-success">
@@ -6413,75 +5841,10 @@ function convertToInvoice() {
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" onclick="saveAndCloseArrivals()">
-                    <i class="fas fa-check me-1"></i>Save & Close
-                </button>
                 <button type="button" class="btn btn-primary" onclick="saveAllArrivals()">
                     <i class="fas fa-save me-1"></i>Save All Arrivals
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Rooming List Modal -->
-<div class="modal fade" id="roomingListModal" tabindex="-1" aria-labelledby="roomingListModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header py-2" style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); color: white;">
-                <h6 class="modal-title mb-0" id="roomingListModalLabel">
-                    <i class="fas fa-list-alt me-2"></i>Rooming List - <span id="roomingListHotelName">Hotel</span>
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-2">
-                <div class="d-flex justify-content-between align-items-center mb-2 px-2">
-                    <div class="d-flex gap-3">
-                        <div class="text-center">
-                            <small class="text-muted d-block">Check-in</small>
-                            <strong id="roomingListCheckIn">-</strong>
-                        </div>
-                        <div class="text-center">
-                            <small class="text-muted d-block">Check-out</small>
-                            <strong id="roomingListCheckOut">-</strong>
-                        </div>
-                        <div class="text-center">
-                            <small class="text-muted d-block">Nights</small>
-                            <span class="badge bg-primary" id="roomingListNights">0</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-success btn-sm" onclick="addRoomToRoomingList()">
-                        <i class="fas fa-plus me-1"></i>Add Room
-                    </button>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover table-sm mb-0" style="font-size: 0.85rem;">
-                        <thead style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white;">
-                            <tr>
-                                <th style="width: 60px;">#</th>
-                                <th style="width: 100px;">Category</th>
-                                <th style="width: 160px;">Room Option</th>
-                                <th style="width: 130px;">Board Basis</th>
-                                <th style="width: 140px;">Dietary Req.</th>
-                                <th style="width: 60px;">Adults</th>
-                                <th style="width: 60px;">Child</th>
-                                <th>Lead Passenger</th>
-                                <th style="width: 60px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="roomingListTableBody">
-                            <!-- Rooms will be populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer py-2">
-                <span class="me-auto text-muted small" id="roomingListSummary">0 rooms configured</span>
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveRoomingList()">
-                    <i class="fas fa-save me-1"></i>Save Rooms
-                </button>
             </div>
         </div>
     </div>
@@ -6528,7 +5891,7 @@ function renderArrivalsTable() {
                     <th>Time</th>
                     <th>Location</th>
                     <th>Flight</th>
-                    <th>Visa Status</th>
+                    <th>Driver</th>
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
@@ -6541,19 +5904,13 @@ function renderArrivalsTable() {
     allArrivals.forEach((batch, index) => {
         const isNew = index >= arrivalBatches.length;
         const deleteIndex = isNew ? index - arrivalBatches.length : batch.id;
-        const visaStatusDisplay = {
-            'VISA_FREE': '<span class="badge bg-success">Visa-free</span>',
-            'RESTRICTED': '<span class="badge bg-warning">Restricted</span>',
-            'INCLUDED': '<span class="badge bg-info">Included</span>',
-            'NOT_INCLUDED': '<span class="badge bg-secondary">Not Included</span>'
-        };
         html += `
             <tr ${isNew ? 'style="background-color: #f0fdf4;"' : ''}>
                 <td>${batch.arrival_date || '-'}</td>
                 <td>${batch.arrival_time || '-'}</td>
                 <td>${batch.arrival_point || '-'}</td>
                 <td>${batch.flight_number || '-'}</td>
-                <td>${visaStatusDisplay[batch.visa_status] || visaStatusDisplay['NOT_INCLUDED']}</td>
+                <td>${batch.driver_name || '-'}</td>
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
@@ -6636,59 +5993,6 @@ function saveAllArrivals() {
     });
 }
 
-function saveAndCloseArrivals() {
-    // Find the Save & Close button and disable it to prevent double submissions
-    const saveCloseBtn = document.querySelector('[onclick="saveAndCloseArrivals()"]');
-    if (saveCloseBtn) {
-        saveCloseBtn.disabled = true;
-        saveCloseBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
-    }
-    
-    if (newArrivals.length === 0) {
-        showNotification('No new arrivals to save', 'info');
-        // Close modal even if nothing to save
-        const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalsModal'));
-        if (modal) modal.hide();
-        if (saveCloseBtn) saveCloseBtn.disabled = false;
-        return;
-    }
-    
-    fetch('/inbound/api/{{ request.id }}/arrivals', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-        },
-        body: JSON.stringify({ batches: newArrivals })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Arrivals saved successfully!', 'success');
-            loadArrivals();  // Reload to get updated list with IDs
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('arrivalsModal'));
-            if (modal) modal.hide();
-        } else {
-            showNotification(data.message || 'Error saving arrivals', 'error');
-            // Re-enable button on error
-            if (saveCloseBtn) {
-                saveCloseBtn.disabled = false;
-                saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error saving arrivals', 'error');
-        // Re-enable button on error
-        if (saveCloseBtn) {
-            saveCloseBtn.disabled = false;
-            saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
-        }
-    });
-}
-
 // Remove the old event listener if it exists
 const oldForm = document.getElementById('arrivalForm');
 if (oldForm) {
@@ -6765,12 +6069,11 @@ function renderDeparturesTable() {
                     <th>Time</th>
                     <th>Location</th>
                     <th>Flight</th>
+                    <th>Driver</th>
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
-                    <th>Meet & Assist</th>
-                    <th>Representative</th>
-                    <th>Departure Tax</th>
+                    <th>Meet & Greet</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -6780,22 +6083,17 @@ function renderDeparturesTable() {
     allDepartures.forEach((batch, index) => {
         const isNew = index >= departureBatches.length;
         const deleteIndex = isNew ? index - departureBatches.length : batch.id;
-        const depTaxDisplay = {
-            'INCLUDED': '<span class="badge bg-success">Included</span>',
-            'NOT_INCLUDED': '<span class="badge bg-secondary">Not Included</span>'
-        };
         html += `
             <tr ${isNew ? 'style="background-color: #fee2e2;"' : ''}>
                 <td>${batch.departure_date || '-'}</td>
                 <td>${batch.departure_time || '-'}</td>
                 <td>${batch.departure_point || '-'}</td>
                 <td>${batch.flight_number || '-'}</td>
+                <td>${batch.driver_name || '-'}</td>
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
-                <td>${batch.meet_assist ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
-                <td>${batch.representative_name || '-'}</td>
-                <td>${depTaxDisplay[batch.departure_tax] || depTaxDisplay['NOT_INCLUDED']}</td>
+                <td>${batch.meet_greet ? 'Yes' : 'No'}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
                             onclick="${isNew ? `removeNewDeparture(${deleteIndex})` : `deleteDeparture(${deleteIndex})`}">
@@ -6874,71 +6172,18 @@ function saveAllDepartures() {
     });
 }
 
-function saveAndCloseDepartures() {
-    // Find the Save & Close button and disable it to prevent double submissions
-    const saveCloseBtn = document.querySelector('[onclick="saveAndCloseDepartures()"]');
-    if (saveCloseBtn) {
-        saveCloseBtn.disabled = true;
-        saveCloseBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
-    }
-    
-    if (newDepartures.length === 0) {
-        showNotification('No new departures to save', 'info');
-        // Close modal even if nothing to save
-        const modal = bootstrap.Modal.getInstance(document.getElementById('departuresModal'));
-        if (modal) modal.hide();
-        if (saveCloseBtn) saveCloseBtn.disabled = false;
-        return;
-    }
-    
-    fetch('/inbound/api/{{ request.id }}/departures', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-        },
-        body: JSON.stringify({ batches: newDepartures })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Departures saved successfully!', 'success');
-            loadDepartures();  // Reload to get updated list with IDs
-            // Close the modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('departuresModal'));
-            if (modal) modal.hide();
-        } else {
-            showNotification(data.message || 'Error saving departures', 'error');
-            // Re-enable button on error
-            if (saveCloseBtn) {
-                saveCloseBtn.disabled = false;
-                saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
-            }
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error saving departures', 'error');
-        // Re-enable button on error
-        if (saveCloseBtn) {
-            saveCloseBtn.disabled = false;
-            saveCloseBtn.innerHTML = '<i class="fas fa-check me-1"></i>Save & Close';
-        }
-    });
-}
-
 document.getElementById('departureForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
     const newDeparture = {};
     
-    // Handle checkbox for meet_assist
-    const meetAssistCheckbox = e.target.querySelector('[name="meet_assist"]');
-    newDeparture['meet_assist'] = meetAssistCheckbox ? meetAssistCheckbox.checked : false;
+    // Handle checkbox for meet_greet
+    const meetGreetCheckbox = e.target.querySelector('[name="meet_greet"]');
+    newDeparture['meet_greet'] = meetGreetCheckbox ? meetGreetCheckbox.checked : false;
     
     // Handle other form fields
     formData.forEach((value, key) => {
-        if (key !== 'meet_assist') {
+        if (key !== 'meet_greet') {
             newDeparture[key] = value;
         }
     });
@@ -7426,40 +6671,19 @@ function updateConfirmationStatus() {
 document.addEventListener('DOMContentLoaded', function() {
     updateIndividualRoomGrid();
     
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Check for saved parameter - show saved badge
-    if (urlParams.get('saved') === '1') {
-        const savedBadge = document.getElementById('savedBadge');
-        if (savedBadge) {
-            savedBadge.style.display = 'inline-block';
-            savedBadge.classList.add('pulse-animation');
-        }
-    }
-    
-    // Check for tab parameter - switch to that tab
-    if (urlParams.get('tab') === 'itinerary') {
-        const itineraryTab = document.getElementById('itinerary-tab');
-        if (itineraryTab) {
-            const tab = new bootstrap.Tab(itineraryTab);
-            tab.show();
-        }
-    }
-    
     // Check for auto_edit parameter and start itinerary edit mode if present
+    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('auto_edit') === '1') {
         // Start itinerary edit mode if not already in it
         if (!isItineraryEditMode && typeof toggleItineraryEditMode === 'function') {
             setTimeout(() => {
                 toggleItineraryEditMode();
+                
+                // Remove the parameter from URL to avoid repeated toggles
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
             }, 500);
         }
-    }
-    
-    // Clean up URL parameters
-    if (urlParams.has('saved') || urlParams.has('tab') || urlParams.has('auto_edit')) {
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, document.title, newUrl);
     }
 });
 
@@ -7549,6 +6773,12 @@ function addRoomRow(tableBody, index, roomType) {
             <input type="text" name="rooms[${index}][dietary_requirements]" class="form-control" placeholder="Vegetarian, Halal, Gluten-free">
         </td>
         <td>
+            <input type="date" name="rooms[${index}][check_in]" class="form-control" id="hotelDefaultCheckin">
+        </td>
+        <td>
+            <input type="date" name="rooms[${index}][check_out]" class="form-control" id="hotelDefaultCheckout">
+        </td>
+        <td>
             <input type="number" name="rooms[${index}][adults]" class="form-control" value="${adults}" min="1" max="8">
         </td>
         <td>
@@ -7587,213 +6817,6 @@ function removeHotelTableRoom(button) {
             }
         });
     }
-}
-
-// Rooming List Modal Functions
-let currentHotelCard = null;
-
-function openRoomingListModal(button) {
-    currentHotelCard = button.closest('.hotel-card');
-    if (!currentHotelCard) {
-        console.error('Hotel card not found');
-        return;
-    }
-    
-    const hotelName = currentHotelCard.querySelector('input[name="hotel_name"]')?.value || 'Hotel';
-    const checkIn = currentHotelCard.querySelector('input[name="check_in_date"]')?.value || '';
-    const checkOut = currentHotelCard.querySelector('input[name="check_out_date"]')?.value || '';
-    
-    // Calculate nights
-    let nights = 0;
-    if (checkIn && checkOut) {
-        const d1 = new Date(checkIn);
-        const d2 = new Date(checkOut);
-        nights = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-    }
-    
-    // Update modal header info
-    document.getElementById('roomingListHotelName').textContent = hotelName || 'Unnamed Hotel';
-    document.getElementById('roomingListCheckIn').textContent = checkIn ? new Date(checkIn).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-';
-    document.getElementById('roomingListCheckOut').textContent = checkOut ? new Date(checkOut).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-';
-    document.getElementById('roomingListNights').textContent = nights + 'n';
-    
-    // Get room counts from hotel card
-    const singleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_single_rooms"]')?.value) || 0;
-    const doubleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_double_rooms"]')?.value) || 0;
-    const tripleRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_triple_rooms"]')?.value) || 0;
-    const otherRooms = parseInt(currentHotelCard.querySelector('input[name="hotel_other_rooms"]')?.value) || 0;
-    
-    console.log('Opening rooming list for hotel:', hotelName, 'Rooms:', singleRooms, doubleRooms, tripleRooms, otherRooms);
-    
-    // Populate rooming list table
-    populateRoomingListTable(singleRooms, doubleRooms, tripleRooms, otherRooms);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('roomingListModal'));
-    modal.show();
-}
-
-function populateRoomingListTable(single, double, triple, other) {
-    const tbody = document.getElementById('roomingListTableBody');
-    tbody.innerHTML = '';
-    
-    let roomNum = 1;
-    
-    // Add single rooms
-    for (let i = 0; i < single; i++) {
-        addRoomRow(tbody, roomNum++, 'Single Room');
-    }
-    // Add double rooms
-    for (let i = 0; i < double; i++) {
-        addRoomRow(tbody, roomNum++, 'Double Room');
-    }
-    // Add triple rooms
-    for (let i = 0; i < triple; i++) {
-        addRoomRow(tbody, roomNum++, 'Triple Room');
-    }
-    // Add other rooms
-    for (let i = 0; i < other; i++) {
-        addRoomRow(tbody, roomNum++, 'Other');
-    }
-    
-    updateRoomingListSummary();
-}
-
-function addRoomRow(tbody, roomNum, category) {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td class="text-center"><strong class="text-primary">${roomNum}</strong></td>
-        <td>
-            <select name="room_category" class="form-select form-select-sm" style="font-size: 0.8rem;">
-                <option value="Single Room" ${category === 'Single Room' ? 'selected' : ''}>Single</option>
-                <option value="Double Room" ${category === 'Double Room' ? 'selected' : ''}>Double</option>
-                <option value="Triple Room" ${category === 'Triple Room' ? 'selected' : ''}>Triple</option>
-                <option value="Other" ${category === 'Other' ? 'selected' : ''}>Other</option>
-            </select>
-        </td>
-        <td>
-            <input type="text" name="room_option" class="form-control form-control-sm" placeholder="Sea View, Premium" style="font-size: 0.8rem;">
-        </td>
-        <td>
-            <select name="board_basis" class="form-select form-select-sm" style="font-size: 0.8rem;">
-                <option value="Room Only">Room Only</option>
-                <option value="Bed & Breakfast" selected>B&B</option>
-                <option value="Half Board">Half Board</option>
-                <option value="Full Board">Full Board</option>
-                <option value="All Inclusive">All Inclusive</option>
-            </select>
-        </td>
-        <td>
-            <input type="text" name="dietary" class="form-control form-control-sm" placeholder="Vegetarian, Halal" style="font-size: 0.8rem;">
-        </td>
-        <td>
-            <input type="number" name="adults" class="form-control form-control-sm text-center" value="${category === 'Single Room' ? 1 : 2}" min="1" max="6" style="font-size: 0.8rem;">
-        </td>
-        <td>
-            <input type="number" name="children" class="form-control form-control-sm text-center" value="0" min="0" max="6" style="font-size: 0.8rem;">
-        </td>
-        <td>
-            <input type="text" name="lead_passenger" class="form-control form-control-sm" placeholder="Lead passenger" style="font-size: 0.8rem;">
-        </td>
-        <td class="text-center">
-            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="removeRoomingListRow(this)">
-                <i class="fas fa-times"></i>
-            </button>
-        </td>
-    `;
-    tbody.appendChild(row);
-}
-
-function addRoomToRoomingList() {
-    const tbody = document.getElementById('roomingListTableBody');
-    const currentRows = tbody.querySelectorAll('tr').length;
-    addRoomRow(tbody, currentRows + 1, 'Single Room');
-    updateRoomingListSummary();
-}
-
-function removeRoomingListRow(button) {
-    const row = button.closest('tr');
-    if (row) {
-        row.remove();
-        // Renumber rooms
-        const tbody = document.getElementById('roomingListTableBody');
-        const rows = tbody.querySelectorAll('tr');
-        rows.forEach((r, index) => {
-            const numCell = r.querySelector('td:first-child strong');
-            if (numCell) numCell.textContent = index + 1;
-        });
-        updateRoomingListSummary();
-    }
-}
-
-function updateRoomingListSummary() {
-    const tbody = document.getElementById('roomingListTableBody');
-    const rows = tbody.querySelectorAll('tr');
-    let single = 0, double = 0, triple = 0, other = 0;
-    
-    rows.forEach(row => {
-        const cat = row.querySelector('select[name="room_category"]')?.value || '';
-        if (cat.includes('Single')) single++;
-        else if (cat.includes('Double')) double++;
-        else if (cat.includes('Triple')) triple++;
-        else other++;
-    });
-    
-    let summary = `${rows.length} room${rows.length !== 1 ? 's' : ''}`;
-    const parts = [];
-    if (single) parts.push(`${single} SGL`);
-    if (double) parts.push(`${double} DBL`);
-    if (triple) parts.push(`${triple} TRP`);
-    if (other) parts.push(`${other} OTH`);
-    if (parts.length) summary += ` (${parts.join(', ')})`;
-    
-    document.getElementById('roomingListSummary').textContent = summary;
-}
-
-function saveRoomingList() {
-    if (!currentHotelCard) {
-        console.error('No hotel card selected');
-        return;
-    }
-    
-    const tbody = document.getElementById('roomingListTableBody');
-    const rows = tbody.querySelectorAll('tr');
-    
-    // Count rooms by category
-    let single = 0, double = 0, triple = 0, other = 0;
-    rows.forEach(row => {
-        const cat = row.querySelector('select[name="room_category"]')?.value || '';
-        if (cat.includes('Single')) single++;
-        else if (cat.includes('Double')) double++;
-        else if (cat.includes('Triple')) triple++;
-        else other++;
-    });
-    
-    console.log('Saving rooms:', single, 'SGL,', double, 'DBL,', triple, 'TRP,', other, 'OTH');
-    
-    // Update hotel card room counts
-    const singleInput = currentHotelCard.querySelector('input[name="hotel_single_rooms"]');
-    const doubleInput = currentHotelCard.querySelector('input[name="hotel_double_rooms"]');
-    const tripleInput = currentHotelCard.querySelector('input[name="hotel_triple_rooms"]');
-    const otherInput = currentHotelCard.querySelector('input[name="hotel_other_rooms"]');
-    
-    if (singleInput) singleInput.value = single;
-    if (doubleInput) doubleInput.value = double;
-    if (tripleInput) tripleInput.value = triple;
-    if (otherInput) otherInput.value = other;
-    
-    // Update total badge
-    const total = single + double + triple + other;
-    const totalBadge = currentHotelCard.querySelector('.room-total-badge');
-    if (totalBadge) {
-        totalBadge.textContent = `${total} room${total !== 1 ? 's' : ''} total`;
-    }
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('roomingListModal'));
-    if (modal) modal.hide();
-    
-    showNotification('Rooming list saved!', 'success');
 }
 
 // Multi-Hotel Management Functions
@@ -8075,128 +7098,6 @@ function markTransportAsReserved(transportId) {
     });
 }
 
-// Guide Language Filter Function
-function filterGuidesByLanguage() {
-    const filter = document.getElementById('guideLanguageFilter').value;
-    const rows = document.querySelectorAll('#guidesTable tbody tr');
-    
-    rows.forEach(row => {
-        const language = row.getAttribute('data-language');
-        if (filter === '' || language === filter) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-// Hotel Room View Function
-function viewHotelRooms(hotelId) {
-    showNotification('Hotel room details feature coming soon!', 'info');
-}
-
-// Store current editing hotel ID
-let currentEditingHotelId = null;
-
-// Edit Functions
-function editHotel(hotelId) {
-    currentEditingHotelId = hotelId;
-    
-    // Fetch hotel data from backend
-    fetch(`/inbound/api/hotel/${hotelId}`, {
-        method: 'GET',
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.hotel) {
-            const hotel = data.hotel;
-            // Populate modal with actual hotel data
-            document.getElementById('editHotelName').value = hotel.name || 'Hotel';
-            document.getElementById('editHotelSupplier').value = hotel.supplier_name || '';
-            document.getElementById('editHotelStatus').value = hotel.status || 'REQUEST';
-            document.getElementById('editHotelCost').value = hotel.total_cost || '0';
-            document.getElementById('editHotelCurrency').value = hotel.currency || 'USD';
-            document.getElementById('editHotelNotes').value = hotel.notes || '';
-            document.getElementById('editHotelCheckIn').value = hotel.check_in_date || '';
-            document.getElementById('editHotelCheckOut').value = hotel.check_out_date || '';
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('hotelEditModal'));
-            modal.show();
-        } else {
-            showNotification('Error loading hotel data: ' + (data.message || 'Unknown error'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching hotel data:', error);
-        showNotification('Error loading hotel data', 'error');
-    });
-}
-
-function saveHotelChanges() {
-    if (!currentEditingHotelId) {
-        showNotification('Error: No hotel selected', 'error');
-        return;
-    }
-    
-    const checkInDate = document.getElementById('editHotelCheckIn').value;
-    const checkOutDate = document.getElementById('editHotelCheckOut').value;
-    
-    if (!checkInDate || !checkOutDate) {
-        showNotification('Please select both check-in and check-out dates', 'warning');
-        return;
-    }
-    
-    const updateData = {
-        hotel_id: currentEditingHotelId,
-        supplier_name: document.getElementById('editHotelSupplier').value,
-        status: document.getElementById('editHotelStatus').value,
-        total_cost: parseFloat(document.getElementById('editHotelCost').value) || 0,
-        currency: document.getElementById('editHotelCurrency').value,
-        notes: document.getElementById('editHotelNotes').value,
-        check_in_date: checkInDate,
-        check_out_date: checkOutDate
-    };
-    
-    fetch(`/inbound/api/hotel/${currentEditingHotelId}/update`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
-        },
-        body: JSON.stringify(updateData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Hotel updated successfully!', 'success');
-            const modal = bootstrap.Modal.getInstance(document.getElementById('hotelEditModal'));
-            modal.hide();
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            showNotification('Error: ' + (data.message || 'Failed to update hotel'), 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error updating hotel', 'error');
-    });
-}
-
-function editTransport(transportId) {
-    showNotification('Transport edit feature coming soon!', 'info');
-}
-
-function editGuide(guideId) {
-    showNotification('Guide edit feature coming soon!', 'info');
-}
-
-function editOptional(optionalId) {
-    showNotification('Optional service edit feature coming soon!', 'info');
-}
-
 function confirmAllHotels() {
     if (!confirm('Mark ALL hotels as confirmed by supplier?')) {
         return;
@@ -8254,102 +7155,6 @@ function confirmAllTransports() {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error updating transport statuses', 'error');
-    });
-}
-
-function uploadDocument() {
-    const fileInput = document.getElementById('docFile');
-    const docType = document.getElementById('docType').value;
-    const description = document.getElementById('docDescription').value;
-    
-    if (!fileInput.files.length) {
-        showNotification('Please select a file to upload', 'error');
-        return;
-    }
-    
-    const file = fileInput.files[0];
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-        showNotification('File size exceeds 10MB limit', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('document_type', docType);
-    formData.append('description', description);
-    
-    const uploadBtn = document.querySelector('#uploadDocForm button');
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading...';
-    
-    fetch('/inbound/api/{{ request.id }}/documents/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Document uploaded successfully!', 'success');
-            // Reset form
-            fileInput.value = '';
-            document.getElementById('docType').value = 'OTHER';
-            document.getElementById('docDescription').value = '';
-            // Refresh to show new document
-            setTimeout(() => window.location.reload(), 500);
-        } else {
-            showNotification(data.message || 'Error uploading document', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error uploading document', 'error');
-    })
-    .finally(() => {
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<i class="fas fa-upload me-1"></i>Upload';
-    });
-}
-
-function deleteDocument(docId) {
-    if (!confirm('Are you sure you want to delete this document?')) {
-        return;
-    }
-    
-    fetch(`/inbound/api/documents/${docId}/delete`, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Document deleted successfully!', 'success');
-            // Remove row from table
-            const row = document.querySelector(`tr[data-doc-id="${docId}"]`);
-            if (row) {
-                row.remove();
-            }
-            // Update count
-            const tbody = document.getElementById('docsTableBody');
-            const count = tbody.querySelectorAll('tr').length;
-            document.getElementById('docCount').textContent = `(${count})`;
-            
-            // Show empty message if no docs
-            if (count === 0) {
-                document.getElementById('noDocsMessage').style.display = 'block';
-                document.getElementById('docsTableWrapper').style.display = 'none';
-            }
-        } else {
-            showNotification(data.message || 'Error deleting document', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error deleting document', 'error');
     });
 }
 
