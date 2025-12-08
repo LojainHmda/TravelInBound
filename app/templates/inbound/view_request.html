@@ -1151,45 +1151,52 @@ body::-webkit-scrollbar-thumb:hover {
     top: 50%;
     transform: translateY(-50%);
     z-index: 1050;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    color: #333;
     border: none;
     border-radius: 8px 0 0 8px;
-    padding: 12px 8px;
+    padding: 12px 14px;
     cursor: pointer;
     box-shadow: -2px 0 10px rgba(0,0,0,0.15);
     transition: all 0.3s ease;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 0;
+    overflow: hidden;
+    min-width: 44px;
 }
 
 .status-sidebar-toggle:hover {
-    padding-right: 12px;
-    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+    padding-right: 16px;
+    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+    min-width: auto;
+}
+
+.status-sidebar-toggle:hover .toggle-text {
+    max-width: 80px;
+    opacity: 1;
+    margin-left: 8px;
 }
 
 .status-sidebar-toggle .toggle-icon {
-    font-size: 16px;
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
 .status-sidebar-toggle .toggle-text {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .status-sidebar-toggle .status-badge {
-    background: white;
-    color: #667eea;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 3px 6px;
-    border-radius: 4px;
-    writing-mode: horizontal-tb;
+    display: none;
 }
 
 /* Sidebar Overlay */
@@ -1479,8 +1486,8 @@ body::-webkit-scrollbar-thumb:hover {
             <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary-pane" type="button" role="tab">
                 <i class="fas fa-route me-1"></i> Itinerary
                 {% if request.itinerary_rows|length > 0 %}
-                <span class="badge bg-primary ms-2">
-                    <i class="fas fa-calendar-check"></i> Generated
+                <span class="badge ms-2" style="background-color: #1e293b; color: white;">
+                    <i class="fas fa-calendar-check me-1"></i> Generated
                 </span>
                 {% endif %}
             </button>
@@ -1710,62 +1717,127 @@ body::-webkit-scrollbar-thumb:hover {
         <!-- Itinerary Tab Pane -->
         <div class="tab-pane fade" id="itinerary-pane" role="tabpanel">
             <div class="card">
-                <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary - Days & Services</h6>
-                    {% if request.itinerary_rows|length > 0 %}
-                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Itinerary Generated</span>
-                    {% else %}
-                    <span class="badge bg-secondary"><i class="fas fa-info-circle"></i> No Itinerary Yet</span>
-                    {% endif %}
+                <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary Details (Edit Mode)</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if request.itinerary_rows|length > 0 %}
+                        <span class="badge" style="background-color: #1e293b; color: white; padding: 6px 12px; font-size: 0.8rem;">
+                            <i class="fas fa-calendar-check me-1"></i> Generated
+                        </span>
+                        {% endif %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='{{ url_for('inbound.view_trip_itinerary', request_id=request.id) }}'">
+                            <i class="fas fa-calendar-alt"></i> View Trip Itinerary
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if request.itinerary_rows|length > 0 %}
+                    <!-- Service Buttons Bar -->
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <div class="text-muted small mb-2">Click services to add to selected dates:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="arrival">
+                                <i class="fas fa-plane-arrival me-1"></i> Arrivals
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="departure">
+                                <i class="fas fa-plane-departure me-1"></i> Departures
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="hotel">
+                                <i class="fas fa-hotel me-1"></i> Hotel
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="guide">
+                                <i class="fas fa-user-tie me-1"></i> Guide
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="transport">
+                                <i class="fas fa-car me-1"></i> Transport
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="meal">
+                                <i class="fas fa-utensils me-1"></i> Meal
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm service-btn" data-service="trip_itinerary">
+                                <i class="fas fa-calendar-alt me-1"></i> Trip Itinerary
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Itinerary Table -->
                     <div class="table-responsive">
-                        <table class="table table-hover table-sm">
+                        <table class="table table-bordered" id="itineraryEditTable">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 60px;">Day</th>
                                     <th style="width: 100px;">Date</th>
-                                    <th>Description</th>
-                                    <th style="width: 200px;">Services</th>
+                                    <th style="width: 250px;">Description</th>
+                                    <th style="width: 200px;">Comment</th>
+                                    <th>Service Flags</th>
+                                    <th style="width: 100px;">Cost</th>
+                                    <th style="width: 80px;"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for row in request.itinerary_rows|sort(attribute='day_number') %}
-                                <tr>
+                                <tr data-row-id="{{ row.id }}" data-day="{{ row.day_number }}">
                                     <td>
-                                        <span class="badge bg-primary rounded-pill">Day {{ row.day_number }}</span>
+                                        <div class="fw-bold">{{ row.itinerary_date.strftime('%d %b %Y') if row.itinerary_date else '' }}</div>
                                     </td>
                                     <td>
-                                        {% if row.itinerary_date %}
-                                        {{ row.itinerary_date.strftime('%d %b %Y') }}
-                                        {% else %}
-                                        <span class="text-muted">-</span>
-                                        {% endif %}
+                                        <input type="text" class="form-control form-control-sm" 
+                                               value="Day {{ row.day_number }} - {{ row.itinerary_date.strftime('%A, %B %d') if row.itinerary_date else '' }}"
+                                               placeholder="Description">
                                     </td>
                                     <td>
-                                        <strong>{{ row.description or '' }}</strong>
-                                        {% if row.notes %}
-                                        <br><small class="text-muted">{{ row.notes }}</small>
-                                        {% endif %}
+                                        <input type="text" class="form-control form-control-sm" 
+                                               value="{{ row.notes or '' }}" placeholder="Comment">
                                     </td>
                                     <td>
                                         <div class="d-flex flex-wrap gap-1">
                                             {% if row.hotel %}
-                                            <span class="badge bg-info" title="Hotel"><i class="fas fa-hotel"></i></span>
+                                            <button type="button" class="btn btn-sm {% if row.hotel %}btn-info{% else %}btn-outline-secondary{% endif %}" 
+                                                    onclick="toggleServiceFlag({{ row.id }}, 'hotel')">
+                                                <i class="fas fa-hotel"></i> Hotel
+                                            </button>
                                             {% endif %}
                                             {% if row.transport %}
-                                            <span class="badge bg-warning text-dark" title="Transport"><i class="fas fa-car"></i></span>
+                                            <button type="button" class="btn btn-sm {% if row.transport %}btn-warning{% else %}btn-outline-secondary{% endif %}" 
+                                                    onclick="toggleServiceFlag({{ row.id }}, 'transport')">
+                                                <i class="fas fa-car"></i> Transport
+                                            </button>
                                             {% endif %}
                                             {% if row.meal %}
-                                            <span class="badge bg-success" title="Meals"><i class="fas fa-utensils"></i></span>
+                                            <button type="button" class="btn btn-sm {% if row.meal %}btn-success{% else %}btn-outline-secondary{% endif %}" 
+                                                    onclick="toggleServiceFlag({{ row.id }}, 'meal')">
+                                                <i class="fas fa-utensils"></i> Meal
+                                            </button>
                                             {% endif %}
                                             {% if row.guide %}
-                                            <span class="badge bg-secondary" title="Guide"><i class="fas fa-user-tie"></i></span>
+                                            <button type="button" class="btn btn-sm {% if row.guide %}btn-secondary{% else %}btn-outline-secondary{% endif %}" 
+                                                    onclick="toggleServiceFlag({{ row.id }}, 'guide')">
+                                                <i class="fas fa-user-tie"></i> Guide
+                                            </button>
                                             {% endif %}
-                                            {% if row.optional %}
-                                            <span class="badge bg-purple" style="background-color: #9c27b0;" title="Optional"><i class="fas fa-star"></i></span>
+                                            {% if not row.hotel and not row.transport and not row.meal and not row.guide %}
+                                            <span class="text-muted small">No services</span>
                                             {% endif %}
+                                        </div>
+                                        <!-- Room button if hotel -->
+                                        {% if row.hotel %}
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="openRoomModal({{ row.id }})">
+                                                <i class="fas fa-bed"></i> Rooms
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ "%.2f"|format(row.selling_price or 0) }} USD</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" title="Delete row">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" title="Add row">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -1773,102 +1845,14 @@ body::-webkit-scrollbar-thumb:hover {
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Service Summary Cards -->
-                    <div class="row mt-3">
-                        <!-- Hotels Summary -->
-                        {% if request.hotels|length > 0 %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white py-2">
-                                    <i class="fas fa-hotel me-2"></i>Hotels ({{ request.hotels|length }})
-                                </div>
-                                <div class="card-body py-2">
-                                    {% for hotel in request.hotels[:3] %}
-                                    <div class="mb-1">
-                                        <strong>{{ hotel.hotel_name or 'Hotel' }}</strong>
-                                        <small class="text-muted ms-2">{{ hotel.city or '' }}</small>
-                                    </div>
-                                    {% endfor %}
-                                    {% if request.hotels|length > 3 %}
-                                    <small class="text-muted">+{{ request.hotels|length - 3 }} more...</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Transport Summary -->
-                        {% if request.transports|length > 0 %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-dark py-2">
-                                    <i class="fas fa-car me-2"></i>Transport ({{ request.transports|length }})
-                                </div>
-                                <div class="card-body py-2">
-                                    {% for transport in request.transports[:3] %}
-                                    <div class="mb-1">
-                                        <strong>{{ transport.vehicle_type or 'Vehicle' }}</strong>
-                                        <small class="text-muted ms-2">{{ transport.from_location or '' }} → {{ transport.to_location or '' }}</small>
-                                    </div>
-                                    {% endfor %}
-                                    {% if request.transports|length > 3 %}
-                                    <small class="text-muted">+{{ request.transports|length - 3 }} more...</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Meals Summary -->
-                        {% if request.meals|length > 0 %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white py-2">
-                                    <i class="fas fa-utensils me-2"></i>Meals ({{ request.meals|length }})
-                                </div>
-                                <div class="card-body py-2">
-                                    {% for meal in request.meals[:3] %}
-                                    <div class="mb-1">
-                                        <strong>{{ meal.meal_type or 'Meal' }}</strong>
-                                        <small class="text-muted ms-2">{{ meal.restaurant_name or '' }}</small>
-                                    </div>
-                                    {% endfor %}
-                                    {% if request.meals|length > 3 %}
-                                    <small class="text-muted">+{{ request.meals|length - 3 }} more...</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        
-                        <!-- Guides Summary -->
-                        {% if request.guides|length > 0 %}
-                        <div class="col-md-6 mb-3">
-                            <div class="card border-secondary">
-                                <div class="card-header bg-secondary text-white py-2">
-                                    <i class="fas fa-user-tie me-2"></i>Guides ({{ request.guides|length }})
-                                </div>
-                                <div class="card-body py-2">
-                                    {% for guide in request.guides[:3] %}
-                                    <div class="mb-1">
-                                        <strong>{{ guide.guide_name or 'Guide' }}</strong>
-                                        <small class="text-muted ms-2">{{ guide.language or '' }}</small>
-                                    </div>
-                                    {% endfor %}
-                                    {% if request.guides|length > 3 %}
-                                    <small class="text-muted">+{{ request.guides|length - 3 }} more...</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
                     {% else %}
                     <div class="text-center py-5">
                         <i class="fas fa-route fa-3x text-muted mb-3"></i>
                         <h5 class="text-muted">No Itinerary Generated Yet</h5>
-                        <p class="text-muted">Save the request first, then generate the itinerary using the Itinerary Builder section below.</p>
+                        <p class="text-muted">Save the request in the Request Master tab first to generate the itinerary.</p>
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('request-tab').click()">
+                            <i class="fas fa-arrow-left me-1"></i> Go to Request Master
+                        </button>
                     </div>
                     {% endif %}
                 </div>
