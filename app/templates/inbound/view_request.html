@@ -6241,8 +6241,9 @@ function convertToInvoice() {
                         <i class="fas fa-plus-circle"></i>Add New Departure
                     </div>
                     <form id="departureForm" class="modal-form">
+                        <!-- Row 1: Date, Time, Departure Point -->
                         <div class="form-row">
-                            <div class="form-group md">
+                            <div class="form-group sm">
                                 <label class="form-label">Date *</label>
                                 <input type="date" class="form-control" name="departure_date" required>
                             </div>
@@ -6253,7 +6254,7 @@ function convertToInvoice() {
                             <div class="form-group lg">
                                 <label class="form-label">Departure Point *</label>
                                 <select class="form-select" name="departure_point" required>
-                                    <option value="">Select...</option>
+                                    <option value="">Select departure point...</option>
                                     <optgroup label="Airports">
                                         <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
                                         <option value="King Hussein International Airport">King Hussein - Aqaba</option>
@@ -6271,35 +6272,22 @@ function convertToInvoice() {
                                 </select>
                             </div>
                         </div>
+                        <!-- Row 2: Flight/Bus, Meet & Assist, Representative, Departure Tax -->
                         <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Flight/Bus #</label>
-                                <input type="text" class="form-control" name="flight_number" placeholder="RJ123">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Vehicle</label>
-                                <select class="form-select" name="vehicle_details">
-                                    <option value="">Select...</option>
-                                    <option value="Sedan">Sedan</option>
-                                    <option value="SUV">SUV</option>
-                                    <option value="Van">Van</option>
-                                    <option value="Minibus">Minibus</option>
-                                    <option value="Coach">Coach</option>
-                                </select>
+                            <div class="form-group sm">
+                                <label class="form-label">Flight/Bus Number</label>
+                                <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ123">
                             </div>
                             <div class="form-group sm">
-                                <label class="form-label">PAX</label>
-                                <input type="number" class="form-control" name="pax_count" min="0" value="0">
+                                <label class="form-label">Meet & Assist</label>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
+                                    <label class="form-check-label" for="meet_assist_dep">Yes</label>
+                                </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Batch</label>
-                                <input type="text" class="form-control" name="batch_name" placeholder="Group A">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Representative</label>
-                                <input type="text" class="form-control" name="representative_name" placeholder="Name">
+                                <label class="form-label">Representative Name</label>
+                                <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Departure Tax</label>
@@ -6308,16 +6296,31 @@ function convertToInvoice() {
                                     <option value="INCLUDED">Included</option>
                                 </select>
                             </div>
+                        </div>
+                        <!-- Row 3: Vehicle, PAX, Batch, Add Button -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Vehicle Type</label>
+                                <select class="form-select" name="vehicle_details">
+                                    <option value="">Select vehicle...</option>
+                                    <option value="Sedan">Sedan</option>
+                                    <option value="SUV">SUV</option>
+                                    <option value="Van">Van</option>
+                                    <option value="Minibus">Minibus</option>
+                                    <option value="Coach">Coach</option>
+                                </select>
+                            </div>
                             <div class="form-group sm">
-                                <label class="form-label">M&A</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_dep">
-                                    <label class="form-check-label" for="meet_assist_dep">Yes</label>
-                                </div>
+                                <label class="form-label">PAX Count</label>
+                                <input type="number" class="form-control" name="pax_count" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Batch Name</label>
+                                <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
                             </div>
                             <div class="form-group sm" style="display: flex; align-items: flex-end;">
-                                <button type="submit" class="btn btn-success btn-sm w-100">
-                                    <i class="fas fa-plus me-1"></i>Add
+                                <button type="submit" class="btn btn-danger btn-sm w-100">
+                                    <i class="fas fa-plus me-1"></i>Add Departure
                                 </button>
                             </div>
                         </div>
