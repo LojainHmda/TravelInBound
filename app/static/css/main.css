@@ -1324,3 +1324,53 @@ p, span, div, label, td, th {
         min-width: 100%;
     }
 }
+
+/* ========================================
+   SAVE BUTTON HIGHLIGHT & SUCCESS STYLES
+   ======================================== */
+
+.saving-highlight {
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+    border-color: #f59e0b !important;
+    color: #000 !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.5) !important;
+    transition: all 0.3s ease;
+}
+
+.save-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border-color: #059669 !important;
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.5) !important;
+    animation: successPulse 0.5s ease-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1.1); }
+}
+
+@keyframes saveSuccessPop {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+@keyframes saveSuccessFade {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -60%) scale(0.9); }
+}
+
+.save-success-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.save-success-content i {
+    font-size: 1.5rem;
+}

@@ -1703,7 +1703,7 @@ body::-webkit-scrollbar-thumb:hover {
                         </div>
 
                         <div id="editModeButtons" class="d-flex gap-2">
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn btn-success" id="saveChangesBtn">
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
                         </div>
@@ -3782,6 +3782,14 @@ function saveChanges(event) {
     
     const form = event.target;
     const formData = new FormData(form);
+    const saveBtn = document.getElementById('saveChangesBtn');
+    
+    // Highlight the button while saving
+    if (saveBtn) {
+        saveBtn.classList.add('saving-highlight');
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        saveBtn.disabled = true;
+    }
     
     // Convert FormData to JSON
     const data = {};
@@ -3802,19 +3810,86 @@ function saveChanges(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Changes saved successfully!', 'success');
-            // Reload page to show updated data
+            // Update button to show success
+            if (saveBtn) {
+                saveBtn.classList.remove('saving-highlight');
+                saveBtn.classList.add('save-success');
+                saveBtn.innerHTML = '<i class="fas fa-check"></i> Request Saved!';
+            }
+            
+            // Show prominent success message
+            showSaveSuccessMessage();
+            
+            // Navigate to itinerary tab after delay
             setTimeout(() => {
-                window.location.reload();
+                // Switch to itinerary tab
+                const itineraryTab = document.querySelector('[data-bs-target="#itinerary-main-pane"]');
+                if (itineraryTab) {
+                    itineraryTab.click();
+                }
+                // Reload to refresh all data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
             }, 1500);
         } else {
+            // Reset button on error
+            if (saveBtn) {
+                saveBtn.classList.remove('saving-highlight');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                saveBtn.disabled = false;
+            }
             showNotification(data.message || 'Error saving changes', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
+        // Reset button on error
+        if (saveBtn) {
+            saveBtn.classList.remove('saving-highlight');
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            saveBtn.disabled = false;
+        }
         showNotification('Error saving changes', 'error');
     });
+}
+
+// Show prominent save success message
+function showSaveSuccessMessage() {
+    // Remove any existing success message
+    const existing = document.getElementById('saveSuccessOverlay');
+    if (existing) existing.remove();
+    
+    // Create overlay message
+    const overlay = document.createElement('div');
+    overlay.id = 'saveSuccessOverlay';
+    overlay.innerHTML = `
+        <div class="save-success-content">
+            <i class="fas fa-check-circle"></i>
+            <span>Request has been saved!</span>
+        </div>
+    `;
+    overlay.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 20px 40px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: saveSuccessPop 0.3s ease-out;
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Remove after delay
+    setTimeout(() => {
+        overlay.style.animation = 'saveSuccessFade 0.3s ease-out';
+        setTimeout(() => overlay.remove(), 300);
+    }, 1200);
 }
 
 // Room distribution modal variables
