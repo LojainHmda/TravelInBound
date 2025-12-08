@@ -1144,142 +1144,239 @@ body::-webkit-scrollbar-thumb:hover {
     line-height: 1.2;
 }
 
-/* Compact Horizontal Status Flow Bar - White Background */
-.status-flow-bar {
-    background: white;
-    border-radius: 10px;
-    padding: 14px 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    border: 1px solid #e2e8f0;
-}
-
-.status-flow-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px;
-    position: relative;
-}
-
-.status-flow-step {
+/* Right Sidebar Status Flow - Expandable */
+.status-sidebar-toggle {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1050;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px 0 0 8px;
+    padding: 12px 8px;
+    cursor: pointer;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 1;
-    position: relative;
+    gap: 6px;
+}
+
+.status-sidebar-toggle:hover {
+    padding-right: 12px;
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.status-sidebar-toggle .toggle-icon {
+    font-size: 16px;
+}
+
+.status-sidebar-toggle .toggle-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.status-sidebar-toggle .status-badge {
+    background: white;
+    color: #667eea;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    writing-mode: horizontal-tb;
+}
+
+/* Sidebar Overlay */
+.status-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    right: -320px;
+    width: 320px;
+    height: 100vh;
+    background: white;
+    z-index: 1060;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.status-sidebar-overlay.open {
+    right: 0;
+}
+
+.status-sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 1055;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.status-sidebar-backdrop.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Sidebar Header */
+.status-sidebar-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-sidebar-header h5 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.status-sidebar-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     cursor: pointer;
-    padding: 6px 4px;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s ease;
 }
 
-.status-flow-step:hover {
-    background: rgba(102, 126, 234, 0.08);
+.status-sidebar-close:hover {
+    background: rgba(255,255,255,0.3);
 }
 
-.status-flow-step::after {
+/* Sidebar Content */
+.status-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+/* Vertical Status Steps */
+.status-step-vertical {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.status-step-vertical:last-child {
+    padding-bottom: 0;
+}
+
+.status-step-vertical:hover {
+    opacity: 0.85;
+}
+
+/* Vertical Line */
+.status-step-vertical::before {
     content: '';
     position: absolute;
-    top: 16px;
-    left: 55%;
-    width: calc(100% - 10px);
-    height: 3px;
+    left: 18px;
+    top: 40px;
+    width: 3px;
+    height: calc(100% - 40px);
     background: #e2e8f0;
-    z-index: 1;
 }
 
-.status-flow-step:last-child::after {
+.status-step-vertical:last-child::before {
     display: none;
 }
 
-.status-flow-step.completed::after {
+.status-step-vertical.completed::before {
     background: #10b981;
 }
 
-.status-flow-step.active::after {
-    background: linear-gradient(90deg, #667eea 0%, #e2e8f0 100%);
+.status-step-vertical.active::before {
+    background: linear-gradient(180deg, #667eea 0%, #e2e8f0 100%);
 }
 
-.status-flow-icon {
-    width: 32px;
-    height: 32px;
+/* Step Icon */
+.status-step-icon {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: #f1f5f9;
+    border: 3px solid #e2e8f0;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #94a3b8;
-    font-size: 12px;
+    font-size: 14px;
+    flex-shrink: 0;
     position: relative;
     z-index: 2;
     transition: all 0.3s ease;
-    border: 2px solid #e2e8f0;
 }
 
-.status-flow-step.completed .status-flow-icon {
+.status-step-vertical.completed .status-step-icon {
     background: #10b981;
-    color: white;
     border-color: #10b981;
+    color: white;
 }
 
-.status-flow-step.active .status-flow-icon {
+.status-step-vertical.active .status-step-icon {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
     border-color: #667eea;
-    box-shadow: 0 0 12px rgba(102, 126, 234, 0.4);
+    color: white;
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
     transform: scale(1.1);
 }
 
-.status-flow-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: #94a3b8;
-    margin-top: 6px;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
+/* Step Content */
+.status-step-content {
+    margin-left: 14px;
+    padding-top: 6px;
 }
 
-.status-flow-step.completed .status-flow-label {
+.status-step-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 2px;
+}
+
+.status-step-vertical.completed .status-step-label {
     color: #10b981;
 }
 
-.status-flow-step.active .status-flow-label {
+.status-step-vertical.active .status-step-label {
     color: #667eea;
 }
 
-/* Pulse animation for active status */
-@keyframes statusPulse {
-    0%, 100% { box-shadow: 0 0 12px rgba(102, 126, 234, 0.4); }
-    50% { box-shadow: 0 0 18px rgba(102, 126, 234, 0.6); }
+.status-step-desc {
+    font-size: 11px;
+    color: #94a3b8;
 }
 
-.status-flow-step.active .status-flow-icon {
-    animation: statusPulse 2s ease-in-out infinite;
+/* Pulse animation for active */
+@keyframes sidebarPulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(102, 126, 234, 0.5); }
+    50% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.8); }
 }
 
-/* Responsive adjustments for status bar */
-@media (max-width: 768px) {
-    .status-flow-bar {
-        padding: 10px 12px;
-    }
-    
-    .status-flow-icon {
-        width: 26px;
-        height: 26px;
-        font-size: 10px;
-    }
-    
-    .status-flow-label {
-        font-size: 8px;
-    }
-    
-    .status-flow-step::after {
-        top: 13px;
-        height: 2px;
-    }
+.status-step-vertical.active .status-step-icon {
+    animation: sidebarPulse 2s ease-in-out infinite;
 }
 
 /* Compact Hotel Booking Card Styles */
@@ -1547,70 +1644,109 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Compact Horizontal Status Flow Bar - Below Request Information -->
-    <div class="status-flow-bar">
-        <div class="status-flow-container">
+    <!-- Right Sidebar Toggle Button -->
+    <button class="status-sidebar-toggle" onclick="toggleStatusSidebar()">
+        <i class="fas fa-tasks toggle-icon"></i>
+        <span class="toggle-text">STATUS</span>
+        <span class="status-badge">
+            {% if request.status == 'REQUEST' %}REQ{% elif request.status == 'SUPPLIER_CONFIRMED' %}SUP{% elif request.status == 'QUOTED' %}QTD{% elif request.status == 'CONFIRMED' %}CNF{% elif request.status == 'INVOICE' %}INV{% elif request.status == 'PROCESSING' %}PRC{% elif request.status == 'COMPLETED' %}DONE{% endif %}
+        </span>
+    </button>
+
+    <!-- Status Sidebar Backdrop -->
+    <div class="status-sidebar-backdrop" id="statusSidebarBackdrop" onclick="toggleStatusSidebar()"></div>
+
+    <!-- Status Sidebar Overlay -->
+    <div class="status-sidebar-overlay" id="statusSidebarOverlay">
+        <div class="status-sidebar-header">
+            <h5><i class="fas fa-tasks me-2"></i>Workflow Status</h5>
+            <button class="status-sidebar-close" onclick="toggleStatusSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="status-sidebar-content">
             <!-- Step 1: REQUEST -->
-            <div class="status-flow-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
                  data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-file-alt"></i>
                 </div>
-                <span class="status-flow-label">Request</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Request</div>
+                    <div class="status-step-desc">Initial request received</div>
+                </div>
             </div>
             
             <!-- Step 2: SUPPLIER_CONFIRMED -->
-            <div class="status-flow-step {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
                  data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-check-double"></i>
                 </div>
-                <span class="status-flow-label">Suppliers</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Supplier Confirmed</div>
+                    <div class="status-step-desc">All suppliers confirmed</div>
+                </div>
             </div>
             
             <!-- Step 3: QUOTED -->
-            <div class="status-flow-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
                  data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-calculator"></i>
                 </div>
-                <span class="status-flow-label">Quoted</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Quoted</div>
+                    <div class="status-step-desc">Quote sent to customer</div>
+                </div>
             </div>
             
             <!-- Step 4: CONFIRMED -->
-            <div class="status-flow-step {% if request.status == 'CONFIRMED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'CONFIRMED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
                  data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-handshake"></i>
                 </div>
-                <span class="status-flow-label">Confirmed</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Confirmed</div>
+                    <div class="status-step-desc">Customer confirmed booking</div>
+                </div>
             </div>
             
             <!-- Step 5: INVOICE -->
-            <div class="status-flow-step {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
                  data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-file-invoice"></i>
                 </div>
-                <span class="status-flow-label">Invoice</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Proforma Invoice</div>
+                    <div class="status-step-desc">Invoice generated</div>
+                </div>
             </div>
             
             <!-- Step 6: PROCESSING -->
-            <div class="status-flow-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}" 
                  data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-cogs"></i>
                 </div>
-                <span class="status-flow-label">Processing</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Processing</div>
+                    <div class="status-step-desc">Booking being processed</div>
+                </div>
             </div>
             
             <!-- Step 7: COMPLETED -->
-            <div class="status-flow-step {% if request.status == 'COMPLETED' %}active{% endif %}" 
+            <div class="status-step-vertical {% if request.status == 'COMPLETED' %}active{% endif %}" 
                  data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
-                <div class="status-flow-icon">
+                <div class="status-step-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <span class="status-flow-label">Done</span>
+                <div class="status-step-content">
+                    <div class="status-step-label">Completed</div>
+                    <div class="status-step-desc">Booking completed</div>
+                </div>
             </div>
         </div>
     </div>
@@ -5547,7 +5683,25 @@ function updateRequestStatus(newStatus) {
     }
 }
 
-// Update Status UI immediately for better UX - Horizontal Status Bar
+// Toggle Status Sidebar
+function toggleStatusSidebar() {
+    const sidebar = document.getElementById('statusSidebarOverlay');
+    const backdrop = document.getElementById('statusSidebarBackdrop');
+    
+    if (!sidebar) return;
+    
+    const isOpen = sidebar.classList.contains('open');
+    
+    if (isOpen) {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+    } else {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+    }
+}
+
+// Update Status UI immediately for better UX - Sidebar Version
 function updateStatusUI(newStatus) {
     console.log('updateStatusUI called with status:', newStatus);
     
@@ -5555,8 +5709,8 @@ function updateStatusUI(newStatus) {
     const stageOrder = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
     const currentIndex = stageOrder.indexOf(newStatus);
     
-    // Update horizontal status flow bar
-    document.querySelectorAll('.status-flow-step').forEach(step => {
+    // Update vertical sidebar status steps
+    document.querySelectorAll('.status-step-vertical').forEach(step => {
         const stepStatus = step.getAttribute('data-status');
         const stepIndex = stageOrder.indexOf(stepStatus);
         
@@ -5564,20 +5718,9 @@ function updateStatusUI(newStatus) {
         step.classList.remove('active', 'completed');
         
         if (stepStatus === newStatus) {
-            // This is the current/active stage
             step.classList.add('active');
         } else if (stepIndex < currentIndex && stepIndex !== -1 && currentIndex !== -1) {
-            // This stage is completed (before current stage)
             step.classList.add('completed');
-        }
-    });
-    
-    // Also update any old-style stages if they exist
-    document.querySelectorAll('.status-stage, .status-stage-vertical').forEach(stage => {
-        stage.classList.remove('active');
-        const stageStatus = stage.getAttribute('data-status');
-        if (stageStatus === newStatus) {
-            stage.classList.add('active');
         }
     });
 }
