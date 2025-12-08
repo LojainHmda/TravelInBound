@@ -1475,7 +1475,7 @@ body::-webkit-scrollbar-thumb:hover {
     <!-- Main Content Tabs -->
     <ul class="nav nav-tabs mb-3" id="requestTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="request-tab" data-bs-toggle="tab" data-bs-target="#request-pane" type="button" role="tab">
+            <button class="nav-link active" id="request-master-tab" data-bs-toggle="tab" data-bs-target="#request-master-pane" type="button" role="tab">
                 <i class="fas fa-file-alt me-1"></i> Request Master
                 <span class="badge bg-success ms-2 saved-badge" id="savedBadge" style="display: none;">
                     <i class="fas fa-check"></i> Saved
@@ -1483,7 +1483,7 @@ body::-webkit-scrollbar-thumb:hover {
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary-pane" type="button" role="tab">
+            <button class="nav-link" id="itinerary-main-tab" data-bs-toggle="tab" data-bs-target="#itinerary-main-pane" type="button" role="tab">
                 <i class="fas fa-route me-1"></i> Itinerary
                 {% if request.itinerary_rows|length > 0 %}
                 <span class="badge ms-2" style="background-color: #1e293b; color: white;">
@@ -1497,7 +1497,7 @@ body::-webkit-scrollbar-thumb:hover {
     <!-- Tab Content -->
     <div class="tab-content" id="requestTabContent">
         <!-- Request Master Tab Pane -->
-        <div class="tab-pane fade show active" id="request-pane" role="tabpanel">
+        <div class="tab-pane fade show active" id="request-master-pane" role="tabpanel">
             <div class="row g-3">
                 <div class="col-12" id="mainContentContainer">
                     <!-- Request Information -->
@@ -1715,7 +1715,7 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
         
         <!-- Itinerary Tab Pane -->
-        <div class="tab-pane fade" id="itinerary-pane" role="tabpanel">
+        <div class="tab-pane fade" id="itinerary-main-pane" role="tabpanel">
             <div class="card">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                     <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary Details (Edit Mode)</h6>
