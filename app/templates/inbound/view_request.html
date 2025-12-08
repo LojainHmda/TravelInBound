@@ -2223,7 +2223,13 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
     {% endif %}
-
+                </div>
+            </div>
+        </div>
+        <!-- End Request Master Tab Pane -->
+        
+        <!-- Itinerary Tab Pane -->
+        <div class="tab-pane fade" id="itinerary-main-pane" role="tabpanel">
             <!-- Operations Dashboard Link (visible when status = PROCESSING) -->
             {% if request.status == 'PROCESSING' %}
             <div class="alert mb-2" style="background: #fef3c7; border: 2px solid #fde68a; border-radius: 8px;">
@@ -3063,9 +3069,9 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
         </div>
-        <!-- End col-lg-10 (main content) -->
+        <!-- End Itinerary Tab Pane -->
     </div>
-    <!-- End row (sidebar + main content) -->
+    <!-- End Tab Content -->
 </div>
 
 <!-- Service Selection Modal -->
@@ -6385,6 +6391,21 @@ function convertToInvoice() {
                             </select>
                         </div>
                         <div class="col-md-3 mb-3">
+                            <label class="form-label">Meet & Assist</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_arr">
+                                <label class="form-check-label" for="meet_assist_arr">
+                                    Yes
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Representative Name</label>
+                            <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
                             <label class="form-label">Vehicle Type</label>
                             <select class="form-control" name="vehicle_details">
                                 <option value="">Select vehicle...</option>
@@ -6400,9 +6421,7 @@ function convertToInvoice() {
                             <label class="form-label">PAX Count</label>
                             <input type="number" class="form-control" name="pax_count" min="0" placeholder="0">
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Batch Name</label>
                             <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A">
                         </div>
@@ -6532,6 +6551,8 @@ function renderArrivalsTable() {
                     <th>Vehicle</th>
                     <th>PAX</th>
                     <th>Batch Name</th>
+                    <th>Meet & Assist</th>
+                    <th>Representative</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -6557,6 +6578,8 @@ function renderArrivalsTable() {
                 <td>${batch.vehicle_details || '-'}</td>
                 <td>${batch.pax_count || 0}</td>
                 <td>${batch.batch_name || '-'}</td>
+                <td>${batch.meet_assist ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                <td>${batch.representative_name || '-'}</td>
                 <td>
                     <button type="button" class="btn btn-sm btn-outline-danger" 
                             onclick="${isNew ? `removeNewArrival(${deleteIndex})` : `deleteArrival(${deleteIndex})`}">
