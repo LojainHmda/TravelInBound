@@ -1247,7 +1247,9 @@ def api_get_arrivals(request_id):
             'vehicle_details': batch.vehicle_details or '',
             'pax_count': batch.pax_count or 0,
             'flight_number': batch.flight_number or '',
-            'visa_status': getattr(batch, 'visa_status', 'NOT_INCLUDED')
+            'visa_status': getattr(batch, 'visa_status', 'NOT_INCLUDED'),
+            'meet_assist': getattr(batch, 'meet_assist', False),
+            'representative_name': getattr(batch, 'representative_name', '')
         })
     
     return jsonify({'success': True, 'batches': batches_data})
@@ -1516,6 +1518,11 @@ def api_save_arrivals(request_id):
                 except:
                     pax_count = 0
             
+            # Parse meet_assist boolean
+            meet_assist = False
+            if batch_data.get('meet_assist'):
+                meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
+            
             batch = ArrivalBatch(
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -1526,7 +1533,9 @@ def api_save_arrivals(request_id):
                 vehicle_details=batch_data.get('vehicle_details') or None,
                 pax_count=pax_count,
                 flight_number=batch_data.get('flight_number') or None,
-                visa_status=batch_data.get('visa_status', 'NOT_INCLUDED')
+                visa_status=batch_data.get('visa_status', 'NOT_INCLUDED'),
+                meet_assist=meet_assist,
+                representative_name=batch_data.get('representative_name') or None
             )
             db.session.add(batch)
         
