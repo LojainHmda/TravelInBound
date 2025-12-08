@@ -4749,12 +4749,16 @@ function saveChanges(event) {
     })
     .then(data => {
         if (data.success) {
-            showNotification('Days generated! Enabling edit mode...', 'success');
+            showNotification('Saved! Itinerary generated successfully.', 'success');
             
-            // Reload with parameter to start edit mode
+            // Store saved state in session storage so it shows after reload
+            sessionStorage.setItem('requestSaved', 'true');
+            sessionStorage.setItem('itineraryGenerated', 'true');
+            
+            // Reload with parameter to show itinerary tab
             setTimeout(() => {
-                window.location.href = window.location.pathname + '?auto_edit=1';
-            }, 1000);
+                window.location.href = window.location.pathname + '?tab=itinerary&saved=1';
+            }, 1500);
         } else {
             throw new Error(data.message || 'Error generating days');
         }
@@ -7441,19 +7445,40 @@ function updateConfirmationStatus() {
 document.addEventListener('DOMContentLoaded', function() {
     updateIndividualRoomGrid();
     
-    // Check for auto_edit parameter and start itinerary edit mode if present
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for saved parameter - show saved badge
+    if (urlParams.get('saved') === '1') {
+        const savedBadge = document.getElementById('savedBadge');
+        if (savedBadge) {
+            savedBadge.style.display = 'inline-block';
+            savedBadge.classList.add('pulse-animation');
+        }
+    }
+    
+    // Check for tab parameter - switch to that tab
+    if (urlParams.get('tab') === 'itinerary') {
+        const itineraryTab = document.getElementById('itinerary-tab');
+        if (itineraryTab) {
+            const tab = new bootstrap.Tab(itineraryTab);
+            tab.show();
+        }
+    }
+    
+    // Check for auto_edit parameter and start itinerary edit mode if present
     if (urlParams.get('auto_edit') === '1') {
         // Start itinerary edit mode if not already in it
         if (!isItineraryEditMode && typeof toggleItineraryEditMode === 'function') {
             setTimeout(() => {
                 toggleItineraryEditMode();
-                
-                // Remove the parameter from URL to avoid repeated toggles
-                const newUrl = window.location.pathname;
-                window.history.replaceState({}, document.title, newUrl);
             }, 500);
         }
+    }
+    
+    // Clean up URL parameters
+    if (urlParams.has('saved') || urlParams.has('tab') || urlParams.has('auto_edit')) {
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
     }
 });
 
