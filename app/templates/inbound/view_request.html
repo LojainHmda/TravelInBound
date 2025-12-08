@@ -1379,6 +1379,43 @@ body::-webkit-scrollbar-thumb:hover {
     animation: sidebarPulse 2s ease-in-out infinite;
 }
 
+/* Saved Badge Animation */
+@keyframes badgePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.pulse-animation {
+    animation: badgePulse 0.5s ease-in-out 3;
+}
+
+/* Tab Styling */
+#requestTabs .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #64748b;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+#requestTabs .nav-link:hover {
+    color: #475569;
+    border-bottom-color: #e2e8f0;
+}
+
+#requestTabs .nav-link.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: transparent;
+}
+
+#requestTabs .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+}
+
 /* Compact Hotel Booking Card Styles */
 .hotel-booking-card {
     transition: all 0.2s ease;
@@ -1428,17 +1465,42 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-    <!-- Main Content (Full Width) -->
-    <div class="row g-3">
-        <div class="col-12" id="mainContentContainer">
-            <!-- Request Information -->
-            <div class="card mb-2">
-                <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Request Information</h6>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditMode()">
-                        <i class="fas fa-edit"></i> <span id="editModeText">Cancel</span>
-                    </button>
-                </div>
+    <!-- Main Content Tabs -->
+    <ul class="nav nav-tabs mb-3" id="requestTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="request-tab" data-bs-toggle="tab" data-bs-target="#request-pane" type="button" role="tab">
+                <i class="fas fa-file-alt me-1"></i> Request Master
+                <span class="badge bg-success ms-2 saved-badge" id="savedBadge" style="display: none;">
+                    <i class="fas fa-check"></i> Saved
+                </span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="itinerary-tab" data-bs-toggle="tab" data-bs-target="#itinerary-pane" type="button" role="tab">
+                <i class="fas fa-route me-1"></i> Itinerary
+                {% if request.itinerary_rows|length > 0 %}
+                <span class="badge bg-primary ms-2">
+                    <i class="fas fa-calendar-check"></i> Generated
+                </span>
+                {% endif %}
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="requestTabContent">
+        <!-- Request Master Tab Pane -->
+        <div class="tab-pane fade show active" id="request-pane" role="tabpanel">
+            <div class="row g-3">
+                <div class="col-12" id="mainContentContainer">
+                    <!-- Request Information -->
+                    <div class="card mb-2">
+                        <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Request Information</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditMode()">
+                                <i class="fas fa-edit"></i> <span id="editModeText">Cancel</span>
+                            </button>
+                        </div>
                 <div class="card-body py-2">
                     <!-- View Mode -->
                     <div id="viewMode" class="edit-mode-hidden">
@@ -1639,6 +1701,176 @@ body::-webkit-scrollbar-thumb:hover {
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Itinerary Tab Pane -->
+        <div class="tab-pane fade" id="itinerary-pane" role="tabpanel">
+            <div class="card">
+                <div class="card-header py-2 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary - Days & Services</h6>
+                    {% if request.itinerary_rows|length > 0 %}
+                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Itinerary Generated</span>
+                    {% else %}
+                    <span class="badge bg-secondary"><i class="fas fa-info-circle"></i> No Itinerary Yet</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if request.itinerary_rows|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 60px;">Day</th>
+                                    <th style="width: 100px;">Date</th>
+                                    <th>Description</th>
+                                    <th style="width: 200px;">Services</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in request.itinerary_rows|sort(attribute='day_number') %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary rounded-pill">Day {{ row.day_number }}</span>
+                                    </td>
+                                    <td>
+                                        {% if row.itinerary_date %}
+                                        {{ row.itinerary_date.strftime('%d %b %Y') }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ row.description or '' }}</strong>
+                                        {% if row.notes %}
+                                        <br><small class="text-muted">{{ row.notes }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% if row.hotel %}
+                                            <span class="badge bg-info" title="Hotel"><i class="fas fa-hotel"></i></span>
+                                            {% endif %}
+                                            {% if row.transport %}
+                                            <span class="badge bg-warning text-dark" title="Transport"><i class="fas fa-car"></i></span>
+                                            {% endif %}
+                                            {% if row.meal %}
+                                            <span class="badge bg-success" title="Meals"><i class="fas fa-utensils"></i></span>
+                                            {% endif %}
+                                            {% if row.guide %}
+                                            <span class="badge bg-secondary" title="Guide"><i class="fas fa-user-tie"></i></span>
+                                            {% endif %}
+                                            {% if row.optional %}
+                                            <span class="badge bg-purple" style="background-color: #9c27b0;" title="Optional"><i class="fas fa-star"></i></span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Service Summary Cards -->
+                    <div class="row mt-3">
+                        <!-- Hotels Summary -->
+                        {% if request.hotels|length > 0 %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white py-2">
+                                    <i class="fas fa-hotel me-2"></i>Hotels ({{ request.hotels|length }})
+                                </div>
+                                <div class="card-body py-2">
+                                    {% for hotel in request.hotels[:3] %}
+                                    <div class="mb-1">
+                                        <strong>{{ hotel.hotel_name or 'Hotel' }}</strong>
+                                        <small class="text-muted ms-2">{{ hotel.city or '' }}</small>
+                                    </div>
+                                    {% endfor %}
+                                    {% if request.hotels|length > 3 %}
+                                    <small class="text-muted">+{{ request.hotels|length - 3 }} more...</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Transport Summary -->
+                        {% if request.transports|length > 0 %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark py-2">
+                                    <i class="fas fa-car me-2"></i>Transport ({{ request.transports|length }})
+                                </div>
+                                <div class="card-body py-2">
+                                    {% for transport in request.transports[:3] %}
+                                    <div class="mb-1">
+                                        <strong>{{ transport.vehicle_type or 'Vehicle' }}</strong>
+                                        <small class="text-muted ms-2">{{ transport.from_location or '' }} → {{ transport.to_location or '' }}</small>
+                                    </div>
+                                    {% endfor %}
+                                    {% if request.transports|length > 3 %}
+                                    <small class="text-muted">+{{ request.transports|length - 3 }} more...</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Meals Summary -->
+                        {% if request.meals|length > 0 %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white py-2">
+                                    <i class="fas fa-utensils me-2"></i>Meals ({{ request.meals|length }})
+                                </div>
+                                <div class="card-body py-2">
+                                    {% for meal in request.meals[:3] %}
+                                    <div class="mb-1">
+                                        <strong>{{ meal.meal_type or 'Meal' }}</strong>
+                                        <small class="text-muted ms-2">{{ meal.restaurant_name or '' }}</small>
+                                    </div>
+                                    {% endfor %}
+                                    {% if request.meals|length > 3 %}
+                                    <small class="text-muted">+{{ request.meals|length - 3 }} more...</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Guides Summary -->
+                        {% if request.guides|length > 0 %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-secondary">
+                                <div class="card-header bg-secondary text-white py-2">
+                                    <i class="fas fa-user-tie me-2"></i>Guides ({{ request.guides|length }})
+                                </div>
+                                <div class="card-body py-2">
+                                    {% for guide in request.guides[:3] %}
+                                    <div class="mb-1">
+                                        <strong>{{ guide.guide_name or 'Guide' }}</strong>
+                                        <small class="text-muted ms-2">{{ guide.language or '' }}</small>
+                                    </div>
+                                    {% endfor %}
+                                    {% if request.guides|length > 3 %}
+                                    <small class="text-muted">+{{ request.guides|length - 3 }} more...</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-route fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Itinerary Generated Yet</h5>
+                        <p class="text-muted">Save the request first, then generate the itinerary using the Itinerary Builder section below.</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -4488,6 +4720,13 @@ function saveChanges(event) {
     .then(data => {
         if (data.success) {
             showNotification('Master details saved successfully! Generating days...', 'success');
+            
+            // Show "Saved" badge
+            const savedBadge = document.getElementById('savedBadge');
+            if (savedBadge) {
+                savedBadge.style.display = 'inline-block';
+                savedBadge.classList.add('pulse-animation');
+            }
             
             // Auto-generate days after saving
             return fetch('/inbound/api/{{ request.id }}/generate-days', {
