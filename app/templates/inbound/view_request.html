@@ -2256,15 +2256,13 @@ body::-webkit-scrollbar-thumb:hover {
                                 <i class="fas fa-click me-2" style="color: #fbbf24;"></i>Click services to add to selected dates:
                             </div>
                             <div class="service-icons-horizontal d-flex gap-3 align-items-center">
-                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalsModal"
-                                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); min-width: 100px; font-weight: 600;">
-                                    <i class="fas fa-plane-arrival mb-1" style="font-size: 1.2rem; display: block;"></i>
-                                    <span style="font-size: 0.85rem; font-weight: 600;">Arrivals</span>
-                                </button>
-                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#departuresModal"
-                                        style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); min-width: 100px; font-weight: 600;">
-                                    <i class="fas fa-plane-departure mb-1" style="font-size: 1.2rem; display: block;"></i>
-                                    <span style="font-size: 0.85rem; font-weight: 600;">Departures</span>
+                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalDepartureModal"
+                                        style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); border: none; border-radius: 12px; padding: 12px; color: white; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(30, 58, 95, 0.3); min-width: 130px; font-weight: 600;">
+                                    <div class="d-flex justify-content-center gap-1 mb-1">
+                                        <i class="fas fa-plane-arrival" style="font-size: 1rem; color: #10b981;"></i>
+                                        <i class="fas fa-plane-departure" style="font-size: 1rem; color: #dc2626;"></i>
+                                    </div>
+                                    <span style="font-size: 0.8rem; font-weight: 600;">Arrivals & Departures</span>
                                 </button>
                                 <button type="button" class="service-icon-button" data-service="hotel"
                                         style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; border-radius: 12px; padding: 12px; color: #1f2937; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); min-width: 100px; font-weight: 600;">
@@ -6340,6 +6338,10 @@ function convertToInvoice() {
                                 </div>
                             </div>
                             <div class="form-row">
+                                <div class="form-group sm">
+                                    <label class="form-label">Flight/Bus #</label>
+                                    <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ 504">
+                                </div>
                                 <div class="form-group">
                                     <label class="form-label">Visa Status</label>
                                     <select class="form-select" name="visa_status">
@@ -6350,8 +6352,8 @@ function convertToInvoice() {
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label">Arrival Driver Name</label>
-                                    <input type="text" class="form-control" name="arrival_driver_name" placeholder="Driver name">
+                                    <label class="form-label">Vehicle Details</label>
+                                    <input type="text" class="form-control" name="vehicle_details" placeholder="e.g., Mercedes Sprinter">
                                 </div>
                             </div>
                         </div>
@@ -7223,6 +7225,7 @@ function renderArrivalDepartureTable() {
                     <th>PAX</th>
                     <th class="text-success">Arr. Date</th>
                     <th class="text-success">Arr. Point</th>
+                    <th class="text-success">Flight#</th>
                     <th class="text-success">Visa</th>
                     <th class="text-danger">Dep. Date</th>
                     <th class="text-danger">Dep. Point</th>
@@ -7250,6 +7253,7 @@ function renderArrivalDepartureTable() {
                 <td>${record.pax_count || 0}</td>
                 <td class="text-success">${record.arrival_date || '-'}</td>
                 <td class="text-success">${record.arrival_point ? record.arrival_point.substring(0, 15) + '...' : '-'}</td>
+                <td class="text-success">${record.flight_number || '-'}</td>
                 <td><span class="badge ${visaStatusBadge[record.visa_status] || 'bg-secondary'}">${record.visa_status || 'N/A'}</span></td>
                 <td class="text-danger">${record.departure_date || '-'}</td>
                 <td class="text-danger">${record.departure_point ? record.departure_point.substring(0, 15) + '...' : '-'}</td>
