@@ -6276,7 +6276,161 @@ function convertToInvoice() {
 }
 </script>
 
-<!-- Departures Modal -->
+<!-- Combined Arrival/Departure Modal -->
+<div class="modal fade" id="arrivalDepartureModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header py-2" style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);">
+                <h6 class="modal-title mb-0" style="color: white !important;"><i class="fas fa-plane me-2"></i>Manage Arrivals & Departures</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3">
+                <!-- Existing Batches Table -->
+                <div id="arrivalDepartureTableContainer" class="mb-3"></div>
+                
+                <!-- Add New Batch Form -->
+                <div class="modal-section">
+                    <div class="modal-section-title">
+                        <i class="fas fa-plus-circle"></i>Add New Batch (Arrival & Departure)
+                    </div>
+                    <form id="arrivalDepartureForm" class="modal-form">
+                        <!-- Batch Info Row -->
+                        <div class="form-row" style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 12px;">
+                            <div class="form-group">
+                                <label class="form-label fw-bold">Batch Name</label>
+                                <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A, Family 1">
+                            </div>
+                            <div class="form-group sm">
+                                <label class="form-label fw-bold">PAX Count</label>
+                                <input type="number" class="form-control" name="pax_count" min="1" value="1">
+                            </div>
+                        </div>
+                        
+                        <!-- ARRIVAL Section -->
+                        <div class="border rounded p-2 mb-3" style="border-color: #10b981 !important;">
+                            <h6 class="text-success mb-2"><i class="fas fa-plane-arrival me-1"></i> ARRIVAL Details</h6>
+                            <div class="form-row">
+                                <div class="form-group sm">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" name="arrival_date">
+                                </div>
+                                <div class="form-group sm">
+                                    <label class="form-label">Time</label>
+                                    <input type="time" class="form-control" name="arrival_time">
+                                </div>
+                                <div class="form-group lg">
+                                    <label class="form-label">Arrival Point</label>
+                                    <select class="form-select" name="arrival_point">
+                                        <option value="">Select arrival point...</option>
+                                        <optgroup label="Airports">
+                                            <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                            <option value="King Hussein International Airport - Aqaba">King Hussein - Aqaba</option>
+                                            <option value="Marka Civil Airport">Marka - Amman</option>
+                                        </optgroup>
+                                        <optgroup label="Land Borders">
+                                            <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                            <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                            <option value="Jaber Border">Jaber Border</option>
+                                            <option value="Omari Border">Omari Border</option>
+                                            <option value="Mudawara Border">Mudawara Border</option>
+                                            <option value="Karameh Border">Karameh Border</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Visa Status</label>
+                                    <select class="form-select" name="visa_status">
+                                        <option value="NOT_INCLUDED">Not Included</option>
+                                        <option value="VISA_FREE">Visa-free</option>
+                                        <option value="RESTRICTED">Restricted</option>
+                                        <option value="INCLUDED">Included</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Arrival Driver Name</label>
+                                    <input type="text" class="form-control" name="arrival_driver_name" placeholder="Driver name">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- DEPARTURE Section -->
+                        <div class="border rounded p-2 mb-3" style="border-color: #dc2626 !important;">
+                            <h6 class="text-danger mb-2"><i class="fas fa-plane-departure me-1"></i> DEPARTURE Details</h6>
+                            <div class="form-row">
+                                <div class="form-group sm">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" class="form-control" name="departure_date">
+                                </div>
+                                <div class="form-group sm">
+                                    <label class="form-label">Time</label>
+                                    <input type="time" class="form-control" name="departure_time">
+                                </div>
+                                <div class="form-group lg">
+                                    <label class="form-label">Departure Point</label>
+                                    <select class="form-select" name="departure_point">
+                                        <option value="">Select departure point...</option>
+                                        <optgroup label="Airports">
+                                            <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                            <option value="King Hussein International Airport">King Hussein - Aqaba</option>
+                                            <option value="Marka Civil Airport">Marka - Amman</option>
+                                        </optgroup>
+                                        <optgroup label="Land Borders">
+                                            <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                            <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                            <option value="Jaber Border">Jaber Border</option>
+                                            <option value="Omari Border">Omari Border</option>
+                                            <option value="Mudawara Border">Mudawara Border</option>
+                                            <option value="Karameh Border">Karameh Border</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group sm">
+                                    <label class="form-label">Meet & Assist</label>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_combined" onchange="toggleRepresentativeField()">
+                                        <label class="form-check-label" for="meet_assist_combined">Yes</label>
+                                    </div>
+                                </div>
+                                <div class="form-group" id="representativeFieldGroup">
+                                    <label class="form-label">Representative Name</label>
+                                    <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Departure Tax</label>
+                                    <select class="form-select" name="departure_tax">
+                                        <option value="NOT_INCLUDED">Not Included</option>
+                                        <option value="INCLUDED">Included</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Add Button -->
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add Batch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success btn-sm" onclick="saveAllArrivalDepartures()">
+                    <i class="fas fa-save me-1"></i>Save All Arrivals/Departures
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Legacy Departures Modal (kept for backwards compatibility) -->
 <div class="modal fade" id="departuresModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -6292,7 +6446,6 @@ function convertToInvoice() {
                         <i class="fas fa-plus-circle"></i>Add New Departure
                     </div>
                     <form id="departureForm" class="modal-form">
-                        <!-- Row 1: Date, Time, Departure Point -->
                         <div class="form-row">
                             <div class="form-group sm">
                                 <label class="form-label">Date *</label>
@@ -6323,7 +6476,6 @@ function convertToInvoice() {
                                 </select>
                             </div>
                         </div>
-                        <!-- Row 2: Flight/Bus, Meet & Assist, Representative, Departure Tax -->
                         <div class="form-row">
                             <div class="form-group sm">
                                 <label class="form-label">Flight/Bus Number</label>
@@ -6348,7 +6500,6 @@ function convertToInvoice() {
                                 </select>
                             </div>
                         </div>
-                        <!-- Row 3: Vehicle, PAX, Batch, Add Button -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Vehicle Type</label>
@@ -6388,7 +6539,7 @@ function convertToInvoice() {
     </div>
 </div>
 
-<!-- Arrivals Modal -->
+<!-- Legacy Arrivals Modal (kept for backwards compatibility) -->
 <div class="modal fade" id="arrivalsModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -6404,7 +6555,6 @@ function convertToInvoice() {
                         <i class="fas fa-plus-circle"></i>Add New Arrival
                     </div>
                     <form id="arrivalForm" class="modal-form">
-                        <!-- Row 1: Date, Time, Arrival Point -->
                         <div class="form-row">
                             <div class="form-group sm">
                                 <label class="form-label">Date *</label>
@@ -6420,7 +6570,7 @@ function convertToInvoice() {
                                     <option value="">Select arrival point...</option>
                                     <optgroup label="Airports">
                                         <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
-                                        <option value="King Hussein International Airport - Aqaba">King Hussein International Airport - Aqaba</option>
+                                        <option value="King Hussein International Airport - Aqaba">King Hussein - Aqaba</option>
                                         <option value="Marka Civil Airport">Marka - Amman</option>
                                     </optgroup>
                                     <optgroup label="Land Borders">
@@ -6435,7 +6585,6 @@ function convertToInvoice() {
                                 </select>
                             </div>
                         </div>
-                        <!-- Row 2: Flight/Bus, Meet & Assist, Representative, Visa Status -->
                         <div class="form-row">
                             <div class="form-group sm">
                                 <label class="form-label">Flight/Bus Number</label>
@@ -6462,7 +6611,6 @@ function convertToInvoice() {
                                 </select>
                             </div>
                         </div>
-                        <!-- Row 3: Vehicle, PAX, Batch, Add Button -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Vehicle Type</label>
@@ -7033,6 +7181,217 @@ document.getElementById('departureForm')?.addEventListener('submit', function(e)
 document.getElementById('departuresModal')?.addEventListener('shown.bs.modal', function() {
     loadDepartures();
 });
+
+// ========================================
+// COMBINED ARRIVAL/DEPARTURE MODAL FUNCTIONS
+// ========================================
+let arrivalDepartureRecords = [];
+let newArrivalDepartures = [];
+
+function loadArrivalDepartures() {
+    fetch('/inbound/api/{{ request.id }}/arrival-departures')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                arrivalDepartureRecords = data.records || [];
+                newArrivalDepartures = [];
+                renderArrivalDepartureTable();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading arrival/departures:', error);
+        });
+}
+
+function renderArrivalDepartureTable() {
+    const container = document.getElementById('arrivalDepartureTableContainer');
+    if (!container) return;
+    
+    const allRecords = [...arrivalDepartureRecords, ...newArrivalDepartures];
+    
+    if (allRecords.length === 0) {
+        container.innerHTML = '<p class="text-muted"><i class="fas fa-info-circle me-2"></i>No batches added yet. Use the form below to add your first batch with arrival and departure details.</p>';
+        return;
+    }
+    
+    let html = `
+        <div class="table-responsive">
+        <table class="table table-sm table-hover" style="font-size: 0.85rem;">
+            <thead style="background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white;">
+                <tr>
+                    <th>Batch</th>
+                    <th>PAX</th>
+                    <th class="text-success">Arr. Date</th>
+                    <th class="text-success">Arr. Point</th>
+                    <th class="text-success">Visa</th>
+                    <th class="text-danger">Dep. Date</th>
+                    <th class="text-danger">Dep. Point</th>
+                    <th class="text-danger">Tax</th>
+                    <th>M&A</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    allRecords.forEach((record, index) => {
+        const isNew = index >= arrivalDepartureRecords.length;
+        const deleteIndex = isNew ? index - arrivalDepartureRecords.length : record.id;
+        const visaStatusBadge = {
+            'VISA_FREE': 'bg-success',
+            'RESTRICTED': 'bg-warning',
+            'INCLUDED': 'bg-info',
+            'NOT_INCLUDED': 'bg-secondary'
+        };
+        
+        html += `
+            <tr ${isNew ? 'style="background-color: #f0fdf4;"' : ''}>
+                <td><strong>${record.batch_name || '-'}</strong></td>
+                <td>${record.pax_count || 0}</td>
+                <td class="text-success">${record.arrival_date || '-'}</td>
+                <td class="text-success">${record.arrival_point ? record.arrival_point.substring(0, 15) + '...' : '-'}</td>
+                <td><span class="badge ${visaStatusBadge[record.visa_status] || 'bg-secondary'}">${record.visa_status || 'N/A'}</span></td>
+                <td class="text-danger">${record.departure_date || '-'}</td>
+                <td class="text-danger">${record.departure_point ? record.departure_point.substring(0, 15) + '...' : '-'}</td>
+                <td><span class="badge ${record.departure_tax === 'INCLUDED' ? 'bg-success' : 'bg-secondary'}">${record.departure_tax || 'N/A'}</span></td>
+                <td>${record.meet_assist ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                            onclick="${isNew ? `removeNewArrivalDeparture(${deleteIndex})` : `deleteArrivalDeparture(${deleteIndex})`}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    ${isNew ? '<span class="badge bg-success ms-1">New</span>' : ''}
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    if (newArrivalDepartures.length > 0) {
+        html += '<div class="alert alert-info mt-2"><i class="fas fa-info-circle me-2"></i>You have unsaved batches. Click "Save All Arrivals/Departures" to save them.</div>';
+    }
+    container.innerHTML = html;
+}
+
+function removeNewArrivalDeparture(index) {
+    if (confirm('Remove this unsaved batch?')) {
+        newArrivalDepartures.splice(index, 1);
+        renderArrivalDepartureTable();
+    }
+}
+
+function deleteArrivalDeparture(recordId) {
+    if (confirm('Delete this batch permanently?')) {
+        fetch(`/inbound/api/{{ request.id }}/arrival-departures/${recordId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Batch deleted successfully!', 'success');
+                loadArrivalDepartures();
+            } else {
+                showNotification(data.error || 'Error deleting batch', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error deleting batch', 'error');
+        });
+    }
+}
+
+function saveAllArrivalDepartures() {
+    const saveBtn = document.querySelector('[onclick="saveAllArrivalDepartures()"]');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    }
+    
+    if (newArrivalDepartures.length === 0) {
+        showNotification('No new batches to save', 'info');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save All Arrivals/Departures';
+        }
+        return;
+    }
+    
+    fetch('/inbound/api/{{ request.id }}/arrival-departures', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        },
+        body: JSON.stringify({ records: newArrivalDepartures })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Batches saved successfully!', 'success');
+            loadArrivalDepartures();
+        } else {
+            showNotification(data.message || 'Error saving batches', 'error');
+        }
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save All Arrivals/Departures';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving batches', 'error');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Save All Arrivals/Departures';
+        }
+    });
+}
+
+function toggleRepresentativeField() {
+    const checkbox = document.getElementById('meet_assist_combined');
+    const repField = document.getElementById('representativeFieldGroup');
+    if (repField) {
+        repField.style.opacity = checkbox.checked ? '1' : '0.5';
+    }
+}
+
+// Combined form submission
+document.getElementById('arrivalDepartureForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newRecord = {};
+    
+    // Handle checkbox for meet_assist
+    const meetAssistCheckbox = e.target.querySelector('[name="meet_assist"]');
+    newRecord['meet_assist'] = meetAssistCheckbox ? meetAssistCheckbox.checked : false;
+    
+    // Handle other form fields
+    formData.forEach((value, key) => {
+        if (key !== 'meet_assist') {
+            newRecord[key] = value;
+        }
+    });
+    
+    newArrivalDepartures.push(newRecord);
+    renderArrivalDepartureTable();
+    e.target.reset();
+    showNotification('Batch added. Click "Save All Arrivals/Departures" to save.', 'info');
+});
+
+// Load data when modal opens
+document.getElementById('arrivalDepartureModal')?.addEventListener('shown.bs.modal', function() {
+    loadArrivalDepartures();
+});
+
+// Function to open the combined modal (can be called from service buttons)
+function openArrivalDepartureModal() {
+    const modal = new bootstrap.Modal(document.getElementById('arrivalDepartureModal'));
+    modal.show();
+}
 </script>
 
 <script>

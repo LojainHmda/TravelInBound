@@ -1567,6 +1567,147 @@ def api_save_arrivals(request_id):
         traceback.print_exc()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/arrival-departures', methods=['GET'])
+def api_get_arrival_departures(request_id):
+    """Get all arrival/departure records for a request (combined model)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    from app.models.inbound import ArrivalDeparture
+    
+    records = ArrivalDeparture.query.filter_by(request_id=request_id).order_by(ArrivalDeparture.id).all()
+    
+    records_list = []
+    for record in records:
+        records_list.append({
+            'id': record.id,
+            'batch_name': record.batch_name,
+            'pax_count': record.pax_count,
+            'arrival_date': record.arrival_date.strftime('%Y-%m-%d') if record.arrival_date else None,
+            'arrival_time': record.arrival_time.strftime('%H:%M') if record.arrival_time else None,
+            'arrival_point': record.arrival_point,
+            'visa_status': record.visa_status,
+            'arrival_driver_name': record.arrival_driver_name,
+            'departure_date': record.departure_date.strftime('%Y-%m-%d') if record.departure_date else None,
+            'departure_time': record.departure_time.strftime('%H:%M') if record.departure_time else None,
+            'departure_point': record.departure_point,
+            'meet_assist': record.meet_assist,
+            'representative_name': record.representative_name,
+            'departure_tax': record.departure_tax
+        })
+    
+    return jsonify({'success': True, 'records': records_list})
+
+@inbound_bp.route('/api/<int:request_id>/arrival-departures', methods=['POST'])
+@csrf.exempt
+def api_save_arrival_departures(request_id):
+    """Save arrival/departure records for a request (combined model)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    records_data = data.get('records', [])
+    
+    from app.models.inbound import ArrivalDeparture
+    
+    try:
+        for record_data in records_data:
+            # Parse dates
+            arrival_date = None
+            if record_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(record_data['arrival_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
+            departure_date = None
+            if record_data.get('departure_date'):
+                try:
+                    departure_date = datetime.strptime(record_data['departure_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            
+            # Parse times
+            arrival_time = None
+            if record_data.get('arrival_time'):
+                try:
+                    arrival_time = datetime.strptime(record_data['arrival_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            departure_time = None
+            if record_data.get('departure_time'):
+                try:
+                    departure_time = datetime.strptime(record_data['departure_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Parse pax count
+            pax_count = 1
+            if record_data.get('pax_count'):
+                try:
+                    pax_count = int(record_data['pax_count'])
+                except:
+                    pax_count = 1
+            
+            # Parse meet_assist boolean
+            meet_assist = False
+            if record_data.get('meet_assist'):
+                meet_assist = record_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
+            
+            record = ArrivalDeparture(
+                request_id=request_id,
+                batch_name=record_data.get('batch_name') or None,
+                pax_count=pax_count,
+                arrival_date=arrival_date,
+                arrival_time=arrival_time,
+                arrival_point=record_data.get('arrival_point') or None,
+                visa_status=record_data.get('visa_status', 'NOT_INCLUDED'),
+                arrival_driver_name=record_data.get('arrival_driver_name') or None,
+                departure_date=departure_date,
+                departure_time=departure_time,
+                departure_point=record_data.get('departure_point') or None,
+                meet_assist=meet_assist,
+                representative_name=record_data.get('representative_name') or None,
+                departure_tax=record_data.get('departure_tax', 'NOT_INCLUDED')
+            )
+            db.session.add(record)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Arrival/Departure records saved successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving arrival/departures: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/arrival-departures/<int:record_id>', methods=['DELETE'])
+@csrf.exempt
+def api_delete_arrival_departure(request_id, record_id):
+    """Delete an arrival/departure record"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import ArrivalDeparture
+    
+    record = ArrivalDeparture.query.filter_by(id=record_id, request_id=request_id).first()
+    
+    if not record:
+        return jsonify({'error': 'Record not found'}), 404
+    
+    try:
+        db.session.delete(record)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Record deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/generate-quote', methods=['POST'])
 @csrf.exempt
 
