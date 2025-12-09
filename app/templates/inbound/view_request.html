@@ -3802,11 +3802,24 @@ function saveChanges(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Request has been saved!', 'success');
-            // Reload page to show updated data
+            // Show success alert
+            showSaveSuccessAlert();
+            
+            // Switch to itinerary tab after a short delay
             setTimeout(() => {
+                const itineraryTab = document.querySelector('button[data-bs-target="#itinerary-main-pane"]');
+                if (itineraryTab) {
+                    itineraryTab.click();
+                    // Highlight the itinerary section
+                    highlightItinerarySection();
+                }
+            }, 800);
+            
+            // Reload page after showing the itinerary
+            setTimeout(() => {
+                window.location.hash = 'itinerary';
                 window.location.reload();
-            }, 1500);
+            }, 2500);
         } else {
             showNotification(data.message || 'Error saving changes', 'error');
         }
@@ -3815,6 +3828,44 @@ function saveChanges(event) {
         console.error('Error:', error);
         showNotification('Error saving changes', 'error');
     });
+}
+
+// Show save success alert at top of page
+function showSaveSuccessAlert() {
+    // Remove existing alert if any
+    const existing = document.getElementById('saveSuccessAlert');
+    if (existing) existing.remove();
+    
+    const alert = document.createElement('div');
+    alert.id = 'saveSuccessAlert';
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.style.cssText = 'position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); animation: slideDown 0.3s ease-out;';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Request has been saved!</strong> Moving to Trip Itinerary...
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alert);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.classList.remove('show');
+            setTimeout(() => alert.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Highlight itinerary section when switching tabs
+function highlightItinerarySection() {
+    const itineraryPane = document.getElementById('itinerary-main-pane');
+    if (itineraryPane) {
+        itineraryPane.style.animation = 'highlightPulse 1s ease-out';
+        setTimeout(() => {
+            itineraryPane.style.animation = '';
+        }, 1000);
+    }
 }
 
 // Room distribution modal variables

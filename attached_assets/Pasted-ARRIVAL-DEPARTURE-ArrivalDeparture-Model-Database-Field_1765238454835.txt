@@ -1,0 +1,39 @@
+ARRIVAL/DEPARTURE (ArrivalDeparture Model)
+Database Fields
+class ArrivalDeparture(db.Model):
+    __tablename__ = 'arrival_departure'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    request_id = db.Column(db.Integer, db.ForeignKey('inbound_request.id'), nullable=False)
+    transport_id = db.Column(db.Integer, db.ForeignKey('inbound_transport.id'), nullable=True)
+    
+    # Batch identification
+    batch_name = db.Column(db.String(100), nullable=True)  # e.g., "Group A", "Family 1"
+    pax_count = db.Column(db.Integer, nullable=True)  # Passengers in this batch
+    
+    # ARRIVAL fields
+    arrival_date = db.Column(db.Date, nullable=True)
+    arrival_point = db.Column(db.String(150), nullable=True)  # e.g., "Queen Alia Airport"
+    arrival_time = db.Column(db.Time, nullable=True)
+    visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+    arrival_driver_name = db.Column(db.String(200), nullable=True)
+    
+    # DEPARTURE fields
+    departure_date = db.Column(db.Date, nullable=True)
+    departure_point = db.Column(db.String(150), nullable=True)
+    departure_time = db.Column(db.Time, nullable=True)
+    meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist checkbox
+    representative_name = db.Column(db.String(200), nullable=True)
+    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+UI Instructions
+Each record represents ONE batch (group of passengers) with both arrival AND departure info
+Predefined location dropdowns for arrival/departure points (airports, border crossings)
+Visa status dropdown: VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
+Meet & Assist checkbox triggers representative name field
+Departure tax: INCLUDED or NOT_INCLUDED
+Multiple batches can exist per booking (for split groups)
