@@ -6287,139 +6287,127 @@ function convertToInvoice() {
                 <div id="arrivalDepartureTableContainer" class="mb-3"></div>
                 
                 <!-- Add New Batch Form -->
-                <div class="modal-section">
-                    <div class="modal-section-title">
-                        <i class="fas fa-plus-circle"></i>Add New Batch (Arrival & Departure)
+                <div class="card">
+                    <div class="card-header bg-light py-2">
+                        <i class="fas fa-plus-circle me-1"></i>Add New Batch (Arrival & Departure)
                     </div>
-                    <form id="arrivalDepartureForm" class="modal-form">
-                        <!-- Batch Info Row -->
-                        <div class="form-row" style="background: #f8f9fa; padding: 8px; border-radius: 6px; margin-bottom: 12px;">
-                            <div class="form-group">
-                                <label class="form-label fw-bold">Batch Name</label>
-                                <input type="text" class="form-control" name="batch_name" placeholder="e.g., Group A, Family 1">
-                            </div>
-                            <div class="form-group sm">
-                                <label class="form-label fw-bold">PAX Count</label>
-                                <input type="number" class="form-control" name="pax_count" min="1" value="1">
-                            </div>
-                        </div>
-                        
-                        <!-- ARRIVAL Section -->
-                        <div class="border rounded p-2 mb-3" style="border-color: #10b981 !important;">
-                            <h6 class="text-success mb-2"><i class="fas fa-plane-arrival me-1"></i> ARRIVAL Details</h6>
-                            <div class="form-row">
-                                <div class="form-group sm">
-                                    <label class="form-label">Date</label>
-                                    <input type="date" class="form-control" name="arrival_date">
+                    <div class="card-body">
+                        <form id="arrivalDepartureForm">
+                            <!-- Batch Info Row -->
+                            <div class="row g-2 mb-3 p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">Batch Name</label>
+                                    <input type="text" class="form-control form-control-sm" name="batch_name" placeholder="e.g., Group A, Family 1">
                                 </div>
-                                <div class="form-group sm">
-                                    <label class="form-label">Time</label>
-                                    <input type="time" class="form-control" name="arrival_time">
-                                </div>
-                                <div class="form-group lg">
-                                    <label class="form-label">Arrival Point</label>
-                                    <select class="form-select" name="arrival_point">
-                                        <option value="">Select arrival point...</option>
-                                        <optgroup label="Airports">
-                                            <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
-                                            <option value="King Hussein International Airport - Aqaba">King Hussein - Aqaba</option>
-                                            <option value="Marka Civil Airport">Marka - Amman</option>
-                                        </optgroup>
-                                        <optgroup label="Land Borders">
-                                            <option value="King Hussein Bridge">King Hussein Bridge</option>
-                                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                                            <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
-                                            <option value="Jaber Border">Jaber Border</option>
-                                            <option value="Omari Border">Omari Border</option>
-                                            <option value="Mudawara Border">Mudawara Border</option>
-                                            <option value="Karameh Border">Karameh Border</option>
-                                        </optgroup>
-                                    </select>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">PAX Count</label>
+                                    <input type="number" class="form-control form-control-sm" name="pax_count" min="1" value="1">
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group sm">
-                                    <label class="form-label">Flight/Bus #</label>
-                                    <input type="text" class="form-control" name="flight_number" placeholder="e.g., RJ 504">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Visa Status</label>
-                                    <select class="form-select" name="visa_status">
-                                        <option value="NOT_INCLUDED">Not Included</option>
-                                        <option value="VISA_FREE">Visa-free</option>
-                                        <option value="RESTRICTED">Restricted</option>
-                                        <option value="INCLUDED">Included</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Vehicle Details</label>
-                                    <input type="text" class="form-control" name="vehicle_details" placeholder="e.g., Mercedes Sprinter">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- DEPARTURE Section -->
-                        <div class="border rounded p-2 mb-3" style="border-color: #dc2626 !important;">
-                            <h6 class="text-danger mb-2"><i class="fas fa-plane-departure me-1"></i> DEPARTURE Details</h6>
-                            <div class="form-row">
-                                <div class="form-group sm">
-                                    <label class="form-label">Date</label>
-                                    <input type="date" class="form-control" name="departure_date">
-                                </div>
-                                <div class="form-group sm">
-                                    <label class="form-label">Time</label>
-                                    <input type="time" class="form-control" name="departure_time">
-                                </div>
-                                <div class="form-group lg">
-                                    <label class="form-label">Departure Point</label>
-                                    <select class="form-select" name="departure_point">
-                                        <option value="">Select departure point...</option>
-                                        <optgroup label="Airports">
-                                            <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
-                                            <option value="King Hussein International Airport">King Hussein - Aqaba</option>
-                                            <option value="Marka Civil Airport">Marka - Amman</option>
-                                        </optgroup>
-                                        <optgroup label="Land Borders">
-                                            <option value="King Hussein Bridge">King Hussein Bridge</option>
-                                            <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
-                                            <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
-                                            <option value="Jaber Border">Jaber Border</option>
-                                            <option value="Omari Border">Omari Border</option>
-                                            <option value="Mudawara Border">Mudawara Border</option>
-                                            <option value="Karameh Border">Karameh Border</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group sm">
-                                    <label class="form-label">Meet & Assist</label>
-                                    <div class="form-check mt-2">
-                                        <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_combined" onchange="toggleRepresentativeField()">
-                                        <label class="form-check-label" for="meet_assist_combined">Yes</label>
+                            
+                            <!-- ARRIVAL Section -->
+                            <div class="border rounded p-2 mb-3" style="border-color: #10b981 !important;">
+                                <h6 class="text-success mb-2"><i class="fas fa-plane-arrival me-1"></i> ARRIVAL Details</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Date</label>
+                                        <input type="date" class="form-control form-control-sm" name="arrival_date">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="time" class="form-control form-control-sm" name="arrival_time">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Arrival Point</label>
+                                        <select class="form-select form-select-sm" name="arrival_point">
+                                            <option value="">Select...</option>
+                                            <optgroup label="Airports">
+                                                <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                                <option value="King Hussein International Airport - Aqaba">King Hussein - Aqaba</option>
+                                            </optgroup>
+                                            <optgroup label="Land Borders">
+                                                <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                                <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                                <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                                <option value="Jaber Border">Jaber Border</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Flight/Bus #</label>
+                                        <input type="text" class="form-control form-control-sm" name="flight_number" placeholder="RJ 504">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Visa Status</label>
+                                        <select class="form-select form-select-sm" name="visa_status">
+                                            <option value="NOT_INCLUDED">Not Included</option>
+                                            <option value="VISA_FREE">Visa-free</option>
+                                            <option value="RESTRICTED">Restricted</option>
+                                            <option value="INCLUDED">Included</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="form-group" id="representativeFieldGroup">
-                                    <label class="form-label">Representative Name</label>
-                                    <input type="text" class="form-control" name="representative_name" placeholder="Representative name">
+                            </div>
+                            
+                            <!-- DEPARTURE Section -->
+                            <div class="border rounded p-2 mb-3" style="border-color: #dc2626 !important;">
+                                <h6 class="text-danger mb-2"><i class="fas fa-plane-departure me-1"></i> DEPARTURE Details</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Date</label>
+                                        <input type="date" class="form-control form-control-sm" name="departure_date">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="time" class="form-control form-control-sm" name="departure_time">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Departure Point</label>
+                                        <select class="form-select form-select-sm" name="departure_point">
+                                            <option value="">Select...</option>
+                                            <optgroup label="Airports">
+                                                <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                                <option value="King Hussein International Airport">King Hussein - Aqaba</option>
+                                            </optgroup>
+                                            <optgroup label="Land Borders">
+                                                <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                                <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                                <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                                <option value="Jaber Border">Jaber Border</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Departure Tax</label>
+                                        <select class="form-select form-select-sm" name="departure_tax">
+                                            <option value="NOT_INCLUDED">Not Included</option>
+                                            <option value="INCLUDED">Included</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Meet & Assist</label>
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input" type="checkbox" name="meet_assist" id="meet_assist_combined">
+                                            <label class="form-check-label small" for="meet_assist_combined">Yes</label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">Departure Tax</label>
-                                    <select class="form-select" name="departure_tax">
-                                        <option value="NOT_INCLUDED">Not Included</option>
-                                        <option value="INCLUDED">Included</option>
-                                    </select>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Representative Name</label>
+                                        <input type="text" class="form-control form-control-sm" name="representative_name" placeholder="Representative name (if Meet & Assist)">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Add Button -->
-                        <div class="text-end">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-plus me-1"></i>Add Batch
-                            </button>
-                        </div>
-                    </form>
+                            
+                            <!-- Add Button -->
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Add Batch
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer py-2">
