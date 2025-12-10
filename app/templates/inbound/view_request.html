@@ -5047,6 +5047,108 @@ function updateRoomDisplay(rowIndex, single, double, triple, other) {
     }
 }
 
+// Save Arrival Service function
+function saveArrivalService() {
+    const requestId = {{ request.id }};
+    
+    const arrivalData = {
+        batches: [{
+            batch_name: document.getElementById('arrival_batch_name')?.value || '',
+            pax_count: document.getElementById('arrival_pax_count')?.value || 1,
+            arrival_date: document.getElementById('arrival_date')?.value || '',
+            arrival_time: document.getElementById('arrival_time')?.value || '',
+            arrival_point: document.getElementById('arrival_point')?.value || '',
+            flight_number: document.getElementById('arrival_flight_number')?.value || '',
+            visa_status: document.getElementById('arrival_visa_status')?.value || 'NOT_INCLUDED',
+            vehicle_details: document.getElementById('arrival_vehicle_type')?.value || '',
+            driver_name: document.getElementById('arrival_driver_name')?.value || '',
+            vehicle_plate: document.getElementById('arrival_vehicle_plate')?.value || '',
+            notes: document.getElementById('arrival_notes')?.value || ''
+        }]
+    };
+    
+    if (!arrivalData.batches[0].arrival_date) {
+        showNotification('Please enter an arrival date', 'error');
+        return;
+    }
+    
+    fetch(`/inbound/api/${requestId}/arrivals`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(arrivalData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Arrival saved successfully!', 'success');
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('serviceConfigModal'));
+            if (modal) modal.hide();
+            // Reload page to show in Generated Services
+            location.reload();
+        } else {
+            showNotification('Error saving arrival: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving arrival', 'error');
+    });
+}
+
+// Save Departure Service function  
+function saveDepartureService() {
+    const requestId = {{ request.id }};
+    
+    const departureData = {
+        batches: [{
+            batch_name: document.getElementById('departure_batch_name')?.value || '',
+            pax_count: document.getElementById('departure_pax_count')?.value || 1,
+            departure_date: document.getElementById('departure_date')?.value || '',
+            departure_time: document.getElementById('departure_time')?.value || '',
+            departure_point: document.getElementById('departure_point')?.value || '',
+            flight_number: document.getElementById('departure_flight_number')?.value || '',
+            departure_tax: document.getElementById('departure_tax')?.value || 'NOT_INCLUDED',
+            meet_assist: document.getElementById('departure_meet_assist')?.checked || false,
+            representative_name: document.getElementById('departure_representative_name')?.value || '',
+            driver_name: document.getElementById('departure_driver_name')?.value || '',
+            notes: document.getElementById('departure_notes')?.value || ''
+        }]
+    };
+    
+    if (!departureData.batches[0].departure_date) {
+        showNotification('Please enter a departure date', 'error');
+        return;
+    }
+    
+    fetch(`/inbound/api/${requestId}/departures`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(departureData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Departure saved successfully!', 'success');
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('serviceConfigModal'));
+            if (modal) modal.hide();
+            // Reload page to show in Generated Services
+            location.reload();
+        } else {
+            showNotification('Error saving departure: ' + (data.message || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving departure', 'error');
+    });
+}
+
 // Remove service function
 function removeService(rowIndex, serviceType) {
     // Update the hidden input for this service
@@ -5887,6 +5989,11 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                     <input type="text" class="form-control form-control-sm" id="arrival_notes" placeholder="Additional notes">
                                 </div>
                             </div>
+                            <div class="mt-3 text-end">
+                                <button type="button" class="btn btn-success" id="saveArrivalBtn" onclick="saveArrivalService()">
+                                    <i class="fas fa-save me-2"></i>Save Arrival
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -5969,6 +6076,11 @@ function handleCustomerSelectionInView(customerId, customerName) {
                                     <label class="form-label small">Notes</label>
                                     <input type="text" class="form-control form-control-sm" id="departure_notes" placeholder="Additional notes">
                                 </div>
+                            </div>
+                            <div class="mt-3 text-end">
+                                <button type="button" class="btn btn-danger" id="saveDepartureBtn" onclick="saveDepartureService()">
+                                    <i class="fas fa-save me-2"></i>Save Departure
+                                </button>
                             </div>
                         </div>
                     </div>
