@@ -97,6 +97,21 @@ class ServiceConfigManager {
             configSection.classList.remove('d-none');
         }
         
+        // Update apply button text based on service type
+        const applyBtn = document.getElementById('applyServiceBtn');
+        if (applyBtn) {
+            if (serviceType === 'arrival') {
+                applyBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Arrival';
+                applyBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            } else if (serviceType === 'departure') {
+                applyBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Departure';
+                applyBtn.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
+            } else {
+                applyBtn.innerHTML = '<i class="fas fa-check me-2"></i>Apply to Selected Dates';
+                applyBtn.style.background = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)';
+            }
+        }
+        
         // Show modal
         if (this.serviceConfigModal) {
             this.serviceConfigModal.show();
@@ -133,6 +148,24 @@ class ServiceConfigManager {
         
         if (!this.currentServiceType) {
             alert('No service type selected');
+            return;
+        }
+        
+        // For arrival, call the save function and set flag
+        if (this.currentServiceType === 'arrival') {
+            console.log('Arrival service - calling saveArrivalService');
+            if (typeof saveArrivalService === 'function') {
+                saveArrivalService();
+            }
+            return;
+        }
+        
+        // For departure, call the save function and set flag
+        if (this.currentServiceType === 'departure') {
+            console.log('Departure service - calling saveDepartureService');
+            if (typeof saveDepartureService === 'function') {
+                saveDepartureService();
+            }
             return;
         }
         
