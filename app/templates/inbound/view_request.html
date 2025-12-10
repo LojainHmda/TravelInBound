@@ -5808,25 +5808,132 @@ function handleCustomerSelectionInView(customerId, customerName) {
                             <h6 class="mb-0"><i class="fas fa-plane me-2"></i>Arrival & Departure Configuration</h6>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold"><i class="fas fa-plane-arrival me-2"></i>Arrival Point</label>
-                                    <input type="text" class="form-control mb-3" id="modal_arrival_point" 
-                                           value="{{ request.arrival_point or '' }}" 
-                                           placeholder="e.g., Queen Alia Airport, Sheikh Hussein Border">
-                                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Arrival Time</label>
-                                    <input type="time" class="form-control" id="modal_arrival_time" 
-                                           value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                            <!-- Batch Info -->
+                            <div class="row g-2 mb-3 p-2" style="background: #f8f9fa; border-radius: 6px;">
+                                <div class="col-md-8">
+                                    <label class="form-label small fw-bold">Batch Name</label>
+                                    <input type="text" class="form-control form-control-sm" id="modal_batch_name" placeholder="e.g., Group A, Family 1">
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold"><i class="fas fa-plane-departure me-2"></i>Departure Point</label>
-                                    <input type="text" class="form-control mb-3" id="modal_departure_point" 
-                                           value="{{ request.departure_point or '' }}" 
-                                           list="departure-points-list"
-                                           placeholder="Type or select departure point...">
-                                    <label class="form-label fw-bold"><i class="fas fa-clock me-2"></i>Departure Time</label>
-                                    <input type="time" class="form-control" id="modal_departure_time" 
-                                           value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">PAX Count</label>
+                                    <input type="number" class="form-control form-control-sm" id="modal_pax_count" min="1" value="{{ request.pax or 1 }}">
+                                </div>
+                            </div>
+                            
+                            <!-- ARRIVAL Section -->
+                            <div class="border rounded p-2 mb-3" style="border-color: #10b981 !important;">
+                                <h6 class="text-success mb-2"><i class="fas fa-plane-arrival me-1"></i> ARRIVAL Details</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Date</label>
+                                        <input type="date" class="form-control form-control-sm" id="modal_arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="time" class="form-control form-control-sm" id="modal_arrival_time" value="{% if request.arrival_time %}{{ request.arrival_time.strftime('%H:%M') }}{% endif %}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Arrival Point</label>
+                                        <select class="form-select form-select-sm" id="modal_arrival_point">
+                                            <option value="">Select...</option>
+                                            <optgroup label="Airports">
+                                                <option value="Queen Alia International Airport" {% if request.arrival_point == 'Queen Alia International Airport' %}selected{% endif %}>Queen Alia (AMM)</option>
+                                                <option value="King Hussein International Airport - Aqaba" {% if request.arrival_point == 'King Hussein International Airport - Aqaba' %}selected{% endif %}>King Hussein - Aqaba</option>
+                                                <option value="Marka Civil Airport" {% if request.arrival_point == 'Marka Civil Airport' %}selected{% endif %}>Marka - Amman</option>
+                                            </optgroup>
+                                            <optgroup label="Land Borders">
+                                                <option value="King Hussein Bridge" {% if request.arrival_point == 'King Hussein Bridge' %}selected{% endif %}>King Hussein Bridge</option>
+                                                <option value="Sheikh Hussein Bridge" {% if request.arrival_point == 'Sheikh Hussein Bridge' %}selected{% endif %}>Sheikh Hussein Bridge</option>
+                                                <option value="Wadi Araba Crossing" {% if request.arrival_point == 'Wadi Araba Crossing' %}selected{% endif %}>Wadi Araba Crossing</option>
+                                                <option value="Jaber Border" {% if request.arrival_point == 'Jaber Border' %}selected{% endif %}>Jaber Border</option>
+                                                <option value="Omari Border" {% if request.arrival_point == 'Omari Border' %}selected{% endif %}>Omari Border</option>
+                                                <option value="Mudawara Border" {% if request.arrival_point == 'Mudawara Border' %}selected{% endif %}>Mudawara Border</option>
+                                                <option value="Karameh Border" {% if request.arrival_point == 'Karameh Border' %}selected{% endif %}>Karameh Border</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Flight/Bus #</label>
+                                        <input type="text" class="form-control form-control-sm" id="modal_flight_number" placeholder="RJ 504">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Visa Status</label>
+                                        <select class="form-select form-select-sm" id="modal_visa_status">
+                                            <option value="NOT_INCLUDED">Not Included</option>
+                                            <option value="VISA_FREE">Visa-free</option>
+                                            <option value="RESTRICTED">Restricted</option>
+                                            <option value="INCLUDED">Included</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Driver Name</label>
+                                        <input type="text" class="form-control form-control-sm" id="modal_arrival_driver_name" placeholder="Driver name for arrival pickup">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Vehicle Details</label>
+                                        <input type="text" class="form-control form-control-sm" id="modal_vehicle_details" placeholder="e.g., Mercedes Sprinter">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Notes</label>
+                                        <input type="text" class="form-control form-control-sm" id="modal_notes" placeholder="Additional notes">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- DEPARTURE Section -->
+                            <div class="border rounded p-2" style="border-color: #dc2626 !important;">
+                                <h6 class="text-danger mb-2"><i class="fas fa-plane-departure me-1"></i> DEPARTURE Details</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Date</label>
+                                        <input type="date" class="form-control form-control-sm" id="modal_departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="time" class="form-control form-control-sm" id="modal_departure_time" value="{% if request.departure_time %}{{ request.departure_time.strftime('%H:%M') }}{% endif %}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Departure Point</label>
+                                        <select class="form-select form-select-sm" id="modal_departure_point">
+                                            <option value="">Select...</option>
+                                            <optgroup label="Airports">
+                                                <option value="Queen Alia International Airport" {% if request.departure_point == 'Queen Alia International Airport' %}selected{% endif %}>Queen Alia (AMM)</option>
+                                                <option value="King Hussein International Airport" {% if request.departure_point == 'King Hussein International Airport' %}selected{% endif %}>King Hussein - Aqaba</option>
+                                                <option value="Marka Civil Airport" {% if request.departure_point == 'Marka Civil Airport' %}selected{% endif %}>Marka - Amman</option>
+                                            </optgroup>
+                                            <optgroup label="Land Borders">
+                                                <option value="King Hussein Bridge" {% if request.departure_point == 'King Hussein Bridge' %}selected{% endif %}>King Hussein Bridge</option>
+                                                <option value="Sheikh Hussein Bridge" {% if request.departure_point == 'Sheikh Hussein Bridge' %}selected{% endif %}>Sheikh Hussein Bridge</option>
+                                                <option value="Wadi Araba Crossing" {% if request.departure_point == 'Wadi Araba Crossing' %}selected{% endif %}>Wadi Araba Crossing</option>
+                                                <option value="Jaber Border" {% if request.departure_point == 'Jaber Border' %}selected{% endif %}>Jaber Border</option>
+                                                <option value="Omari Border" {% if request.departure_point == 'Omari Border' %}selected{% endif %}>Omari Border</option>
+                                                <option value="Mudawara Border" {% if request.departure_point == 'Mudawara Border' %}selected{% endif %}>Mudawara Border</option>
+                                                <option value="Karameh Border" {% if request.departure_point == 'Karameh Border' %}selected{% endif %}>Karameh Border</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Departure Tax</label>
+                                        <select class="form-select form-select-sm" id="modal_departure_tax">
+                                            <option value="NOT_INCLUDED">Not Included</option>
+                                            <option value="INCLUDED">Included</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Meet & Assist</label>
+                                        <div class="form-check mt-1">
+                                            <input class="form-check-input" type="checkbox" id="modal_meet_assist">
+                                            <label class="form-check-label small" for="modal_meet_assist">Yes</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-6">
+                                        <label class="form-label small">Representative Name</label>
+                                        <input type="text" class="form-control form-control-sm" id="modal_representative_name" placeholder="Representative name (if Meet & Assist)">
+                                    </div>
                                 </div>
                             </div>
                         </div>
