@@ -2486,15 +2486,13 @@ body::-webkit-scrollbar-thumb:hover {
         </div>
     </div>
 
-
-
     <!-- Service Details Tabs -->
     {% set itinerary_count = request.itinerary_rows | selectattr('flag_hotel') | list | length + request.itinerary_rows | selectattr('flag_transport') | list | length + request.itinerary_rows | selectattr('flag_meal') | list | length + request.itinerary_rows | selectattr('flag_guide') | list | length + request.itinerary_rows | selectattr('flag_airport') | list | length %}
     {% if request.itinerary_rows or request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides %}
-    <div class="row mt-4">
+    <div class="row mt-2">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-header py-2">
                     <h5 class="card-title mb-0">Generated Services</h5>
                 </div>
                 <div class="card-body">
