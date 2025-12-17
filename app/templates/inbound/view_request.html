@@ -5049,13 +5049,21 @@ function updateRoomDisplay(rowIndex, single, double, triple, other) {
 function saveArrivalService() {
     const requestId = {{ request.id }};
     
+    // Get arrival_point from the select element
+    const arrivalPointSelect = document.getElementById('arrival_point');
+    const arrivalPointValue = arrivalPointSelect?.value || '';
+    
+    console.log('Saving arrival - Request ID:', requestId);
+    console.log('Arrival date:', document.getElementById('arrival_date')?.value);
+    console.log('Arrival point:', arrivalPointValue);
+    
     const arrivalData = {
         batches: [{
             batch_name: document.getElementById('arrival_batch_name')?.value || '',
-            pax_count: document.getElementById('arrival_pax_count')?.value || 1,
+            pax_count: parseInt(document.getElementById('arrival_pax_count')?.value) || 1,
             arrival_date: document.getElementById('arrival_date')?.value || '',
             arrival_time: document.getElementById('arrival_time')?.value || '',
-            arrival_point: document.getElementById('arrival_point')?.value || '',
+            arrival_point: arrivalPointValue,
             flight_number: document.getElementById('arrival_flight_number')?.value || '',
             visa_status: document.getElementById('arrival_visa_status')?.value || 'NOT_INCLUDED',
             vehicle_details: document.getElementById('arrival_vehicle_type')?.value || '',
@@ -5065,9 +5073,18 @@ function saveArrivalService() {
         }]
     };
     
+    console.log('Arrival data to send:', JSON.stringify(arrivalData, null, 2));
+    
     if (!arrivalData.batches[0].arrival_date) {
         showNotification('Please enter an arrival date', 'error');
         return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveArrivalBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
     }
     
     fetch(`/inbound/api/${requestId}/arrivals`, {
@@ -5077,22 +5094,36 @@ function saveArrivalService() {
         },
         body: JSON.stringify(arrivalData)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             showNotification('Arrival saved successfully!', 'success');
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('serviceConfigModal'));
             if (modal) modal.hide();
             // Reload page to show in Generated Services
-            location.reload();
+            setTimeout(() => location.reload(), 500);
         } else {
-            showNotification('Error saving arrival: ' + (data.message || 'Unknown error'), 'error');
+            showNotification('Error saving arrival: ' + (data.message || data.error || 'Unknown error'), 'error');
+            // Reset button
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Arrival';
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error saving arrival', 'error');
+        showNotification('Error saving arrival: ' + error.message, 'error');
+        // Reset button
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Arrival';
+        }
     });
 }
 
@@ -5100,13 +5131,21 @@ function saveArrivalService() {
 function saveDepartureService() {
     const requestId = {{ request.id }};
     
+    // Get departure_point from the select element
+    const departurePointSelect = document.getElementById('departure_point');
+    const departurePointValue = departurePointSelect?.value || '';
+    
+    console.log('Saving departure - Request ID:', requestId);
+    console.log('Departure date:', document.getElementById('departure_date')?.value);
+    console.log('Departure point:', departurePointValue);
+    
     const departureData = {
         batches: [{
             batch_name: document.getElementById('departure_batch_name')?.value || '',
-            pax_count: document.getElementById('departure_pax_count')?.value || 1,
+            pax_count: parseInt(document.getElementById('departure_pax_count')?.value) || 1,
             departure_date: document.getElementById('departure_date')?.value || '',
             departure_time: document.getElementById('departure_time')?.value || '',
-            departure_point: document.getElementById('departure_point')?.value || '',
+            departure_point: departurePointValue,
             flight_number: document.getElementById('departure_flight_number')?.value || '',
             departure_tax: document.getElementById('departure_tax')?.value || 'NOT_INCLUDED',
             meet_assist: document.getElementById('departure_meet_assist')?.checked || false,
@@ -5116,9 +5155,18 @@ function saveDepartureService() {
         }]
     };
     
+    console.log('Departure data to send:', JSON.stringify(departureData, null, 2));
+    
     if (!departureData.batches[0].departure_date) {
         showNotification('Please enter a departure date', 'error');
         return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveDepartureBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
     }
     
     fetch(`/inbound/api/${requestId}/departures`, {
@@ -5128,22 +5176,36 @@ function saveDepartureService() {
         },
         body: JSON.stringify(departureData)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             showNotification('Departure saved successfully!', 'success');
             // Close modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('serviceConfigModal'));
             if (modal) modal.hide();
             // Reload page to show in Generated Services
-            location.reload();
+            setTimeout(() => location.reload(), 500);
         } else {
-            showNotification('Error saving departure: ' + (data.message || 'Unknown error'), 'error');
+            showNotification('Error saving departure: ' + (data.message || data.error || 'Unknown error'), 'error');
+            // Reset button
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Departure';
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Error saving departure', 'error');
+        showNotification('Error saving departure: ' + error.message, 'error');
+        // Reset button
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save me-2"></i>Save Departure';
+        }
     });
 }
 
