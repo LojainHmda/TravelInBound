@@ -268,12 +268,12 @@ window.applyCurrentFilter = function() {
     // Apply filter
     switch(window.customerCurrentFilter) {
         case 'recent':
-            // Sort by last_activity or updated_at (most recent first)
+            // Sort by created_at (most recently added first) - show only 5
             filtered = filtered.sort((a, b) => {
-                const dateA = new Date(a.last_activity || a.updated_at || a.created_at || 0);
-                const dateB = new Date(b.last_activity || b.updated_at || b.created_at || 0);
+                const dateA = new Date(a.created_at || a.updated_at || 0);
+                const dateB = new Date(b.created_at || b.updated_at || 0);
                 return dateB - dateA;
-            }).slice(0, 20);
+            }).slice(0, 5);
             break;
         case 'frequent':
             // Sort by booking count (most frequent first)

@@ -257,7 +257,11 @@ def api_list_customers():
             'email': c.email,
             'phone': c.phone,
             'customer_type': c.customer_type,
-            'company_name': c.company_name
+            'company_name': c.company_name,
+            'nationality': c.nationality,
+            'created_at': c.created_at.isoformat() if c.created_at else None,
+            'updated_at': c.updated_at.isoformat() if c.updated_at else None,
+            'booking_count': len(c.bookings) if hasattr(c, 'bookings') and c.bookings else 0
         } for c in customers]
         
         return jsonify(customers_list)
