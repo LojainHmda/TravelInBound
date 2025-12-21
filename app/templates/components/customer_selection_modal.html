@@ -2,11 +2,11 @@
 <div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
+            <div class="modal-header" style="background-color: #1e3a5f; color: white;">
                 <h5 class="modal-title" id="customerSelectionModalLabel">
                     <i class="fas fa-users me-2"></i>Select Customer
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(2);"></button>
             </div>
             <div class="modal-body">
                 <!-- Search Filter -->
@@ -27,13 +27,13 @@
                 <!-- Quick Filter Buttons -->
                 <div class="mb-3">
                     <div class="btn-group" role="group" aria-label="Customer filters">
-                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all">
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn active" data-filter="all" onclick="applyCustomerFilter(this, 'all')">
                             <i class="fas fa-globe"></i> All
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="recent">
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="recent" onclick="applyCustomerFilter(this, 'recent')">
                             <i class="fas fa-clock"></i> Recent
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="frequent">
+                        <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="frequent" onclick="applyCustomerFilter(this, 'frequent')">
                             <i class="fas fa-star"></i> Frequent
                         </button>
                     </div>
@@ -360,6 +360,16 @@ window.selectCustomer = function(customerId) {
     if (window.customerSelectionCallback && customer) {
         window.customerSelectionCallback(customer.id, customer.name);
     }
+}
+
+window.applyCustomerFilter = function(btn, filter) {
+    // Update active state
+    document.querySelectorAll('#customerSelectionModal .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Apply filter
+    currentFilter = filter;
+    applyCurrentFilter();
 }
 
 window.showNewCustomerForm = function() {
