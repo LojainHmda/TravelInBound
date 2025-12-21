@@ -5884,11 +5884,16 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     </div>
                     <!-- End of hotels container -->
                     
-                    <!-- Add Another Hotel Button -->
-                    <div class="text-center mt-2">
+                    <!-- Hotel Action Buttons -->
+                    <div class="d-flex justify-content-center gap-2 mt-2">
+                        {% if not view_only %}
+                        <button type="button" class="btn btn-success btn-sm" onclick="saveServiceConfiguration()">
+                            <i class="fas fa-save me-1"></i>Save Hotels
+                        </button>
                         <button type="button" class="btn btn-outline-success btn-sm" onclick="addAnotherHotel()">
                             <i class="fas fa-plus me-1"></i>Add Another Hotel
                         </button>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -8761,6 +8766,10 @@ function addAnotherHotel() {
     const existingHotels = hotelsContainer.querySelectorAll('.hotel-card');
     const newIndex = existingHotels.length;
     
+    // Get the check-out date from the last hotel to use as check-in for new hotel
+    const lastHotel = existingHotels[existingHotels.length - 1];
+    const lastCheckOut = lastHotel.querySelector('[name="check_out_date"]')?.value || '';
+    
     // Clone the first hotel card
     const firstHotel = existingHotels[0];
     const newHotelCard = firstHotel.cloneNode(true);
@@ -8796,6 +8805,16 @@ function addAnotherHotel() {
         select.selectedIndex = 0;
     });
     
+    // Set check-in date to the previous hotel's check-out date (date cascading)
+    if (lastCheckOut) {
+        const checkInInput = newHotelCard.querySelector('[name="check_in_date"]');
+        if (checkInInput) {
+            checkInInput.value = lastCheckOut;
+            // Update nights badge
+            updateHotelNights(newHotelCard);
+        }
+    }
+    
     // Clear room table
     const roomTableBody = newHotelCard.querySelector('tbody');
     if (roomTableBody) {
@@ -8805,10 +8824,66 @@ function addAnotherHotel() {
     // Update form field names to include hotel index
     updateHotelFieldNames(newHotelCard, newIndex);
     
+    // Add date change listeners for cascading
+    setupHotelDateListeners(newHotelCard);
+    
     // Append to container
     hotelsContainer.appendChild(newHotelCard);
     
-    console.log(`Added hotel #${newIndex + 1}`);
+    console.log(`Added hotel #${newIndex + 1} with check-in: ${lastCheckOut}`);
+}
+
+// Update nights badge for a hotel card
+function updateHotelNights(hotelCard) {
+    const checkIn = hotelCard.querySelector('[name="check_in_date"]')?.value;
+    const checkOut = hotelCard.querySelector('[name="check_out_date"]')?.value;
+    const nightsBadge = hotelCard.querySelector('.nights-badge');
+    
+    if (checkIn && checkOut && nightsBadge) {
+        const start = new Date(checkIn);
+        const end = new Date(checkOut);
+        const nights = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        nightsBadge.textContent = `${nights} nts`;
+    }
+}
+
+// Setup date change listeners for hotel date cascading
+function setupHotelDateListeners(hotelCard) {
+    const checkInInput = hotelCard.querySelector('[name="check_in_date"]');
+    const checkOutInput = hotelCard.querySelector('[name="check_out_date"]');
+    
+    if (checkInInput) {
+        checkInInput.addEventListener('change', function() {
+            updateHotelNights(hotelCard);
+        });
+    }
+    
+    if (checkOutInput) {
+        checkOutInput.addEventListener('change', function() {
+            updateHotelNights(hotelCard);
+            // Cascade to next hotel if exists
+            cascadeCheckOutToNextHotel(hotelCard);
+        });
+    }
+}
+
+// Cascade check-out date to next hotel's check-in
+function cascadeCheckOutToNextHotel(hotelCard) {
+    const hotelsContainer = document.getElementById('hotelsContainer');
+    const hotelCards = Array.from(hotelsContainer.querySelectorAll('.hotel-card'));
+    const currentIndex = hotelCards.indexOf(hotelCard);
+    
+    if (currentIndex >= 0 && currentIndex < hotelCards.length - 1) {
+        const nextHotel = hotelCards[currentIndex + 1];
+        const currentCheckOut = hotelCard.querySelector('[name="check_out_date"]')?.value;
+        const nextCheckIn = nextHotel.querySelector('[name="check_in_date"]');
+        
+        if (currentCheckOut && nextCheckIn) {
+            nextCheckIn.value = currentCheckOut;
+            updateHotelNights(nextHotel);
+            showNotification('Next hotel check-in date updated automatically', 'info');
+        }
+    }
 }
 
 function removeHotelCard(button) {
