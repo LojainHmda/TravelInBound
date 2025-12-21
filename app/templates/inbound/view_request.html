@@ -6326,10 +6326,12 @@ function handleCustomerSelectionInView(customerId, customerName) {
                     </div>
                 </div>
             </div>
-            <div class="modal-footer d-none">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="applyServiceBtn" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none;">
-                    <i class="fas fa-check me-2"></i>Apply to Selected Dates
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Close
+                </button>
+                <button type="button" class="btn btn-success" id="saveServiceConfigBtn" onclick="saveServiceConfiguration()">
+                    <i class="fas fa-save me-1"></i>Save
                 </button>
             </div>
         </div>
@@ -8856,6 +8858,77 @@ function updateHotelFieldNames(hotelCard, hotelIndex) {
                 field.name = `hotels[${hotelIndex}][${baseName}]`;
             }
         }
+    });
+}
+
+// Save Service Configuration (Hotel)
+function saveServiceConfiguration() {
+    const hotelsContainer = document.getElementById('hotelsContainer');
+    const hotelCards = hotelsContainer.querySelectorAll('.hotel-card');
+    const hotels = [];
+    
+    hotelCards.forEach((card, index) => {
+        const hotelData = {
+            hotel_name: card.querySelector('[name="hotel_name"]')?.value || '',
+            supplier: card.querySelector('[name="supplier"]')?.value || '',
+            status: card.querySelector('[name="status"]')?.value || 'confirmed',
+            check_in_date: card.querySelector('[name="check_in_date"]')?.value || '',
+            check_out_date: card.querySelector('[name="check_out_date"]')?.value || '',
+            confirmation_number: card.querySelector('[name="confirmation_number"]')?.value || '',
+            cost: parseFloat(card.querySelector('[name="cost"]')?.value) || 0,
+            currency: card.querySelector('[name="currency"]')?.value || 'USD',
+            phone_number: card.querySelector('[name="phone_number"]')?.value || '',
+            pickup_location: card.querySelector('[name="pickup_location"]')?.value || '',
+            notes: card.querySelector('[name="notes"]')?.value || '',
+            single_rooms: parseInt(card.querySelector('[name="single_rooms"]')?.value) || 0,
+            double_rooms: parseInt(card.querySelector('[name="double_rooms"]')?.value) || 0,
+            triple_rooms: parseInt(card.querySelector('[name="triple_rooms"]')?.value) || 0,
+            other_rooms: parseInt(card.querySelector('[name="other_rooms"]')?.value) || 0
+        };
+        
+        if (hotelData.hotel_name) {
+            hotels.push(hotelData);
+        }
+    });
+    
+    if (hotels.length === 0) {
+        showNotification('Please enter at least one hotel name', 'warning');
+        return;
+    }
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                     document.querySelector('input[name="csrf_token"]')?.value || '';
+    
+    // Save to server
+    fetch('/inbound/api/{{ request.id }}/save-hotels', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ hotels: hotels })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Hotels saved successfully!', 'success');
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('serviceConfigModal'));
+            if (modal) {
+                modal.hide();
+            }
+            // Reload page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            showNotification('Error saving hotels: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving hotels. Please try again.', 'error');
     });
 }
 
