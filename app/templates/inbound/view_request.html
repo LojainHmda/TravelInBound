@@ -1715,11 +1715,13 @@ body::-webkit-scrollbar-thumb:hover {
                             </div>
                         </div>
 
+                        {% if not view_only %}
                         <div id="editModeButtons" class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
                         </div>
+                        {% endif %}
                     </form>
                 </div>
             </div>
@@ -2468,6 +2470,7 @@ body::-webkit-scrollbar-thumb:hover {
                                     <tfoot>
                                         <tr>
                                             <td colspan="6" class="text-center py-2">
+                                                {% if not view_only %}
                                                 <button type="button" class="btn btn-info me-2" onclick="addItineraryRow()">
                                                     <i class="fas fa-plus"></i> Add Day
                                                 </button>
@@ -2477,6 +2480,7 @@ body::-webkit-scrollbar-thumb:hover {
                                                 <button type="button" class="btn btn-secondary" onclick="cancelItineraryEdit()">
                                                     <i class="fas fa-times"></i> Cancel
                                                 </button>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     </tfoot>
@@ -3146,7 +3150,9 @@ body::-webkit-scrollbar-thumb:hover {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                {% if not view_only %}
                 <button type="button" class="btn btn-primary" onclick="saveServiceSelection()">Save Changes</button>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -3306,9 +3312,11 @@ body::-webkit-scrollbar-thumb:hover {
                 </div>
             </div>
             <div class="modal-footer">
+                {% if not view_only %}
                 <button type="button" class="btn btn-success" onclick="saveAllItineraryEdits()">
                     <i class="fas fa-save me-1"></i>Save Changes
                 </button>
+                {% endif %}
                 <button type="button" class="btn btn-outline-primary" onclick="printItinerary()">
                     <i class="fas fa-print me-1"></i>Print
                 </button>
