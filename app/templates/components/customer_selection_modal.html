@@ -2,11 +2,11 @@
 <div class="modal fade" id="customerSelectionModal" tabindex="-1" aria-labelledby="customerSelectionModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #1e3a5f; color: white;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                 <h5 class="modal-title" id="customerSelectionModalLabel">
                     <i class="fas fa-users me-2"></i>Select Customer
                 </h5>
-                <button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close" style="color: white; font-size: 1.5rem; line-height: 1; opacity: 0.8;">
+                <button type="button" class="btn p-0" data-bs-dismiss="modal" aria-label="Close" style="color: black; font-size: 1.5rem; line-height: 1;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -211,7 +211,7 @@ window.customerSelectionInitialized = true;
 let allCustomers = [];
 let filteredCustomers = [];
 let selectedCustomerId = null;
-let currentFilter = 'all';
+window.customerCurrentFilter = 'all';
 
 // Customer selection modal functions
 window.openCustomerSelectionModal = function(callback) {
@@ -263,7 +263,7 @@ function applyCurrentFilter() {
     let filtered = [...allCustomers];
     
     // Apply filter
-    switch(currentFilter) {
+    switch(window.customerCurrentFilter) {
         case 'recent':
             // Sort by created date (most recent first)
             filtered = filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 20);
@@ -370,7 +370,7 @@ window.applyCustomerFilter = function(btn, filter) {
     btn.classList.add('active');
     
     // Apply filter
-    currentFilter = filter;
+    window.customerCurrentFilter = filter;
     applyCurrentFilter();
 }
 
@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
             
             // Apply filter
-            currentFilter = this.dataset.filter;
+            window.customerCurrentFilter = this.dataset.filter;
             applyCurrentFilter();
         });
     });
