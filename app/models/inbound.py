@@ -72,6 +72,8 @@ class InboundRequest(db.Model):
     inbound_cash_expenses = db.relationship('InboundCashExpense', backref='request', lazy=True, cascade="all, delete-orphan")
     inbound_optionals = db.relationship('InboundOptional', backref='request', lazy=True, cascade="all, delete-orphan")
     arrival_departures = db.relationship('ArrivalDeparture', backref='request', lazy=True, cascade="all, delete-orphan")
+    arrival_batches = db.relationship('ArrivalBatch', backref='request', lazy=True, cascade="all, delete-orphan")
+    departure_batches = db.relationship('DepartureBatch', backref='request', lazy=True, cascade="all, delete-orphan")
     quotations = db.relationship('InboundQuotation', backref='request', lazy=True, cascade="all, delete-orphan")
     documents = db.relationship('InboundDocument', backref='request', lazy=True, cascade="all, delete-orphan")
     booking = db.relationship('Booking', backref='inbound_request', lazy=True)
