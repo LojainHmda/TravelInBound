@@ -245,7 +245,7 @@ window.loadCustomers = function() {
                 allCustomers = [];
                 console.error('API Error:', data.error);
             }
-            applyCurrentFilter();
+            window.applyCurrentFilter();
             hideLoader();
         })
         .catch(error => {
@@ -259,14 +259,21 @@ function hideLoader() {
     document.getElementById('customerListLoader').classList.add('d-none');
 }
 
-function applyCurrentFilter() {
+window.applyCurrentFilter = function() {
     let filtered = [...allCustomers];
+    
+    console.log('applyCurrentFilter called with filter:', window.customerCurrentFilter);
+    console.log('All customers count:', allCustomers.length);
     
     // Apply filter
     switch(window.customerCurrentFilter) {
         case 'recent':
-            // Sort by created date (most recent first)
-            filtered = filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 20);
+            // Sort by last_activity or updated_at (most recent first)
+            filtered = filtered.sort((a, b) => {
+                const dateA = new Date(a.last_activity || a.updated_at || a.created_at || 0);
+                const dateB = new Date(b.last_activity || b.updated_at || b.created_at || 0);
+                return dateB - dateA;
+            }).slice(0, 20);
             break;
         case 'frequent':
             // Sort by booking count (most frequent first)
@@ -277,6 +284,7 @@ function applyCurrentFilter() {
             filtered = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }
     
+    console.log('Filtered customers count:', filtered.length);
     filteredCustomers = filtered;
     renderCustomerList();
 }
@@ -365,13 +373,15 @@ window.selectCustomer = function(customerId) {
 }
 
 window.applyCustomerFilter = function(btn, filter) {
+    console.log('applyCustomerFilter called with filter:', filter);
+    
     // Update active state
     document.querySelectorAll('#customerSelectionModal .filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     
     // Apply filter
     window.customerCurrentFilter = filter;
-    applyCurrentFilter();
+    window.applyCurrentFilter();
 }
 
 window.showNewCustomerForm = function() {
@@ -490,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Apply filter
             window.customerCurrentFilter = this.dataset.filter;
-            applyCurrentFilter();
+            window.applyCurrentFilter();
         });
     });
 });
