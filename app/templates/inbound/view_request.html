@@ -1469,8 +1469,19 @@ body::-webkit-scrollbar-thumb:hover {
             <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
+            {% if view_only %}
+            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Switch to Edit Mode
+            </a>
+            {% endif %}
         </div>
     </div>
+
+    {% if view_only %}
+    <div class="alert alert-info py-2 mb-3" style="border-left: 4px solid #0d6efd;">
+        <i class="fas fa-eye me-2"></i><strong>View Only Mode</strong> - You are viewing this request in read-only mode. Click "Switch to Edit Mode" to make changes.
+    </div>
+    {% endif %}
 
     <!-- Main Content Tabs -->
     <ul class="nav nav-tabs mb-3" id="requestTabs" role="tablist">
@@ -1504,9 +1515,11 @@ body::-webkit-scrollbar-thumb:hover {
                     <div class="card mb-2">
                         <div class="card-header py-2 d-flex justify-content-between align-items-center">
                             <h6 class="mb-0">Request Information</h6>
+                            {% if not view_only %}
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="toggleEditMode()">
                                 <i class="fas fa-edit"></i> <span id="editModeText">Cancel</span>
                             </button>
+                            {% endif %}
                         </div>
                 <div class="card-body py-2">
                     <!-- View Mode -->

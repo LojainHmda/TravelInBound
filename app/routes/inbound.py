@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, send_file
+from flask_login import login_required
 from datetime import datetime, timedelta
 import json
 import os
@@ -229,12 +230,32 @@ def edit_request(id):
 @inbound_bp.route('/<int:id>/view')
 def view_request(id):
     """View inbound request details with unified edit functionality"""
+    from flask import request as flask_request
     request_obj = InboundRequest.query.get_or_404(id)
     
-    # Temporarily disabled ownership check for testing
-    # Ownership validation removed for voucher access
+    # Get mode parameter (view or edit)
+    mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
+    view_only = (mode == 'view')
     
-    return render_template('inbound/view_request.html', request=request_obj)
+    return render_template('inbound/view_request.html', request=request_obj, view_only=view_only)
+
+
+@inbound_bp.route('/<int:id>/delete')
+@login_required
+def delete_request(id):
+    """Delete an inbound request"""
+    request_obj = InboundRequest.query.get_or_404(id)
+    
+    try:
+        db.session.delete(request_obj)
+        db.session.commit()
+        flash('Request deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting request: {str(e)}', 'error')
+    
+    return redirect(url_for('inbound.index'))
+
 
 # API Route for updating request details
 @inbound_bp.route('/api/<int:request_id>/update', methods=['POST'])

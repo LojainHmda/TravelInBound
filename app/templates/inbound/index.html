@@ -315,6 +315,27 @@
     transform: translateY(-2px);
 }
 
+.btn-delete {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    border: 2px solid #e9ecef;
+    background: white;
+    color: #dc3545;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border-color: #dc3545;
+    transform: translateY(-2px);
+}
+
 /* Empty State */
 .empty-state {
     text-align: center;
@@ -517,14 +538,17 @@
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
-                               class="btn-view" title="View">
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=view" 
+                               class="btn-view" title="View Only">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ url_for('inbound.view_request', id=request.id) }}" 
+                            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" 
                                class="btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
+                            <button type="button" class="btn-delete" title="Delete" onclick="confirmDelete({{ request.id }}, '{{ request.request_number }}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -687,6 +711,12 @@ function getServiceIcon(type) {
         'AIRPORT': 'fa-plane'
     };
     return icons[type] || 'fa-info-circle';
+}
+
+function confirmDelete(requestId, requestNumber) {
+    if (confirm('Are you sure you want to delete request ' + requestNumber + '? This action cannot be undone.')) {
+        window.location.href = '/inbound/' + requestId + '/delete';
+    }
 }
 </script>
 
