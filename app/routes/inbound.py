@@ -891,7 +891,14 @@ def api_update_status(request_id):
     data = request.get_json()
     new_status = data.get('status')
     
-    if new_status not in [STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED]:
+    # Accept all workflow statuses used in the sidebar
+    valid_statuses = [
+        'REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 
+        'INVOICE', 'PROCESSING', 'COMPLETED',
+        STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
+    ]
+    
+    if new_status not in valid_statuses:
         return jsonify({'error': 'Invalid status'}), 400
     
     request_obj.status = new_status
