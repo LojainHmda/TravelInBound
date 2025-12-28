@@ -1,690 +1,391 @@
-{% extends 'base.html' %}
+<!-- {% extends 'base.html' %}
 
 {% block title %}Analytics Dashboard - Windows of Jordan{% endblock %}
 
 {% block styles %}
 <style>
-/* Import Premium Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-
-/* CSS Variables - Professional Color System */
-:root {
-  --primary: #1e3a5f;
-  --primary-light: #2c4b6e;
-  --secondary: #c8a97e;
-  --accent: #e8c48e;
-  --success: #10b981;
-  --info: #3b82f6;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --dark: #111827;
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-400: #9ca3af;
-  --gray-500: #6b7280;
-  --gray-600: #4b5563;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-
-/* Global Reset & Base Styles */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
+/* Modern Dashboard Styles */
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  color: var(--gray-900);
-  line-height: 1.6;
-  min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-/* Dashboard Container */
 .dashboard-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
-/* Premium Header Section */
+/* Dashboard Header */
 .dashboard-header {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  border-radius: 24px;
-  padding: 3rem;
-  margin-bottom: 2.5rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-2xl);
-}
-
-.dashboard-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 60%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-  transform: rotate(35deg);
-}
-
-.dashboard-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background: url('https://picsum.photos/seed/jordan/800/600.jpg') center/cover no-repeat;
-  opacity: 0.08;
-  border-radius: 0 24px 24px 0;
+    background: #f5f2e8;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    color: #8b7355;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(139, 115, 85, 0.1);
 }
 
 .dashboard-header h1 {
-  font-size: 3rem;
-  font-weight: 900;
-  margin-bottom: 0.75rem;
-  letter-spacing: -0.02em;
-  position: relative;
-  z-index: 1;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.025em;
 }
 
 .dashboard-header p {
-  font-size: 1.25rem;
-  opacity: 0.9;
-  max-width: 600px;
-  position: relative;
-  z-index: 1;
+    font-size: 1.1rem;
+    color: rgba(139, 115, 85, 0.8);
+    margin: 0;
 }
 
-/* Enhanced Stats Grid */
+/* Stats Cards */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-bottom: 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: var(--shadow-lg);
-  border: 1px solid var(--gray-100);
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--gradient-accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.4s ease;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--accent-gradient);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
 }
 
 .stat-card:hover::before {
-  transform: scaleX(1);
+    transform: scaleX(1);
 }
 
 .stat-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-2xl);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .stat-card.request {
-  --gradient-accent: linear-gradient(135deg, #f59e0b, #f97316);
+    --accent-gradient: linear-gradient(135deg, #f59e0b, #ef4444);
 }
 
 .stat-card.booked {
-  --gradient-accent: linear-gradient(135deg, #3b82f6, #06b6d4);
+    --accent-gradient: linear-gradient(135deg, #3b82f6, #06b6d4);
 }
 
 .stat-card.progress {
-  --gradient-accent: linear-gradient(135deg, #8b5cf6, #a855f7);
+    --accent-gradient: linear-gradient(135deg, #8b5cf6, #a855f7);
 }
 
 .stat-card.completed {
-  --gradient-accent: linear-gradient(135deg, #10b981, #06b6d4);
+    --accent-gradient: linear-gradient(135deg, #10b981, #06b6d4);
 }
 
 .stat-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.75rem;
-  color: white;
-  position: relative;
-  box-shadow: var(--shadow-lg);
-}
-
-.stat-card.request .stat-icon {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-}
-
-.stat-card.booked .stat-icon {
-  background: linear-gradient(135deg, #3b82f6, #06b6d4);
-}
-
-.stat-card.progress .stat-icon {
-  background: linear-gradient(135deg, #8b5cf6, #a855f7);
-}
-
-.stat-card.completed .stat-icon {
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-}
-
-.stat-icon::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 20px;
-  background: inherit;
-  opacity: 0.2;
-  z-index: -1;
-  transform: scale(1.5);
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--accent-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stat-title {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gray-500);
-  margin-bottom: 0.75rem;
+    color: #64748b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
 }
 
 .stat-value {
-  font-size: 3rem;
-  font-weight: 900;
-  color: var(--gray-900);
-  line-height: 1;
-  letter-spacing: -0.02em;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
 }
 
-/* Modern Table Card */
+/* Modern Table Styles */
 .booking-table-card {
-  background: white;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: var(--shadow-xl);
-  margin-bottom: 3rem;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
 }
 
 .table-header {
-  background: linear-gradient(135deg, var(--gray-50) 0%, white 100%);
-  padding: 2rem;
-  border-bottom: 1px solid var(--gray-200);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+    background: linear-gradient(135deg, #f0f4f8 0%, #fff 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .table-title {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--gray-900);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .table-title i {
-  color: var(--secondary);
+    color: #667eea;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  color: white;
-  border: none;
-  padding: 0.875rem 1.75rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: var(--shadow-md);
+.btn-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
-  color: white;
-}
-
-.table-responsive {
-  overflow-x: auto;
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    color: white;
 }
 
 .modern-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+    width: 100%;
+    border-spacing: 0;
 }
 
 .modern-table thead {
-  background: var(--gray-50);
+    background: #f8fafc;
 }
 
 .modern-table thead th {
-  padding: 1.25rem 1.5rem;
-  text-align: left;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--gray-700);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 2px solid var(--gray-200);
-  white-space: nowrap;
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 .modern-table tbody tr {
-  transition: all 0.2s ease;
+    transition: background-color 0.2s;
 }
 
 .modern-table tbody tr:hover {
-  background-color: var(--gray-50);
+    background-color: #f8fafc;
 }
 
 .modern-table tbody td {
-  padding: 1.5rem;
-  color: var(--gray-700);
-  font-weight: 500;
-  border-bottom: 1px solid var(--gray-100);
+    padding: 1.25rem 1.5rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .font-weight-medium {
-  font-weight: 700;
-  color: var(--gray-900);
+    font-weight: 600;
+    color: #1e293b;
 }
 
 .status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 100px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: var(--shadow-sm);
+    display: inline-block;
+    padding: 0.375rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .status-badge.status-request {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: #92400e;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
 }
 
 .status-badge.status-booked {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  color: #1e3a8a;
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e3a8a;
 }
 
 .status-badge.status-in_progress {
-  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
-  color: #581c87;
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    color: #581c87;
 }
 
 .status-badge.status-completed {
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  color: #065f46;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
 }
 
 .amount {
-  font-weight: 800;
-  font-size: 1.125rem;
-  color: var(--secondary);
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
 }
 
 .btn-action {
-  background: white;
-  border: 2px solid var(--gray-200);
-  color: var(--primary);
-  padding: 0.625rem 1.25rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+    background: white;
+    border: 2px solid #e2e8f0;
+    color: #667eea;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
 .btn-action:hover {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  color: white;
-  border-color: transparent;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-2px);
 }
 
-/* Premium Service Tabs */
+/* Service Tabs */
 .service-tabs-card {
-  background: white;
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: var(--shadow-xl);
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .service-tabs-header {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  padding: 2rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.service-tabs-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 60%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-  transform: rotate(35deg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    color: white;
 }
 
 .service-tabs-header h5 {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  position: relative;
-  z-index: 1;
-}
-
-.service-tabs-header h5 i {
-  color: var(--accent);
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .modern-tabs {
-  display: flex;
-  background: var(--gray-50);
-  border-bottom: 2px solid var(--gray-200);
-  overflow-x: auto;
+    display: flex;
+    background: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
 }
 
 .modern-tabs .nav-link {
-  flex: 1;
-  padding: 1.5rem;
-  text-align: center;
-  color: var(--gray-600);
-  font-weight: 600;
-  border: none;
-  background: transparent;
-  position: relative;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  font-size: 0.9375rem;
+    flex: 1;
+    padding: 1rem 1.5rem;
+    text-align: center;
+    color: #64748b;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    position: relative;
+    transition: all 0.3s ease;
 }
 
 .modern-tabs .nav-link:hover {
-  color: var(--primary);
-  background: rgba(30, 58, 95, 0.05);
+    color: #667eea;
 }
 
 .modern-tabs .nav-link.active {
-  color: var(--primary);
-  background: white;
+    color: #667eea;
+    background: white;
 }
 
 .modern-tabs .nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .modern-tabs i {
-  margin-right: 0.5rem;
-  color: var(--secondary);
+    margin-right: 0.5rem;
 }
 
 .tab-content {
-  padding: 2.5rem;
+    padding: 2rem;
 }
 
-/* Enhanced Table in Tabs */
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.table th {
-  background: var(--gray-50);
-  padding: 1rem 1.5rem;
-  font-weight: 700;
-  color: var(--gray-700);
-  text-transform: uppercase;
-  font-size: 0.8125rem;
-  letter-spacing: 0.05em;
-  border-bottom: 2px solid var(--gray-200);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--gray-100);
-  font-weight: 500;
-  color: var(--gray-700);
-}
-
-.table tr:hover {
-  background-color: var(--gray-50);
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.375rem 0.875rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 100px;
-}
-
-.bg-orange {
-  background: linear-gradient(135deg, #fed7aa, #fdba74);
-  color: #9a3412;
-}
-
-.btn-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.8125rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.btn-success {
-  background: linear-gradient(135deg, var(--success), #059669);
-  color: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-success:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-outline-secondary {
-  background: white;
-  color: var(--gray-600);
-  border: 1px solid var(--gray-300);
-}
-
-.btn-outline-secondary:hover {
-  background: var(--gray-50);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-dark-blue {
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  color: white;
-  box-shadow: var(--shadow-sm);
-}
-
-.btn-dark-blue:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 1rem;
-  }
-  
-  .dashboard-header {
-    padding: 2rem 1.5rem;
-  }
-  
-  .dashboard-header h1 {
-    font-size: 2rem;
-  }
-  
-  .dashboard-header p {
-    font-size: 1rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
+.service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
-  }
-  
-  .table-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .modern-tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-  }
-  
-  .modern-tabs .nav-link {
-    flex: 0 0 auto;
-    min-width: 120px;
-  }
-  
-  .tab-content {
+}
+
+.service-card {
+    background: #f8fafc;
+    border-radius: 12px;
     padding: 1.5rem;
-  }
-  
-  .table-responsive {
-    margin: 0 -1rem;
-    padding: 0 1rem;
-  }
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
 }
 
-/* Loading Animation */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.loading {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.service-card h6 {
+    color: #1e293b;
+    font-weight: 700;
+    margin-bottom: 1rem;
 }
 
-/* Smooth Scroll */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Focus States */
-button:focus,
-a:focus {
-  outline: 2px solid var(--secondary);
-  outline-offset: 2px;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--gray-100);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--gray-400);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gray-500);
+.service-card p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dashboard-container">
-    <!-- Premium Dashboard Header -->
+    <!-- Dashboard Header -->
     <div class="dashboard-header">
         <h1>Analytics Dashboard</h1>
-        <p>Monitor your travel operations and booking performance in real-time</p>
+        <p>Monitor your travel operations and booking performance</p>
     </div>
 
-    <!-- Enhanced Stats Grid -->
+    <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card request" onclick="filterBookings('REQUEST')">
             <div class="stat-icon">
@@ -719,7 +420,7 @@ a:focus {
         </div>
     </div>
 
-    <!-- Modern Bookings Table -->
+    <!-- Bookings Table Section -->
     <div class="booking-table-card">
         <div class="table-header">
             <h5 class="table-title" id="bookingTableTitle">
@@ -731,11 +432,11 @@ a:focus {
             </h5>
             <div class="table-actions">
                 {% if show_all_mode %}
-                    <a href="{{ url_for('dashboard') }}" class="btn-primary">
-                        <i class="fas fa-arrow-left"></i> Back to Requests ({{ request_count }})
+                    <a href="{{ url_for('dashboard') }}" class="btn-modern">
+                        <i class="fas fa-clipboard-list"></i> Back to Requests ({{ request_count }})
                     </a>
                 {% else %}
-                    <button id="showAllBtn" class="btn-primary" onclick="showAllBookings()">
+                    <button id="showAllBtn" class="btn-modern" onclick="showAllBookings()">
                         <i class="fas fa-list"></i> Show All ({{ request_count + booked_count + in_progress_count + completed_count }})
                     </button>
                 {% endif %}
@@ -774,7 +475,7 @@ a:focus {
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center text-gray-500 py-8">No bookings found</td>
+                            <td colspan="6" class="text-center">No bookings found</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -783,45 +484,44 @@ a:focus {
         </div>
     </div>
 
-    <!-- Premium Service Tabs -->
-    <div class="service-tabs-card">
-        <div class="service-tabs-header">
-            <h5><i class="fas fa-briefcase"></i> Service Items</h5>
+    <div class="card">
+        <div class="card-header" style="background-color: #FFBF00; color: #333333;">
+            <h5 class="mb-0"><i class="fas fa-briefcase me-2" style="color: #333333;"></i>Service Items</h5>
         </div>
 
         <div class="card-body p-0">
-            <ul class="nav nav-tabs nav-fill modern-tabs" id="serviceTabs" role="tablist">
+            <ul class="nav nav-tabs nav-fill" id="serviceTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true">
-                        <i class="fas fa-plane"></i> Flights
+                    <button class="nav-link active" id="flights-tab" data-bs-toggle="tab" data-bs-target="#flights" type="button" role="tab" aria-controls="flights" aria-selected="true" style="color: #000080;">
+                        <i class="fas fa-plane" style="color: #FFC107;"></i> Flights
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false">
-                        <i class="fas fa-hotel"></i> Hotels
+                    <button class="nav-link" id="hotels-tab" data-bs-toggle="tab" data-bs-target="#hotels" type="button" role="tab" aria-controls="hotels" aria-selected="false" style="color: #000080;">
+                        <i class="fas fa-hotel" style="color: #FFC107;"></i> Hotels
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false">
-                        <i class="fas fa-car"></i> Transport
+                    <button class="nav-link" id="transport-tab" data-bs-toggle="tab" data-bs-target="#transport" type="button" role="tab" aria-controls="transport" aria-selected="false" style="color: #000080;">
+                        <i class="fas fa-car" style="color: #FFC107;"></i> Transport
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false">
-                        <i class="fas fa-passport"></i> Visa
+                    <button class="nav-link" id="visa-tab" data-bs-toggle="tab" data-bs-target="#visa" type="button" role="tab" aria-controls="visa" aria-selected="false" style="color: #000080;">
+                        <i class="fas fa-passport" style="color: #FFC107;"></i> Visa
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false">
-                        <i class="fas fa-shield-alt"></i> Insurance
+                    <button class="nav-link" id="insurance-tab" data-bs-toggle="tab" data-bs-target="#insurance" type="button" role="tab" aria-controls="insurance" aria-selected="false" style="color: #000080;">
+                        <i class="fas fa-shield-alt" style="color: #FFC107;"></i> Insurance
                     </button>
                 </li>
             </ul>
 
             <div class="tab-content" id="serviceTabsContent">
                 <div class="tab-pane fade show active" id="flights" role="tabpanel" aria-labelledby="flights-tab">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive p-3">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Booking Ref.</th>
@@ -834,12 +534,12 @@ a:focus {
                             <tbody>
                                 {% for item in flight_items %}
                                 <tr>
-                                    <td class="font-weight-medium">{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.booking.reference_number }}</td>
                                     <td>
                                         {{ item.description }}
                                         {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
                                         {% if conf_doc %}
-                                            <div class="mt-2">
+                                            <div class="mt-1">
                                                 <small class="text-muted d-block">
                                                     <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
                                                     {% if conf_doc.notes %}
@@ -856,7 +556,7 @@ a:focus {
                                     </td>
                                     <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                     <td>
-                                        <span class="badge bg-orange">{{ item.status }}</span>
+                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group">
@@ -877,7 +577,7 @@ a:focus {
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" data-booking-id="{{ item.booking_id }}">
+                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
@@ -885,7 +585,7 @@ a:focus {
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-gray-500 py-8">No flight service items found</td>
+                                    <td colspan="5" class="text-center">No flight service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -894,8 +594,8 @@ a:focus {
                 </div>
 
                 <div class="tab-pane fade" id="hotels" role="tabpanel" aria-labelledby="hotels-tab">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive p-3">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Booking Ref.</th>
@@ -908,12 +608,12 @@ a:focus {
                             <tbody>
                                 {% for item in hotel_items %}
                                 <tr>
-                                    <td class="font-weight-medium">{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.booking.reference_number }}</td>
                                     <td>
                                         {{ item.description }}
                                         {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
                                         {% if conf_doc %}
-                                            <div class="mt-2">
+                                            <div class="mt-1">
                                                 <small class="text-muted d-block">
                                                     <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
                                                     {% if conf_doc.notes %}
@@ -922,18 +622,18 @@ a:focus {
                                                             <span class="ms-2 badge bg-light text-dark border">
                                                                 <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
                                                             </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
+                                            {% if item.status == 'REQUEST' %}
+                                                {% if item.booking.status != 'REQUEST' %}
+                                                    <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check me-1"></i>Confirm
+                                                    </a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="Start operations first">
+                                                        <i class="fas fa-lock me-1"></i>Locked
+                                                    </button>
+                                                {% endif %}
                                         {% endif %}
                                     </td>
-                                    <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
-                                    <td>
-                                        <span class="badge bg-orange">{{ item.status }}</span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
                                             {% if item.status == 'REQUEST' %}
                                                 {% if item.booking.status == 'IN_PROGRESS' %}
                                                     <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
@@ -944,8 +644,18 @@ a:focus {
                                                         <i class="fas fa-lock me-1"></i>Locked
                                                     </button>
                                                 {% endif %}
+                                    <td>
+                                        <div class="btn-group">
+                                            {% if item.status == 'REQUEST' %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </a>
+                                            {% elif item.status == 'IN_PROGRESS' %}
+                                                <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-check me-1"></i>Confirm
+                                                </a>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" data-booking-id="{{ item.booking_id }}">
+                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
@@ -953,7 +663,7 @@ a:focus {
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-gray-500 py-8">No hotel service items found</td>
+                                    <td colspan="5" class="text-center">No hotel service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -962,8 +672,8 @@ a:focus {
                 </div>
 
                 <div class="tab-pane fade" id="transport" role="tabpanel" aria-labelledby="transport-tab">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive p-3">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Booking Ref.</th>
@@ -976,12 +686,12 @@ a:focus {
                             <tbody>
                                 {% for item in transport_items %}
                                 <tr>
-                                    <td class="font-weight-medium">{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.booking.reference_number }}</td>
                                     <td>
                                         {{ item.description }}
                                         {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
                                         {% if conf_doc %}
-                                            <div class="mt-2">
+                                            <div class="mt-1">
                                                 <small class="text-muted d-block">
                                                     <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
                                                     {% if conf_doc.notes %}
@@ -990,15 +700,21 @@ a:focus {
                                                             <span class="ms-2 badge bg-light text-dark border">
                                                                 <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
                                                             </span>
-                                                        {% endif %}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
+                                            {% if item.status == 'REQUEST' %}
+                                                {% if item.booking.status != 'REQUEST' %}
+                                                    <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check me-1"></i>Confirm
+                                                    </a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="Start operations first">
+                                                        <i class="fas fa-lock me-1"></i>Locked
+                                                    </button>
+                                                {% endif %}
                                         {% endif %}
                                     </td>
                                     <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                     <td>
-                                        <span class="badge bg-orange">{{ item.status }}</span>
+                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group">
@@ -1011,7 +727,7 @@ a:focus {
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" data-booking-id="{{ item.booking_id }}">
+                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
@@ -1019,7 +735,7 @@ a:focus {
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-gray-500 py-8">No transport service items found</td>
+                                    <td colspan="5" class="text-center">No transport service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -1028,8 +744,8 @@ a:focus {
                 </div>
 
                 <div class="tab-pane fade" id="visa" role="tabpanel" aria-labelledby="visa-tab">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive p-3">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Booking Ref.</th>
@@ -1042,18 +758,24 @@ a:focus {
                             <tbody>
                                 {% for item in visa_items %}
                                 <tr>
-                                    <td class="font-weight-medium">{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.booking.reference_number }}</td>
                                     <td>
                                         {{ item.description }}
                                         {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
                                         {% if conf_doc %}
-                                            <div class="mt-2">
+                                            <div class="mt-1">
                                                 <small class="text-muted d-block">
                                                     <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
-                                                    {% if conf_doc.notes %}
-                                                        {% set doc_data = conf_doc.notes|from_json %}
-                                                        {% if doc_data and doc_data.supplier %}
-                                                            <span class="ms-2 badge bg-light text-dark border">
+                                            {% if item.status == 'REQUEST' %}
+                                                {% if item.booking.status != 'REQUEST' %}
+                                                    <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check me-1"></i>Confirm
+                                                    </a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="Start operations first">
+                                                        <i class="fas fa-lock me-1"></i>Locked
+                                                    </button>
+                                                {% endif %}
                                                                 <i class="fas fa-building me-1"></i>{{ doc_data.supplier }}
                                                             </span>
                                                         {% endif %}
@@ -1064,7 +786,7 @@ a:focus {
                                     </td>
                                     <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                     <td>
-                                        <span class="badge bg-orange">{{ item.status }}</span>
+                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group">
@@ -1077,7 +799,7 @@ a:focus {
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" data-booking-id="{{ item.booking_id }}">
+                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
@@ -1085,7 +807,7 @@ a:focus {
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-gray-500 py-8">No visa service items found</td>
+                                    <td colspan="5" class="text-center">No visa service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -1094,8 +816,8 @@ a:focus {
                 </div>
 
                 <div class="tab-pane fade" id="insurance" role="tabpanel" aria-labelledby="insurance-tab">
-                    <div class="table-responsive">
-                        <table class="table">
+                    <div class="table-responsive p-3">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>Booking Ref.</th>
@@ -1108,12 +830,18 @@ a:focus {
                             <tbody>
                                 {% for item in insurance_items %}
                                 <tr>
-                                    <td class="font-weight-medium">{{ item.booking.reference_number }}</td>
+                                    <td>{{ item.booking.reference_number }}</td>
                                     <td>
-                                        {{ item.description }}
-                                        {% set conf_doc = item.documents|selectattr('document_type', 'equalto', 'CONFIRMATION')|first %}
-                                        {% if conf_doc %}
-                                            <div class="mt-2">
+                                            {% if item.status == 'REQUEST' %}
+                                                {% if item.booking.status != 'REQUEST' %}
+                                                    <a href="{{ url_for('booking.confirm_service', item_id=item.id) }}" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check me-1"></i>Confirm
+                                                    </a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-secondary" disabled title="Start operations first">
+                                                        <i class="fas fa-lock me-1"></i>Locked
+                                                    </button>
+                                                {% endif %}
                                                 <small class="text-muted d-block">
                                                     <strong class="text-success">Ref:</strong> {{ conf_doc.document_number }}
                                                     {% if conf_doc.notes %}
@@ -1130,7 +858,7 @@ a:focus {
                                     </td>
                                     <td>{{ item.start_date.strftime('%d %b') }} - {{ item.end_date.strftime('%d %b %Y') }}</td>
                                     <td>
-                                        <span class="badge bg-orange">{{ item.status }}</span>
+                                        <span class="badge bg-orange" style="display: inline-block; min-width: 80px; text-align: center;">{{ item.status }}</span>
                                     </td>
                                     <td>
                                         <div class="btn-group">
@@ -1143,7 +871,7 @@ a:focus {
                                                     <i class="fas fa-check me-1"></i>Confirm
                                                 </a>
                                             {% endif %}
-                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" data-booking-id="{{ item.booking_id }}">
+                                            <button class="btn btn-sm btn-dark-blue view-booking-btn" style="background-color: var(--dark-blue); color: white;" data-booking-id="{{ item.booking_id }}">
                                                 <i class="fas fa-info-circle"></i>
                                             </button>
                                         </div>
@@ -1151,7 +879,7 @@ a:focus {
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center text-gray-500 py-8">No insurance service items found</td>
+                                    <td colspan="5" class="text-center">No insurance service items found</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -1166,4 +894,4 @@ a:focus {
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-{% endblock %}
+{% endblock %} -->
