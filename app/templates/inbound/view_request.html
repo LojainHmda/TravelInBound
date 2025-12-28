@@ -2063,22 +2063,7 @@ body::-webkit-scrollbar-thumb:hover {
             <div class="action-buttons-bar" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                 <!-- Action Buttons Based on Current Status -->
                 <div style="display: contents;">
-                    {% if request.status == 'REQUEST' %}
-                    <!-- Step 1: Confirm Suppliers -->
-                    <button type="button" class="btn btn-success" style="padding: 0.5rem 1rem;" onclick="confirmAllSuppliers()">
-                        <i class="fas fa-check-circle"></i> Confirm All Suppliers
-                    </button>
-                    <button type="button" class="btn btn-secondary" style="padding: 0.5rem 1rem;" disabled title="Confirm suppliers first">
-                        <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
-                    </button>
-                    
-                    {% elif request.status == 'QUOTED' %}
-                    <!-- Step 2: Suppliers Confirmed, Generate Proforma -->
-                    <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="btn btn-info" style="text-decoration: none; padding: 0.5rem 1rem;">
-                        <i class="fas fa-file-invoice"></i> Generate Proforma Invoice
-                    </a>
-                    
-                    {% elif request.status == 'RESERVED' %}
+                    {% if request.status == 'RESERVED' %}
                     <!-- Step 3: Proforma Generated, Await Client Confirmation -->
                     <a href="{{ url_for('inbound.preview_proforma', request_id=request.id) }}" class="btn btn-outline-info btn-lg me-2 mb-2" style="text-decoration: none;">
                         <i class="fas fa-eye"></i> View Proforma Invoice
@@ -2109,23 +2094,6 @@ body::-webkit-scrollbar-thumb:hover {
                     {% endif %}
                 </div>
                 
-                <!-- Additional Action Buttons -->
-                
-                <!-- Run-Down Analytics Button -->
-                <a href="{{ url_for('inbound.analytics_dashboard') }}" class="btn" style="text-decoration: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 0.5rem 1rem;">
-                    <i class="fas fa-chart-line"></i> Run-Down Analytics
-                </a>
-                
-                <!-- Export Voucher/Trip Plan Word Document Button (always available) -->
-                <a href="/inbound/api/{{ request.id }}/export-voucher-doc" class="btn" style="text-decoration: none; background: #2c3e50; color: white; padding: 0.5rem 1rem;">
-                    <i class="fas fa-file-word"></i> Export Voucher (Word)
-                </a>
-                
-                <!-- Export Expense Report Button (always available) -->
-                <a href="/inbound/api/{{ request.id }}/export-expense-report" class="btn" style="text-decoration: none; background: #2c3e50; color: white; padding: 0.5rem 1rem;">
-                    <i class="fas fa-file-excel"></i> Export Expense Report
-                </a>
-                
                 <!-- Confirm Booking Button (shown after status is QUOTED) -->
                 {% if request.booking_id and request.status == 'QUOTED' %}
                 <button type="button" class="action-btn action-btn-confirm" onclick="confirmBooking()">
@@ -2139,11 +2107,6 @@ body::-webkit-scrollbar-thumb:hover {
                     <i class="fas fa-play-circle"></i> Start Processing
                 </button>
                 {% endif %}
-                
-                <!-- Edit Button -->
-                <button type="button" class="btn btn-outline-secondary" style="padding: 0.5rem 1rem;" onclick="toggleEditMode()">
-                    <i class="fas fa-edit"></i> Edit
-                </button>
                 
                 <!-- Edit Itinerary Button -->
                 {% if request.itinerary_rows %}
