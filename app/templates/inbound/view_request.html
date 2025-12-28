@@ -1483,32 +1483,16 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
 
-    <!-- Main Content Tabs -->
-    <ul class="nav nav-tabs mb-3" id="requestTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="request-master-tab" data-bs-toggle="tab" data-bs-target="#request-master-pane" type="button" role="tab">
-                <i class="fas fa-file-alt me-1"></i> Request Master
+    <!-- Main Content - Vertical Sections -->
+    <div id="requestContent">
+        <!-- Request Master Section -->
+        <div class="mb-4" id="request-master-section">
+            <div class="section-header d-flex align-items-center mb-3 p-2 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h5 class="mb-0 text-white"><i class="fas fa-file-alt me-2"></i> Request Master</h5>
                 <span class="badge bg-success ms-2 saved-badge" id="savedBadge" style="display: none;">
                     <i class="fas fa-check"></i> Saved
                 </span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="itinerary-main-tab" data-bs-toggle="tab" data-bs-target="#itinerary-main-pane" type="button" role="tab">
-                <i class="fas fa-route me-1"></i> Itinerary
-                {% if request.itinerary_rows|length > 0 %}
-                <span class="badge ms-2" style="background-color: #1e293b; color: white;">
-                    <i class="fas fa-calendar-check me-1"></i> Generated
-                </span>
-                {% endif %}
-            </button>
-        </li>
-    </ul>
-
-    <!-- Tab Content -->
-    <div class="tab-content" id="requestTabContent">
-        <!-- Request Master Tab Pane -->
-        <div class="tab-pane fade show active" id="request-master-pane" role="tabpanel">
+            </div>
             <div class="row g-3">
                 <div class="col-12" id="mainContentContainer">
                     <!-- Request Information -->
@@ -1729,8 +1713,16 @@ body::-webkit-scrollbar-thumb:hover {
             </div>
         </div>
         
-        <!-- Itinerary Tab Pane -->
-        <div class="tab-pane fade" id="itinerary-main-pane" role="tabpanel">
+        <!-- Itinerary Section -->
+        <div class="mb-4" id="itinerary-section">
+            <div class="section-header d-flex align-items-center mb-3 p-2 rounded" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h5 class="mb-0 text-white"><i class="fas fa-route me-2"></i> Itinerary</h5>
+                {% if request.itinerary_rows|length > 0 %}
+                <span class="badge ms-2" style="background-color: rgba(255,255,255,0.2); color: white;">
+                    <i class="fas fa-calendar-check me-1"></i> Generated
+                </span>
+                {% endif %}
+            </div>
             <div class="card">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
                     <h6 class="mb-0"><i class="fas fa-route me-2"></i>Itinerary Details (Edit Mode)</h6>
@@ -3082,9 +3074,9 @@ body::-webkit-scrollbar-thumb:hover {
     </div>
     {% endif %}
         </div>
-        <!-- End Itinerary Tab Pane -->
+        <!-- End Itinerary Section -->
     </div>
-    <!-- End Tab Content -->
+    <!-- End Main Content -->
 </div>
 
 <!-- Service Selection Modal -->
