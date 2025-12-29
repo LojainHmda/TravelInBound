@@ -3035,7 +3035,7 @@ def run_down_export_excel():
     
     # Create Excel workbook
     wb = openpyxl.Workbook()
-    ws = wb.active
+    ws = wb.active  # type: ignore[assignment]
     ws.title = "Run-Down Plan"
     
     # Header styling
@@ -3828,7 +3828,7 @@ def api_export_expense_report(request_id):
     
     try:
         wb = Workbook()
-        ws = wb.active
+        ws = wb.active  # type: ignore[assignment]
         ws.title = "Sheet1"
         
         # Header
@@ -5016,7 +5016,7 @@ def analytics_export_excel():
     
     # Create Excel workbook
     wb = openpyxl.Workbook()
-    ws = wb.active
+    ws = wb.active  # type: ignore[assignment]
     ws.title = "Services Analytics"
     
     # Header styling
