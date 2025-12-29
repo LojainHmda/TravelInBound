@@ -872,6 +872,101 @@ def api_update_master_details(request_id):
         'message': 'Master details updated successfully'
     })
 
+@inbound_bp.route('/api/<int:request_id>/auto-save-and-regenerate', methods=['POST'])
+@csrf.exempt
+def api_auto_save_and_regenerate(request_id):
+    """Auto-save master details and regenerate itinerary rows"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    
+    # Track if dates changed
+    dates_changed = False
+    old_from_date = request_obj.from_date
+    old_to_date = request_obj.to_date
+    
+    # Update master details
+    if data.get('from_date'):
+        new_from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
+        if new_from_date != old_from_date:
+            request_obj.from_date = new_from_date
+            dates_changed = True
+    if data.get('to_date'):
+        new_to_date = datetime.strptime(data.get('to_date'), '%Y-%m-%d').date()
+        if new_to_date != old_to_date:
+            request_obj.to_date = new_to_date
+            dates_changed = True
+    
+    if data.get('pax'):
+        request_obj.pax = int(data.get('pax'))
+    if data.get('customer_type'):
+        request_obj.customer_type = data.get('customer_type')
+    if data.get('contact_name'):
+        request_obj.contact_name = data.get('contact_name')
+    if data.get('nationality'):
+        request_obj.nationality = data.get('nationality')
+    
+    # Recalculate days
+    request_obj.calculate_days()
+    
+    db.session.commit()
+    
+    # Regenerate itinerary if dates changed
+    itinerary_rows = []
+    if dates_changed and request_obj.from_date and request_obj.to_date:
+        # Clear existing rows
+        ItineraryRow.query.filter_by(request_id=request_id).delete()
+        
+        # Generate one row per day
+        current_date = request_obj.from_date
+        day_counter = 1
+        
+        while current_date <= request_obj.to_date:
+            row = ItineraryRow(
+                request_id=request_id,
+                date=current_date,
+                description=f'Day {day_counter} - {current_date.strftime("%A, %B %d")}',
+                base_cost=0.0,
+                cost_unit=COST_UNIT_PER_PERSON,
+                currency=request_obj.total_currency
+            )
+            db.session.add(row)
+            db.session.flush()  # Get the row ID
+            
+            itinerary_rows.append({
+                'id': row.id,
+                'date': current_date.strftime('%Y-%m-%d'),
+                'date_display': current_date.strftime('%a, %d %b'),
+                'description': row.description,
+                'day_number': day_counter
+            })
+            
+            current_date += timedelta(days=1)
+            day_counter += 1
+        
+        db.session.commit()
+    else:
+        # Return existing itinerary rows
+        for row in request_obj.itinerary_rows:
+            day_num = (row.date - request_obj.from_date).days + 1 if row.date and request_obj.from_date else 0
+            itinerary_rows.append({
+                'id': row.id,
+                'date': row.date.strftime('%Y-%m-%d') if row.date else '',
+                'date_display': row.date.strftime('%a, %d %b') if row.date else '',
+                'description': row.description or '',
+                'day_number': day_num
+            })
+    
+    return jsonify({
+        'success': True,
+        'dates_changed': dates_changed,
+        'no_of_days': request_obj.no_of_days,
+        'itinerary_rows': itinerary_rows
+    })
+
 @inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
 @csrf.exempt
 
