@@ -1988,10 +1988,18 @@ function autoSaveServiceData(serviceType) {
         if (data.success) {
             showNotification(data.message || 'Service data saved!', 'success');
             
-            // Reload page after short delay to show updated tables and costs
-            setTimeout(() => {
-                window.location.reload();
-            }, 500);
+            // Instant DOM update - replace itinerary table rows
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = data.itinerary_html;
+                }
+            }
+            
+            // Also activate the icon visually for current context
+            if (currentServiceContext.rowId) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
         } else {
             showNotification('Error saving service data', 'error');
         }

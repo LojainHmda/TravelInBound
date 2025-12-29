@@ -1197,7 +1197,19 @@ def api_save_service_data(request_id):
                         meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
         
         db.session.commit()
-        return jsonify({'success': True, 'message': f'{service_type.capitalize()} data saved'})
+        
+        # Render updated HTML partials for instant DOM update
+        itinerary_html = render_template(
+            'components/itinerary_rows.html',
+            rows=request_obj.itinerary_rows,
+            view_only=False
+        )
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{service_type.capitalize()} data saved',
+            'itinerary_html': itinerary_html
+        })
     
     except Exception as e:
         db.session.rollback()
