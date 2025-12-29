@@ -1222,6 +1222,62 @@ def api_save_service_data(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/delete-service', methods=['POST'])
+@csrf.exempt
+def api_delete_service(request_id):
+    """Delete a service (hotel, transport, guide, meal)"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        data = request.get_json()
+        service_type = data.get('service_type')
+        service_id = data.get('service_id')
+        
+        if not service_type or not service_id:
+            return jsonify({'success': False, 'error': 'Missing service_type or service_id'}), 400
+        
+        # Delete based on service type
+        if service_type == 'hotel':
+            service = InboundHotel.query.filter_by(id=service_id, request_id=request_id).first()
+        elif service_type == 'transport':
+            service = InboundTransport.query.filter_by(id=service_id, request_id=request_id).first()
+        elif service_type == 'guide':
+            service = InboundGuide.query.filter_by(id=service_id, request_id=request_id).first()
+        elif service_type == 'meal':
+            service = InboundMeal.query.filter_by(id=service_id, request_id=request_id).first()
+        else:
+            return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
+        
+        if service:
+            db.session.delete(service)
+            db.session.commit()
+            
+            # Expire cached data and re-query fresh rows
+            db.session.expire_all()
+            fresh_rows = ItineraryRow.query.filter_by(request_id=request_id).order_by(ItineraryRow.date).all()
+            
+            # Render updated HTML partials for instant DOM update
+            itinerary_html = render_template(
+                'components/itinerary_rows.html',
+                rows=fresh_rows,
+                view_only=False
+            )
+            
+            return jsonify({
+                'success': True, 
+                'message': f'{service_type.capitalize()} deleted',
+                'itinerary_html': itinerary_html
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Service not found'}), 404
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/create-default-itinerary', methods=['POST'])
 @csrf.exempt
 def api_create_default_itinerary(request_id):

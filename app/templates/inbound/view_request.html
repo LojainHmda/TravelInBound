@@ -2015,6 +2015,67 @@ function saveServiceData(serviceType) {
     autoSaveServiceData(serviceType);
 }
 
+// Delete service functions
+function deleteHotel(hotelId) {
+    if (!confirm('Are you sure you want to delete this hotel?')) return;
+    deleteService('hotel', hotelId);
+}
+
+function deleteTransport(transportId) {
+    if (!confirm('Are you sure you want to delete this transport?')) return;
+    deleteService('transport', transportId);
+}
+
+function deleteGuide(guideId) {
+    if (!confirm('Are you sure you want to delete this guide?')) return;
+    deleteService('guide', guideId);
+}
+
+function deleteMeal(mealId) {
+    if (!confirm('Are you sure you want to delete this meal?')) return;
+    deleteService('meal', mealId);
+}
+
+function deleteService(serviceType, serviceId) {
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: serviceType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Service deleted!', 'success');
+            
+            // Instant DOM update - replace itinerary table rows
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = data.itinerary_html;
+                }
+            }
+            
+            // Also remove the deleted row from service table
+            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            if (serviceRow) {
+                serviceRow.remove();
+            }
+        } else {
+            showNotification('Error deleting service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting service', 'error');
+    });
+}
+
 // Helper to visually turn on the icon for a specific row
 function activateIcon(rowId, serviceType) {
     const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
