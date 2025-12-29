@@ -1005,6 +1005,11 @@ def api_save_service_data(request_id):
     row_id = data.get('row_id')
     is_global = data.get('is_global', False)
     
+    # Debug logging
+    import logging
+    logging.debug(f"Save service data: type={service_type}, is_global={is_global}, row_id={row_id}")
+    logging.debug(f"Form data received: {form_data}")
+    
     # Validate context
     if not service_type:
         return jsonify({'success': False, 'error': 'Missing service_type'}), 400
