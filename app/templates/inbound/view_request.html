@@ -412,133 +412,303 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
 
-            <!-- Itinerary Card -->
+            <!-- Services Card with Tabs -->
             <div class="tw-card">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
-                        <i class="fas fa-route text-purple-500"></i>
-                        Itinerary
-                        {% if request.itinerary_rows %}
-                        <span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{{ request.itinerary_rows|length }} days</span>
-                        {% endif %}
-                    </h2>
-                    {% if not view_only and request.itinerary_rows %}
-                    <div class="flex gap-2">
-                        <button type="button" class="tw-btn tw-btn-sm tw-btn-secondary" onclick="printItinerary()">
-                            <i class="fas fa-print"></i> Print
+                <!-- Tab Navigation -->
+                <div class="border-b border-slate-200 bg-slate-50/50">
+                    <nav class="flex overflow-x-auto" id="serviceTabs">
+                        <button type="button" class="service-tab active" data-service="itinerary" onclick="switchServiceTab('itinerary')">
+                            Itinerary
+                            {% if request.itinerary_rows %}
+                            <span class="ml-1.5 bg-purple-100 text-purple-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.itinerary_rows|length }}</span>
+                            {% endif %}
                         </button>
-                    </div>
-                    {% endif %}
+                        <button type="button" class="service-tab" data-service="arrival" onclick="switchServiceTab('arrival')">
+                            Arrival
+                            {% if request.arrival_batches %}
+                            <span class="ml-1.5 bg-green-100 text-green-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.arrival_batches|length }}</span>
+                            {% endif %}
+                        </button>
+                        <button type="button" class="service-tab" data-service="departure" onclick="switchServiceTab('departure')">
+                            Departure
+                            {% if request.departure_batches %}
+                            <span class="ml-1.5 bg-orange-100 text-orange-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.departure_batches|length }}</span>
+                            {% endif %}
+                        </button>
+                        <button type="button" class="service-tab" data-service="hotel" onclick="switchServiceTab('hotel')">
+                            Hotel
+                            {% if request.inbound_hotels %}
+                            <span class="ml-1.5 bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.inbound_hotels|length }}</span>
+                            {% endif %}
+                        </button>
+                        <button type="button" class="service-tab" data-service="guide" onclick="switchServiceTab('guide')">
+                            Guide
+                            {% if request.inbound_guides %}
+                            <span class="ml-1.5 bg-teal-100 text-teal-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.inbound_guides|length }}</span>
+                            {% endif %}
+                        </button>
+                        <button type="button" class="service-tab" data-service="transport" onclick="switchServiceTab('transport')">
+                            Transport
+                            {% if request.inbound_transports %}
+                            <span class="ml-1.5 bg-cyan-100 text-cyan-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.inbound_transports|length }}</span>
+                            {% endif %}
+                        </button>
+                        <button type="button" class="service-tab" data-service="meal" onclick="switchServiceTab('meal')">
+                            Meal
+                            {% if request.inbound_meals %}
+                            <span class="ml-1.5 bg-amber-100 text-amber-700 text-xs px-1.5 py-0.5 rounded-full">{{ request.inbound_meals|length }}</span>
+                            {% endif %}
+                        </button>
+                    </nav>
                 </div>
+
+                <!-- Tab Content Panels -->
                 <div class="p-5">
-                    {% if request.itinerary_rows %}
-                    <!-- Service Tabs -->
-                    <div class="border-b border-slate-200 mb-4">
-                        <nav class="flex gap-0 -mb-px overflow-x-auto" id="serviceTabs">
-                            <button type="button" class="service-tab active" data-service="itinerary" onclick="switchServiceTab('itinerary')">
-                                Itinerary
-                            </button>
-                            <button type="button" class="service-tab" data-service="arrival" onclick="switchServiceTab('arrival')">
-                                Arrival
-                            </button>
-                            <button type="button" class="service-tab" data-service="departure" onclick="switchServiceTab('departure')">
-                                Departure
-                            </button>
-                            <button type="button" class="service-tab" data-service="hotel" onclick="switchServiceTab('hotel')">
-                                Hotel
-                            </button>
-                            <button type="button" class="service-tab" data-service="guide" onclick="switchServiceTab('guide')">
-                                Guide
-                            </button>
-                            <button type="button" class="service-tab" data-service="transport" onclick="switchServiceTab('transport')">
-                                Transport
-                            </button>
-                            <button type="button" class="service-tab" data-service="meal" onclick="switchServiceTab('meal')">
-                                Meal
-                            </button>
-                        </nav>
+                    <!-- Itinerary Panel -->
+                    <div id="service-panel-itinerary" class="service-panel">
+                        {% if request.itinerary_rows %}
+                        <div class="space-y-2" id="itineraryTable">
+                            {% for row in request.itinerary_rows|sort(attribute='day_number') %}
+                            <div class="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-100 hover:border-slate-200 transition-all" data-row-id="{{ row.id }}">
+                                <!-- Day Badge -->
+                                <div class="flex-shrink-0 w-16 h-16 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white flex flex-col items-center justify-center shadow-sm">
+                                    <span class="text-xs font-medium opacity-80">Day</span>
+                                    <span class="text-2xl font-bold">{{ row.day_number }}</span>
+                                </div>
+                                
+                                <!-- Content -->
+                                <div class="flex-grow min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-sm font-semibold text-slate-700">{{ row.itinerary_date.strftime('%A, %B %d') if row.itinerary_date else 'Date TBD' }}</span>
+                                    </div>
+                                    {% if view_only %}
+                                    <p class="text-slate-600">{{ row.description or 'No description' }}</p>
+                                    {% else %}
+                                    <input type="text" class="tw-input text-sm" 
+                                           value="{{ row.description or '' }}"
+                                           placeholder="Add description for this day...">
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Service Flags -->
+                                <div class="flex-shrink-0 flex flex-wrap gap-1.5 max-w-[200px]">
+                                    {% if row.flag_airport %}<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-purple-100 text-purple-700 text-xs font-medium">Airport</span>{% endif %}
+                                    {% if row.flag_hotel %}<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium">Hotel</span>{% endif %}
+                                    {% if row.flag_transport %}<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-cyan-100 text-cyan-700 text-xs font-medium">Transport</span>{% endif %}
+                                    {% if row.flag_guide %}<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-100 text-teal-700 text-xs font-medium">Guide</span>{% endif %}
+                                    {% if row.flag_meal %}<span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-100 text-amber-700 text-xs font-medium">Meal</span>{% endif %}
+                                    {% if not row.flag_hotel and not row.flag_transport and not row.flag_meal and not row.flag_guide and not row.flag_airport %}
+                                    <span class="text-slate-400 text-xs italic">No services</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Cost -->
+                                <div class="flex-shrink-0 text-right w-24">
+                                    <span class="text-lg font-bold text-slate-800">${{ "%.0f"|format(row.selling_price or 0) }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12" id="itineraryEmptyState">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-route text-2xl text-slate-400"></i>
+                            </div>
+                            <h3 class="font-semibold text-slate-600 mb-2">No Itinerary Yet</h3>
+                            <p class="text-slate-400 text-sm">Set the travel dates above to generate the itinerary automatically.</p>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <!-- Itinerary Table -->
-                    <div class="overflow-x-auto" id="itineraryTable">
-                        <table class="tw-table" id="itineraryEditTable">
-                            <thead>
-                                <tr>
-                                    <th style="width: 100px;">Date</th>
-                                    <th>Description</th>
-                                    <th style="width: 200px;">Services</th>
-                                    <th style="width: 100px;">Cost</th>
-                                    {% if not view_only %}<th style="width: 60px;"></th>{% endif %}
-                                </tr>
-                            </thead>
-                            <tbody id="itineraryTableBody">
-                                {% for row in request.itinerary_rows|sort(attribute='day_number') %}
-                                <tr data-row-id="{{ row.id }}" data-day="{{ row.day_number }}">
-                                    <td>
-                                        <div class="font-semibold text-slate-700">{{ row.itinerary_date.strftime('%d %b') if row.itinerary_date else '' }}</div>
-                                        <div class="text-xs text-slate-400">Day {{ row.day_number }}</div>
-                                    </td>
-                                    <td>
-                                        {% if view_only %}
-                                        <span class="text-slate-700">{{ row.description or 'Day ' ~ row.day_number }}</span>
-                                        {% else %}
-                                        <input type="text" class="tw-input" 
-                                               value="{{ row.description or 'Day ' ~ row.day_number ~ ' - ' ~ (row.itinerary_date.strftime('%A, %B %d') if row.itinerary_date else '') }}"
-                                               placeholder="Description">
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="flex flex-wrap gap-1">
-                                            {% if row.flag_hotel %}<span class="service-flag flag-hotel"><i class="fas fa-bed"></i> Hotel</span>{% endif %}
-                                            {% if row.flag_transport %}<span class="service-flag flag-transport"><i class="fas fa-car"></i> Transport</span>{% endif %}
-                                            {% if row.flag_meal %}<span class="service-flag flag-meal"><i class="fas fa-utensils"></i> Meal</span>{% endif %}
-                                            {% if row.flag_guide %}<span class="service-flag flag-guide"><i class="fas fa-user-tie"></i> Guide</span>{% endif %}
-                                            {% if row.flag_airport %}<span class="service-flag flag-airport"><i class="fas fa-plane"></i> Airport</span>{% endif %}
-                                            {% if not row.flag_hotel and not row.flag_transport and not row.flag_meal and not row.flag_guide and not row.flag_airport %}
-                                            <span class="text-slate-400 text-xs">No services</span>
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="font-semibold text-slate-700">${{ "%.2f"|format(row.selling_price or 0) }}</span>
-                                    </td>
-                                    {% if not view_only %}
-                                    <td>
-                                        <button type="button" class="tw-btn tw-btn-sm tw-btn-secondary" title="Edit">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                    </td>
-                                    {% endif %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-12" id="itineraryEmptyState">
-                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-route text-2xl text-slate-400"></i>
+                    <!-- Arrival Panel -->
+                    <div id="service-panel-arrival" class="service-panel hidden">
+                        {% if request.arrival_batches %}
+                        <div class="space-y-3">
+                            {% for batch in request.arrival_batches %}
+                            <div class="p-4 rounded-xl bg-green-50 border border-green-100">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-lg bg-green-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-plane-arrival"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-green-800">{{ batch.arrival_date.strftime('%A, %B %d, %Y') if batch.arrival_date else 'Date TBD' }}</div>
+                                        <div class="text-sm text-green-600">{{ batch.arrival_time or 'Time TBD' }} - {{ batch.arrival_point or 'Location TBD' }}</div>
+                                    </div>
+                                </div>
+                                {% if batch.flight_number %}
+                                <div class="text-sm text-green-700">Flight: {{ batch.flight_number }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
                         </div>
-                        <h3 class="font-semibold text-slate-600 mb-2">No Itinerary Yet</h3>
-                        <p class="text-slate-400 text-sm mb-4">Change the travel dates above to automatically generate the itinerary.</p>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-plane-arrival text-4xl mb-3 opacity-50"></i>
+                            <p>No arrival information</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    <!-- Hidden table for when itinerary needs to be added dynamically -->
-                    {% if not request.itinerary_rows %}
-                    <div class="overflow-x-auto hidden" id="itineraryTable">
-                        <table class="tw-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 80px;">Day</th>
-                                    <th style="width: 120px;">Date</th>
-                                    <th>Description</th>
-                                    <th style="width: 200px;">Services</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itineraryTableBody"></tbody>
-                        </table>
+
+                    <!-- Departure Panel -->
+                    <div id="service-panel-departure" class="service-panel hidden">
+                        {% if request.departure_batches %}
+                        <div class="space-y-3">
+                            {% for batch in request.departure_batches %}
+                            <div class="p-4 rounded-xl bg-orange-50 border border-orange-100">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-lg bg-orange-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-plane-departure"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold text-orange-800">{{ batch.departure_date.strftime('%A, %B %d, %Y') if batch.departure_date else 'Date TBD' }}</div>
+                                        <div class="text-sm text-orange-600">{{ batch.departure_time or 'Time TBD' }} - {{ batch.departure_point or 'Location TBD' }}</div>
+                                    </div>
+                                </div>
+                                {% if batch.flight_number %}
+                                <div class="text-sm text-orange-700">Flight: {{ batch.flight_number }}</div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-plane-departure text-4xl mb-3 opacity-50"></i>
+                            <p>No departure information</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
+
+                    <!-- Hotel Panel -->
+                    <div id="service-panel-hotel" class="service-panel hidden">
+                        {% if request.inbound_hotels %}
+                        <div class="space-y-3">
+                            {% for hotel in request.inbound_hotels %}
+                            <div class="p-4 rounded-xl bg-blue-50 border border-blue-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-hotel"></i>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-semibold text-blue-800">{{ hotel.hotel_name or 'Hotel TBD' }}</div>
+                                        <div class="text-sm text-blue-600">
+                                            {{ hotel.check_in_date.strftime('%b %d') if hotel.check_in_date else 'Check-in TBD' }} 
+                                            - {{ hotel.check_out_date.strftime('%b %d') if hotel.check_out_date else 'Check-out TBD' }}
+                                            ({{ hotel.nights or 0 }} nights)
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium
+                                            {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700
+                                            {% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
+                                            {% else %}bg-slate-100 text-slate-700{% endif %}">
+                                            {{ hotel.status or 'PENDING' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-hotel text-4xl mb-3 opacity-50"></i>
+                            <p>No hotels added</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Guide Panel -->
+                    <div id="service-panel-guide" class="service-panel hidden">
+                        {% if request.inbound_guides %}
+                        <div class="space-y-3">
+                            {% for guide in request.inbound_guides %}
+                            <div class="p-4 rounded-xl bg-teal-50 border border-teal-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-teal-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-semibold text-teal-800">{{ guide.guide_name or 'Guide TBD' }}</div>
+                                        <div class="text-sm text-teal-600">
+                                            {{ guide.service_date.strftime('%b %d, %Y') if guide.service_date else 'Date TBD' }}
+                                            {% if guide.language %} - {{ guide.language }}{% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-user-tie text-4xl mb-3 opacity-50"></i>
+                            <p>No guides assigned</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Transport Panel -->
+                    <div id="service-panel-transport" class="service-panel hidden">
+                        {% if request.inbound_transports %}
+                        <div class="space-y-3">
+                            {% for transport in request.inbound_transports %}
+                            <div class="p-4 rounded-xl bg-cyan-50 border border-cyan-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-cyan-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-car"></i>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-semibold text-cyan-800">{{ transport.vehicle_type or 'Vehicle TBD' }}</div>
+                                        <div class="text-sm text-cyan-600">
+                                            {{ transport.service_date.strftime('%b %d, %Y') if transport.service_date else 'Date TBD' }}
+                                            {% if transport.pickup_point %} - From: {{ transport.pickup_point }}{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium
+                                            {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700
+                                            {% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
+                                            {% else %}bg-slate-100 text-slate-700{% endif %}">
+                                            {{ transport.status or 'PENDING' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-car text-4xl mb-3 opacity-50"></i>
+                            <p>No transport arranged</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Meal Panel -->
+                    <div id="service-panel-meal" class="service-panel hidden">
+                        {% if request.inbound_meals %}
+                        <div class="space-y-3">
+                            {% for meal in request.inbound_meals %}
+                            <div class="p-4 rounded-xl bg-amber-50 border border-amber-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center">
+                                        <i class="fas fa-utensils"></i>
+                                    </div>
+                                    <div class="flex-grow">
+                                        <div class="font-semibold text-amber-800">{{ meal.meal_type or 'Meal' }} - {{ meal.restaurant_name or 'Restaurant TBD' }}</div>
+                                        <div class="text-sm text-amber-600">
+                                            {{ meal.service_date.strftime('%b %d, %Y') if meal.service_date else 'Date TBD' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-12 text-slate-400">
+                            <i class="fas fa-utensils text-4xl mb-3 opacity-50"></i>
+                            <p>No meals planned</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -1028,13 +1198,15 @@ function switchServiceTab(serviceName) {
         tab.classList.toggle('active', tab.dataset.service === serviceName);
     });
     
-    // Show/hide content based on selected service
-    const itineraryTable = document.getElementById('itineraryTable');
+    // Hide all service panels
+    document.querySelectorAll('.service-panel').forEach(panel => {
+        panel.classList.add('hidden');
+    });
     
-    // For now, all tabs show the itinerary table
-    // Individual service content can be added later
-    if (itineraryTable) {
-        itineraryTable.classList.remove('hidden');
+    // Show the selected panel
+    const targetPanel = document.getElementById('service-panel-' + serviceName);
+    if (targetPanel) {
+        targetPanel.classList.remove('hidden');
     }
 }
 
