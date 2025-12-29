@@ -220,6 +220,39 @@ class ItineraryRow(db.Model):
             return (self.base_cost or 0) * pax_count
         else:  # PER_GROUP
             return self.base_cost or 0
+    
+    @property
+    def total_service_cost(self):
+        """Calculate total cost from all linked services for this itinerary row"""
+        total = 0.0
+        
+        # Get linked services via source_itinerary_id
+        if self.request:
+            # Hotel costs linked to this row
+            for hotel in self.request.inbound_hotels:
+                if hotel.source_itinerary_id == self.id:
+                    total += hotel.total_cost or 0.0
+            
+            # Transport costs linked to this row
+            for transport in self.request.inbound_transports:
+                if transport.source_itinerary_id == self.id:
+                    total += transport.cost or 0.0
+            
+            # Guide costs linked to this row
+            for guide in self.request.inbound_guides:
+                if guide.source_itinerary_id == self.id:
+                    total += guide.cost or 0.0
+            
+            # Meal costs linked to this row
+            for meal in self.request.inbound_meals:
+                if meal.source_itinerary_id == self.id:
+                    total += meal.total_cost or 0.0
+        
+        # If no service costs, fall back to base_cost
+        if total == 0.0:
+            return self.base_cost or 0.0
+        
+        return total
 
 class InboundHotel(db.Model):
     """Hotel services generated from itinerary flags"""

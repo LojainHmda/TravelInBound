@@ -68,7 +68,7 @@
         </div>
     </td>
     <td class="py-3 px-3 text-right">
-        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row.base_cost or 0) }}</span>
+        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row.total_service_cost or 0) }}</span>
     </td>
     <td class="py-3 px-3">
         <span class="text-slate-400 text-xs">{{ row.comment or '' }}</span>
