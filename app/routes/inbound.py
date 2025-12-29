@@ -1227,7 +1227,7 @@ def api_save_hotels(request_id):
                     'children': room_data.get('children', 0)
                 }
                 
-                hotel_room = HotelRoom(
+                hotel_room = HotelRoom(  # type: ignore[call-arg]
                     hotel_id=hotel.id,
                     room_type=room_type,
                     room_count=1,
@@ -1454,7 +1454,7 @@ def api_save_departures(request_id):
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1']
             
-            batch = DepartureBatch(
+            batch = DepartureBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
                 departure_date=departure_date,
@@ -1551,7 +1551,7 @@ def api_save_arrivals(request_id):
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
             
-            batch = ArrivalBatch(
+            batch = ArrivalBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
                 arrival_date=arrival_date,
