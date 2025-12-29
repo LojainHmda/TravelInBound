@@ -1211,11 +1211,31 @@ def api_save_service_data(request_id):
             selectinload(InboundRequest.itinerary_rows)
         ).get(request_id)
         
+        # Build service lookup maps for template
+        hotel_map = {h.source_itinerary_id: h for h in fresh_request.inbound_hotels}
+        transport_map = {t.source_itinerary_id: t for t in fresh_request.inbound_transports}
+        guide_map = {g.source_itinerary_id: g for g in fresh_request.inbound_guides}
+        meal_map = {m.source_itinerary_id: m for m in fresh_request.inbound_meals}
+        
+        # Global fallbacks (source_itinerary_id=None)
+        global_hotel = hotel_map.get(None)
+        global_transport = transport_map.get(None)
+        global_guide = guide_map.get(None)
+        global_meal = meal_map.get(None)
+        
         # Render updated HTML partials for instant DOM update
         itinerary_html = render_template(
             'components/itinerary_rows.html',
             rows=fresh_request.itinerary_rows,
-            view_only=False
+            view_only=False,
+            hotel_map=hotel_map,
+            transport_map=transport_map,
+            guide_map=guide_map,
+            meal_map=meal_map,
+            global_hotel=global_hotel,
+            global_transport=global_transport,
+            global_guide=global_guide,
+            global_meal=global_meal
         )
         
         return jsonify({
@@ -1271,11 +1291,25 @@ def api_delete_service(request_id):
                 selectinload(InboundRequest.itinerary_rows)
             ).get(request_id)
             
+            # Build service lookup maps for template
+            hotel_map = {h.source_itinerary_id: h for h in fresh_request.inbound_hotels}
+            transport_map = {t.source_itinerary_id: t for t in fresh_request.inbound_transports}
+            guide_map = {g.source_itinerary_id: g for g in fresh_request.inbound_guides}
+            meal_map = {m.source_itinerary_id: m for m in fresh_request.inbound_meals}
+            
             # Render updated HTML partials for instant DOM update
             itinerary_html = render_template(
                 'components/itinerary_rows.html',
                 rows=fresh_request.itinerary_rows,
-                view_only=False
+                view_only=False,
+                hotel_map=hotel_map,
+                transport_map=transport_map,
+                guide_map=guide_map,
+                meal_map=meal_map,
+                global_hotel=hotel_map.get(None),
+                global_transport=transport_map.get(None),
+                global_guide=guide_map.get(None),
+                global_meal=meal_map.get(None)
             )
             
             return jsonify({

@@ -1,14 +1,22 @@
 {% for row in rows|sort(attribute='date') %}
+{% set row_hotel = hotel_map.get(row.id) if hotel_map else none %}
+{% set row_transport = transport_map.get(row.id) if transport_map else none %}
+{% set row_guide = guide_map.get(row.id) if guide_map else none %}
+{% set row_meal = meal_map.get(row.id) if meal_map else none %}
+{% set eff_hotel = row_hotel or global_hotel or row.linked_hotel %}
+{% set eff_transport = row_transport or global_transport or row.linked_transport %}
+{% set eff_guide = row_guide or global_guide or row.linked_guide %}
+{% set eff_meal = row_meal or global_meal or row.linked_meal %}
 <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
     data-row-id="{{ row.id }}"
-    data-hotel-name="{{ row.linked_hotel.hotel_name if row.linked_hotel else '' }}"
-    data-hotel-cat="{{ row.linked_hotel.hotel_category if row.linked_hotel else '' }}"
-    data-transport-vehicle="{{ row.linked_transport.vehicle_type if row.linked_transport else '' }}"
-    data-transport-pickup="{{ row.linked_transport.pickup_location if row.linked_transport else '' }}"
-    data-transport-dropoff="{{ row.linked_transport.dropoff_location if row.linked_transport else '' }}"
-    data-guide-name="{{ row.linked_guide.guide_name if row.linked_guide else '' }}"
-    data-meal-restaurant="{{ row.linked_meal.restaurant if row.linked_meal else '' }}"
-    data-meal-type="{{ row.linked_meal.meal_type if row.linked_meal else '' }}">
+    data-hotel-name="{{ eff_hotel.hotel_name if eff_hotel else '' }}"
+    data-hotel-cat="{{ eff_hotel.hotel_category if eff_hotel else '' }}"
+    data-transport-vehicle="{{ eff_transport.vehicle_type if eff_transport else '' }}"
+    data-transport-pickup="{{ eff_transport.pickup_location if eff_transport else '' }}"
+    data-transport-dropoff="{{ eff_transport.dropoff_location if eff_transport else '' }}"
+    data-guide-name="{{ eff_guide.guide_name if eff_guide else '' }}"
+    data-meal-restaurant="{{ eff_meal.restaurant if eff_meal else '' }}"
+    data-meal-type="{{ eff_meal.meal_type if eff_meal else '' }}">
     <td class="py-3 px-3">
         <span class="font-medium text-slate-700">Day {{ row.day_number }}{% if row.description and ('Arrival' in row.description or 'Departure' in row.description) %} - {{ 'Arrival' if 'Arrival' in row.description else 'Departure' }}{% endif %}</span>
     </td>
@@ -37,25 +45,25 @@
     </td>
     <td class="py-3 px-3">
         <div class="flex items-center justify-center gap-1">
-            <div class="service-icon-toggle hotel{% if row.linked_hotel and row.linked_hotel.hotel_name %} active{% endif %}" 
+            <div class="service-icon-toggle hotel{% if eff_hotel and eff_hotel.hotel_name %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('hotel', {{ row.id }})"
                  title="Hotel">
                 <i class="fas fa-bed"></i>
             </div>
-            <div class="service-icon-toggle transport{% if row.linked_transport and row.linked_transport.vehicle_type %} active{% endif %}" 
+            <div class="service-icon-toggle transport{% if eff_transport and eff_transport.vehicle_type %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('transport', {{ row.id }})"
                  title="Transport">
                 <i class="fas fa-car"></i>
             </div>
-            <div class="service-icon-toggle guide{% if row.linked_guide and row.linked_guide.guide_name %} active{% endif %}" 
+            <div class="service-icon-toggle guide{% if eff_guide and eff_guide.guide_name %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('guide', {{ row.id }})"
                  title="Guide">
                 <i class="fas fa-user"></i>
             </div>
-            <div class="service-icon-toggle meal{% if row.linked_meal and row.linked_meal.restaurant %} active{% endif %}" 
+            <div class="service-icon-toggle meal{% if eff_meal and eff_meal.restaurant %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('meal', {{ row.id }})"
                  title="Meal">
@@ -64,7 +72,11 @@
         </div>
     </td>
     <td class="py-3 px-3 text-right">
-        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row.total_service_cost or 0) }}</span>
+        {% set row_cost = (eff_hotel.total_cost or 0) if eff_hotel else 0 %}
+        {% set row_cost = row_cost + ((eff_transport.cost or 0) if eff_transport else 0) %}
+        {% set row_cost = row_cost + ((eff_guide.cost or 0) if eff_guide else 0) %}
+        {% set row_cost = row_cost + ((eff_meal.total_cost or 0) if eff_meal else 0) %}
+        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row_cost) }}</span>
     </td>
     <td class="py-3 px-3">
         <span class="text-slate-400 text-xs">{{ row.comment or '' }}</span>
