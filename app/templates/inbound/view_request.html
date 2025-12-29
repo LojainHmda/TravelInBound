@@ -2191,13 +2191,6 @@ body::-webkit-scrollbar-thumb:hover {
                 </button>
                 {% endif %}
                 
-                <!-- Edit Itinerary Button -->
-                {% if request.itinerary_rows %}
-                <button type="button" class="btn btn-outline-secondary" style="padding: 0.5rem 1rem;" onclick="toggleItineraryEditMode()">
-                    <i class="fas fa-table"></i> <span id="itineraryEditModeText">Edit Itinerary</span>
-                </button>
-                {% endif %}
-                
                 <!-- Status Update Button -->
                 {% if request.booking_id %}
                 <button type="button" class="action-btn action-btn-status" onclick="toggleStatusUpdate()">
