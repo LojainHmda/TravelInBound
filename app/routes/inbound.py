@@ -974,7 +974,7 @@ def api_auto_save_and_regenerate(request_id):
                 'description': row.description,
                 'day_number': day_counter,
                 'restaurant': row.restaurant or '',
-                'selling_price': row.selling_price or 0,
+                'selling_price': row.base_cost or 0,
                 'comments': row.comments or ''
             })
             
@@ -993,7 +993,7 @@ def api_auto_save_and_regenerate(request_id):
                 'description': row.description or '',
                 'day_number': day_num,
                 'restaurant': row.restaurant or '',
-                'selling_price': row.selling_price or 0,
+                'selling_price': row.base_cost or 0,
                 'comments': row.comments or ''
             })
     
