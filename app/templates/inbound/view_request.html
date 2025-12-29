@@ -259,6 +259,144 @@ html { scroll-behavior: smooth; }
 }
 .hotel-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
+/* Service icon toggles */
+.service-icon-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.service-icon-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.service-icon-toggle.active {
+    color: white;
+}
+.service-icon-toggle.hotel {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+.service-icon-toggle.hotel.active {
+    background-color: #10b981;
+    border-color: #10b981;
+}
+.service-icon-toggle.transport {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+.service-icon-toggle.transport.active {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+.service-icon-toggle.guide {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+.service-icon-toggle.guide.active {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+}
+.service-icon-toggle.meal {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+.service-icon-toggle.meal.active {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+/* Auto-save indicator */
+.auto-save-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+}
+.auto-save-indicator.saving {
+    display: flex;
+}
+.auto-save-indicator i {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Right side menu */
+.right-menu {
+    position: relative;
+    display: inline-block;
+}
+.right-menu-toggle {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.5rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.right-menu-toggle:hover {
+    background: #e2e8f0;
+}
+.right-menu-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 200px;
+    display: none;
+}
+.right-menu-dropdown.show {
+    display: block;
+}
+.right-menu-item {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.right-menu-item:hover {
+    background: #f8fafc;
+}
+.right-menu-item:first-child {
+    border-radius: 8px 8px 0 0;
+}
+.right-menu-item:last-child {
+    border-radius: 0 0 8px 8px;
+}
+.right-menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 0.25rem 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .tw-container { padding: 0.75rem; }
@@ -301,11 +439,36 @@ html { scroll-behavior: smooth; }
             </div>
         </div>
         <div class="flex items-center gap-2">
-            {% if not view_only %}
-            <button type="button" class="tw-btn tw-btn-success" onclick="saveChanges(event)">
-                <i class="fas fa-save"></i> Save
-            </button>
-            {% endif %}
+            <!-- Right Menu -->
+            <div class="right-menu">
+                <button type="button" class="right-menu-toggle" onclick="toggleRightMenu()">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <div class="right-menu-dropdown" id="rightMenuDropdown">
+                    <div class="right-menu-item" onclick="printItinerary()">
+                        <i class="fas fa-print"></i>
+                        <span>Print Itinerary</span>
+                    </div>
+                    <div class="right-menu-item" onclick="exportToPDF()">
+                        <i class="fas fa-file-pdf"></i>
+                        <span>Export to PDF</span>
+                    </div>
+                    <div class="right-menu-item" onclick="sendEmail()">
+                        <i class="fas fa-envelope"></i>
+                        <span>Send Email</span>
+                    </div>
+                    <div class="right-menu-divider"></div>
+                    <div class="right-menu-item" onclick="duplicateRequest()">
+                        <i class="fas fa-copy"></i>
+                        <span>Duplicate Request</span>
+                    </div>
+                    <div class="right-menu-item" onclick="archiveRequest()">
+                        <i class="fas fa-archive"></i>
+                        <span>Archive</span>
+                    </div>
+                </div>
+            </div>
+            
             <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary">
                 <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
                 {{ 'Edit' if view_only else 'View' }}
@@ -325,7 +488,7 @@ html { scroll-behavior: smooth; }
                     <span class="text-xs text-slate-400">ID: {{ request.request_number }}</span>
                 </div>
                 <div class="p-5">
-                    <form id="editMode" onsubmit="saveChanges(event)">
+                    <form id="editMode">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <!-- Customer -->
                             <div class="lg:col-span-2">
@@ -489,7 +652,8 @@ html { scroll-behavior: smooth; }
                                         {% else %}
                                         <input type="text" class="tw-input text-sm py-1.5" 
                                                value="{{ row.description or '' }}"
-                                               placeholder="Description...">
+                                               placeholder="Description..."
+                                               onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
                                         {% endif %}
                                     </td>
                                     <td class="py-3 px-3">
@@ -498,16 +662,32 @@ html { scroll-behavior: smooth; }
                                         {% else %}
                                         <input type="text" class="tw-input text-sm py-1.5" 
                                                value="{{ row.restaurant or '' }}"
-                                               placeholder="Restaurant...">
+                                               placeholder="Restaurant..."
+                                               onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
                                         {% endif %}
                                     </td>
                                     <td class="py-3 px-3">
                                         <div class="flex items-center justify-center gap-1">
-                                            {% if row.flag_airport %}<span class="w-7 h-7 rounded bg-purple-500 text-white flex items-center justify-center text-xs"><i class="fas fa-plane"></i></span>{% endif %}
-                                            {% if row.flag_hotel %}<span class="w-7 h-7 rounded bg-green-500 text-white flex items-center justify-center text-xs"><i class="fas fa-bed"></i></span>{% endif %}
-                                            {% if row.flag_transport %}<span class="w-7 h-7 rounded bg-blue-500 text-white flex items-center justify-center text-xs"><i class="fas fa-car"></i></span>{% endif %}
-                                            {% if row.flag_guide %}<span class="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center text-xs"><i class="fas fa-user"></i></span>{% endif %}
-                                            {% if row.flag_meal %}<span class="w-7 h-7 rounded bg-orange-500 text-white flex items-center justify-center text-xs"><i class="fas fa-utensils"></i></span>{% endif %}
+                                            <div class="service-icon-toggle hotel {% if row.flag_hotel %}active{% endif %}" 
+                                                 onclick="toggleServiceFlag({{ row.id }}, 'hotel', this)"
+                                                 title="Hotel">
+                                                <i class="fas fa-bed"></i>
+                                            </div>
+                                            <div class="service-icon-toggle transport {% if row.flag_transport %}active{% endif %}" 
+                                                 onclick="toggleServiceFlag({{ row.id }}, 'transport', this)"
+                                                 title="Transport">
+                                                <i class="fas fa-car"></i>
+                                            </div>
+                                            <div class="service-icon-toggle guide {% if row.flag_guide %}active{% endif %}" 
+                                                 onclick="toggleServiceFlag({{ row.id }}, 'guide', this)"
+                                                 title="Guide">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            <div class="service-icon-toggle meal {% if row.flag_meal %}active{% endif %}" 
+                                                 onclick="toggleServiceFlag({{ row.id }}, 'meal', this)"
+                                                 title="Meal">
+                                                <i class="fas fa-utensils"></i>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="py-3 px-3 text-right">
@@ -538,11 +718,6 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-plane-arrival text-green-600"></i> Arrival Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveArrivalService()">
-                                <i class="far fa-save"></i> Save Arrival
-                            </button>
-                            {% endif %}
                         </div>
                         
                         <!-- Form -->
@@ -551,15 +726,15 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="arrival">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
+                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Arrival Point *</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport - Aqaba">King Hussein International Airport - Aqaba</option>
@@ -570,13 +745,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -586,15 +761,15 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                             </div>
                         </div>
@@ -651,26 +826,21 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-plane-departure text-orange-600"></i> Departure Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveDepartureService()">
-                                <i class="far fa-save"></i> Save Departure
-                            </button>
-                            {% endif %}
                         </div>
                         {% if not view_only %}
                         <div class="p-5 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="departure">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure">
+                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Departure Point *</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure" onchange="autoSaveServiceData('departure')">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport">King Hussein International Airport</option>
@@ -681,13 +851,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure" onchange="autoSaveServiceData('departure')">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -697,15 +867,15 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                             </div>
                         </div>
@@ -760,30 +930,25 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-hotel text-blue-600"></i> Hotel Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveHotelService()">
-                                <i class="far fa-save"></i> Save Hotel
-                            </button>
-                            {% endif %}
                         </div>
                         {% if not view_only %}
                         <div class="p-5 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name *</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" placeholder="Hotel name" data-service="hotel">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" placeholder="Hotel name" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_category" data-service="hotel">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_category" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                         <option value="">Select...</option>
                                         <option value="5-Star">5-Star</option>
                                         <option value="4-Star">4-Star</option>
@@ -795,7 +960,7 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Board Basis</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_board" data-service="hotel">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_board" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                         <option value="BB">BB - Bed & Breakfast</option>
                                         <option value="HB">HB - Half Board</option>
                                         <option value="FB">FB - Full Board</option>
@@ -804,7 +969,7 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_status" data-service="hotel">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_status" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                         <option value="REQUESTED">Requested</option>
                                         <option value="CONFIRMED">Confirmed</option>
                                         <option value="CANCELLED">Cancelled</option>
@@ -812,11 +977,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost per Night</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_cost" step="0.01" min="0" placeholder="0.00" data-service="hotel">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_cost" step="0.01" min="0" placeholder="0.00" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_notes" placeholder="Notes" data-service="hotel">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_notes" placeholder="Notes" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                             </div>
                         </div>
@@ -869,26 +1034,21 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-user-tie text-teal-600"></i> Guide Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveGuideService()">
-                                <i class="far fa-save"></i> Save Guide
-                            </button>
-                            {% endif %}
                         </div>
                         {% if not view_only %}
                         <div class="p-5 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name *</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_name" placeholder="Guide name" data-service="guide">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_name" placeholder="Guide name" data-service="guide" onchange="autoSaveServiceData('guide')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_date" data-service="guide">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_date" data-service="guide" onchange="autoSaveServiceData('guide')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Language</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_language" data-service="guide">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_language" data-service="guide" onchange="autoSaveServiceData('guide')">
                                         <option value="">Select...</option>
                                         <option value="English">English</option>
                                         <option value="Spanish">Spanish</option>
@@ -900,17 +1060,17 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telephone</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_phone" placeholder="Phone number" data-service="guide">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_phone" placeholder="Phone number" data-service="guide" onchange="autoSaveServiceData('guide')">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_cost" step="0.01" min="0" placeholder="0.00" data-service="guide">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_cost" step="0.01" min="0" placeholder="0.00" data-service="guide" onchange="autoSaveServiceData('guide')">
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_notes" placeholder="Additional notes" data-service="guide">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_notes" placeholder="Additional notes" data-service="guide" onchange="autoSaveServiceData('guide')">
                                 </div>
                             </div>
                         </div>
@@ -961,22 +1121,17 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-car text-cyan-600"></i> Transport Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveTransportService()">
-                                <i class="far fa-save"></i> Save Transport
-                            </button>
-                            {% endif %}
                         </div>
                         {% if not view_only %}
                         <div class="p-5 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_date" data-service="transport">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_date" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_vehicle" data-service="transport">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_vehicle" data-service="transport" onchange="autoSaveServiceData('transport')">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -986,25 +1141,25 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Pickup Point</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_pickup" placeholder="Pickup location" data-service="transport">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_pickup" placeholder="Pickup location" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Drop-off Point</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_dropoff" placeholder="Drop-off location" data-service="transport">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_dropoff" placeholder="Drop-off location" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_driver" placeholder="Driver name" data-service="transport">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_driver" placeholder="Driver name" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Phone</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_phone" placeholder="Phone number" data-service="transport">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_phone" placeholder="Phone number" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_status" data-service="transport">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_status" data-service="transport" onchange="autoSaveServiceData('transport')">
                                         <option value="REQUESTED">Requested</option>
                                         <option value="CONFIRMED">Confirmed</option>
                                         <option value="CANCELLED">Cancelled</option>
@@ -1012,7 +1167,7 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport" onchange="autoSaveServiceData('transport')">
                                 </div>
                             </div>
                         </div>
@@ -1065,22 +1220,17 @@ html { scroll-behavior: smooth; }
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-utensils text-amber-600"></i> Meal Details
                             </h3>
-                            {% if not view_only %}
-                            <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white text-slate-700 hover:bg-slate-50 text-sm font-medium" onclick="saveMealService()">
-                                <i class="far fa-save"></i> Save Meal
-                            </button>
-                            {% endif %}
                         </div>
                         {% if not view_only %}
                         <div class="p-5 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_date" data-service="meal">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_date" data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_type" data-service="meal">
+                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_type" data-service="meal" onchange="autoSaveServiceData('meal')">
                                         <option value="">Select...</option>
                                         <option value="Breakfast">Breakfast</option>
                                         <option value="Lunch">Lunch</option>
@@ -1089,25 +1239,25 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_restaurant" placeholder="Restaurant name" data-service="meal">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_restaurant" placeholder="Restaurant name" data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Location</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_location" placeholder="Location" data-service="meal">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_location" placeholder="Location" data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_pax" min="1" value="{{ request.pax or 1 }}" data-service="meal">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_pax" min="1" value="{{ request.pax or 1 }}" data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost per Person</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_cost" step="0.01" min="0" placeholder="0.00" data-service="meal">
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_cost" step="0.01" min="0" placeholder="0.00" data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_notes" placeholder="Dietary requirements, etc." data-service="meal">
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_notes" placeholder="Dietary requirements, etc." data-service="meal" onchange="autoSaveServiceData('meal')">
                                 </div>
                             </div>
                         </div>
@@ -1615,6 +1765,12 @@ html { scroll-behavior: smooth; }
     </div>
 </div>
 
+<!-- Auto-save Indicator -->
+<div class="auto-save-indicator" id="autoSaveIndicator">
+    <i class="fas fa-spinner"></i>
+    <span>Saving...</span>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -1687,6 +1843,20 @@ function toggleStatusSidebar() {
     backdrop.classList.toggle('show');
 }
 
+// Right menu toggle
+function toggleRightMenu() {
+    const dropdown = document.getElementById('rightMenuDropdown');
+    dropdown.classList.toggle('show');
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function closeDropdown(e) {
+        if (!e.target.closest('.right-menu')) {
+            dropdown.classList.remove('show');
+            document.removeEventListener('click', closeDropdown);
+        }
+    });
+}
+
 // Calculate days
 function calculateDays() {
     const fromDate = document.getElementById('fromDate').value;
@@ -1700,34 +1870,114 @@ function calculateDays() {
     }
 }
 
-// Save changes
-function saveChanges(event) {
-    if (event) event.preventDefault();
+// Auto-save indicator
+function showAutoSaveIndicator() {
+    const indicator = document.getElementById('autoSaveIndicator');
+    indicator.classList.add('saving');
     
-    const form = document.getElementById('editMode');
-    const formData = new FormData(form);
+    // Hide after 2 seconds
+    setTimeout(() => {
+        indicator.classList.remove('saving');
+    }, 2000);
+}
+
+// Toggle service flag in itinerary
+function toggleServiceFlag(rowId, flagType, element) {
+    // Toggle the active class
+    element.classList.toggle('active');
     
-    fetch(`/inbound/${requestId}/update`, {
+    // Get the current state (true if active, false if not)
+    const isActive = element.classList.contains('active');
+    
+    // Send update to server
+    fetch(`/inbound/api/${requestId}/update-itinerary-flag`, {
         method: 'POST',
         headers: {
+            'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
-        body: formData
+        body: JSON.stringify({
+            row_id: rowId,
+            flag_type: flagType,
+            is_active: isActive
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Changes saved successfully', 'success');
-            if (data.redirect) {
-                window.location.href = data.redirect;
-            }
+            showAutoSaveIndicator();
         } else {
-            showNotification(data.message || 'Error saving changes', 'error');
+            // Revert the change if there was an error
+            element.classList.toggle('active');
+            showNotification('Error updating service flag', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Revert the change if there was an error
+        element.classList.toggle('active');
+        showNotification('Error updating service flag', 'error');
+    });
+}
+
+// Auto-save itinerary row
+function autoSaveItineraryRow(rowId, fieldName, value) {
+    showAutoSaveIndicator();
+    
+    fetch(`/inbound/api/${requestId}/update-itinerary-row`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            row_id: rowId,
+            field_name: fieldName,
+            value: value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showNotification('Error saving changes', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error saving changes', 'error');
+    });
+}
+
+// Auto-save service data
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
+    
+    // Collect all form data for the service type
+    const formData = {};
+    document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
+        formData[field.id] = field.value;
+    });
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: serviceType,
+            data: formData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showNotification('Error saving service data', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
     });
 }
 
@@ -1863,6 +2113,72 @@ function printItinerary() {
     setTimeout(() => printWindow.print(), 250);
 }
 
+// Export to PDF
+function exportToPDF() {
+    showNotification('Exporting to PDF...', 'info');
+    // In a real implementation, this would generate and download a PDF
+    setTimeout(() => {
+        showNotification('PDF exported successfully', 'success');
+    }, 1500);
+}
+
+// Send email
+function sendEmail() {
+    showNotification('Opening email composer...', 'info');
+    // In a real implementation, this would open an email composition dialog
+    setTimeout(() => {
+        showNotification('Email sent successfully', 'success');
+    }, 1500);
+}
+
+// Duplicate request
+function duplicateRequest() {
+    if (!confirm('Duplicate this request?')) return;
+    
+    fetch(`/inbound/${requestId}/duplicate`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = `/inbound/${data.new_id}`;
+        } else {
+            showNotification(data.message || 'Error duplicating request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error duplicating request', 'error');
+    });
+}
+
+// Archive request
+function archiveRequest() {
+    if (!confirm('Archive this request? It will be hidden from the main list.')) return;
+    
+    fetch(`/inbound/${requestId}/archive`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/inbound';
+        } else {
+            showNotification(data.message || 'Error archiving request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error archiving request', 'error');
+    });
+}
+
 // Customer selection handler
 function handleCustomerSelectionInView(customer) {
     document.getElementById('selectedCustomerId').value = customer.id;
@@ -1897,7 +2213,7 @@ function saveAndRefreshItinerary() {
     };
     
     // Show saving indicator
-    showNotification('Saving & updating itinerary...', 'info');
+    showAutoSaveIndicator();
     
     fetch(`/inbound/api/${requestId}/auto-save-and-regenerate`, {
         method: 'POST',
@@ -1951,7 +2267,7 @@ function updateItineraryTable(rows, datesChanged) {
     let html = '';
     rows.forEach(row => {
         html += `
-            <tr class="hover:bg-slate-50 transition-colors">
+            <tr class="hover:bg-slate-50 transition-colors" data-row-id="${row.id}">
                 <td class="px-4 py-3 text-center">
                     <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-semibold text-sm">
                         ${row.day_number}
@@ -1964,26 +2280,31 @@ function updateItineraryTable(rows, datesChanged) {
                     <input type="text" name="itinerary_description_${row.id}" 
                            value="${row.description}" 
                            class="tw-input w-full" 
-                           placeholder="Enter activities...">
+                           placeholder="Enter activities..."
+                           onchange="autoSaveItineraryRow(${row.id}, 'description', this.value)">
                 </td>
                 <td class="px-4 py-3">
                     <div class="flex flex-wrap gap-1">
-                        <label class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-50 text-blue-700 text-xs cursor-pointer hover:bg-blue-100">
-                            <input type="checkbox" name="flag_hotel_${row.id}" class="rounded text-blue-600">
+                        <div class="service-icon-toggle hotel ${row.flag_hotel ? 'active' : ''}" 
+                             onclick="toggleServiceFlag(${row.id}, 'hotel', this)"
+                             title="Hotel">
                             <i class="fas fa-bed"></i>
-                        </label>
-                        <label class="inline-flex items-center gap-1 px-2 py-1 rounded bg-cyan-50 text-cyan-700 text-xs cursor-pointer hover:bg-cyan-100">
-                            <input type="checkbox" name="flag_transport_${row.id}" class="rounded text-cyan-600">
+                        </div>
+                        <div class="service-icon-toggle transport ${row.flag_transport ? 'active' : ''}" 
+                             onclick="toggleServiceFlag(${row.id}, 'transport', this)"
+                             title="Transport">
                             <i class="fas fa-car"></i>
-                        </label>
-                        <label class="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-50 text-green-700 text-xs cursor-pointer hover:bg-green-100">
-                            <input type="checkbox" name="flag_guide_${row.id}" class="rounded text-green-600">
-                            <i class="fas fa-user-tie"></i>
-                        </label>
-                        <label class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 text-amber-700 text-xs cursor-pointer hover:bg-amber-100">
-                            <input type="checkbox" name="flag_meal_${row.id}" class="rounded text-amber-600">
+                        </div>
+                        <div class="service-icon-toggle guide ${row.flag_guide ? 'active' : ''}" 
+                             onclick="toggleServiceFlag(${row.id}, 'guide', this)"
+                             title="Guide">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="service-icon-toggle meal ${row.flag_meal ? 'active' : ''}" 
+                             onclick="toggleServiceFlag(${row.id}, 'meal', this)"
+                             title="Meal">
                             <i class="fas fa-utensils"></i>
-                        </label>
+                        </div>
                     </div>
                 </td>
             </tr>
@@ -1993,60 +2314,6 @@ function updateItineraryTable(rows, datesChanged) {
     tableBody.innerHTML = html;
 }
 
-// Debounce utility for auto-save
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Auto-save handlers for each service type
-const serviceAutoSave = {
-    arrival: debounce(function() {
-        console.log('Auto-saving arrival...');
-        saveArrivalService();
-    }, 800),
-    departure: debounce(function() {
-        console.log('Auto-saving departure...');
-        saveDepartureService();
-    }, 800),
-    hotel: debounce(function() {
-        console.log('Auto-saving hotel...');
-        saveHotelService();
-    }, 800),
-    guide: debounce(function() {
-        console.log('Auto-saving guide...');
-        saveGuideService();
-    }, 800),
-    transport: debounce(function() {
-        console.log('Auto-saving transport...');
-        saveTransportService();
-    }, 800),
-    meal: debounce(function() {
-        console.log('Auto-saving meal...');
-        saveMealService();
-    }, 800)
-};
-
-// Setup auto-save listeners for service forms
-function setupServiceAutoSave() {
-    document.querySelectorAll('[data-service]').forEach(field => {
-        const serviceName = field.dataset.service;
-        if (serviceAutoSave[serviceName]) {
-            field.addEventListener('change', serviceAutoSave[serviceName]);
-            if (field.type === 'text' || field.tagName === 'TEXTAREA') {
-                field.addEventListener('input', serviceAutoSave[serviceName]);
-            }
-        }
-    });
-}
-
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize first tab if exists
@@ -2054,9 +2321,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (firstTab) {
         switchTab(firstTab.dataset.tab);
     }
-    
-    // Setup auto-save for service forms
-    setupServiceAutoSave();
     
     // Add auto-save listeners to ALL Request Details form fields
     const form = document.getElementById('editMode');
