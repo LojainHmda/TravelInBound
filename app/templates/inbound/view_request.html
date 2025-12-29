@@ -481,10 +481,6 @@ html { scroll-behavior: smooth; }
     <!-- Header -->
     <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div class="flex items-center gap-4">
-            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary">
-                <i class="fas fa-arrow-left"></i>
-                <span class="hidden sm:inline">Back</span>
-            </a>
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}
@@ -543,6 +539,10 @@ html { scroll-behavior: smooth; }
             <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary">
                 <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
                 {{ 'Edit' if view_only else 'View' }}
+            </a>
+            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden sm:inline">Back</span>
             </a>
         </div>
     </div>
