@@ -1981,6 +1981,40 @@ function autoSaveServiceData(serviceType) {
     });
 }
 
+// Status order for determining completed/active states
+const STATUS_ORDER = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
+
+// Update sidebar visual state
+function updateSidebarState(newStatus) {
+    const statusIndex = STATUS_ORDER.indexOf(newStatus);
+    
+    document.querySelectorAll('.status-step').forEach(step => {
+        const stepStatus = step.dataset.status;
+        const stepIndex = STATUS_ORDER.indexOf(stepStatus);
+        
+        // Remove existing classes
+        step.classList.remove('active', 'completed');
+        
+        // Set appropriate class based on position relative to current status
+        if (stepIndex < statusIndex) {
+            step.classList.add('completed');
+        } else if (stepIndex === statusIndex) {
+            step.classList.add('active');
+        }
+    });
+    
+    // Update the status badge in the bottom bar
+    const statusBadge = document.querySelector('.stage-bar .status-badge');
+    if (statusBadge) {
+        // Remove all status classes
+        statusBadge.className = 'status-badge';
+        // Add the new status class
+        const statusClass = 'status-' + newStatus.toLowerCase().replace('_', '-');
+        statusBadge.classList.add(statusClass);
+        statusBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+}
+
 // Update request status
 function updateRequestStatus(status) {
     if (!confirm(`Change status to ${status.replace('_', ' ')}?`)) return;
@@ -1996,7 +2030,16 @@ function updateRequestStatus(status) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.reload();
+            // Update sidebar visually without reloading
+            updateSidebarState(status);
+            showNotification('Status updated successfully', 'success');
+            
+            // Reset the dropdown
+            const select = document.getElementById('confirmStageSelect');
+            if (select) {
+                select.value = '';
+                toggleConfirmButton();
+            }
         } else {
             showNotification(data.message || 'Error updating status', 'error');
         }
