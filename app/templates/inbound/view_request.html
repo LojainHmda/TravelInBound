@@ -1963,6 +1963,19 @@ function toggleServiceFlag(rowId, flagType, element) {
     // Get current state (true if active, false if not)
     const isActive = element.classList.contains('active');
     
+    // Map flag types to service tab names
+    const tabMapping = {
+        'hotel': 'hotel',
+        'transport': 'transport',
+        'guide': 'guide',
+        'meal': 'meal'
+    };
+    
+    // Open the corresponding service tab
+    if (tabMapping[flagType]) {
+        switchServiceTab(tabMapping[flagType]);
+    }
+    
     // Send update to server
     fetch(`/inbound/api/${requestId}/update-itinerary-flag`, {
         method: 'POST',
