@@ -236,9 +236,8 @@ def new_request():
     return redirect(url_for('inbound.view_request', id=request_obj.id))
 
 @inbound_bp.route('/<int:id>/edit')
-
 def edit_request(id):
-    """Edit inbound request with full itinerary interface"""
+    """Redirect to unified view/edit page"""
     request_obj = InboundRequest.query.get_or_404(id)
     
     # Check ownership
@@ -246,11 +245,8 @@ def edit_request(id):
         flash('Access denied.', 'error')
         return redirect(url_for('inbound.index'))
     
-    # Get all customers for selection dropdown
-    from app.models.customer import Customer
-    customers = Customer.query.all()
-    
-    return render_template('inbound/edit_request.html', request=request_obj, customers=customers)
+    # Redirect to the unified view_request page in edit mode
+    return redirect(url_for('inbound.view_request', id=id, mode='edit'))
 
 @inbound_bp.route('/<int:id>/view')
 def view_request(id):
