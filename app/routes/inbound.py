@@ -199,6 +199,37 @@ def new_request():
     request_obj.calculate_days()
     
     db.session.add(request_obj)
+    db.session.flush()  # Get ID for the request
+    
+    # Create default itinerary rows immediately (no flash/reload needed)
+    current_date = from_date
+    day_counter = 1
+    total_days = (to_date - from_date).days + 1
+    
+    while current_date <= to_date:
+        # Generate description based on day
+        if day_counter == 1:
+            description = "Arrival Day"
+        elif current_date == to_date:
+            description = "Departure Day"
+        else:
+            description = f"Day {day_counter}"
+        
+        row = ItineraryRow(
+            request_id=request_obj.id,
+            date=current_date,
+            description=description,
+            flag_hotel=(day_counter != total_days),  # Hotel except last day
+            flag_transport=True,
+            flag_guide=(day_counter > 1 and day_counter < total_days),  # Guide for middle days
+            flag_meal=(day_counter > 1 and day_counter < total_days),  # Meals for middle days
+            flag_airport=(day_counter == 1 or day_counter == total_days)  # Airport on first and last day
+        )
+        db.session.add(row)
+        
+        current_date += timedelta(days=1)
+        day_counter += 1
+    
     db.session.commit()
     
     # Redirect to view page which now has unified edit functionality
