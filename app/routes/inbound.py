@@ -36,7 +36,7 @@ def index():
     
     agent = request.args.get('agent', '')
     if agent:
-        query = query.filter(InboundRequest.agent.contains(agent))
+        query = query.filter(InboundRequest.agent_ref.contains(agent))
     
     date_from = request.args.get('date_from', '')
     if date_from:
