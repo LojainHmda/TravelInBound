@@ -2091,7 +2091,7 @@ function updateSidebarState(newStatus) {
 
 // Update request status - Direct change without confirmation
 function updateRequestStatus(status) {
-    fetch(`/inbound/${requestId}/update-status`, {
+    fetch(`/inbound/api/${requestId}/update-status`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
