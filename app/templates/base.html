@@ -604,19 +604,6 @@
             
             <!-- User Section -->
             <div class="user-section">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        {% if current_user.is_authenticated %}
-                            {{ current_user.username[0]|upper }}
-                        {% else %}
-                            <i class="fas fa-user"></i>
-                        {% endif %}
-                    </div>
-                    {% if current_user.is_authenticated %}
-                        <span>{{ current_user.username }}</span>
-                    {% endif %}
-                </div>
-                
                 <!-- Mobile Menu Toggle -->
                 <button class="mobile-menu-toggle" id="mobile-menu-toggle">
                     <i class="fas fa-bars"></i>
