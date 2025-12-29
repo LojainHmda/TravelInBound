@@ -1541,23 +1541,21 @@ body::-webkit-scrollbar-thumb:hover {
 {% block content %}
 <div class="container-fluid" style="max-width: 100%; padding: 1rem 1rem;">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2><i class="fas fa-eye"></i> {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}</h2>
+    <div class="d-flex align-items-center mb-3">
+        <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+        <div class="flex-grow-1">
+            <h2 class="mb-0"><i class="fas fa-eye"></i> {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}</h2>
             <div class="text-muted">
                 {% if request.document_sequence %}<span class="small">Internal: {{ request.request_number }}</span> | {% endif %}Created on <span id="localCreatedTime" data-utc="{{ request.created_at.isoformat() }}Z">{{ request.created_at.strftime('%d %b %Y at %H:%M') }}</span>
             </div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('inbound.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-            {% if view_only %}
-            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Switch to Edit Mode
-            </a>
-            {% endif %}
-        </div>
+        {% if view_only %}
+        <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Switch to Edit Mode
+        </a>
+        {% endif %}
     </div>
 
     {% if view_only %}
