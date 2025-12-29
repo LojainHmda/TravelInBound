@@ -288,10 +288,8 @@ html { scroll-behavior: smooth; }
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column - Request Details -->
-        <div class="lg:col-span-2 space-y-6">
+    <!-- Main Content - Vertical Stack -->
+    <div class="space-y-6 max-w-5xl mx-auto">
             <!-- Request Master Card -->
             <div class="tw-card">
                 <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
@@ -505,68 +503,60 @@ html { scroll-behavior: smooth; }
                     {% endif %}
                 </div>
             </div>
-        </div>
 
-        <!-- Right Column - Services & Summary -->
-        <div class="space-y-6">
-            <!-- Quick Stats -->
-            <div class="tw-card p-5">
-                <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-chart-pie text-amber-500"></i>
-                    Summary
-                </h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                        <span class="text-slate-500 text-sm">Hotels</span>
-                        <span class="font-semibold text-slate-700">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</span>
+            <!-- Summary Card -->
+            <div class="tw-card">
+                <div class="px-5 py-4 border-b border-slate-200">
+                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+                        <i class="fas fa-chart-pie text-amber-500"></i>
+                        Summary
+                    </h2>
+                </div>
+                <div class="p-5">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
+                            <div class="text-xs text-slate-500 mt-1">Hotels</div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-cyan-600">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
+                            <div class="text-xs text-slate-500 mt-1">Transport</div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-green-600">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
+                            <div class="text-xs text-slate-500 mt-1">Guides</div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-amber-600">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
+                            <div class="text-xs text-slate-500 mt-1">Meals</div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-4 text-center">
+                            <div class="text-2xl font-bold text-slate-600">{{ request.documents|length if request.documents else 0 }}</div>
+                            <div class="text-xs text-slate-500 mt-1">Documents</div>
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                        <span class="text-slate-500 text-sm">Transport</span>
-                        <span class="font-semibold text-slate-700">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</span>
+                    
+                    <!-- Flights Summary -->
+                    {% if request.arrival_batches or request.departure_batches %}
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <div class="flex flex-wrap gap-3">
+                            {% for batch in request.arrival_batches %}
+                            <div class="bg-green-50 rounded-lg px-4 py-2 flex items-center gap-2">
+                                <i class="fas fa-plane-arrival text-green-600"></i>
+                                <span class="text-sm font-medium text-green-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}</span>
+                            </div>
+                            {% endfor %}
+                            {% for batch in request.departure_batches %}
+                            <div class="bg-orange-50 rounded-lg px-4 py-2 flex items-center gap-2">
+                                <i class="fas fa-plane-departure text-orange-600"></i>
+                                <span class="text-sm font-medium text-orange-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
-                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                        <span class="text-slate-500 text-sm">Guides</span>
-                        <span class="font-semibold text-slate-700">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                        <span class="text-slate-500 text-sm">Meals</span>
-                        <span class="font-semibold text-slate-700">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</span>
-                    </div>
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-slate-500 text-sm">Documents</span>
-                        <span class="font-semibold text-slate-700">{{ request.documents|length if request.documents else 0 }}</span>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
-
-            <!-- Arrival/Departure Quick View -->
-            {% if request.arrival_batches or request.departure_batches %}
-            <div class="tw-card p-5">
-                <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-plane text-blue-500"></i>
-                    Flights
-                </h3>
-                {% for batch in request.arrival_batches %}
-                <div class="bg-green-50 rounded-lg p-3 mb-2">
-                    <div class="flex items-center gap-2 text-green-700 text-sm font-medium">
-                        <i class="fas fa-plane-arrival"></i>
-                        {{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}
-                    </div>
-                    <p class="text-xs text-green-600 mt-1">{{ batch.arrival_point or 'Airport' }}</p>
-                </div>
-                {% endfor %}
-                {% for batch in request.departure_batches %}
-                <div class="bg-orange-50 rounded-lg p-3 mb-2">
-                    <div class="flex items-center gap-2 text-orange-700 text-sm font-medium">
-                        <i class="fas fa-plane-departure"></i>
-                        {{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}
-                    </div>
-                    <p class="text-xs text-orange-600 mt-1">{{ batch.departure_point or 'Airport' }}</p>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
     </div>
 
     <!-- Service Tabs Section -->
@@ -1108,11 +1098,28 @@ function confirmAllHotels() {
 
 // Show notification
 function showNotification(message, type) {
+    // Remove any existing notifications first
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
     const notification = document.createElement('div');
-    notification.className = `fixed top-20 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`;
-    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'exclamation-circle'} mr-2"></i>${message}`;
+    let bgColor = 'bg-green-500';
+    let icon = 'check';
+    
+    if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = 'exclamation-circle';
+    } else if (type === 'info') {
+        bgColor = 'bg-blue-500';
+        icon = 'spinner fa-spin';
+    }
+    
+    notification.className = `tw-notification fixed top-20 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${bgColor} text-white flex items-center gap-2`;
+    notification.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
     document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 3000);
+    
+    if (type !== 'info') {
+        setTimeout(() => notification.remove(), 3000);
+    }
 }
 
 // Print itinerary
@@ -1166,12 +1173,95 @@ function handleCustomerSelectionInView(customer) {
     document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ' (' + customer.company_name + ')' : '');
 }
 
+// Auto-save with debounce
+let autoSaveTimeout = null;
+let isSaving = false;
+
+function autoSaveChanges() {
+    if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+    
+    autoSaveTimeout = setTimeout(() => {
+        if (!isSaving) {
+            saveAndRefreshItinerary();
+        }
+    }, 1000); // 1 second debounce
+}
+
+function saveAndRefreshItinerary() {
+    isSaving = true;
+    const form = document.getElementById('editMode');
+    const formData = new FormData(form);
+    
+    // Show saving indicator
+    showNotification('Saving...', 'info');
+    
+    fetch(`/inbound/${requestId}/update`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        isSaving = false;
+        if (data.success) {
+            showNotification('Saved! Refreshing itinerary...', 'success');
+            // Reload page to show updated itinerary
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        } else {
+            showNotification(data.message || 'Error saving', 'error');
+        }
+    })
+    .catch(error => {
+        isSaving = false;
+        console.error('Error:', error);
+        showNotification('Error saving', 'error');
+    });
+}
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize first tab if exists
     const firstTab = document.querySelector('.tw-tab');
     if (firstTab) {
         switchTab(firstTab.dataset.tab);
+    }
+    
+    // Add auto-save listeners to Request Details form fields
+    const form = document.getElementById('editMode');
+    if (form) {
+        // Listen to date changes - these affect itinerary
+        const fromDate = document.getElementById('fromDate');
+        const toDate = document.getElementById('toDate');
+        
+        if (fromDate) {
+            fromDate.addEventListener('change', function() {
+                calculateDays();
+                autoSaveChanges();
+            });
+        }
+        
+        if (toDate) {
+            toDate.addEventListener('change', function() {
+                calculateDays();
+                autoSaveChanges();
+            });
+        }
+        
+        // Listen to pax changes
+        const paxField = form.querySelector('[name="pax"]');
+        if (paxField) {
+            paxField.addEventListener('change', autoSaveChanges);
+        }
+        
+        // Listen to customer type changes
+        const customerType = form.querySelector('[name="customer_type"]');
+        if (customerType) {
+            customerType.addEventListener('change', autoSaveChanges);
+        }
     }
 });
 </script>
