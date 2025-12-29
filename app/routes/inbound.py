@@ -1021,7 +1021,7 @@ def api_save_service_data(request_id):
         if service_type == 'hotel':
             if is_global:
                 # Apply to all days - create or update hotel for request
-                hotel = InboundHotel.query.filter_by(request_id=request_id).first()
+                hotel = InboundHotel.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
                 if not hotel:
                     hotel = InboundHotel(
                         request_id=request_id,
@@ -1032,7 +1032,22 @@ def api_save_service_data(request_id):
                 
                 hotel.hotel_name = form_data.get('hotel_name', '')
                 hotel.hotel_category = form_data.get('hotel_category', '')
-                hotel.meal_plan = form_data.get('meal_plan', 'BB')
+                hotel.meal_plan = form_data.get('hotel_board', 'BB')
+                hotel.status = form_data.get('hotel_status', 'REQUESTED')
+                
+                # Parse dates
+                if form_data.get('hotel_check_in'):
+                    hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
+                if form_data.get('hotel_check_out'):
+                    hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
+                
+                # Calculate nights and cost
+                if hotel.check_in_date and hotel.check_out_date:
+                    hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+                
+                cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
+                hotel.cost_per_night = cost_per_night
+                hotel.total_cost = cost_per_night * (hotel.nights or 1)
             else:
                 # Apply to specific day
                 row = ItineraryRow.query.get(row_id)
@@ -1049,7 +1064,22 @@ def api_save_service_data(request_id):
                     
                     hotel.hotel_name = form_data.get('hotel_name', '')
                     hotel.hotel_category = form_data.get('hotel_category', '')
-                    hotel.meal_plan = form_data.get('meal_plan', 'BB')
+                    hotel.meal_plan = form_data.get('hotel_board', 'BB')
+                    hotel.status = form_data.get('hotel_status', 'REQUESTED')
+                    
+                    # Parse dates
+                    if form_data.get('hotel_check_in'):
+                        hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
+                    if form_data.get('hotel_check_out'):
+                        hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
+                    
+                    # Calculate nights and cost
+                    if hotel.check_in_date and hotel.check_out_date:
+                        hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
+                    
+                    cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
+                    hotel.cost_per_night = cost_per_night
+                    hotel.total_cost = cost_per_night * (hotel.nights or 1)
         
         elif service_type == 'transport':
             if is_global:
@@ -1057,14 +1087,20 @@ def api_save_service_data(request_id):
                 if not transport:
                     transport = InboundTransport(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        service_date=request_obj.from_date or date_type.today()
                     )
                     db.session.add(transport)
                 
                 transport.vehicle_type = form_data.get('transport_vehicle', '')
-                transport.pickup_location = form_data.get('transport_pickup', '')
-                transport.dropoff_location = form_data.get('transport_dropoff', '')
+                transport.pickup_point = form_data.get('transport_pickup', '')
+                transport.drop_off_point = form_data.get('transport_dropoff', '')
                 transport.driver_name = form_data.get('transport_driver', '')
+                transport.driver_phone = form_data.get('transport_phone', '')
+                transport.status = form_data.get('transport_status', 'REQUESTED')
+                transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                
+                if form_data.get('transport_date'):
+                    transport.service_date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
@@ -1073,14 +1109,20 @@ def api_save_service_data(request_id):
                         transport = InboundTransport(
                             request_id=request_id,
                             source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
+                            service_date=row.date or date_type.today()
                         )
                         db.session.add(transport)
                     
                     transport.vehicle_type = form_data.get('transport_vehicle', '')
-                    transport.pickup_location = form_data.get('transport_pickup', '')
-                    transport.dropoff_location = form_data.get('transport_dropoff', '')
+                    transport.pickup_point = form_data.get('transport_pickup', '')
+                    transport.drop_off_point = form_data.get('transport_dropoff', '')
                     transport.driver_name = form_data.get('transport_driver', '')
+                    transport.driver_phone = form_data.get('transport_phone', '')
+                    transport.status = form_data.get('transport_status', 'REQUESTED')
+                    transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    
+                    if form_data.get('transport_date'):
+                        transport.service_date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
         
         elif service_type == 'guide':
             if is_global:
@@ -1088,13 +1130,17 @@ def api_save_service_data(request_id):
                 if not guide:
                     guide = InboundGuide(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        service_date=request_obj.from_date or date_type.today()
                     )
                     db.session.add(guide)
                 
                 guide.guide_name = form_data.get('guide_name', '')
                 guide.language = form_data.get('guide_language', '')
-                guide.telephone_number = form_data.get('guide_phone', '')
+                guide.telephone = form_data.get('guide_phone', '')
+                guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                
+                if form_data.get('guide_date'):
+                    guide.service_date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
@@ -1103,13 +1149,17 @@ def api_save_service_data(request_id):
                         guide = InboundGuide(
                             request_id=request_id,
                             source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
+                            service_date=row.date or date_type.today()
                         )
                         db.session.add(guide)
                     
                     guide.guide_name = form_data.get('guide_name', '')
                     guide.language = form_data.get('guide_language', '')
-                    guide.telephone_number = form_data.get('guide_phone', '')
+                    guide.telephone = form_data.get('guide_phone', '')
+                    guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                    
+                    if form_data.get('guide_date'):
+                        guide.service_date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
         
         elif service_type == 'meal':
             if is_global:
@@ -1117,12 +1167,19 @@ def api_save_service_data(request_id):
                 if not meal:
                     meal = InboundMeal(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        service_date=request_obj.from_date or date_type.today()
                     )
                     db.session.add(meal)
                 
-                meal.restaurant = form_data.get('meal_restaurant', '')
+                meal.restaurant_name = form_data.get('meal_restaurant', '')
                 meal.meal_type = form_data.get('meal_type', '')
+                meal.location = form_data.get('meal_location', '')
+                meal.pax_count = int(form_data.get('meal_pax', 1) or 1)
+                meal.cost_per_person = float(form_data.get('meal_cost', 0) or 0)
+                meal.total_cost = meal.cost_per_person * meal.pax_count
+                
+                if form_data.get('meal_date'):
+                    meal.service_date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
@@ -1131,12 +1188,19 @@ def api_save_service_data(request_id):
                         meal = InboundMeal(
                             request_id=request_id,
                             source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
+                            service_date=row.date or date_type.today()
                         )
                         db.session.add(meal)
                     
-                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    meal.restaurant_name = form_data.get('meal_restaurant', '')
                     meal.meal_type = form_data.get('meal_type', '')
+                    meal.location = form_data.get('meal_location', '')
+                    meal.pax_count = int(form_data.get('meal_pax', 1) or 1)
+                    meal.cost_per_person = float(form_data.get('meal_cost', 0) or 0)
+                    meal.total_cost = meal.cost_per_person * meal.pax_count
+                    
+                    if form_data.get('meal_date'):
+                        meal.service_date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
         
         db.session.commit()
         return jsonify({'success': True, 'message': f'{service_type.capitalize()} data saved'})

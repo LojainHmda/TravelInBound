@@ -1988,17 +1988,10 @@ function autoSaveServiceData(serviceType) {
         if (data.success) {
             showNotification(data.message || 'Service data saved!', 'success');
             
-            // If we saved a specific day, light up the icon immediately
-            if (currentServiceContext.rowId && !payload.is_global) {
-                activateIcon(currentServiceContext.rowId, serviceType);
-                updateRowDataAttributes(currentServiceContext.rowId, serviceType, formData);
-            } else if (payload.is_global) {
-                // For global mode, activate icons on all rows
-                document.querySelectorAll(`tr[data-row-id]`).forEach(row => {
-                    const rowId = row.dataset.rowId;
-                    activateIcon(rowId, serviceType);
-                });
-            }
+            // Reload page after short delay to show updated tables and costs
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
         } else {
             showNotification('Error saving service data', 'error');
         }
