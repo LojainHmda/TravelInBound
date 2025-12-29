@@ -424,33 +424,33 @@ html { scroll-behavior: smooth; }
                     </h2>
                 </div>
                 
-                <!-- Service Summary Bar -->
+                <!-- Service Tabs -->
                 <div class="px-5 py-3 bg-slate-50 border-b border-slate-200">
                     <div class="flex flex-wrap gap-2">
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-100 text-green-700 text-sm font-medium">
+                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 text-sm font-medium transition-colors" data-service="arrival">
                             <i class="fas fa-plane-arrival"></i> Arrival
                             <span class="bg-green-200 text-green-800 px-1.5 py-0.5 rounded text-xs">{{ request.arrival_batches|length if request.arrival_batches else 0 }}</span>
-                        </div>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 text-sm font-medium">
+                        </button>
+                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 text-sm font-medium transition-colors" data-service="departure">
                             <i class="fas fa-plane-departure"></i> Departure
                             <span class="bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded text-xs">{{ request.departure_batches|length if request.departure_batches else 0 }}</span>
-                        </div>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-700 text-sm font-medium">
+                        </button>
+                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-medium transition-colors" data-service="hotel">
                             <i class="fas fa-hotel"></i> Hotel
                             <span class="bg-blue-200 text-blue-800 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</span>
-                        </div>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-100 text-teal-700 text-sm font-medium">
+                        </button>
+                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-teal-100 text-teal-700 hover:bg-teal-200 text-sm font-medium transition-colors" data-service="guide">
                             <i class="fas fa-user-tie"></i> Guide
                             <span class="bg-teal-200 text-teal-800 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</span>
-                        </div>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-100 text-cyan-700 text-sm font-medium">
+                        </button>
+                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-cyan-100 text-cyan-700 hover:bg-cyan-200 text-sm font-medium transition-colors" data-service="transport">
                             <i class="fas fa-car"></i> Transport
                             <span class="bg-cyan-200 text-cyan-800 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</span>
-                        </div>
-                        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 text-amber-700 text-sm font-medium">
+                        </button>
+                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 text-sm font-medium transition-colors" data-service="meal">
                             <i class="fas fa-utensils"></i> Meal
                             <span class="bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</span>
-                        </div>
+                        </button>
                     </div>
                 </div>
 
@@ -526,6 +526,129 @@ html { scroll-behavior: smooth; }
                         <p class="text-slate-400 text-sm">Set the travel dates above to generate the itinerary automatically.</p>
                     </div>
                     {% endif %}
+                    
+                    <!-- Service Content Panels (shown when tabs clicked) -->
+                    <div id="service-panel-arrival" class="service-panel hidden mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                        <h3 class="font-semibold text-green-800 mb-3 flex items-center gap-2"><i class="fas fa-plane-arrival"></i> Arrival Details</h3>
+                        {% if request.arrival_batches %}
+                        <div class="space-y-2">
+                            {% for batch in request.arrival_batches %}
+                            <div class="bg-white p-3 rounded-lg border border-green-100">
+                                <div class="font-medium text-green-700">{{ batch.arrival_date.strftime('%A, %B %d, %Y') if batch.arrival_date else 'Date TBD' }}</div>
+                                <div class="text-sm text-green-600">{{ batch.arrival_time or 'Time TBD' }} - {{ batch.arrival_point or 'Location TBD' }}</div>
+                                {% if batch.flight_number %}<div class="text-sm text-green-600 mt-1">Flight: {{ batch.flight_number }}</div>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-green-600 text-sm">No arrival information added yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-departure" class="service-panel hidden mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                        <h3 class="font-semibold text-orange-800 mb-3 flex items-center gap-2"><i class="fas fa-plane-departure"></i> Departure Details</h3>
+                        {% if request.departure_batches %}
+                        <div class="space-y-2">
+                            {% for batch in request.departure_batches %}
+                            <div class="bg-white p-3 rounded-lg border border-orange-100">
+                                <div class="font-medium text-orange-700">{{ batch.departure_date.strftime('%A, %B %d, %Y') if batch.departure_date else 'Date TBD' }}</div>
+                                <div class="text-sm text-orange-600">{{ batch.departure_time or 'Time TBD' }} - {{ batch.departure_point or 'Location TBD' }}</div>
+                                {% if batch.flight_number %}<div class="text-sm text-orange-600 mt-1">Flight: {{ batch.flight_number }}</div>{% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-orange-600 text-sm">No departure information added yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-hotel" class="service-panel hidden mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-blue-800 mb-3 flex items-center gap-2"><i class="fas fa-hotel"></i> Hotel Details</h3>
+                        {% if request.inbound_hotels %}
+                        <div class="space-y-2">
+                            {% for hotel in request.inbound_hotels %}
+                            <div class="bg-white p-3 rounded-lg border border-blue-100">
+                                <div class="font-medium text-blue-700">{{ hotel.hotel_name or 'Hotel TBD' }}</div>
+                                <div class="text-sm text-blue-600">
+                                    {{ hotel.check_in_date.strftime('%b %d') if hotel.check_in_date else 'Check-in TBD' }} 
+                                    - {{ hotel.check_out_date.strftime('%b %d') if hotel.check_out_date else 'Check-out TBD' }}
+                                    ({{ hotel.nights or 0 }} nights)
+                                </div>
+                                <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded text-xs font-medium
+                                    {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700
+                                    {% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
+                                    {% else %}bg-slate-100 text-slate-700{% endif %}">
+                                    {{ hotel.status or 'PENDING' }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-blue-600 text-sm">No hotels added yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-guide" class="service-panel hidden mt-4 p-4 bg-teal-50 rounded-lg border border-teal-200">
+                        <h3 class="font-semibold text-teal-800 mb-3 flex items-center gap-2"><i class="fas fa-user-tie"></i> Guide Details</h3>
+                        {% if request.inbound_guides %}
+                        <div class="space-y-2">
+                            {% for guide in request.inbound_guides %}
+                            <div class="bg-white p-3 rounded-lg border border-teal-100">
+                                <div class="font-medium text-teal-700">{{ guide.guide_name or 'Guide TBD' }}</div>
+                                <div class="text-sm text-teal-600">
+                                    {{ guide.service_date.strftime('%b %d, %Y') if guide.service_date else 'Date TBD' }}
+                                    {% if guide.language %} - {{ guide.language }}{% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-teal-600 text-sm">No guides assigned yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-transport" class="service-panel hidden mt-4 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
+                        <h3 class="font-semibold text-cyan-800 mb-3 flex items-center gap-2"><i class="fas fa-car"></i> Transport Details</h3>
+                        {% if request.inbound_transports %}
+                        <div class="space-y-2">
+                            {% for transport in request.inbound_transports %}
+                            <div class="bg-white p-3 rounded-lg border border-cyan-100">
+                                <div class="font-medium text-cyan-700">{{ transport.vehicle_type or 'Vehicle TBD' }}</div>
+                                <div class="text-sm text-cyan-600">
+                                    {{ transport.service_date.strftime('%b %d, %Y') if transport.service_date else 'Date TBD' }}
+                                    {% if transport.pickup_point %} - From: {{ transport.pickup_point }}{% endif %}
+                                </div>
+                                <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded text-xs font-medium
+                                    {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700
+                                    {% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
+                                    {% else %}bg-slate-100 text-slate-700{% endif %}">
+                                    {{ transport.status or 'PENDING' }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-cyan-600 text-sm">No transport arranged yet.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-meal" class="service-panel hidden mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                        <h3 class="font-semibold text-amber-800 mb-3 flex items-center gap-2"><i class="fas fa-utensils"></i> Meal Details</h3>
+                        {% if request.inbound_meals %}
+                        <div class="space-y-2">
+                            {% for meal in request.inbound_meals %}
+                            <div class="bg-white p-3 rounded-lg border border-amber-100">
+                                <div class="font-medium text-amber-700">{{ meal.meal_type or 'Meal' }} - {{ meal.restaurant_name or 'Restaurant TBD' }}</div>
+                                <div class="text-sm text-amber-600">
+                                    {{ meal.service_date.strftime('%b %d, %Y') if meal.service_date else 'Date TBD' }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-amber-600 text-sm">No meals planned yet.</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -1008,22 +1131,32 @@ function switchTab(tabName) {
     }
 }
 
-// Service tab switching
+// Service tab switching - toggle panel visibility
 function switchServiceTab(serviceName) {
-    // Update active state on tabs
-    document.querySelectorAll('.service-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.service === serviceName);
-    });
-    
-    // Hide all service panels
-    document.querySelectorAll('.service-panel').forEach(panel => {
-        panel.classList.add('hidden');
-    });
-    
-    // Show the selected panel
     const targetPanel = document.getElementById('service-panel-' + serviceName);
+    
     if (targetPanel) {
-        targetPanel.classList.remove('hidden');
+        // Toggle: if already visible, hide it; otherwise show it
+        if (targetPanel.classList.contains('hidden')) {
+            // Hide all other panels first
+            document.querySelectorAll('.service-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            // Show the selected panel
+            targetPanel.classList.remove('hidden');
+            // Update active state on buttons
+            document.querySelectorAll('.service-btn').forEach(btn => {
+                btn.classList.toggle('ring-2', btn.dataset.service === serviceName);
+                btn.classList.toggle('ring-offset-1', btn.dataset.service === serviceName);
+            });
+        } else {
+            // Hide the panel if clicking the same tab
+            targetPanel.classList.add('hidden');
+            // Remove active state from all buttons
+            document.querySelectorAll('.service-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-1');
+            });
+        }
     }
 }
 
