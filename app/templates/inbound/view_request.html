@@ -1360,38 +1360,26 @@ document.addEventListener('DOMContentLoaded', function() {
         switchTab(firstTab.dataset.tab);
     }
     
-    // Add auto-save listeners to Request Details form fields
+    // Add auto-save listeners to ALL Request Details form fields
     const form = document.getElementById('editMode');
     if (form) {
-        // Listen to date changes - these affect itinerary
-        const fromDate = document.getElementById('fromDate');
-        const toDate = document.getElementById('toDate');
-        
-        if (fromDate) {
-            fromDate.addEventListener('change', function() {
-                calculateDays();
-                autoSaveChanges();
-            });
-        }
-        
-        if (toDate) {
-            toDate.addEventListener('change', function() {
-                calculateDays();
-                autoSaveChanges();
-            });
-        }
-        
-        // Listen to pax changes
-        const paxField = form.querySelector('[name="pax"]');
-        if (paxField) {
-            paxField.addEventListener('change', autoSaveChanges);
-        }
-        
-        // Listen to customer type changes
-        const customerType = form.querySelector('[name="customer_type"]');
-        if (customerType) {
-            customerType.addEventListener('change', autoSaveChanges);
-        }
+        // Listen to all input changes
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            // For date fields, also calculate days
+            if (field.id === 'fromDate' || field.id === 'toDate') {
+                field.addEventListener('change', function() {
+                    calculateDays();
+                    autoSaveChanges();
+                });
+            } else {
+                // For all other fields
+                field.addEventListener('change', autoSaveChanges);
+                // Also listen to input events for text fields (real-time updates)
+                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+                    field.addEventListener('input', autoSaveChanges);
+                }
+            }
+        });
     }
 });
 </script>
