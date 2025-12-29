@@ -59,10 +59,11 @@
         .navbar-container {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             height: 100%;
             padding: 0 20px;
             max-width: 100%;
+            position: relative;
         }
         
         /* Logo Section */
@@ -73,6 +74,9 @@
             gap: 4px;
             text-decoration: none;
             color: white;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
         
         .navbar-brand:hover {
