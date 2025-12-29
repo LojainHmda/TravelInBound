@@ -222,31 +222,55 @@ class ItineraryRow(db.Model):
             return self.base_cost or 0
     
     @property
+    def linked_hotel(self):
+        """Get the hotel linked to this itinerary row"""
+        if self.request:
+            for hotel in self.request.inbound_hotels:
+                if hotel.source_itinerary_id == self.id:
+                    return hotel
+        return None
+    
+    @property
+    def linked_transport(self):
+        """Get the transport linked to this itinerary row"""
+        if self.request:
+            for transport in self.request.inbound_transports:
+                if transport.source_itinerary_id == self.id:
+                    return transport
+        return None
+    
+    @property
+    def linked_guide(self):
+        """Get the guide linked to this itinerary row"""
+        if self.request:
+            for guide in self.request.inbound_guides:
+                if guide.source_itinerary_id == self.id:
+                    return guide
+        return None
+    
+    @property
+    def linked_meal(self):
+        """Get the meal linked to this itinerary row"""
+        if self.request:
+            for meal in self.request.inbound_meals:
+                if meal.source_itinerary_id == self.id:
+                    return meal
+        return None
+    
+    @property
     def total_service_cost(self):
         """Calculate total cost from all linked services for this itinerary row"""
         total = 0.0
         
-        # Get linked services via source_itinerary_id
-        if self.request:
-            # Hotel costs linked to this row
-            for hotel in self.request.inbound_hotels:
-                if hotel.source_itinerary_id == self.id:
-                    total += hotel.total_cost or 0.0
-            
-            # Transport costs linked to this row
-            for transport in self.request.inbound_transports:
-                if transport.source_itinerary_id == self.id:
-                    total += transport.cost or 0.0
-            
-            # Guide costs linked to this row
-            for guide in self.request.inbound_guides:
-                if guide.source_itinerary_id == self.id:
-                    total += guide.cost or 0.0
-            
-            # Meal costs linked to this row
-            for meal in self.request.inbound_meals:
-                if meal.source_itinerary_id == self.id:
-                    total += meal.total_cost or 0.0
+        # Use linked properties
+        if self.linked_hotel:
+            total += self.linked_hotel.total_cost or 0.0
+        if self.linked_transport:
+            total += self.linked_transport.cost or 0.0
+        if self.linked_guide:
+            total += self.linked_guide.cost or 0.0
+        if self.linked_meal:
+            total += self.linked_meal.total_cost or 0.0
         
         # If no service costs, fall back to base_cost
         if total == 0.0:
