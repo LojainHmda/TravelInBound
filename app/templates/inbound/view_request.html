@@ -152,7 +152,7 @@ html { scroll-behavior: smooth; }
 }
 .tw-table tbody tr:hover { background: #f8fafc; }
 
-/* Status sidebar */
+/* Status sidebar - Responsive Design */
 .status-sidebar-toggle {
     position: fixed;
     right: 0;
@@ -172,7 +172,7 @@ html { scroll-behavior: smooth; }
 .status-sidebar-overlay {
     position: fixed;
     top: 0;
-    right: -320px;
+    right: -100%;
     width: 320px;
     height: 100vh;
     background: white;
@@ -181,6 +181,13 @@ html { scroll-behavior: smooth; }
     transition: right 0.3s ease;
 }
 .status-sidebar-overlay.open { right: 0; }
+
+@media (max-width: 768px) {
+    .status-sidebar-overlay {
+        width: 85%;
+        max-width: 320px;
+    }
+}
 
 .status-sidebar-backdrop {
     position: fixed;
@@ -197,8 +204,16 @@ html { scroll-behavior: smooth; }
 .status-sidebar-backdrop.show { opacity: 1; visibility: visible; }
 
 /* Status steps */
-.status-step { display: flex; align-items: flex-start; position: relative; padding-bottom: 24px; cursor: pointer; }
+.status-step { 
+    display: flex; 
+    align-items: flex-start; 
+    position: relative; 
+    padding-bottom: 24px; 
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 .status-step:last-child { padding-bottom: 0; }
+.status-step:hover { transform: translateX(-5px); }
 .status-step::before {
     content: '';
     position: absolute;
@@ -230,10 +245,22 @@ html { scroll-behavior: smooth; }
 .status-step.completed .status-icon { background: #10b981; border-color: #10b981; color: white; }
 .status-step.active .status-icon { background: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 0 0 4px rgba(59,130,246,0.2); }
 
-.status-content { margin-left: 12px; padding-top: 8px; }
-.status-label { font-weight: 600; font-size: 0.875rem; color: #1e293b; }
+.status-content { 
+    margin-left: 12px; 
+    padding-top: 8px;
+    flex: 1;
+}
+.status-label { 
+    font-weight: 600; 
+    font-size: 0.875rem; 
+    color: #1e293b; 
+}
 .status-step.active .status-label { color: #3b82f6; }
-.status-desc { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+.status-desc { 
+    font-size: 0.75rem; 
+    color: #64748b; 
+    margin-top: 2px; 
+}
 
 /* Workflow stage bar */
 .stage-bar {
@@ -271,6 +298,7 @@ html { scroll-behavior: smooth; }
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid transparent;
+    position: relative;
 }
 .service-icon-toggle:hover {
     transform: translateY(-2px);
@@ -397,10 +425,53 @@ html { scroll-behavior: smooth; }
     margin: 0.25rem 0;
 }
 
+/* Day row service tabs */
+.day-service-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    position: relative;
+}
+.day-service-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+.day-service-tab:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+.day-service-tab.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+.day-service-tab-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.2);
+}
+.day-service-tab-content {
+    flex: 1;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .tw-container { padding: 0.75rem; }
     .stage-bar { flex-wrap: wrap; gap: 0.5rem; }
+    .status-sidebar-overlay { width: 85%; }
 }
 </style>
 {% endblock %}
@@ -546,7 +617,7 @@ html { scroll-behavior: smooth; }
                             <div>
                                 <label class="tw-label">From Date</label>
                                 <input type="date" class="tw-input" name="from_date" id="fromDate" 
-                                       value="{{ request.from_date.strftime('%Y-%m-%d') }}" 
+                                       value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" 
                                        onchange="calculateDays()" {% if view_only %}disabled{% endif %}>
                             </div>
 
@@ -554,7 +625,7 @@ html { scroll-behavior: smooth; }
                             <div>
                                 <label class="tw-label">To Date</label>
                                 <input type="date" class="tw-input" name="to_date" id="toDate" 
-                                       value="{{ request.to_date.strftime('%Y-%m-%d') }}" 
+                                       value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" 
                                        onchange="calculateDays()" {% if view_only %}disabled{% endif %}>
                             </div>
 
@@ -563,11 +634,11 @@ html { scroll-behavior: smooth; }
                                 <div class="flex-1">
                                     <label class="tw-label">Days</label>
                                     <input type="number" class="tw-input bg-slate-50" name="no_of_days" id="noOfDays" 
-                                           value="{{ request.no_of_days }}" readonly>
+                                           value="{{ request.no_of_days if request.no_of_days else 4 }}" readonly>
                                 </div>
                                 <div class="flex-1">
                                     <label class="tw-label">Pax</label>
-                                    <input type="number" class="tw-input" name="pax" value="{{ request.pax }}" min="1" {% if view_only %}disabled{% endif %}>
+                                    <input type="number" class="tw-input" name="pax" value="{{ request.pax if request.pax else 1 }}" min="1" {% if view_only %}disabled{% endif %}>
                                 </div>
                             </div>
                         </div>
@@ -638,7 +709,7 @@ html { scroll-behavior: smooth; }
                                 </tr>
                             </thead>
                             <tbody id="itineraryTableBody">
-                                {% for row in request.itinerary_rows|sort(attribute='date') %}
+                                {% for row in request.itinerary_rows|sort(attribute='day_number') %}
                                 <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" data-row-id="{{ row.id }}">
                                     <td class="py-3 px-3">
                                         <span class="font-medium text-slate-700">Day {{ row.day_number }}</span>
@@ -726,7 +797,7 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
@@ -832,7 +903,7 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
@@ -940,11 +1011,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
+                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="hotel" onchange="autoSaveServiceData('hotel')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
@@ -1724,7 +1795,7 @@ html { scroll-behavior: smooth; }
     <span class="text-white/60 text-sm">
         <i class="fas fa-forward mr-2"></i>Advance to:
     </span>
-    <select id="confirmStageSelect" onchange="toggleConfirmButton()" 
+    <select id="confirmStageSelect" onchange="confirmStageChange()" 
             class="bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
         <option value="">Select next stage...</option>
         {% if request.status != 'REQUEST' %}
@@ -1749,9 +1820,6 @@ html { scroll-behavior: smooth; }
         <option value="COMPLETED">Completed</option>
         {% endif %}
     </select>
-    <button type="button" class="tw-btn tw-btn-success" id="confirmStageBtn" onclick="confirmStageChange()" disabled>
-        <i class="fas fa-check"></i> Confirm
-    </button>
     <div class="ml-auto flex items-center gap-3">
         <span class="text-white/40 text-sm">Current:</span>
         <span class="status-badge 
@@ -1812,7 +1880,7 @@ function switchServiceTab(serviceName) {
             btn.style.borderBottom = '';
         });
         
-        // Hide all panels inside the container
+        // Hide all panels inside container
         tabContainer.querySelectorAll('.service-panel').forEach(panel => {
             panel.classList.add('hidden');
         });
@@ -1870,6 +1938,9 @@ function calculateDays() {
         const diffTime = Math.abs(to - from);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         document.getElementById('noOfDays').value = diffDays;
+        
+        // Auto-save and regenerate itinerary if dates changed
+        autoSaveChanges();
     }
 }
 
@@ -1886,10 +1957,10 @@ function showAutoSaveIndicator() {
 
 // Toggle service flag in itinerary
 function toggleServiceFlag(rowId, flagType, element) {
-    // Toggle the active class
+    // Toggle active class
     element.classList.toggle('active');
     
-    // Get the current state (true if active, false if not)
+    // Get current state (true if active, false if not)
     const isActive = element.classList.contains('active');
     
     // Send update to server
@@ -1910,14 +1981,14 @@ function toggleServiceFlag(rowId, flagType, element) {
         if (data.success) {
             showAutoSaveIndicator();
         } else {
-            // Revert the change if there was an error
+            // Revert change if there was an error
             element.classList.toggle('active');
             showNotification('Error updating service flag', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        // Revert the change if there was an error
+        // Revert change if there was an error
         element.classList.toggle('active');
         showNotification('Error updating service flag', 'error');
     });
@@ -1955,7 +2026,7 @@ function autoSaveItineraryRow(rowId, fieldName, value) {
 function autoSaveServiceData(serviceType) {
     showAutoSaveIndicator();
     
-    // Collect all form data for the service type
+    // Collect all form data for service type
     const formData = {};
     document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
         formData[field.id] = field.value;
@@ -2018,10 +2089,8 @@ function updateSidebarState(newStatus) {
     }
 }
 
-// Update request status
+// Update request status - Direct change without confirmation
 function updateRequestStatus(status) {
-    if (!confirm(`Change status to ${status.replace('_', ' ')}?`)) return;
-    
     fetch(`/inbound/${requestId}/update-status`, {
         method: 'POST',
         headers: {
@@ -2041,7 +2110,6 @@ function updateRequestStatus(status) {
             const select = document.getElementById('confirmStageSelect');
             if (select) {
                 select.value = '';
-                toggleConfirmButton();
             }
         } else {
             showNotification(data.message || 'Error updating status', 'error');
@@ -2053,14 +2121,7 @@ function updateRequestStatus(status) {
     });
 }
 
-// Toggle confirm button
-function toggleConfirmButton() {
-    const select = document.getElementById('confirmStageSelect');
-    const btn = document.getElementById('confirmStageBtn');
-    btn.disabled = !select.value;
-}
-
-// Confirm stage change
+// Confirm stage change - Direct change without confirmation
 function confirmStageChange() {
     const select = document.getElementById('confirmStageSelect');
     if (select.value) {
@@ -2203,7 +2264,7 @@ function duplicateRequest() {
 
 // Archive request
 function archiveRequest() {
-    if (!confirm('Archive this request? It will be hidden from the main list.')) return;
+    if (!confirm('Archive this request? It will be hidden from main list.')) return;
     
     fetch(`/inbound/${requestId}/archive`, {
         method: 'POST',
@@ -2389,6 +2450,44 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // If no itinerary rows exist, create default 4-day itinerary
+    if (!document.getElementById('itineraryTableBody') || document.getElementById('itineraryTableBody').children.length === 0) {
+        createDefaultItinerary();
+    }
 });
+
+// Create default 4-day itinerary
+function createDefaultItinerary() {
+    const fromDate = document.getElementById('fromDate').value || (new Date()).toISOString().split('T')[0];
+    const toDate = document.getElementById('toDate').value || (new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    const pax = document.querySelector('[name="pax"]').value || 1;
+    
+    fetch(`/inbound/api/${requestId}/create-default-itinerary`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            from_date: fromDate,
+            to_date: toDate,
+            pax: pax
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload the page to show the new itinerary
+            window.location.reload();
+        } else {
+            showNotification(data.message || 'Error creating default itinerary', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error creating default itinerary', 'error');
+    });
+}
 </script>
 {% endblock %}
