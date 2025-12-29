@@ -9201,7 +9201,7 @@ function initializeHotelAutocomplete() {
             if (query.length < 2) return;
             
             // Fetch hotel suggestions via API
-            fetch(`/api/hotels/search?q=${encodeURIComponent(query)}`)
+            fetch(`/inbound/api/hotels/search?q=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(data => {
                     // Create or update datalist
