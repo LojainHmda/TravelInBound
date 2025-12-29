@@ -202,6 +202,18 @@ class ItineraryRow(db.Model):
     def __repr__(self):
         return f'<ItineraryRow {self.date} - {self.description[:50]}>'
     
+    @property
+    def itinerary_date(self):
+        """Alias for date field for template compatibility"""
+        return self.date
+    
+    @property
+    def day_number(self):
+        """Calculate day number from request's from_date"""
+        if self.request and self.request.from_date and self.date:
+            return (self.date - self.request.from_date).days + 1
+        return 1
+    
     def calculate_row_cost(self, pax_count):
         """Calculate the actual cost for this row based on cost unit and pax"""
         if self.cost_unit == COST_UNIT_PER_PERSON:
