@@ -5158,7 +5158,7 @@ def api_upload_document(request_id):
         description = request.form.get("description", "")
         
         # Create database record
-        doc = InboundDocument(
+        doc = InboundDocument(  # type: ignore[call-arg]
             request_id=request_id,
             document_type=document_type,
             filename=unique_filename,
