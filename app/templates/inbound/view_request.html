@@ -163,11 +163,13 @@ html { scroll-behavior: smooth; }
     color: white;
     border: none;
     border-radius: 8px 0 0 8px;
-    padding: 12px;
+    padding: 12px 10px;
     cursor: pointer;
     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
 }
-.status-sidebar-toggle:hover { background: #334155; }
+.status-sidebar-toggle:hover { background: #334155; transform: translateY(-50%) scale(1.05); }
+.status-sidebar-toggle i { font-size: 1rem; }
 
 .status-sidebar-overlay {
     position: fixed;
@@ -179,15 +181,10 @@ html { scroll-behavior: smooth; }
     z-index: 1060;
     box-shadow: -4px 0 20px rgba(0,0,0,0.15);
     transition: right 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 .status-sidebar-overlay.open { right: 0; }
-
-@media (max-width: 768px) {
-    .status-sidebar-overlay {
-        width: 85%;
-        max-width: 320px;
-    }
-}
 
 .status-sidebar-backdrop {
     position: fixed;
@@ -202,6 +199,48 @@ html { scroll-behavior: smooth; }
     transition: all 0.3s ease;
 }
 .status-sidebar-backdrop.show { opacity: 1; visibility: visible; }
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .status-sidebar-toggle { padding: 10px 8px; }
+    .status-sidebar-toggle i { font-size: 0.9rem; }
+    .status-sidebar-overlay { width: 280px; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .status-sidebar-toggle {
+        top: auto;
+        bottom: 20px;
+        right: 20px;
+        transform: none;
+        border-radius: 50%;
+        padding: 14px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .status-sidebar-toggle:hover { transform: scale(1.1); }
+    .status-sidebar-toggle i { font-size: 1.1rem; }
+    .status-sidebar-overlay {
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+    .status-sidebar-toggle {
+        bottom: 15px;
+        right: 15px;
+        padding: 12px;
+    }
+    .status-sidebar-overlay {
+        width: 100%;
+        max-width: none;
+    }
+    .status-step { padding-bottom: 18px; }
+    .status-icon { width: 36px; height: 36px; font-size: 12px; }
+    .status-step::before { left: 17px; top: 36px; height: calc(100% - 36px); }
+}
 
 /* Status steps */
 .status-step { 
@@ -405,7 +444,6 @@ html { scroll-behavior: smooth; }
 @media (max-width: 768px) {
     .tw-container { padding: 0.75rem; }
     .stage-bar { flex-wrap: wrap; gap: 0.5rem; }
-    .status-sidebar-overlay { width: 85%; }
 }
 </style>
 {% endblock %}
