@@ -967,6 +967,75 @@ def api_auto_save_and_regenerate(request_id):
         'itinerary_rows': itinerary_rows
     })
 
+@inbound_bp.route('/api/<int:request_id>/create-default-itinerary', methods=['POST'])
+@csrf.exempt
+def api_create_default_itinerary(request_id):
+    """Create default itinerary rows for a new request"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Check if itinerary already exists
+    if request_obj.itinerary_rows and len(request_obj.itinerary_rows) > 0:
+        return jsonify({'success': True, 'message': 'Itinerary already exists'})
+    
+    try:
+        data = request.get_json() or {}
+        
+        # Get dates from request or use defaults
+        from_date_str = data.get('from_date')
+        to_date_str = data.get('to_date')
+        
+        if from_date_str:
+            request_obj.from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        if to_date_str:
+            request_obj.to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+        
+        # If no dates set, use today + 3 days
+        if not request_obj.from_date:
+            request_obj.from_date = date.today()
+        if not request_obj.to_date:
+            request_obj.to_date = request_obj.from_date + timedelta(days=3)
+        
+        # Calculate days
+        request_obj.calculate_days()
+        
+        # Create itinerary rows for each day
+        current_date = request_obj.from_date
+        day_counter = 1
+        
+        while current_date <= request_obj.to_date:
+            # Generate description based on day
+            if day_counter == 1:
+                description = "Arrival Day"
+            elif current_date == request_obj.to_date:
+                description = "Departure Day"
+            else:
+                description = f"Day {day_counter}"
+            
+            row = ItineraryRow(
+                request_id=request_obj.id,
+                date=current_date,
+                description=description,
+                flag_hotel=(day_counter != (request_obj.to_date - request_obj.from_date).days + 1),  # Hotel except last day
+                flag_transport=True,
+                flag_guide=(day_counter > 1 and day_counter < (request_obj.to_date - request_obj.from_date).days + 1),  # Guide for middle days
+                flag_meal=(day_counter > 1 and day_counter < (request_obj.to_date - request_obj.from_date).days + 1),  # Meals for middle days
+                flag_airport=(day_counter == 1 or current_date == request_obj.to_date)  # Airport on first and last day
+            )
+            db.session.add(row)
+            
+            current_date += timedelta(days=1)
+            day_counter += 1
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Default itinerary created'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/update-status', methods=['POST'])
 @csrf.exempt
 
