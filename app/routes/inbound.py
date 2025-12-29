@@ -1,26 +1,22 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, send_file
 from flask_login import login_required
 from datetime import datetime, timedelta
+from typing import cast, Any
 import json
 import os
 
 from app import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
-    InboundMeal, InboundGuide, InboundCashExpense, InboundQuotation, 
-    InboundQuotationItem, QuotationAttachment, InboundDocument,
+    InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,
     COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
 from werkzeug.utils import secure_filename
 import uuid
 from app.models import STATUS_REQUEST, STATUS_QUOTED, STATUS_RESERVED, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
-from app.models.service import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE, ServiceItem
+from app.models.service import ServiceItem
 from app.models.booking import Booking
 from app.models.customer import Customer
-from app.forms.inbound import (
-    InboundRequestForm, ItineraryRowForm, InboundHotelForm, 
-    InboundTransportForm, InboundMealForm, InboundGuideForm
-)
 from app.services.proforma_doc_generator import ProformaDocGenerator
 from app.services.voucher_trip_plan_generator import VoucherTripPlanGenerator
 
@@ -67,7 +63,6 @@ def index():
 def get_run_down_data_by_date():
     """Get confirmed itineraries grouped by date with activities"""
     from app.models.customer import Customer
-    from sqlalchemy import and_
     
     # Get date range (next 30 days)
     today = datetime.now().date()
@@ -414,7 +409,7 @@ def api_save_itinerary(request_id):
         request_obj.calculate_total()
         
         db.session.commit()
-        print(f"DEBUG: Successfully saved itinerary")
+        print("DEBUG: Successfully saved itinerary")
         return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
         
     except Exception as e:
@@ -1168,7 +1163,6 @@ def api_save_hotels(request_id):
     hotels_data = data.get('hotels', [])
     
     from app.models.inbound import InboundHotel, HotelRoom
-    import json
     
     try:
         # Delete existing hotels and their rooms for this request
@@ -1878,7 +1872,7 @@ def api_confirm_all_suppliers(request_id):
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
-    from app.models import STATUS_RESERVED, STATUS_QUOTED
+    from app.models import STATUS_RESERVED
     
     try:
         # Update all hotels to RESERVED (individual services)
@@ -1921,7 +1915,7 @@ def api_confirm_supplier(request_id, service_id):
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
-    from app.models import STATUS_RESERVED, STATUS_QUOTED
+    from app.models import STATUS_RESERVED
     from app.models.inbound import InboundHotel, InboundTransport
     
     service_type = request.json.get('service_type')
@@ -1975,7 +1969,6 @@ def api_generate_proforma(request_id):
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
     
-    from app.models import STATUS_QUOTED, STATUS_CONFIRMED
     
     # Check if status is QUOTED (suppliers confirmed)
     if request_obj.status != STATUS_QUOTED:
@@ -2839,9 +2832,7 @@ def run_down_plan():
 def api_run_down_data():
     """API endpoint for run-down plan data"""
     from app.models.customer import Customer
-    from app.models.service import ServiceConfirmation
-    from app.models.supplier import Supplier
-    from sqlalchemy import and_, or_
+    from sqlalchemy import and_
     
     # Get filter parameters
     date_from_str = request.args.get('date_from')
@@ -3035,7 +3026,7 @@ def run_down_export_excel():
     
     # Create Excel workbook
     wb = openpyxl.Workbook()
-    ws = wb.active  # type: ignore[assignment]
+    ws = cast(Any, wb.active)
     ws.title = "Run-Down Plan"
     
     # Header styling
@@ -3525,7 +3516,7 @@ def wizard_step3():
                     
                     # Validate hotel dates
                     if check_out <= check_in:
-                        raise ValueError(f"Hotel check-out date must be after check-in date")
+                        raise ValueError("Hotel check-out date must be after check-in date")
                     
                     hotel_name = service.get('hotel_name', '')
                     location = service.get('location', '')
@@ -3828,7 +3819,7 @@ def api_export_expense_report(request_id):
     
     try:
         wb = Workbook()
-        ws = wb.active  # type: ignore[assignment]
+        ws = cast(Any, wb.active)
         ws.title = "Sheet1"
         
         # Header
@@ -4037,7 +4028,7 @@ def add_meal(request_id):
         abort(403)
     
     try:
-        from app.models.inbound import ItineraryRow, SERVICE_FLAG_MEAL
+        from app.models.inbound import ItineraryRow
         
         meal_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         meal_type = request.form['meal_type']
@@ -5016,7 +5007,7 @@ def analytics_export_excel():
     
     # Create Excel workbook
     wb = openpyxl.Workbook()
-    ws = wb.active  # type: ignore[assignment]
+    ws = cast(Any, wb.active)
     ws.title = "Services Analytics"
     
     # Header styling
