@@ -2273,263 +2273,6 @@ body::-webkit-scrollbar-thumb:hover {
             </div>
         </div>
         <!-- End Request Master Tab Pane -->
-        
-        <!-- Itinerary Tab Pane -->
-        <div class="tab-pane fade" id="itinerary-main-pane" role="tabpanel">
-            <!-- Operations Dashboard Link (visible when status = PROCESSING) -->
-            {% if request.status == 'PROCESSING' %}
-            <div class="alert mb-2" style="background: #fef3c7; border: 2px solid #fde68a; border-radius: 8px;">
-                <h6 class="mb-1" style="color: #92400e;"><i class="fas fa-calendar-check me-2"></i>Operations Dashboard Available</h6>
-                <p class="mb-0" style="color: #78350f;">This itinerary is now in active operations. View the daily timeline and calendar on the <a href="{{ url_for('inbound.run_down_plan') }}" style="color: #1e40af; font-weight: 600; text-decoration: underline;">Run-Down dashboard</a>.</p>
-            </div>
-            {% endif %}
-
-            <!-- Itinerary Details -->
-            <div class="card mb-2" style="border: 1px solid #e2e8f0; box-shadow: none;">
-                <div class="card-header d-flex justify-content-between align-items-center" style="background: white; border-bottom: 1px solid #e2e8f0; padding: 0.75rem 1rem;">
-                    <h5 class="card-title mb-0" style="font-size: 0.95rem; font-weight: 600; color: #334155;">Itinerary Details</h5>
-                    <button type="button" class="btn btn-sm" onclick="scrollToTripItinerary()" style="padding: 4px 12px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 0.8rem;">
-                        <i class="fas fa-calendar-alt me-1"></i> View Trip Itinerary
-                    </button>
-                </div>
-                <div class="card-body py-2">
-                    {% if request.itinerary_rows %}
-                    <!-- Editable Itinerary -->
-                    <div id="itineraryEditMode">
-                        <!-- Intuitive Service Selection Bar -->
-                        <div class="service-selection-bar mb-3" style="background: #f8fafc; border-radius: 8px; padding: 12px 16px; border: 1px solid #e2e8f0;">
-                            <div class="service-bar-title mb-2" style="font-weight: 500; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.025em;">
-                                <i class="fas fa-plus-circle me-2"></i>Add Services:
-                            </div>
-                            <div class="service-icons-horizontal d-flex gap-2 align-items-center flex-wrap">
-                                <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#arrivalDepartureModal"
-                                        style="background: #475569; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-plane me-1"></i>
-                                    <span>Arrivals/Departures</span>
-                                </button>
-                                <button type="button" class="service-icon-button" data-service="hotel"
-                                        style="background: #f59e0b; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-bed me-1"></i>
-                                    <span>Hotel</span>
-                                </button>
-                                <button type="button" class="service-icon-button" data-service="guide"
-                                        style="background: #f59e0b; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-user-tie me-1"></i>
-                                    <span>Guide</span>
-                                </button>
-                                <button type="button" class="service-icon-button" data-service="transport"
-                                        style="background: #f59e0b; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-car me-1"></i>
-                                    <span>Transport</span>
-                                </button>
-                                <button type="button" class="service-icon-button" data-service="meal"
-                                        style="background: #f59e0b; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-utensils me-1"></i>
-                                    <span>Meal</span>
-                                </button>
-                                <button type="button" onclick="openTripItineraryModal()"
-                                        style="background: #0284c7; border: none; border-radius: 6px; padding: 8px 12px; color: white; cursor: pointer; transition: all 0.15s ease; min-width: auto; font-weight: 500; font-size: 0.8rem;">
-                                    <i class="fas fa-calendar-alt me-1"></i>
-                                    <span>Trip Itinerary</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <form id="itineraryForm" onsubmit="saveItinerary(event)">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Description</th>
-                                            <th style="display: none;">Restaurant</th>
-                                            <th style="display: none;">Cash Expense</th>
-                                            <th>Comment</th>
-                                            <th>Service Flags</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="itineraryTableBody">
-                                        {% for row in request.itinerary_rows %}
-                                        <tr data-row-id="{{ row.id }}" data-row-index="{{ loop.index0 }}" data-date="{{ row.date.strftime('%Y-%m-%d') }}" 
-                                            class="itinerary-row clickable-row" style="cursor: pointer; transition: all 0.2s ease;"
-                                            onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor=''">
-                                            <td>
-                                                {{ row.date.strftime('%d %b %Y') }}
-                                                <input type="hidden" name="date[]" value="{{ row.date.strftime('%Y-%m-%d') }}">
-                                                <input type="hidden" name="row_id[]" value="{{ row.id }}">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control" 
-                                                       name="description[]" 
-                                                       value="{{ row.description }}" 
-                                                       placeholder="Enter description" 
-                                                       required>
-                                            </td>
-                                            <td style="display: none;">
-                                                <input type="text" class="form-control form-control-sm" 
-                                                       name="restaurant[]" 
-                                                       value="{{ row.restaurant or '' }}" 
-                                                       placeholder="Type or select restaurant"
-                                                       list="jordan-restaurants">
-                                            </td>
-                                            <td style="display: none;">
-                                                <input type="number" class="form-control form-control-sm" 
-                                                       name="cash_expense[]" 
-                                                       value="{{ row.cash_expense or 0 }}" 
-                                                       step="0.01" 
-                                                       min="0" 
-                                                       style="width: 90px;">
-                                            </td>
-                                            <td>
-                                                <input type="text" class="form-control form-control-sm" 
-                                                       name="comment[]" 
-                                                       value="{{ row.comment or '' }}" 
-                                                       placeholder="Comment">
-                                            </td>
-                                            <td>
-                                                <div class="d-flex flex-wrap gap-1 mb-2">
-                                                    {% if row.flag_hotel %}
-                                                        <div class="hotel-badge-container service-badge-removable" data-service="hotel">
-                                                            <span class="badge bg-danger" data-service="hotel" style="display: flex; align-items: center; gap: 6px;">
-                                                                <i class="fas fa-bed"></i> Hotel
-                                                                <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'hotel')" title="Remove hotel">
-                                                                    <i class="fas fa-times"></i>
-                                                                </button>
-                                                            </span>
-                                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" 
-                                                                    onclick="openRoomDistributionModal({{ loop.index0 }})"
-                                                                    title="Manage room distribution">
-                                                                <i class="fas fa-door-open"></i> Rooms
-                                                            </button>
-                                                            {% if row.hotel_single_rooms or row.hotel_double_rooms or row.hotel_triple_rooms or row.hotel_other_rooms %}
-                                                                <div class="room-distribution-display">
-                                                                    {% if row.hotel_single_rooms and row.hotel_single_rooms > 0 %}
-                                                                        <span class="room-type-badge">S{{ row.hotel_single_rooms }}</span>
-                                                                    {% endif %}
-                                                                    {% if row.hotel_double_rooms and row.hotel_double_rooms > 0 %}
-                                                                        <span class="room-type-badge">D{{ row.hotel_double_rooms }}</span>
-                                                                    {% endif %}
-                                                                    {% if row.hotel_triple_rooms and row.hotel_triple_rooms > 0 %}
-                                                                        <span class="room-type-badge">T{{ row.hotel_triple_rooms }}</span>
-                                                                    {% endif %}
-                                                                    {% if row.hotel_other_rooms and row.hotel_other_rooms > 0 %}
-                                                                        <span class="room-type-badge">O{{ row.hotel_other_rooms }}</span>
-                                                                    {% endif %}
-                                                                </div>
-                                                            {% endif %}
-                                                        </div>
-                                                    {% endif %}
-                                                    {% if row.flag_guide %}
-                                                        <span class="badge bg-success service-badge-removable" data-service="guide">
-                                                            <i class="fas fa-user-tie"></i> Guide
-                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'guide')">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_transport %}
-                                                        <span class="badge bg-info service-badge-removable" data-service="transport">
-                                                            <i class="fas fa-car"></i> Transport
-                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'transport')">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_meal %}
-                                                        <span class="badge bg-warning text-dark service-badge-removable" data-service="meal">
-                                                            <i class="fas fa-utensils"></i> Meal
-                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'meal')">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_airport %}
-                                                        <span class="badge bg-secondary service-badge-removable clickable-airport-badge" 
-                                                              data-service="airport" 
-                                                              onclick="openArrivalDepartureBatchModal()" 
-                                                              style="cursor: pointer;">
-                                                            <i class="fas fa-plane"></i> Airport
-                                                            <button type="button" class="btn-remove-service" onclick="event.stopPropagation(); removeService({{ loop.index0 }}, 'airport')">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        </span>
-                                                    {% endif %}
-                                                    {% if row.flag_drive %}
-                                                        <span class="badge bg-primary service-badge-removable" data-service="drive">
-                                                            <i class="fas fa-road"></i> Drive
-                                                            <button type="button" class="btn-remove-service" onclick="removeService({{ loop.index0 }}, 'drive')">
-                                                                <i class="fas fa-times"></i>
-                                                            </button>
-                                                        </span>
-                                                    {% endif %}
-                                                </div>
-                                                <!-- Hidden inputs for form submission -->
-                                                <input type="hidden" name="flag_hotel_{{ loop.index0 }}" value="{% if row.flag_hotel %}1{% endif %}">
-                                                <input type="hidden" name="flag_guide_{{ loop.index0 }}" value="{% if row.flag_guide %}1{% endif %}">
-                                                <input type="hidden" name="flag_transport_{{ loop.index0 }}" value="{% if row.flag_transport %}1{% endif %}">
-                                                <input type="hidden" name="flag_meal_{{ loop.index0 }}" value="{% if row.flag_meal %}1{% endif %}">
-                                                <input type="hidden" name="flag_airport_{{ loop.index0 }}" value="{% if row.flag_airport %}1{% endif %}">
-                                                <input type="hidden" name="flag_drive_{{ loop.index0 }}" value="{% if row.flag_drive %}1{% endif %}">
-                                                <!-- Hidden room data -->
-                                                <input type="hidden" id="single_{{ loop.index0 }}_input" name="hotel_single_rooms[]" value="{{ row.hotel_single_rooms or 0 }}">
-                                                <input type="hidden" id="double_{{ loop.index0 }}_input" name="hotel_double_rooms[]" value="{{ row.hotel_double_rooms or 0 }}">
-                                                <input type="hidden" id="triple_{{ loop.index0 }}_input" name="hotel_triple_rooms[]" value="{{ row.hotel_triple_rooms or 0 }}">
-                                                <input type="hidden" id="other_{{ loop.index0 }}_input" name="hotel_other_rooms[]" value="{{ row.hotel_other_rooms or 0 }}">
-                                            </td>
-                                            <td class="fw-bold">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <span>
-                                                        {% if row.cost_unit == 'PER_PERSON' %}
-                                                            {{ "%.2f"|format(row.base_cost * request.pax) }}
-                                                        {% else %}
-                                                            {{ "%.2f"|format(row.base_cost) }}
-                                                        {% endif %}
-                                                        {{ row.currency }}
-                                                    </span>
-                                                    <button type="button" class="btn btn-xs btn-outline-primary ms-2" 
-                                                            onclick="openServiceSelectionModal({{ loop.index0 }})" 
-                                                            title="Add/Manage Services">
-                                                        <i class="fas fa-plus"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="6" class="text-center py-2">
-                                                {% if not view_only %}
-                                                <button type="button" class="btn btn-info me-2" onclick="addItineraryRow()">
-                                                    <i class="fas fa-plus"></i> Add Day
-                                                </button>
-                                                <button type="submit" class="btn btn-success me-2" onclick="alert('Button clicked! Check console.'); console.log('Button onclick fired');">
-                                                    <i class="fas fa-save"></i> Save Changes
-                                                </button>
-                                                <button type="button" class="btn btn-secondary" onclick="cancelItineraryEdit()">
-                                                    <i class="fas fa-times"></i> Cancel
-                                                </button>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </form>
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5 text-muted">
-                        <i class="fas fa-list fa-3x mb-3"></i>
-                        <h5>No Itinerary Items</h5>
-                        <p>Click the button below to automatically generate itinerary days from {{ request.from_date.strftime('%d %b') }} to {{ request.to_date.strftime('%d %b') }}</p>
-                        <button type="button" class="btn btn-primary btn-lg" onclick="generateDays()" style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; color: #1f2937; font-weight: 600; padding: 12px 32px; box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);">
-                            <i class="fas fa-calendar-plus"></i> Generate Days
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Confirm Stage Section -->
     <div class="confirm-stage-section">
@@ -3902,21 +3645,11 @@ function saveChanges(event) {
             // Show success alert
             showSaveSuccessAlert();
             
-            // Switch to itinerary tab after a short delay
+            // Reload page after a short delay to show updated data
             setTimeout(() => {
-                const itineraryTab = document.querySelector('button[data-bs-target="#itinerary-main-pane"]');
-                if (itineraryTab) {
-                    itineraryTab.click();
-                    // Highlight the itinerary section
-                    highlightItinerarySection();
-                }
-            }, 800);
-            
-            // Reload page after showing the itinerary
-            setTimeout(() => {
-                window.location.hash = 'itinerary';
+                window.location.hash = 'itinerary-section';
                 window.location.reload();
-            }, 2500);
+            }, 1500);
         } else {
             showNotification(data.message || 'Error saving changes', 'error');
         }
@@ -3954,13 +3687,13 @@ function showSaveSuccessAlert() {
     }, 3000);
 }
 
-// Highlight itinerary section when switching tabs
+// Highlight itinerary section
 function highlightItinerarySection() {
-    const itineraryPane = document.getElementById('itinerary-main-pane');
-    if (itineraryPane) {
-        itineraryPane.style.animation = 'highlightPulse 1s ease-out';
+    const itinerarySection = document.getElementById('itinerary-section');
+    if (itinerarySection) {
+        itinerarySection.style.animation = 'highlightPulse 1s ease-out';
         setTimeout(() => {
-            itineraryPane.style.animation = '';
+            itinerarySection.style.animation = '';
         }, 1000);
     }
 }
