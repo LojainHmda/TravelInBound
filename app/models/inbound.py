@@ -223,37 +223,57 @@ class ItineraryRow(db.Model):
     
     @property
     def linked_hotel(self):
-        """Get the hotel linked to this itinerary row"""
+        """Get the hotel linked to this itinerary row (row-specific or global fallback)"""
         if self.request:
+            # First try row-specific match
             for hotel in self.request.inbound_hotels:
                 if hotel.source_itinerary_id == self.id:
+                    return hotel
+            # Fall back to global hotel (source_itinerary_id=None)
+            for hotel in self.request.inbound_hotels:
+                if hotel.source_itinerary_id is None:
                     return hotel
         return None
     
     @property
     def linked_transport(self):
-        """Get the transport linked to this itinerary row"""
+        """Get the transport linked to this itinerary row (row-specific or global fallback)"""
         if self.request:
+            # First try row-specific match
             for transport in self.request.inbound_transports:
                 if transport.source_itinerary_id == self.id:
+                    return transport
+            # Fall back to global transport (source_itinerary_id=None)
+            for transport in self.request.inbound_transports:
+                if transport.source_itinerary_id is None:
                     return transport
         return None
     
     @property
     def linked_guide(self):
-        """Get the guide linked to this itinerary row"""
+        """Get the guide linked to this itinerary row (row-specific or global fallback)"""
         if self.request:
+            # First try row-specific match
             for guide in self.request.inbound_guides:
                 if guide.source_itinerary_id == self.id:
+                    return guide
+            # Fall back to global guide (source_itinerary_id=None)
+            for guide in self.request.inbound_guides:
+                if guide.source_itinerary_id is None:
                     return guide
         return None
     
     @property
     def linked_meal(self):
-        """Get the meal linked to this itinerary row"""
+        """Get the meal linked to this itinerary row (row-specific or global fallback)"""
         if self.request:
+            # First try row-specific match
             for meal in self.request.inbound_meals:
                 if meal.source_itinerary_id == self.id:
+                    return meal
+            # Fall back to global meal (source_itinerary_id=None)
+            for meal in self.request.inbound_meals:
+                if meal.source_itinerary_id is None:
                     return meal
         return None
     
