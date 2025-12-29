@@ -202,7 +202,6 @@ def new_request():
     db.session.commit()
     
     # Redirect to view page which now has unified edit functionality
-    flash(f'New inbound request {request_obj.request_number} created. Please fill in the details.', 'info')
     return redirect(url_for('inbound.view_request', id=request_obj.id))
 
 @inbound_bp.route('/<int:id>/edit')
