@@ -991,8 +991,49 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
+                        <!-- Saved Guides Table (Above Form Fields) -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-teal-600 text-white">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Guide</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Phone</th>
+                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-100">
+                                    {% if request.inbound_guides %}
+                                    {% for guide in request.inbound_guides %}
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-700">{{ guide.language or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ guide.telephone or '-' }}</td>
+                                        {% if not view_only %}
+                                        <td class="px-4 py-3 text-center">
+                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteGuide({{ guide.id }})">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="{% if view_only %}4{% else %}5{% endif %}" class="px-4 py-8 text-center text-slate-400">
+                                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                                            <p>No guides saved yet</p>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                         {% if not view_only %}
-                        <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <!-- Add Guide Form Fields (Below Table) -->
+                        <div class="p-5 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name *</label>
@@ -1037,45 +1078,6 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Guide</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Phone</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_guides %}
-                                    {% for guide in request.inbound_guides %}
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ guide.language or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ guide.telephone or '-' }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteGuide({{ guide.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}4{% else %}5{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No guides saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                     
                     <div id="service-panel-transport" class="service-panel hidden">
@@ -1085,8 +1087,51 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-transport" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
+                        <!-- Saved Transport Table (Above Form Fields) -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-teal-600 text-white">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
+                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-100">
+                                    {% if request.inbound_transports %}
+                                    {% for transport in request.inbound_transports %}
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-4 py-3 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-700">{{ transport.pickup_point or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
+                                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
+                                        {% if not view_only %}
+                                        <td class="px-4 py-3 text-center">
+                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteTransport({{ transport.id }})">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
+                                            <i class="fas fa-inbox text-2xl mb-2"></i>
+                                            <p>No transport saved yet</p>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
                         {% if not view_only %}
-                        <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <!-- Add Transport Form Fields (Below Table) -->
+                        <div class="p-5 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
@@ -1141,30 +1186,40 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
+                    </div>
+                    
+                    <div id="service-panel-meal" class="service-panel hidden">
+                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="fas fa-utensils text-amber-600"></i> Meal Details
+                                <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
+                            </h3>
+                        </div>
+                        <!-- Saved Meals Table (Above Form Fields) -->
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Location</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
                                         {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_transports %}
-                                    {% for transport in request.inbound_transports %}
+                                    {% if request.inbound_meals %}
+                                    {% for meal in request.inbound_meals %}
                                     <tr class="hover:bg-slate-50">
-                                        <td class="px-4 py-3 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ transport.pickup_point or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
-                                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
+                                        <td class="px-4 py-3 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ meal.meal_type or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500">{{ meal.location or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-700 text-center">{{ meal.pax_count or 0 }}</td>
                                         {% if not view_only %}
                                         <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteTransport({{ transport.id }})">
+                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteMeal({{ meal.id }})">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </td>
@@ -1175,24 +1230,16 @@ html { scroll-behavior: smooth; }
                                     <tr>
                                         <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
                                             <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No transport saved yet</p>
+                                            <p>No meals saved yet</p>
                                         </td>
                                     </tr>
                                     {% endif %}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                    
-                    <div id="service-panel-meal" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                                <i class="fas fa-utensils text-amber-600"></i> Meal Details
-                                <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
-                            </h3>
-                        </div>
                         {% if not view_only %}
-                        <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <!-- Add Meal Form Fields (Below Table) -->
+                        <div class="p-5 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
@@ -1238,47 +1285,6 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Location</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_meals %}
-                                    {% for meal in request.inbound_meals %}
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="px-4 py-3 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ meal.meal_type or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ meal.location or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700 text-center">{{ meal.pax_count or 0 }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteMeal({{ meal.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No meals saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
             </div>
