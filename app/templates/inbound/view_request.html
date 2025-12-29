@@ -530,123 +530,579 @@ html { scroll-behavior: smooth; }
                     <!-- Service Content Panels (shown when tabs clicked) -->
                     <div id="service-panel-arrival" class="service-panel hidden mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
                         <h3 class="font-semibold text-green-800 mb-3 flex items-center gap-2"><i class="fas fa-plane-arrival"></i> Arrival Details</h3>
-                        {% if request.arrival_batches %}
-                        <div class="space-y-2">
-                            {% for batch in request.arrival_batches %}
-                            <div class="bg-white p-3 rounded-lg border border-green-100">
-                                <div class="font-medium text-green-700">{{ batch.arrival_date.strftime('%A, %B %d, %Y') if batch.arrival_date else 'Date TBD' }}</div>
-                                <div class="text-sm text-green-600">{{ batch.arrival_time or 'Time TBD' }} - {{ batch.arrival_point or 'Location TBD' }}</div>
-                                {% if batch.flight_number %}<div class="text-sm text-green-600 mt-1">Flight: {{ batch.flight_number }}</div>{% endif %}
+                        
+                        <!-- Add New Arrival Form -->
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-green-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Date *</label>
+                                    <input type="date" class="tw-input text-sm" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Time</label>
+                                    <input type="time" class="tw-input text-sm" id="arrival_time">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Arrival Point *</label>
+                                    <select class="tw-input text-sm" id="arrival_point">
+                                        <option value="">Select...</option>
+                                        <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                        <option value="King Hussein International Airport - Aqaba">King Hussein - Aqaba</option>
+                                        <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                        <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Flight Number</label>
+                                    <input type="text" class="tw-input text-sm" id="arrival_flight_number" placeholder="e.g., RJ123">
+                                </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Vehicle Type</label>
+                                    <select class="tw-input text-sm" id="arrival_vehicle_type">
+                                        <option value="">Select...</option>
+                                        <option value="Sedan">Sedan (1-3 PAX)</option>
+                                        <option value="Van">Van (4-7 PAX)</option>
+                                        <option value="Minibus">Minibus (8-15 PAX)</option>
+                                        <option value="Bus">Bus (16+ PAX)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">PAX Count</label>
+                                    <input type="number" class="tw-input text-sm" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Driver Name</label>
+                                    <input type="text" class="tw-input text-sm" id="arrival_driver_name" placeholder="Driver name">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Notes</label>
+                                    <input type="text" class="tw-input text-sm" id="arrival_notes" placeholder="Notes">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn tw-btn-success text-sm" onclick="saveArrivalService()">
+                                    <i class="fas fa-save"></i> Save Arrival
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Saved Arrivals Table -->
+                        {% if request.arrival_batches %}
+                        <div class="bg-white rounded-lg border border-green-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-green-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">Time</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">Flight</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">PAX</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-green-800">Driver</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in request.arrival_batches %}
+                                    <tr class="border-t border-green-50">
+                                        <td class="px-3 py-2">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.arrival_point or '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-3 py-2">{{ batch.driver_name or '-' }}</td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteArrivalBatch({{ batch.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-green-600 text-sm">No arrival information added yet.</p>
+                        <p class="text-green-600 text-sm text-center py-4">No arrivals saved yet</p>
                         {% endif %}
                     </div>
                     
                     <div id="service-panel-departure" class="service-panel hidden mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
                         <h3 class="font-semibold text-orange-800 mb-3 flex items-center gap-2"><i class="fas fa-plane-departure"></i> Departure Details</h3>
-                        {% if request.departure_batches %}
-                        <div class="space-y-2">
-                            {% for batch in request.departure_batches %}
-                            <div class="bg-white p-3 rounded-lg border border-orange-100">
-                                <div class="font-medium text-orange-700">{{ batch.departure_date.strftime('%A, %B %d, %Y') if batch.departure_date else 'Date TBD' }}</div>
-                                <div class="text-sm text-orange-600">{{ batch.departure_time or 'Time TBD' }} - {{ batch.departure_point or 'Location TBD' }}</div>
-                                {% if batch.flight_number %}<div class="text-sm text-orange-600 mt-1">Flight: {{ batch.flight_number }}</div>{% endif %}
+                        
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-orange-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Date *</label>
+                                    <input type="date" class="tw-input text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Time</label>
+                                    <input type="time" class="tw-input text-sm" id="departure_time">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Departure Point *</label>
+                                    <select class="tw-input text-sm" id="departure_point">
+                                        <option value="">Select...</option>
+                                        <option value="Queen Alia International Airport">Queen Alia (AMM)</option>
+                                        <option value="King Hussein International Airport">King Hussein - Aqaba</option>
+                                        <option value="King Hussein Bridge">King Hussein Bridge</option>
+                                        <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
+                                        <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Flight Number</label>
+                                    <input type="text" class="tw-input text-sm" id="departure_flight_number" placeholder="e.g., RJ123">
+                                </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Vehicle Type</label>
+                                    <select class="tw-input text-sm" id="departure_vehicle_type">
+                                        <option value="">Select...</option>
+                                        <option value="Sedan">Sedan (1-3 PAX)</option>
+                                        <option value="Van">Van (4-7 PAX)</option>
+                                        <option value="Minibus">Minibus (8-15 PAX)</option>
+                                        <option value="Bus">Bus (16+ PAX)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">PAX Count</label>
+                                    <input type="number" class="tw-input text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Driver Name</label>
+                                    <input type="text" class="tw-input text-sm" id="departure_driver_name" placeholder="Driver name">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Notes</label>
+                                    <input type="text" class="tw-input text-sm" id="departure_notes" placeholder="Notes">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn tw-btn-warning text-sm" onclick="saveDepartureService()">
+                                    <i class="fas fa-save"></i> Save Departure
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.departure_batches %}
+                        <div class="bg-white rounded-lg border border-orange-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-orange-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">Time</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">Flight</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">PAX</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-orange-800">Driver</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for batch in request.departure_batches %}
+                                    <tr class="border-t border-orange-50">
+                                        <td class="px-3 py-2">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.departure_point or '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-3 py-2">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-3 py-2">{{ batch.driver_name or '-' }}</td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteDepartureBatch({{ batch.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-orange-600 text-sm">No departure information added yet.</p>
+                        <p class="text-orange-600 text-sm text-center py-4">No departures saved yet</p>
                         {% endif %}
                     </div>
                     
                     <div id="service-panel-hotel" class="service-panel hidden mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <h3 class="font-semibold text-blue-800 mb-3 flex items-center gap-2"><i class="fas fa-hotel"></i> Hotel Details</h3>
-                        {% if request.inbound_hotels %}
-                        <div class="space-y-2">
-                            {% for hotel in request.inbound_hotels %}
-                            <div class="bg-white p-3 rounded-lg border border-blue-100">
-                                <div class="font-medium text-blue-700">{{ hotel.hotel_name or 'Hotel TBD' }}</div>
-                                <div class="text-sm text-blue-600">
-                                    {{ hotel.check_in_date.strftime('%b %d') if hotel.check_in_date else 'Check-in TBD' }} 
-                                    - {{ hotel.check_out_date.strftime('%b %d') if hotel.check_out_date else 'Check-out TBD' }}
-                                    ({{ hotel.nights or 0 }} nights)
+                        
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-blue-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Hotel Name *</label>
+                                    <input type="text" class="tw-input text-sm" id="hotel_name" placeholder="Hotel name">
                                 </div>
-                                <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded text-xs font-medium
-                                    {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700
-                                    {% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
-                                    {% else %}bg-slate-100 text-slate-700{% endif %}">
-                                    {{ hotel.status or 'PENDING' }}
-                                </span>
+                                <div>
+                                    <label class="tw-label">Check-in Date</label>
+                                    <input type="date" class="tw-input text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Check-out Date</label>
+                                    <input type="date" class="tw-input text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Category</label>
+                                    <select class="tw-input text-sm" id="hotel_category">
+                                        <option value="">Select...</option>
+                                        <option value="5-Star">5-Star</option>
+                                        <option value="4-Star">4-Star</option>
+                                        <option value="3-Star">3-Star</option>
+                                        <option value="Boutique">Boutique</option>
+                                    </select>
+                                </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Board Basis</label>
+                                    <select class="tw-input text-sm" id="hotel_board">
+                                        <option value="BB">BB - Bed & Breakfast</option>
+                                        <option value="HB">HB - Half Board</option>
+                                        <option value="FB">FB - Full Board</option>
+                                        <option value="RO">RO - Room Only</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Status</label>
+                                    <select class="tw-input text-sm" id="hotel_status">
+                                        <option value="REQUESTED">Requested</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Cost per Night</label>
+                                    <input type="number" class="tw-input text-sm" id="hotel_cost" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Notes</label>
+                                    <input type="text" class="tw-input text-sm" id="hotel_notes" placeholder="Notes">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn tw-btn-primary text-sm" onclick="saveHotelService()">
+                                    <i class="fas fa-save"></i> Save Hotel
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.inbound_hotels %}
+                        <div class="bg-white rounded-lg border border-blue-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-blue-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-blue-800">Hotel</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-blue-800">Check-in</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-blue-800">Check-out</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-blue-800">Nights</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-blue-800">Status</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for hotel in request.inbound_hotels %}
+                                    <tr class="border-t border-blue-50">
+                                        <td class="px-3 py-2">{{ hotel.hotel_name or '-' }}</td>
+                                        <td class="px-3 py-2">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ hotel.nights or 0 }}</td>
+                                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteHotel({{ hotel.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-blue-600 text-sm">No hotels added yet.</p>
+                        <p class="text-blue-600 text-sm text-center py-4">No hotels saved yet</p>
                         {% endif %}
                     </div>
                     
                     <div id="service-panel-guide" class="service-panel hidden mt-4 p-4 bg-teal-50 rounded-lg border border-teal-200">
                         <h3 class="font-semibold text-teal-800 mb-3 flex items-center gap-2"><i class="fas fa-user-tie"></i> Guide Details</h3>
-                        {% if request.inbound_guides %}
-                        <div class="space-y-2">
-                            {% for guide in request.inbound_guides %}
-                            <div class="bg-white p-3 rounded-lg border border-teal-100">
-                                <div class="font-medium text-teal-700">{{ guide.guide_name or 'Guide TBD' }}</div>
-                                <div class="text-sm text-teal-600">
-                                    {{ guide.service_date.strftime('%b %d, %Y') if guide.service_date else 'Date TBD' }}
-                                    {% if guide.language %} - {{ guide.language }}{% endif %}
+                        
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-teal-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Guide Name *</label>
+                                    <input type="text" class="tw-input text-sm" id="guide_name" placeholder="Guide name">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Service Date</label>
+                                    <input type="date" class="tw-input text-sm" id="guide_date">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Language</label>
+                                    <select class="tw-input text-sm" id="guide_language">
+                                        <option value="">Select...</option>
+                                        <option value="English">English</option>
+                                        <option value="Spanish">Spanish</option>
+                                        <option value="French">French</option>
+                                        <option value="German">German</option>
+                                        <option value="Arabic">Arabic</option>
+                                        <option value="Italian">Italian</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Telephone</label>
+                                    <input type="text" class="tw-input text-sm" id="guide_phone" placeholder="Phone number">
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Cost</label>
+                                    <input type="number" class="tw-input text-sm" id="guide_cost" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="tw-label">Notes</label>
+                                    <input type="text" class="tw-input text-sm" id="guide_notes" placeholder="Additional notes">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn text-sm" style="background-color: #14b8a6; color: white;" onclick="saveGuideService()">
+                                    <i class="fas fa-save"></i> Save Guide
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.inbound_guides %}
+                        <div class="bg-white rounded-lg border border-teal-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-teal-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-teal-800">Guide</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-teal-800">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-teal-800">Language</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-teal-800">Phone</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for guide in request.inbound_guides %}
+                                    <tr class="border-t border-teal-50">
+                                        <td class="px-3 py-2">{{ guide.guide_name or '-' }}</td>
+                                        <td class="px-3 py-2">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ guide.language or '-' }}</td>
+                                        <td class="px-3 py-2">{{ guide.telephone or '-' }}</td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteGuide({{ guide.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-teal-600 text-sm">No guides assigned yet.</p>
+                        <p class="text-teal-600 text-sm text-center py-4">No guides saved yet</p>
                         {% endif %}
                     </div>
                     
                     <div id="service-panel-transport" class="service-panel hidden mt-4 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
                         <h3 class="font-semibold text-cyan-800 mb-3 flex items-center gap-2"><i class="fas fa-car"></i> Transport Details</h3>
-                        {% if request.inbound_transports %}
-                        <div class="space-y-2">
-                            {% for transport in request.inbound_transports %}
-                            <div class="bg-white p-3 rounded-lg border border-cyan-100">
-                                <div class="font-medium text-cyan-700">{{ transport.vehicle_type or 'Vehicle TBD' }}</div>
-                                <div class="text-sm text-cyan-600">
-                                    {{ transport.service_date.strftime('%b %d, %Y') if transport.service_date else 'Date TBD' }}
-                                    {% if transport.pickup_point %} - From: {{ transport.pickup_point }}{% endif %}
+                        
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-cyan-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Service Date</label>
+                                    <input type="date" class="tw-input text-sm" id="transport_date">
                                 </div>
-                                <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded text-xs font-medium
-                                    {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700
-                                    {% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700
-                                    {% else %}bg-slate-100 text-slate-700{% endif %}">
-                                    {{ transport.status or 'PENDING' }}
-                                </span>
+                                <div>
+                                    <label class="tw-label">Vehicle Type</label>
+                                    <select class="tw-input text-sm" id="transport_vehicle">
+                                        <option value="">Select...</option>
+                                        <option value="Sedan">Sedan (1-3 PAX)</option>
+                                        <option value="Van">Van (4-7 PAX)</option>
+                                        <option value="Minibus">Minibus (8-15 PAX)</option>
+                                        <option value="Bus">Bus (16+ PAX)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Pickup Point</label>
+                                    <input type="text" class="tw-input text-sm" id="transport_pickup" placeholder="Pickup location">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Drop-off Point</label>
+                                    <input type="text" class="tw-input text-sm" id="transport_dropoff" placeholder="Drop-off location">
+                                </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Driver Name</label>
+                                    <input type="text" class="tw-input text-sm" id="transport_driver" placeholder="Driver name">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Driver Phone</label>
+                                    <input type="text" class="tw-input text-sm" id="transport_phone" placeholder="Phone number">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Status</label>
+                                    <select class="tw-input text-sm" id="transport_status">
+                                        <option value="REQUESTED">Requested</option>
+                                        <option value="CONFIRMED">Confirmed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Cost</label>
+                                    <input type="number" class="tw-input text-sm" id="transport_cost" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn text-sm" style="background-color: #06b6d4; color: white;" onclick="saveTransportService()">
+                                    <i class="fas fa-save"></i> Save Transport
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.inbound_transports %}
+                        <div class="bg-white rounded-lg border border-cyan-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-cyan-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-cyan-800">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-cyan-800">Vehicle</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-cyan-800">Pickup</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-cyan-800">Drop-off</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-cyan-800">Status</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transport in request.inbound_transports %}
+                                    <tr class="border-t border-cyan-50">
+                                        <td class="px-3 py-2">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ transport.vehicle_type or '-' }}</td>
+                                        <td class="px-3 py-2">{{ transport.pickup_point or '-' }}</td>
+                                        <td class="px-3 py-2">{{ transport.drop_off_point or '-' }}</td>
+                                        <td class="px-3 py-2"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteTransport({{ transport.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-cyan-600 text-sm">No transport arranged yet.</p>
+                        <p class="text-cyan-600 text-sm text-center py-4">No transport saved yet</p>
                         {% endif %}
                     </div>
                     
                     <div id="service-panel-meal" class="service-panel hidden mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
                         <h3 class="font-semibold text-amber-800 mb-3 flex items-center gap-2"><i class="fas fa-utensils"></i> Meal Details</h3>
-                        {% if request.inbound_meals %}
-                        <div class="space-y-2">
-                            {% for meal in request.inbound_meals %}
-                            <div class="bg-white p-3 rounded-lg border border-amber-100">
-                                <div class="font-medium text-amber-700">{{ meal.meal_type or 'Meal' }} - {{ meal.restaurant_name or 'Restaurant TBD' }}</div>
-                                <div class="text-sm text-amber-600">
-                                    {{ meal.service_date.strftime('%b %d, %Y') if meal.service_date else 'Date TBD' }}
+                        
+                        {% if not view_only %}
+                        <div class="bg-white p-4 rounded-lg border border-amber-100 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">Service Date</label>
+                                    <input type="date" class="tw-input text-sm" id="meal_date">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Meal Type</label>
+                                    <select class="tw-input text-sm" id="meal_type">
+                                        <option value="">Select...</option>
+                                        <option value="Breakfast">Breakfast</option>
+                                        <option value="Lunch">Lunch</option>
+                                        <option value="Dinner">Dinner</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="tw-label">Restaurant Name</label>
+                                    <input type="text" class="tw-input text-sm" id="meal_restaurant" placeholder="Restaurant name">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Location</label>
+                                    <input type="text" class="tw-input text-sm" id="meal_location" placeholder="Location">
                                 </div>
                             </div>
-                            {% endfor %}
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                                <div>
+                                    <label class="tw-label">PAX Count</label>
+                                    <input type="number" class="tw-input text-sm" id="meal_pax" min="1" value="{{ request.pax or 1 }}">
+                                </div>
+                                <div>
+                                    <label class="tw-label">Cost per Person</label>
+                                    <input type="number" class="tw-input text-sm" id="meal_cost" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                                <div class="col-span-2">
+                                    <label class="tw-label">Notes</label>
+                                    <input type="text" class="tw-input text-sm" id="meal_notes" placeholder="Dietary requirements, etc.">
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <button type="button" class="tw-btn tw-btn-warning text-sm" onclick="saveMealService()">
+                                    <i class="fas fa-save"></i> Save Meal
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.inbound_meals %}
+                        <div class="bg-white rounded-lg border border-amber-100 overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-amber-100">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-amber-800">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-amber-800">Type</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-amber-800">Restaurant</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-amber-800">Location</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold text-amber-800">PAX</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-16"></th>{% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for meal in request.inbound_meals %}
+                                    <tr class="border-t border-amber-50">
+                                        <td class="px-3 py-2">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
+                                        <td class="px-3 py-2">{{ meal.meal_type or '-' }}</td>
+                                        <td class="px-3 py-2">{{ meal.restaurant_name or '-' }}</td>
+                                        <td class="px-3 py-2">{{ meal.location or '-' }}</td>
+                                        <td class="px-3 py-2">{{ meal.pax_count or 0 }}</td>
+                                        {% if not view_only %}
+                                        <td class="px-3 py-2">
+                                            <button type="button" class="text-red-500 hover:text-red-700" onclick="deleteMeal({{ meal.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                         {% else %}
-                        <p class="text-amber-600 text-sm">No meals planned yet.</p>
+                        <p class="text-amber-600 text-sm text-center py-4">No meals saved yet</p>
                         {% endif %}
                     </div>
                 </div>
