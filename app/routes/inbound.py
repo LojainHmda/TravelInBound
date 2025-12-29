@@ -975,7 +975,7 @@ def api_auto_save_and_regenerate(request_id):
                 'day_number': day_counter,
                 'restaurant': row.restaurant or '',
                 'selling_price': row.base_cost or 0,
-                'comments': row.comments or ''
+                'comments': row.comment or ''
             })
             
             current_date += timedelta(days=1)
@@ -994,7 +994,7 @@ def api_auto_save_and_regenerate(request_id):
                 'day_number': day_num,
                 'restaurant': row.restaurant or '',
                 'selling_price': row.base_cost or 0,
-                'comments': row.comments or ''
+                'comments': row.comment or ''
             })
     
     return jsonify({
