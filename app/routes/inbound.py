@@ -262,7 +262,10 @@ def view_request(id):
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
     view_only = (mode == 'view')
     
-    return render_template('inbound/view_request.html', request=request_obj, view_only=view_only)
+    return render_template('inbound/view_request.html', 
+                           request=request_obj, 
+                           view_only=view_only,
+                           rows=request_obj.itinerary_rows)
 
 
 @inbound_bp.route('/<int:id>/delete')
@@ -946,7 +949,6 @@ def api_auto_save_and_regenerate(request_id):
     db.session.commit()
     
     # Regenerate itinerary if dates changed
-    itinerary_rows = []
     if dates_changed and request_obj.from_date and request_obj.to_date:
         # Clear existing rows
         ItineraryRow.query.filter_by(request_id=request_id).delete()
@@ -965,43 +967,22 @@ def api_auto_save_and_regenerate(request_id):
                 currency=request_obj.total_currency
             )
             db.session.add(row)
-            db.session.flush()  # Get the row ID
-            
-            itinerary_rows.append({
-                'id': row.id,
-                'date': current_date.strftime('%Y-%m-%d'),
-                'date_display': current_date.strftime('%d/%m/%Y'),
-                'description': row.description,
-                'day_number': day_counter,
-                'restaurant': row.restaurant or '',
-                'selling_price': row.base_cost or 0,
-                'comments': row.comment or ''
-            })
             
             current_date += timedelta(days=1)
             day_counter += 1
         
         db.session.commit()
-    else:
-        # Return existing itinerary rows
-        for row in request_obj.itinerary_rows:
-            day_num = (row.date - request_obj.from_date).days + 1 if row.date and request_obj.from_date else 0
-            itinerary_rows.append({
-                'id': row.id,
-                'date': row.date.strftime('%Y-%m-%d') if row.date else '',
-                'date_display': row.date.strftime('%d/%m/%Y') if row.date else '',
-                'description': row.description or '',
-                'day_number': day_num,
-                'restaurant': row.restaurant or '',
-                'selling_price': row.base_cost or 0,
-                'comments': row.comment or ''
-            })
+    
+    # Render the itinerary rows HTML using the component template
+    rows_html = render_template('components/itinerary_rows.html', 
+                                rows=request_obj.itinerary_rows,
+                                view_only=False)
     
     return jsonify({
         'success': True,
         'dates_changed': dates_changed,
         'no_of_days': request_obj.no_of_days,
-        'itinerary_rows': itinerary_rows
+        'itinerary_html': rows_html
     })
 
 @inbound_bp.route('/api/<int:request_id>/create-default-itinerary', methods=['POST'])

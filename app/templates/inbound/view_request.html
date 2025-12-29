@@ -637,70 +637,7 @@ html { scroll-behavior: smooth; }
                                 </tr>
                             </thead>
                             <tbody id="itineraryTableBody">
-                                {% for row in request.itinerary_rows|sort(attribute='date') %}
-                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" data-row-id="{{ row.id }}">
-                                    <td class="py-3 px-3">
-                                        <span class="font-medium text-slate-700">Day {{ row.day_number }}</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <span class="text-slate-600">{{ row.itinerary_date.strftime('%d/%m/%Y') if row.itinerary_date else '' }}</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        {% if view_only %}
-                                        <span class="text-slate-700">{{ row.description or '' }}</span>
-                                        {% else %}
-                                        <input type="text" class="tw-input text-sm py-1.5" 
-                                               value="{{ row.description or '' }}"
-                                               placeholder="Description..."
-                                               onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
-                                        {% endif %}
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        {% if view_only %}
-                                        <span class="text-slate-600">{{ row.restaurant or '' }}</span>
-                                        {% else %}
-                                        <input type="text" class="tw-input text-sm py-1.5" 
-                                               value="{{ row.restaurant or '' }}"
-                                               placeholder="Restaurant..."
-                                               onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
-                                        {% endif %}
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <div class="flex items-center justify-center gap-1">
-                                            <div class="service-icon-toggle hotel" 
-                                                 data-row-id="{{ row.id }}"
-                                                 onclick="switchServiceTab('hotel', {{ row.id }})"
-                                                 title="Hotel">
-                                                <i class="fas fa-bed"></i>
-                                            </div>
-                                            <div class="service-icon-toggle transport" 
-                                                 data-row-id="{{ row.id }}"
-                                                 onclick="switchServiceTab('transport', {{ row.id }})"
-                                                 title="Transport">
-                                                <i class="fas fa-car"></i>
-                                            </div>
-                                            <div class="service-icon-toggle guide" 
-                                                 data-row-id="{{ row.id }}"
-                                                 onclick="switchServiceTab('guide', {{ row.id }})"
-                                                 title="Guide">
-                                                <i class="fas fa-user"></i>
-                                            </div>
-                                            <div class="service-icon-toggle meal" 
-                                                 data-row-id="{{ row.id }}"
-                                                 onclick="switchServiceTab('meal', {{ row.id }})"
-                                                 title="Meal">
-                                                <i class="fas fa-utensils"></i>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-3 text-right">
-                                        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row.selling_price or 0) }}</span>
-                                    </td>
-                                    <td class="py-3 px-3">
-                                        <span class="text-slate-400 text-xs">{{ row.comments or 'Internal no' }}</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
+                                {% include 'components/itinerary_rows.html' with context %}
                             </tbody>
                         </table>
                     </div>
@@ -2414,10 +2351,19 @@ function saveAndRefreshItinerary() {
             const daysField = document.getElementById('noOfDays');
             if (daysField) daysField.value = data.no_of_days;
             
-            // Update itinerary table dynamically
-            if (data.dates_changed) {
-                updateItineraryTable(data.itinerary_rows, data.dates_changed);
-                showNotification('Itinerary regenerated!', 'success');
+            // Update itinerary table with server-rendered HTML
+            if (data.itinerary_html) {
+                const tableBody = document.getElementById('itineraryTableBody');
+                const itineraryTable = document.getElementById('itineraryTable');
+                const emptyState = document.getElementById('itineraryEmptyState');
+                
+                if (tableBody) {
+                    tableBody.innerHTML = data.itinerary_html;
+                }
+                if (itineraryTable) itineraryTable.classList.remove('hidden');
+                if (emptyState) emptyState.classList.add('hidden');
+                
+                showNotification(data.dates_changed ? 'Itinerary regenerated!' : 'Saved!', 'success');
             } else {
                 showNotification('Saved!', 'success');
             }

@@ -1,0 +1,64 @@
+{% for row in rows|sort(attribute='date') %}
+<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" data-row-id="{{ row.id }}">
+    <td class="py-3 px-3">
+        <span class="font-medium text-slate-700">Day {{ row.day_number }}</span>
+    </td>
+    <td class="py-3 px-3">
+        <span class="text-slate-600">{{ row.itinerary_date.strftime('%d/%m/%Y') if row.itinerary_date else '' }}</span>
+    </td>
+    <td class="py-3 px-3">
+        {% if view_only %}
+        <span class="text-slate-700">{{ row.description or '' }}</span>
+        {% else %}
+        <input type="text" class="tw-input text-sm py-1.5" 
+               value="{{ row.description or '' }}"
+               placeholder="Description..."
+               onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
+        {% endif %}
+    </td>
+    <td class="py-3 px-3">
+        {% if view_only %}
+        <span class="text-slate-600">{{ row.restaurant or '' }}</span>
+        {% else %}
+        <input type="text" class="tw-input text-sm py-1.5" 
+               value="{{ row.restaurant or '' }}"
+               placeholder="Restaurant..."
+               onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
+        {% endif %}
+    </td>
+    <td class="py-3 px-3">
+        <div class="flex items-center justify-center gap-1">
+            <div class="service-icon-toggle hotel" 
+                 data-row-id="{{ row.id }}"
+                 onclick="switchServiceTab('hotel', {{ row.id }})"
+                 title="Hotel">
+                <i class="fas fa-bed"></i>
+            </div>
+            <div class="service-icon-toggle transport" 
+                 data-row-id="{{ row.id }}"
+                 onclick="switchServiceTab('transport', {{ row.id }})"
+                 title="Transport">
+                <i class="fas fa-car"></i>
+            </div>
+            <div class="service-icon-toggle guide" 
+                 data-row-id="{{ row.id }}"
+                 onclick="switchServiceTab('guide', {{ row.id }})"
+                 title="Guide">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="service-icon-toggle meal" 
+                 data-row-id="{{ row.id }}"
+                 onclick="switchServiceTab('meal', {{ row.id }})"
+                 title="Meal">
+                <i class="fas fa-utensils"></i>
+            </div>
+        </div>
+    </td>
+    <td class="py-3 px-3 text-right">
+        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row.base_cost or 0) }}</span>
+    </td>
+    <td class="py-3 px-3">
+        <span class="text-slate-400 text-xs">{{ row.comment or '' }}</span>
+    </td>
+</tr>
+{% endfor %}
