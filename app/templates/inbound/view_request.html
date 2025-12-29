@@ -286,7 +286,7 @@ html { scroll-behavior: smooth; }
 }
 .hotel-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
-/* Service icon toggles */
+/* Service icon toggles - Updated for Context */
 .service-icon-toggle {
     width: 32px;
     height: 32px;
@@ -299,46 +299,22 @@ html { scroll-behavior: smooth; }
     transition: all 0.2s ease;
     border: 1px solid transparent;
     position: relative;
+    background-color: #f3f4f6;
+    color: #9ca3af; /* Default gray/off state */
 }
 .service-icon-toggle:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background-color: #e5e7eb;
 }
 .service-icon-toggle.active {
     color: white;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.4), 0 4px 6px rgba(0,0,0,0.1);
 }
-.service-icon-toggle.hotel {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}
-.service-icon-toggle.hotel.active {
-    background-color: #10b981;
-    border-color: #10b981;
-}
-.service-icon-toggle.transport {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}
-.service-icon-toggle.transport.active {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-}
-.service-icon-toggle.guide {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}
-.service-icon-toggle.guide.active {
-    background-color: #f59e0b;
-    border-color: #f59e0b;
-}
-.service-icon-toggle.meal {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}
-.service-icon-toggle.meal.active {
-    background-color: #ef4444;
-    border-color: #ef4444;
-}
+.service-icon-toggle.hotel.active { background-color: #10b981; }
+.service-icon-toggle.transport.active { background-color: #3b82f6; }
+.service-icon-toggle.guide.active { background-color: #f59e0b; }
+.service-icon-toggle.meal.active { background-color: #ef4444; }
 
 /* Auto-save indicator */
 .auto-save-indicator {
@@ -423,48 +399,6 @@ html { scroll-behavior: smooth; }
     height: 1px;
     background: #e2e8f0;
     margin: 0.25rem 0;
-}
-
-/* Day row service tabs */
-.day-service-tabs {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-    position: relative;
-}
-.day-service-tab {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border-radius: 6px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.875rem;
-}
-.day-service-tab:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-}
-.day-service-tab.active {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-}
-.day-service-tab-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    background: rgba(255,255,255,0.2);
-}
-.day-service-tab-content {
-    flex: 1;
 }
 
 /* Responsive */
@@ -658,32 +592,26 @@ html { scroll-behavior: smooth; }
                     </h2>
                 </div>
                 
-                <!-- Service Tabs - Classic Stacked Design -->
+                <!-- Service Tabs - Top Navigation -->
                 <div class="px-5 pt-4 pb-0">
                     <div class="flex flex-wrap justify-end -mb-px">
                         <button type="button" onclick="switchServiceTab('arrival')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-green-50 hover:text-green-700 text-sm font-medium transition-all mr-1" data-service="arrival">
                             <i class="fas fa-plane-arrival text-green-600"></i> Arrival
-                            <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs">{{ request.arrival_batches|length if request.arrival_batches else 0 }}</span>
                         </button>
                         <button type="button" onclick="switchServiceTab('departure')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-orange-50 hover:text-orange-700 text-sm font-medium transition-all mr-1" data-service="departure">
                             <i class="fas fa-plane-departure text-orange-600"></i> Departure
-                            <span class="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-xs">{{ request.departure_batches|length if request.departure_batches else 0 }}</span>
                         </button>
                         <button type="button" onclick="switchServiceTab('hotel')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-sm font-medium transition-all mr-1" data-service="hotel">
                             <i class="fas fa-hotel text-blue-600"></i> Hotel
-                            <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</span>
                         </button>
                         <button type="button" onclick="switchServiceTab('guide')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-teal-50 hover:text-teal-700 text-sm font-medium transition-all mr-1" data-service="guide">
                             <i class="fas fa-user-tie text-teal-600"></i> Guide
-                            <span class="bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</span>
                         </button>
                         <button type="button" onclick="switchServiceTab('transport')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 text-sm font-medium transition-all mr-1" data-service="transport">
                             <i class="fas fa-car text-cyan-600"></i> Transport
-                            <span class="bg-cyan-100 text-cyan-700 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</span>
                         </button>
                         <button type="button" onclick="switchServiceTab('meal')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 text-sm font-medium transition-all" data-service="meal">
                             <i class="fas fa-utensils text-amber-600"></i> Meal
-                            <span class="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-xs">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</span>
                         </button>
                     </div>
                     <!-- Tab Content Container -->
@@ -710,7 +638,22 @@ html { scroll-behavior: smooth; }
                             </thead>
                             <tbody id="itineraryTableBody">
                                 {% for row in request.itinerary_rows|sort(attribute='date') %}
-                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" data-row-id="{{ row.id }}">
+                                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
+                                    data-row-id="{{ row.id }}"
+                                    <!-- Data Attributes for Specific Day Loading -->
+                                    data-hotel-name="{{ row.hotel_name or '' }}"
+                                    data-hotel-cat="{{ row.hotel_category or '' }}"
+                                    data-transport-vehicle="{{ row.vehicle_type or '' }}"
+                                    data-transport-pickup="{{ row.pickup_point or '' }}"
+                                    data-transport-dropoff="{{ row.drop_off_point or '' }}"
+                                    data-guide-name="{{ row.guide_name or '' }}"
+                                    data-meal-restaurant="{{ row.restaurant or '' }}"
+                                    data-meal-type="{{ row.meal_type or '' }}"
+                                    data-flag-hotel="{{ 1 if row.flag_hotel else 0 }}"
+                                    data-flag-transport="{{ 1 if row.flag_transport else 0 }}"
+                                    data-flag-guide="{{ 1 if row.flag_guide else 0 }}"
+                                    data-flag-meal="{{ 1 if row.flag_meal else 0 }}"
+                                >
                                     <td class="py-3 px-3">
                                         <span class="font-medium text-slate-700">Day {{ row.day_number }}</span>
                                     </td>
@@ -739,24 +682,25 @@ html { scroll-behavior: smooth; }
                                     </td>
                                     <td class="py-3 px-3">
                                         <div class="flex items-center justify-center gap-1">
+                                            <!-- Icons now call switchServiceTab with rowId -->
                                             <div class="service-icon-toggle hotel {% if row.flag_hotel %}active{% endif %}" 
-                                                 onclick="toggleServiceFlag({{ row.id }}, 'hotel', this)"
-                                                 title="Hotel">
+                                                 onclick="switchServiceTab('hotel', {{ row.id }})"
+                                                 title="Edit Hotel for Day {{ row.day_number }}">
                                                 <i class="fas fa-bed"></i>
                                             </div>
                                             <div class="service-icon-toggle transport {% if row.flag_transport %}active{% endif %}" 
-                                                 onclick="toggleServiceFlag({{ row.id }}, 'transport', this)"
-                                                 title="Transport">
+                                                 onclick="switchServiceTab('transport', {{ row.id }})"
+                                                 title="Edit Transport for Day {{ row.day_number }}">
                                                 <i class="fas fa-car"></i>
                                             </div>
                                             <div class="service-icon-toggle guide {% if row.flag_guide %}active{% endif %}" 
-                                                 onclick="toggleServiceFlag({{ row.id }}, 'guide', this)"
-                                                 title="Guide">
+                                                 onclick="switchServiceTab('guide', {{ row.id }})"
+                                                 title="Edit Guide for Day {{ row.day_number }}">
                                                 <i class="fas fa-user"></i>
                                             </div>
                                             <div class="service-icon-toggle meal {% if row.flag_meal %}active{% endif %}" 
-                                                 onclick="toggleServiceFlag({{ row.id }}, 'meal', this)"
-                                                 title="Meal">
+                                                 onclick="switchServiceTab('meal', {{ row.id }})"
+                                                 title="Edit Meal for Day {{ row.day_number }}">
                                                 <i class="fas fa-utensils"></i>
                                             </div>
                                         </div>
@@ -782,12 +726,12 @@ html { scroll-behavior: smooth; }
                     </div>
                     {% endif %}
                     
-                    <!-- Service Content Panels - Displayed directly in tab container -->
+                    <!-- Service Content Panels -->
                     <div id="service-panel-arrival" class="service-panel hidden">
-                        <!-- Header -->
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-plane-arrival text-green-600"></i> Arrival Details
+                                <span id="panel-context-badge-arrival" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global</span>
                             </h3>
                         </div>
                         
@@ -896,6 +840,7 @@ html { scroll-behavior: smooth; }
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-plane-departure text-orange-600"></i> Departure Details
+                                <span id="panel-context-badge-departure" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global</span>
                             </h3>
                         </div>
                         {% if not view_only %}
@@ -1000,6 +945,7 @@ html { scroll-behavior: smooth; }
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-hotel text-blue-600"></i> Hotel Details
+                                <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         {% if not view_only %}
@@ -1104,6 +1050,7 @@ html { scroll-behavior: smooth; }
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-user-tie text-teal-600"></i> Guide Details
+                                <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         {% if not view_only %}
@@ -1191,6 +1138,7 @@ html { scroll-behavior: smooth; }
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-car text-cyan-600"></i> Transport Details
+                                <span id="panel-context-badge-transport" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         {% if not view_only %}
@@ -1290,6 +1238,7 @@ html { scroll-behavior: smooth; }
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
                                 <i class="fas fa-utensils text-amber-600"></i> Meal Details
+                                <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         {% if not view_only %}
@@ -1849,7 +1798,13 @@ html { scroll-behavior: smooth; }
 const requestId = {{ request.id }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-// Tab switching
+// Global Context Variable to track if we are editing Global or Specific Day
+let currentServiceContext = {
+    serviceName: null,
+    rowId: null // null = Global (Applies to All), Integer = Specific Row ID
+};
+
+// Tab switching (Main Bottom Tabs like Hotels, Transport lists)
 function switchTab(tabName) {
     document.querySelectorAll('.tw-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
@@ -1863,12 +1818,23 @@ function switchTab(tabName) {
     }
 }
 
-// Service tab switching - show/hide panels directly (preserves event handlers)
-function switchServiceTab(serviceName) {
+/**
+ * SERVICE TAB LOGIC (Global vs Specific)
+ * Handles the top tabs (Arrival, Hotel, etc.)
+ * @param {string} serviceName - 'hotel', 'transport', etc.
+ * @param {number|null} rowId - If null, mode is GLOBAL. If set, mode is SPECIFIC DAY.
+ */
+function switchServiceTab(serviceName, rowId = null) {
     const targetPanel = document.getElementById('service-panel-' + serviceName);
     const tabContainer = document.getElementById('service-tab-content');
     const activeBtn = document.querySelector('.service-btn[data-service="' + serviceName + '"]');
     
+    // Update Context
+    currentServiceContext = {
+        serviceName: serviceName,
+        rowId: rowId
+    };
+
     if (targetPanel && tabContainer) {
         const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
         
@@ -1885,9 +1851,10 @@ function switchServiceTab(serviceName) {
             panel.classList.add('hidden');
         });
         
-        if (isCurrentlyActive) {
-            // Close the tab - hide the container
+        if (isCurrentlyActive && rowId === null) {
+            // Clicking the same top tab toggles it closed only if it was Global
             tabContainer.classList.add('hidden');
+            resetContext();
         } else {
             // Move panel into container if not already there
             if (!tabContainer.contains(targetPanel)) {
@@ -1902,8 +1869,73 @@ function switchServiceTab(serviceName) {
             activeBtn.classList.remove('bg-white');
             activeBtn.style.marginBottom = '-1px';
             activeBtn.style.borderBottom = '1px solid #f8fafc';
+
+            // Load Data & Update Badge
+            updateServiceContextUI(serviceName, rowId);
         }
     }
+}
+
+// Updates the Badge text and Form Inputs based on Context (Global vs Specific)
+function updateServiceContextUI(serviceName, rowId) {
+    const badge = document.getElementById('panel-context-badge-' + serviceName);
+    if (!badge) return;
+
+    if (rowId) {
+        // SPECIFIC DAY MODE
+        badge.textContent = `Day Specific (ID: ${rowId})`;
+        badge.className = "text-xs font-semibold px-2 py-1 rounded bg-blue-100 text-blue-700";
+        
+        // Load data for this specific day into the form inputs
+        populateFormWithDayData(serviceName, rowId);
+    } else {
+        // GLOBAL MODE
+        badge.textContent = "Global (Applies to All)";
+        badge.className = "text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500";
+        
+        // Clear inputs for global entry (or keep default)
+        clearServiceForm(serviceName);
+    }
+}
+
+// Reset global context
+function resetContext() {
+    currentServiceContext = { serviceName: null, rowId: null };
+}
+
+// Populate inputs based on data-attributes in the table row
+function populateFormWithDayData(service, rowId) {
+    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+    if (!row) return;
+
+    if (service === 'hotel') {
+        setInput('hotel_name', row.dataset.hotelName);
+        setInput('hotel_category', row.dataset.hotelCat);
+    } else if (service === 'transport') {
+        setInput('transport_vehicle', row.dataset.transportVehicle);
+        setInput('transport_pickup', row.dataset.transportPickup);
+        setInput('transport_dropoff', row.dataset.transportDropoff);
+    } else if (service === 'guide') {
+        setInput('guide_name', row.dataset.guideName);
+    } else if (service === 'meal') {
+        setInput('meal_restaurant', row.dataset.mealRestaurant);
+        setInput('meal_type', row.dataset.mealType);
+    }
+}
+
+function setInput(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+}
+
+function clearServiceForm(service) {
+    // Determine which inputs belong to this service and clear them
+    // For global mode, it's often useful to keep them blank or reset to defaults
+    document.querySelectorAll(`[data-service="${service}"]`).forEach(el => {
+        if (el.tagName === 'INPUT' && el.type !== 'date') {
+            el.value = '';
+        }
+    });
 }
 
 // Status sidebar toggle
@@ -1955,59 +1987,97 @@ function showAutoSaveIndicator() {
     }, 2000);
 }
 
-// Toggle service flag in itinerary
-function toggleServiceFlag(rowId, flagType, element) {
-    // Toggle active class
-    element.classList.toggle('active');
+// Auto-save service data
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
     
-    // Get current state (true if active, false if not)
-    const isActive = element.classList.contains('active');
+    // Collect all form data for service type
+    const formData = {};
+    document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
+        formData[field.id] = field.value;
+    });
     
-    // Map flag types to service tab names
-    const tabMapping = {
+    // Prepare Payload based on Context
+    const payload = {
+        service_type: serviceType,
+        data: formData
+    };
+
+    // ADD CONTEXT LOGIC HERE
+    if (currentServiceContext.rowId) {
+        // SPECIFIC DAY MODE
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        // GLOBAL MODE
+        payload.is_global = true; // Tells backend to apply to all days
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // If we saved a specific day, light up the icon immediately
+            if (currentServiceContext.rowId && !payload.is_global) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+                updateRowDataAttributes(currentServiceContext.rowId, serviceType, formData);
+            }
+        } else {
+            showNotification('Error saving service data', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// Helper to visually turn on the icon for a specific row
+function activateIcon(rowId, serviceType) {
+    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+    if (!row) return;
+
+    const iconMap = {
         'hotel': 'hotel',
         'transport': 'transport',
         'guide': 'guide',
         'meal': 'meal'
     };
     
-    // Open the corresponding service tab
-    if (tabMapping[flagType]) {
-        switchServiceTab(tabMapping[flagType]);
+    const iconDiv = row.querySelector(`.service-icon-toggle.${iconMap[serviceType]}`);
+    if (iconDiv) {
+        iconDiv.classList.add('active');
     }
-    
-    // Send update to server
-    fetch(`/inbound/api/${requestId}/update-itinerary-flag`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            row_id: rowId,
-            flag_type: flagType,
-            is_active: isActive
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAutoSaveIndicator();
-        } else {
-            // Revert change if there was an error
-            element.classList.toggle('active');
-            showNotification('Error updating service flag', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        // Revert change if there was an error
-        element.classList.toggle('active');
-        showNotification('Error updating service flag', 'error');
-    });
 }
 
-// Auto-save itinerary row
+// Helper to update the data attributes on the row (so switching back gets latest data)
+function updateRowDataAttributes(rowId, serviceType, data) {
+    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+    if (!row) return;
+
+    if (serviceType === 'hotel') {
+        row.dataset.hotelName = data.hotel_name || '';
+        row.dataset.hotelCat = data.hotel_category || '';
+    } else if (serviceType === 'transport') {
+        row.dataset.transportVehicle = data.transport_vehicle || '';
+        row.dataset.transportPickup = data.transport_pickup || '';
+        row.dataset.transportDropoff = data.transport_dropoff || '';
+    } else if (serviceType === 'guide') {
+        row.dataset.guideName = data.guide_name || '';
+    } else if (serviceType === 'meal') {
+        row.dataset.mealRestaurant = data.meal_restaurant || '';
+        row.dataset.mealType = data.meal_type || '';
+    }
+}
+
+// Auto-save itinerary row (Description/Restaurant text fields)
 function autoSaveItineraryRow(rowId, fieldName, value) {
     showAutoSaveIndicator();
     
@@ -2032,39 +2102,6 @@ function autoSaveItineraryRow(rowId, fieldName, value) {
     .catch(error => {
         console.error('Error:', error);
         showNotification('Error saving changes', 'error');
-    });
-}
-
-// Auto-save service data
-function autoSaveServiceData(serviceType) {
-    showAutoSaveIndicator();
-    
-    // Collect all form data for service type
-    const formData = {};
-    document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
-        formData[field.id] = field.value;
-    });
-    
-    fetch(`/inbound/api/${requestId}/save-service-data`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            service_type: serviceType,
-            data: formData
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            showNotification('Error saving service data', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error saving service data', 'error');
     });
 }
 
@@ -2415,23 +2452,23 @@ function updateItineraryTable(rows, datesChanged) {
                 <td class="px-4 py-3">
                     <div class="flex flex-wrap gap-1">
                         <div class="service-icon-toggle hotel ${row.flag_hotel ? 'active' : ''}" 
-                             onclick="toggleServiceFlag(${row.id}, 'hotel', this)"
-                             title="Hotel">
+                             onclick="switchServiceTab('hotel', ${row.id})"
+                             title="Edit Hotel for Day ${row.day_number}">
                             <i class="fas fa-bed"></i>
                         </div>
                         <div class="service-icon-toggle transport ${row.flag_transport ? 'active' : ''}" 
-                             onclick="toggleServiceFlag(${row.id}, 'transport', this)"
-                             title="Transport">
+                             onclick="switchServiceTab('transport', ${row.id})"
+                             title="Edit Transport for Day ${row.day_number}">
                             <i class="fas fa-car"></i>
                         </div>
                         <div class="service-icon-toggle guide ${row.flag_guide ? 'active' : ''}" 
-                             onclick="toggleServiceFlag(${row.id}, 'guide', this)"
-                             title="Guide">
+                             onclick="switchServiceTab('guide', ${row.id})"
+                             title="Edit Guide for Day ${row.day_number}">
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="service-icon-toggle meal ${row.flag_meal ? 'active' : ''}" 
-                             onclick="toggleServiceFlag(${row.id}, 'meal', this)"
-                             title="Meal">
+                             onclick="switchServiceTab('meal', ${row.id})"
+                             title="Edit Meal for Day ${row.day_number}">
                             <i class="fas fa-utensils"></i>
                         </div>
                     </div>
