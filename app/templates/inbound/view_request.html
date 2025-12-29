@@ -2414,10 +2414,13 @@ function saveAndRefreshItinerary() {
             const daysField = document.getElementById('noOfDays');
             if (daysField) daysField.value = data.no_of_days;
             
-            // Update itinerary table dynamically
-            updateItineraryTable(data.itinerary_rows, data.dates_changed);
-            
-            showNotification(data.dates_changed ? 'Itinerary regenerated!' : 'Saved!', 'success');
+            // If dates changed, reload page to ensure consistent table rendering
+            if (data.dates_changed) {
+                showNotification('Itinerary regenerated! Reloading...', 'success');
+                setTimeout(() => window.location.reload(), 500);
+            } else {
+                showNotification('Saved!', 'success');
+            }
         } else {
             showNotification(data.message || 'Error saving', 'error');
         }
