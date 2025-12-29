@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import cast, Any
 import json
 import os
+from sqlalchemy.orm import selectinload
 
 from app import db, csrf
 from app.models.inbound import (
@@ -1198,17 +1199,22 @@ def api_save_service_data(request_id):
         
         db.session.commit()
         
-        # Expire cached data and re-query fresh rows with relationships
+        # Expire cached data and re-query with eager loading
         db.session.expire_all()
         
-        # Re-query fresh request with all relationships loaded
-        fresh_request = InboundRequest.query.get(request_id)
-        fresh_rows = ItineraryRow.query.filter_by(request_id=request_id).order_by(ItineraryRow.date).all()
+        # Re-query fresh request with all service relationships eagerly loaded
+        fresh_request = InboundRequest.query.options(
+            selectinload(InboundRequest.inbound_hotels),
+            selectinload(InboundRequest.inbound_transports),
+            selectinload(InboundRequest.inbound_guides),
+            selectinload(InboundRequest.inbound_meals),
+            selectinload(InboundRequest.itinerary_rows)
+        ).get(request_id)
         
         # Render updated HTML partials for instant DOM update
         itinerary_html = render_template(
             'components/itinerary_rows.html',
-            rows=fresh_rows,
+            rows=fresh_request.itinerary_rows,
             view_only=False
         )
         
@@ -1255,21 +1261,29 @@ def api_delete_service(request_id):
             db.session.delete(service)
             db.session.commit()
             
-            # Expire cached data and re-query fresh rows
+            # Expire cached data and re-query with eager loading
             db.session.expire_all()
-            fresh_rows = ItineraryRow.query.filter_by(request_id=request_id).order_by(ItineraryRow.date).all()
+            fresh_request = InboundRequest.query.options(
+                selectinload(InboundRequest.inbound_hotels),
+                selectinload(InboundRequest.inbound_transports),
+                selectinload(InboundRequest.inbound_guides),
+                selectinload(InboundRequest.inbound_meals),
+                selectinload(InboundRequest.itinerary_rows)
+            ).get(request_id)
             
             # Render updated HTML partials for instant DOM update
             itinerary_html = render_template(
                 'components/itinerary_rows.html',
-                rows=fresh_rows,
+                rows=fresh_request.itinerary_rows,
                 view_only=False
             )
             
             return jsonify({
                 'success': True, 
                 'message': f'{service_type.capitalize()} deleted',
-                'itinerary_html': itinerary_html
+                'itinerary_html': itinerary_html,
+                'deleted_id': service_id,
+                'deleted_type': service_type
             })
         else:
             return jsonify({'success': False, 'error': 'Service not found'}), 404
