@@ -667,22 +667,26 @@ html { scroll-behavior: smooth; }
                                     </td>
                                     <td class="py-3 px-3">
                                         <div class="flex items-center justify-center gap-1">
-                                            <div class="service-icon-toggle hotel {% if row.flag_hotel %}active{% endif %}" 
+                                            <div class="service-icon-toggle hotel" 
+                                                 data-row-id="{{ row.id }}"
                                                  onclick="switchServiceTab('hotel', {{ row.id }})"
                                                  title="Hotel">
                                                 <i class="fas fa-bed"></i>
                                             </div>
-                                            <div class="service-icon-toggle transport {% if row.flag_transport %}active{% endif %}" 
+                                            <div class="service-icon-toggle transport" 
+                                                 data-row-id="{{ row.id }}"
                                                  onclick="switchServiceTab('transport', {{ row.id }})"
                                                  title="Transport">
                                                 <i class="fas fa-car"></i>
                                             </div>
-                                            <div class="service-icon-toggle guide {% if row.flag_guide %}active{% endif %}" 
+                                            <div class="service-icon-toggle guide" 
+                                                 data-row-id="{{ row.id }}"
                                                  onclick="switchServiceTab('guide', {{ row.id }})"
                                                  title="Guide">
                                                 <i class="fas fa-user"></i>
                                             </div>
-                                            <div class="service-icon-toggle meal {% if row.flag_meal %}active{% endif %}" 
+                                            <div class="service-icon-toggle meal" 
+                                                 data-row-id="{{ row.id }}"
                                                  onclick="switchServiceTab('meal', {{ row.id }})"
                                                  title="Meal">
                                                 <i class="fas fa-utensils"></i>
