@@ -484,7 +484,7 @@ html { scroll-behavior: smooth; }
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
                     {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}
-                    <span class="status-badge 
+                    <span id="headerStatusBadge" class="status-badge 
                         {% if request.status == 'REQUEST' %}status-request
                         {% elif request.status == 'QUOTED' %}status-quoted
                         {% elif request.status == 'SUPPLIER_CONFIRMED' %}status-supplier-confirmed
@@ -2086,6 +2086,15 @@ function updateSidebarState(newStatus) {
         const statusClass = 'status-' + newStatus.toLowerCase().replace('_', '-');
         statusBadge.classList.add(statusClass);
         statusBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+    
+    // Update the header status badge
+    const headerBadge = document.getElementById('headerStatusBadge');
+    if (headerBadge) {
+        headerBadge.className = 'status-badge';
+        const statusClass = 'status-' + newStatus.toLowerCase().replace('_', '-');
+        headerBadge.classList.add(statusClass);
+        headerBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 }
 
