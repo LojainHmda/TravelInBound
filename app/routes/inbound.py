@@ -1198,10 +1198,17 @@ def api_save_service_data(request_id):
         
         db.session.commit()
         
+        # Expire cached data and re-query fresh rows with relationships
+        db.session.expire_all()
+        
+        # Re-query fresh request with all relationships loaded
+        fresh_request = InboundRequest.query.get(request_id)
+        fresh_rows = ItineraryRow.query.filter_by(request_id=request_id).order_by(ItineraryRow.date).all()
+        
         # Render updated HTML partials for instant DOM update
         itinerary_html = render_template(
             'components/itinerary_rows.html',
-            rows=request_obj.itinerary_rows,
+            rows=fresh_rows,
             view_only=False
         )
         
