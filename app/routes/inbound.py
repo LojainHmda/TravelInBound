@@ -985,6 +985,164 @@ def api_auto_save_and_regenerate(request_id):
         'itinerary_html': rows_html
     })
 
+@inbound_bp.route('/api/<int:request_id>/save-service-data', methods=['POST'])
+@csrf.exempt
+def api_save_service_data(request_id):
+    """Save service data (hotel, transport, guide, meal) for itinerary"""
+    from datetime import date as date_type
+    
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    service_type = data.get('service_type')
+    form_data = data.get('data', {})
+    row_id = data.get('row_id')
+    is_global = data.get('is_global', False)
+    
+    # Validate context
+    if not service_type:
+        return jsonify({'success': False, 'error': 'Missing service_type'}), 400
+    
+    if not is_global and not row_id:
+        return jsonify({'success': False, 'error': 'Missing row_id for day-specific save'}), 400
+    
+    # Validate row exists for day-specific saves
+    if not is_global:
+        row = ItineraryRow.query.get(row_id)
+        if not row or row.request_id != request_id:
+            return jsonify({'success': False, 'error': 'Invalid row_id'}), 400
+    
+    try:
+        if service_type == 'hotel':
+            if is_global:
+                # Apply to all days - create or update hotel for request
+                hotel = InboundHotel.query.filter_by(request_id=request_id).first()
+                if not hotel:
+                    hotel = InboundHotel(
+                        request_id=request_id,
+                        check_in_date=request_obj.from_date or date_type.today(),
+                        check_out_date=request_obj.to_date or date_type.today()
+                    )
+                    db.session.add(hotel)
+                
+                hotel.hotel_name = form_data.get('hotel_name', '')
+                hotel.hotel_category = form_data.get('hotel_category', '')
+                hotel.meal_plan = form_data.get('meal_plan', 'BB')
+            else:
+                # Apply to specific day
+                row = ItineraryRow.query.get(row_id)
+                if row:
+                    hotel = InboundHotel.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
+                    if not hotel:
+                        hotel = InboundHotel(
+                            request_id=request_id,
+                            source_itinerary_id=row_id,
+                            check_in_date=row.date or date_type.today(),
+                            check_out_date=row.date or date_type.today()
+                        )
+                        db.session.add(hotel)
+                    
+                    hotel.hotel_name = form_data.get('hotel_name', '')
+                    hotel.hotel_category = form_data.get('hotel_category', '')
+                    hotel.meal_plan = form_data.get('meal_plan', 'BB')
+        
+        elif service_type == 'transport':
+            if is_global:
+                transport = InboundTransport.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
+                if not transport:
+                    transport = InboundTransport(
+                        request_id=request_id,
+                        date=request_obj.from_date or date_type.today()
+                    )
+                    db.session.add(transport)
+                
+                transport.vehicle_type = form_data.get('transport_vehicle', '')
+                transport.pickup_location = form_data.get('transport_pickup', '')
+                transport.dropoff_location = form_data.get('transport_dropoff', '')
+                transport.driver_name = form_data.get('transport_driver', '')
+            else:
+                row = ItineraryRow.query.get(row_id)
+                if row:
+                    transport = InboundTransport.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
+                    if not transport:
+                        transport = InboundTransport(
+                            request_id=request_id,
+                            source_itinerary_id=row_id,
+                            date=row.date or date_type.today()
+                        )
+                        db.session.add(transport)
+                    
+                    transport.vehicle_type = form_data.get('transport_vehicle', '')
+                    transport.pickup_location = form_data.get('transport_pickup', '')
+                    transport.dropoff_location = form_data.get('transport_dropoff', '')
+                    transport.driver_name = form_data.get('transport_driver', '')
+        
+        elif service_type == 'guide':
+            if is_global:
+                guide = InboundGuide.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
+                if not guide:
+                    guide = InboundGuide(
+                        request_id=request_id,
+                        date=request_obj.from_date or date_type.today()
+                    )
+                    db.session.add(guide)
+                
+                guide.guide_name = form_data.get('guide_name', '')
+                guide.language = form_data.get('guide_language', '')
+                guide.telephone_number = form_data.get('guide_phone', '')
+            else:
+                row = ItineraryRow.query.get(row_id)
+                if row:
+                    guide = InboundGuide.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
+                    if not guide:
+                        guide = InboundGuide(
+                            request_id=request_id,
+                            source_itinerary_id=row_id,
+                            date=row.date or date_type.today()
+                        )
+                        db.session.add(guide)
+                    
+                    guide.guide_name = form_data.get('guide_name', '')
+                    guide.language = form_data.get('guide_language', '')
+                    guide.telephone_number = form_data.get('guide_phone', '')
+        
+        elif service_type == 'meal':
+            if is_global:
+                meal = InboundMeal.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
+                if not meal:
+                    meal = InboundMeal(
+                        request_id=request_id,
+                        date=request_obj.from_date or date_type.today()
+                    )
+                    db.session.add(meal)
+                
+                meal.restaurant = form_data.get('meal_restaurant', '')
+                meal.meal_type = form_data.get('meal_type', '')
+            else:
+                row = ItineraryRow.query.get(row_id)
+                if row:
+                    meal = InboundMeal.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
+                    if not meal:
+                        meal = InboundMeal(
+                            request_id=request_id,
+                            source_itinerary_id=row_id,
+                            date=row.date or date_type.today()
+                        )
+                        db.session.add(meal)
+                    
+                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    meal.meal_type = form_data.get('meal_type', '')
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'{service_type.capitalize()} data saved'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/<int:request_id>/create-default-itinerary', methods=['POST'])
 @csrf.exempt
 def api_create_default_itinerary(request_id):

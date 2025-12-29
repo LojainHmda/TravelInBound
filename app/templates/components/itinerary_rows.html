@@ -1,5 +1,18 @@
 {% for row in rows|sort(attribute='date') %}
-<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" data-row-id="{{ row.id }}">
+{% set row_hotel = row.request.inbound_hotels|selectattr('source_itinerary_id', 'equalto', row.id)|first if row.request else none %}
+{% set row_transport = row.request.inbound_transports|selectattr('source_itinerary_id', 'equalto', row.id)|first if row.request else none %}
+{% set row_guide = row.request.inbound_guides|selectattr('source_itinerary_id', 'equalto', row.id)|first if row.request else none %}
+{% set row_meal = row.request.inbound_meals|selectattr('source_itinerary_id', 'equalto', row.id)|first if row.request else none %}
+<tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
+    data-row-id="{{ row.id }}"
+    data-hotel-name="{{ row_hotel.hotel_name if row_hotel else '' }}"
+    data-hotel-cat="{{ row_hotel.hotel_category if row_hotel else '' }}"
+    data-transport-vehicle="{{ row_transport.vehicle_type if row_transport else '' }}"
+    data-transport-pickup="{{ row_transport.pickup_location if row_transport else '' }}"
+    data-transport-dropoff="{{ row_transport.dropoff_location if row_transport else '' }}"
+    data-guide-name="{{ row_guide.guide_name if row_guide else '' }}"
+    data-meal-restaurant="{{ row_meal.restaurant if row_meal else '' }}"
+    data-meal-type="{{ row_meal.meal_type if row_meal else '' }}">
     <td class="py-3 px-3">
         <span class="font-medium text-slate-700">Day {{ row.day_number }}</span>
     </td>
@@ -28,25 +41,25 @@
     </td>
     <td class="py-3 px-3">
         <div class="flex items-center justify-center gap-1">
-            <div class="service-icon-toggle hotel" 
+            <div class="service-icon-toggle hotel{% if row_hotel and row_hotel.hotel_name %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('hotel', {{ row.id }})"
                  title="Hotel">
                 <i class="fas fa-bed"></i>
             </div>
-            <div class="service-icon-toggle transport" 
+            <div class="service-icon-toggle transport{% if row_transport and row_transport.vehicle_type %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('transport', {{ row.id }})"
                  title="Transport">
                 <i class="fas fa-car"></i>
             </div>
-            <div class="service-icon-toggle guide" 
+            <div class="service-icon-toggle guide{% if row_guide and row_guide.guide_name %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('guide', {{ row.id }})"
                  title="Guide">
                 <i class="fas fa-user"></i>
             </div>
-            <div class="service-icon-toggle meal" 
+            <div class="service-icon-toggle meal{% if row_meal and row_meal.restaurant %} active{% endif %}" 
                  data-row-id="{{ row.id }}"
                  onclick="switchServiceTab('meal', {{ row.id }})"
                  title="Meal">
