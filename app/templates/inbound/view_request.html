@@ -1727,19 +1727,22 @@ html { scroll-behavior: smooth; }
     <select id="confirmStageSelect" onchange="toggleConfirmButton()" 
             class="bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
         <option value="">Select next stage...</option>
-        {% if request.status == 'REQUEST' %}
+        {% if request.status != 'REQUEST' %}
+        <option value="REQUEST">Request</option>
+        {% endif %}
+        {% if request.status != 'SUPPLIER_CONFIRMED' %}
         <option value="SUPPLIER_CONFIRMED">Supplier Confirmed</option>
         {% endif %}
-        {% if request.status in ['REQUEST', 'SUPPLIER_CONFIRMED'] %}
+        {% if request.status != 'QUOTED' %}
         <option value="QUOTED">Quoted</option>
         {% endif %}
-        {% if request.status in ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED'] %}
+        {% if request.status != 'CONFIRMED' %}
         <option value="CONFIRMED">Confirmed</option>
         {% endif %}
-        {% if request.status in ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED'] %}
+        {% if request.status != 'INVOICE' %}
         <option value="INVOICE">Invoice</option>
         {% endif %}
-        {% if request.status in ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE'] %}
+        {% if request.status != 'PROCESSING' %}
         <option value="PROCESSING">Processing</option>
         {% endif %}
         {% if request.status != 'COMPLETED' %}
