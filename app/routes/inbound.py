@@ -252,16 +252,22 @@ def edit_request(id):
 def view_request(id):
     """View inbound request details with unified edit functionality"""
     from flask import request as flask_request
+    from app.models.supplier import Supplier
+    
     request_obj = InboundRequest.query.get_or_404(id)
     
     # Get mode parameter (view or edit)
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
     view_only = (mode == 'view')
     
+    # Get hotel suppliers for dropdown
+    hotel_suppliers = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).order_by(Supplier.name).all()
+    
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
-                           rows=request_obj.itinerary_rows)
+                           rows=request_obj.itinerary_rows,
+                           hotel_suppliers=hotel_suppliers)
 
 
 @inbound_bp.route('/<int:id>/delete')
