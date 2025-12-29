@@ -970,9 +970,12 @@ def api_auto_save_and_regenerate(request_id):
             itinerary_rows.append({
                 'id': row.id,
                 'date': current_date.strftime('%Y-%m-%d'),
-                'date_display': current_date.strftime('%a, %d %b'),
+                'date_display': current_date.strftime('%d/%m/%Y'),
                 'description': row.description,
-                'day_number': day_counter
+                'day_number': day_counter,
+                'restaurant': row.restaurant or '',
+                'selling_price': row.selling_price or 0,
+                'comments': row.comments or ''
             })
             
             current_date += timedelta(days=1)
@@ -986,9 +989,12 @@ def api_auto_save_and_regenerate(request_id):
             itinerary_rows.append({
                 'id': row.id,
                 'date': row.date.strftime('%Y-%m-%d') if row.date else '',
-                'date_display': row.date.strftime('%a, %d %b') if row.date else '',
+                'date_display': row.date.strftime('%d/%m/%Y') if row.date else '',
                 'description': row.description or '',
-                'day_number': day_num
+                'day_number': day_num,
+                'restaurant': row.restaurant or '',
+                'selling_price': row.selling_price or 0,
+                'comments': row.comments or ''
             })
     
     return jsonify({
