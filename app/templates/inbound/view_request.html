@@ -1953,11 +1953,28 @@ function showAutoSaveIndicator() {
 function autoSaveServiceData(serviceType) {
     showAutoSaveIndicator();
     
-    // Collect all form data for service type
+    // Collect form data ONLY from the active service panel to avoid conflicts
+    // with duplicate IDs across global/day-specific panels
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
     const formData = {};
-    document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
-        formData[field.id] = field.value;
-    });
+    
+    if (activePanel) {
+        // Only collect from the visible panel
+        activePanel.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
+            if (field.id) {
+                formData[field.id] = field.value;
+            }
+        });
+    } else {
+        // Fallback to document-wide query if panel not found
+        document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
+            if (field.id) {
+                formData[field.id] = field.value;
+            }
+        });
+    }
+    
+    console.log('Saving service data:', serviceType, formData);
     
     // Prepare Payload based on Context
     const payload = {
