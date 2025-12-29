@@ -426,7 +426,7 @@ html { scroll-behavior: smooth; }
                 
                 <!-- Service Tabs - Classic Stacked Design -->
                 <div class="px-5 pt-4 pb-0">
-                    <div class="flex flex-wrap -mb-px">
+                    <div class="flex flex-wrap justify-end -mb-px">
                         <button type="button" onclick="switchServiceTab('arrival')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-green-50 hover:text-green-700 text-sm font-medium transition-all mr-1" data-service="arrival">
                             <i class="fas fa-plane-arrival text-green-600"></i> Arrival
                             <span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-xs">{{ request.arrival_batches|length if request.arrival_batches else 0 }}</span>
