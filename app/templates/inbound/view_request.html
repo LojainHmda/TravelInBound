@@ -2461,7 +2461,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // If no itinerary rows exist, create default 4-day itinerary
-    if (!document.getElementById('itineraryTableBody') || document.getElementById('itineraryTableBody').children.length === 0) {
+    const tableBody = document.getElementById('itineraryTableBody');
+    const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
+    if (!hasRows) {
         createDefaultItinerary();
     }
 });
