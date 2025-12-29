@@ -682,33 +682,24 @@ html { scroll-behavior: smooth; }
                                     </td>
                                     <td class="py-3 px-3">
                                         <div class="flex items-center justify-center gap-1">
-                                            <!-- Icons now call switchServiceTab with rowId. Active state set only after saving data -->
-                                            <div class="service-icon-toggle hotel" 
-                                                 data-row-id="{{ row.id }}"
-                                                 data-service="hotel"
+                                            <div class="service-icon-toggle hotel {% if row.flag_hotel %}active{% endif %}" 
                                                  onclick="switchServiceTab('hotel', {{ row.id }})"
-                                                 title="Edit Hotel for Day {{ row.day_number }}">
+                                                 title="Hotel">
                                                 <i class="fas fa-bed"></i>
                                             </div>
-                                            <div class="service-icon-toggle transport" 
-                                                 data-row-id="{{ row.id }}"
-                                                 data-service="transport"
+                                            <div class="service-icon-toggle transport {% if row.flag_transport %}active{% endif %}" 
                                                  onclick="switchServiceTab('transport', {{ row.id }})"
-                                                 title="Edit Transport for Day {{ row.day_number }}">
+                                                 title="Transport">
                                                 <i class="fas fa-car"></i>
                                             </div>
-                                            <div class="service-icon-toggle guide" 
-                                                 data-row-id="{{ row.id }}"
-                                                 data-service="guide"
+                                            <div class="service-icon-toggle guide {% if row.flag_guide %}active{% endif %}" 
                                                  onclick="switchServiceTab('guide', {{ row.id }})"
-                                                 title="Edit Guide for Day {{ row.day_number }}">
+                                                 title="Guide">
                                                 <i class="fas fa-user"></i>
                                             </div>
-                                            <div class="service-icon-toggle meal" 
-                                                 data-row-id="{{ row.id }}"
-                                                 data-service="meal"
+                                            <div class="service-icon-toggle meal {% if row.flag_meal %}active{% endif %}" 
                                                  onclick="switchServiceTab('meal', {{ row.id }})"
-                                                 title="Edit Meal for Day {{ row.day_number }}">
+                                                 title="Meal">
                                                 <i class="fas fa-utensils"></i>
                                             </div>
                                         </div>
