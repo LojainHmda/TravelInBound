@@ -2414,10 +2414,10 @@ function saveAndRefreshItinerary() {
             const daysField = document.getElementById('noOfDays');
             if (daysField) daysField.value = data.no_of_days;
             
-            // If dates changed, reload page to ensure consistent table rendering
+            // Update itinerary table dynamically
             if (data.dates_changed) {
-                showNotification('Itinerary regenerated! Reloading...', 'success');
-                setTimeout(() => window.location.reload(), 500);
+                updateItineraryTable(data.itinerary_rows, data.dates_changed);
+                showNotification('Itinerary regenerated!', 'success');
             } else {
                 showNotification('Saved!', 'success');
             }
@@ -2511,6 +2511,11 @@ function updateItineraryTable(rows, datesChanged) {
     });
     
     tableBody.innerHTML = html;
+    
+    // Trigger FontAwesome to refresh icons in dynamically added content
+    if (typeof FontAwesome !== 'undefined' && FontAwesome.dom) {
+        FontAwesome.dom.i2svg();
+    }
 }
 
 // Initialize on load
