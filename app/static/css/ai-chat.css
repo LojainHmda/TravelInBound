@@ -203,8 +203,8 @@
 
 .ai-chat-fab {
     position: fixed;
-    bottom: 30px;
-    right: 100px;
+    bottom: 80px;
+    right: 30px;
     width: 50px;
     height: 50px;
     background: linear-gradient(135deg, #FFD700, #FFA500);
@@ -294,13 +294,13 @@
     .ai-chat-widget {
         width: 300px;
         height: 400px;
-        bottom: 80px;
+        bottom: 100px;
         right: 20px;
     }
     
     .ai-chat-fab {
-        right: 80px;
-        bottom: 20px;
+        right: 20px;
+        bottom: 80px;
         width: 45px;
         height: 45px;
         font-size: 18px;
