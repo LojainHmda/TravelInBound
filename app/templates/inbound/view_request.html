@@ -2811,16 +2811,30 @@ function autoRecalculateSingleRooms(changedField) {
     
     if (!singleField || !doubleField || !tripleField) return;
     
-    const doubleRooms = parseInt(doubleField.value) || 0;
-    const tripleRooms = parseInt(tripleField.value) || 0;
+    let doubleRooms = parseInt(doubleField.value) || 0;
+    let tripleRooms = parseInt(tripleField.value) || 0;
     
-    // Calculate capacity used by DBL and TRP
-    const usedCapacity = (doubleRooms * 2) + (tripleRooms * 3);
+    // Cap Triple rooms first (each uses 3 capacity)
+    const maxTriple = Math.floor(pax / 3);
+    if (tripleRooms > maxTriple) {
+        tripleRooms = maxTriple;
+        tripleField.value = maxTriple;
+    }
+    
+    // Calculate remaining capacity after Triple rooms
+    const afterTriple = pax - (tripleRooms * 3);
+    
+    // Cap Double rooms (each uses 2 capacity)
+    const maxDouble = Math.floor(afterTriple / 2);
+    if (doubleRooms > maxDouble) {
+        doubleRooms = maxDouble;
+        doubleField.value = maxDouble;
+    }
     
     // Calculate remaining for SGL (each SGL = 1 guest)
-    const remainingSgl = pax - usedCapacity;
+    const remainingSgl = pax - (doubleRooms * 2) - (tripleRooms * 3);
     
-    // Update SGL (don't go below 0)
+    // Update SGL
     singleField.value = Math.max(0, remainingSgl);
     
     calculateTotalGuests();
