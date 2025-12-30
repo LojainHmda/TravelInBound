@@ -921,12 +921,24 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name <span class="text-red-500">*</span></label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" data-service="hotel">
-                                        <option value="">Select hotel...</option>
-                                        {% for hotel in hotel_suppliers %}
-                                        <option value="{{ hotel.name }}">{{ hotel.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="flex gap-2">
+                                        <select class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" data-service="hotel">
+                                            <option value="">Select hotel...</option>
+                                            {% for city, hotels in hotels_by_city.items() %}
+                                            <optgroup label="{{ city }}">
+                                                {% for hotel in hotels %}
+                                                <option value="{{ hotel.name }}">{{ hotel.name }}</option>
+                                                {% endfor %}
+                                            </optgroup>
+                                            {% endfor %}
+                                            <optgroup label="──────────">
+                                                <option value="__ADD_NEW__">+ Add New Hotel...</option>
+                                            </optgroup>
+                                        </select>
+                                        <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600" onclick="openAddHotelModal()" title="Add New Hotel">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                     <div id="hotel-error-container" class="hidden mt-1">
                                         <span id="hotel-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
@@ -2647,5 +2659,128 @@ function createDefaultItinerary() {
         showNotification('Error creating default itinerary', 'error');
     });
 }
+
+// Add New Hotel Modal functionality
+function openAddHotelModal() {
+    document.getElementById('addHotelModal').classList.remove('hidden');
+    document.getElementById('addHotelModal').classList.add('flex');
+    document.getElementById('new_hotel_name').focus();
+}
+
+function closeAddHotelModal() {
+    document.getElementById('addHotelModal').classList.add('hidden');
+    document.getElementById('addHotelModal').classList.remove('flex');
+    document.getElementById('new_hotel_name').value = '';
+    document.getElementById('new_hotel_city').value = 'Amman';
+    document.getElementById('add-hotel-error').classList.add('hidden');
+}
+
+function saveNewHotel() {
+    const hotelName = document.getElementById('new_hotel_name').value.trim();
+    const hotelCity = document.getElementById('new_hotel_city').value;
+    
+    if (!hotelName) {
+        document.getElementById('add-hotel-error').textContent = 'Please enter a hotel name';
+        document.getElementById('add-hotel-error').classList.remove('hidden');
+        return;
+    }
+    
+    fetch('/inbound/api/add-hotel', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            name: hotelName,
+            city: hotelCity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new hotel to the dropdown
+            const select = document.getElementById('hotel_name');
+            let optgroup = select.querySelector(`optgroup[label="${hotelCity}"]`);
+            if (!optgroup) {
+                // Create new optgroup before the separator
+                const separator = select.querySelector('optgroup[label="──────────"]');
+                optgroup = document.createElement('optgroup');
+                optgroup.label = hotelCity;
+                select.insertBefore(optgroup, separator);
+            }
+            const option = document.createElement('option');
+            option.value = hotelName;
+            option.textContent = hotelName;
+            optgroup.appendChild(option);
+            
+            // Select the new hotel
+            select.value = hotelName;
+            
+            closeAddHotelModal();
+            showNotification('Hotel added successfully', 'success');
+        } else {
+            document.getElementById('add-hotel-error').textContent = data.error || 'Error adding hotel';
+            document.getElementById('add-hotel-error').classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('add-hotel-error').textContent = 'Error adding hotel';
+        document.getElementById('add-hotel-error').classList.remove('hidden');
+    });
+}
+
+// Handle "Add New" selection in dropdown
+document.getElementById('hotel_name').addEventListener('change', function() {
+    if (this.value === '__ADD_NEW__') {
+        this.value = '';
+        openAddHotelModal();
+    }
+});
 </script>
+
+<!-- Add New Hotel Modal -->
+<div id="addHotelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Add New Hotel
+            </h3>
+            <button type="button" onclick="closeAddHotelModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <div id="add-hotel-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Hotel Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="new_hotel_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter hotel name">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">City</label>
+                    <select id="new_hotel_city" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Amman">Amman</option>
+                        <option value="Aqaba">Aqaba</option>
+                        <option value="Petra">Petra</option>
+                        <option value="Dead Sea">Dead Sea</option>
+                        <option value="Jerash">Jerash</option>
+                        <option value="Madaba">Madaba</option>
+                        <option value="Wadi Rum">Wadi Rum</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+            <button type="button" onclick="closeAddHotelModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewHotel()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-save mr-2"></i>Add Hotel
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}

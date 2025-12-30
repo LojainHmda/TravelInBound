@@ -261,14 +261,27 @@ def view_request(id):
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
     view_only = (mode == 'view')
     
-    # Get hotel suppliers for dropdown
-    hotel_suppliers = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).order_by(Supplier.name).all()
+    # Get hotel suppliers for dropdown, grouped by city
+    hotel_suppliers = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).order_by(Supplier.city, Supplier.name).all()
+    
+    # Group hotels by city for the dropdown
+    hotels_by_city = {}
+    city_order = ['Amman', 'Aqaba', 'Petra', 'Dead Sea', 'Other']
+    for hotel in hotel_suppliers:
+        city = hotel.city or 'Other'
+        if city not in hotels_by_city:
+            hotels_by_city[city] = []
+        hotels_by_city[city].append(hotel)
+    
+    # Sort by preferred city order
+    sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
     
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
                            rows=request_obj.itinerary_rows,
-                           hotel_suppliers=hotel_suppliers)
+                           hotel_suppliers=hotel_suppliers,
+                           hotels_by_city=sorted_hotels_by_city)
 
 
 @inbound_bp.route('/<int:id>/delete')
@@ -1304,6 +1317,53 @@ def api_save_service_data(request_id):
             'service_type': service_type
         })
     
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/add-hotel', methods=['POST'])
+@csrf.exempt
+def api_add_hotel():
+    """Add a new hotel to the suppliers list"""
+    try:
+        data = request.get_json()
+        hotel_name = data.get('name', '').strip()
+        hotel_city = data.get('city', 'Amman')
+        
+        if not hotel_name:
+            return jsonify({'success': False, 'error': 'Hotel name is required'}), 400
+        
+        # Check if hotel already exists
+        existing = Supplier.query.filter_by(name=hotel_name, supplier_type='HOTEL').first()
+        if existing:
+            return jsonify({'success': False, 'error': 'Hotel already exists'}), 400
+        
+        # Generate unique code
+        import re
+        city_code = re.sub(r'[^A-Z]', '', hotel_city.upper()[:3]) or 'OTH'
+        count = Supplier.query.filter(Supplier.code.like(f'HTL-{city_code}-%')).count()
+        new_code = f'HTL-{city_code}-{count + 1:03d}'
+        
+        # Create new supplier
+        new_hotel = Supplier(
+            name=hotel_name,
+            code=new_code,
+            supplier_type='HOTEL',
+            city=hotel_city,
+            is_active=True
+        )
+        db.session.add(new_hotel)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'hotel': {
+                'id': new_hotel.id,
+                'name': new_hotel.name,
+                'city': new_hotel.city
+            }
+        })
+        
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
