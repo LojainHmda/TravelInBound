@@ -2348,14 +2348,16 @@ function showInlineError(serviceType, message) {
             if (field) {
                 field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
                 field.focus();
-                // Clear highlight on input
-                field.addEventListener('input', function clearHighlight() {
+                // Clear highlight and hide error on input
+                field.addEventListener('input', function clearError() {
                     field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-                    field.removeEventListener('input', clearHighlight);
+                    errorContainer.classList.add('hidden');
+                    field.removeEventListener('input', clearError);
                 }, { once: true });
-                field.addEventListener('change', function clearHighlight() {
+                field.addEventListener('change', function clearError() {
                     field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
-                    field.removeEventListener('change', clearHighlight);
+                    errorContainer.classList.add('hidden');
+                    field.removeEventListener('change', clearError);
                 }, { once: true });
             }
         }
