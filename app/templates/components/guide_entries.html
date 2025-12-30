@@ -1,0 +1,25 @@
+{% if guides %}
+{% for guide in guides %}
+<tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}">
+    <td class="px-4 py-3 text-slate-500">{{ guide.date.strftime('%d %b') if guide.date else '-' }}</td>
+    <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
+    <td class="px-4 py-3 text-slate-500">{{ guide.language or '-' }}</td>
+    <td class="px-4 py-3 text-slate-500">{{ guide.telephone or '-' }}</td>
+    <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if guide.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif guide.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ guide.status or 'PENDING' }}</span></td>
+    {% if not view_only %}
+    <td class="px-4 py-3 text-center">
+        <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteGuide({{ guide.id }})">
+            <i class="far fa-trash-alt"></i>
+        </button>
+    </td>
+    {% endif %}
+</tr>
+{% endfor %}
+{% else %}
+<tr>
+    <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
+        <i class="fas fa-inbox text-2xl mb-2"></i>
+        <p>No guides saved yet</p>
+    </td>
+</tr>
+{% endif %}

@@ -2013,6 +2013,17 @@ function autoSaveServiceData(serviceType) {
                 }
             }
             
+            // Update the service entries table (saved entries section)
+            if (data.service_entries_html && data.service_type) {
+                const servicePanel = document.getElementById(`service-panel-${data.service_type}`);
+                if (servicePanel) {
+                    const entriesTable = servicePanel.querySelector('table tbody');
+                    if (entriesTable) {
+                        entriesTable.innerHTML = data.service_entries_html;
+                    }
+                }
+            }
+            
             // Also activate the icon visually for current context
             if (currentServiceContext.rowId) {
                 activateIcon(currentServiceContext.rowId, serviceType);

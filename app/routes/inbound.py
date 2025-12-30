@@ -1247,10 +1247,39 @@ def api_save_service_data(request_id):
             global_meal=global_meal
         )
         
+        # Also render the service-specific entries table
+        service_entries_html = None
+        if service_type == 'hotel':
+            service_entries_html = render_template(
+                'components/hotel_entries.html',
+                hotels=fresh_request.inbound_hotels,
+                view_only=False
+            )
+        elif service_type == 'transport':
+            service_entries_html = render_template(
+                'components/transport_entries.html',
+                transports=fresh_request.inbound_transports,
+                view_only=False
+            )
+        elif service_type == 'guide':
+            service_entries_html = render_template(
+                'components/guide_entries.html',
+                guides=fresh_request.inbound_guides,
+                view_only=False
+            )
+        elif service_type == 'meal':
+            service_entries_html = render_template(
+                'components/meal_entries.html',
+                meals=fresh_request.inbound_meals,
+                view_only=False
+            )
+        
         return jsonify({
             'success': True, 
             'message': f'{service_type.capitalize()} data saved',
-            'itinerary_html': itinerary_html
+            'itinerary_html': itinerary_html,
+            'service_entries_html': service_entries_html,
+            'service_type': service_type
         })
     
     except Exception as e:
