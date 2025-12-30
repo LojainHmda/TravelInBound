@@ -992,12 +992,12 @@ html { scroll-behavior: smooth; }
                                     <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" id="hotel_triple_rooms" min="0" value="0" data-service="hotel">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Guests</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Room Capacity</label>
                                     <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center bg-slate-100 font-semibold text-blue-600" id="hotel_total_guests" readonly value="0">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center bg-slate-50 text-slate-600" id="hotel_pax_display" readonly value="{{ request.pax or 0 }}">
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Guests</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center bg-slate-50 text-slate-600 font-semibold" id="hotel_pax_display" readonly value="{{ request.pax or 0 }}">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
