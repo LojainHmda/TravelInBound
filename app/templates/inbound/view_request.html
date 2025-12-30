@@ -2129,6 +2129,14 @@ function autoSaveServiceData(serviceType) {
 
 // Manual save function called by Save buttons
 function saveServiceData(serviceType) {
+    // Validate room distribution for hotel saves
+    if (serviceType === 'hotel') {
+        const validation = validateRoomDistribution();
+        if (!validation.valid) {
+            showInlineError('hotel', validation.message);
+            return;
+        }
+    }
     autoSaveServiceData(serviceType);
 }
 
@@ -2779,6 +2787,45 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     }
 });
 
+// Initialize room distribution with all PAX as Single rooms
+function initializeRoomDistribution() {
+    const pax = parseInt(document.getElementById('hotel_pax_display')?.value) || 0;
+    const singleField = document.getElementById('hotel_single_rooms');
+    const doubleField = document.getElementById('hotel_double_rooms');
+    const tripleField = document.getElementById('hotel_triple_rooms');
+    
+    if (singleField && doubleField && tripleField) {
+        singleField.value = pax;
+        doubleField.value = 0;
+        tripleField.value = 0;
+    }
+    calculateTotalGuests();
+}
+
+// Auto-recalculate SGL when DBL or TRP changes to maintain PAX total
+function autoRecalculateSingleRooms(changedField) {
+    const pax = parseInt(document.getElementById('hotel_pax_display')?.value) || 0;
+    const singleField = document.getElementById('hotel_single_rooms');
+    const doubleField = document.getElementById('hotel_double_rooms');
+    const tripleField = document.getElementById('hotel_triple_rooms');
+    
+    if (!singleField || !doubleField || !tripleField) return;
+    
+    const doubleRooms = parseInt(doubleField.value) || 0;
+    const tripleRooms = parseInt(tripleField.value) || 0;
+    
+    // Calculate capacity used by DBL and TRP
+    const usedCapacity = (doubleRooms * 2) + (tripleRooms * 3);
+    
+    // Calculate remaining for SGL (each SGL = 1 guest)
+    const remainingSgl = pax - usedCapacity;
+    
+    // Update SGL (don't go below 0)
+    singleField.value = Math.max(0, remainingSgl);
+    
+    calculateTotalGuests();
+}
+
 // Calculate total guests from room distribution
 function calculateTotalGuests() {
     const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
@@ -2805,19 +2852,36 @@ function calculateTotalGuests() {
             totalGuestsField.classList.add('text-blue-600');
         }
     }
+    
+    return totalGuests;
+}
+
+// Validate room distribution matches PAX
+function validateRoomDistribution() {
+    const pax = parseInt(document.getElementById('hotel_pax_display')?.value) || 0;
+    const totalGuests = calculateTotalGuests();
+    
+    if (totalGuests !== pax) {
+        return { valid: false, message: `Room capacity (${totalGuests}) must equal Total Guests (${pax})` };
+    }
+    return { valid: true };
 }
 
 // Add event listeners to room distribution fields
-['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms'].forEach(fieldId => {
+document.getElementById('hotel_single_rooms')?.addEventListener('input', calculateTotalGuests);
+document.getElementById('hotel_single_rooms')?.addEventListener('change', calculateTotalGuests);
+
+// DBL and TRP auto-recalculate SGL
+['hotel_double_rooms', 'hotel_triple_rooms'].forEach(fieldId => {
     const field = document.getElementById(fieldId);
     if (field) {
-        field.addEventListener('input', calculateTotalGuests);
-        field.addEventListener('change', calculateTotalGuests);
+        field.addEventListener('input', () => autoRecalculateSingleRooms(fieldId));
+        field.addEventListener('change', () => autoRecalculateSingleRooms(fieldId));
     }
 });
 
 // Initialize on page load
-calculateTotalGuests();
+initializeRoomDistribution();
 </script>
 
 <!-- Add New Hotel Modal -->
