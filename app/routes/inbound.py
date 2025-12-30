@@ -1037,7 +1037,9 @@ def api_save_service_data(request_id):
                     )
                     db.session.add(hotel)
                 
-                hotel.hotel_name = form_data.get('hotel_name', '')
+                hotel_name_value = form_data.get('hotel_name', '')
+                print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
+                hotel.hotel_name = hotel_name_value
                 hotel.hotel_category = form_data.get('hotel_category', '')
                 hotel.meal_plan = form_data.get('hotel_board', 'BB')
                 hotel.status = form_data.get('hotel_status', 'REQUESTED')
@@ -1204,6 +1206,7 @@ def api_save_service_data(request_id):
                         meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
         
         db.session.commit()
+        print(f"[SAVE SERVICE] Commit successful for {service_type}")
         
         # Expire cached data and re-query with eager loading
         db.session.expire_all()
