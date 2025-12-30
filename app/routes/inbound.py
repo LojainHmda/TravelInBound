@@ -1024,6 +1024,28 @@ def api_save_service_data(request_id):
         if not row or row.request_id != request_id:
             return jsonify({'success': False, 'error': 'Invalid row_id'}), 400
     
+    # Validate required fields based on service type
+    validation_errors = []
+    if service_type == 'hotel':
+        if not form_data.get('hotel_name', '').strip():
+            validation_errors.append('Hotel Name is required')
+    elif service_type == 'transport':
+        if not form_data.get('transport_vehicle', '').strip():
+            validation_errors.append('Vehicle Type is required')
+    elif service_type == 'guide':
+        if not form_data.get('guide_name', '').strip():
+            validation_errors.append('Guide Name is required')
+    elif service_type == 'meal':
+        if not form_data.get('meal_restaurant', '').strip():
+            validation_errors.append('Restaurant is required')
+    
+    if validation_errors:
+        return jsonify({
+            'success': False, 
+            'error': ', '.join(validation_errors),
+            'validation_errors': validation_errors
+        }), 400
+    
     try:
         if service_type == 'hotel':
             if is_global:

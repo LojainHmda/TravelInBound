@@ -2000,9 +2000,9 @@ function autoSaveServiceData(serviceType) {
         },
         body: JSON.stringify(payload)
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
             showNotification(data.message || 'Service data saved!', 'success');
             
             // Instant DOM update - replace itinerary table rows
@@ -2029,7 +2029,9 @@ function autoSaveServiceData(serviceType) {
                 activateIcon(currentServiceContext.rowId, serviceType);
             }
         } else {
-            showNotification('Error saving service data', 'error');
+            // Show validation error message from server
+            const errorMsg = data.error || 'Error saving service data';
+            showNotification(errorMsg, 'error');
         }
     })
     .catch(error => {
