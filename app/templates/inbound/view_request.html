@@ -918,9 +918,16 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
+                            <!-- Inline Error Container -->
+                            <div id="hotel-error-container" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center gap-2 text-red-700 text-sm">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="hotel-error-message"></span>
+                                </div>
+                            </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name *</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name <span class="text-red-500">*</span></label>
                                     <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" data-service="hotel">
                                         <option value="">Select hotel...</option>
                                         {% for hotel in hotel_suppliers %}
@@ -1034,9 +1041,16 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
+                            <!-- Inline Error Container -->
+                            <div id="guide-error-container" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center gap-2 text-red-700 text-sm">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="guide-error-message"></span>
+                                </div>
+                            </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name *</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
                                     <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_name" placeholder="Guide name" data-service="guide">
                                 </div>
                                 <div>
@@ -1131,56 +1145,88 @@ html { scroll-behavior: smooth; }
                         </div>
                         {% if not view_only %}
                         <!-- Add Transport Form Fields (Below Table) -->
-                        <div class="p-5 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_date" data-service="transport">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_vehicle" data-service="transport">
-                                        <option value="">Select...</option>
-                                        <option value="Sedan">Sedan (1-3 PAX)</option>
-                                        <option value="Van">Van (4-7 PAX)</option>
-                                        <option value="Minibus">Minibus (8-15 PAX)</option>
-                                        <option value="Bus">Bus (16+ PAX)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Pickup Point</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_pickup" placeholder="Pickup location" data-service="transport">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Drop-off Point</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_dropoff" placeholder="Drop-off location" data-service="transport">
+                        <div class="p-5 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
+                            <!-- Inline Error Container -->
+                            <div id="transport-error-container" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center gap-2 text-red-700 text-sm">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="transport-error-message"></span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_driver" placeholder="Driver name" data-service="transport">
+                            
+                            <!-- Transport Details Section -->
+                            <div class="mb-5">
+                                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                                    <i class="fas fa-car-side text-cyan-500 text-sm"></i>
+                                    <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
                                 </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Phone</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_phone" placeholder="Phone number" data-service="transport">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_status" data-service="transport">
-                                        <option value="REQUESTED">Requested</option>
-                                        <option value="CONFIRMED">Confirmed</option>
-                                        <option value="CANCELLED">Cancelled</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Service Date</label>
+                                        <input type="date" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_date" data-service="transport">
+                                    </div>
+                                    <div class="field-wrapper" data-field="transport_vehicle">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">
+                                            Vehicle Type <span class="text-red-500">*</span>
+                                        </label>
+                                        <select class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_vehicle" data-service="transport">
+                                            <option value="">Select vehicle...</option>
+                                            <option value="Sedan">Sedan (1-3 PAX)</option>
+                                            <option value="Van">Van (4-7 PAX)</option>
+                                            <option value="Minibus">Minibus (8-15 PAX)</option>
+                                            <option value="Bus">Bus (16+ PAX)</option>
+                                            <option value="Luxury">Luxury Car</option>
+                                            <option value="SUV">SUV (4-6 PAX)</option>
+                                        </select>
+                                        <p class="field-error hidden text-xs text-red-600 mt-1"></p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Pickup Point</label>
+                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_pickup" placeholder="e.g., Airport, Hotel" data-service="transport">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Drop-off Point</label>
+                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_dropoff" placeholder="e.g., Hotel, Station" data-service="transport">
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <!-- Driver & Cost Section -->
+                            <div class="mb-5">
+                                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
+                                    <i class="fas fa-user-tie text-slate-400 text-sm"></i>
+                                    <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Driver & Cost</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Driver Name</label>
+                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_driver" placeholder="Full name" data-service="transport">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Driver Phone</label>
+                                        <input type="tel" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_phone" placeholder="+1 234 567 890" data-service="transport">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Status</label>
+                                        <select class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_status" data-service="transport">
+                                            <option value="REQUESTED">Requested</option>
+                                            <option value="CONFIRMED">Confirmed</option>
+                                            <option value="CANCELLED">Cancelled</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Cost</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+                                            <input type="number" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Save Button -->
-                            <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('transport')" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors font-medium text-sm">
+                            <div class="flex justify-end pt-2">
+                                <button type="button" onclick="saveServiceData('transport')" class="inline-flex items-center px-5 py-2.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-sm shadow-sm">
                                     <i class="fas fa-save mr-2"></i>Save Transport
                                 </button>
                             </div>
@@ -1240,6 +1286,13 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
+                            <!-- Inline Error Container -->
+                            <div id="meal-error-container" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <div class="flex items-center gap-2 text-red-700 text-sm">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="meal-error-message"></span>
+                                </div>
+                            </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
@@ -1255,7 +1308,7 @@ html { scroll-behavior: smooth; }
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant Name</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant <span class="text-red-500">*</span></label>
                                     <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_restaurant" placeholder="Restaurant name" data-service="meal">
                                 </div>
                                 <div>
@@ -2003,6 +2056,8 @@ function autoSaveServiceData(serviceType) {
     .then(response => response.json().then(data => ({ ok: response.ok, data })))
     .then(({ ok, data }) => {
         if (ok && data.success) {
+            // Clear any inline errors
+            clearInlineError(serviceType);
             showNotification(data.message || 'Service data saved!', 'success');
             
             // Instant DOM update - replace itinerary table rows
@@ -2029,9 +2084,9 @@ function autoSaveServiceData(serviceType) {
                 activateIcon(currentServiceContext.rowId, serviceType);
             }
         } else {
-            // Show validation error message from server
+            // Show inline validation error instead of toast
             const errorMsg = data.error || 'Error saving service data';
-            showNotification(errorMsg, 'error');
+            showInlineError(serviceType, errorMsg);
         }
     })
     .catch(error => {
@@ -2276,6 +2331,55 @@ function confirmAllHotels() {
 }
 
 // Show notification
+// Show inline error within a service panel
+function showInlineError(serviceType, message) {
+    const errorContainer = document.getElementById(`${serviceType}-error-container`);
+    const errorMessage = document.getElementById(`${serviceType}-error-message`);
+    
+    if (errorContainer && errorMessage) {
+        errorMessage.textContent = message;
+        errorContainer.classList.remove('hidden');
+        // Scroll error into view
+        errorContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Also highlight the required field if applicable
+        const fieldMap = {
+            'hotel': 'hotel_name',
+            'transport': 'transport_vehicle',
+            'guide': 'guide_name',
+            'meal': 'meal_restaurant'
+        };
+        const fieldId = fieldMap[serviceType];
+        if (fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+                field.focus();
+                // Clear highlight on input
+                field.addEventListener('input', function clearHighlight() {
+                    field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    field.removeEventListener('input', clearHighlight);
+                }, { once: true });
+                field.addEventListener('change', function clearHighlight() {
+                    field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                    field.removeEventListener('change', clearHighlight);
+                }, { once: true });
+            }
+        }
+    } else {
+        // Fallback to toast if inline container not found
+        showNotification(message, 'error');
+    }
+}
+
+// Clear inline error for a service panel
+function clearInlineError(serviceType) {
+    const errorContainer = document.getElementById(`${serviceType}-error-container`);
+    if (errorContainer) {
+        errorContainer.classList.add('hidden');
+    }
+}
+
 function showNotification(message, type) {
     // Remove any existing notifications first
     document.querySelectorAll('.tw-notification').forEach(n => n.remove());
