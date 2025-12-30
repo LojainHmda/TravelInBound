@@ -2934,6 +2934,20 @@ document.getElementById('hotel_single_rooms')?.addEventListener('change', calcul
     }
 });
 
+// Listen for PAX changes from the main booking form and update room distribution
+document.querySelector('[name="pax"]')?.addEventListener('input', function() {
+    const newPax = parseInt(this.value) || 0;
+    
+    // Update the hotel_pax_display element
+    const paxDisplay = document.getElementById('hotel_pax_display');
+    if (paxDisplay) {
+        paxDisplay.textContent = newPax;
+    }
+    
+    // Re-initialize room distribution with new PAX value
+    initializeRoomDistribution();
+});
+
 // Initialize on page load
 initializeRoomDistribution();
 </script>
