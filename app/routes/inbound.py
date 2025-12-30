@@ -1005,10 +1005,11 @@ def api_save_service_data(request_id):
     row_id = data.get('row_id')
     is_global = data.get('is_global', False)
     
-    # Debug logging
-    import logging
-    logging.debug(f"Save service data: type={service_type}, is_global={is_global}, row_id={row_id}")
-    logging.debug(f"Form data received: {form_data}")
+    # Debug logging - use print for immediate visibility
+    print(f"[SAVE SERVICE] type={service_type}, is_global={is_global}, row_id={row_id}")
+    print(f"[SAVE SERVICE] form_data keys: {list(form_data.keys())}")
+    print(f"[SAVE SERVICE] hotel_name value: '{form_data.get('hotel_name', 'NOT_FOUND')}'")
+    print(f"[SAVE SERVICE] full form_data: {form_data}")
     
     # Validate context
     if not service_type:
