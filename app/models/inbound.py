@@ -319,6 +319,12 @@ class InboundHotel(db.Model):
     room_type = db.Column(db.String(100), nullable=True)
     meal_plan = db.Column(db.String(50), nullable=True, default='BB')  # BB, HB, FB, AI
     
+    # Room distribution
+    single_rooms = db.Column(db.Integer, default=0)
+    double_rooms = db.Column(db.Integer, default=0)
+    triple_rooms = db.Column(db.Integer, default=0)
+    notes = db.Column(db.Text, nullable=True)
+    
     # Costing
     cost_per_night = db.Column(db.Float, default=0.0)
     total_cost = db.Column(db.Float, default=0.0)

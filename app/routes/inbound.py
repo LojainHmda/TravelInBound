@@ -1092,6 +1092,12 @@ def api_save_service_data(request_id):
                 cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
                 hotel.cost_per_night = cost_per_night
                 hotel.total_cost = cost_per_night * (hotel.nights or 1)
+                
+                # Room distribution
+                hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
+                hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
+                hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
+                hotel.notes = form_data.get('hotel_notes', '')
             else:
                 # Apply to specific day
                 row = ItineraryRow.query.get(row_id)
@@ -1124,6 +1130,12 @@ def api_save_service_data(request_id):
                     cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
                     hotel.cost_per_night = cost_per_night
                     hotel.total_cost = cost_per_night * (hotel.nights or 1)
+                    
+                    # Room distribution
+                    hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
+                    hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
+                    hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
+                    hotel.notes = form_data.get('hotel_notes', '')
         
         elif service_type == 'transport':
             if is_global:

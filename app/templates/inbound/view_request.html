@@ -879,9 +879,9 @@ html { scroll-behavior: smooth; }
                                 <thead class="bg-teal-600 text-white">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Hotel</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Check-in</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Check-out</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Nights</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Dates</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide">Nights</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide">Rooms</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
                                         {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
                                     </tr>
@@ -890,10 +890,19 @@ html { scroll-behavior: smooth; }
                                     {% if request.inbound_hotels %}
                                     {% for hotel in request.inbound_hotels %}
                                     <tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
-                                        <td class="px-4 py-3 text-slate-700">{{ hotel.hotel_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-700 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                                        <td class="px-4 py-3 text-slate-500 text-sm">
+                                            {{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }} - {{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}
+                                        </td>
                                         <td class="px-4 py-3 text-slate-700 text-center">{{ hotel.nights or 0 }}</td>
+                                        <td class="px-4 py-3 text-center">
+                                            <div class="flex items-center justify-center gap-2 text-xs">
+                                                {% if hotel.single_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> {{ hotel.single_rooms }}</span>{% endif %}
+                                                {% if hotel.double_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> {{ hotel.double_rooms }}</span>{% endif %}
+                                                {% if hotel.triple_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> {{ hotel.triple_rooms }}</span>{% endif %}
+                                                {% if not hotel.single_rooms and not hotel.double_rooms and not hotel.triple_rooms %}<span class="text-slate-400">-</span>{% endif %}
+                                            </div>
+                                        </td>
                                         <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
                                         {% if not view_only %}
                                         <td class="px-4 py-3 text-center">
@@ -960,6 +969,35 @@ html { scroll-behavior: smooth; }
                                         <option value="3-Star">3-Star</option>
                                         <option value="Boutique">Boutique</option>
                                     </select>
+                                </div>
+                            </div>
+                            <!-- Room Distribution Row -->
+                            <div class="grid grid-cols-5 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        <i class="fas fa-user text-slate-400 mr-1"></i>Single
+                                    </label>
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" id="hotel_single_rooms" min="0" value="0" data-service="hotel">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        <i class="fas fa-user-friends text-slate-400 mr-1"></i>Twin/Double
+                                    </label>
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" id="hotel_double_rooms" min="0" value="0" data-service="hotel">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+                                        <i class="fas fa-users text-slate-400 mr-1"></i>Triple
+                                    </label>
+                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" id="hotel_triple_rooms" min="0" value="0" data-service="hotel">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Total Guests</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center bg-slate-100 font-semibold text-blue-600" id="hotel_total_guests" readonly value="0">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-center bg-slate-50 text-slate-600" id="hotel_pax_display" readonly value="{{ request.pax or 0 }}">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -2740,6 +2778,46 @@ document.getElementById('hotel_name').addEventListener('change', function() {
         openAddHotelModal();
     }
 });
+
+// Calculate total guests from room distribution
+function calculateTotalGuests() {
+    const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
+    const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
+    const tripleRooms = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
+    
+    // Single = 1 guest, Double/Twin = 2 guests, Triple = 3 guests
+    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3);
+    
+    const totalGuestsField = document.getElementById('hotel_total_guests');
+    if (totalGuestsField) {
+        totalGuestsField.value = totalGuests;
+        
+        // Visual feedback - highlight if matches PAX
+        const pax = parseInt(document.getElementById('hotel_pax_display')?.value) || 0;
+        if (totalGuests === pax && totalGuests > 0) {
+            totalGuestsField.classList.remove('text-blue-600', 'text-red-600');
+            totalGuestsField.classList.add('text-green-600');
+        } else if (totalGuests > 0 && totalGuests !== pax) {
+            totalGuestsField.classList.remove('text-blue-600', 'text-green-600');
+            totalGuestsField.classList.add('text-red-600');
+        } else {
+            totalGuestsField.classList.remove('text-green-600', 'text-red-600');
+            totalGuestsField.classList.add('text-blue-600');
+        }
+    }
+}
+
+// Add event listeners to room distribution fields
+['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms'].forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.addEventListener('input', calculateTotalGuests);
+        field.addEventListener('change', calculateTotalGuests);
+    }
+});
+
+// Initialize on page load
+calculateTotalGuests();
 </script>
 
 <!-- Add New Hotel Modal -->
