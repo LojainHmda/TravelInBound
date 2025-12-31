@@ -10,6 +10,7 @@
 /* Smooth scroll */
 html { scroll-behavior: smooth; }
 
+
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -705,8 +706,9 @@ html { scroll-behavior: smooth; }
                         </div>
                         {% endif %}
                         
-                        <!-- Saved Arrivals Table -->
-                        <div class="overflow-x-auto" id="arrival-table-container">
+                        <!-- Saved Arrivals Table (ONLY SHOWS IF DATA EXISTS) -->
+                        {% if request.arrival_batches %}
+                        <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
                                     <tr>
@@ -720,7 +722,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.arrival_batches %}
                                     {% for batch in request.arrival_batches %}
                                     <tr class="hover:bg-slate-50">
                                         <td class="px-4 py-3 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
@@ -738,17 +739,10 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}6{% else %}7{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No arrivals saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
                     </div>
                     
                     <!-- Departure Panel -->
@@ -812,6 +806,9 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
+                        
+                        <!-- Saved Departures Table (ONLY SHOWS IF DATA EXISTS) -->
+                        {% if request.departure_batches %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
@@ -826,7 +823,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.departure_batches %}
                                     {% for batch in request.departure_batches %}
                                     <tr class="hover:bg-slate-50">
                                         <td class="px-4 py-3 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
@@ -844,17 +840,10 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}6{% else %}7{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No departures saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
                     </div>
                     
                     <!-- Hotel Panel -->
@@ -865,7 +854,7 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        <!-- Saved Hotels Table (Above Form Fields) - Only show if hotels exist -->
+                        <!-- Saved Hotels Table (ONLY SHOWS IF DATA EXISTS) -->
                         {% if request.inbound_hotels %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
@@ -963,19 +952,19 @@ html { scroll-behavior: smooth; }
                                     <!-- ROW 1: Checkbox Options -->
                                     <div class="flex items-center gap-10 mb-6">
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('economic')">
+                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
                                             <span class="text-sm text-slate-600">Economic</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('dbl')">
+                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
                                             <span class="text-sm text-slate-600">DBL</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('privacy')">
+                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
                                             <span class="text-sm text-slate-600">Privacy</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('manual')">
+                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
                                             <span class="text-sm font-semibold text-slate-700">Manual</span>
                                         </label>
                                         <span class="ml-auto text-sm text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
@@ -985,19 +974,19 @@ html { scroll-behavior: smooth; }
                                         <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-1">
                                                 <span class="text-sm text-slate-500">SGL</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold text-slate-700 shadow-sm" style="background-color: #dbeafe;" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <span class="text-sm text-slate-500">DBL</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold text-slate-700 shadow-sm" style="background-color: #dbeafe;" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <span class="text-sm text-slate-500">TRP</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold text-slate-700 shadow-sm" style="background-color: #dbeafe;" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <span class="text-sm text-slate-500">OTH</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold text-slate-700 shadow-sm" style="background-color: #dbeafe;" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
                                                 <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
                                             </div>
                                         </div>
@@ -1054,7 +1043,9 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        <!-- Saved Guides Table (Above Form Fields) -->
+                        
+                        <!-- Saved Guides Table (ONLY SHOWS IF DATA EXISTS) -->
+                        {% if request.inbound_guides %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
@@ -1067,7 +1058,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_guides %}
                                     {% for guide in request.inbound_guides %}
                                     <tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}">
                                         <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
@@ -1083,17 +1073,11 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}4{% else %}5{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No guides saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
+
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
@@ -1154,7 +1138,9 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-transport" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        <!-- Saved Transport Table (Above Form Fields) -->
+                        
+                        <!-- Saved Transport Table (ONLY SHOWS IF DATA EXISTS) -->
+                        {% if request.inbound_transports %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
@@ -1168,7 +1154,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_transports %}
                                     {% for transport in request.inbound_transports %}
                                     <tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}">
                                         <td class="px-4 py-3 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
@@ -1185,17 +1170,11 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No transport saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
+
                         {% if not view_only %}
                         <!-- Add Transport Form Fields (Below Table) -->
                         <div class="p-5 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
@@ -1289,7 +1268,9 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        <!-- Saved Meals Table (Above Form Fields) -->
+                        
+                        <!-- Saved Meals Table (ONLY SHOWS IF DATA EXISTS) -->
+                        {% if request.inbound_meals %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
@@ -1303,7 +1284,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_meals %}
                                     {% for meal in request.inbound_meals %}
                                     <tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}">
                                         <td class="px-4 py-3 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
@@ -1320,17 +1300,11 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% else %}
-                                    <tr>
-                                        <td colspan="{% if view_only %}5{% else %}6{% endif %}" class="px-4 py-8 text-center text-slate-400">
-                                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                                            <p>No meals saved yet</p>
-                                        </td>
-                                    </tr>
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
+
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
@@ -1836,9 +1810,30 @@ function autoSaveServiceData(serviceType) {
             if (data.service_entries_html && data.service_type) {
                 const servicePanel = document.getElementById(`service-panel-${data.service_type}`);
                 if (servicePanel) {
-                    const entriesTable = servicePanel.querySelector('table tbody');
-                    if (entriesTable) {
-                        entriesTable.innerHTML = data.service_entries_html;
+                    const tableContainer = servicePanel.querySelector('.overflow-x-auto');
+                    if (!tableContainer) {
+                        // If the table was previously hidden (empty), we need to inject it
+                        // Assuming the server sends the full HTML including the wrapping div/table
+                        // But the JS logic targets 'tbody'. 
+                        // We need to handle the case where the table wrapper is missing.
+                        
+                        // Create a container div if it doesn't exist (before the form)
+                        const formSection = servicePanel.querySelector('form') || servicePanel.lastElementChild;
+                        const newTableContainer = document.createElement('div');
+                        newTableContainer.className = 'overflow-x-auto';
+                        newTableContainer.innerHTML = data.service_entries_html; // Server should send full table HTML
+                        servicePanel.insertBefore(newTableContainer, formSection);
+                    } else {
+                        // If container exists, assume server sends tbody content OR full table
+                        // Safer approach: Server sends full table HTML, we replace the container content
+                        // However, previous code assumed rows. Let's try to support both.
+                        // If the response contains <thead>, it's a full table.
+                        if (data.service_entries_html.includes('<thead>')) {
+                            tableContainer.innerHTML = data.service_entries_html;
+                        } else {
+                            const tbody = tableContainer.querySelector('tbody');
+                            if (tbody) tbody.innerHTML = data.service_entries_html;
+                        }
                     }
                 }
             }
@@ -1922,6 +1917,13 @@ function deleteService(serviceType, serviceId) {
             const serviceRow = document.querySelector('[data-' + serviceType + '-id="' + serviceId + '"]');
             if (serviceRow) {
                 serviceRow.remove();
+            }
+            
+            // If table is now empty (no rows left), remove the entire table container to keep UI clean
+            const servicePanel = document.getElementById(`service-panel-${serviceType}`);
+            const tableContainer = servicePanel.querySelector('.overflow-x-auto');
+            if (tableContainer && tableContainer.querySelector('tbody').children.length === 0) {
+                tableContainer.remove();
             }
         } else {
             showNotification('Error deleting service: ' + (data.error || ''), 'error');
