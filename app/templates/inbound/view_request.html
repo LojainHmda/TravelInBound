@@ -1411,6 +1411,57 @@ html { scroll-behavior: smooth; }
                         </div>
                     </div>
                     {% endif %}
+                    
+                    <!-- Summary Table -->
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                    <th class="pb-2">Service</th>
+                                    <th class="pb-2">Details</th>
+                                    <th class="pb-2">Date</th>
+                                    <th class="pb-2">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                {% for hotel in request.inbound_hotels %}
+                                <tr>
+                                    <td class="py-2"><span class="inline-flex items-center gap-1"><i class="fas fa-hotel text-blue-500"></i> Hotel</span></td>
+                                    <td class="py-2">{{ hotel.name or 'N/A' }}</td>
+                                    <td class="py-2">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else 'TBA' }} - {{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else 'TBA' }}</td>
+                                    <td class="py-2"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
+                                </tr>
+                                {% endfor %}
+                                {% for transport in request.inbound_transports %}
+                                <tr>
+                                    <td class="py-2"><span class="inline-flex items-center gap-1"><i class="fas fa-car text-cyan-500"></i> Transport</span></td>
+                                    <td class="py-2">{{ transport.vehicle_type or 'N/A' }} - {{ transport.pickup_point or '' }} to {{ transport.dropoff_point or '' }}</td>
+                                    <td class="py-2">{{ transport.date.strftime('%d %b') if transport.date else 'TBA' }}</td>
+                                    <td class="py-2"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
+                                </tr>
+                                {% endfor %}
+                                {% for guide in request.inbound_guides %}
+                                <tr>
+                                    <td class="py-2"><span class="inline-flex items-center gap-1"><i class="fas fa-user-tie text-green-500"></i> Guide</span></td>
+                                    <td class="py-2">{{ guide.name or 'N/A' }} ({{ guide.language or 'N/A' }})</td>
+                                    <td class="py-2">{{ guide.date.strftime('%d %b') if guide.date else 'TBA' }}</td>
+                                    <td class="py-2"><span class="px-2 py-0.5 rounded text-xs {% if guide.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif guide.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ guide.status or 'PENDING' }}</span></td>
+                                </tr>
+                                {% endfor %}
+                                {% for meal in request.inbound_meals %}
+                                <tr>
+                                    <td class="py-2"><span class="inline-flex items-center gap-1"><i class="fas fa-utensils text-amber-500"></i> Meal</span></td>
+                                    <td class="py-2">{{ meal.restaurant or 'N/A' }} ({{ meal.meal_type or 'N/A' }})</td>
+                                    <td class="py-2">{{ meal.date.strftime('%d %b') if meal.date else 'TBA' }}</td>
+                                    <td class="py-2"><span class="px-2 py-0.5 rounded text-xs {% if meal.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif meal.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ meal.status or 'PENDING' }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if not request.inbound_hotels and not request.inbound_transports and not request.inbound_guides and not request.inbound_meals %}
+                        <p class="text-sm text-slate-400 text-center py-4">No services added yet</p>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
     </div>
