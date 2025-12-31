@@ -585,23 +585,29 @@ html { scroll-behavior: smooth; }
                 <!-- Service Tabs - Top Navigation -->
                 <div class="px-3 pt-2 pb-2">
                     <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
-                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="arrival">
-                            <i class="fas fa-check-circle text-slate-400"></i> Arrival
+                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.arrival_batches %}bg-green-100 text-green-700{% else %}bg-white text-slate-500{% endif %}" data-service="arrival" id="tab-arrival">
+                            <i class="fas fa-plane-arrival {% if request.arrival_batches %}text-green-500{% else %}text-slate-400{% endif %}"></i> Arrival
+                            {% if request.arrival_batches %}<span class="ml-1 bg-green-500 text-white text-[10px] px-1.5 rounded-full">{{ request.arrival_batches|length }}</span>{% endif %}
                         </button>
-                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="departure">
-                            <i class="fas fa-plane-departure text-slate-400"></i> Departure
+                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.departure_batches %}bg-orange-100 text-orange-700{% else %}bg-white text-slate-500{% endif %}" data-service="departure" id="tab-departure">
+                            <i class="fas fa-plane-departure {% if request.departure_batches %}text-orange-500{% else %}text-slate-400{% endif %}"></i> Departure
+                            {% if request.departure_batches %}<span class="ml-1 bg-orange-500 text-white text-[10px] px-1.5 rounded-full">{{ request.departure_batches|length }}</span>{% endif %}
                         </button>
-                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="hotel">
-                            <i class="fas fa-hotel text-slate-400"></i> Hotel
+                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_hotels %}bg-blue-100 text-blue-700{% else %}bg-white text-slate-500{% endif %}" data-service="hotel" id="tab-hotel">
+                            <i class="fas fa-hotel {% if request.inbound_hotels %}text-blue-500{% else %}text-slate-400{% endif %}"></i> Hotel
+                            {% if request.inbound_hotels %}<span class="ml-1 bg-blue-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_hotels|length }}</span>{% endif %}
                         </button>
-                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="guide">
-                            <i class="fas fa-user-tie text-slate-400"></i> Guide
+                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_guides %}bg-teal-100 text-teal-700{% else %}bg-white text-slate-500{% endif %}" data-service="guide" id="tab-guide">
+                            <i class="fas fa-user-tie {% if request.inbound_guides %}text-teal-500{% else %}text-slate-400{% endif %}"></i> Guide
+                            {% if request.inbound_guides %}<span class="ml-1 bg-teal-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_guides|length }}</span>{% endif %}
                         </button>
-                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="transport">
-                            <i class="fas fa-car text-slate-400"></i> Transport
+                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_transports %}bg-cyan-100 text-cyan-700{% else %}bg-white text-slate-500{% endif %}" data-service="transport" id="tab-transport">
+                            <i class="fas fa-car {% if request.inbound_transports %}text-cyan-500{% else %}text-slate-400{% endif %}"></i> Transport
+                            {% if request.inbound_transports %}<span class="ml-1 bg-cyan-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_transports|length }}</span>{% endif %}
                         </button>
-                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="meal">
-                            <i class="fas fa-utensils text-slate-400"></i> Meal
+                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_meals %}bg-amber-100 text-amber-700{% else %}bg-white text-slate-500{% endif %}" data-service="meal" id="tab-meal">
+                            <i class="fas fa-utensils {% if request.inbound_meals %}text-amber-500{% else %}text-slate-400{% endif %}"></i> Meal
+                            {% if request.inbound_meals %}<span class="ml-1 bg-amber-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_meals|length }}</span>{% endif %}
                         </button>
                     </div>
                     <!-- Tab Content Container -->
@@ -2311,6 +2317,73 @@ function updateSummaryCounts() {
         }).join('');
         
         hotelsContainer.innerHTML = hotels || '<span class="text-slate-400 text-[10px]">No hotels added</span>';
+    }
+    
+    // Update tab colors based on data
+    updateTabColors();
+}
+
+// Function to update tab colors when they have data
+function updateTabColors() {
+    const tabConfigs = {
+        'arrival': { 
+            count: document.querySelectorAll('#arrival-table-body tr').length,
+            bgHas: 'bg-green-100', textHas: 'text-green-700', iconHas: 'text-green-500', badgeBg: 'bg-green-500'
+        },
+        'departure': { 
+            count: document.querySelectorAll('#departure-table-body tr').length,
+            bgHas: 'bg-orange-100', textHas: 'text-orange-700', iconHas: 'text-orange-500', badgeBg: 'bg-orange-500'
+        },
+        'hotel': { 
+            count: document.querySelectorAll('#hotels-table-body tr').length,
+            bgHas: 'bg-blue-100', textHas: 'text-blue-700', iconHas: 'text-blue-500', badgeBg: 'bg-blue-500'
+        },
+        'guide': { 
+            count: document.querySelectorAll('#guides-table-body tr').length,
+            bgHas: 'bg-teal-100', textHas: 'text-teal-700', iconHas: 'text-teal-500', badgeBg: 'bg-teal-500'
+        },
+        'transport': { 
+            count: document.querySelectorAll('#transports-table-body tr').length,
+            bgHas: 'bg-cyan-100', textHas: 'text-cyan-700', iconHas: 'text-cyan-500', badgeBg: 'bg-cyan-500'
+        },
+        'meal': { 
+            count: document.querySelectorAll('#meals-table-body tr').length,
+            bgHas: 'bg-amber-100', textHas: 'text-amber-700', iconHas: 'text-amber-500', badgeBg: 'bg-amber-500'
+        }
+    };
+    
+    for (const [service, config] of Object.entries(tabConfigs)) {
+        const tab = document.getElementById(`tab-${service}`);
+        if (!tab) continue;
+        
+        const icon = tab.querySelector('i');
+        let badge = tab.querySelector('.tab-count-badge');
+        
+        // Remove old classes
+        tab.classList.remove('bg-white', 'text-slate-500', config.bgHas, config.textHas);
+        if (icon) icon.classList.remove('text-slate-400', config.iconHas);
+        
+        if (config.count > 0) {
+            // Has data - apply colored styling
+            tab.classList.add(config.bgHas, config.textHas);
+            if (icon) icon.classList.add(config.iconHas);
+            
+            // Add or update badge
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+                tab.appendChild(badge);
+            }
+            badge.textContent = config.count;
+            badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+        } else {
+            // No data - apply default styling
+            tab.classList.add('bg-white', 'text-slate-500');
+            if (icon) icon.classList.add('text-slate-400');
+            
+            // Remove badge
+            if (badge) badge.remove();
+        }
     }
 }
 
