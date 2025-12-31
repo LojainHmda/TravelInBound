@@ -990,28 +990,28 @@ html { scroll-behavior: smooth; }
                                     </div>
                                     <!-- ROW 2: Room Fields + Capacity -->
                                     <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-3">
+                                        <div class="flex items-center gap-4">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm text-slate-500">SGL</span>
-                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-14 px-2 py-1.5 border-0 rounded-md text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm text-slate-500">DBL</span>
-                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-14 px-2 py-1.5 border-0 rounded-md text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm text-slate-500">TRP</span>
-                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-14 px-2 py-1.5 border-0 rounded-md text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm text-slate-500">OTH</span>
-                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-14 px-2 py-1.5 border-0 rounded-md text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
                                                 <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
                                             </div>
                                         </div>
                                         <!-- Capacity Display -->
                                         <div class="flex flex-col items-center">
-                                            <span class="px-3 py-1.5 rounded-md text-sm font-bold text-white" style="background-color: #ef5350;" id="hotel_total_guests">0</span>
+                                            <span class="px-3 py-1.5 rounded-md text-sm font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
                                             <span id="room-capacity-note" class="text-xs mt-1 font-bold" style="color: #ef5350;"></span>
                                         </div>
                                     </div>
@@ -2697,7 +2697,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!hasRows) {
         createDefaultItinerary();
     }
+    
+    // Initialize Room Distribution with Economic layout (default selection)
+    initializeRoomDistribution();
 });
+
+// Initialize room distribution with Economic layout on page load
+function initializeRoomDistribution() {
+    // Economic is already checked by default in HTML
+    // Apply the economic layout calculation
+    applyWizardLayout('economic');
+    calculateTotalGuests();
+}
 
 // Create default 4-day itinerary
 function createDefaultItinerary() {
