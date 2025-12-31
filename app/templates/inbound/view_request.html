@@ -2321,6 +2321,144 @@ function updateSummaryCounts() {
     
     // Update tab colors based on data
     updateTabColors();
+    
+    // Update the full summary section inline tables
+    updateFullSummaryTables();
+}
+
+// Function to update the inline full summary tables dynamically
+function updateFullSummaryTables() {
+    // Update Hotels Summary Table
+    const hotelsSummaryBody = document.getElementById('full-summary-hotels');
+    if (hotelsSummaryBody) {
+        const hotelRows = Array.from(document.querySelectorAll('#hotels-table-body tr'));
+        if (hotelRows.length > 0) {
+            hotelsSummaryBody.innerHTML = hotelRows.map(tr => {
+                const cells = tr.cells;
+                const name = cells[0]?.textContent.trim() || '-';
+                const dates = cells[1]?.textContent.trim() || '-';
+                const dateParts = dates.split(' - ');
+                const checkIn = dateParts[0] || '-';
+                const checkOut = dateParts[1] || '-';
+                const nights = cells[2]?.textContent.trim() || '0';
+                const rooms = cells[3]?.innerHTML || '';
+                const status = cells[4]?.textContent.trim() || 'PENDING';
+                const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                                   status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
+                return `<tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${name}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${checkIn}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${checkOut}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${nights}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${rooms}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
+                </tr>`;
+            }).join('');
+        } else {
+            hotelsSummaryBody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>';
+        }
+    }
+    
+    // Update Flights Summary Table
+    const flightsSummaryBody = document.getElementById('full-summary-flights');
+    if (flightsSummaryBody) {
+        const arrivalRows = Array.from(document.querySelectorAll('#arrival-table-body tr'));
+        const departureRows = Array.from(document.querySelectorAll('#departure-table-body tr'));
+        
+        let flightsHtml = '';
+        arrivalRows.forEach(tr => {
+            const cells = tr.cells;
+            flightsHtml += `<tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[5]?.textContent.trim() || '-'}</td>
+            </tr>`;
+        });
+        departureRows.forEach(tr => {
+            const cells = tr.cells;
+            flightsHtml += `<tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
+                <td class="border border-gray-300 px-2 py-1.5">${cells[5]?.textContent.trim() || '-'}</td>
+            </tr>`;
+        });
+        
+        if (flightsHtml) {
+            flightsSummaryBody.innerHTML = flightsHtml;
+        } else {
+            flightsSummaryBody.innerHTML = '<tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>';
+        }
+    }
+    
+    // Update Transport Summary Table
+    const transportSummaryBody = document.getElementById('full-summary-transports');
+    if (transportSummaryBody) {
+        const transportRows = Array.from(document.querySelectorAll('#transports-table-body tr'));
+        if (transportRows.length > 0) {
+            transportSummaryBody.innerHTML = transportRows.map(tr => {
+                const cells = tr.cells;
+                const status = cells[4]?.textContent.trim() || 'PENDING';
+                const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                                   status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
+                return `<tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[1]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
+                </tr>`;
+            }).join('');
+        } else {
+            transportSummaryBody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>';
+        }
+    }
+    
+    // Update Guides Summary Table
+    const guidesSummaryBody = document.getElementById('full-summary-guides');
+    if (guidesSummaryBody) {
+        const guideRows = Array.from(document.querySelectorAll('#guides-table-body tr'));
+        if (guideRows.length > 0) {
+            guidesSummaryBody.innerHTML = guideRows.map(tr => {
+                const cells = tr.cells;
+                return `<tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${cells[0]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                </tr>`;
+            }).join('');
+        } else {
+            guidesSummaryBody.innerHTML = '<tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>';
+        }
+    }
+    
+    // Update Meals Summary Table
+    const mealsSummaryBody = document.getElementById('full-summary-meals');
+    if (mealsSummaryBody) {
+        const mealRows = Array.from(document.querySelectorAll('#meals-table-body tr'));
+        if (mealRows.length > 0) {
+            mealsSummaryBody.innerHTML = mealRows.map(tr => {
+                const cells = tr.cells;
+                return `<tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[1]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${cells[2]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
+                </tr>`;
+            }).join('');
+        } else {
+            mealsSummaryBody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>';
+        }
+    }
 }
 
 // Function to update tab colors when they have data
