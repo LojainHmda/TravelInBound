@@ -996,26 +996,28 @@ html { scroll-behavior: smooth; }
                                         <span class="ml-auto text-sm text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
                                     </div>
                                     <!-- ROW 2: Room Fields + Capacity -->
-                                    <div class="flex flex-wrap items-center gap-4">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm text-slate-500 font-medium">SGL</span>
-                                            <input type="number" class="w-20 px-3 py-2.5 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm text-slate-500 font-medium">DBL</span>
-                                            <input type="number" class="w-20 px-3 py-2.5 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm text-slate-500 font-medium">TRP</span>
-                                            <input type="number" class="w-20 px-3 py-2.5 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm text-slate-500 font-medium">OTH</span>
-                                            <input type="number" class="w-20 px-3 py-2.5 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
-                                            <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-5">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-slate-500">SGL</span>
+                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-slate-500">DBL</span>
+                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-slate-500">TRP</span>
+                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-slate-500">OTH</span>
+                                                <input type="number" class="w-16 px-2 py-2 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
+                                            </div>
                                         </div>
                                         <!-- Capacity Display -->
-                                        <div class="flex items-center gap-3 ml-auto">
+                                        <div class="flex items-center gap-3">
                                             <span class="text-lg text-slate-400">=</span>
                                             <div class="flex flex-col items-center">
                                                 <span class="px-4 py-2 rounded-lg text-sm font-bold text-white" style="background-color: #ef5350;" id="hotel_total_guests">0</span>
