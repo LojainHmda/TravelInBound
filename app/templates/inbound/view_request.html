@@ -974,63 +974,61 @@ html { scroll-behavior: smooth; }
                             <!-- Room Distribution -->
                             <div class="mb-4">
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Room Distribution</label>
-                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-3">
-                                    <!-- ROW 1: Quick Layout Options (Above) -->
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs text-slate-500 font-medium w-16">Quick:</span>
-                                        <div class="flex gap-2">
-                                            <button type="button" data-mode="economic" onclick="applyWizardLayout('economic')" class="wizard-btn is-active flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border-2 border-green-500 bg-green-50 text-green-700 transition-all">
-                                                <i class="fas fa-check-circle"></i><span>Economic</span>
-                                            </button>
-                                            <button type="button" data-mode="dbl" onclick="applyWizardLayout('dbl')" class="wizard-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 bg-white text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-all">
-                                                <i class="fas fa-user-friends"></i><span>DBL Mode</span>
-                                            </button>
-                                            <button type="button" data-mode="privacy" onclick="applyWizardLayout('privacy')" class="wizard-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 bg-white text-slate-500 hover:border-purple-400 hover:text-purple-600 transition-all">
-                                                <i class="fas fa-user"></i><span>Privacy</span>
-                                            </button>
-                                            <button type="button" data-mode="manual" onclick="enableManualMode()" class="wizard-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-slate-300 bg-white text-slate-500 hover:border-orange-400 hover:text-orange-600 transition-all">
-                                                <i class="fas fa-edit"></i><span>Manual</span>
-                                            </button>
-                                        </div>
-                                        <div class="ml-auto flex items-center gap-1 text-xs">
-                                            <span class="text-slate-400">PAX:</span>
-                                            <span class="font-bold text-slate-700" id="hotel_pax_display">{{ request.pax or 0 }}</span>
-                                        </div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <!-- ROW 1: Radio-style Options -->
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="economic" checked class="wizard-radio w-4 h-4 text-green-600 border-slate-300 focus:ring-green-500" onchange="applyWizardLayout('economic')">
+                                            <span class="text-sm text-slate-700">Economic</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="dbl" class="wizard-radio w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" onchange="applyWizardLayout('dbl')">
+                                            <span class="text-sm text-slate-700">DBL Mode</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="privacy" class="wizard-radio w-4 h-4 text-purple-600 border-slate-300 focus:ring-purple-500" onchange="applyWizardLayout('privacy')">
+                                            <span class="text-sm text-slate-700">Privacy</span>
+                                        </label>
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="manual" class="wizard-radio w-4 h-4 text-orange-600 border-slate-300 focus:ring-orange-500" onchange="enableManualMode()">
+                                            <span class="text-sm text-slate-700">Manual</span>
+                                        </label>
+                                        <span class="ml-auto text-xs text-slate-500">PAX: <span class="font-bold text-slate-700" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
                                     </div>
-                                    <!-- ROW 2: Room Distribution Fields (Below) -->
-                                    <div class="flex items-center gap-4 pt-2 border-t border-slate-200">
+                                    <!-- ROW 2: Room Fields + Capacity -->
+                                    <div class="flex items-center gap-3 pt-3 border-t border-slate-200">
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-600 font-medium w-8">SGL</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded-md text-sm text-center font-semibold bg-white" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <label class="text-xs text-slate-500 w-7">SGL</label>
+                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-600 font-medium w-8">DBL</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded-md text-sm text-center font-semibold bg-white" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <label class="text-xs text-slate-500 w-7">DBL</label>
+                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-600 font-medium w-8">TRP</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded-md text-sm text-center font-semibold bg-white" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <label class="text-xs text-slate-500 w-7">TRP</label>
+                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
-                                        <div id="oth-field-group" class="hidden flex items-center gap-1">
-                                            <label class="text-xs text-slate-600 font-medium w-8">OTH</label>
-                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded-md text-sm text-center font-semibold bg-white" id="hotel_other_rooms" min="0" value="0" data-service="hotel">
+                                        <div id="oth-field-group" class="hidden items-center gap-1">
+                                            <label class="text-xs text-slate-500 w-7">OTH</label>
+                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_other_rooms" min="0" value="0" data-service="hotel">
                                             <span class="text-xs text-slate-400">×</span>
-                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded-md text-sm text-center font-semibold bg-white" id="hotel_other_capacity" min="1" value="4" data-service="hotel" placeholder="Cap">
+                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_other_capacity" min="1" value="4" data-service="hotel">
                                         </div>
-                                        <div class="ml-auto flex items-center gap-2">
-                                            <span class="text-xs text-slate-500">=</span>
-                                            <span class="px-3 py-1 rounded-md text-sm font-bold bg-slate-100 text-slate-700" id="hotel_total_guests">0</span>
-                                            <span id="room-validation-icon"></span>
-                                        </div>
-                                    </div>
-                                    <!-- ROW 3: Manual Mode Indicator & Errors -->
-                                    <div id="manual-mode-indicator" class="hidden pt-2 border-t border-orange-200 bg-orange-50 -mx-3 -mb-3 px-3 py-2 rounded-b-lg">
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-xs text-orange-700 font-medium"><i class="fas fa-edit mr-1"></i>Manual Mode Active - Edit fields directly</span>
-                                            <button type="button" onclick="exitManualMode()" class="text-xs text-orange-600 hover:text-orange-800 underline">Exit Manual</button>
+                                        <!-- Capacity Display -->
+                                        <div class="ml-auto flex flex-col items-end">
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-xs text-slate-500">=</span>
+                                                <span class="px-3 py-1 rounded text-sm font-bold" id="hotel_total_guests">0</span>
+                                            </div>
+                                            <span id="room-capacity-note" class="text-xs mt-0.5"></span>
                                         </div>
                                     </div>
-                                    <div id="room-error" class="hidden text-xs text-red-600 flex items-center gap-1"></div>
+                                    <!-- Manual Mode Indicator -->
+                                    <div id="manual-mode-indicator" class="hidden mt-3 pt-2 border-t border-orange-200 flex items-center justify-between">
+                                        <span class="text-xs text-orange-600"><i class="fas fa-edit mr-1"></i>Manual Mode - Edit fields directly</span>
+                                        <button type="button" onclick="exitManualMode()" class="text-xs text-orange-500 hover:text-orange-700 underline">Exit</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -2929,48 +2927,19 @@ function applyWizardLayout(mode) {
         exitManualMode();
     }
     
-    // Update segmented control active state
-    setActiveWizardButton(mode);
+    // Update radio button selection
+    setActiveWizardMode(mode);
     
     calculateTotalGuests();
     clearAllErrors();
 }
 
-// Set active state on wizard buttons with checkmark and dimming
-function setActiveWizardButton(mode) {
-    const modeStyles = {
-        economic: { border: 'border-green-500', bg: 'bg-green-50', text: 'text-green-700', icon: 'fa-check-circle' },
-        dbl: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', icon: 'fa-check-circle' },
-        privacy: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-700', icon: 'fa-check-circle' },
-        manual: { border: 'border-orange-500', bg: 'bg-orange-50', text: 'text-orange-700', icon: 'fa-check-circle' }
-    };
-    const defaultIcons = { economic: 'fa-leaf', dbl: 'fa-user-friends', privacy: 'fa-user', manual: 'fa-edit' };
-    
-    document.querySelectorAll('.wizard-btn').forEach(btn => {
-        const btnMode = btn.getAttribute('data-mode');
-        const icon = btn.querySelector('i');
-        
-        // Reset to inactive state
-        btn.classList.remove('is-active', 'border-2', 'border-green-500', 'border-blue-500', 'border-purple-500', 'border-orange-500',
-            'bg-green-50', 'bg-blue-50', 'bg-purple-50', 'bg-orange-50',
-            'text-green-700', 'text-blue-700', 'text-purple-700', 'text-orange-700');
-        btn.classList.add('border', 'border-slate-300', 'bg-white', 'text-slate-500');
-        if (icon) {
-            icon.classList.remove('fa-check-circle');
-            icon.classList.add(defaultIcons[btnMode]);
-        }
-        
-        // Apply active state to selected mode
-        if (btnMode === mode) {
-            const style = modeStyles[mode];
-            btn.classList.remove('border', 'border-slate-300', 'bg-white', 'text-slate-500');
-            btn.classList.add('is-active', 'border-2', style.border, style.bg, style.text);
-            if (icon) {
-                icon.classList.remove(defaultIcons[btnMode]);
-                icon.classList.add(style.icon);
-            }
-        }
-    });
+// Set the radio button selection programmatically
+function setActiveWizardMode(mode) {
+    const radio = document.querySelector(`input[name="room_mode"][value="${mode}"]`);
+    if (radio) {
+        radio.checked = true;
+    }
     
     // Show/hide OTH fields based on mode
     const othGroup = document.getElementById('oth-field-group');
@@ -2999,11 +2968,9 @@ function enableManualMode() {
         }
     });
     
-    // Show manual mode indicator
+    // Show manual mode indicator and OTH fields
     document.getElementById('manual-mode-indicator')?.classList.remove('hidden');
-    
-    // Update segmented control active state
-    setActiveWizardButton('manual');
+    setActiveWizardMode('manual');
 }
 
 // Exit manual mode - make fields readonly again and apply economic layout
@@ -3030,6 +2997,7 @@ function exitManualMode() {
     
     // Reset OTH values and apply economic layout
     document.getElementById('hotel_other_rooms').value = 0;
+    setActiveWizardMode('economic');
     applyWizardLayout('economic');
     
     clearAllErrors();
@@ -3057,33 +3025,39 @@ function calculateTotalGuests() {
     const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3) + (otherRooms * otherCapacity);
     
     const totalGuestsEl = document.getElementById('hotel_total_guests');
-    const validationIcon = document.getElementById('room-validation-icon');
-    const roomError = document.getElementById('room-error');
+    const capacityNote = document.getElementById('room-capacity-note');
     const pax = getPaxValue();
     
     if (totalGuestsEl) {
         totalGuestsEl.textContent = totalGuests;
         
-        // Visual feedback on total
-        totalGuestsEl.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700', 'bg-slate-100', 'text-slate-700');
+        // Visual feedback: Green if equal to PAX, Red if not
+        totalGuestsEl.classList.remove('bg-green-500', 'text-white', 'bg-red-500', 'bg-slate-200', 'text-slate-700');
         
         if (totalGuests === pax && totalGuests > 0) {
-            totalGuestsEl.classList.add('bg-green-100', 'text-green-700');
-            if (validationIcon) validationIcon.innerHTML = '<i class="fas fa-check-circle text-green-500"></i>';
-            if (roomError) roomError.classList.add('hidden');
+            totalGuestsEl.classList.add('bg-green-500', 'text-white');
+            if (capacityNote) {
+                capacityNote.textContent = '';
+                capacityNote.className = 'text-xs mt-0.5';
+            }
         } else if (totalGuests !== pax && pax > 0) {
-            totalGuestsEl.classList.add('bg-red-100', 'text-red-700');
-            if (validationIcon) validationIcon.innerHTML = '<i class="fas fa-exclamation-circle text-red-500"></i>';
-            if (roomError) {
+            totalGuestsEl.classList.add('bg-red-500', 'text-white');
+            if (capacityNote) {
                 const diff = totalGuests - pax;
-                const diffText = diff > 0 ? `${diff} over capacity` : `${Math.abs(diff)} guests missing`;
-                roomError.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${diffText}`;
-                roomError.classList.remove('hidden');
+                if (diff > 0) {
+                    capacityNote.textContent = `+${diff} over`;
+                    capacityNote.className = 'text-xs mt-0.5 text-red-600';
+                } else {
+                    capacityNote.textContent = `${diff} under`;
+                    capacityNote.className = 'text-xs mt-0.5 text-red-600';
+                }
             }
         } else {
-            totalGuestsEl.classList.add('bg-slate-100', 'text-slate-700');
-            if (validationIcon) validationIcon.innerHTML = '';
-            if (roomError) roomError.classList.add('hidden');
+            totalGuestsEl.classList.add('bg-slate-200', 'text-slate-700');
+            if (capacityNote) {
+                capacityNote.textContent = '';
+                capacityNote.className = 'text-xs mt-0.5';
+            }
         }
     }
     
