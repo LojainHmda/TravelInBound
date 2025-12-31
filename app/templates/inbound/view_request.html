@@ -1391,8 +1391,8 @@ html { scroll-behavior: smooth; }
                         Trip Summary
                     </h2>
                     <div class="flex items-center gap-2">
-                        <button onclick="generateSummaryTable()" class="tw-btn tw-btn-primary tw-btn-sm">
-                            <i class="fas fa-table"></i> View Full Summary
+                        <button onclick="toggleFullSummary()" class="tw-btn tw-btn-primary tw-btn-sm" id="toggleSummaryBtn">
+                            <i class="fas fa-table"></i> <span id="toggleSummaryText">View Full Summary</span>
                         </button>
                         <button onclick="exportToExcel()" class="tw-btn tw-btn-success tw-btn-sm">
                             <i class="fas fa-file-excel"></i> Download Excel
@@ -1468,6 +1468,217 @@ html { scroll-behavior: smooth; }
                                 <span class="text-slate-400 text-[10px]">No hotels added</span>
                                 {% endif %}
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Full Summary Section (Hidden by default) -->
+                    <div id="fullSummarySection" class="hidden mt-4 border-t border-slate-200 pt-4">
+                        <!-- Hotels Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-hotel text-blue-500 mr-2"></i> Hotel Accommodations
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Hotel Name</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-in</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-out</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Nights</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Rooms</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-hotels">
+                                        {% if request.inbound_hotels %}
+                                            {% for hotel in request.inbound_hotels %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.nights or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:{{ hotel.single_rooms }}</span>{% endif %}
+                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:{{ hotel.double_rooms }}</span>{% endif %}
+                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:{{ hotel.triple_rooms }}</span>{% endif %}
+                                                </td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Flights Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-plane text-green-500 mr-2"></i> Flight Details
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Type</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Time</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Point</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Flight No.</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Driver</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-flights">
+                                        {% if request.arrival_batches %}
+                                            {% for batch in request.arrival_batches %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.arrival_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if request.departure_batches %}
+                                            {% for batch in request.departure_batches %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.departure_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% endif %}
+                                        {% if not request.arrival_batches and not request.departure_batches %}
+                                            <tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Transport Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-car text-cyan-500 mr-2"></i> Transport Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Vehicle</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Pickup</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Drop-off</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-transports">
+                                        {% if request.inbound_transports %}
+                                            {% for transport in request.inbound_transports %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Guides Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-user-tie text-teal-500 mr-2"></i> Guide Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Guide Name</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Language</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Telephone</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-guides">
+                                        {% if request.inbound_guides %}
+                                            {% for guide in request.inbound_guides %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Meals Table -->
+                        <div class="mb-2">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-utensils text-amber-500 mr-2"></i> Meal Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Meal Type</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Restaurant</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Location</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-meals">
+                                        {% if request.inbound_meals %}
+                                            {% for meal in request.inbound_meals %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.meal_type or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.location or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.pax_count or 0 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Print Button -->
+                        <div class="flex justify-end mt-3">
+                            <button onclick="printFullSummary()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs font-medium">
+                                <i class="fas fa-print mr-1"></i> Print Summary
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2101,6 +2312,60 @@ function updateSummaryCounts() {
         
         hotelsContainer.innerHTML = hotels || '<span class="text-slate-400 text-[10px]">No hotels added</span>';
     }
+}
+
+// Function to toggle full summary section
+function toggleFullSummary() {
+    const section = document.getElementById('fullSummarySection');
+    const btnText = document.getElementById('toggleSummaryText');
+    
+    if (section.classList.contains('hidden')) {
+        section.classList.remove('hidden');
+        btnText.textContent = 'Hide Summary';
+    } else {
+        section.classList.add('hidden');
+        btnText.textContent = 'View Full Summary';
+    }
+}
+
+// Function to print full summary
+function printFullSummary() {
+    const summarySection = document.getElementById('fullSummarySection');
+    const requestNumber = "{{ request.request_number }}";
+    const customerName = document.getElementById('selectedCustomerName')?.value || "N/A";
+    const fromDate = document.getElementById('fromDate')?.value || "";
+    const toDate = document.getElementById('toDate')?.value || "";
+    const pax = document.querySelector('[name="pax"]')?.value || "0";
+    const days = document.getElementById('noOfDays')?.value || "0";
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Trip Summary - ${requestNumber}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+                    h1 { font-size: 18px; margin-bottom: 5px; }
+                    .header-info { color: #666; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+                    th { background-color: #f2f2f2; font-weight: bold; }
+                    h4 { margin: 15px 0 8px; font-size: 14px; }
+                    .badge { padding: 2px 6px; border-radius: 10px; font-size: 10px; }
+                    .arrival { background: #dcfce7; color: #166534; }
+                    .departure { background: #ffedd5; color: #9a3412; }
+                    @media print { button { display: none; } }
+                </style>
+            </head>
+            <body>
+                <h1>Trip Summary - ${requestNumber}</h1>
+                <div class="header-info">${customerName} | ${fromDate} to ${toDate} | ${pax} PAX | ${days} Days</div>
+                ${summarySection.innerHTML}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
 }
 
 // Function to generate comprehensive summary table
