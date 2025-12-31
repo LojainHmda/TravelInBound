@@ -3214,13 +3214,45 @@ function exportToExcel() {
 }
 
 // ==========================================
-// ROOMING ALLOCATION WIZARD
+// PAX & ROOMING ALLOCATION LOGIC
 // ==========================================
+
+// Global variable to track manual mode state
 let isManualMode = false;
 
+/**
+ * Helper function to safely get the PAX value from the main request form.
+ * This ensures we always get the correct number for calculations.
+ */
 function getPaxValue() {
-    const paxField = document.querySelector('[name="pax"]');
-    return parseInt(paxField?.value) || 0;
+    // Select the specific PAX input from the master request card
+    const paxField = document.querySelector('form#editMode input[name="pax"]');
+    if (!paxField) return 0;
+
+    let val = parseInt(paxField.value);
+    return isNaN(val) ? 0 : val;
+}
+
+/**
+ * Event Listener for Global PAX Input.
+ * Updates the room wizard automatically when the total PAX changes.
+ */
+const globalPaxInput = document.querySelector('form#editMode input[name="pax"]');
+if (globalPaxInput) {
+    globalPaxInput.addEventListener('input', function() {
+        // Update the PAX display inside the hotel wizard
+        updateWizardPreviews();
+        
+        // Recalculate total guest capacity based on rooms
+        calculateTotalGuests();
+
+        // If NOT in manual mode, recalculate room distribution based on new PAX
+        if (!isManualMode) {
+             // Determine the currently selected mode (Economic/DBL/Privacy)
+             const currentMode = document.querySelector('.wizard-check:checked')?.name.replace('room_mode_', '') || 'economic';
+             applyWizardLayout(currentMode);
+        }
+    });
 }
 
 function calculateEconomicLayout(pax) {

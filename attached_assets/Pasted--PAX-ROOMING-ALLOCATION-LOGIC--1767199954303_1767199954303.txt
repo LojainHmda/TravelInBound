@@ -1,0 +1,86 @@
+// ==========================================
+// PAX & ROOMING ALLOCATION LOGIC
+// ==========================================
+
+// Global variable to track manual mode state
+let isManualMode = false;
+
+/**
+ * Helper function to safely get the PAX value from the main request form.
+ * This ensures we always get the correct number for calculations.
+ */
+function getPaxValue() {
+    // Select the specific PAX input from the master request card
+    const paxField = document.querySelector('form#editMode input[name="pax"]');
+    if (!paxField) return 0;
+
+    let val = parseInt(paxField.value);
+    return isNaN(val) ? 0 : val;
+}
+
+/**
+ * Event Listener for Global PAX Input.
+ * Updates the room wizard automatically when the total PAX changes.
+ */
+const globalPaxInput = document.querySelector('form#editMode input[name="pax"]');
+if (globalPaxInput) {
+    globalPaxInput.addEventListener('input', function() {
+        // Update the PAX display inside the hotel wizard
+        updateWizardPreviews();
+        
+        // Recalculate total guest capacity based on rooms
+        calculateTotalGuests();
+
+        // If NOT in manual mode, recalculate room distribution based on new PAX
+        if (!isManualMode) {
+             // Determine the currently selected mode (Economic/DBL/Privacy)
+             const currentMode = document.querySelector('.wizard-check:checked')?.name.replace('room_mode_', '') || 'economic';
+             applyWizardLayout(currentMode);
+        }
+    });
+}
+
+/**
+ * Calculate total guests based on current room selection.
+ * Compares calculated guests vs. Total PAX and updates UI accordingly.
+ */
+function calculateTotalGuests() {
+    const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
+    const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
+    const tripleRooms = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
+
+    // Calculation: (SGL * 1) + (DBL * 2) + (TRP * 3)
+    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3);
+
+    const totalGuestsEl = document.getElementById('hotel_total_guests');
+    const capacityNote = document.getElementById('room-capacity-note');
+    const pax = getPaxValue();
+
+    if (totalGuestsEl) {
+        totalGuestsEl.textContent = totalGuests;
+
+        // Logic: Check if calculated guests matches total PAX
+        if (totalGuests === pax && totalGuests > 0) {
+            // MATCH: Green background
+            totalGuestsEl.style.backgroundColor = '#22c55e';
+            totalGuestsEl.classList.add('text-white');
+            if (capacityNote) capacityNote.textContent = '';
+        } else if (totalGuests !== pax && pax > 0) {
+            // MISMATCH: Red background with error text
+            totalGuestsEl.style.backgroundColor = '#ef5350';
+            totalGuestsEl.classList.add('text-white');
+            if (capacityNote) {
+                const diff = totalGuests - pax;
+                capacityNote.textContent = diff > 0 ? `${diff} EXTRA` : `${Math.abs(diff)} SHORT`;
+                capacityNote.style.color = '#ef5350';
+            }
+        } else {
+            // EMPTY / ZERO: Gray background
+            totalGuestsEl.style.backgroundColor = '#e2e8f0';
+            totalGuestsEl.classList.remove('text-white');
+            totalGuestsEl.classList.add('text-slate-700');
+            if (capacityNote) capacityNote.textContent = '';
+        }
+    }
+    return totalGuests;
+}
