@@ -976,58 +976,54 @@ html { scroll-behavior: smooth; }
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Room Distribution</label>
                                 <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
                                     <!-- ROW 1: Radio-style Options -->
-                                    <div class="flex items-center gap-4 mb-3">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="room_mode" value="economic" checked class="wizard-radio w-4 h-4 text-green-600 border-slate-300 focus:ring-green-500" onchange="applyWizardLayout('economic')">
-                                            <span class="text-sm text-slate-700">Economic</span>
+                                    <div class="flex flex-wrap items-center gap-3 mb-3">
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="economic" checked class="wizard-radio w-3.5 h-3.5 text-green-600" onchange="applyWizardLayout('economic')">
+                                            <span class="text-xs text-slate-700">Economic</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="room_mode" value="dbl" class="wizard-radio w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" onchange="applyWizardLayout('dbl')">
-                                            <span class="text-sm text-slate-700">DBL Mode</span>
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="dbl" class="wizard-radio w-3.5 h-3.5 text-blue-600" onchange="applyWizardLayout('dbl')">
+                                            <span class="text-xs text-slate-700">DBL</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="room_mode" value="privacy" class="wizard-radio w-4 h-4 text-purple-600 border-slate-300 focus:ring-purple-500" onchange="applyWizardLayout('privacy')">
-                                            <span class="text-sm text-slate-700">Privacy</span>
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="privacy" class="wizard-radio w-3.5 h-3.5 text-purple-600" onchange="applyWizardLayout('privacy')">
+                                            <span class="text-xs text-slate-700">Privacy</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="radio" name="room_mode" value="manual" class="wizard-radio w-4 h-4 text-orange-600 border-slate-300 focus:ring-orange-500" onchange="enableManualMode()">
-                                            <span class="text-sm text-slate-700">Manual</span>
+                                        <label class="flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="room_mode" value="manual" class="wizard-radio w-3.5 h-3.5 text-orange-600" onchange="enableManualMode()">
+                                            <span class="text-xs text-slate-700">Manual</span>
                                         </label>
+                                        <span id="manual-mode-indicator" class="hidden text-xs text-orange-500">(<button type="button" onclick="exitManualMode()" class="underline hover:text-orange-700">exit</button>)</span>
                                         <span class="ml-auto text-xs text-slate-500">PAX: <span class="font-bold text-slate-700" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
                                     </div>
-                                    <!-- ROW 2: Room Fields + Capacity -->
-                                    <div class="flex items-center gap-3 pt-3 border-t border-slate-200">
+                                    <!-- ROW 2: Room Fields + Capacity (all inline) -->
+                                    <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200">
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-500 w-7">SGL</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-xs text-slate-500">SGL</span>
+                                            <input type="number" class="w-11 px-1 py-1 border border-slate-300 rounded text-xs text-center font-semibold bg-white" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-500 w-7">DBL</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-xs text-slate-500">DBL</span>
+                                            <input type="number" class="w-11 px-1 py-1 border border-slate-300 rounded text-xs text-center font-semibold bg-white" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-1">
-                                            <label class="text-xs text-slate-500 w-7">TRP</label>
-                                            <input type="number" class="w-12 px-2 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-xs text-slate-500">TRP</span>
+                                            <input type="number" class="w-11 px-1 py-1 border border-slate-300 rounded text-xs text-center font-semibold bg-white" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div id="oth-field-group" class="hidden items-center gap-1">
-                                            <label class="text-xs text-slate-500 w-7">OTH</label>
-                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_other_rooms" min="0" value="0" data-service="hotel">
+                                            <span class="text-xs text-slate-500">OTH</span>
+                                            <input type="number" class="w-9 px-1 py-1 border border-slate-300 rounded text-xs text-center font-semibold bg-white" id="hotel_other_rooms" min="0" value="0" data-service="hotel">
                                             <span class="text-xs text-slate-400">×</span>
-                                            <input type="number" class="w-10 px-1 py-1.5 border border-slate-300 rounded text-sm text-center font-semibold bg-white" id="hotel_other_capacity" min="1" value="4" data-service="hotel">
+                                            <input type="number" class="w-9 px-1 py-1 border border-slate-300 rounded text-xs text-center font-semibold bg-white" id="hotel_other_capacity" min="1" value="4" data-service="hotel">
                                         </div>
                                         <!-- Capacity Display -->
-                                        <div class="ml-auto flex flex-col items-end">
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-xs text-slate-500">=</span>
-                                                <span class="px-3 py-1 rounded text-sm font-bold" id="hotel_total_guests">0</span>
+                                        <div class="ml-auto flex items-center gap-2">
+                                            <span class="text-xs text-slate-400">=</span>
+                                            <div class="flex flex-col items-center">
+                                                <span class="px-2 py-0.5 rounded text-xs font-bold min-w-[28px] text-center" id="hotel_total_guests">0</span>
+                                                <span id="room-capacity-note" class="text-[10px] leading-tight"></span>
                                             </div>
-                                            <span id="room-capacity-note" class="text-xs mt-0.5"></span>
                                         </div>
-                                    </div>
-                                    <!-- Manual Mode Indicator -->
-                                    <div id="manual-mode-indicator" class="hidden mt-3 pt-2 border-t border-orange-200 flex items-center justify-between">
-                                        <span class="text-xs text-orange-600"><i class="fas fa-edit mr-1"></i>Manual Mode - Edit fields directly</span>
-                                        <button type="button" onclick="exitManualMode()" class="text-xs text-orange-500 hover:text-orange-700 underline">Exit</button>
                                     </div>
                                 </div>
                             </div>
@@ -2968,8 +2964,9 @@ function enableManualMode() {
         }
     });
     
-    // Show manual mode indicator and OTH fields
+    // Show manual mode indicator (inline exit link) and OTH fields
     document.getElementById('manual-mode-indicator')?.classList.remove('hidden');
+    document.getElementById('manual-mode-indicator')?.classList.add('inline');
     setActiveWizardMode('manual');
 }
 
@@ -2988,7 +2985,11 @@ function exitManualMode() {
     });
     
     // Hide manual mode indicator and OTH fields
-    document.getElementById('manual-mode-indicator')?.classList.add('hidden');
+    const manualIndicator = document.getElementById('manual-mode-indicator');
+    if (manualIndicator) {
+        manualIndicator.classList.add('hidden');
+        manualIndicator.classList.remove('inline');
+    }
     const othGroup = document.getElementById('oth-field-group');
     if (othGroup) {
         othGroup.classList.add('hidden');
