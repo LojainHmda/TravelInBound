@@ -3302,10 +3302,16 @@ function applyWizardLayout(mode) {
         default: return;
     }
     
-    document.getElementById('hotel_single_rooms').value = layout.sgl;
-    document.getElementById('hotel_double_rooms').value = layout.dbl;
-    document.getElementById('hotel_triple_rooms').value = layout.trp;
-    document.getElementById('hotel_other_rooms').value = layout.oth;
+    // Add null checks to prevent errors when elements don't exist yet
+    const sglField = document.getElementById('hotel_single_rooms');
+    const dblField = document.getElementById('hotel_double_rooms');
+    const trpField = document.getElementById('hotel_triple_rooms');
+    const othField = document.getElementById('hotel_other_rooms');
+    
+    if (sglField) sglField.value = layout.sgl;
+    if (dblField) dblField.value = layout.dbl;
+    if (trpField) trpField.value = layout.trp;
+    if (othField) othField.value = layout.oth;
     
     if (isManualMode) exitManualMode();
     setActiveWizardMode(mode);
@@ -3421,9 +3427,13 @@ function initializeRoomWizard() {
     const pax = getPaxValue();
     if (pax > 0) {
         const layout = calculateEconomicLayout(pax);
-        document.getElementById('hotel_single_rooms').value = layout.sgl;
-        document.getElementById('hotel_double_rooms').value = layout.dbl;
-        document.getElementById('hotel_triple_rooms').value = layout.trp;
+        const sglField = document.getElementById('hotel_single_rooms');
+        const dblField = document.getElementById('hotel_double_rooms');
+        const trpField = document.getElementById('hotel_triple_rooms');
+        
+        if (sglField) sglField.value = layout.sgl;
+        if (dblField) dblField.value = layout.dbl;
+        if (trpField) trpField.value = layout.trp;
     }
     calculateTotalGuests();
 }
