@@ -402,7 +402,7 @@ html { scroll-behavior: smooth; }
 {% block content %}
 <div class="tw-container">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div class="flex items-center gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
@@ -471,17 +471,17 @@ html { scroll-behavior: smooth; }
     </div>
 
     <!-- Main Content - Vertical Stack -->
-    <div class="space-y-6 max-w-5xl mx-auto">
+    <div class="space-y-3 max-w-5xl mx-auto">
             <!-- Request Master Card -->
             <div class="tw-card">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-file-alt text-blue-500"></i>
                         Request Details
                     </h2>
                     <span class="text-xs text-slate-400">ID: {{ request.request_number }}</span>
                 </div>
-                <div class="p-5">
+                <div class="p-4">
                     <form id="editMode">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <!-- Customer -->
@@ -571,7 +571,7 @@ html { scroll-behavior: smooth; }
 
             <!-- Itinerary Card (Unified Management & View) -->
             <div class="tw-card">
-                <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-route text-purple-500"></i>
                         Itinerary & Services
@@ -582,7 +582,7 @@ html { scroll-behavior: smooth; }
                 </div>
                 
                 <!-- Service Tabs - Top Navigation -->
-                <div class="px-5 pt-4 pb-4">
+                <div class="px-4 pt-3 pb-3">
                     <div class="flex items-center gap-2 p-2 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
                         <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="arrival">
                             <i class="fas fa-check-circle text-slate-400"></i> Arrival
@@ -610,7 +610,7 @@ html { scroll-behavior: smooth; }
                 <div class="border-t border-slate-200"></div>
 
                 <!-- Itinerary Table (Always Visible) -->
-                <div class="p-5">
+                <div class="p-4">
                     {% if request.itinerary_rows %}
                     <div class="overflow-x-auto" id="itineraryTable">
                         <table class="w-full text-sm">
@@ -653,7 +653,7 @@ html { scroll-behavior: smooth; }
                         
                         <!-- Form -->
                         {% if not view_only %}
-                        <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
@@ -706,32 +706,31 @@ html { scroll-behavior: smooth; }
                         </div>
                         {% endif %}
                         
-                        <!-- Saved Arrivals Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.arrival_batches %}
-                        <div class="overflow-x-auto">
+                        <!-- Saved Arrivals Table -->
+                        <div class="overflow-x-auto" id="arrival-table-container" {% if not request.arrival_batches %}style="display: none;"{% endif %}>
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-10"></th>{% endif %}
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
+                                <tbody class="bg-white divide-y divide-slate-100" id="arrival-table-body">
                                     {% for batch in request.arrival_batches %}
                                     <tr class="hover:bg-slate-50">
-                                        <td class="px-4 py-3 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ batch.arrival_point or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700">{{ batch.arrival_point or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.driver_name or '-' }}</td>
                                         {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
+                                        <td class="px-3 py-2 text-center">
                                             <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteArrivalBatch({{ batch.id }})">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
@@ -742,7 +741,6 @@ html { scroll-behavior: smooth; }
                                 </tbody>
                             </table>
                         </div>
-                        {% endif %}
                     </div>
                     
                     <!-- Departure Panel -->
@@ -754,7 +752,7 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         {% if not view_only %}
-                        <div class="p-5 bg-slate-50 border-b border-slate-200">
+                        <div class="p-4 bg-slate-50 border-b border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
@@ -807,32 +805,31 @@ html { scroll-behavior: smooth; }
                         </div>
                         {% endif %}
                         
-                        <!-- Saved Departures Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.departure_batches %}
-                        <div class="overflow-x-auto">
+                        <!-- Saved Departures Table -->
+                        <div class="overflow-x-auto" id="departure-table-container" {% if not request.departure_batches %}style="display: none;"{% endif %}>
                             <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
+                                <thead class="bg-orange-600 text-white">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
+                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
+                                        {% if not view_only %}<th class="px-3 py-2 w-10"></th>{% endif %}
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
+                                <tbody class="bg-white divide-y divide-slate-100" id="departure-table-body">
                                     {% for batch in request.departure_batches %}
                                     <tr class="hover:bg-slate-50">
-                                        <td class="px-4 py-3 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ batch.departure_point or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700">{{ batch.departure_point or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-3 py-2 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-3 py-2 text-slate-500">{{ batch.driver_name or '-' }}</td>
                                         {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
+                                        <td class="px-3 py-2 text-center">
                                             <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteDepartureBatch({{ batch.id }})">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
@@ -843,7 +840,6 @@ html { scroll-behavior: smooth; }
                                 </tbody>
                             </table>
                         </div>
-                        {% endif %}
                     </div>
                     
                     <!-- Hotel Panel -->
@@ -900,7 +896,7 @@ html { scroll-behavior: smooth; }
                         {% endif %}
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
-                        <div class="p-5 bg-slate-50 border-t border-slate-200">
+                        <div class="p-4 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name <span class="text-red-500">*</span></label>
@@ -948,9 +944,9 @@ html { scroll-behavior: smooth; }
                             <!-- Room Distribution -->
                             <div class="mb-4">
                                 <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">ROOM DISTRIBUTION</label>
-                                <div class="rounded-2xl p-6" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                <div class="rounded-2xl p-4" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                     <!-- ROW 1: Checkbox Options -->
-                                    <div class="flex items-center gap-10 mb-6">
+                                    <div class="flex items-center gap-6 mb-3">
                                         <label class="flex items-center gap-2 cursor-pointer">
                                             <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
                                             <span class="text-sm text-slate-600">Economic</span>
@@ -1080,7 +1076,7 @@ html { scroll-behavior: smooth; }
 
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
-                        <div class="p-5 bg-slate-50 border-t border-slate-200">
+                        <div class="p-4 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
@@ -1307,7 +1303,7 @@ html { scroll-behavior: smooth; }
 
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
-                        <div class="p-5 bg-slate-50 border-t border-slate-200">
+                        <div class="p-4 bg-slate-50 border-t border-slate-200">
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
@@ -1360,57 +1356,86 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
 
-            <!-- Summary Card -->
-            <div class="tw-card">
-                <div class="px-5 py-4 border-b border-slate-200">
+            <!-- Trip Summary Card -->
+            <div class="tw-card" id="tripSummaryCard">
+                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-chart-pie text-amber-500"></i>
-                        Summary
+                        Trip Summary
                     </h2>
+                    <span class="text-xs text-slate-400">Auto-updates on save</span>
                 </div>
-                <div class="p-5">
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div class="bg-slate-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-blue-600">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
-                            <div class="text-xs text-slate-500 mt-1">Hotels</div>
+                <div class="p-4">
+                    <!-- Trip Overview Row -->
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-3">
+                        <div class="bg-blue-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-blue-600">{{ request.no_of_days or 0 }}</div>
+                            <div class="text-xs text-slate-500">Days</div>
                         </div>
-                        <div class="bg-slate-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-cyan-600">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
-                            <div class="text-xs text-slate-500 mt-1">Transport</div>
+                        <div class="bg-purple-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-purple-600">{{ request.pax or 0 }}</div>
+                            <div class="text-xs text-slate-500">PAX</div>
                         </div>
-                        <div class="bg-slate-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-green-600">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
-                            <div class="text-xs text-slate-500 mt-1">Guides</div>
+                        <div class="bg-teal-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-teal-600" id="summary_hotels">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
+                            <div class="text-xs text-slate-500">Hotels</div>
                         </div>
-                        <div class="bg-slate-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-amber-600">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
-                            <div class="text-xs text-slate-500 mt-1">Meals</div>
+                        <div class="bg-cyan-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-cyan-600" id="summary_transport">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
+                            <div class="text-xs text-slate-500">Transport</div>
                         </div>
-                        <div class="bg-slate-50 rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-slate-600">{{ request.documents|length if request.documents else 0 }}</div>
-                            <div class="text-xs text-slate-500 mt-1">Documents</div>
+                        <div class="bg-green-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-green-600" id="summary_guides">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
+                            <div class="text-xs text-slate-500">Guides</div>
+                        </div>
+                        <div class="bg-amber-50 rounded-lg p-3 text-center">
+                            <div class="text-lg font-bold text-amber-600" id="summary_meals">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
+                            <div class="text-xs text-slate-500">Meals</div>
                         </div>
                     </div>
                     
-                    <!-- Flights Summary -->
-                    {% if request.arrival_batches or request.departure_batches %}
-                    <div class="mt-4 pt-4 border-t border-slate-100">
-                        <div class="flex flex-wrap gap-3">
-                            {% for batch in request.arrival_batches %}
-                            <div class="bg-green-50 rounded-lg px-4 py-2 flex items-center gap-2">
-                                <i class="fas fa-plane-arrival text-green-600"></i>
-                                <span class="text-sm font-medium text-green-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}</span>
+                    <!-- Flights & Hotels Detail -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <!-- Arrivals & Departures -->
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="text-xs font-semibold text-slate-500 uppercase mb-2">Flights</div>
+                            <div class="flex flex-wrap gap-2" id="summary_flights">
+                                {% if request.arrival_batches %}
+                                    {% for batch in request.arrival_batches %}
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
+                                        <i class="fas fa-plane-arrival"></i> {{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if request.departure_batches %}
+                                    {% for batch in request.departure_batches %}
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                                        <i class="fas fa-plane-departure"></i> {{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if not request.arrival_batches and not request.departure_batches %}
+                                <span class="text-slate-400 text-xs">No flights added</span>
+                                {% endif %}
                             </div>
-                            {% endfor %}
-                            {% for batch in request.departure_batches %}
-                            <div class="bg-orange-50 rounded-lg px-4 py-2 flex items-center gap-2">
-                                <i class="fas fa-plane-departure text-orange-600"></i>
-                                <span class="text-sm font-medium text-orange-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}</span>
+                        </div>
+                        <!-- Hotels List -->
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="text-xs font-semibold text-slate-500 uppercase mb-2">Hotels</div>
+                            <div class="flex flex-wrap gap-2" id="summary_hotel_list">
+                                {% if request.inbound_hotels %}
+                                    {% for hotel in request.inbound_hotels %}
+                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                        <i class="fas fa-hotel"></i> {{ hotel.hotel_name or 'Unnamed' }}
+                                        {% if hotel.nights %}<span class="text-blue-500">({{ hotel.nights }}N)</span>{% endif %}
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                <span class="text-slate-400 text-xs">No hotels added</span>
+                                {% endif %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
-                    {% endif %}
                 </div>
             </div>
     </div>
@@ -1817,34 +1842,25 @@ function autoSaveServiceData(serviceType) {
                 }
             }
             
-            // Update the service entries table (saved entries section)
+            // Reload page after saving arrival/departure to ensure tables render properly
+            if (serviceType === 'arrival' || serviceType === 'departure') {
+                setTimeout(() => window.location.reload(), 500);
+                return;
+            }
+            
+            // Generic handler for hotel/guide/transport/meal tables
             if (data.service_entries_html && data.service_type) {
                 const servicePanel = document.getElementById(`service-panel-${data.service_type}`);
                 if (servicePanel) {
                     const tableContainer = servicePanel.querySelector('.overflow-x-auto');
-                    if (!tableContainer) {
-                        // If the table was previously hidden (empty), we need to inject it
-                        // Assuming the server sends the full HTML including the wrapping div/table
-                        // But the JS logic targets 'tbody'. 
-                        // We need to handle the case where the table wrapper is missing.
-                        
-                        // Create a container div if it doesn't exist (before the form)
-                        const formSection = servicePanel.querySelector('form') || servicePanel.lastElementChild;
-                        const newTableContainer = document.createElement('div');
-                        newTableContainer.className = 'overflow-x-auto';
-                        newTableContainer.innerHTML = data.service_entries_html; // Server should send full table HTML
-                        servicePanel.insertBefore(newTableContainer, formSection);
-                    } else {
-                        // If container exists, assume server sends tbody content OR full table
-                        // Safer approach: Server sends full table HTML, we replace the container content
-                        // However, previous code assumed rows. Let's try to support both.
-                        // If the response contains <thead>, it's a full table.
-                        if (data.service_entries_html.includes('<thead>')) {
+                    if (tableContainer) {
+                        const tbody = tableContainer.querySelector('tbody');
+                        if (tbody) {
+                            tbody.innerHTML = data.service_entries_html;
+                        } else if (data.service_entries_html.includes('<table')) {
                             tableContainer.innerHTML = data.service_entries_html;
-                        } else {
-                            const tbody = tableContainer.querySelector('tbody');
-                            if (tbody) tbody.innerHTML = data.service_entries_html;
                         }
+                        tableContainer.style.display = 'block';
                     }
                 }
             }
