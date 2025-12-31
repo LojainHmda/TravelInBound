@@ -10,7 +10,6 @@
 /* Smooth scroll */
 html { scroll-behavior: smooth; }
 
-
 /* Custom scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -19,7 +18,7 @@ html { scroll-behavior: smooth; }
 
 /* Service tab styling (Used for top navigation) */
 .service-tab {
-    padding: 0.5rem 0.75rem; /* Reduced padding */
+    padding: 0.5rem 0.75rem;
     font-weight: 500;
     font-size: 0.875rem;
     color: #64748b;
@@ -32,7 +31,7 @@ html { scroll-behavior: smooth; }
     border-right: none;
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem; /* Reduced gap */
+    gap: 0.25rem;
     white-space: nowrap;
 }
 .service-tab:hover { color: #334155; border-bottom-color: #cbd5e1; }
@@ -45,13 +44,13 @@ html { scroll-behavior: smooth; }
 /* Card styles */
 .tw-card {
     background: white;
-    border-radius: 10px; /* Slightly smaller radius */
+    border-radius: 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
     border: 1px solid #e2e8f0;
 }
 
 /* Status badges */
-.status-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; } /* Smaller padding */
+.status-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; }
 .status-request { background: #fef3c7; color: #92400e; }
 .status-quoted { background: #dbeafe; color: #1e40af; }
 .status-supplier-confirmed { background: #d1fae5; color: #065f46; }
@@ -61,7 +60,7 @@ html { scroll-behavior: smooth; }
 .status-completed { background: #1e293b; color: white; }
 
 /* Service flags */
-.service-flag { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; } /* Smaller */
+.service-flag { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; }
 .flag-hotel { background: #fee2e2; color: #991b1b; }
 .flag-transport { background: #dbeafe; color: #1e40af; }
 .flag-meal { background: #fef3c7; color: #92400e; }
@@ -71,7 +70,7 @@ html { scroll-behavior: smooth; }
 /* Form inputs */
 .tw-input {
     width: 100%;
-    padding: 0.4rem 0.6rem; /* Reduced padding */
+    padding: 0.4rem 0.6rem;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     font-size: 0.875rem;
@@ -90,17 +89,17 @@ html { scroll-behavior: smooth; }
 
 .tw-label {
     display: block;
-    font-size: 0.7rem; /* Smaller font */
+    font-size: 0.7rem;
     font-weight: 600;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    margin-bottom: 0.25rem; /* Reduced margin */
+    margin-bottom: 0.25rem;
 }
 
 /* Buttons */
 .tw-btn {
-    padding: 0.4rem 0.8rem; /* Smaller padding */
+    padding: 0.4rem 0.8rem;
     border-radius: 6px;
     font-weight: 500;
     font-size: 0.85rem;
@@ -125,8 +124,8 @@ html { scroll-behavior: smooth; }
 .tw-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .tw-table th { 
     background: #f8fafc; 
-    padding: 0.5rem 0.75rem; /* Reduced padding */
-    font-size: 0.7rem; /* Smaller font */
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600; 
     color: #64748b; 
     text-transform: uppercase; 
@@ -135,7 +134,7 @@ html { scroll-behavior: smooth; }
     border-bottom: 2px solid #e2e8f0;
 }
 .tw-table td { 
-    padding: 0.6rem 0.75rem; /* Reduced padding */
+    padding: 0.6rem 0.75rem;
     border-bottom: 1px solid #f1f5f9; 
     vertical-align: middle;
     font-size: 0.85rem;
@@ -153,7 +152,7 @@ html { scroll-behavior: smooth; }
     color: white;
     border: none;
     border-radius: 8px 0 0 8px;
-    padding: 8px; /* Reduced padding */
+    padding: 8px;
     cursor: pointer;
     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
 }
@@ -207,7 +206,7 @@ html { scroll-behavior: smooth; }
 .status-step::before {
     content: '';
     position: absolute;
-    left: 15px; /* Adjusted for smaller icon */
+    left: 15px;
     top: 32px;
     width: 2px;
     height: calc(100% - 32px);
@@ -218,8 +217,8 @@ html { scroll-behavior: smooth; }
 .status-step.active::before { background: linear-gradient(180deg, #3b82f6 0%, #e2e8f0 100%); }
 
 .status-icon {
-    width: 32px; /* Smaller */
-    height: 32px; /* Smaller */
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #f1f5f9;
     border: 2px solid #e2e8f0;
@@ -227,7 +226,7 @@ html { scroll-behavior: smooth; }
     align-items: center;
     justify-content: center;
     color: #94a3b8;
-    font-size: 12px; /* Smaller icon */
+    font-size: 12px;
     flex-shrink: 0;
     z-index: 2;
     transition: all 0.2s ease;
@@ -236,18 +235,18 @@ html { scroll-behavior: smooth; }
 .status-step.active .status-icon { background: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
 
 .status-content { 
-    margin-left: 10px; /* Reduced margin */
+    margin-left: 10px;
     padding-top: 4px;
     flex: 1;
 }
 .status-label { 
     font-weight: 600; 
-    font-size: 0.85rem; /* Smaller */
+    font-size: 0.85rem;
     color: #1e293b; 
 }
 .status-step.active .status-label { color: #3b82f6; }
 .status-desc { 
-    font-size: 0.7rem; /* Smaller */
+    font-size: 0.7rem;
     color: #64748b; 
     margin-top: 1px; 
 }
@@ -259,7 +258,7 @@ html { scroll-behavior: smooth; }
     left: 0;
     right: 0;
     background: #1e293b;
-    padding: 0.5rem 1.5rem; /* Reduced padding */
+    padding: 0.5rem 1.5rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -278,8 +277,8 @@ html { scroll-behavior: smooth; }
 
 /* Service icon toggles - Updated for Context */
 .service-icon-toggle {
-    width: 28px; /* Smaller */
-    height: 28px; /* Smaller */
+    width: 28px;
+    height: 28px;
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
@@ -309,11 +308,11 @@ html { scroll-behavior: smooth; }
 /* Auto-save indicator */
 .auto-save-indicator {
     position: fixed;
-    bottom: 70px; /* Moved up to avoid stage bar */
+    bottom: 70px;
     right: 20px;
     background: #10b981;
     color: white;
-    padding: 6px 12px; /* Smaller */
+    padding: 6px 12px;
     border-radius: 4px;
     font-size: 12px;
     display: none;
@@ -368,7 +367,7 @@ html { scroll-behavior: smooth; }
     display: block;
 }
 .right-menu-item {
-    padding: 0.5rem 1rem; /* Reduced padding */
+    padding: 0.5rem 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -473,19 +472,19 @@ html { scroll-behavior: smooth; }
     </div>
 
     <!-- Main Content - Vertical Stack with REDUCED spacing -->
-    <div class="space-y-2 max-w-6xl mx-auto"> <!-- Changed space-y-3 to space-y-2 -->
+    <div class="space-y-2 max-w-6xl mx-auto">
             <!-- Request Master Card -->
             <div class="tw-card">
-                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between"> <!-- Reduced padding -->
+                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
                         <i class="fas fa-file-alt text-blue-500"></i>
                         Request Details
                     </h2>
                     <span class="text-xs text-slate-400">ID: {{ request.request_number }}</span>
                 </div>
-                <div class="p-3"> <!-- Reduced padding -->
+                <div class="p-3">
                     <form id="editMode">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"> <!-- Reduced gap -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             <!-- Customer -->
                             <div class="lg:col-span-2">
                                 <label class="tw-label">Customer</label>
@@ -573,7 +572,7 @@ html { scroll-behavior: smooth; }
 
             <!-- Itinerary Card (Unified Management & View) -->
             <div class="tw-card">
-                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between"> <!-- Reduced padding -->
+                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
                         <i class="fas fa-route text-purple-500"></i>
                         Itinerary & Services
@@ -584,9 +583,9 @@ html { scroll-behavior: smooth; }
                 </div>
                 
                 <!-- Service Tabs - Top Navigation -->
-                <div class="px-3 pt-2 pb-2"> <!-- Reduced padding -->
-                    <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);"> <!-- Reduced gap -->
-                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="arrival"> <!-- Reduced padding/text -->
+                <div class="px-3 pt-2 pb-2">
+                    <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
+                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="arrival">
                             <i class="fas fa-check-circle text-slate-400"></i> Arrival
                         </button>
                         <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="departure">
@@ -633,8 +632,8 @@ html { scroll-behavior: smooth; }
                         </table>
                     </div>
                     {% else %}
-                    <div class="text-center py-8" id="itineraryEmptyState"> <!-- Reduced py -->
-                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3"> <!-- Reduced w/h -->
+                    <div class="text-center py-8" id="itineraryEmptyState">
+                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <i class="fas fa-route text-xl text-slate-400"></i>
                         </div>
                         <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
@@ -1399,7 +1398,7 @@ html { scroll-behavior: smooth; }
                 </div>
                 <div class="p-3">
                     <!-- Trip Overview Row -->
-                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2"> <!-- Reduced gap -->
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2">
                         <div class="bg-blue-50 rounded-lg p-2 text-center">
                             <div class="text-sm font-bold text-blue-600">{{ request.no_of_days or 0 }}</div>
                             <div class="text-[10px] text-slate-500">Days</div>
@@ -1877,9 +1876,7 @@ function autoSaveServiceData(serviceType) {
                 if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
-            // REMOVE RELOAD LOGIC FOR ARRIVAL/DEPARTURE TO SUPPORT REAL-TIME UPDATES
-            // if (serviceType === 'arrival' || serviceType === 'departure') { ... }
-            
+            // Update table visibility and content without page refresh
             if (data.service_entries_html && data.service_type) {
                 // Map service types to table IDs
                 let tbodyId = '';
@@ -1897,12 +1894,13 @@ function autoSaveServiceData(serviceType) {
                 const tbody = document.getElementById(tbodyId);
                 const container = document.getElementById(containerId);
 
+                // Show the table container when data is added
                 if (container) {
-                    container.style.display = 'block'; // Make sure table is visible
+                    container.style.display = 'block';
                 }
 
                 if (tbody) {
-                    // Use insertAdjacentHTML to APPEND the new row instead of replacing content
+                    // Append the new row to the existing table
                     tbody.insertAdjacentHTML('beforeend', data.service_entries_html);
                 }
             }
