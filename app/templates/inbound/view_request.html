@@ -1391,6 +1391,9 @@ html { scroll-behavior: smooth; }
                         Trip Summary
                     </h2>
                     <div class="flex items-center gap-2">
+                        <button onclick="generateSummaryTable()" class="tw-btn tw-btn-primary tw-btn-sm">
+                            <i class="fas fa-table"></i> View Full Summary
+                        </button>
                         <button onclick="exportToExcel()" class="tw-btn tw-btn-success tw-btn-sm">
                             <i class="fas fa-file-excel"></i> Download Excel
                         </button>
@@ -2097,6 +2100,416 @@ function updateSummaryCounts() {
         }).join('');
         
         hotelsContainer.innerHTML = hotels || '<span class="text-slate-400 text-[10px]">No hotels added</span>';
+    }
+}
+
+// Function to generate comprehensive summary table
+function generateSummaryTable() {
+    const requestNumber = "{{ request.request_number }}";
+    const customerName = document.getElementById('selectedCustomerName')?.value || "N/A";
+    const fromDate = document.getElementById('fromDate')?.value || "";
+    const toDate = document.getElementById('toDate')?.value || "";
+    const pax = document.querySelector('[name="pax"]')?.value || "0";
+    const days = document.getElementById('noOfDays')?.value || "0";
+    
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+    modal.id = 'summaryModal';
+    
+    let tableHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold">Trip Summary - ${requestNumber}</h2>
+                        <p class="text-blue-100 mt-1">${customerName} | ${fromDate} to ${toDate} | ${pax} PAX | ${days} Days</p>
+                    </div>
+                    <button onclick="closeSummaryModal()" class="text-white hover:bg-white/20 rounded-lg p-2 transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <!-- Hotels Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-hotel text-blue-500 mr-2"></i>
+                        Hotel Accommodations
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Hotel Name</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">City</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-in</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-out</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Nights</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Rooms</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Board</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Status</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost/Night</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const hotelRows = document.querySelectorAll('#hotels-table-body tr');
+    if (hotelRows.length > 0) {
+        hotelRows.forEach(row => {
+            const cells = row.cells;
+            const hotelName = cells[0].textContent.trim();
+            const dates = cells[1].textContent.trim().split(' - ');
+            const nights = cells[2].textContent.trim();
+            const rooms = cells[3].innerHTML.trim();
+            const status = cells[4].textContent.trim();
+            
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 font-medium">${hotelName}</td>
+                    <td class="border border-gray-300 px-4 py-2">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[0] || '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[1] || '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${nights}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${rooms}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">
+                        <span class="px-2 py-1 rounded text-xs ${
+                            status.includes('CONFIRMED') ? 'bg-green-100 text-green-700' : 
+                            status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${status}</span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableHTML += `
+            <tr>
+                <td colspan="9" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No hotels added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Flights Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-plane text-green-500 mr-2"></i>
+                        Flight Details
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Type</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Time</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Point</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Flight No.</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">PAX</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Driver</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Vehicle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const arrivalRows = document.querySelectorAll('#arrival-table-body tr');
+    arrivalRows.forEach(row => {
+        const cells = row.cells;
+        tableHTML += `
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-plane-arrival mr-1"></i> Arrival
+                    </span>
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[0].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[1].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[2].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[4].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[5].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">-</td>
+            </tr>
+        `;
+    });
+    
+    const departureRows = document.querySelectorAll('#departure-table-body tr');
+    departureRows.forEach(row => {
+        const cells = row.cells;
+        tableHTML += `
+            <tr class="hover:bg-gray-50">
+                <td class="border border-gray-300 px-4 py-2">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        <i class="fas fa-plane-departure mr-1"></i> Departure
+                    </span>
+                </td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[0].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[1].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[2].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center">${cells[4].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">${cells[5].textContent.trim()}</td>
+                <td class="border border-gray-300 px-4 py-2">-</td>
+            </tr>
+        `;
+    });
+    
+    if (arrivalRows.length === 0 && departureRows.length === 0) {
+        tableHTML += `
+            <tr>
+                <td colspan="8" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No flights added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Transport Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-car text-cyan-500 mr-2"></i>
+                        Transport Services
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Vehicle Type</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Pickup Point</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Drop-off Point</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Driver</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Phone</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Status</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const transportRows = document.querySelectorAll('#transports-table-body tr');
+    if (transportRows.length > 0) {
+        transportRows.forEach(row => {
+            const cells = row.cells;
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[0].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[1].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[2].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">-</td>
+                    <td class="border border-gray-300 px-4 py-2">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">
+                        <span class="px-2 py-1 rounded text-xs ${
+                            cells[4].textContent.includes('CONFIRMED') ? 'bg-green-100 text-green-700' : 
+                            cells[4].textContent.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${cells[4].textContent.trim()}</span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableHTML += `
+            <tr>
+                <td colspan="8" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No transport services added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Guides Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-user-tie text-teal-500 mr-2"></i>
+                        Guide Services
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Guide Name</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Service Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Language</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Telephone</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const guideRows = document.querySelectorAll('#guides-table-body tr');
+    if (guideRows.length > 0) {
+        guideRows.forEach(row => {
+            const cells = row.cells;
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 font-medium">${cells[0].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[1].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[2].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableHTML += `
+            <tr>
+                <td colspan="5" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No guides added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Meals Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-utensils text-amber-500 mr-2"></i>
+                        Meal Services
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Date</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Meal Type</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Restaurant</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Location</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">PAX</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost/Person</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Total Cost</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const mealRows = document.querySelectorAll('#meals-table-body tr');
+    if (mealRows.length > 0) {
+        mealRows.forEach(row => {
+            const cells = row.cells;
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[0].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[1].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 font-medium">${cells[2].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2">${cells[3].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${cells[4].textContent.trim()}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableHTML += `
+            <tr>
+                <td colspan="7" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No meals added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Summary Statistics -->
+                <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Trip Statistics</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-blue-600">${hotelRows.length}</div>
+                            <div class="text-sm text-gray-600">Hotels</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-green-600">${arrivalRows.length + departureRows.length}</div>
+                            <div class="text-sm text-gray-600">Flights</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-cyan-600">${transportRows.length}</div>
+                            <div class="text-sm text-gray-600">Transports</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-teal-600">${guideRows.length}</div>
+                            <div class="text-sm text-gray-600">Guides</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-100 px-6 py-3 flex justify-end gap-2">
+                <button onclick="printSummaryTable()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button onclick="closeSummaryModal()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+    
+    modal.innerHTML = tableHTML;
+    document.body.appendChild(modal);
+}
+
+function closeSummaryModal() {
+    const modal = document.getElementById('summaryModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function printSummaryTable() {
+    const modalContent = document.querySelector('#summaryModal .bg-white');
+    if (modalContent) {
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Trip Summary - {{ request.request_number }}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; font-weight: bold; }
+                        h2, h3 { color: #333; }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${modalContent.innerHTML}
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
     }
 }
 
