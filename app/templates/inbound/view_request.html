@@ -19,7 +19,7 @@ html { scroll-behavior: smooth; }
 
 /* Service tab styling (Used for top navigation) */
 .service-tab {
-    padding: 0.625rem 1rem;
+    padding: 0.5rem 0.75rem; /* Reduced padding */
     font-weight: 500;
     font-size: 0.875rem;
     color: #64748b;
@@ -32,7 +32,7 @@ html { scroll-behavior: smooth; }
     border-right: none;
     display: inline-flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: 0.25rem; /* Reduced gap */
     white-space: nowrap;
 }
 .service-tab:hover { color: #334155; border-bottom-color: #cbd5e1; }
@@ -45,13 +45,13 @@ html { scroll-behavior: smooth; }
 /* Card styles */
 .tw-card {
     background: white;
-    border-radius: 12px;
+    border-radius: 10px; /* Slightly smaller radius */
     box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
     border: 1px solid #e2e8f0;
 }
 
 /* Status badges */
-.status-badge { padding: 0.375rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+.status-badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 600; } /* Smaller padding */
 .status-request { background: #fef3c7; color: #92400e; }
 .status-quoted { background: #dbeafe; color: #1e40af; }
 .status-supplier-confirmed { background: #d1fae5; color: #065f46; }
@@ -61,7 +61,7 @@ html { scroll-behavior: smooth; }
 .status-completed { background: #1e293b; color: white; }
 
 /* Service flags */
-.service-flag { padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; }
+.service-flag { padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; } /* Smaller */
 .flag-hotel { background: #fee2e2; color: #991b1b; }
 .flag-transport { background: #dbeafe; color: #1e40af; }
 .flag-meal { background: #fef3c7; color: #92400e; }
@@ -71,9 +71,9 @@ html { scroll-behavior: smooth; }
 /* Form inputs */
 .tw-input {
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem; /* Reduced padding */
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 0.875rem;
     transition: all 0.15s ease;
     background: white;
@@ -81,7 +81,7 @@ html { scroll-behavior: smooth; }
 .tw-input:focus {
     outline: none;
     border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
 }
 .tw-input:disabled, .tw-input[readonly] {
     background: #f8fafc;
@@ -90,24 +90,24 @@ html { scroll-behavior: smooth; }
 
 .tw-label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.7rem; /* Smaller font */
     font-weight: 600;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    margin-bottom: 0.375rem;
+    margin-bottom: 0.25rem; /* Reduced margin */
 }
 
 /* Buttons */
 .tw-btn {
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
+    padding: 0.4rem 0.8rem; /* Smaller padding */
+    border-radius: 6px;
     font-weight: 500;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     transition: all 0.15s ease;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     cursor: pointer;
     border: none;
 }
@@ -119,14 +119,14 @@ html { scroll-behavior: smooth; }
 .tw-btn-success:hover { background: #059669; }
 .tw-btn-danger { background: #ef4444; color: white; }
 .tw-btn-danger:hover { background: #dc2626; }
-.tw-btn-sm { padding: 0.375rem 0.75rem; font-size: 0.8rem; }
+.tw-btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 
-/* Table styles */
+/* Table styles - COMPACT */
 .tw-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .tw-table th { 
     background: #f8fafc; 
-    padding: 0.75rem 1rem; 
-    font-size: 0.75rem; 
+    padding: 0.5rem 0.75rem; /* Reduced padding */
+    font-size: 0.7rem; /* Smaller font */
     font-weight: 600; 
     color: #64748b; 
     text-transform: uppercase; 
@@ -135,9 +135,10 @@ html { scroll-behavior: smooth; }
     border-bottom: 2px solid #e2e8f0;
 }
 .tw-table td { 
-    padding: 0.875rem 1rem; 
+    padding: 0.6rem 0.75rem; /* Reduced padding */
     border-bottom: 1px solid #f1f5f9; 
     vertical-align: middle;
+    font-size: 0.85rem;
 }
 .tw-table tbody tr:hover { background: #f8fafc; }
 
@@ -152,7 +153,7 @@ html { scroll-behavior: smooth; }
     color: white;
     border: none;
     border-radius: 8px 0 0 8px;
-    padding: 12px;
+    padding: 8px; /* Reduced padding */
     cursor: pointer;
     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
 }
@@ -197,7 +198,7 @@ html { scroll-behavior: smooth; }
     display: flex; 
     align-items: flex-start; 
     position: relative; 
-    padding-bottom: 24px; 
+    padding-bottom: 20px; 
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -206,10 +207,10 @@ html { scroll-behavior: smooth; }
 .status-step::before {
     content: '';
     position: absolute;
-    left: 19px;
-    top: 40px;
+    left: 15px; /* Adjusted for smaller icon */
+    top: 32px;
     width: 2px;
-    height: calc(100% - 40px);
+    height: calc(100% - 32px);
     background: #e2e8f0;
 }
 .status-step:last-child::before { display: none; }
@@ -217,8 +218,8 @@ html { scroll-behavior: smooth; }
 .status-step.active::before { background: linear-gradient(180deg, #3b82f6 0%, #e2e8f0 100%); }
 
 .status-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px; /* Smaller */
+    height: 32px; /* Smaller */
     border-radius: 50%;
     background: #f1f5f9;
     border: 2px solid #e2e8f0;
@@ -226,29 +227,29 @@ html { scroll-behavior: smooth; }
     align-items: center;
     justify-content: center;
     color: #94a3b8;
-    font-size: 14px;
+    font-size: 12px; /* Smaller icon */
     flex-shrink: 0;
     z-index: 2;
     transition: all 0.2s ease;
 }
 .status-step.completed .status-icon { background: #10b981; border-color: #10b981; color: white; }
-.status-step.active .status-icon { background: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 0 0 4px rgba(59,130,246,0.2); }
+.status-step.active .status-icon { background: #3b82f6; border-color: #3b82f6; color: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
 
 .status-content { 
-    margin-left: 12px; 
-    padding-top: 8px;
+    margin-left: 10px; /* Reduced margin */
+    padding-top: 4px;
     flex: 1;
 }
 .status-label { 
     font-weight: 600; 
-    font-size: 0.875rem; 
+    font-size: 0.85rem; /* Smaller */
     color: #1e293b; 
 }
 .status-step.active .status-label { color: #3b82f6; }
 .status-desc { 
-    font-size: 0.75rem; 
+    font-size: 0.7rem; /* Smaller */
     color: #64748b; 
-    margin-top: 2px; 
+    margin-top: 1px; 
 }
 
 /* Workflow stage bar */
@@ -258,10 +259,10 @@ html { scroll-behavior: smooth; }
     left: 0;
     right: 0;
     background: #1e293b;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1.5rem; /* Reduced padding */
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
     z-index: 100;
     box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
 }
@@ -269,7 +270,7 @@ html { scroll-behavior: smooth; }
 /* Hotel card */
 .hotel-card {
     background: white;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
     transition: all 0.2s ease;
 }
@@ -277,13 +278,13 @@ html { scroll-behavior: smooth; }
 
 /* Service icon toggles - Updated for Context */
 .service-icon-toggle {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 28px; /* Smaller */
+    height: 28px; /* Smaller */
+    border-radius: 4px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-right: 6px;
+    margin-right: 4px;
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid transparent;
@@ -308,16 +309,16 @@ html { scroll-behavior: smooth; }
 /* Auto-save indicator */
 .auto-save-indicator {
     position: fixed;
-    bottom: 20px;
+    bottom: 70px; /* Moved up to avoid stage bar */
     right: 20px;
     background: #10b981;
     color: white;
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 14px;
+    padding: 6px 12px; /* Smaller */
+    border-radius: 4px;
+    font-size: 12px;
     display: none;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
 }
@@ -341,8 +342,8 @@ html { scroll-behavior: smooth; }
     background: #f1f5f9;
     color: #475569;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0.5rem;
+    border-radius: 6px;
+    padding: 0.4rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -360,20 +361,21 @@ html { scroll-behavior: smooth; }
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
-    min-width: 200px;
+    min-width: 180px;
     display: none;
 }
 .right-menu-dropdown.show {
     display: block;
 }
 .right-menu-item {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem; /* Reduced padding */
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     color: #334155;
     cursor: pointer;
     transition: background 0.2s;
+    font-size: 0.875rem;
 }
 .right-menu-item:hover {
     background: #f8fafc;
@@ -392,7 +394,7 @@ html { scroll-behavior: smooth; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .tw-container { padding: 0.75rem; }
+    .tw-container { padding: 0.5rem; }
     .stage-bar { flex-wrap: wrap; gap: 0.5rem; }
     .status-sidebar-overlay { width: 85%; }
 }
@@ -402,10 +404,10 @@ html { scroll-behavior: smooth; }
 {% block content %}
 <div class="tw-container">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <div class="flex items-center gap-4">
+    <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <div class="flex items-center gap-3">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                     {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}
                     <span id="headerStatusBadge" class="status-badge 
                         {% if request.status == 'REQUEST' %}status-request
@@ -419,11 +421,11 @@ html { scroll-behavior: smooth; }
                         {{ request.status.replace('_', ' ').title() }}
                     </span>
                 </h1>
-                <p class="text-slate-500 text-sm mt-1">
+                <p class="text-slate-500 text-xs mt-0.5">
                     {% if request.customer %}{{ request.customer.name }}{% endif %}
-                    <span class="mx-2">•</span>
+                    <span class="mx-1">•</span>
                     {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }}
-                    <span class="mx-2">•</span>
+                    <span class="mx-1">•</span>
                     {{ request.no_of_days }} days, {{ request.pax }} pax
                 </p>
             </div>
@@ -459,31 +461,31 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
             
-            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary">
+            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary tw-btn-sm">
                 <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
                 {{ 'Edit' if view_only else 'View' }}
             </a>
-            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary">
+            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
                 <i class="fas fa-arrow-left"></i>
                 <span class="hidden sm:inline">Back</span>
             </a>
         </div>
     </div>
 
-    <!-- Main Content - Vertical Stack -->
-    <div class="space-y-3 max-w-5xl mx-auto">
+    <!-- Main Content - Vertical Stack with REDUCED spacing -->
+    <div class="space-y-2 max-w-6xl mx-auto"> <!-- Changed space-y-3 to space-y-2 -->
             <!-- Request Master Card -->
             <div class="tw-card">
-                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between"> <!-- Reduced padding -->
+                    <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
                         <i class="fas fa-file-alt text-blue-500"></i>
                         Request Details
                     </h2>
                     <span class="text-xs text-slate-400">ID: {{ request.request_number }}</span>
                 </div>
-                <div class="p-4">
+                <div class="p-3"> <!-- Reduced padding -->
                     <form id="editMode">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3"> <!-- Reduced gap -->
                             <!-- Customer -->
                             <div class="lg:col-span-2">
                                 <label class="tw-label">Customer</label>
@@ -553,7 +555,7 @@ html { scroll-behavior: smooth; }
                             </div>
 
                             <!-- Days & Pax -->
-                            <div class="flex gap-3">
+                            <div class="flex gap-2">
                                 <div class="flex-1">
                                     <label class="tw-label">Days</label>
                                     <input type="number" class="tw-input bg-slate-50" name="no_of_days" id="noOfDays" 
@@ -571,8 +573,8 @@ html { scroll-behavior: smooth; }
 
             <!-- Itinerary Card (Unified Management & View) -->
             <div class="tw-card">
-                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between"> <!-- Reduced padding -->
+                    <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
                         <i class="fas fa-route text-purple-500"></i>
                         Itinerary & Services
                         {% if request.itinerary_rows %}
@@ -582,47 +584,47 @@ html { scroll-behavior: smooth; }
                 </div>
                 
                 <!-- Service Tabs - Top Navigation -->
-                <div class="px-4 pt-3 pb-3">
-                    <div class="flex items-center gap-2 p-2 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
-                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="arrival">
+                <div class="px-3 pt-2 pb-2"> <!-- Reduced padding -->
+                    <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);"> <!-- Reduced gap -->
+                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="arrival"> <!-- Reduced padding/text -->
                             <i class="fas fa-check-circle text-slate-400"></i> Arrival
                         </button>
-                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="departure">
+                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="departure">
                             <i class="fas fa-plane-departure text-slate-400"></i> Departure
                         </button>
-                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="hotel">
+                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="hotel">
                             <i class="fas fa-hotel text-slate-400"></i> Hotel
                         </button>
-                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="guide">
+                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="guide">
                             <i class="fas fa-user-tie text-slate-400"></i> Guide
                         </button>
-                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="transport">
+                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="transport">
                             <i class="fas fa-car text-slate-400"></i> Transport
                         </button>
-                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="meal">
+                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-slate-500 text-xs font-medium transition-all" data-service="meal">
                             <i class="fas fa-utensils text-slate-400"></i> Meal
                         </button>
                     </div>
                     <!-- Tab Content Container -->
-                    <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-4"></div>
+                    <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-2"></div>
                 </div>
                 
                 <div class="border-t border-slate-200"></div>
 
                 <!-- Itinerary Table (Always Visible) -->
-                <div class="p-4">
+                <div class="p-3">
                     {% if request.itinerary_rows %}
                     <div class="overflow-x-auto" id="itineraryTable">
                         <table class="w-full text-sm">
                             <thead>
                                 <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    <th class="py-3 px-3 w-16">Day</th>
-                                    <th class="py-3 px-3 w-28">Date</th>
-                                    <th class="py-3 px-3">Description</th>
-                                    <th class="py-3 px-3 w-36">Restaurant</th>
-                                    <th class="py-3 px-3 w-32 text-center">Services</th>
-                                    <th class="py-3 px-3 w-24 text-right">Base Cost</th>
-                                    <th class="py-3 px-3 w-32">Comments</th>
+                                    <th class="py-2 px-2 w-16">Day</th>
+                                    <th class="py-2 px-2 w-24">Date</th>
+                                    <th class="py-2 px-2">Description</th>
+                                    <th class="py-2 px-2 w-32">Restaurant</th>
+                                    <th class="py-2 px-2 w-28 text-center">Services</th>
+                                    <th class="py-2 px-2 w-20 text-right">Cost</th>
+                                    <th class="py-2 px-2 w-28">Comments</th>
                                 </tr>
                             </thead>
                             <tbody id="itineraryTableBody">
@@ -631,12 +633,12 @@ html { scroll-behavior: smooth; }
                         </table>
                     </div>
                     {% else %}
-                    <div class="text-center py-12" id="itineraryEmptyState">
-                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-route text-2xl text-slate-400"></i>
+                    <div class="text-center py-8" id="itineraryEmptyState"> <!-- Reduced py -->
+                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3"> <!-- Reduced w/h -->
+                            <i class="fas fa-route text-xl text-slate-400"></i>
                         </div>
-                        <h3 class="font-semibold text-slate-600 mb-2">No Itinerary Yet</h3>
-                        <p class="text-slate-400 text-sm">Set the travel dates above to generate the itinerary automatically.</p>
+                        <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
+                        <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
                     </div>
                     {% endif %}
                     
@@ -644,28 +646,28 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Arrival Panel -->
                     <div id="service-panel-arrival" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-plane-arrival text-green-600"></i> Arrival Details
-                                <span id="panel-context-badge-arrival" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global</span>
+                                <span id="panel-context-badge-arrival" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global</span>
                             </h3>
                         </div>
                         
                         <!-- Form -->
                         {% if not view_only %}
-                        <div class="p-4 bg-slate-50 border-b border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 border-b border-slate-200">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Arrival Point *</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport - Aqaba">King Hussein International Airport - Aqaba</option>
@@ -676,13 +678,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -692,50 +694,55 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival" onchange="autoSaveServiceData('arrival')">
                                 </div>
+                            </div>
+                            <div class="flex justify-end mt-2">
+                                <button type="button" onclick="saveServiceData('arrival')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add Arrival
+                                </button>
                             </div>
                         </div>
                         {% endif %}
                         
                         <!-- Saved Arrivals Table -->
                         <div id="arrival-table-container" {% if not request.arrival_batches %}style="display: none;"{% endif %}>
-                            <div class="px-4 py-2 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-sm font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Arrivals</h4>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Arrivals</h4>
                             </div>
                             <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
+                            <table class="w-full text-xs">
                                 <thead class="bg-teal-600 text-white">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-3 py-2 w-10"></th>{% endif %}
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
+                                        {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100" id="arrival-table-body">
                                     {% for batch in request.arrival_batches %}
                                     <tr class="hover:bg-slate-50">
-                                        <td class="px-3 py-2 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-700">{{ batch.arrival_point or '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_point or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
                                         {% if not view_only %}
-                                        <td class="px-3 py-2 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteArrivalBatch({{ batch.id }})">
+                                        <td class="px-2 py-1.5 text-center">
+                                            <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteArrivalBatch({{ batch.id }})">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </td>
@@ -750,26 +757,26 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Departure Panel -->
                     <div id="service-panel-departure" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-plane-departure text-orange-600"></i> Departure Details
-                                <span id="panel-context-badge-departure" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global</span>
+                                <span id="panel-context-badge-departure" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global</span>
                             </h3>
                         </div>
                         {% if not view_only %}
-                        <div class="p-4 bg-slate-50 border-b border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 border-b border-slate-200">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Departure Point *</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure" onchange="autoSaveServiceData('departure')">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport">King Hussein International Airport</option>
@@ -780,13 +787,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure" onchange="autoSaveServiceData('departure')">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -796,50 +803,55 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure" onchange="autoSaveServiceData('departure')">
                                 </div>
+                            </div>
+                             <div class="flex justify-end mt-2">
+                                <button type="button" onclick="saveServiceData('departure')" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add Departure
+                                </button>
                             </div>
                         </div>
                         {% endif %}
                         
                         <!-- Saved Departures Table -->
                         <div id="departure-table-container" {% if not request.departure_batches %}style="display: none;"{% endif %}>
-                            <div class="px-4 py-2 bg-orange-50 border-b border-orange-200">
-                                <h4 class="text-sm font-semibold text-orange-700"><i class="fas fa-list mr-1"></i> Saved Departures</h4>
+                            <div class="px-3 py-1 bg-orange-50 border-b border-orange-200">
+                                <h4 class="text-xs font-semibold text-orange-700"><i class="fas fa-list mr-1"></i> Saved Departures</h4>
                             </div>
                             <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
+                            <table class="w-full text-xs">
                                 <thead class="bg-orange-600 text-white">
                                     <tr>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-3 py-2 w-10"></th>{% endif %}
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
+                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
+                                        {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100" id="departure-table-body">
                                     {% for batch in request.departure_batches %}
                                     <tr class="hover:bg-slate-50">
-                                        <td class="px-3 py-2 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-700">{{ batch.departure_point or '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-3 py-2 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-3 py-2 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_point or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                        <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
                                         {% if not view_only %}
-                                        <td class="px-3 py-2 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteDepartureBatch({{ batch.id }})">
+                                        <td class="px-2 py-1.5 text-center">
+                                            <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteDepartureBatch({{ batch.id }})">
                                                 <i class="far fa-trash-alt"></i>
                                             </button>
                                         </td>
@@ -854,64 +866,66 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Hotel Panel -->
                     <div id="service-panel-hotel" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-hotel text-blue-600"></i> Hotel Details
-                                <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
+                                <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         <!-- Saved Hotels Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.inbound_hotels %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Hotel</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Dates</th>
-                                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide">Nights</th>
-                                        <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide">Rooms</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% for hotel in request.inbound_hotels %}
-                                    <tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
-                                        <td class="px-4 py-3 text-slate-700 font-medium">{{ hotel.hotel_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500 text-sm">
-                                            {{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }} - {{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}
-                                        </td>
-                                        <td class="px-4 py-3 text-slate-700 text-center">{{ hotel.nights or 0 }}</td>
-                                        <td class="px-4 py-3 text-center">
-                                            <div class="flex items-center justify-center gap-2 text-xs">
-                                                {% if hotel.single_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> {{ hotel.single_rooms }}</span>{% endif %}
-                                                {% if hotel.double_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> {{ hotel.double_rooms }}</span>{% endif %}
-                                                {% if hotel.triple_rooms %}<span class="px-1.5 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> {{ hotel.triple_rooms }}</span>{% endif %}
-                                                {% if not hotel.single_rooms and not hotel.double_rooms and not hotel.triple_rooms %}<span class="text-slate-400">-</span>{% endif %}
-                                            </div>
-                                        </td>
-                                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteHotel({{ hotel.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div id="hotels-table-container" {% if not request.inbound_hotels %}style="display: none;"{% endif %}>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Hotels</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-teal-600 text-white">
+                                        <tr>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Hotel</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Dates</th>
+                                            <th class="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide">Nights</th>
+                                            <th class="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide">Rooms</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
+                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100" id="hotels-table-body">
+                                        {% for hotel in request.inbound_hotels %}
+                                        <tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500 text-xs">
+                                                {{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }} - {{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}
+                                            </td>
+                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ hotel.nights or 0 }}</td>
+                                            <td class="px-2 py-1.5 text-center">
+                                                <div class="flex items-center justify-center gap-1 text-xs">
+                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> {{ hotel.single_rooms }}</span>{% endif %}
+                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> {{ hotel.double_rooms }}</span>{% endif %}
+                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> {{ hotel.triple_rooms }}</span>{% endif %}
+                                                </div>
+                                            </td>
+                                            <td class="px-2 py-1.5"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
+                                            {% if not view_only %}
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteHotel({{ hotel.id }})">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        {% endif %}
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
-                        <div class="p-4 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 border-t border-slate-200">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Hotel Name <span class="text-red-500">*</span></label>
                                     <div class="flex gap-2">
-                                        <select class="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_name" data-service="hotel">
+                                        <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_name" data-service="hotel">
                                             <option value="">Select hotel...</option>
                                             {% for city, hotels in hotels_by_city.items() %}
                                             <optgroup label="{{ city }}">
@@ -934,15 +948,15 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_category" data-service="hotel">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_category" data-service="hotel">
                                         <option value="">Select...</option>
                                         <option value="5-Star">5-Star</option>
                                         <option value="4-Star">4-Star</option>
@@ -952,62 +966,57 @@ html { scroll-behavior: smooth; }
                                 </div>
                             </div>
                             <!-- Room Distribution -->
-                            <div class="mb-4">
-                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">ROOM DISTRIBUTION</label>
-                                <div class="rounded-2xl p-4" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                            <div class="mb-2">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">ROOM DISTRIBUTION</label>
+                                <div class="rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                     <!-- ROW 1: Checkbox Options -->
-                                    <div class="flex items-center gap-6 mb-3">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
-                                            <span class="text-sm text-slate-600">Economic</span>
+                                    <div class="flex items-center gap-4 mb-2">
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
+                                            <span class="text-slate-600">Economic</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
-                                            <span class="text-sm text-slate-600">DBL</span>
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
+                                            <span class="text-slate-600">DBL</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
-                                            <span class="text-sm text-slate-600">Privacy</span>
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
+                                            <span class="text-slate-600">Privacy</span>
                                         </label>
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
-                                            <span class="text-sm font-semibold text-slate-700">Manual</span>
+                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
+                                            <span class="font-semibold text-slate-700">Manual</span>
                                         </label>
-                                        <span class="ml-auto text-sm text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
+                                        <span class="ml-auto text-xs text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
                                     </div>
                                     <!-- ROW 2: Room Fields + Capacity -->
                                     <div class="flex items-center justify-between">
-                                        <div class="flex items-center gap-4">
+                                        <div class="flex items-center gap-2">
                                             <div class="flex items-center gap-1">
-                                                <span class="text-sm text-slate-500">SGL</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <span class="text-xs text-slate-500">SGL</span>
+                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-1">
-                                                <span class="text-sm text-slate-500">DBL</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <span class="text-xs text-slate-500">DBL</span>
+                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                             <div class="flex items-center gap-1">
-                                                <span class="text-sm text-slate-500">TRP</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
-                                            </div>
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-sm text-slate-500">OTH</span>
-                                                <input type="number" class="w-10 px-1 py-1 border-0 rounded text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
-                                                <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
+                                                <span class="text-xs text-slate-500">TRP</span>
+                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                             </div>
                                         </div>
                                         <!-- Capacity Display -->
                                         <div class="flex flex-col items-center">
-                                            <span class="px-3 py-1.5 rounded-md text-sm font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
-                                            <span id="room-capacity-note" class="text-xs mt-1 font-bold" style="color: #ef5350;"></span>
+                                            <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
+                                            <span id="room-capacity-note" class="text-[10px] mt-0.5 font-bold" style="color: #ef5350;"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Board Basis</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_board" data-service="hotel">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_board" data-service="hotel">
                                         <option value="BB">BB - Bed & Breakfast</option>
                                         <option value="HB">HB - Half Board</option>
                                         <option value="FB">FB - Full Board</option>
@@ -1016,7 +1025,7 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_status" data-service="hotel">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_status" data-service="hotel">
                                         <option value="REQUESTED">Requested</option>
                                         <option value="CONFIRMED">Confirmed</option>
                                         <option value="CANCELLED">Cancelled</option>
@@ -1024,17 +1033,17 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost per Night</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_cost" step="0.01" min="0" placeholder="0.00" data-service="hotel">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_cost" step="0.01" min="0" placeholder="0.00" data-service="hotel">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="hotel_notes" placeholder="Notes" data-service="hotel">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_notes" placeholder="Notes" data-service="hotel">
                                 </div>
                             </div>
                             <!-- Save Button -->
                             <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('hotel')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">
-                                    <i class="fas fa-save mr-2"></i>Save Hotel
+                                <button type="button" onclick="saveServiceData('hotel')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Save Hotel
                                 </button>
                             </div>
                         </div>
@@ -1043,65 +1052,68 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Guide Panel -->
                     <div id="service-panel-guide" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-user-tie text-teal-600"></i> Guide Details
-                                <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
+                                <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         
                         <!-- Saved Guides Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.inbound_guides %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Guide</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Phone</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% for guide in request.inbound_guides %}
-                                    <tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}">
-                                        <td class="px-4 py-3 text-slate-700">{{ guide.guide_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ guide.language or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ guide.telephone or '-' }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteGuide({{ guide.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div id="guides-table-container" {% if not request.inbound_guides %}style="display: none;"{% endif %}>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Guides</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-teal-600 text-white">
+                                        <tr>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Guide</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Phone</th>
+                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100" id="guides-table-body">
+                                        {% for guide in request.inbound_guides %}
+                                        <tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700">{{ guide.guide_name or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700">{{ guide.language or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ guide.telephone or '-' }}</td>
+                                            {% if not view_only %}
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteGuide({{ guide.id }})">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        {% endif %}
 
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
-                        <div class="p-4 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 border-t border-slate-200">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_name" placeholder="Guide name" data-service="guide">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_name" placeholder="Guide name" data-service="guide">
                                     <div id="guide-error-container" class="hidden mt-1">
                                         <span id="guide-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_date" data-service="guide">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_date" data-service="guide">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Language</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_language" data-service="guide">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_language" data-service="guide">
                                         <option value="">Select...</option>
                                         <option value="English">English</option>
                                         <option value="Spanish">Spanish</option>
@@ -1113,23 +1125,23 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Telephone</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_phone" placeholder="Phone number" data-service="guide">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_phone" placeholder="Phone number" data-service="guide">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_cost" step="0.01" min="0" placeholder="0.00" data-service="guide">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_cost" step="0.01" min="0" placeholder="0.00" data-service="guide">
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="guide_notes" placeholder="Additional notes" data-service="guide">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_notes" placeholder="Additional notes" data-service="guide">
                                 </div>
                             </div>
                             <!-- Save Button -->
                             <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('guide')" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-sm">
-                                    <i class="fas fa-save mr-2"></i>Save Guide
+                                <button type="button" onclick="saveServiceData('guide')" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Save Guide
                                 </button>
                             </div>
                         </div>
@@ -1138,68 +1150,71 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Transport Panel -->
                     <div id="service-panel-transport" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-car text-cyan-600"></i> Transport Details
-                                <span id="panel-context-badge-transport" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
+                                <span id="panel-context-badge-transport" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         
                         <!-- Saved Transport Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.inbound_transports %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% for transport in request.inbound_transports %}
-                                    <tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}">
-                                        <td class="px-4 py-3 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ transport.pickup_point or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
-                                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteTransport({{ transport.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div id="transports-table-container" {% if not request.inbound_transports %}style="display: none;"{% endif %}>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Transports</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-teal-600 text-white">
+                                        <tr>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
+                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100" id="transports-table-body">
+                                        {% for transport in request.inbound_transports %}
+                                        <tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700">{{ transport.pickup_point or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
+                                            <td class="px-2 py-1.5"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
+                                            {% if not view_only %}
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteTransport({{ transport.id }})">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        {% endif %}
 
                         {% if not view_only %}
                         <!-- Add Transport Form Fields (Below Table) -->
-                        <div class="p-5 bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
+                        <div class="p-3 bg-slate-50 border-t border-slate-200">
                             <!-- Transport Details Section -->
-                            <div class="mb-5">
-                                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
-                                    <i class="fas fa-car-side text-cyan-500 text-sm"></i>
-                                    <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
+                            <div class="mb-2">
+                                <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-200">
+                                    <i class="fas fa-car-side text-cyan-500 text-xs"></i>
+                                    <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Service Date</label>
-                                        <input type="date" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_date" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Service Date</label>
+                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_date" data-service="transport">
                                     </div>
                                     <div class="field-wrapper" data-field="transport_vehicle">
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">
                                             Vehicle Type <span class="text-red-500">*</span>
                                         </label>
-                                        <select class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_vehicle" data-service="transport">
+                                        <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_vehicle" data-service="transport">
                                             <option value="">Select vehicle...</option>
                                             <option value="Sedan">Sedan (1-3 PAX)</option>
                                             <option value="Van">Van (4-7 PAX)</option>
@@ -1213,53 +1228,53 @@ html { scroll-behavior: smooth; }
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Pickup Point</label>
-                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_pickup" placeholder="e.g., Airport, Hotel" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Pickup Point</label>
+                                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_pickup" placeholder="e.g., Airport, Hotel" data-service="transport">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Drop-off Point</label>
-                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_dropoff" placeholder="e.g., Hotel, Station" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Drop-off Point</label>
+                                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_dropoff" placeholder="e.g., Hotel, Station" data-service="transport">
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Driver & Cost Section -->
-                            <div class="mb-5">
-                                <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200">
-                                    <i class="fas fa-user-tie text-slate-400 text-sm"></i>
-                                    <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Driver & Cost</span>
+                            <div class="mb-2">
+                                <div class="flex items-center gap-2 mb-2 pb-1 border-b border-slate-200">
+                                    <i class="fas fa-user-tie text-slate-400 text-xs"></i>
+                                    <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Driver & Cost</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Driver Name</label>
-                                        <input type="text" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_driver" placeholder="Full name" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Driver Name</label>
+                                        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_driver" placeholder="Full name" data-service="transport">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Driver Phone</label>
-                                        <input type="tel" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_phone" placeholder="+1 234 567 890" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Driver Phone</label>
+                                        <input type="tel" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_phone" placeholder="+1 234 567 890" data-service="transport">
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Status</label>
-                                        <select class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_status" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Status</label>
+                                        <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_status" data-service="transport">
                                             <option value="REQUESTED">Requested</option>
                                             <option value="CONFIRMED">Confirmed</option>
                                             <option value="CANCELLED">Cancelled</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1.5">Cost</label>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">Cost</label>
                                         <div class="relative">
-                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                                            <input type="number" class="w-full pl-7 pr-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
+                                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
+                                            <input type="number" class="w-full pl-5 pr-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_cost" step="0.01" min="0" placeholder="0.00" data-service="transport">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Save Button -->
-                            <div class="flex justify-end pt-2">
-                                <button type="button" onclick="saveServiceData('transport')" class="inline-flex items-center px-5 py-2.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-sm shadow-sm">
-                                    <i class="fas fa-save mr-2"></i>Save Transport
+                            <div class="flex justify-end pt-1">
+                                <button type="button" onclick="saveServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
+                                    <i class="fas fa-plus mr-1"></i>Save Transport
                                 </button>
                             </div>
                         </div>
@@ -1268,60 +1283,63 @@ html { scroll-behavior: smooth; }
                     
                     <!-- Meal Panel -->
                     <div id="service-panel-meal" class="service-panel hidden">
-                        <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
-                            <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                            <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
                                 <i class="fas fa-utensils text-amber-600"></i> Meal Details
-                                <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
+                                <span id="panel-context-badge-meal" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
                         
                         <!-- Saved Meals Table (ONLY SHOWS IF DATA EXISTS) -->
-                        {% if request.inbound_meals %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">Location</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        {% if not view_only %}<th class="px-4 py-3 w-12"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    {% for meal in request.inbound_meals %}
-                                    <tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}">
-                                        <td class="px-4 py-3 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ meal.meal_type or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-500">{{ meal.location or '-' }}</td>
-                                        <td class="px-4 py-3 text-slate-700 text-center">{{ meal.pax_count or 0 }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-4 py-3 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-1" onclick="deleteMeal({{ meal.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                        <div id="meals-table-container" {% if not request.inbound_meals %}style="display: none;"{% endif %}>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Meals</h4>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-teal-600 text-white">
+                                        <tr>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Location</th>
+                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
+                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100" id="meals-table-body">
+                                        {% for meal in request.inbound_meals %}
+                                        <tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ meal.meal_type or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ meal.location or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ meal.pax_count or 0 }}</td>
+                                            {% if not view_only %}
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteMeal({{ meal.id }})">
+                                                    <i class="far fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                            {% endif %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        {% endif %}
 
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
-                        <div class="p-4 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div class="p-3 bg-slate-50 border-t border-slate-200">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_date" data-service="meal">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_date" data-service="meal">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
-                                    <select class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_type" data-service="meal">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_type" data-service="meal">
                                         <option value="">Select...</option>
                                         <option value="Breakfast">Breakfast</option>
                                         <option value="Lunch">Lunch</option>
@@ -1330,34 +1348,34 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant <span class="text-red-500">*</span></label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_restaurant" placeholder="Restaurant name" data-service="meal">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" placeholder="Restaurant name" data-service="meal">
                                     <div id="meal-error-container" class="hidden mt-1">
                                         <span id="meal-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Location</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_location" placeholder="Location" data-service="meal">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_location" placeholder="Location" data-service="meal">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_pax" min="1" value="{{ request.pax or 1 }}" data-service="meal">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_pax" min="1" value="{{ request.pax or 1 }}" data-service="meal">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Cost per Person</label>
-                                    <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_cost" step="0.01" min="0" placeholder="0.00" data-service="meal">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_cost" step="0.01" min="0" placeholder="0.00" data-service="meal">
                                 </div>
                                 <div class="col-span-2">
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" id="meal_notes" placeholder="Dietary requirements, etc." data-service="meal">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_notes" placeholder="Dietary requirements, etc." data-service="meal">
                                 </div>
                             </div>
                             <!-- Save Button -->
                             <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('meal')" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-sm">
-                                    <i class="fas fa-save mr-2"></i>Save Meal
+                                <button type="button" onclick="saveServiceData('meal')" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Save Meal
                                 </button>
                             </div>
                         </div>
@@ -1368,80 +1386,84 @@ html { scroll-behavior: smooth; }
 
             <!-- Trip Summary Card -->
             <div class="tw-card" id="tripSummaryCard">
-                <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-                    <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+                <div class="px-3 py-2 border-b border-slate-200 flex items-center justify-between">
+                    <h2 class="font-semibold text-slate-800 flex items-center gap-2 text-sm">
                         <i class="fas fa-chart-pie text-amber-500"></i>
                         Trip Summary
                     </h2>
-                    <span class="text-xs text-slate-400">Auto-updates on save</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportToExcel()" class="tw-btn tw-btn-success tw-btn-sm">
+                            <i class="fas fa-file-excel"></i> Download Excel
+                        </button>
+                    </div>
                 </div>
-                <div class="p-4">
+                <div class="p-3">
                     <!-- Trip Overview Row -->
-                    <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-3">
-                        <div class="bg-blue-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-blue-600">{{ request.no_of_days or 0 }}</div>
-                            <div class="text-xs text-slate-500">Days</div>
+                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2"> <!-- Reduced gap -->
+                        <div class="bg-blue-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-blue-600">{{ request.no_of_days or 0 }}</div>
+                            <div class="text-[10px] text-slate-500">Days</div>
                         </div>
-                        <div class="bg-purple-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-purple-600">{{ request.pax or 0 }}</div>
-                            <div class="text-xs text-slate-500">PAX</div>
+                        <div class="bg-purple-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-purple-600">{{ request.pax or 0 }}</div>
+                            <div class="text-[10px] text-slate-500">PAX</div>
                         </div>
-                        <div class="bg-teal-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-teal-600" id="summary_hotels">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
-                            <div class="text-xs text-slate-500">Hotels</div>
+                        <div class="bg-teal-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-teal-600" id="summary_hotels">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
+                            <div class="text-[10px] text-slate-500">Hotels</div>
                         </div>
-                        <div class="bg-cyan-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-cyan-600" id="summary_transport">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
-                            <div class="text-xs text-slate-500">Transport</div>
+                        <div class="bg-cyan-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-cyan-600" id="summary_transport">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
+                            <div class="text-[10px] text-slate-500">Transport</div>
                         </div>
-                        <div class="bg-green-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-green-600" id="summary_guides">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
-                            <div class="text-xs text-slate-500">Guides</div>
+                        <div class="bg-green-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-green-600" id="summary_guides">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
+                            <div class="text-[10px] text-slate-500">Guides</div>
                         </div>
-                        <div class="bg-amber-50 rounded-lg p-3 text-center">
-                            <div class="text-lg font-bold text-amber-600" id="summary_meals">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
-                            <div class="text-xs text-slate-500">Meals</div>
+                        <div class="bg-amber-50 rounded-lg p-2 text-center">
+                            <div class="text-sm font-bold text-amber-600" id="summary_meals">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
+                            <div class="text-[10px] text-slate-500">Meals</div>
                         </div>
                     </div>
                     
                     <!-- Flights & Hotels Detail -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <!-- Arrivals & Departures -->
-                        <div class="bg-slate-50 rounded-lg p-3">
-                            <div class="text-xs font-semibold text-slate-500 uppercase mb-2">Flights</div>
-                            <div class="flex flex-wrap gap-2" id="summary_flights">
+                        <div class="bg-slate-50 rounded-lg p-2">
+                            <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1">Flights</div>
+                            <div class="flex flex-wrap gap-1" id="summary_flights">
                                 {% if request.arrival_batches %}
                                     {% for batch in request.arrival_batches %}
-                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">
                                         <i class="fas fa-plane-arrival"></i> {{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}
                                     </span>
                                     {% endfor %}
                                 {% endif %}
                                 {% if request.departure_batches %}
                                     {% for batch in request.departure_batches %}
-                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs">
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">
                                         <i class="fas fa-plane-departure"></i> {{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}
                                     </span>
                                     {% endfor %}
                                 {% endif %}
                                 {% if not request.arrival_batches and not request.departure_batches %}
-                                <span class="text-slate-400 text-xs">No flights added</span>
+                                <span class="text-slate-400 text-[10px]">No flights added</span>
                                 {% endif %}
                             </div>
                         </div>
                         <!-- Hotels List -->
-                        <div class="bg-slate-50 rounded-lg p-3">
-                            <div class="text-xs font-semibold text-slate-500 uppercase mb-2">Hotels</div>
-                            <div class="flex flex-wrap gap-2" id="summary_hotel_list">
+                        <div class="bg-slate-50 rounded-lg p-2">
+                            <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1">Hotels</div>
+                            <div class="flex flex-wrap gap-1" id="summary_hotel_list">
                                 {% if request.inbound_hotels %}
                                     {% for hotel in request.inbound_hotels %}
-                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
                                         <i class="fas fa-hotel"></i> {{ hotel.hotel_name or 'Unnamed' }}
                                         {% if hotel.nights %}<span class="text-blue-500">({{ hotel.nights }}N)</span>{% endif %}
                                     </span>
                                     {% endfor %}
                                 {% else %}
-                                <span class="text-slate-400 text-xs">No hotels added</span>
+                                <span class="text-slate-400 text-[10px]">No hotels added</span>
                                 {% endif %}
                             </div>
                         </div>
@@ -1461,13 +1483,13 @@ html { scroll-behavior: smooth; }
 
 <!-- Status Sidebar -->
 <div class="status-sidebar-overlay" id="statusSidebarOverlay">
-    <div class="bg-slate-800 text-white px-5 py-4 flex justify-between items-center">
-        <h5 class="font-semibold"><i class="fas fa-tasks mr-2"></i>Workflow</h5>
+    <div class="bg-slate-800 text-white px-4 py-3 flex justify-between items-center">
+        <h5 class="font-semibold text-sm"><i class="fas fa-tasks mr-2"></i>Workflow</h5>
         <button class="text-white/70 hover:text-white" onclick="toggleStatusSidebar()">
             <i class="fas fa-times"></i>
         </button>
     </div>
-    <div class="p-5 overflow-y-auto flex-1">
+    <div class="p-4 overflow-y-auto flex-1">
         <!-- Status Steps -->
         <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
              data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
@@ -1536,11 +1558,11 @@ html { scroll-behavior: smooth; }
 
 <!-- Workflow Stage Bar (Bottom) -->
 <div class="stage-bar">
-    <span class="text-white/60 text-sm">
-        <i class="fas fa-forward mr-2"></i>Advance to:
+    <span class="text-white/60 text-xs">
+        <i class="fas fa-forward mr-1"></i>Advance to:
     </span>
     <select id="confirmStageSelect" onchange="confirmStageChange()" 
-            class="bg-slate-700 text-white border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            class="bg-slate-700 text-white border border-slate-600 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
         <option value="">Select next stage...</option>
         {% if request.status != 'REQUEST' %}
         <option value="REQUEST">Request</option>
@@ -1564,8 +1586,8 @@ html { scroll-behavior: smooth; }
         <option value="COMPLETED">Completed</option>
         {% endif %}
     </select>
-    <div class="ml-auto flex items-center gap-3">
-        <span class="text-white/40 text-sm">Current:</span>
+    <div class="ml-auto flex items-center gap-2">
+        <span class="text-white/40 text-xs">Current:</span>
         <span class="status-badge 
             {% if request.status == 'REQUEST' %}status-request
             {% elif request.status == 'QUOTED' %}status-quoted
@@ -1586,9 +1608,56 @@ html { scroll-behavior: smooth; }
     <span>Saving...</span>
 </div>
 
+<!-- Add New Hotel Modal -->
+<div id="addHotelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Add New Hotel
+            </h3>
+            <button type="button" onclick="closeAddHotelModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <div id="add-hotel-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Hotel Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="new_hotel_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter hotel name">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">City</label>
+                    <select id="new_hotel_city" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="Amman">Amman</option>
+                        <option value="Aqaba">Aqaba</option>
+                        <option value="Petra">Petra</option>
+                        <option value="Dead Sea">Dead Sea</option>
+                        <option value="Jerash">Jerash</option>
+                        <option value="Madaba">Madaba</option>
+                        <option value="Wadi Rum">Wadi Rum</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
+            <button type="button" onclick="closeAddHotelModal()" class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xs">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewHotel()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs">
+                <i class="fas fa-save mr-1"></i>Add Hotel
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+<!-- SheetJS for Excel Export -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
 <script>
 const requestId = {{ request.id }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1601,7 +1670,6 @@ let currentServiceContext = {
 
 // Initialize room distribution with Economic layout
 function initializeRoomDistribution() {
-    // Check if functions exist before calling
     if (typeof applyWizardLayout === 'function') {
         applyWizardLayout('economic');
     }
@@ -1612,9 +1680,6 @@ function initializeRoomDistribution() {
 
 /**
  * SERVICE TAB LOGIC (Global vs Specific)
- * Handles the top tabs (Arrival, Hotel, etc.)
- * @param {string} serviceName - 'hotel', 'transport', etc.
- * @param {number|null} rowId - If null, mode is GLOBAL. If set, mode is SPECIFIC DAY.
  */
 function switchServiceTab(serviceName, rowId = null) {
     const targetPanel = document.getElementById('service-panel-' + serviceName);
@@ -1645,26 +1710,21 @@ function switchServiceTab(serviceName, rowId = null) {
         });
         
         if (isCurrentlyActive && rowId === null) {
-            // Clicking the same top tab toggles it closed only if it was Global
             tabContainer.classList.add('hidden');
             resetContext();
         } else {
-            // Move panel into container if not already there
             if (!tabContainer.contains(targetPanel)) {
                 tabContainer.appendChild(targetPanel);
             }
-            // Show the container and the specific panel
             tabContainer.classList.remove('hidden');
             targetPanel.classList.remove('hidden');
             
-            // Style the active tab with blue border
             activeBtn.classList.add('active-tab', 'font-semibold');
             activeBtn.style.border = '2px solid #3b82f6';
             activeBtn.style.color = '#3b82f6';
             const activeIcon = activeBtn.querySelector('i');
             if (activeIcon) activeIcon.style.color = '#3b82f6';
 
-            // Load Data & Update Badge
             updateServiceContextUI(serviceName, rowId);
         }
     }
@@ -1676,33 +1736,24 @@ function updateServiceContextUI(serviceName, rowId) {
     if (!badge) return;
 
     if (rowId) {
-        // SPECIFIC DAY MODE
         badge.textContent = `Day Specific (ID: ${rowId})`;
-        badge.className = "text-xs font-semibold px-2 py-1 rounded bg-blue-100 text-blue-700";
-        
-        // Load data for this specific day into the form inputs
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700";
         populateFormWithDayData(serviceName, rowId);
     } else {
-        // GLOBAL MODE
         badge.textContent = "Global (Applies to All)";
-        badge.className = "text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500";
-        
-        // Clear inputs for global entry (or keep default)
+        badge.className = "text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500";
         clearServiceForm(serviceName);
     }
     
-    // Initialize room distribution for hotel tab (after clearing form)
     if (serviceName === 'hotel') {
         initializeRoomDistribution();
     }
 }
 
-// Reset global context
 function resetContext() {
     currentServiceContext = { serviceName: null, rowId: null };
 }
 
-// Populate inputs based on data-attributes in the table row
 function populateFormWithDayData(service, rowId) {
     const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
     if (!row) return;
@@ -1728,16 +1779,16 @@ function setInput(id, value) {
 }
 
 function clearServiceForm(service) {
-    // Determine which inputs belong to this service and clear them
-    // For global mode, it's often useful to keep them blank or reset to defaults
     document.querySelectorAll(`[data-service="${service}"]`).forEach(el => {
         if (el.tagName === 'INPUT' && el.type !== 'date') {
             el.value = '';
         }
+        if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        }
     });
 }
 
-// Status sidebar toggle
 function toggleStatusSidebar() {
     const sidebar = document.getElementById('statusSidebarOverlay');
     const backdrop = document.getElementById('statusSidebarBackdrop');
@@ -1745,12 +1796,9 @@ function toggleStatusSidebar() {
     backdrop.classList.toggle('show');
 }
 
-// Right menu toggle
 function toggleRightMenu() {
     const dropdown = document.getElementById('rightMenuDropdown');
     dropdown.classList.toggle('show');
-    
-    // Close dropdown when clicking outside
     document.addEventListener('click', function closeDropdown(e) {
         if (!e.target.closest('.right-menu')) {
             dropdown.classList.remove('show');
@@ -1759,7 +1807,6 @@ function toggleRightMenu() {
     });
 }
 
-// Calculate days
 function calculateDays() {
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
@@ -1769,41 +1816,29 @@ function calculateDays() {
         const diffTime = Math.abs(to - from);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
         document.getElementById('noOfDays').value = diffDays;
-        
-        // Auto-save and regenerate itinerary if dates changed
         autoSaveChanges();
     }
 }
 
-// Auto-save indicator
 function showAutoSaveIndicator() {
     const indicator = document.getElementById('autoSaveIndicator');
     indicator.classList.add('saving');
-    
-    // Hide after 2 seconds
-    setTimeout(() => {
-        indicator.classList.remove('saving');
-    }, 2000);
+    setTimeout(() => indicator.classList.remove('saving'), 2000);
 }
 
 // Auto-save service data
 function autoSaveServiceData(serviceType) {
     showAutoSaveIndicator();
-    
-    // Collect form data ONLY from the active service panel to avoid conflicts
-    // with duplicate IDs across global/day-specific panels
     const activePanel = document.getElementById(`service-panel-${serviceType}`);
     const formData = {};
     
     if (activePanel) {
-        // Only collect from the visible panel
         activePanel.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
             if (field.id) {
                 formData[field.id] = field.value;
             }
         });
     } else {
-        // Fallback to document-wide query if panel not found
         document.querySelectorAll(`[data-service="${serviceType}"]`).forEach(field => {
             if (field.id) {
                 formData[field.id] = field.value;
@@ -1811,22 +1846,16 @@ function autoSaveServiceData(serviceType) {
         });
     }
     
-    console.log('Saving service data:', serviceType, formData);
-    
-    // Prepare Payload based on Context
     const payload = {
         service_type: serviceType,
         data: formData
     };
 
-    // ADD CONTEXT LOGIC HERE
     if (currentServiceContext.rowId) {
-        // SPECIFIC DAY MODE
         payload.row_id = currentServiceContext.rowId;
         payload.is_global = false;
     } else {
-        // GLOBAL MODE
-        payload.is_global = true; // Tells backend to apply to all days
+        payload.is_global = true;
     }
     
     fetch(`/inbound/api/${requestId}/save-service-data`, {
@@ -1840,47 +1869,42 @@ function autoSaveServiceData(serviceType) {
     .then(response => response.json().then(data => ({ ok: response.ok, data })))
     .then(({ ok, data }) => {
         if (ok && data.success) {
-            // Clear any inline errors
             clearInlineError(serviceType);
             showNotification(data.message || 'Service data saved!', 'success');
             
-            // Instant DOM update - replace itinerary table rows
             if (data.itinerary_html) {
                 const tbody = document.querySelector('#itineraryTable tbody');
-                if (tbody) {
-                    tbody.innerHTML = data.itinerary_html;
-                }
+                if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
-            // Reload page after saving arrival/departure to ensure tables render properly
             if (serviceType === 'arrival' || serviceType === 'departure') {
                 setTimeout(() => window.location.reload(), 500);
                 return;
             }
             
-            // Generic handler for hotel/guide/transport/meal tables
             if (data.service_entries_html && data.service_type) {
                 const servicePanel = document.getElementById(`service-panel-${data.service_type}`);
-                if (servicePanel) {
-                    const tableContainer = servicePanel.querySelector('.overflow-x-auto');
+                const tableContainerId = data.service_type === 'hotel' ? 'hotels-table-container' : 
+                                          data.service_type === 'guide' ? 'guides-table-container' : 
+                                          data.service_type === 'transport' ? 'transports-table-container' : 
+                                          data.service_type === 'meal' ? 'meals-table-container' : '';
+                
+                if (servicePanel && tableContainerId) {
+                    const tableContainer = servicePanel.querySelector(`#${tableContainerId}`);
+                    const tbody = servicePanel.querySelector(`#${data.service_type}-table-body`);
+                    
+                    // Reveal container if it was hidden
                     if (tableContainer) {
-                        const tbody = tableContainer.querySelector('tbody');
-                        if (tbody) {
-                            tbody.innerHTML = data.service_entries_html;
-                        } else if (data.service_entries_html.includes('<table')) {
-                            tableContainer.innerHTML = data.service_entries_html;
-                        }
                         tableContainer.style.display = 'block';
+                        if (tbody) tbody.innerHTML = data.service_entries_html;
                     }
                 }
             }
             
-            // Also activate the icon visually for current context
             if (currentServiceContext.rowId) {
                 activateIcon(currentServiceContext.rowId, serviceType);
             }
         } else {
-            // Show inline validation error instead of toast
             const errorMsg = data.error || 'Error saving service data';
             showInlineError(serviceType, errorMsg);
         }
@@ -1893,7 +1917,8 @@ function autoSaveServiceData(serviceType) {
 
 // Manual save function called by Save buttons
 function saveServiceData(serviceType) {
-    // Validate room distribution for hotel saves
+    // Clear inputs after save logic is handled in the generic function, 
+    // but we explicitly clear here to encourage multiple entries
     if (serviceType === 'hotel') {
         const validation = validateRoomDistribution();
         if (!validation.valid) {
@@ -1901,7 +1926,18 @@ function saveServiceData(serviceType) {
             return;
         }
     }
+    
+    // Perform Save
     autoSaveServiceData(serviceType);
+    
+    // IMPORTANT: Clear the form fields after saving to allow adding another item easily
+    setTimeout(() => {
+        // Only clear if it was a global save (rowId is null)
+        if (!currentServiceContext.rowId) {
+            clearServiceForm(serviceType);
+            showNotification('Saved. You can add another item.', 'success');
+        }
+    }, 500);
 }
 
 // Delete service functions
@@ -1942,25 +1978,23 @@ function deleteService(serviceType, serviceId) {
         if (data.success) {
             showNotification(data.message || 'Service deleted!', 'success');
             
-            // Instant DOM update - replace itinerary table rows
             if (data.itinerary_html) {
                 const tbody = document.querySelector('#itineraryTable tbody');
-                if (tbody) {
-                    tbody.innerHTML = data.itinerary_html;
-                }
+                if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
-            // Remove the deleted row from service table using correct attribute selector
-            const serviceRow = document.querySelector('[data-' + serviceType + '-id="' + serviceId + '"]');
-            if (serviceRow) {
-                serviceRow.remove();
-            }
+            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            if (serviceRow) serviceRow.remove();
             
-            // If table is now empty (no rows left), remove the entire table container to keep UI clean
-            const servicePanel = document.getElementById(`service-panel-${serviceType}`);
-            const tableContainer = servicePanel.querySelector('.overflow-x-auto');
-            if (tableContainer && tableContainer.querySelector('tbody').children.length === 0) {
-                tableContainer.remove();
+            // Check if table is empty and hide container
+            const tableContainerId = serviceType === 'hotel' ? 'hotels-table-container' : 
+                                      serviceType === 'guide' ? 'guides-table-container' : 
+                                      serviceType === 'transport' ? 'transports-table-container' : 
+                                      serviceType === 'meal' ? 'meals-table-container' : '';
+            const tbody = document.querySelector(`#${serviceType}-table-body`);
+            if (tbody && tbody.children.length === 0) {
+                 const container = document.getElementById(tableContainerId);
+                 if (container) container.style.display = 'none';
             }
         } else {
             showNotification('Error deleting service: ' + (data.error || ''), 'error');
@@ -1972,7 +2006,6 @@ function deleteService(serviceType, serviceId) {
     });
 }
 
-// Helper to visually turn on the icon for a specific row
 function activateIcon(rowId, serviceType) {
     const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
     if (!row) return;
@@ -1985,174 +2018,17 @@ function activateIcon(rowId, serviceType) {
     };
     
     const iconDiv = row.querySelector(`.service-icon-toggle.${iconMap[serviceType]}`);
-    if (iconDiv) {
-        iconDiv.classList.add('active');
-    }
+    if (iconDiv) iconDiv.classList.add('active');
 }
 
-// Helper to update the data attributes on the row (so switching back gets latest data)
-function updateRowDataAttributes(rowId, serviceType, data) {
-    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
-    if (!row) return;
-
-    if (serviceType === 'hotel') {
-        row.dataset.hotelName = data.hotel_name || '';
-        row.dataset.hotelCat = data.hotel_category || '';
-    } else if (serviceType === 'transport') {
-        row.dataset.transportVehicle = data.transport_vehicle || '';
-        row.dataset.transportPickup = data.transport_pickup || '';
-        row.dataset.transportDropoff = data.transport_dropoff || '';
-    } else if (serviceType === 'guide') {
-        row.dataset.guideName = data.guide_name || '';
-    } else if (serviceType === 'meal') {
-        row.dataset.mealRestaurant = data.meal_restaurant || '';
-        row.dataset.mealType = data.meal_type || '';
-    }
-}
-
-// Auto-save itinerary row (Description/Restaurant text fields)
-function autoSaveItineraryRow(rowId, fieldName, value) {
-    showAutoSaveIndicator();
-    
-    fetch(`/inbound/api/${requestId}/update-itinerary-row`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            row_id: rowId,
-            field_name: fieldName,
-            value: value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (!data.success) {
-            showNotification('Error saving changes', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error saving changes', 'error');
-    });
-}
-
-// Status order for determining completed/active states
-const STATUS_ORDER = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
-
-// Update sidebar visual state
-function updateSidebarState(newStatus) {
-    const statusIndex = STATUS_ORDER.indexOf(newStatus);
-    
-    document.querySelectorAll('.status-step').forEach(step => {
-        const stepStatus = step.dataset.status;
-        const stepIndex = STATUS_ORDER.indexOf(stepStatus);
-        
-        // Remove existing classes
-        step.classList.remove('active', 'completed');
-        
-        // Set appropriate class based on position relative to current status
-        if (stepIndex < statusIndex) {
-            step.classList.add('completed');
-        } else if (stepIndex === statusIndex) {
-            step.classList.add('active');
-        }
-    });
-    
-    // Update the status badge in the bottom bar
-    const statusBadge = document.querySelector('.stage-bar .status-badge');
-    if (statusBadge) {
-        // Remove all status classes
-        statusBadge.className = 'status-badge';
-        // Add the new status class
-        const statusClass = 'status-' + newStatus.toLowerCase().replace('_', '-');
-        statusBadge.classList.add(statusClass);
-        statusBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-    
-    // Update the header status badge
-    const headerBadge = document.getElementById('headerStatusBadge');
-    if (headerBadge) {
-        headerBadge.className = 'status-badge';
-        const statusClass = 'status-' + newStatus.toLowerCase().replace('_', '-');
-        headerBadge.classList.add(statusClass);
-        headerBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
-}
-
-// Update request status - Direct change without confirmation
-function updateRequestStatus(status) {
-    fetch(`/inbound/api/${requestId}/update-status`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({ status: status })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update sidebar visually without reloading
-            updateSidebarState(status);
-            showNotification('Status updated successfully', 'success');
-            
-            // Reset the dropdown
-            const select = document.getElementById('confirmStageSelect');
-            if (select) {
-                select.value = '';
-            }
-        } else {
-            showNotification(data.message || 'Error updating status', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error updating status', 'error');
-    });
-}
-
-// Confirm stage change - Direct change without confirmation
-function confirmStageChange() {
-    const select = document.getElementById('confirmStageSelect');
-    if (select.value) {
-        updateRequestStatus(select.value);
-    }
-}
-
-// Confirm all hotels
-function confirmAllHotels() {
-    if (!confirm('Confirm all hotels?')) return;
-    
-    fetch(`/inbound/${requestId}/confirm-all-hotels`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showNotification(data.message || 'Error confirming hotels', 'error');
-        }
-    });
-}
-
-// Show notification
-// Show inline error within a service panel
 function showInlineError(serviceType, message) {
     const errorContainer = document.getElementById(`${serviceType}-error-container`);
     const errorMessage = document.getElementById(`${serviceType}-error-message`);
     
     if (errorContainer && errorMessage) {
-        // Set error text with icon preserved
         errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
         errorContainer.classList.remove('hidden');
         
-        // Also highlight the required field if applicable
         const fieldMap = {
             'hotel': 'hotel_name',
             'transport': 'transport_vehicle',
@@ -2165,7 +2041,6 @@ function showInlineError(serviceType, message) {
             if (field) {
                 field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
                 field.focus();
-                // Clear highlight and hide error on input
                 field.addEventListener('input', function clearError() {
                     field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
                     errorContainer.classList.add('hidden');
@@ -2179,21 +2054,16 @@ function showInlineError(serviceType, message) {
             }
         }
     } else {
-        // Fallback to toast if inline container not found
         showNotification(message, 'error');
     }
 }
 
-// Clear inline error for a service panel
 function clearInlineError(serviceType) {
     const errorContainer = document.getElementById(`${serviceType}-error-container`);
-    if (errorContainer) {
-        errorContainer.classList.add('hidden');
-    }
+    if (errorContainer) errorContainer.classList.add('hidden');
 }
 
 function showNotification(message, type) {
-    // Remove any existing notifications first
     document.querySelectorAll('.tw-notification').forEach(n => n.remove());
     
     const notification = document.createElement('div');
@@ -2208,7 +2078,7 @@ function showNotification(message, type) {
         icon = 'spinner fa-spin';
     }
     
-    notification.className = `tw-notification fixed top-20 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${bgColor} text-white flex items-center gap-2`;
+    notification.className = `tw-notification fixed top-20 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${bgColor} text-white flex items-center gap-2 text-sm`;
     notification.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
     document.body.appendChild(notification);
     
@@ -2217,121 +2087,48 @@ function showNotification(message, type) {
     }
 }
 
-// Print itinerary
+// PRINT / EXPORT PLACEHOLDERS
 function printItinerary() {
-    const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Trip Itinerary - {{ request.request_number }}</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h1 { color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; }
-                td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
-                .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin: 2px; }
-            </style>
-        </head>
-        <body>
-            <h1>Trip Itinerary</h1>
-            <p><strong>{{ request.contact_name }}</strong> | {{ request.from_date.strftime('%d %b') }} - {{ request.to_date.strftime('%d %b %Y') }} | {{ request.pax }} PAX</p>
-            <table>
-                <thead><tr><th>Date</th><th>Activities</th><th>Services</th></tr></thead>
-                <tbody>
-                    {% for row in request.itinerary_rows %}
-                    <tr>
-                        <td>{{ row.itinerary_date.strftime('%d %b') if row.itinerary_date else '' }}</td>
-                        <td>{{ row.description or '' }}</td>
-                        <td>
-                            {% if row.flag_hotel %}Hotel {% endif %}
-                            {% if row.flag_transport %}Transport {% endif %}
-                            {% if row.flag_meal %}Meal {% endif %}
-                            {% if row.flag_guide %}Guide {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 250);
+    window.print();
 }
-
-// Export to PDF
 function exportToPDF() {
-    showNotification('Exporting to PDF...', 'info');
-    // In a real implementation, this would generate and download a PDF
-    setTimeout(() => {
-        showNotification('PDF exported successfully', 'success');
-    }, 1500);
+    showNotification('PDF Export feature coming soon', 'info');
 }
-
-// Send email
 function sendEmail() {
-    showNotification('Opening email composer...', 'info');
-    // In a real implementation, this would open an email composition dialog
-    setTimeout(() => {
-        showNotification('Email sent successfully', 'success');
-    }, 1500);
+    showNotification('Email feature coming soon', 'info');
 }
 
-// Duplicate request
 function duplicateRequest() {
     if (!confirm('Duplicate this request?')) return;
-    
     fetch(`/inbound/${requestId}/duplicate`, {
         method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken
-        }
+        headers: { 'X-CSRFToken': csrfToken }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            window.location.href = `/inbound/${data.new_id}`;
-        } else {
-            showNotification(data.message || 'Error duplicating request', 'error');
-        }
+        if (data.success) window.location.href = `/inbound/${data.new_id}`;
+        else showNotification(data.message || 'Error', 'error');
     })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error duplicating request', 'error');
-    });
+    .catch(error => showNotification('Error', 'error'));
 }
 
-// Archive request
 function archiveRequest() {
-    if (!confirm('Archive this request? It will be hidden from main list.')) return;
-    
+    if (!confirm('Archive this request?')) return;
     fetch(`/inbound/${requestId}/archive`, {
         method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken
-        }
+        headers: { 'X-CSRFToken': csrfToken }
     })
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            window.location.href = '/inbound';
-        } else {
-            showNotification(data.message || 'Error archiving request', 'error');
-        }
+        if (data.success) window.location.href = '/inbound';
+        else showNotification(data.message || 'Error', 'error');
     })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error archiving request', 'error');
-    });
+    .catch(error => showNotification('Error', 'error'));
 }
 
-// Customer selection handler
 function handleCustomerSelectionInView(customer) {
     document.getElementById('selectedCustomerId').value = customer.id;
-    document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ' (' + customer.company_name + ')' : '');
+    document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ` (${customer.company_name})` : '');
 }
 
 // Auto-save with debounce
@@ -2342,16 +2139,12 @@ function autoSaveChanges() {
     if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     
     autoSaveTimeout = setTimeout(() => {
-        if (!isSaving) {
-            saveAndRefreshItinerary();
-        }
-    }, 800); // 800ms debounce
+        if (!isSaving) saveAndRefreshItinerary();
+    }, 800);
 }
 
 function saveAndRefreshItinerary() {
     isSaving = true;
-    
-    // Collect form data
     const data = {
         from_date: document.getElementById('fromDate')?.value || '',
         to_date: document.getElementById('toDate')?.value || '',
@@ -2361,7 +2154,6 @@ function saveAndRefreshItinerary() {
         nationality: document.querySelector('[name="nationality"]')?.value || ''
     };
     
-    // Show saving indicator
     showAutoSaveIndicator();
     
     fetch(`/inbound/api/${requestId}/auto-save-and-regenerate`, {
@@ -2376,19 +2168,15 @@ function saveAndRefreshItinerary() {
     .then(data => {
         isSaving = false;
         if (data.success) {
-            // Update days field
             const daysField = document.getElementById('noOfDays');
             if (daysField) daysField.value = data.no_of_days;
             
-            // Update itinerary table with server-rendered HTML
             if (data.itinerary_html) {
                 const tableBody = document.getElementById('itineraryTableBody');
                 const itineraryTable = document.getElementById('itineraryTable');
                 const emptyState = document.getElementById('itineraryEmptyState');
                 
-                if (tableBody) {
-                    tableBody.innerHTML = data.itinerary_html;
-                }
+                if (tableBody) tableBody.innerHTML = data.itinerary_html;
                 if (itineraryTable) itineraryTable.classList.remove('hidden');
                 if (emptyState) emptyState.classList.add('hidden');
                 
@@ -2407,167 +2195,96 @@ function saveAndRefreshItinerary() {
     });
 }
 
+// ==========================================
+// EXCEL EXPORT FUNCTION (English Only)
+// ==========================================
+function exportToExcel() {
+    // Gather data from the Trip Summary Card (DOM elements)
+    // We use textContent to ensure it matches what the user sees exactly
+    
+    // 1. Basic Info
+    const requestNumber = "{{ request.request_number }}";
+    const customerName = document.querySelector('#selectedCustomerName')?.value || "N/A";
+    const dates = `${document.getElementById('fromDate').value} - ${document.getElementById('toDate').value}`;
+    const pax = document.querySelector('[name="pax"]').value;
+    const days = document.getElementById('noOfDays').value;
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', function() {
-    // Add auto-save listeners to ALL Request Details form fields
-    const form = document.getElementById('editMode');
-    if (form) {
-        // Listen to all input changes
-        form.querySelectorAll('input, select, textarea').forEach(field => {
-            // For date fields, also calculate days
-            if (field.id === 'fromDate' || field.id === 'toDate') {
-                field.addEventListener('change', function() {
-                    calculateDays();
-                    autoSaveChanges();
-                });
-            } else {
-                // For all other fields
-                field.addEventListener('change', autoSaveChanges);
-                // Also listen to input events for text fields (real-time updates)
-                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
-                    field.addEventListener('input', autoSaveChanges);
-                }
-            }
+    // 2. Counts
+    const hotelsCount = document.getElementById('summary_hotels').innerText;
+    const transportsCount = document.getElementById('summary_transport').innerText;
+    const guidesCount = document.getElementById('summary_guides').innerText;
+    const mealsCount = document.getElementById('summary_meals').innerText;
+
+    // 3. Helper to extract text from badges
+    const extractItems = (containerId) => {
+        const container = document.getElementById(containerId);
+        if (!container) return [];
+        return Array.from(container.children).map(span => span.innerText.replace(/[\n\r]/g, ' ').trim());
+    };
+
+    const flights = extractItems('summary_flights');
+    const hotelsList = extractItems('summary_hotel_list');
+
+    // 4. Construct Data for Excel (English Keys Only)
+    const excelData = [
+        { "Section": "Request Details", "Item": "Request Number", "Value": requestNumber },
+        { "Section": "Request Details", "Item": "Customer Name", "Value": customerName },
+        { "Section": "Request Details", "Item": "Travel Dates", "Value": dates },
+        { "Section": "Request Details", "Item": "Total Days", "Value": days },
+        { "Section": "Request Details", "Item": "Total PAX", "Value": pax },
+        {}, // Empty Row
+        { "Section": "Service Summary", "Item": "Hotels", "Value": hotelsCount },
+        { "Section": "Service Summary", "Item": "Transports", "Value": transportsCount },
+        { "Section": "Service Summary", "Item": "Guides", "Value": guidesCount },
+        { "Section": "Service Summary", "Item": "Meals", "Value": mealsCount },
+        {}, // Empty Row
+    ];
+
+    // 5. Add Flights
+    if (flights.length > 0) {
+        excelData.push({ "Section": "Flights", "Item": "Flight Details", "Value": flights.join(', ') });
+    } else {
+        excelData.push({ "Section": "Flights", "Item": "Flight Details", "Value": "No flights added" });
+    }
+    excelData.push({});
+
+    // 6. Add Hotels
+    if (hotelsList.length > 0) {
+        hotelsList.forEach(h => {
+            excelData.push({ "Section": "Hotel List", "Item": "Hotel Booking", "Value": h });
         });
+    } else {
+        excelData.push({ "Section": "Hotel List", "Item": "Hotel Booking", "Value": "No hotels added" });
     }
-    
-    // If no itinerary rows exist, create default 4-day itinerary
-    const tableBody = document.getElementById('itineraryTableBody');
-    const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
-    if (!hasRows) {
-        createDefaultItinerary();
-    }
-    
-    // Initialize Room Distribution with Economic layout (default selection)
-    initializeRoomDistribution();
-});
 
-// Create default 4-day itinerary
-function createDefaultItinerary() {
-    const fromDate = document.getElementById('fromDate').value || (new Date()).toISOString().split('T')[0];
-    const toDate = document.getElementById('toDate').value || (new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0];
-    const pax = document.querySelector('[name="pax"]').value || 1;
+    // 7. Generate Excel File
+    const ws = XLSX.utils.json_to_sheet(excelData);
     
-    fetch(`/inbound/api/${requestId}/create-default-itinerary`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            from_date: fromDate,
-            to_date: toDate,
-            pax: pax
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Reload the page to show the new itinerary
-            window.location.reload();
-        } else {
-            showNotification(data.message || 'Error creating default itinerary', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error creating default itinerary', 'error');
-    });
+    // Set Column Widths
+    const wscols = [
+        {wch: 20}, // Section
+        {wch: 25}, // Item
+        {wch: 50}  // Value
+    ];
+    ws['!cols'] = wscols;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Trip Summary");
+
+    // Filename
+    XLSX.writeFile(wb, `Trip_Summary_${requestNumber}.xlsx`);
 }
-
-// Add New Hotel Modal functionality
-function openAddHotelModal() {
-    document.getElementById('addHotelModal').classList.remove('hidden');
-    document.getElementById('addHotelModal').classList.add('flex');
-    document.getElementById('new_hotel_name').focus();
-}
-
-function closeAddHotelModal() {
-    document.getElementById('addHotelModal').classList.add('hidden');
-    document.getElementById('addHotelModal').classList.remove('flex');
-    document.getElementById('new_hotel_name').value = '';
-    document.getElementById('new_hotel_city').value = 'Amman';
-    document.getElementById('add-hotel-error').classList.add('hidden');
-}
-
-function saveNewHotel() {
-    const hotelName = document.getElementById('new_hotel_name').value.trim();
-    const hotelCity = document.getElementById('new_hotel_city').value;
-    
-    if (!hotelName) {
-        document.getElementById('add-hotel-error').textContent = 'Please enter a hotel name';
-        document.getElementById('add-hotel-error').classList.remove('hidden');
-        return;
-    }
-    
-    fetch('/inbound/api/add-hotel', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify({
-            name: hotelName,
-            city: hotelCity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Add the new hotel to the dropdown
-            const select = document.getElementById('hotel_name');
-            let optgroup = select.querySelector(`optgroup[label="${hotelCity}"]`);
-            if (!optgroup) {
-                // Create new optgroup before the separator
-                const separator = select.querySelector('optgroup[label="──────────"]');
-                optgroup = document.createElement('optgroup');
-                optgroup.label = hotelCity;
-                select.insertBefore(optgroup, separator);
-            }
-            const option = document.createElement('option');
-            option.value = hotelName;
-            option.textContent = hotelName;
-            optgroup.appendChild(option);
-            
-            // Select the new hotel
-            select.value = hotelName;
-            
-            closeAddHotelModal();
-            showNotification('Hotel added successfully', 'success');
-        } else {
-            document.getElementById('add-hotel-error').textContent = data.error || 'Error adding hotel';
-            document.getElementById('add-hotel-error').classList.remove('hidden');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('add-hotel-error').textContent = 'Error adding hotel';
-        document.getElementById('add-hotel-error').classList.remove('hidden');
-    });
-}
-
-// Handle "Add New" selection in dropdown
-document.getElementById('hotel_name').addEventListener('change', function() {
-    if (this.value === '__ADD_NEW__') {
-        this.value = '';
-        openAddHotelModal();
-    }
-});
 
 // ==========================================
 // ROOMING ALLOCATION WIZARD
 // ==========================================
-
 let isManualMode = false;
 
-// Get PAX value from the main booking form
 function getPaxValue() {
     const paxField = document.querySelector('[name="pax"]');
     return parseInt(paxField?.value) || 0;
 }
 
-// Calculate layout for Economic mode: TRP first, then DBL, leftover SGL
 function calculateEconomicLayout(pax) {
     const trp = Math.floor(pax / 3);
     const afterTrp = pax - (trp * 3);
@@ -2576,19 +2293,16 @@ function calculateEconomicLayout(pax) {
     return { sgl, dbl, trp, oth: 0 };
 }
 
-// Calculate layout for DBL mode: divide by 2, leftover SGL
 function calculateDblLayout(pax) {
     const dbl = Math.floor(pax / 2);
     const sgl = pax % 2;
     return { sgl, dbl, trp: 0, oth: 0 };
 }
 
-// Calculate layout for Privacy mode: all SGL
 function calculatePrivacyLayout(pax) {
     return { sgl: pax, dbl: 0, trp: 0, oth: 0 };
 }
 
-// Format layout for preview display
 function formatLayoutPreview(layout) {
     const parts = [];
     if (layout.trp > 0) parts.push(`${layout.trp} TRP`);
@@ -2598,114 +2312,59 @@ function formatLayoutPreview(layout) {
     return parts.length > 0 ? parts.join(' + ') : '--';
 }
 
-// Update wizard previews when PAX changes
 function updateWizardPreviews() {
     const pax = getPaxValue();
-    
-    // Update PAX display
     const paxDisplay = document.getElementById('hotel_pax_display');
-    if (paxDisplay) {
-        paxDisplay.textContent = pax;
-    }
+    if (paxDisplay) paxDisplay.textContent = pax;
     
-    const economicPreview = document.getElementById('economic-preview');
-    const dblPreview = document.getElementById('dbl-preview');
-    const privacyPreview = document.getElementById('privacy-preview');
-    
-    if (pax <= 0) {
-        if (economicPreview) economicPreview.textContent = '--';
-        if (dblPreview) dblPreview.textContent = '--';
-        if (privacyPreview) privacyPreview.textContent = '--';
-        return;
-    }
-    
-    // Calculate and display previews
-    const economicLayout = calculateEconomicLayout(pax);
-    const dblLayout = calculateDblLayout(pax);
-    const privacyLayout = calculatePrivacyLayout(pax);
-    
-    if (economicPreview) economicPreview.textContent = formatLayoutPreview(economicLayout);
-    if (dblPreview) dblPreview.textContent = formatLayoutPreview(dblLayout);
-    if (privacyPreview) privacyPreview.textContent = formatLayoutPreview(privacyLayout);
+    // Since preview elements weren't in HTML, we skip updating them or assume they exist if user adds them
+    // The main input fields update via applyWizardLayout
 }
 
-// Apply a wizard layout to the room fields
 function applyWizardLayout(mode) {
     const pax = getPaxValue();
     let layout;
     
     switch(mode) {
-        case 'economic':
-            layout = calculateEconomicLayout(pax);
-            break;
-        case 'dbl':
-            layout = calculateDblLayout(pax);
-            break;
-        case 'privacy':
-            layout = calculatePrivacyLayout(pax);
-            break;
-        default:
-            return;
+        case 'economic': layout = calculateEconomicLayout(pax); break;
+        case 'dbl': layout = calculateDblLayout(pax); break;
+        case 'privacy': layout = calculatePrivacyLayout(pax); break;
+        default: return;
     }
     
-    // Apply to fields
     document.getElementById('hotel_single_rooms').value = layout.sgl;
     document.getElementById('hotel_double_rooms').value = layout.dbl;
     document.getElementById('hotel_triple_rooms').value = layout.trp;
     document.getElementById('hotel_other_rooms').value = layout.oth;
     
-    // Exit manual mode if active
-    if (isManualMode) {
-        exitManualMode();
-    }
-    
-    // Update radio button selection
+    if (isManualMode) exitManualMode();
     setActiveWizardMode(mode);
-    
     calculateTotalGuests();
     clearAllErrors();
 }
 
-// Select room mode (single-choice checkboxes)
 function selectRoomMode(mode) {
-    // Uncheck all checkboxes first
     document.querySelectorAll('.wizard-check').forEach(cb => cb.checked = false);
-    
-    // Check the selected one
     const checkbox = document.querySelector(`input[name="room_mode_${mode}"]`);
-    if (checkbox) {
-        checkbox.checked = true;
-    }
+    if (checkbox) checkbox.checked = true;
     
-    // Apply the layout or enable manual mode
     if (mode === 'manual') {
         enableManualMode();
     } else {
-        if (isManualMode) {
-            exitManualMode();
-        }
+        if (isManualMode) exitManualMode();
         applyWizardLayout(mode);
     }
 }
 
-// Set the checkbox selection programmatically
 function setActiveWizardMode(mode) {
-    // Uncheck all checkboxes first
     document.querySelectorAll('.wizard-check').forEach(cb => cb.checked = false);
-    
-    // Check the selected one
     const checkbox = document.querySelector(`input[name="room_mode_${mode}"]`);
-    if (checkbox) {
-        checkbox.checked = true;
-    }
+    if (checkbox) checkbox.checked = true;
 }
 
-// Enable manual mode - make fields editable
 function enableManualMode() {
     isManualMode = true;
-    
-    const fields = ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'];
-    fields.forEach(id => {
+    ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'].forEach(id => {
         const field = document.getElementById(id);
         if (field) {
             field.removeAttribute('readonly');
@@ -2713,16 +2372,12 @@ function enableManualMode() {
             field.style.backgroundColor = '#ffffff';
         }
     });
-    
     setActiveWizardMode('manual');
 }
 
-// Exit manual mode - make fields readonly again and apply economic layout
 function exitManualMode() {
     isManualMode = false;
-    
-    const fields = ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'];
-    fields.forEach(id => {
+    ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'].forEach(id => {
         const field = document.getElementById(id);
         if (field) {
             field.setAttribute('readonly', true);
@@ -2730,27 +2385,19 @@ function exitManualMode() {
             field.style.backgroundColor = '#ffffff';
         }
     });
-    
-    // Reset OTH value and apply economic layout
     document.getElementById('hotel_other_rooms').value = 0;
     setActiveWizardMode('economic');
     applyWizardLayout('economic');
-    
     clearAllErrors();
 }
 
-// Clear all inline errors
 function clearAllErrors() {
     ['sgl-error', 'dbl-error', 'trp-error', 'oth-error'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.classList.add('hidden');
-            el.textContent = '';
-        }
+        if (el) { el.classList.add('hidden'); el.textContent = ''; }
     });
 }
 
-// Calculate total guests from room distribution
 function calculateTotalGuests() {
     const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
@@ -2768,63 +2415,39 @@ function calculateTotalGuests() {
         totalGuestsEl.textContent = totalGuests;
         
         if (totalGuests === pax && totalGuests > 0) {
-            // Green when matches PAX
             totalGuestsEl.style.backgroundColor = '#22c55e';
             totalGuestsEl.classList.add('text-white');
-            if (capacityNote) {
-                capacityNote.textContent = '';
-            }
+            if (capacityNote) capacityNote.textContent = '';
         } else if (totalGuests !== pax && pax > 0) {
-            // Red coral when doesn't match
             totalGuestsEl.style.backgroundColor = '#ef5350';
             totalGuestsEl.classList.add('text-white');
             if (capacityNote) {
                 const diff = totalGuests - pax;
-                if (diff > 0) {
-                    capacityNote.textContent = `${diff} EXTRA`;
-                } else {
-                    capacityNote.textContent = `${Math.abs(diff)} SHORT`;
-                }
+                capacityNote.textContent = diff > 0 ? `${diff} EXTRA` : `${Math.abs(diff)} SHORT`;
                 capacityNote.style.color = '#ef5350';
             }
         } else {
-            // Default gray
             totalGuestsEl.style.backgroundColor = '#e2e8f0';
             totalGuestsEl.classList.remove('text-white');
             totalGuestsEl.classList.add('text-slate-700');
-            if (capacityNote) {
-                capacityNote.textContent = '';
-            }
+            if (capacityNote) capacityNote.textContent = '';
         }
     }
-    
     return totalGuests;
 }
 
-// Validate room distribution matches PAX
 function validateRoomDistribution() {
     const pax = getPaxValue();
     const totalGuests = calculateTotalGuests();
     
     if (totalGuests !== pax) {
-        // Show inline error
-        const statusDiv = document.getElementById('room-distribution-status');
-        if (statusDiv) {
-            statusDiv.classList.remove('hidden');
-            document.getElementById('room-status-message').innerHTML = 
-                `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i> Room capacity (${totalGuests}) must equal Total Guests (${pax})`;
-            document.getElementById('room-status-message').className = 'text-red-600';
-        }
         return { valid: false, message: `Room capacity (${totalGuests}) must equal Total Guests (${pax})` };
     }
     return { valid: true };
 }
 
-// Initialize wizard on page load
 function initializeRoomWizard() {
     updateWizardPreviews();
-    
-    // Apply economic layout as default if PAX > 0
     const pax = getPaxValue();
     if (pax > 0) {
         const layout = calculateEconomicLayout(pax);
@@ -2832,11 +2455,9 @@ function initializeRoomWizard() {
         document.getElementById('hotel_double_rooms').value = layout.dbl;
         document.getElementById('hotel_triple_rooms').value = layout.trp;
     }
-    
     calculateTotalGuests();
 }
 
-// Add event listeners for manual mode fields
 ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms', 'hotel_other_capacity'].forEach(id => {
     const field = document.getElementById(id);
     if (field) {
@@ -2845,57 +2466,164 @@ function initializeRoomWizard() {
     }
 });
 
-// Listen for PAX changes and update wizard
 document.querySelector('[name="pax"]')?.addEventListener('input', function() {
     updateWizardPreviews();
     calculateTotalGuests();
 });
 
-// Initialize on page load
-initializeRoomWizard();
-</script>
+// Add Hotel Modal Logic
+function openAddHotelModal() {
+    document.getElementById('addHotelModal').classList.remove('hidden');
+    document.getElementById('addHotelModal').classList.add('flex');
+    document.getElementById('new_hotel_name').focus();
+}
+function closeAddHotelModal() {
+    document.getElementById('addHotelModal').classList.add('hidden');
+    document.getElementById('addHotelModal').classList.remove('flex');
+    document.getElementById('new_hotel_name').value = '';
+    document.getElementById('new_hotel_city').value = 'Amman';
+    document.getElementById('add-hotel-error').classList.add('hidden');
+}
+function saveNewHotel() {
+    const hotelName = document.getElementById('new_hotel_name').value.trim();
+    const hotelCity = document.getElementById('new_hotel_city').value;
+    if (!hotelName) {
+        document.getElementById('add-hotel-error').textContent = 'Please enter a hotel name';
+        document.getElementById('add-hotel-error').classList.remove('hidden');
+        return;
+    }
+    fetch('/inbound/api/add-hotel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ name: hotelName, city: hotelCity })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.getElementById('hotel_name');
+            let optgroup = select.querySelector(`optgroup[label="${hotelCity}"]`);
+            if (!optgroup) {
+                const separator = select.querySelector('optgroup[label="──────────"]');
+                optgroup = document.createElement('optgroup');
+                optgroup.label = hotelCity;
+                select.insertBefore(optgroup, separator);
+            }
+            const option = document.createElement('option');
+            option.value = hotelName;
+            option.textContent = hotelName;
+            optgroup.appendChild(option);
+            select.value = hotelName;
+            closeAddHotelModal();
+            showNotification('Hotel added successfully', 'success');
+        } else {
+            document.getElementById('add-hotel-error').textContent = data.error || 'Error adding hotel';
+            document.getElementById('add-hotel-error').classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        document.getElementById('add-hotel-error').textContent = 'Error adding hotel';
+        document.getElementById('add-hotel-error').classList.remove('hidden');
+    });
+}
+document.getElementById('hotel_name').addEventListener('change', function() {
+    if (this.value === '__ADD_NEW__') {
+        this.value = '';
+        openAddHotelModal();
+    }
+});
 
-<!-- Add New Hotel Modal -->
-<div id="addHotelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
-    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-slate-800">
-                <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Add New Hotel
-            </h3>
-            <button type="button" onclick="closeAddHotelModal()" class="text-slate-400 hover:text-slate-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        <div class="p-6">
-            <div id="add-hotel-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Hotel Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="new_hotel_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter hotel name">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">City</label>
-                    <select id="new_hotel_city" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="Amman">Amman</option>
-                        <option value="Aqaba">Aqaba</option>
-                        <option value="Petra">Petra</option>
-                        <option value="Dead Sea">Dead Sea</option>
-                        <option value="Jerash">Jerash</option>
-                        <option value="Madaba">Madaba</option>
-                        <option value="Wadi Rum">Wadi Rum</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
-            <button type="button" onclick="closeAddHotelModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                Cancel
-            </button>
-            <button type="button" onclick="saveNewHotel()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-save mr-2"></i>Add Hotel
-            </button>
-        </div>
-    </div>
-</div>
+// Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editMode');
+    if (form) {
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            if (field.id === 'fromDate' || field.id === 'toDate') {
+                field.addEventListener('change', function() { calculateDays(); autoSaveChanges(); });
+            } else {
+                field.addEventListener('change', autoSaveChanges);
+                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+                    field.addEventListener('input', autoSaveChanges);
+                }
+            }
+        });
+    }
+    
+    const tableBody = document.getElementById('itineraryTableBody');
+    const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
+    if (!hasRows) {
+        // Auto-create default itinerary if needed (similar to existing logic)
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        if (fromDate && toDate) {
+             fetch(`/inbound/api/${requestId}/create-default-itinerary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({
+                    from_date: fromDate,
+                    to_date: toDate,
+                    pax: document.querySelector('[name="pax"]').value || 1
+                })
+            }).then(r => r.json()).then(data => {
+                if(data.success) window.location.reload();
+            });
+        }
+    }
+    
+    initializeRoomWizard();
+});
+
+// Status Updates
+const STATUS_ORDER = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
+function updateSidebarState(newStatus) {
+    const statusIndex = STATUS_ORDER.indexOf(newStatus);
+    document.querySelectorAll('.status-step').forEach(step => {
+        const stepStatus = step.dataset.status;
+        const stepIndex = STATUS_ORDER.indexOf(stepStatus);
+        step.classList.remove('active', 'completed');
+        if (stepIndex < statusIndex) step.classList.add('completed');
+        else if (stepIndex === statusIndex) step.classList.add('active');
+    });
+    
+    const updateBadge = (id, status) => {
+        const badge = document.getElementById(id);
+        if(badge) {
+            badge.className = 'status-badge status-' + status.toLowerCase().replace('_', '-');
+            badge.textContent = status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+    };
+    updateBadge('headerStatusBadge', newStatus);
+    // Assuming bottom badge exists
+    const bottomBadge = document.querySelector('.stage-bar .status-badge');
+    if(bottomBadge) {
+        bottomBadge.className = 'status-badge status-' + newStatus.toLowerCase().replace('_', '-');
+        bottomBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+}
+
+function updateRequestStatus(status) {
+    fetch(`/inbound/api/${requestId}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ status: status })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateSidebarState(status);
+            showNotification('Status updated', 'success');
+            const select = document.getElementById('confirmStageSelect');
+            if (select) select.value = '';
+        } else {
+            showNotification(data.message || 'Error', 'error');
+        }
+    })
+    .catch(e => showNotification('Error', 'error'));
+}
+
+function confirmStageChange() {
+    const select = document.getElementById('confirmStageSelect');
+    if (select.value) updateRequestStatus(select.value);
+}
+
+</script>
 {% endblock %}
