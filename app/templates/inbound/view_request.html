@@ -1564,6 +1564,17 @@ let currentServiceContext = {
     rowId: null // null = Global (Applies to All), Integer = Specific Row ID
 };
 
+// Initialize room distribution with Economic layout
+function initializeRoomDistribution() {
+    // Check if functions exist before calling
+    if (typeof applyWizardLayout === 'function') {
+        applyWizardLayout('economic');
+    }
+    if (typeof calculateTotalGuests === 'function') {
+        calculateTotalGuests();
+    }
+}
+
 /**
  * SERVICE TAB LOGIC (Global vs Specific)
  * Handles the top tabs (Arrival, Hotel, etc.)
@@ -2405,14 +2416,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Room Distribution with Economic layout (default selection)
     initializeRoomDistribution();
 });
-
-// Initialize room distribution with Economic layout on page load
-function initializeRoomDistribution() {
-    // Economic is already checked by default in HTML
-    // Apply the economic layout calculation
-    applyWizardLayout('economic');
-    calculateTotalGuests();
-}
 
 // Create default 4-day itinerary
 function createDefaultItinerary() {
