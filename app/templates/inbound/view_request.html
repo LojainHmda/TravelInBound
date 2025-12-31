@@ -16,19 +16,7 @@ html { scroll-behavior: smooth; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* Tab styling */
-.tw-tab { 
-    padding: 0.75rem 1.25rem; 
-    font-weight: 500; 
-    color: #64748b; 
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.tw-tab:hover { color: #334155; border-bottom-color: #e2e8f0; }
-.tw-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
-
-/* Service tab styling */
+/* Service tab styling (Used for top navigation) */
 .service-tab {
     padding: 0.625rem 1rem;
     font-weight: 500;
@@ -300,7 +288,7 @@ html { scroll-behavior: smooth; }
     border: 1px solid transparent;
     position: relative;
     background-color: #f3f4f6;
-    color: #9ca3af; /* Default gray/off state */
+    color: #9ca3af;
 }
 .service-icon-toggle:hover {
     transform: translateY(-2px);
@@ -580,12 +568,12 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
 
-            <!-- Itinerary Card -->
+            <!-- Itinerary Card (Unified Management & View) -->
             <div class="tw-card">
                 <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
                     <h2 class="font-semibold text-slate-800 flex items-center gap-2">
                         <i class="fas fa-route text-purple-500"></i>
-                        Itinerary
+                        Itinerary & Services
                         {% if request.itinerary_rows %}
                         <span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{{ request.itinerary_rows|length }} days</span>
                         {% endif %}
@@ -651,7 +639,9 @@ html { scroll-behavior: smooth; }
                     </div>
                     {% endif %}
                     
-                    <!-- Service Content Panels -->
+                    <!-- Service Content Panels (Unified View & Edit) -->
+                    
+                    <!-- Arrival Panel -->
                     <div id="service-panel-arrival" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -761,6 +751,7 @@ html { scroll-behavior: smooth; }
                         </div>
                     </div>
                     
+                    <!-- Departure Panel -->
                     <div id="service-panel-departure" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -866,6 +857,7 @@ html { scroll-behavior: smooth; }
                         </div>
                     </div>
                     
+                    <!-- Hotel Panel -->
                     <div id="service-panel-hotel" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -971,19 +963,19 @@ html { scroll-behavior: smooth; }
                                     <!-- ROW 1: Checkbox Options -->
                                     <div class="flex items-center gap-10 mb-6">
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
+                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('economic')">
                                             <span class="text-sm text-slate-600">Economic</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
+                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('dbl')">
                                             <span class="text-sm text-slate-600">DBL</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
+                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('privacy')">
                                             <span class="text-sm text-slate-600">Privacy</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
+                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-blue-500 focus:ring-blue-500 accent-blue-500" onchange="selectRoomMode('manual')">
                                             <span class="text-sm font-semibold text-slate-700">Manual</span>
                                         </label>
                                         <span class="ml-auto text-sm text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
@@ -1054,6 +1046,7 @@ html { scroll-behavior: smooth; }
                         {% endif %}
                     </div>
                     
+                    <!-- Guide Panel -->
                     <div id="service-panel-guide" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -1153,6 +1146,7 @@ html { scroll-behavior: smooth; }
                         {% endif %}
                     </div>
                     
+                    <!-- Transport Panel -->
                     <div id="service-panel-transport" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -1287,6 +1281,7 @@ html { scroll-behavior: smooth; }
                         {% endif %}
                     </div>
                     
+                    <!-- Meal Panel -->
                     <div id="service-panel-meal" class="service-panel hidden">
                         <div class="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white">
                             <h3 class="font-semibold text-slate-700 flex items-center gap-2">
@@ -1445,279 +1440,6 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
     </div>
-
-    <!-- Service Tabs Section -->
-    {% if request.inbound_hotels or request.inbound_transports or request.inbound_meals or request.inbound_guides or request.inbound_optionals or request.documents %}
-    <div class="tw-card mt-6">
-        <div class="border-b border-slate-200">
-            <nav class="flex overflow-x-auto px-4" id="servicesTabs">
-                {% if request.inbound_hotels %}
-                <button class="tw-tab active" data-tab="hotels" onclick="switchTab('hotels')">
-                    <i class="fas fa-bed mr-2"></i>Hotels <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded">{{ request.inbound_hotels|length }}</span>
-                </button>
-                {% endif %}
-                {% if request.inbound_transports %}
-                <button class="tw-tab" data-tab="transport" onclick="switchTab('transport')">
-                    <i class="fas fa-car mr-2"></i>Transport <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded">{{ request.inbound_transports|length }}</span>
-                </button>
-                {% endif %}
-                {% if request.inbound_guides %}
-                <button class="tw-tab" data-tab="guides" onclick="switchTab('guides')">
-                    <i class="fas fa-user-tie mr-2"></i>Guides <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded">{{ request.inbound_guides|length }}</span>
-                </button>
-                {% endif %}
-                {% if request.inbound_meals %}
-                <button class="tw-tab" data-tab="meals" onclick="switchTab('meals')">
-                    <i class="fas fa-utensils mr-2"></i>Meals <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded">{{ request.inbound_meals|length }}</span>
-                </button>
-                {% endif %}
-                {% if request.inbound_optionals %}
-                <button class="tw-tab" data-tab="optionals" onclick="switchTab('optionals')">
-                    <i class="fas fa-star mr-2"></i>Extras <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded">{{ request.inbound_optionals|length }}</span>
-                </button>
-                {% endif %}
-                <button class="tw-tab" data-tab="documents" onclick="switchTab('documents')">
-                    <i class="fas fa-paperclip mr-2"></i>Docs <span class="ml-1 text-xs bg-slate-100 px-1.5 py-0.5 rounded" id="docCount">{{ request.documents|length }}</span>
-                </button>
-            </nav>
-        </div>
-
-        <!-- Tab Contents -->
-        <div class="p-5">
-            <!-- Hotels Tab -->
-            {% if request.inbound_hotels %}
-            <div id="hotels-tab-content" class="tab-content">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-slate-700">Hotel Bookings</h3>
-                    {% if not view_only %}
-                    <button type="button" class="tw-btn tw-btn-sm tw-btn-success" onclick="confirmAllHotels()">
-                        <i class="fas fa-check-double"></i> Confirm All
-                    </button>
-                    {% endif %}
-                </div>
-                <div class="space-y-3">
-                    {% for hotel in request.inbound_hotels %}
-                    <div class="hotel-card p-4">
-                        <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div class="flex items-start gap-3">
-                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                                    <i class="fas fa-hotel"></i>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-slate-800">{{ hotel.hotel_name or 'Unnamed Hotel' }}</h4>
-                                    <p class="text-sm text-slate-500">{{ hotel.hotel_category or 'Standard' }} {% if hotel.location %}• {{ hotel.location }}{% endif %}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-4 text-sm">
-                                <div class="text-center">
-                                    <div class="text-xs text-slate-400 uppercase">Check-in</div>
-                                    <div class="font-semibold text-slate-700">{{ hotel.check_in_date.strftime('%d %b') }}</div>
-                                </div>
-                                <div class="text-slate-300">→</div>
-                                <div class="text-center">
-                                    <div class="text-xs text-slate-400 uppercase">Check-out</div>
-                                    <div class="font-semibold text-slate-700">{{ hotel.check_out_date.strftime('%d %b') }}</div>
-                                </div>
-                                <div class="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-semibold">
-                                    {{ hotel.nights }} night{{ 's' if hotel.nights != 1 else '' }}
-                                </div>
-                                <span class="status-badge 
-                                    {% if hotel.status == 'CONFIRMED' %}status-confirmed
-                                    {% elif hotel.status == 'REQUESTED' %}status-quoted
-                                    {% else %}status-request{% endif %}">
-                                    {{ hotel.status or 'Pending' }}
-                                </span>
-                            </div>
-                        </div>
-                        {% if hotel.rooms %}
-                        <div class="mt-3 pt-3 border-t border-slate-100">
-                            <div class="flex flex-wrap gap-2">
-                                {% for room in hotel.rooms %}
-                                <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">
-                                    {{ room.room_category or 'Room' }} • {{ room.adults or 1 }} adult(s)
-                                </span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Transport Tab -->
-            {% if request.inbound_transports %}
-            <div id="transport-tab-content" class="tab-content hidden">
-                <h3 class="font-semibold text-slate-700 mb-4">Transport Services</h3>
-                <div class="space-y-3">
-                    {% for transport in request.inbound_transports %}
-                    <div class="hotel-card p-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center text-cyan-600">
-                                <i class="fas fa-car"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="font-semibold text-slate-800">{{ transport.vehicle_type or 'Vehicle' }}</h4>
-                                        <p class="text-sm text-slate-500">{{ transport.service_date.strftime('%d %b %Y') if transport.service_date else 'TBA' }}</p>
-                                    </div>
-                                    <span class="status-badge 
-                                        {% if transport.status == 'CONFIRMED' %}status-confirmed
-                                        {% elif transport.status == 'REQUESTED' %}status-quoted
-                                        {% else %}status-request{% endif %}">
-                                        {{ transport.status or 'Pending' }}
-                                    </span>
-                                </div>
-                                {% if transport.pickup_point or transport.dropoff_point %}
-                                <div class="mt-2 text-sm text-slate-600">
-                                    <span class="text-green-600"><i class="fas fa-map-marker-alt"></i> {{ transport.pickup_point or 'TBA' }}</span>
-                                    <span class="mx-2 text-slate-300">→</span>
-                                    <span class="text-red-600"><i class="fas fa-map-pin"></i> {{ transport.dropoff_point or 'TBA' }}</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Guides Tab -->
-            {% if request.inbound_guides %}
-            <div id="guides-tab-content" class="tab-content hidden">
-                <h3 class="font-semibold text-slate-700 mb-4">Guide Services</h3>
-                <div class="space-y-3">
-                    {% for guide in request.inbound_guides %}
-                    <div class="hotel-card p-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="font-semibold text-slate-800">{{ guide.guide_name or 'Guide TBA' }}</h4>
-                                        <p class="text-sm text-slate-500">{{ guide.service_date.strftime('%d %b %Y') if guide.service_date else 'TBA' }}</p>
-                                    </div>
-                                    <span class="status-badge 
-                                        {% if guide.status == 'CONFIRMED' %}status-confirmed
-                                        {% elif guide.status == 'REQUESTED' %}status-quoted
-                                        {% else %}status-request{% endif %}">
-                                        {{ guide.status or 'Pending' }}
-                                    </span>
-                                </div>
-                                {% if guide.language %}
-                                <div class="mt-2">
-                                    <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs">{{ guide.language }}</span>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Meals Tab -->
-            {% if request.inbound_meals %}
-            <div id="meals-tab-content" class="tab-content hidden">
-                <h3 class="font-semibold text-slate-700 mb-4">Meal Services</h3>
-                <div class="space-y-3">
-                    {% for meal in request.inbound_meals %}
-                    <div class="hotel-card p-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
-                                <i class="fas fa-utensils"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start">
-                                    <div>
-                                        <h4 class="font-semibold text-slate-800">{{ meal.meal_type or 'Meal' }}</h4>
-                                        <p class="text-sm text-slate-500">{{ meal.service_date.strftime('%d %b %Y') if meal.service_date else 'TBA' }}</p>
-                                    </div>
-                                    <span class="status-badge 
-                                        {% if meal.status == 'CONFIRMED' %}status-confirmed
-                                        {% elif meal.status == 'REQUESTED' %}status-quoted
-                                        {% else %}status-request{% endif %}">
-                                        {{ meal.status or 'Pending' }}
-                                    </span>
-                                </div>
-                                {% if meal.restaurant_name %}
-                                <p class="mt-2 text-sm text-slate-600"><i class="fas fa-store-alt mr-1"></i> {{ meal.restaurant_name }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Optionals Tab -->
-            {% if request.inbound_optionals %}
-            <div id="optionals-tab-content" class="tab-content hidden">
-                <h3 class="font-semibold text-slate-700 mb-4">Optional Extras</h3>
-                <div class="space-y-3">
-                    {% for optional in request.inbound_optionals %}
-                    <div class="hotel-card p-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center text-pink-600">
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h4 class="font-semibold text-slate-800">{{ optional.service_name or 'Optional Service' }}</h4>
-                                <p class="text-sm text-slate-500">{{ optional.service_date.strftime('%d %b %Y') if optional.service_date else 'TBA' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Documents Tab -->
-            <div id="documents-tab-content" class="tab-content {% if request.inbound_hotels %}hidden{% endif %}">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-semibold text-slate-700">Documents & Attachments</h3>
-                    {% if not view_only %}
-                    <button type="button" class="tw-btn tw-btn-sm tw-btn-primary" onclick="openDocumentUpload()">
-                        <i class="fas fa-upload"></i> Upload
-                    </button>
-                    {% endif %}
-                </div>
-                {% if request.documents %}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {% for doc in request.documents %}
-                    <div class="hotel-card p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-500">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="font-medium text-slate-800 truncate">{{ doc.filename or 'Document' }}</h4>
-                            <p class="text-xs text-slate-400">{{ doc.category or 'General' }}</p>
-                        </div>
-                        <a href="{{ url_for('inbound.download_document', doc_id=doc.id) }}" class="tw-btn tw-btn-sm tw-btn-secondary">
-                            <i class="fas fa-download"></i>
-                        </a>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-8">
-                    <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-paperclip text-xl text-slate-400"></i>
-                    </div>
-                    <p class="text-slate-400 text-sm">No documents attached yet</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <!-- Status Sidebar Toggle -->
@@ -1867,20 +1589,6 @@ let currentServiceContext = {
     serviceName: null,
     rowId: null // null = Global (Applies to All), Integer = Specific Row ID
 };
-
-// Tab switching (Main Bottom Tabs like Hotels, Transport lists)
-function switchTab(tabName) {
-    document.querySelectorAll('.tw-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.tab === tabName);
-    });
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    const targetContent = document.getElementById(tabName + '-tab-content');
-    if (targetContent) {
-        targetContent.classList.remove('hidden');
-    }
-}
 
 /**
  * SERVICE TAB LOGIC (Global vs Specific)
@@ -2663,12 +2371,6 @@ function saveAndRefreshItinerary() {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize first tab if exists
-    const firstTab = document.querySelector('.tw-tab');
-    if (firstTab) {
-        switchTab(firstTab.dataset.tab);
-    }
-    
     // Add auto-save listeners to ALL Request Details form fields
     const form = document.getElementById('editMode');
     if (form) {
