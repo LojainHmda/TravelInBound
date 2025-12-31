@@ -587,27 +587,27 @@ html { scroll-behavior: smooth; }
                     <div class="flex items-center gap-1 p-1.5 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
                         <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.arrival_batches %}bg-green-100 text-green-700{% else %}bg-white text-slate-500{% endif %}" data-service="arrival" id="tab-arrival">
                             <i class="fas fa-plane-arrival {% if request.arrival_batches %}text-green-500{% else %}text-slate-400{% endif %}"></i> Arrival
-                            {% if request.arrival_batches %}<span class="ml-1 bg-green-500 text-white text-[10px] px-1.5 rounded-full">{{ request.arrival_batches|length }}</span>{% endif %}
+                            {% if request.arrival_batches %}<span class="ml-1 bg-green-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.arrival_batches|length }}</span>{% endif %}
                         </button>
                         <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.departure_batches %}bg-orange-100 text-orange-700{% else %}bg-white text-slate-500{% endif %}" data-service="departure" id="tab-departure">
                             <i class="fas fa-plane-departure {% if request.departure_batches %}text-orange-500{% else %}text-slate-400{% endif %}"></i> Departure
-                            {% if request.departure_batches %}<span class="ml-1 bg-orange-500 text-white text-[10px] px-1.5 rounded-full">{{ request.departure_batches|length }}</span>{% endif %}
+                            {% if request.departure_batches %}<span class="ml-1 bg-orange-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.departure_batches|length }}</span>{% endif %}
                         </button>
                         <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_hotels %}bg-blue-100 text-blue-700{% else %}bg-white text-slate-500{% endif %}" data-service="hotel" id="tab-hotel">
                             <i class="fas fa-hotel {% if request.inbound_hotels %}text-blue-500{% else %}text-slate-400{% endif %}"></i> Hotel
-                            {% if request.inbound_hotels %}<span class="ml-1 bg-blue-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_hotels|length }}</span>{% endif %}
+                            {% if request.inbound_hotels %}<span class="ml-1 bg-blue-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.inbound_hotels|length }}</span>{% endif %}
                         </button>
                         <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_guides %}bg-teal-100 text-teal-700{% else %}bg-white text-slate-500{% endif %}" data-service="guide" id="tab-guide">
                             <i class="fas fa-user-tie {% if request.inbound_guides %}text-teal-500{% else %}text-slate-400{% endif %}"></i> Guide
-                            {% if request.inbound_guides %}<span class="ml-1 bg-teal-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_guides|length }}</span>{% endif %}
+                            {% if request.inbound_guides %}<span class="ml-1 bg-teal-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.inbound_guides|length }}</span>{% endif %}
                         </button>
                         <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_transports %}bg-cyan-100 text-cyan-700{% else %}bg-white text-slate-500{% endif %}" data-service="transport" id="tab-transport">
                             <i class="fas fa-car {% if request.inbound_transports %}text-cyan-500{% else %}text-slate-400{% endif %}"></i> Transport
-                            {% if request.inbound_transports %}<span class="ml-1 bg-cyan-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_transports|length }}</span>{% endif %}
+                            {% if request.inbound_transports %}<span class="ml-1 bg-cyan-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.inbound_transports|length }}</span>{% endif %}
                         </button>
                         <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all {% if request.inbound_meals %}bg-amber-100 text-amber-700{% else %}bg-white text-slate-500{% endif %}" data-service="meal" id="tab-meal">
                             <i class="fas fa-utensils {% if request.inbound_meals %}text-amber-500{% else %}text-slate-400{% endif %}"></i> Meal
-                            {% if request.inbound_meals %}<span class="ml-1 bg-amber-500 text-white text-[10px] px-1.5 rounded-full">{{ request.inbound_meals|length }}</span>{% endif %}
+                            {% if request.inbound_meals %}<span class="ml-1 bg-amber-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge">{{ request.inbound_meals|length }}</span>{% endif %}
                         </button>
                     </div>
                     <!-- Tab Content Container -->
