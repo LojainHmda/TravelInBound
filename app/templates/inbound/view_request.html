@@ -593,29 +593,29 @@ html { scroll-behavior: smooth; }
                 </div>
                 
                 <!-- Service Tabs - Top Navigation -->
-                <div class="px-5 pt-4 pb-0">
-                    <div class="flex flex-wrap justify-end -mb-px">
-                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-green-50 hover:text-green-700 text-sm font-medium transition-all mr-1" data-service="arrival">
-                            <i class="fas fa-plane-arrival text-green-600"></i> Arrival
+                <div class="px-5 pt-4 pb-4">
+                    <div class="flex items-center gap-2 p-2 rounded-full" style="background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
+                        <button type="button" onclick="switchServiceTab('arrival')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="arrival">
+                            <i class="fas fa-check-circle text-slate-400"></i> Arrival
                         </button>
-                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-orange-50 hover:text-orange-700 text-sm font-medium transition-all mr-1" data-service="departure">
-                            <i class="fas fa-plane-departure text-orange-600"></i> Departure
+                        <button type="button" onclick="switchServiceTab('departure')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="departure">
+                            <i class="fas fa-plane-departure text-slate-400"></i> Departure
                         </button>
-                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-blue-50 hover:text-blue-700 text-sm font-medium transition-all mr-1" data-service="hotel">
-                            <i class="fas fa-hotel text-blue-600"></i> Hotel
+                        <button type="button" onclick="switchServiceTab('hotel')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="hotel">
+                            <i class="fas fa-hotel text-slate-400"></i> Hotel
                         </button>
-                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-teal-50 hover:text-teal-700 text-sm font-medium transition-all mr-1" data-service="guide">
-                            <i class="fas fa-user-tie text-teal-600"></i> Guide
+                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="guide">
+                            <i class="fas fa-user-tie text-slate-400"></i> Guide
                         </button>
-                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 text-sm font-medium transition-all mr-1" data-service="transport">
-                            <i class="fas fa-car text-cyan-600"></i> Transport
+                        <button type="button" onclick="switchServiceTab('transport')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="transport">
+                            <i class="fas fa-car text-slate-400"></i> Transport
                         </button>
-                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn relative inline-flex items-center gap-2 px-4 py-2.5 border border-b-0 border-slate-300 rounded-t-lg bg-white text-slate-600 hover:bg-amber-50 hover:text-amber-700 text-sm font-medium transition-all" data-service="meal">
-                            <i class="fas fa-utensils text-amber-600"></i> Meal
+                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-slate-500 text-sm font-medium transition-all" data-service="meal">
+                            <i class="fas fa-utensils text-slate-400"></i> Meal
                         </button>
                     </div>
                     <!-- Tab Content Container -->
-                    <div id="service-tab-content" class="hidden border border-slate-300 rounded-b-lg rounded-tr-lg bg-slate-50 -mt-px"></div>
+                    <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-4"></div>
                 </div>
                 
                 <div class="border-t border-slate-200"></div>
@@ -1911,10 +1911,11 @@ function switchServiceTab(serviceName, rowId = null) {
         
         // Reset all tabs to inactive state
         document.querySelectorAll('.service-btn').forEach(btn => {
-            btn.classList.remove('active-tab', 'bg-slate-50', 'z-10', 'font-semibold');
-            btn.classList.add('bg-white');
-            btn.style.marginBottom = '';
-            btn.style.borderBottom = '';
+            btn.classList.remove('active-tab', 'font-semibold');
+            btn.style.border = 'none';
+            btn.style.color = '#64748b';
+            const icon = btn.querySelector('i');
+            if (icon) icon.style.color = '#94a3b8';
         });
         
         // Hide all panels inside container
@@ -1935,11 +1936,12 @@ function switchServiceTab(serviceName, rowId = null) {
             tabContainer.classList.remove('hidden');
             targetPanel.classList.remove('hidden');
             
-            // Style the active tab to connect with content
-            activeBtn.classList.add('active-tab', 'bg-slate-50', 'z-10', 'font-semibold');
-            activeBtn.classList.remove('bg-white');
-            activeBtn.style.marginBottom = '-1px';
-            activeBtn.style.borderBottom = '1px solid #f8fafc';
+            // Style the active tab with blue border
+            activeBtn.classList.add('active-tab', 'font-semibold');
+            activeBtn.style.border = '2px solid #3b82f6';
+            activeBtn.style.color = '#3b82f6';
+            const activeIcon = activeBtn.querySelector('i');
+            if (activeIcon) activeIcon.style.color = '#3b82f6';
 
             // Load Data & Update Badge
             updateServiceContextUI(serviceName, rowId);
