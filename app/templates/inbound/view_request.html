@@ -973,53 +973,53 @@ html { scroll-behavior: smooth; }
                             </div>
                             <!-- Room Distribution -->
                             <div class="mb-4">
-                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Room Distribution</label>
-                                <div class="bg-white border border-slate-200 rounded-lg p-5">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">ROOM DISTRIBUTION</label>
+                                <div class="rounded-2xl p-6" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                     <!-- ROW 1: Checkbox Options -->
-                                    <div class="flex items-center gap-8 mb-5">
+                                    <div class="flex items-center gap-10 mb-6">
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500" onchange="selectRoomMode('economic')">
+                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
                                             <span class="text-sm text-slate-600">Economic</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500" onchange="selectRoomMode('dbl')">
+                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
                                             <span class="text-sm text-slate-600">DBL</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500" onchange="selectRoomMode('privacy')">
+                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
                                             <span class="text-sm text-slate-600">Privacy</span>
                                         </label>
                                         <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500" onchange="selectRoomMode('manual')">
+                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-5 h-5 rounded border-2 border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
                                             <span class="text-sm font-semibold text-slate-700">Manual</span>
                                         </label>
                                         <span class="ml-auto text-sm text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
                                     </div>
                                     <!-- ROW 2: Room Fields + Capacity -->
-                                    <div class="flex items-center gap-6 pt-4 border-t border-slate-100">
+                                    <div class="flex items-center gap-8">
                                         <div class="flex items-center gap-3">
-                                            <span class="text-sm text-slate-500">SGL</span>
-                                            <input type="number" class="w-24 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-center font-semibold bg-slate-50 text-slate-700" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-sm text-slate-500 font-medium">SGL</span>
+                                            <input type="number" class="w-28 px-4 py-3 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-3">
-                                            <span class="text-sm text-slate-500">DBL</span>
-                                            <input type="number" class="w-24 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-center font-semibold bg-slate-50 text-slate-700" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-sm text-slate-500 font-medium">DBL</span>
+                                            <input type="number" class="w-28 px-4 py-3 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-3">
-                                            <span class="text-sm text-slate-500">TRP</span>
-                                            <input type="number" class="w-24 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-center font-semibold bg-slate-50 text-slate-700" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-sm text-slate-500 font-medium">TRP</span>
+                                            <input type="number" class="w-28 px-4 py-3 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
                                         </div>
                                         <div class="flex items-center gap-3">
-                                            <span class="text-sm text-slate-500">OTH</span>
-                                            <input type="number" class="w-24 px-3 py-2.5 border border-slate-200 rounded-lg text-sm text-center font-semibold bg-slate-50 text-slate-700" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
+                                            <span class="text-sm text-slate-500 font-medium">OTH</span>
+                                            <input type="number" class="w-28 px-4 py-3 border-0 rounded-lg text-sm text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly>
                                             <input type="hidden" id="hotel_other_capacity" value="1" data-service="hotel">
                                         </div>
                                         <!-- Capacity Display -->
-                                        <div class="ml-auto flex items-center gap-3">
-                                            <span class="text-lg text-slate-400">=</span>
-                                            <div class="flex flex-col items-end">
-                                                <span class="px-5 py-2 rounded-lg text-base font-bold min-w-[60px] text-center" id="hotel_total_guests">0</span>
-                                                <span id="room-capacity-note" class="text-xs mt-1 font-semibold"></span>
+                                        <div class="ml-auto flex items-center gap-4">
+                                            <span class="text-xl text-slate-400">=</span>
+                                            <div class="flex flex-col items-center">
+                                                <span class="px-6 py-2 rounded-lg text-base font-bold text-white" style="background-color: #ef5350;" id="hotel_total_guests">0</span>
+                                                <span id="room-capacity-note" class="text-xs mt-1 font-bold" style="color: #ef5350;"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -2971,8 +2971,8 @@ function enableManualMode() {
         const field = document.getElementById(id);
         if (field) {
             field.removeAttribute('readonly');
-            field.classList.remove('bg-slate-50');
-            field.classList.add('bg-white', 'border-orange-400');
+            field.style.border = '2px solid #fb923c';
+            field.style.backgroundColor = '#ffffff';
         }
     });
     
@@ -2988,8 +2988,8 @@ function exitManualMode() {
         const field = document.getElementById(id);
         if (field) {
             field.setAttribute('readonly', true);
-            field.classList.remove('bg-white', 'border-orange-400');
-            field.classList.add('bg-slate-50', 'border-slate-300');
+            field.style.border = '0';
+            field.style.backgroundColor = '#ffffff';
         }
     });
     
@@ -3018,7 +3018,7 @@ function calculateTotalGuests() {
     const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const tripleRooms = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
     const otherRooms = parseInt(document.getElementById('hotel_other_rooms')?.value) || 0;
-    const otherCapacity = parseInt(document.getElementById('hotel_other_capacity')?.value) || 4;
+    const otherCapacity = parseInt(document.getElementById('hotel_other_capacity')?.value) || 1;
     
     const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3) + (otherRooms * otherCapacity);
     
@@ -3029,32 +3029,33 @@ function calculateTotalGuests() {
     if (totalGuestsEl) {
         totalGuestsEl.textContent = totalGuests;
         
-        // Visual feedback: Green if equal to PAX, Red if not
-        totalGuestsEl.classList.remove('bg-green-500', 'text-white', 'bg-red-500', 'bg-slate-100', 'text-slate-700');
-        
         if (totalGuests === pax && totalGuests > 0) {
-            totalGuestsEl.classList.add('bg-green-500', 'text-white');
+            // Green when matches PAX
+            totalGuestsEl.style.backgroundColor = '#22c55e';
+            totalGuestsEl.classList.add('text-white');
             if (capacityNote) {
                 capacityNote.textContent = '';
-                capacityNote.className = 'text-xs mt-1 font-medium';
             }
         } else if (totalGuests !== pax && pax > 0) {
-            totalGuestsEl.classList.add('bg-red-500', 'text-white');
+            // Red coral when doesn't match
+            totalGuestsEl.style.backgroundColor = '#ef5350';
+            totalGuestsEl.classList.add('text-white');
             if (capacityNote) {
                 const diff = totalGuests - pax;
                 if (diff > 0) {
                     capacityNote.textContent = `${diff} EXTRA`;
-                    capacityNote.className = 'text-xs mt-1 font-medium text-red-500';
                 } else {
                     capacityNote.textContent = `${Math.abs(diff)} SHORT`;
-                    capacityNote.className = 'text-xs mt-1 font-medium text-red-500';
                 }
+                capacityNote.style.color = '#ef5350';
             }
         } else {
-            totalGuestsEl.classList.add('bg-slate-100', 'text-slate-700');
+            // Default gray
+            totalGuestsEl.style.backgroundColor = '#e2e8f0';
+            totalGuestsEl.classList.remove('text-white');
+            totalGuestsEl.classList.add('text-slate-700');
             if (capacityNote) {
                 capacityNote.textContent = '';
-                capacityNote.className = 'text-xs mt-1 font-medium';
             }
         }
     }
