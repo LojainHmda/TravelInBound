@@ -1,0 +1,366 @@
+// Enhanced autoSaveServiceData function
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    // Collect form data
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            showNotification(data.message || 'Service data saved!', 'success');
+            
+            // Update itinerary if needed
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+            
+            // Update service table - this is the key part
+            updateServiceTable(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icon if needed
+            if (currentServiceContext.rowId) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// New function to update service tables
+function updateServiceTable(serviceType, data) {
+    // Map service types to table IDs
+    const tableMap = {
+        'hotel': { tbodyId: 'hotels-table-body', containerId: 'hotels-table-container' },
+        'arrival': { tbodyId: 'arrival-table-body', containerId: 'arrival-table-container' },
+        'departure': { tbodyId: 'departure-table-body', containerId: 'departure-table-container' },
+        'guide': { tbodyId: 'guides-table-body', containerId: 'guides-table-container' },
+        'transport': { tbodyId: 'transports-table-body', containerId: 'transports-table-container' },
+        'meal': { tbodyId: 'meals-table-body', containerId: 'meals-table-container' }
+    };
+    
+    const tableInfo = tableMap[serviceType];
+    if (!tableInfo) return;
+    
+    const tbody = document.getElementById(tableInfo.tbodyId);
+    const container = document.getElementById(tableInfo.containerId);
+    
+    // Show the table container when data is added
+    if (container) {
+        container.style.display = 'block';
+    }
+    
+    // Handle different response formats
+    if (data.service_entries_html) {
+        // Append new row to existing table
+        if (tbody) {
+            tbody.insertAdjacentHTML('beforeend', data.service_entries_html);
+        }
+    } else if (data.service_entry) {
+        // Handle single entry object
+        if (tbody) {
+            const rowHtml = createServiceRowHtml(serviceType, data.service_entry);
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+        }
+    } else if (data.all_entries_html) {
+        // Replace entire table content
+        if (tbody) {
+            tbody.innerHTML = data.all_entries_html;
+        }
+    }
+}
+
+// Function to create HTML for a new service row
+function createServiceRowHtml(serviceType, entry) {
+    switch(serviceType) {
+        case 'hotel':
+            return `
+                <tr class="hover:bg-slate-50" data-hotel-id="${entry.id}">
+                    <td class="px-2 py-1.5 text-slate-700 font-medium">${entry.hotel_name || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500 text-xs">
+                        ${entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'} - 
+                        ${entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}
+                    </td>
+                    <td class="px-2 py-1.5 text-slate-700 text-center">${entry.nights || 0}</td>
+                    <td class="px-2 py-1.5 text-center">
+                        <div class="flex items-center justify-center gap-1 text-xs">
+                            ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> ${entry.single_rooms}</span>` : ''}
+                            ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> ${entry.double_rooms}</span>` : ''}
+                            ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> ${entry.triple_rooms}</span>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-2 py-1.5">
+                        <span class="px-2 py-0.5 rounded text-xs ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-slate-100 text-slate-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteHotel(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        case 'arrival':
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-2 py-1.5 text-slate-700">${entry.arrival_date ? new Date(entry.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.arrival_time ? new Date(`1970-01-01T${entry.arrival_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700">${entry.arrival_point || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.flight_number || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteArrivalBatch(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        case 'departure':
+            return `
+                <tr class="hover:bg-slate-50">
+                    <td class="px-2 py-1.5 text-slate-700">${entry.departure_date ? new Date(entry.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.departure_time ? new Date(`1970-01-01T${entry.departure_time}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700">${entry.departure_point || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.flight_number || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteDepartureBatch(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        case 'guide':
+            return `
+                <tr class="hover:bg-slate-50" data-guide-id="${entry.id}">
+                    <td class="px-2 py-1.5 text-slate-700">${entry.guide_name || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700">${entry.language || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.telephone || '-'}</td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteGuide(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        case 'transport':
+            return `
+                <tr class="hover:bg-slate-50" data-transport-id="${entry.id}">
+                    <td class="px-2 py-1.5 text-slate-700">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.vehicle_type || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700">${entry.pickup_point || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.drop_off_point || '-'}</td>
+                    <td class="px-2 py-1.5">
+                        <span class="px-2 py-0.5 rounded text-xs ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-slate-100 text-slate-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteTransport(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        case 'meal':
+            return `
+                <tr class="hover:bg-slate-50" data-meal-id="${entry.id}">
+                    <td class="px-2 py-1.5 text-slate-700">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.meal_type || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700">${entry.restaurant_name || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-500">${entry.location || '-'}</td>
+                    <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
+                    <td class="px-2 py-1.5 text-center">
+                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteMeal(${entry.id})">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        default:
+            return '';
+    }
+}
+
+// Function to update summary counts
+function updateSummaryCounts() {
+    // Update hotel count
+    const hotelCount = document.querySelectorAll('#hotels-table-body tr').length;
+    const hotelSummary = document.getElementById('summary_hotels');
+    if (hotelSummary) hotelSummary.textContent = hotelCount;
+    
+    // Update transport count
+    const transportCount = document.querySelectorAll('#transports-table-body tr').length;
+    const transportSummary = document.getElementById('summary_transport');
+    if (transportSummary) transportSummary.textContent = transportCount;
+    
+    // Update guide count
+    const guideCount = document.querySelectorAll('#guides-table-body tr').length;
+    const guideSummary = document.getElementById('summary_guides');
+    if (guideSummary) guideSummary.textContent = guideCount;
+    
+    // Update meal count
+    const mealCount = document.querySelectorAll('#meals-table-body tr').length;
+    const mealSummary = document.getElementById('summary_meals');
+    if (mealSummary) mealSummary.textContent = mealCount;
+    
+    // Update flights list
+    const flightsContainer = document.getElementById('summary_flights');
+    if (flightsContainer) {
+        const arrivals = Array.from(document.querySelectorAll('#arrival-table-body tr')).map(tr => {
+            const date = tr.cells[0].textContent.trim();
+            return `<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]"><i class="fas fa-plane-arrival"></i> ${date}</span>`;
+        }).join('');
+        
+        const departures = Array.from(document.querySelectorAll('#departure-table-body tr')).map(tr => {
+            const date = tr.cells[0].textContent.trim();
+            return `<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]"><i class="fas fa-plane-departure"></i> ${date}</span>`;
+        }).join('');
+        
+        flightsContainer.innerHTML = arrivals + departures || '<span class="text-slate-400 text-[10px]">No flights added</span>';
+    }
+    
+    // Update hotels list
+    const hotelsContainer = document.getElementById('summary_hotel_list');
+    if (hotelsContainer) {
+        const hotels = Array.from(document.querySelectorAll('#hotels-table-body tr')).map(tr => {
+            const name = tr.cells[0].textContent.trim();
+            const nights = tr.cells[2].textContent.trim();
+            return `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]"><i class="fas fa-hotel"></i> ${name} <span class="text-blue-500">(${nights}N)</span></span>`;
+        }).join('');
+        
+        hotelsContainer.innerHTML = hotels || '<span class="text-slate-400 text-[10px]">No hotels added</span>';
+    }
+}
+
+// Enhanced deleteService function
+function deleteService(serviceType, serviceId) {
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: serviceType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Service deleted!', 'success');
+            
+            // Update itinerary if needed
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+            
+            // Remove the row from the table
+            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            if (serviceRow) serviceRow.remove();
+            
+            // Check if table is empty and hide container
+            const tableMap = {
+                'hotel': 'hotels-table-container',
+                'guide': 'guides-table-container',
+                'transport': 'transports-table-container',
+                'meal': 'meals-table-container',
+                'arrival': 'arrival-table-container',
+                'departure': 'departure-table-container'
+            };
+            
+            const tbodyId = `${serviceType}-table-body`;
+            const tbody = document.getElementById(tbodyId);
+            
+            if (tbody && tbody.children.length === 0) {
+                const containerId = tableMap[serviceType];
+                const container = document.getElementById(containerId);
+                if (container) container.style.display = 'none';
+            }
+            
+            // Update summary counts
+            updateSummaryCounts();
+        } else {
+            showNotification('Error deleting service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting service', 'error');
+    });
+}
+
+// Update the saveServiceData function to use the new updateServiceTable function
+function saveServiceData(serviceType) {
+    // Validation for hotel room distribution
+    if (serviceType === 'hotel') {
+        const validation = validateRoomDistribution();
+        if (!validation.valid) {
+            showInlineError('hotel', validation.message);
+            return;
+        }
+    }
+    
+    // Perform Save
+    autoSaveServiceData(serviceType);
+    
+    // Clear form fields after saving
+    setTimeout(() => {
+        if (!currentServiceContext.rowId) {
+            clearServiceForm(serviceType);
+            showNotification('Saved. You can add another item.', 'success');
+        }
+    }, 500);
+}
