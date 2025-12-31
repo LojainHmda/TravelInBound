@@ -873,7 +873,8 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-1 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        <!-- Saved Hotels Table (Above Form Fields) -->
+                        <!-- Saved Hotels Table (Above Form Fields) - Only show if hotels exist -->
+                        {% if request.inbound_hotels %}
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead class="bg-teal-600 text-white">
@@ -887,7 +888,6 @@ html { scroll-behavior: smooth; }
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100">
-                                    {% if request.inbound_hotels %}
                                     {% for hotel in request.inbound_hotels %}
                                     <tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
                                         <td class="px-4 py-3 text-slate-700 font-medium">{{ hotel.hotel_name or '-' }}</td>
@@ -913,10 +913,10 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                     </tr>
                                     {% endfor %}
-                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
+                        {% endif %}
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
                         <div class="p-5 bg-slate-50 border-t border-slate-200">
