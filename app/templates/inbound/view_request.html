@@ -1730,7 +1730,7 @@ function switchServiceTab(serviceName, rowId = null) {
     }
 }
 
-// Updates the Badge text and Form Inputs based on Context (Global vs Specific)
+// Updates Badge text and Form Inputs based on Context (Global vs Specific)
 function updateServiceContextUI(serviceName, rowId) {
     const badge = document.getElementById('panel-context-badge-' + serviceName);
     if (!badge) return;
@@ -1877,27 +1877,33 @@ function autoSaveServiceData(serviceType) {
                 if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
-            if (serviceType === 'arrival' || serviceType === 'departure') {
-                setTimeout(() => window.location.reload(), 500);
-                return;
-            }
+            // REMOVE RELOAD LOGIC FOR ARRIVAL/DEPARTURE TO SUPPORT REAL-TIME UPDATES
+            // if (serviceType === 'arrival' || serviceType === 'departure') { ... }
             
             if (data.service_entries_html && data.service_type) {
-                const servicePanel = document.getElementById(`service-panel-${data.service_type}`);
-                const tableContainerId = data.service_type === 'hotel' ? 'hotels-table-container' : 
-                                          data.service_type === 'guide' ? 'guides-table-container' : 
-                                          data.service_type === 'transport' ? 'transports-table-container' : 
-                                          data.service_type === 'meal' ? 'meals-table-container' : '';
+                // Map service types to table IDs
+                let tbodyId = '';
+                let containerId = '';
                 
-                if (servicePanel && tableContainerId) {
-                    const tableContainer = servicePanel.querySelector(`#${tableContainerId}`);
-                    const tbody = servicePanel.querySelector(`#${data.service_type}-table-body`);
-                    
-                    // Reveal container if it was hidden
-                    if (tableContainer) {
-                        tableContainer.style.display = 'block';
-                        if (tbody) tbody.innerHTML = data.service_entries_html;
-                    }
+                switch(data.service_type) {
+                    case 'hotel': tbodyId = 'hotels-table-body'; containerId = 'hotels-table-container'; break;
+                    case 'arrival': tbodyId = 'arrival-table-body'; containerId = 'arrival-table-container'; break;
+                    case 'departure': tbodyId = 'departure-table-body'; containerId = 'departure-table-container'; break;
+                    case 'guide': tbodyId = 'guides-table-body'; containerId = 'guides-table-container'; break;
+                    case 'transport': tbodyId = 'transports-table-body'; containerId = 'transports-table-container'; break;
+                    case 'meal': tbodyId = 'meals-table-body'; containerId = 'meals-table-container'; break;
+                }
+
+                const tbody = document.getElementById(tbodyId);
+                const container = document.getElementById(containerId);
+
+                if (container) {
+                    container.style.display = 'block'; // Make sure table is visible
+                }
+
+                if (tbody) {
+                    // Use insertAdjacentHTML to APPEND the new row instead of replacing content
+                    tbody.insertAdjacentHTML('beforeend', data.service_entries_html);
                 }
             }
             
@@ -1917,7 +1923,7 @@ function autoSaveServiceData(serviceType) {
 
 // Manual save function called by Save buttons
 function saveServiceData(serviceType) {
-    // Clear inputs after save logic is handled in the generic function, 
+    // Clear inputs after save logic is handled in generic function, 
     // but we explicitly clear here to encourage multiple entries
     if (serviceType === 'hotel') {
         const validation = validateRoomDistribution();
@@ -1930,7 +1936,7 @@ function saveServiceData(serviceType) {
     // Perform Save
     autoSaveServiceData(serviceType);
     
-    // IMPORTANT: Clear the form fields after saving to allow adding another item easily
+    // IMPORTANT: Clear form fields after saving to allow adding another item easily
     setTimeout(() => {
         // Only clear if it was a global save (rowId is null)
         if (!currentServiceContext.rowId) {
@@ -1990,7 +1996,9 @@ function deleteService(serviceType, serviceId) {
             const tableContainerId = serviceType === 'hotel' ? 'hotels-table-container' : 
                                       serviceType === 'guide' ? 'guides-table-container' : 
                                       serviceType === 'transport' ? 'transports-table-container' : 
-                                      serviceType === 'meal' ? 'meals-table-container' : '';
+                                      serviceType === 'meal' ? 'meals-table-container' : 
+                                      serviceType === 'arrival' ? 'arrival-table-container' : 
+                                      serviceType === 'departure' ? 'departure-table-container' : '';
             const tbody = document.querySelector(`#${serviceType}-table-body`);
             if (tbody && tbody.children.length === 0) {
                  const container = document.getElementById(tableContainerId);
@@ -2199,8 +2207,8 @@ function saveAndRefreshItinerary() {
 // EXCEL EXPORT FUNCTION (English Only)
 // ==========================================
 function exportToExcel() {
-    // Gather data from the Trip Summary Card (DOM elements)
-    // We use textContent to ensure it matches what the user sees exactly
+    // Gather data from Trip Summary Card (DOM elements)
+    // We use textContent to ensure it matches what user sees exactly
     
     // 1. Basic Info
     const requestNumber = "{{ request.request_number }}";
