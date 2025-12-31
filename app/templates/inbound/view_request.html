@@ -971,45 +971,119 @@ html { scroll-behavior: smooth; }
                                     </select>
                                 </div>
                             </div>
-                            <!-- Room Distribution Section -->
+                            <!-- Rooming Allocation Wizard -->
                             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <h4 class="text-sm font-bold text-blue-800 flex items-center gap-2">
-                                        <i class="fas fa-bed"></i> Room Distribution
+                                        <i class="fas fa-magic"></i> Rooming Allocation Wizard
                                     </h4>
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs text-slate-500">Total Guests:</span>
                                         <span class="text-lg font-bold text-blue-700 bg-white px-3 py-1 rounded-lg border border-blue-200" id="hotel_pax_display">{{ request.pax or 0 }}</span>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-3">
+                                
+                                <!-- Wizard Layout Options -->
+                                <div id="wizard-options" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+                                    <!-- Economic Mode -->
+                                    <div class="wizard-option cursor-pointer bg-white rounded-lg p-3 border-2 border-slate-200 hover:border-green-400 hover:shadow-md transition-all" onclick="applyWizardLayout('economic')">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-piggy-bank text-green-600 text-sm"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-green-700">Economic</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-2">Minimize rooms: TRP → DBL → SGL</p>
+                                        <div id="economic-preview" class="text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded">--</div>
+                                    </div>
+                                    
+                                    <!-- DBL Mode -->
+                                    <div class="wizard-option cursor-pointer bg-white rounded-lg p-3 border-2 border-slate-200 hover:border-blue-400 hover:shadow-md transition-all" onclick="applyWizardLayout('dbl')">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-user-friends text-blue-600 text-sm"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-blue-700">DBL Mode</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-2">Divide by 2: pairs in DBL rooms</p>
+                                        <div id="dbl-preview" class="text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded">--</div>
+                                    </div>
+                                    
+                                    <!-- Privacy Mode -->
+                                    <div class="wizard-option cursor-pointer bg-white rounded-lg p-3 border-2 border-slate-200 hover:border-purple-400 hover:shadow-md transition-all" onclick="applyWizardLayout('privacy')">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-user-shield text-purple-600 text-sm"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-purple-700">Privacy Mode</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-2">All guests in SGL rooms</p>
+                                        <div id="privacy-preview" class="text-xs font-medium text-slate-600 bg-slate-50 px-2 py-1 rounded">--</div>
+                                    </div>
+                                    
+                                    <!-- Manual Mode -->
+                                    <div class="wizard-option cursor-pointer bg-white rounded-lg p-3 border-2 border-slate-200 hover:border-orange-400 hover:shadow-md transition-all" onclick="enableManualMode()">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-edit text-orange-600 text-sm"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-orange-700">Manual Mode</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mb-2">Custom room distribution</p>
+                                        <div class="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">Edit fields</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Room Distribution Fields (read-only by default, editable in manual mode) -->
+                                <div class="grid grid-cols-5 gap-3">
                                     <div class="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                         <label class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                                            <i class="fas fa-user text-blue-500"></i> SGL <span class="text-slate-400 font-normal">(1 guest)</span>
+                                            <i class="fas fa-user text-blue-500"></i> SGL <span class="text-slate-400 font-normal">(1)</span>
                                         </label>
-                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-blue-50" id="hotel_single_rooms" min="0" value="0" data-service="hotel">
+                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-slate-100" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                        <div id="sgl-error" class="hidden mt-1 text-xs text-red-600"></div>
                                     </div>
                                     <div class="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                         <label class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                                            <i class="fas fa-user-friends text-green-500"></i> DBL <span class="text-slate-400 font-normal">(2 guests)</span>
+                                            <i class="fas fa-user-friends text-green-500"></i> DBL <span class="text-slate-400 font-normal">(2)</span>
                                         </label>
-                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold" id="hotel_double_rooms" min="0" value="0" data-service="hotel">
+                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-slate-100" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                        <div id="dbl-error" class="hidden mt-1 text-xs text-red-600"></div>
                                     </div>
                                     <div class="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                         <label class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                                            <i class="fas fa-users text-purple-500"></i> TRP <span class="text-slate-400 font-normal">(3 guests)</span>
+                                            <i class="fas fa-users text-purple-500"></i> TRP <span class="text-slate-400 font-normal">(3)</span>
                                         </label>
-                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold" id="hotel_triple_rooms" min="0" value="0" data-service="hotel">
+                                        <input type="number" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-slate-100" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                        <div id="trp-error" class="hidden mt-1 text-xs text-red-600"></div>
                                     </div>
                                     <div class="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
                                         <label class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
-                                            <i class="fas fa-calculator text-slate-400"></i> Room Capacity
+                                            <i class="fas fa-door-open text-amber-500"></i> OTH <span class="text-slate-400 font-normal">(×?)</span>
+                                        </label>
+                                        <div class="flex gap-1">
+                                            <input type="number" class="w-12 px-2 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-slate-100" id="hotel_other_rooms" min="0" value="0" data-service="hotel" readonly placeholder="Qty">
+                                            <input type="number" class="w-12 px-2 py-2 border border-slate-300 rounded-lg text-sm text-center font-semibold bg-slate-100" id="hotel_other_capacity" min="1" value="4" data-service="hotel" readonly placeholder="Cap">
+                                        </div>
+                                        <div id="oth-error" class="hidden mt-1 text-xs text-red-600"></div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                                        <label class="block text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
+                                            <i class="fas fa-calculator text-slate-400"></i> Capacity
                                         </label>
                                         <input type="text" class="w-full px-3 py-2 border-2 rounded-lg text-sm text-center font-bold text-lg" id="hotel_total_guests" readonly value="0">
                                     </div>
                                 </div>
+                                
+                                <!-- Status message -->
                                 <div id="room-distribution-status" class="mt-3 text-center text-xs font-medium hidden">
                                     <span id="room-status-message"></span>
+                                </div>
+                                
+                                <!-- Manual mode indicator -->
+                                <div id="manual-mode-indicator" class="hidden mt-3 flex items-center justify-center gap-2">
+                                    <span class="text-xs text-orange-600 font-medium"><i class="fas fa-edit mr-1"></i>Manual Mode Active - Edit fields directly</span>
+                                    <button type="button" onclick="exitManualMode()" class="text-xs text-slate-500 hover:text-slate-700 underline">Exit</button>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -2804,64 +2878,192 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     }
 });
 
-// Get PAX value from display element (works for both input and span)
+// ==========================================
+// ROOMING ALLOCATION WIZARD
+// ==========================================
+
+let isManualMode = false;
+
+// Get PAX value from the main booking form
 function getPaxValue() {
-    const paxEl = document.getElementById('hotel_pax_display');
-    if (!paxEl) return 0;
-    return parseInt(paxEl.value || paxEl.textContent) || 0;
+    const paxField = document.querySelector('[name="pax"]');
+    return parseInt(paxField?.value) || 0;
 }
 
-// Initialize room distribution with all PAX as Single rooms
-function initializeRoomDistribution() {
-    const pax = getPaxValue();
-    const singleField = document.getElementById('hotel_single_rooms');
-    const doubleField = document.getElementById('hotel_double_rooms');
-    const tripleField = document.getElementById('hotel_triple_rooms');
-    
-    if (singleField && doubleField && tripleField) {
-        singleField.value = pax;
-        doubleField.value = 0;
-        tripleField.value = 0;
-    }
-    calculateTotalGuests();
+// Calculate layout for Economic mode: TRP first, then DBL, leftover SGL
+function calculateEconomicLayout(pax) {
+    const trp = Math.floor(pax / 3);
+    const afterTrp = pax - (trp * 3);
+    const dbl = Math.floor(afterTrp / 2);
+    const sgl = afterTrp - (dbl * 2);
+    return { sgl, dbl, trp, oth: 0 };
 }
 
-// Auto-recalculate SGL when DBL or TRP changes to maintain PAX total
-function autoRecalculateSingleRooms(changedField) {
+// Calculate layout for DBL mode: divide by 2, leftover SGL
+function calculateDblLayout(pax) {
+    const dbl = Math.floor(pax / 2);
+    const sgl = pax % 2;
+    return { sgl, dbl, trp: 0, oth: 0 };
+}
+
+// Calculate layout for Privacy mode: all SGL
+function calculatePrivacyLayout(pax) {
+    return { sgl: pax, dbl: 0, trp: 0, oth: 0 };
+}
+
+// Format layout for preview display
+function formatLayoutPreview(layout) {
+    const parts = [];
+    if (layout.trp > 0) parts.push(`${layout.trp} TRP`);
+    if (layout.dbl > 0) parts.push(`${layout.dbl} DBL`);
+    if (layout.sgl > 0) parts.push(`${layout.sgl} SGL`);
+    if (layout.oth > 0) parts.push(`${layout.oth} OTH`);
+    return parts.length > 0 ? parts.join(' + ') : '--';
+}
+
+// Update wizard previews when PAX changes
+function updateWizardPreviews() {
     const pax = getPaxValue();
-    const singleField = document.getElementById('hotel_single_rooms');
-    const doubleField = document.getElementById('hotel_double_rooms');
-    const tripleField = document.getElementById('hotel_triple_rooms');
     
-    if (!singleField || !doubleField || !tripleField) return;
-    
-    let doubleRooms = parseInt(doubleField.value) || 0;
-    let tripleRooms = parseInt(tripleField.value) || 0;
-    
-    // Cap Triple rooms first (each uses 3 capacity)
-    const maxTriple = Math.floor(pax / 3);
-    if (tripleRooms > maxTriple) {
-        tripleRooms = maxTriple;
-        tripleField.value = maxTriple;
+    // Update PAX display
+    const paxDisplay = document.getElementById('hotel_pax_display');
+    if (paxDisplay) {
+        paxDisplay.textContent = pax;
     }
     
-    // Calculate remaining capacity after Triple rooms
-    const afterTriple = pax - (tripleRooms * 3);
+    const economicPreview = document.getElementById('economic-preview');
+    const dblPreview = document.getElementById('dbl-preview');
+    const privacyPreview = document.getElementById('privacy-preview');
     
-    // Cap Double rooms (each uses 2 capacity)
-    const maxDouble = Math.floor(afterTriple / 2);
-    if (doubleRooms > maxDouble) {
-        doubleRooms = maxDouble;
-        doubleField.value = maxDouble;
+    if (pax <= 0) {
+        if (economicPreview) economicPreview.textContent = '--';
+        if (dblPreview) dblPreview.textContent = '--';
+        if (privacyPreview) privacyPreview.textContent = '--';
+        return;
     }
     
-    // Calculate remaining for SGL (each SGL = 1 guest)
-    const remainingSgl = pax - (doubleRooms * 2) - (tripleRooms * 3);
+    // Calculate and display previews
+    const economicLayout = calculateEconomicLayout(pax);
+    const dblLayout = calculateDblLayout(pax);
+    const privacyLayout = calculatePrivacyLayout(pax);
     
-    // Update SGL
-    singleField.value = Math.max(0, remainingSgl);
+    if (economicPreview) economicPreview.textContent = formatLayoutPreview(economicLayout);
+    if (dblPreview) dblPreview.textContent = formatLayoutPreview(dblLayout);
+    if (privacyPreview) privacyPreview.textContent = formatLayoutPreview(privacyLayout);
+}
+
+// Apply a wizard layout to the room fields
+function applyWizardLayout(mode) {
+    const pax = getPaxValue();
+    let layout;
+    
+    switch(mode) {
+        case 'economic':
+            layout = calculateEconomicLayout(pax);
+            break;
+        case 'dbl':
+            layout = calculateDblLayout(pax);
+            break;
+        case 'privacy':
+            layout = calculatePrivacyLayout(pax);
+            break;
+        default:
+            return;
+    }
+    
+    // Apply to fields
+    document.getElementById('hotel_single_rooms').value = layout.sgl;
+    document.getElementById('hotel_double_rooms').value = layout.dbl;
+    document.getElementById('hotel_triple_rooms').value = layout.trp;
+    document.getElementById('hotel_other_rooms').value = layout.oth;
+    
+    // Exit manual mode if active
+    if (isManualMode) {
+        exitManualMode();
+    }
+    
+    // Highlight selected option
+    document.querySelectorAll('.wizard-option').forEach(opt => {
+        opt.classList.remove('border-green-500', 'border-blue-500', 'border-purple-500', 'border-orange-500', 'bg-green-50', 'bg-blue-50', 'bg-purple-50', 'bg-orange-50');
+    });
+    
+    const colorMap = {
+        'economic': { border: 'border-green-500', bg: 'bg-green-50' },
+        'dbl': { border: 'border-blue-500', bg: 'bg-blue-50' },
+        'privacy': { border: 'border-purple-500', bg: 'bg-purple-50' }
+    };
+    
+    if (colorMap[mode] && event && event.currentTarget) {
+        const clickedOption = event.currentTarget;
+        clickedOption.classList.add(colorMap[mode].border, colorMap[mode].bg);
+    }
     
     calculateTotalGuests();
+    clearAllErrors();
+}
+
+// Enable manual mode - make fields editable
+function enableManualMode() {
+    isManualMode = true;
+    
+    const fields = ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms', 'hotel_other_capacity'];
+    fields.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            field.removeAttribute('readonly');
+            field.classList.remove('bg-slate-100');
+            field.classList.add('bg-white');
+        }
+    });
+    
+    // Show manual mode indicator
+    document.getElementById('manual-mode-indicator')?.classList.remove('hidden');
+    
+    // Highlight manual mode option
+    document.querySelectorAll('.wizard-option').forEach(opt => {
+        opt.classList.remove('border-green-500', 'border-blue-500', 'border-purple-500', 'bg-green-50', 'bg-blue-50', 'bg-purple-50');
+    });
+    
+    if (event && event.currentTarget) {
+        const manualOption = event.currentTarget;
+        manualOption.classList.add('border-orange-500', 'bg-orange-50');
+    }
+}
+
+// Exit manual mode - make fields readonly again
+function exitManualMode() {
+    isManualMode = false;
+    
+    const fields = ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms', 'hotel_other_capacity'];
+    fields.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            field.setAttribute('readonly', true);
+            field.classList.remove('bg-white');
+            field.classList.add('bg-slate-100');
+        }
+    });
+    
+    // Hide manual mode indicator
+    document.getElementById('manual-mode-indicator')?.classList.add('hidden');
+    
+    // Remove highlight from manual option
+    document.querySelectorAll('.wizard-option').forEach(opt => {
+        opt.classList.remove('border-orange-500', 'bg-orange-50');
+    });
+    
+    clearAllErrors();
+}
+
+// Clear all inline errors
+function clearAllErrors() {
+    ['sgl-error', 'dbl-error', 'trp-error', 'oth-error'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.textContent = '';
+        }
+    });
 }
 
 // Calculate total guests from room distribution
@@ -2869,9 +3071,10 @@ function calculateTotalGuests() {
     const singleRooms = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const doubleRooms = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const tripleRooms = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
+    const otherRooms = parseInt(document.getElementById('hotel_other_rooms')?.value) || 0;
+    const otherCapacity = parseInt(document.getElementById('hotel_other_capacity')?.value) || 4;
     
-    // Single = 1 guest, Double/Twin = 2 guests, Triple = 3 guests
-    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3);
+    const totalGuests = (singleRooms * 1) + (doubleRooms * 2) + (tripleRooms * 3) + (otherRooms * otherCapacity);
     
     const totalGuestsField = document.getElementById('hotel_total_guests');
     const statusDiv = document.getElementById('room-distribution-status');
@@ -2881,21 +3084,23 @@ function calculateTotalGuests() {
     if (totalGuestsField) {
         totalGuestsField.value = totalGuests;
         
-        // Visual feedback - highlight if matches PAX
         if (totalGuests === pax && totalGuests > 0) {
-            totalGuestsField.classList.remove('border-blue-300', 'border-red-400', 'bg-red-50');
+            totalGuestsField.classList.remove('border-blue-300', 'border-red-400', 'bg-red-50', 'text-red-700');
             totalGuestsField.classList.add('border-green-400', 'bg-green-50', 'text-green-700');
             if (statusDiv) {
                 statusDiv.classList.remove('hidden');
                 statusMsg.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-1"></i> Room distribution matches Total Guests';
                 statusMsg.className = 'text-green-600';
             }
-        } else if (totalGuests !== pax) {
+            clearAllErrors();
+        } else if (totalGuests !== pax && pax > 0) {
             totalGuestsField.classList.remove('border-blue-300', 'border-green-400', 'bg-green-50', 'text-green-700');
             totalGuestsField.classList.add('border-red-400', 'bg-red-50', 'text-red-700');
             if (statusDiv) {
                 statusDiv.classList.remove('hidden');
-                statusMsg.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i> Room capacity (' + totalGuests + ') does not match Total Guests (' + pax + ')';
+                const diff = totalGuests - pax;
+                const diffText = diff > 0 ? `${diff} too many` : `${Math.abs(diff)} missing`;
+                statusMsg.innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i> Capacity: ${totalGuests} / PAX: ${pax} (${diffText})`;
                 statusMsg.className = 'text-red-600';
             }
         } else {
@@ -2916,40 +3121,42 @@ function validateRoomDistribution() {
     const totalGuests = calculateTotalGuests();
     
     if (totalGuests !== pax) {
+        // Show inline error
+        const statusDiv = document.getElementById('room-distribution-status');
+        if (statusDiv) {
+            statusDiv.classList.remove('hidden');
+            document.getElementById('room-status-message').innerHTML = 
+                `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i> Room capacity (${totalGuests}) must equal Total Guests (${pax})`;
+            document.getElementById('room-status-message').className = 'text-red-600';
+        }
         return { valid: false, message: `Room capacity (${totalGuests}) must equal Total Guests (${pax})` };
     }
     return { valid: true };
 }
 
-// Add event listeners to room distribution fields
-document.getElementById('hotel_single_rooms')?.addEventListener('input', calculateTotalGuests);
-document.getElementById('hotel_single_rooms')?.addEventListener('change', calculateTotalGuests);
+// Initialize wizard on page load
+function initializeRoomWizard() {
+    updateWizardPreviews();
+    calculateTotalGuests();
+}
 
-// DBL and TRP auto-recalculate SGL
-['hotel_double_rooms', 'hotel_triple_rooms'].forEach(fieldId => {
-    const field = document.getElementById(fieldId);
+// Add event listeners for manual mode fields
+['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms', 'hotel_other_capacity'].forEach(id => {
+    const field = document.getElementById(id);
     if (field) {
-        field.addEventListener('input', () => autoRecalculateSingleRooms(fieldId));
-        field.addEventListener('change', () => autoRecalculateSingleRooms(fieldId));
+        field.addEventListener('input', calculateTotalGuests);
+        field.addEventListener('change', calculateTotalGuests);
     }
 });
 
-// Listen for PAX changes from the main booking form and update room distribution
+// Listen for PAX changes and update wizard
 document.querySelector('[name="pax"]')?.addEventListener('input', function() {
-    const newPax = parseInt(this.value) || 0;
-    
-    // Update the hotel_pax_display element
-    const paxDisplay = document.getElementById('hotel_pax_display');
-    if (paxDisplay) {
-        paxDisplay.textContent = newPax;
-    }
-    
-    // Re-initialize room distribution with new PAX value
-    initializeRoomDistribution();
+    updateWizardPreviews();
+    calculateTotalGuests();
 });
 
 // Initialize on page load
-initializeRoomDistribution();
+initializeRoomWizard();
 </script>
 
 <!-- Add New Hotel Modal -->
