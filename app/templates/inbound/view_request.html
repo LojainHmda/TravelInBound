@@ -5,7 +5,7 @@
 {% block styles %}
 <style>
 /* Tailwind CSS Overrides */
-.tw-container { max-width: 1600px; margin: 0 auto; padding: 1rem 1.5rem; }
+.tw-container { max-width: 1600px; margin: 0 auto; padding: 1rem 2rem; }
 
 /* Smooth scroll */
 html { scroll-behavior: smooth; }
@@ -393,7 +393,7 @@ html { scroll-behavior: smooth; }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .tw-container { padding: 0.5rem; }
+    .tw-container { padding: 1rem; }
     .stage-bar { flex-wrap: wrap; gap: 0.5rem; }
     .status-sidebar-overlay { width: 85%; }
 }
@@ -460,13 +460,17 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
             
+            <a href="{{ url_for('main.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
+                <i class="fas fa-home"></i>
+                <span class="hidden sm:inline">Dashboard</span>
+            </a>
+            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
+                <i class="fas fa-list"></i>
+                <span class="hidden sm:inline">Orders List</span>
+            </a>
             <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary tw-btn-sm">
                 <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
                 {{ 'Edit' if view_only else 'View' }}
-            </a>
-            <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
-                <i class="fas fa-arrow-left"></i>
-                <span class="hidden sm:inline">Back</span>
             </a>
         </div>
     </div>
