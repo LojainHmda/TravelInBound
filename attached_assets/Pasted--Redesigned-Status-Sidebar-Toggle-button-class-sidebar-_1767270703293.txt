@@ -1,0 +1,107 @@
+<!-- Redesigned Status Sidebar Toggle -->
+<button class="sidebar-toggle-btn" onclick="toggleStatusSidebar()" aria-label="Toggle Status Sidebar">
+    <i class="fas fa-stream"></i>
+</button>
+
+<!-- Status Sidebar Backdrop -->
+<div class="sidebar-backdrop" id="statusSidebarBackdrop" onclick="toggleStatusSidebar()"></div>
+
+<!-- Redesigned Status Sidebar -->
+<div class="sidebar-panel" id="statusSidebarOverlay">
+    <!-- Sidebar Header -->
+    <div class="sidebar-header">
+        <div class="sidebar-header-content">
+            <h2 class="sidebar-title">Request Workflow</h2>
+            <p class="sidebar-subtitle">Track your progress</p>
+        </div>
+        <button class="sidebar-close-btn" onclick="toggleStatusSidebar()" aria-label="Close Sidebar">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar Body -->
+    <div class="sidebar-body">
+        <div class="progress-track">
+            <!-- Progress Line (dynamically styled by JS) -->
+            <div class="progress-line" id="progressLine"></div>
+            
+            <!-- Status Steps -->
+            <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+                 data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
+                <div class="status-indicator">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Request</div>
+                    <div class="status-desc">Initial request received</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+                 data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
+                <div class="status-indicator">
+                    <i class="fas fa-check-double"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Supplier Confirmed</div>
+                    <div class="status-desc">All suppliers confirmed</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+                 data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
+                <div class="status-indicator">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Quoted</div>
+                    <div class="status-desc">Quote sent to customer</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'CONFIRMED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+                 data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
+                <div class="status-indicator">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Confirmed</div>
+                    <div class="status-desc">Customer confirmed booking</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
+                 data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
+                <div class="status-indicator">
+                    <i class="fas fa-file-invoice"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Invoice</div>
+                    <div class="status-desc">Invoice generated</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}" 
+                 data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
+                <div class="status-indicator">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Processing</div>
+                    <div class="status-desc">Trip in progress</div>
+                </div>
+            </div>
+            
+            <div class="status-step {% if request.status == 'COMPLETED' %}active{% endif %}" 
+                 data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
+                <div class="status-indicator">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="status-content">
+                    <div class="status-title">Completed</div>
+                    <div class="status-desc">Trip completed successfully</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
