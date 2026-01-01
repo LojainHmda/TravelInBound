@@ -2153,6 +2153,11 @@ function updateServiceTable(serviceType, data) {
             tbody.innerHTML = data.all_entries_html;
         }
     }
+    
+    // Mark summary tables as stale so they refresh when opened
+    if (typeof markSummaryTablesStale === 'function') {
+        markSummaryTablesStale();
+    }
 }
 
 // Function to create HTML for a new service row
@@ -2321,9 +2326,6 @@ function updateSummaryCounts() {
     
     // Update tab colors based on data
     updateTabColors();
-    
-    // Update the full summary section inline tables
-    updateFullSummaryTables();
 }
 
 // Function to update the inline full summary tables dynamically
@@ -2526,6 +2528,7 @@ function updateTabColors() {
 }
 
 // Function to toggle full summary section
+let summaryTablesLoaded = false;
 function toggleFullSummary() {
     const section = document.getElementById('fullSummarySection');
     const btnText = document.getElementById('toggleSummaryText');
@@ -2533,10 +2536,20 @@ function toggleFullSummary() {
     if (section.classList.contains('hidden')) {
         section.classList.remove('hidden');
         btnText.textContent = 'Hide Summary';
+        // Only update tables on first open or when data has changed
+        if (!summaryTablesLoaded) {
+            updateFullSummaryTables();
+            summaryTablesLoaded = true;
+        }
     } else {
         section.classList.add('hidden');
         btnText.textContent = 'View Full Summary';
     }
+}
+
+// Mark tables as needing refresh when services change
+function markSummaryTablesStale() {
+    summaryTablesLoaded = false;
 }
 
 // Function to print full summary
