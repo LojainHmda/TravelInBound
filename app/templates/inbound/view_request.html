@@ -402,10 +402,11 @@ html { scroll-behavior: smooth; }
 
 {% block content %}
 <div class="tw-container">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
-        <div class="flex items-center gap-3">
-            <div>
+    <!-- Header Wrapper for Alignment -->
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+            <div class="flex items-center gap-3">
+                <div>
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                     {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}
                     <span id="headerStatusBadge" class="status-badge 
@@ -472,6 +473,7 @@ html { scroll-behavior: smooth; }
                 <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
                 {{ 'Edit' if view_only else 'View' }}
             </a>
+            </div>
         </div>
     </div>
 
