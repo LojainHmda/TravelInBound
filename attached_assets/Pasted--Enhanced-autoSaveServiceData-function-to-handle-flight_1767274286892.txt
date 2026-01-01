@@ -1,0 +1,248 @@
+// Enhanced autoSaveServiceData function to handle flight data better
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    // Collect form data
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            showNotification(data.message || 'Service data saved!', 'success');
+            
+            // Update the appropriate table based on service type
+            if (serviceType === 'arrival' || serviceType === 'departure') {
+                updateFlightTable(serviceType, data);
+            } else {
+                updateServiceTable(serviceType, data);
+            }
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icon if needed
+            if (currentServiceContext.rowId) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// New function to update flight tables separately
+function updateFlightTable(flightType, data) {
+    const tableId = flightType === 'arrival' ? 'arrival-table-body' : 'departure-table-body';
+    const containerId = flightType === 'arrival' ? 'arrival-table-container' : 'departure-table-container';
+    
+    const tbody = document.getElementById(tableId);
+    const container = document.getElementById(containerId);
+    
+    // Show the table container when data is added
+    if (container) {
+        container.style.display = 'block';
+    }
+    
+    // Check if we have data in the response
+    if (data.service_entry) {
+        if (tbody) {
+            const rowHtml = createFlightRowHtml(flightType, data.service_entry);
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+        }
+    } else if (data.all_entries_html) {
+        if (tbody) {
+            tbody.innerHTML = data.all_entries_html;
+        }
+    } else if (data.service_entries_html) {
+        if (tbody) {
+            tbody.insertAdjacentHTML('beforeend', data.service_entries_html);
+        }
+    }
+    
+    // Update tab colors
+    updateTabColors();
+}
+
+// New function to create HTML row for flight data
+function createFlightRowHtml(flightType, entry) {
+    const dateField = flightType === 'arrival' ? 'arrival_date' : 'departure_date';
+    const timeField = flightType === 'arrival' ? 'arrival_time' : 'departure_time';
+    const pointField = flightType === 'arrival' ? 'arrival_point' : 'departure_point';
+    
+    const date = entry[dateField] ? new Date(entry[dateField]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+    const time = entry[timeField] ? new Date('1970-01-01T' + entry[timeField]).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-';
+    
+    return `
+        <tr class="hover:bg-slate-50">
+            <td class="px-2 py-1.5 text-slate-700">${date}</td>
+            <td class="px-2 py-1.5 text-slate-500">${time}</td>
+            <td class="px-2 py-1.5 text-slate-700">${entry[pointField] || '-'}</td>
+            <td class="px-2 py-1.5 text-slate-500">${entry.flight_number || '-'}</td>
+            <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
+            <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
+            <td class="px-2 py-1.5 text-center">
+                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="delete${flightType === 'arrival' ? 'Arrival' : 'Departure'}Batch(${entry.id})">
+                    <i class="far fa-trash-alt"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// Improved delete functions for flight services
+function deleteArrivalBatch(batchId) {
+    if (!confirm('Are you sure you want to delete this arrival?')) return;
+    deleteFlightService('arrival', batchId);
+}
+
+function deleteDepartureBatch(batchId) {
+    if (!confirm('Are you sure you want to delete this departure?')) return;
+    deleteFlightService('departure', batchId);
+}
+
+function deleteFlightService(flightType, serviceId) {
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: flightType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Flight service deleted!', 'success');
+            
+            // Find and remove the row
+            const rows = document.querySelectorAll(`#${flightType}-table-body tr`);
+            rows.forEach(row => {
+                const deleteBtn = row.querySelector(`button[onclick*="${serviceId}"]`);
+                if (deleteBtn) {
+                    row.remove();
+                }
+            });
+            
+            // Check if table is empty and hide container
+            const tbody = document.getElementById(`${flightType}-table-body`);
+            if (tbody && tbody.children.length === 0) {
+                const container = document.getElementById(`${flightType}-table-container`);
+                if (container) container.style.display = 'none';
+            }
+            
+            // Update summary counts
+            updateSummaryCounts();
+        } else {
+            showNotification('Error deleting flight service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting flight service', 'error');
+    });
+}
+
+// Update updateSummaryCounts to handle flight data better
+function updateSummaryCounts() {
+    // Update other service counts
+    const hotelCount = document.querySelectorAll('#hotels-table-body tr').length;
+    const hotelSummary = document.getElementById('summary_hotels');
+    if (hotelSummary) hotelSummary.textContent = hotelCount;
+    
+    const transportCount = document.querySelectorAll('#transports-table-body tr').length;
+    const transportSummary = document.getElementById('summary_transport');
+    if (transportSummary) transportSummary.textContent = transportCount;
+    
+    const guideCount = document.querySelectorAll('#guides-table-body tr').length;
+    const guideSummary = document.getElementById('summary_guides');
+    if (guideSummary) guideSummary.textContent = guideCount;
+    
+    const mealCount = document.querySelectorAll('#meals-table-body tr').length;
+    const mealSummary = document.getElementById('summary_meals');
+    if (mealSummary) mealSummary.textContent = mealCount;
+    
+    // Update flight data
+    const flightsContainer = document.getElementById('summary_flights');
+    if (flightsContainer) {
+        const arrivalRows = Array.from(document.querySelectorAll('#arrival-table-body tr'));
+        const departureRows = Array.from(document.querySelectorAll('#departure-table-body tr'));
+        
+        let flightsHtml = '';
+        
+        // Add arrival data
+        arrivalRows.forEach(tr => {
+            const date = tr.cells[0].textContent.trim();
+            flightsHtml += `<span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-plane-arrival"></i> ${date}
+            </span>`;
+        });
+        
+        // Add departure data
+        departureRows.forEach(tr => {
+            const date = tr.cells[0].textContent.trim();
+            flightsHtml += `<span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-plane-departure"></i> ${date}
+            </span>`;
+        });
+        
+        flightsContainer.innerHTML = flightsHtml || '<span class="text-slate-400 text-[10px]">No flights added</span>';
+    }
+    
+    // Update hotel data
+    const hotelsContainer = document.getElementById('summary_hotel_list');
+    if (hotelsContainer) {
+        const hotels = Array.from(document.querySelectorAll('#hotels-table-body tr')).map(tr => {
+            const name = tr.cells[0].textContent.trim();
+            const nights = tr.cells[2].textContent.trim();
+            return `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-hotel"></i> ${name} 
+                ${nights !== '0' ? `<span class="text-blue-500">(${nights}N)</span>` : ''}
+            </span>`;
+        }).join('');
+        
+        hotelsContainer.innerHTML = hotels || '<span class="text-slate-400 text-[10px]">No hotels added</span>';
+    }
+    
+    // Update tab colors
+    updateTabColors();
+}
