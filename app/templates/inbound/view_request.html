@@ -1534,7 +1534,7 @@ html { scroll-behavior: smooth; }
                                     <tbody id="full-summary-guides">
                                         {% if request.inbound_guides %}
                                             {% for guide in request.inbound_guides %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
@@ -1878,11 +1878,23 @@ function getServiceCounts() {
         }).length;
     }
     
+    // Helper function to count unique items by data attribute
+    function countUniqueByAttr(tbodyId, attrName) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return 0;
+        const uniqueValues = new Set();
+        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+            const val = row.getAttribute(attrName);
+            if (val && val.trim()) uniqueValues.add(val.trim());
+        });
+        return uniqueValues.size;
+    }
+    
     return {
         'arrival': arrivalCount,
         'departure': departureCount,
         'hotel': countDataRows('full-summary-hotels'),
-        'guide': countDataRows('full-summary-guides'),
+        'guide': countUniqueByAttr('full-summary-guides', 'data-guide-name'),
         'transport': countDataRows('full-summary-transports'),
         'meal': countDataRows('full-summary-meals')
     };
@@ -2583,8 +2595,9 @@ function updateFullSummaryTables() {
         if (guideRows.length > 0) {
             guidesSummaryBody.innerHTML = guideRows.map(tr => {
                 const cells = tr.cells;
-                return `<tr class="hover:bg-gray-50">
-                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${cells[0]?.textContent.trim() || '-'}</td>
+                const guideName = cells[0]?.textContent.trim() || '';
+                return `<tr class="hover:bg-gray-50" data-guide-name="${guideName}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${guideName || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
