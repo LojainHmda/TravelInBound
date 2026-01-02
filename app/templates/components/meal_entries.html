@@ -1,6 +1,6 @@
 {% if meals %}
 {% for meal in meals %}
-<tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}">
+<tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant or '' }}">
     <td class="px-4 py-3 text-slate-500">{{ meal.date.strftime('%d %b') if meal.date else '-' }}</td>
     <td class="px-4 py-3 text-slate-700">{{ meal.restaurant or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ meal.meal_type or '-' }}</td>

@@ -1,6 +1,6 @@
 {% if hotels %}
 {% for hotel in hotels %}
-<tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
+<tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}" data-hotel-name="{{ hotel.hotel_name or '' }}">
     <td class="px-4 py-3 text-slate-700">{{ hotel.hotel_name or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>

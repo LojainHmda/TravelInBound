@@ -1,6 +1,6 @@
 {% if transports %}
 {% for transport in transports %}
-<tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}">
+<tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_location or '' }}-{{ transport.dropoff_location or '' }}">
     <td class="px-4 py-3 text-slate-500">{{ transport.date.strftime('%d %b') if transport.date else '-' }}</td>
     <td class="px-4 py-3 text-slate-700">{{ transport.vehicle_type or '-' }}</td>
     <td class="px-4 py-3 text-slate-500">{{ transport.pickup_location or '-' }}</td>
