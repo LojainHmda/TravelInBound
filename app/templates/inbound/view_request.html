@@ -1849,26 +1849,50 @@ function initializeTabStates() {
     updateTabColors();
 }
 
-// Helper function to get service counts from service tables
+// Helper function to get UNIQUE service counts from summary tables
+// Badge counts show unique services (1 hotel = badge "1"), not daily entries
 function getServiceCounts() {
-    // Count rows in a table body, excluding empty/placeholder rows
+    // Count arrivals and departures from flights table by looking at the badges
+    const flightRows = document.querySelectorAll('#full-summary-flights tr');
+    let arrivalCount = 0, departureCount = 0;
+    flightRows.forEach(row => {
+        const badge = row.querySelector('span');
+        if (badge) {
+            if (badge.textContent.includes('Arrival')) arrivalCount++;
+            if (badge.textContent.includes('Departure')) departureCount++;
+        }
+    });
+    
+    // Count rows for a table body, excluding placeholder rows
     function countRows(tbodyId) {
         const tbody = document.getElementById(tbodyId);
         if (!tbody) return 0;
-        // Filter out rows with colspan (placeholder "no data" rows)
         return Array.from(tbody.querySelectorAll('tr')).filter(row => {
             const td = row.querySelector('td[colspan]');
             return !td;
         }).length;
     }
     
+    // Count unique items by data attribute (for services that may have daily entries)
+    function countUniqueByAttr(tbodyId, attrName) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return 0;
+        const uniqueValues = new Set();
+        Array.from(tbody.querySelectorAll('tr')).forEach(row => {
+            const val = row.getAttribute(attrName);
+            if (val && val.trim()) uniqueValues.add(val.trim());
+        });
+        // If no data attributes found, fall back to row count
+        return uniqueValues.size > 0 ? uniqueValues.size : countRows(tbodyId);
+    }
+    
     return {
-        'arrival': countRows('arrival-table-body'),
-        'departure': countRows('departure-table-body'),
-        'hotel': countRows('hotels-table-body'),
-        'guide': countRows('guides-table-body'),
-        'transport': countRows('transports-table-body'),
-        'meal': countRows('meals-table-body')
+        'arrival': arrivalCount,
+        'departure': departureCount,
+        'hotel': countUniqueByAttr('full-summary-hotels', 'data-hotel-name'),
+        'guide': countUniqueByAttr('full-summary-guides', 'data-guide-name'),
+        'transport': countUniqueByAttr('full-summary-transports', 'data-transport-key'),
+        'meal': countUniqueByAttr('full-summary-meals', 'data-meal-key')
     };
 }
 
@@ -3352,42 +3376,33 @@ function parseDateFromText(dateText) {
     return new Date(year, month, day);
 }
 
-// Function to update service tables after saving a service
+// Function to update summary tables after saving a service
 function updateSummaryTables(serviceType, data) {
-    // Map service types to their table body IDs
+    // Map service types to their summary table body IDs
     const tableMap = {
-        'hotel': 'hotels-table-body',
-        'arrival': 'arrival-table-body',
-        'departure': 'departure-table-body',
-        'guide': 'guides-table-body',
-        'transport': 'transports-table-body',
-        'meal': 'meals-table-body'
-    };
-    
-    const containerMap = {
-        'hotel': 'hotels-table-container',
-        'arrival': 'arrival-table-container',
-        'departure': 'departure-table-container',
-        'guide': 'guides-table-container',
-        'transport': 'transports-table-container',
-        'meal': 'meals-table-container'
+        'hotel': 'full-summary-hotels',
+        'arrival': 'full-summary-flights',
+        'departure': 'full-summary-flights',
+        'guide': 'full-summary-guides',
+        'transport': 'full-summary-transports',
+        'meal': 'full-summary-meals'
     };
     
     const tableId = tableMap[serviceType];
-    const containerId = containerMap[serviceType];
     
-    if (tableId) {
+    if (tableId && data.service_entries_html) {
         const tableBody = document.getElementById(tableId);
-        const container = document.getElementById(containerId);
-        
-        // Show container when adding data
-        if (container) {
-            container.style.display = 'block';
-        }
-        
-        if (tableBody && data.service_entries_html) {
-            // Append new rows to the service table
-            tableBody.insertAdjacentHTML('beforeend', data.service_entries_html);
+        if (tableBody) {
+            if (serviceType === 'arrival' || serviceType === 'departure') {
+                // For flights, use async fetch then update badges after
+                updateFlightsSummaryTable().then(() => {
+                    updateTabBadges();
+                    updateTabColors();
+                });
+            } else {
+                // REPLACE table content instead of appending
+                tableBody.innerHTML = data.service_entries_html;
+            }
         }
     }
     

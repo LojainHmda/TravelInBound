@@ -1,0 +1,274 @@
+// Update tab badges with service counts
+function updateTabBadges() {
+    const serviceCounts = getServiceCounts();
+    
+    const colorMap = {
+        'arrival': 'bg-green-500',
+        'departure': 'bg-orange-500',
+        'hotel': 'bg-blue-500',
+        'guide': 'bg-teal-500',
+        'transport': 'bg-cyan-500',
+        'meal': 'bg-amber-500'
+    };
+    
+    Object.keys(serviceCounts).forEach(serviceType => {
+        const tab = document.getElementById(`tab-${serviceType}`);
+        if (!tab) return;
+        
+        // Remove existing badge if any
+        const existingBadge = tab.querySelector('.tab-count-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        // Add new badge if count > 0
+        if (serviceCounts[serviceType] > 0) {
+            const badge = document.createElement('span');
+            badge.className = `ml-1 ${colorMap[serviceType]} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            badge.textContent = serviceCounts[serviceType];
+            tab.appendChild(badge);
+        }
+    });
+}
+
+// Function to update service tables
+function updateServiceTable(serviceType, data) {
+    const tableMap = {
+        'hotel': { tbodyId: 'hotels-table-body', containerId: 'hotels-table-container' },
+        'arrival': { tbodyId: 'arrival-table-body', containerId: 'arrival-table-container' },
+        'departure': { tbodyId: 'departure-table-body', containerId: 'departure-table-container' },
+        'guide': { tbodyId: 'guides-table-body', containerId: 'guides-table-container' },
+        'transport': { tbodyId: 'transports-table-body', containerId: 'transports-table-container' },
+        'meal': { tbodyId: 'meals-table-body', containerId: 'meals-table-container' }
+    };
+    
+    const tableInfo = tableMap[serviceType];
+    if (!tableInfo) return;
+    
+    const tbody = document.getElementById(tableInfo.tbodyId);
+    const container = document.getElementById(tableInfo.containerId);
+    
+    // Show the table container when data is added
+    if (container) {
+        container.style.display = 'block';
+    }
+    
+    // Handle different response formats
+    if (data.service_entries_html) {
+        if (tbody) {
+            tbody.insertAdjacentHTML('beforeend', data.service_entries_html);
+        }
+    } else if (data.service_entry) {
+        if (tbody) {
+            const rowHtml = createServiceRowHtml(serviceType, data.service_entry);
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+        }
+    } else if (data.all_entries_html) {
+        if (tbody) {
+            tbody.innerHTML = data.all_entries_html;
+        }
+    }
+    
+    // Update tab badges immediately after updating the table
+    updateTabBadges();
+    updateTabColors();
+    
+    // Mark summary tables as stale so they refresh when opened
+    if (typeof markSummaryTablesStale === 'function') {
+        markSummaryTablesStale();
+    }
+}
+
+// Enhanced saveServiceData to update badges
+function saveServiceData(serviceType) {
+    // Validation code remains the same...
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            
+            // Update service table
+            updateServiceTable(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Explicitly update tab badges and colors
+            updateTabBadges();
+            updateTabColors();
+            
+            // Show notification
+            showNotification('Service saved!', 'success');
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// Enhanced deleteService to update badges
+function deleteService(serviceType, serviceId) {
+    if (!confirm(`Are you sure you want to delete this ${serviceType}?`)) return;
+    
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: serviceType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Service deleted!', 'success');
+            
+            // Remove row from table
+            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            if (serviceRow) serviceRow.remove();
+            
+            // Check if table is empty and hide container
+            const tbody = document.querySelector(`#${serviceType}-table-body`);
+            if (tbody && tbody.children.length === 0) {
+                const container = document.getElementById(`${serviceType}-table-container`);
+                if (container) container.style.display = 'none';
+            }
+            
+            // Update counts immediately
+            updateTabBadges();
+            updateTabColors();
+            updateSummaryCounts();
+            
+            // Update itinerary if needed
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+        } else {
+            showNotification('Error deleting service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting service', 'error');
+    });
+}
+
+// Enhanced autoSaveServiceData to update badges
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    // Collect form data
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            showNotification(data.message || 'Service data saved!', 'success');
+            
+            // Update itinerary if needed
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+            
+            // Update service table
+            updateServiceTable(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icon if needed
+            if (currentServiceContext.rowId) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// Initialize tab states and counts on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing initialization code...
+    
+    // Initialize tab badges with current counts
+    updateTabBadges();
+    updateTabColors();
+    
+    // Set up listeners for real-time updates
+    setupServiceListeners();
+});
+
+// Set up listeners for service table changes
+function setupServiceListeners() {
+    // Watch for changes in service tables
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                // Update badges when table content changes
+                updateTabBadges();
+                updateTabColors();
+            }
+        });
+    });
+    
+    // Observe all service table bodies
+    ['arrival', 'departure', 'hotel', 'guide', 'transport', 'meal'].forEach(service => {
+        const tbody = document.getElementById(`${service}-table-body`);
+        if (tbody) {
+            observer.observe(tbody, { childList: true });
+        }
+    });
+}
