@@ -3220,8 +3220,17 @@ function activateIconsForDateRange(serviceType, fromDate, toDate) {
 
 // Helper function to parse date from text (handles various formats)
 function parseDateFromText(dateText) {
+    if (!dateText) return null;
+    const text = dateText.trim();
+    
+    // Handle ISO format (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        const [year, month, day] = text.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+    
     // Handle formats like "15 Jun" or "15 Jun 2023"
-    const parts = dateText.trim().split(' ');
+    const parts = text.split(' ');
     if (parts.length < 2) return null;
     
     const day = parseInt(parts[0]);
