@@ -3177,30 +3177,44 @@ function activateIconsForDateRange(serviceType, fromDate, toDate) {
     const iconClass = serviceIconMap[serviceType];
     if (!iconClass) return;
     
-    // Convert dates to Date objects for comparison
-    const startDate = new Date(fromDate);
-    const endDate = new Date(toDate);
+    // Normalize dates to YYYY-MM-DD strings for comparison (avoids timezone issues)
+    const normalizeDate = (dateStr) => {
+        if (!dateStr) return null;
+        // If already ISO format, return as-is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+        // Parse and convert to ISO
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().split('T')[0];
+    };
+    
+    const startDateStr = normalizeDate(fromDate);
+    const endDateStr = normalizeDate(toDate);
+    
+    if (!startDateStr || !endDateStr) return;
     
     // Find all rows in the itinerary
     const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
     
     rows.forEach(row => {
-        // Get the date for this row (assuming it's stored in data-date attribute or in a specific cell)
+        // Get the date for this row from data-date attribute
         let rowDateStr = row.dataset.date;
         if (!rowDateStr) {
             // Try to get date from the date cell (second column)
             const dateCell = row.cells[1];
             if (dateCell) {
                 rowDateStr = dateCell.textContent.trim();
+                // Try to parse and normalize
+                const parsed = parseDateFromText(rowDateStr);
+                if (parsed) {
+                    rowDateStr = parsed.toISOString().split('T')[0];
+                }
             }
         }
         
         if (rowDateStr) {
-            // Parse the row date (format might be "DD Mon" or "DD Mon YYYY")
-            const rowDate = parseDateFromText(rowDateStr);
-            
-            // Check if this row's date is within the specified range
-            if (rowDate && rowDate >= startDate && rowDate <= endDate) {
+            // Compare as strings (YYYY-MM-DD format sorts correctly)
+            if (rowDateStr >= startDateStr && rowDateStr <= endDateStr) {
                 // Activate the icon for this service type on this row
                 const icon = row.querySelector(`.service-icon-toggle.${iconClass}`);
                 if (icon) {
