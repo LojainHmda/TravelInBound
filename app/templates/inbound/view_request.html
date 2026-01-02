@@ -3141,16 +3141,15 @@ function saveServiceData(serviceType) {
             // Update summary counts
             updateSummaryCounts();
             
-            // Activate icon if needed
-            if (currentServiceContext.rowId) {
-                activateIcon(currentServiceContext.rowId, serviceType);
-            }
-            
-            // Notify user that service was applied to specific days only
+            // Activate icons only for the specific date range
             if (!currentServiceContext.rowId && fromDate && toDate) {
+                activateIconsForDateRange(serviceType, fromDate, toDate);
                 const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                showNotification(`Service applied to days ${startDate} - ${endDate}`, 'info');
+                showNotification(`Service applied to days ${startDate} - ${endDate} only`, 'info');
+            } else if (currentServiceContext.rowId) {
+                // For day-specific services, activate only that day's icon
+                activateIcon(currentServiceContext.rowId, serviceType);
             }
         } else {
             const errorMsg = data.error || 'Error saving service data';
@@ -3166,8 +3165,81 @@ function saveServiceData(serviceType) {
     setTimeout(() => {
         if (!currentServiceContext.rowId) {
             clearServiceForm(serviceType);
+            showNotification('Saved. You can add another item.', 'success');
         }
     }, 500);
+}
+
+// Function to activate icons only for rows within a specific date range
+function activateIconsForDateRange(serviceType, fromDate, toDate) {
+    const serviceIconMap = {
+        'hotel': 'hotel',
+        'guide': 'guide',
+        'transport': 'transport',
+        'meal': 'meal',
+        'arrival': 'arrival',
+        'departure': 'departure'
+    };
+    
+    const iconClass = serviceIconMap[serviceType];
+    if (!iconClass) return;
+    
+    // Convert dates to Date objects for comparison
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    
+    // Find all rows in the itinerary
+    const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
+    
+    rows.forEach(row => {
+        // Get the date for this row (assuming it's stored in data-date attribute or in a specific cell)
+        let rowDateStr = row.dataset.date;
+        if (!rowDateStr) {
+            // Try to get date from the date cell (second column)
+            const dateCell = row.cells[1];
+            if (dateCell) {
+                rowDateStr = dateCell.textContent.trim();
+            }
+        }
+        
+        if (rowDateStr) {
+            // Parse the row date (format might be "DD Mon" or "DD Mon YYYY")
+            const rowDate = parseDateFromText(rowDateStr);
+            
+            // Check if this row's date is within the specified range
+            if (rowDate && rowDate >= startDate && rowDate <= endDate) {
+                // Activate the icon for this service type on this row
+                const icon = row.querySelector(`.service-icon-toggle.${iconClass}`);
+                if (icon) {
+                    icon.classList.add('active');
+                }
+            }
+        }
+    });
+}
+
+// Helper function to parse date from text (handles various formats)
+function parseDateFromText(dateText) {
+    // Handle formats like "15 Jun" or "15 Jun 2023"
+    const parts = dateText.trim().split(' ');
+    if (parts.length < 2) return null;
+    
+    const day = parseInt(parts[0]);
+    const monthStr = parts[1];
+    
+    // Convert month name to number (0-indexed)
+    const months = {
+        'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+        'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+    };
+    
+    const month = months[monthStr];
+    if (month === undefined) return null;
+    
+    // Use current year if not specified
+    const year = parts.length > 2 ? parseInt(parts[2]) : new Date().getFullYear();
+    
+    return new Date(year, month, day);
 }
 
 // Delete service functions
