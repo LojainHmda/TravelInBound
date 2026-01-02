@@ -3137,6 +3137,9 @@ function saveServiceData(serviceType) {
             // Update summary counts
             updateSummaryCounts();
             
+            // Explicitly update tab badges
+            updateTabBadges();
+            
             // Activate icons only for the specific date range
             if (!currentServiceContext.rowId && fromDate && toDate) {
                 activateIconsForDateRange(serviceType, fromDate, toDate);
@@ -3395,6 +3398,44 @@ function updateFlightsSummaryTable() {
     });
 }
 
+// Function to update tab badges with service counts
+function updateTabBadges() {
+    const serviceCounts = {
+        'arrival': document.querySelectorAll('#arrival-table-body tr').length,
+        'departure': document.querySelectorAll('#departure-table-body tr').length,
+        'hotel': document.querySelectorAll('#hotels-table-body tr').length,
+        'guide': document.querySelectorAll('#guides-table-body tr').length,
+        'transport': document.querySelectorAll('#transports-table-body tr').length,
+        'meal': document.querySelectorAll('#meals-table-body tr').length
+    };
+    
+    Object.keys(serviceCounts).forEach(serviceType => {
+        const tab = document.getElementById(`tab-${serviceType}`);
+        if (!tab) return;
+        
+        // Remove existing badge if any
+        const existingBadge = tab.querySelector('.tab-count-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        // Add new badge if count > 0
+        if (serviceCounts[serviceType] > 0) {
+            const colorMap = {
+                'arrival': 'bg-green-500',
+                'departure': 'bg-orange-500',
+                'hotel': 'bg-blue-500',
+                'guide': 'bg-teal-500',
+                'transport': 'bg-cyan-500',
+                'meal': 'bg-amber-500'
+            };
+            
+            const badge = document.createElement('span');
+            badge.className = `ml-1 ${colorMap[serviceType]} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            badge.textContent = serviceCounts[serviceType];
+            tab.appendChild(badge);
+        }
+    });
+}
+
 // Delete service functions
 function deleteHotel(hotelId) {
     if (!confirm('Are you sure you want to delete this hotel?')) return;
@@ -3462,6 +3503,9 @@ function deleteFlightService(flightType, serviceId) {
             // Update summary counts
             updateSummaryCounts();
             
+            // Update tab badges
+            updateTabBadges();
+            
             // Mark summary tables as stale
             if (typeof markSummaryTablesStale === 'function') {
                 markSummaryTablesStale();
@@ -3513,6 +3557,12 @@ function deleteService(serviceType, serviceId) {
                  const container = document.getElementById(tableContainerId);
                  if (container) container.style.display = 'none';
             }
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Update tab badges
+            updateTabBadges();
         } else {
             showNotification('Error deleting service: ' + (data.error || ''), 'error');
         }
@@ -4130,6 +4180,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initializeRoomWizard();
     setupDateFieldListeners();
+    updateTabBadges();
 });
 
 // Status Updates

@@ -1,0 +1,283 @@
+// Update the saveServiceData function to properly update tab badges
+function saveServiceData(serviceType) {
+    // Validate date range for global services
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateValidation = validateDateRange(serviceType);
+        if (!dateValidation.valid) {
+            showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+    }
+    
+    // Validate room distribution for hotels
+    if (serviceType === 'hotel') {
+        const validation = validateRoomDistribution();
+        if (!validation.valid) {
+            showInlineError('hotel', validation.message);
+            return;
+        }
+    }
+    
+    // Collect form data
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    // Determine date range for application
+    let fromDate, toDate;
+    
+    switch(serviceType) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            break;
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = document.getElementById('arrival_date')?.value;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = document.getElementById('departure_date')?.value;
+            break;
+    }
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData,
+        apply_to_specific_days: true,
+        from_date: fromDate,
+        to_date: toDate
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+        payload.apply_to_specific_days = true;
+    }
+    
+    // Remove any previous notifications before sending request
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            
+            // Update summary tables instead of service table
+            updateSummaryTables(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Explicitly update tab badges
+            updateTabBadges();
+            
+            // Activate icons only for the specific date range
+            if (!currentServiceContext.rowId && fromDate && toDate) {
+                activateIconsForDateRange(serviceType, fromDate, toDate);
+                const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                showNotification(`Saved! Applied to ${startDate} - ${endDate}. Add another?`, 'success');
+                // Clear form for next entry
+                setTimeout(() => clearServiceForm(serviceType), 300);
+            } else if (currentServiceContext.rowId) {
+                // For day-specific services, activate only that day's icon
+                activateIcon(currentServiceContext.rowId, serviceType);
+                showNotification('Service saved for this day!', 'success');
+            } else {
+                showNotification('Service saved!', 'success');
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// Add a new function specifically for updating tab badges
+function updateTabBadges() {
+    const serviceCounts = {
+        'arrival': document.querySelectorAll('#arrival-table-body tr').length,
+        'departure': document.querySelectorAll('#departure-table-body tr').length,
+        'hotel': document.querySelectorAll('#hotels-table-body tr').length,
+        'guide': document.querySelectorAll('#guides-table-body tr').length,
+        'transport': document.querySelectorAll('#transports-table-body tr').length,
+        'meal': document.querySelectorAll('#meals-table-body tr').length
+    };
+    
+    Object.keys(serviceCounts).forEach(serviceType => {
+        const tab = document.getElementById(`tab-${serviceType}`);
+        if (!tab) return;
+        
+        // Remove existing badge if any
+        const existingBadge = tab.querySelector('.tab-count-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        // Add new badge if count > 0
+        if (serviceCounts[serviceType] > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'ml-1 bg-green-500 text-white text-[10px] px-1.5 rounded-full tab-count-badge';
+            
+            // Set badge color based on service type
+            const colorMap = {
+                'arrival': 'bg-green-500',
+                'departure': 'bg-orange-500',
+                'hotel': 'bg-blue-500',
+                'guide': 'bg-teal-500',
+                'transport': 'bg-cyan-500',
+                'meal': 'bg-amber-500'
+            };
+            
+            badge.className = `ml-1 ${colorMap[serviceType]} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            badge.textContent = serviceCounts[serviceType];
+            tab.appendChild(badge);
+        }
+    });
+}
+
+// Update the deleteService functions to also update tab badges
+function deleteService(serviceType, serviceId) {
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: serviceType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Service deleted!', 'success');
+            
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+            
+            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            if (serviceRow) serviceRow.remove();
+            
+            // Check if table is empty and hide container
+            const tableContainerId = serviceType === 'hotel' ? 'hotels-table-container' : 
+                                      serviceType === 'guide' ? 'guides-table-container' : 
+                                      serviceType === 'transport' ? 'transports-table-container' : 
+                                      serviceType === 'meal' ? 'meals-table-container' : 
+                                      serviceType === 'arrival' ? 'arrival-table-container' : 
+                                      serviceType === 'departure' ? 'departure-table-container' : '';
+            const tbody = document.querySelector(`#${serviceType}-table-body`);
+            if (tbody && tbody.children.length === 0) {
+                 const container = document.getElementById(tableContainerId);
+                 if (container) container.style.display = 'none';
+            }
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Update tab badges
+            updateTabBadges();
+        } else {
+            showNotification('Error deleting service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting service', 'error');
+    });
+}
+
+// Update the deleteFlightService function to also update tab badges
+function deleteFlightService(flightType, serviceId) {
+    fetch(`/inbound/api/${requestId}/delete-service`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            service_type: flightType,
+            service_id: serviceId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Flight service deleted!', 'success');
+            
+            // Find and remove the row by looking for the delete button with matching ID
+            const rows = document.querySelectorAll(`#${flightType}-table-body tr`);
+            rows.forEach(row => {
+                const deleteBtn = row.querySelector(`button[onclick*="${serviceId}"]`);
+                if (deleteBtn) {
+                    row.remove();
+                }
+            });
+            
+            // Check if table is empty and hide container
+            const tbody = document.getElementById(`${flightType}-table-body`);
+            if (tbody && tbody.children.length === 0) {
+                const container = document.getElementById(`${flightType}-table-container`);
+                if (container) container.style.display = 'none';
+            }
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Update tab badges
+            updateTabBadges();
+        } else {
+            showNotification('Error deleting flight service: ' + (data.error || ''), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error deleting flight service', 'error');
+    });
+}
+
+// Initialize tab badges on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing initialization code ...
+    
+    // Initialize tab badges
+    updateTabBadges();
+});
