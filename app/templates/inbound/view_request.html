@@ -852,47 +852,6 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
-                        
-                        <!-- Saved Arrivals Table -->
-                        <div id="arrival-table-container" {% if not request.arrival_batches %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Arrivals</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                            <table class="w-full text-xs">
-                                <thead class="bg-teal-600 text-white">
-                                    <tr>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100" id="arrival-table-body">
-                                    {% for batch in request.arrival_batches %}
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_point or '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-2 py-1.5 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteArrivalBatch({{ batch.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            </div>
-                        </div>
                     </div>
                     
                     <!-- Departure Panel -->
@@ -961,47 +920,6 @@ html { scroll-behavior: smooth; }
                             </div>
                         </div>
                         {% endif %}
-                        
-                        <!-- Saved Departures Table -->
-                        <div id="departure-table-container" {% if not request.departure_batches %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-orange-50 border-b border-orange-200">
-                                <h4 class="text-xs font-semibold text-orange-700"><i class="fas fa-list mr-1"></i> Saved Departures</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                            <table class="w-full text-xs">
-                                <thead class="bg-orange-600 text-white">
-                                    <tr>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Time</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Point</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Flight</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                        <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Driver</th>
-                                        {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100" id="departure-table-body">
-                                    {% for batch in request.departure_batches %}
-                                    <tr class="hover:bg-slate-50">
-                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_point or '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
-                                        <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
-                                        <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
-                                        {% if not view_only %}
-                                        <td class="px-2 py-1.5 text-center">
-                                            <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteDepartureBatch({{ batch.id }})">
-                                                <i class="far fa-trash-alt"></i>
-                                            </button>
-                                        </td>
-                                        {% endif %}
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                            </div>
-                        </div>
                     </div>
                     
                     <!-- Hotel Panel -->
@@ -1011,52 +929,6 @@ html { scroll-behavior: smooth; }
                                 <i class="fas fa-hotel text-blue-600"></i> Hotel Details
                                 <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
-                        </div>
-                        <!-- Saved Hotels Table (ONLY SHOWS IF DATA EXISTS) -->
-                        <div id="hotels-table-container" {% if not request.inbound_hotels %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Hotels</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs">
-                                    <thead class="bg-teal-600 text-white">
-                                        <tr>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Hotel</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Dates</th>
-                                            <th class="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide">Nights</th>
-                                            <th class="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide">Rooms</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
-                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-slate-100" id="hotels-table-body">
-                                        {% for hotel in request.inbound_hotels %}
-                                        <tr class="hover:bg-slate-50" data-hotel-id="{{ hotel.id }}">
-                                            <td class="px-2 py-1.5 text-slate-700 font-medium">{{ hotel.hotel_name or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500 text-xs">
-                                                {{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }} - {{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}
-                                            </td>
-                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ hotel.nights or 0 }}</td>
-                                            <td class="px-2 py-1.5 text-center">
-                                                <div class="flex items-center justify-center gap-1 text-xs">
-                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> {{ hotel.single_rooms }}</span>{% endif %}
-                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> {{ hotel.double_rooms }}</span>{% endif %}
-                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> {{ hotel.triple_rooms }}</span>{% endif %}
-                                                </div>
-                                            </td>
-                                            <td class="px-2 py-1.5"><span class="px-2 py-0.5 rounded text-xs {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ hotel.status or 'PENDING' }}</span></td>
-                                            {% if not view_only %}
-                                            <td class="px-2 py-1.5 text-center">
-                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteHotel({{ hotel.id }})">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
                         {% if not view_only %}
                         <!-- Add Hotel Form Fields (Below Table) -->
@@ -1199,43 +1071,6 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         
-                        <!-- Saved Guides Table (ONLY SHOWS IF DATA EXISTS) -->
-                        <div id="guides-table-container" {% if not request.inbound_guides %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Guides</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs">
-                                    <thead class="bg-teal-600 text-white">
-                                        <tr>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Guide</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Phone</th>
-                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-slate-100" id="guides-table-body">
-                                        {% for guide in request.inbound_guides %}
-                                        <tr class="hover:bg-slate-50" data-guide-id="{{ guide.id }}">
-                                            <td class="px-2 py-1.5 text-slate-700">{{ guide.guide_name or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-700">{{ guide.language or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ guide.telephone or '-' }}</td>
-                                            {% if not view_only %}
-                                            <td class="px-2 py-1.5 text-center">
-                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteGuide({{ guide.id }})">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
@@ -1297,45 +1132,6 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         
-                        <!-- Saved Transport Table (ONLY SHOWS IF DATA EXISTS) -->
-                        <div id="transports-table-container" {% if not request.inbound_transports %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Transports</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs">
-                                    <thead class="bg-teal-600 text-white">
-                                        <tr>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Status</th>
-                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-slate-100" id="transports-table-body">
-                                        {% for transport in request.inbound_transports %}
-                                        <tr class="hover:bg-slate-50" data-transport-id="{{ transport.id }}">
-                                            <td class="px-2 py-1.5 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-700">{{ transport.pickup_point or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
-                                            <td class="px-2 py-1.5"><span class="px-2 py-0.5 rounded text-xs {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-slate-100 text-slate-700{% endif %}">{{ transport.status or 'PENDING' }}</span></td>
-                                            {% if not view_only %}
-                                            <td class="px-2 py-1.5 text-center">
-                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteTransport({{ transport.id }})">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
                         {% if not view_only %}
                         <!-- Add Transport Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
@@ -1430,45 +1226,6 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         
-                        <!-- Saved Meals Table (ONLY SHOWS IF DATA EXISTS) -->
-                        <div id="meals-table-container" {% if not request.inbound_meals %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
-                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Meals</h4>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs">
-                                    <thead class="bg-teal-600 text-white">
-                                        <tr>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Location</th>
-                                            <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">PAX</th>
-                                            {% if not view_only %}<th class="px-2 py-1.5 w-8"></th>{% endif %}
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-slate-100" id="meals-table-body">
-                                        {% for meal in request.inbound_meals %}
-                                        <tr class="hover:bg-slate-50" data-meal-id="{{ meal.id }}">
-                                            <td class="px-2 py-1.5 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ meal.meal_type or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-500">{{ meal.location or '-' }}</td>
-                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ meal.pax_count or 0 }}</td>
-                                            {% if not view_only %}
-                                            <td class="px-2 py-1.5 text-center">
-                                                <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteMeal({{ meal.id }})">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </td>
-                                            {% endif %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
