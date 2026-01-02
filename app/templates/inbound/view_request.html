@@ -33,8 +33,6 @@ html { scroll-behavior: smooth; }
     align-items: center;
     gap: 0.25rem;
     white-space: nowrap;
-    flex: 1;
-    justify-content: center;
 }
 .service-tab:hover { color: #334155; border-bottom-color: #cbd5e1; }
 .service-tab.active { 
@@ -209,7 +207,6 @@ html { scroll-behavior: smooth; }
     transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 .sidebar-panel.open {
@@ -263,7 +260,6 @@ html { scroll-behavior: smooth; }
     flex-grow: 1;
     padding: 2rem 1.5rem;
     overflow-y: auto;
-    max-height: calc(100vh - 100px);
 }
 
 /* --- Progress Track --- */
@@ -523,174 +519,6 @@ html { scroll-behavior: smooth; }
     height: 1px;
     background: #e2e8f0;
     margin: 0.25rem 0;
-}
-
-/* Expansion Panel Styles */
-.expansion-panel {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-}
-
-.expansion-panel-header {
-    background: #f8fafc;
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.expansion-panel-header:hover {
-    background: #f1f5f9;
-}
-
-.expansion-panel-title {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-.expansion-panel-icon {
-    transition: transform 0.2s;
-}
-
-.expansion-panel.expanded .expansion-panel-icon {
-    transform: rotate(180deg);
-}
-
-.expansion-panel-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease-out;
-}
-
-.expansion-panel.expanded .expansion-panel-content {
-    max-height: 1000px;
-}
-
-.expansion-panel-body {
-    padding: 1rem;
-}
-
-.expansion-panel-controls {
-    padding: 0.5rem 1rem;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.expansion-panel-control-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    border-radius: 4px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.expansion-panel-control-btn:hover {
-    background: #f1f5f9;
-    color: #334155;
-}
-
-/* Room Distribution Styles */
-.room-distribution-container {
-    margin-top: 1rem;
-}
-
-.room-distribution-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-}
-
-.room-distribution-title {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-.room-distribution-mode {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.room-distribution-mode-btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    border-radius: 4px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.room-distribution-mode-btn.active {
-    background: #3b82f6;
-    color: white;
-    border-color: #3b82f6;
-}
-
-.room-distribution-mode-btn:hover {
-    background: #f1f5f9;
-    color: #334155;
-}
-
-.room-distribution-mode-btn.active:hover {
-    background: #2563eb;
-}
-
-.room-allocation {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.room-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 0.75rem;
-    background: white;
-}
-
-.room-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.room-type {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-.room-capacity {
-    font-size: 0.75rem;
-    color: #64748b;
-}
-
-.room-guests {
-    margin-top: 0.5rem;
-}
-
-.guest-input {
-    width: 100%;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 4px;
-    margin-bottom: 0.25rem;
 }
 
 /* Responsive */
@@ -1184,34 +1012,14 @@ html { scroll-behavior: smooth; }
                                 <span id="panel-context-badge-hotel" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
                         </div>
-                        
-                        <!-- Date Range Selection for Global Services -->
-                        <div class="p-3 bg-blue-50 border-b border-blue-200">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-calendar-alt text-blue-600"></i>
-                                <span class="text-sm font-medium text-blue-800">Global Service</span>
-                                <span class="text-xs text-blue-600">Apply to all days</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <label class="block text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">From Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_global_from" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">To Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-blue-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_global_to" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Saved Hotels Table (ONLY SHOWS IF DATA EXISTS) -->
                         <div id="hotels-table-container" {% if not request.inbound_hotels %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-blue-50 border-b border-blue-200">
-                                <h4 class="text-xs font-semibold text-blue-700"><i class="fas fa-list mr-1"></i> Saved Hotels</h4>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Hotels</h4>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs">
-                                    <thead class="bg-blue-600 text-white">
+                                    <thead class="bg-teal-600 text-white">
                                         <tr>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Hotel</th>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Dates</th>
@@ -1345,21 +1153,6 @@ html { scroll-behavior: smooth; }
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Room Guest Names Section -->
-                            <div class="room-distribution-container" id="room-guest-names" style="display: none;">
-                                <div class="room-distribution-header">
-                                    <div class="room-distribution-title">Assign Guest Names to Rooms</div>
-                                    <div class="room-distribution-mode">
-                                        <button type="button" class="room-distribution-mode-btn active" data-mode="auto">Auto Assign</button>
-                                        <button type="button" class="room-distribution-mode-btn" data-mode="manual">Manual Assign</button>
-                                    </div>
-                                </div>
-                                <div class="room-allocation" id="room-allocation-container">
-                                    <!-- Room cards will be dynamically added here -->
-                                </div>
-                            </div>
-                            
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Board Basis</label>
@@ -1404,25 +1197,6 @@ html { scroll-behavior: smooth; }
                                 <i class="fas fa-user-tie text-teal-600"></i> Guide Details
                                 <span id="panel-context-badge-guide" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global (Applies to all)</span>
                             </h3>
-                        </div>
-                        
-                        <!-- Date Range Selection for Global Services -->
-                        <div class="p-3 bg-teal-50 border-b border-teal-200">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-calendar-alt text-teal-600"></i>
-                                <span class="text-sm font-medium text-teal-800">Global Service</span>
-                                <span class="text-xs text-teal-600">Apply to all days</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wide mb-1">From Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-teal-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" id="guide_global_from" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-teal-700 uppercase tracking-wide mb-1">To Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-teal-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" id="guide_global_to" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
-                                </div>
-                            </div>
                         </div>
                         
                         <!-- Saved Guides Table (ONLY SHOWS IF DATA EXISTS) -->
@@ -1523,33 +1297,14 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         
-                        <!-- Date Range Selection for Global Services -->
-                        <div class="p-3 bg-cyan-50 border-b border-cyan-200">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-calendar-alt text-cyan-600"></i>
-                                <span class="text-sm font-medium text-cyan-800">Global Service</span>
-                                <span class="text-xs text-cyan-600">Apply to all days</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <label class="block text-xs font-semibold text-cyan-700 uppercase tracking-wide mb-1">From Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" id="transport_global_from" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-cyan-700 uppercase tracking-wide mb-1">To Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-cyan-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" id="transport_global_to" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Saved Transport Table (ONLY SHOWS IF DATA EXISTS) -->
                         <div id="transports-table-container" {% if not request.inbound_transports %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-cyan-50 border-b border-cyan-200">
-                                <h4 class="text-xs font-semibold text-cyan-700"><i class="fas fa-list mr-1"></i> Saved Transports</h4>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Transports</h4>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs">
-                                    <thead class="bg-cyan-600 text-white">
+                                    <thead class="bg-teal-600 text-white">
                                         <tr>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
@@ -1675,33 +1430,14 @@ html { scroll-behavior: smooth; }
                             </h3>
                         </div>
                         
-                        <!-- Date Range Selection for Global Services -->
-                        <div class="p-3 bg-amber-50 border-b border-amber-200">
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-calendar-alt text-amber-600"></i>
-                                <span class="text-sm font-medium text-amber-800">Global Service</span>
-                                <span class="text-xs text-amber-600">Apply to all days</span>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3 mt-2">
-                                <div>
-                                    <label class="block text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">From Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-amber-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_global_from" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1">To Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-amber-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_global_to" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}">
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Saved Meals Table (ONLY SHOWS IF DATA EXISTS) -->
                         <div id="meals-table-container" {% if not request.inbound_meals %}style="display: none;"{% endif %}>
-                            <div class="px-3 py-1 bg-amber-50 border-b border-amber-200">
-                                <h4 class="text-xs font-semibold text-amber-700"><i class="fas fa-list mr-1"></i> Saved Meals</h4>
+                            <div class="px-3 py-1 bg-teal-50 border-b border-teal-200">
+                                <h4 class="text-xs font-semibold text-teal-700"><i class="fas fa-list mr-1"></i> Saved Meals</h4>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs">
-                                    <thead class="bg-amber-600 text-white">
+                                    <thead class="bg-teal-600 text-white">
                                         <tr>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
                                             <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Type</th>
@@ -1833,207 +1569,257 @@ html { scroll-behavior: smooth; }
                         </div>
                     </div>
                     
-                    <!-- Expansion Panels for Summary Details -->
-                    <div id="summaryExpansionPanels">
-                        <!-- Flights Expansion Panel -->
-                        <div class="expansion-panel" id="flights-panel">
-                            <div class="expansion-panel-header" onclick="toggleExpansionPanel('flights-panel')">
-                                <div class="expansion-panel-title">
-                                    <i class="fas fa-plane text-green-500 mr-2"></i>Flights
-                                </div>
-                                <i class="fas fa-chevron-down expansion-panel-icon"></i>
+                    <!-- Flights & Hotels Detail -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <!-- Arrivals & Departures -->
+                        <div class="bg-slate-50 rounded-lg p-2">
+                            <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1">Flights</div>
+                            <div class="flex flex-wrap gap-1" id="summary_flights">
+                                {% if request.arrival_batches %}
+                                    {% for batch in request.arrival_batches %}
+                                    <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">
+                                        <i class="fas fa-plane-arrival"></i> {{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if request.departure_batches %}
+                                    {% for batch in request.departure_batches %}
+                                    <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">
+                                        <i class="fas fa-plane-departure"></i> {{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                                {% if not request.arrival_batches and not request.departure_batches %}
+                                <span class="text-slate-400 text-[10px]">No flights added</span>
+                                {% endif %}
                             </div>
-                            <div class="expansion-panel-content">
-                                <div class="expansion-panel-body">
-                                    <div class="flex flex-wrap gap-1" id="summary_flights">
+                        </div>
+                        <!-- Hotels List -->
+                        <div class="bg-slate-50 rounded-lg p-2">
+                            <div class="text-[10px] font-semibold text-slate-500 uppercase mb-1">Hotels</div>
+                            <div class="flex flex-wrap gap-1" id="summary_hotel_list">
+                                {% if request.inbound_hotels %}
+                                    {% for hotel in request.inbound_hotels %}
+                                    <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
+                                        <i class="fas fa-hotel"></i> {{ hotel.hotel_name or 'Unnamed' }}
+                                        {% if hotel.nights %}<span class="text-blue-500">({{ hotel.nights }}N)</span>{% endif %}
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                <span class="text-slate-400 text-[10px]">No hotels added</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Full Summary Section (Hidden by default) -->
+                    <div id="fullSummarySection" class="hidden mt-4 border-t border-slate-200 pt-4">
+                        <!-- Hotels Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-hotel text-blue-500 mr-2"></i> Hotel Accommodations
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Hotel Name</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-in</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-out</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Nights</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Rooms</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-hotels">
+                                        {% if request.inbound_hotels %}
+                                            {% for hotel in request.inbound_hotels %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.nights or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:{{ hotel.single_rooms }}</span>{% endif %}
+                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:{{ hotel.double_rooms }}</span>{% endif %}
+                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:{{ hotel.triple_rooms }}</span>{% endif %}
+                                                </td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Flights Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-plane text-green-500 mr-2"></i> Flight Details
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Type</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Time</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Point</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Flight No.</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Driver</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-flights">
                                         {% if request.arrival_batches %}
                                             {% for batch in request.arrival_batches %}
-                                            <span class="inline-flex items-center gap-1 bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px]">
-                                                <i class="fas fa-plane-arrival"></i> {{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else 'TBA' }}
-                                            </span>
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.arrival_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                            </tr>
                                             {% endfor %}
                                         {% endif %}
                                         {% if request.departure_batches %}
                                             {% for batch in request.departure_batches %}
-                                            <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded text-[10px]">
-                                                <i class="fas fa-plane-departure"></i> {{ batch.departure_date.strftime('%d %b') if batch.departure_date else 'TBA' }}
-                                            </span>
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.departure_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                            </tr>
                                             {% endfor %}
                                         {% endif %}
                                         {% if not request.arrival_batches and not request.departure_batches %}
-                                        <span class="text-slate-400 text-[10px]">No flights added</span>
+                                            <tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
                                         {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-panel-controls">
-                                <button type="button" class="expansion-panel-control-btn" onclick="expandAllPanels()">Expand All</button>
-                                <button type="button" class="expansion-panel-control-btn" onclick="collapseAllPanels()">Collapse All</button>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <!-- Hotels Expansion Panel -->
-                        <div class="expansion-panel" id="hotels-panel">
-                            <div class="expansion-panel-header" onclick="toggleExpansionPanel('hotels-panel')">
-                                <div class="expansion-panel-title">
-                                    <i class="fas fa-hotel text-blue-500 mr-2"></i>Hotels
-                                </div>
-                                <i class="fas fa-chevron-down expansion-panel-icon"></i>
-                            </div>
-                            <div class="expansion-panel-content">
-                                <div class="expansion-panel-body">
-                                    <div class="flex flex-wrap gap-1" id="summary_hotel_list">
-                                        {% if request.inbound_hotels %}
-                                            {% for hotel in request.inbound_hotels %}
-                                            <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
-                                                <i class="fas fa-hotel"></i> {{ hotel.hotel_name or 'Unnamed' }}
-                                                {% if hotel.nights %}<span class="text-blue-500">({{ hotel.nights }}N)</span>{% endif %}
-                                            </span>
+                        <!-- Transport Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-car text-cyan-500 mr-2"></i> Transport Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Vehicle</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Pickup</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Drop-off</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-transports">
+                                        {% if request.inbound_transports %}
+                                            {% for transport in request.inbound_transports %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
+                                                </td>
+                                            </tr>
                                             {% endfor %}
                                         {% else %}
-                                        <span class="text-slate-400 text-[10px]">No hotels added</span>
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
                                         {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-panel-controls">
-                                <button type="button" class="expansion-panel-control-btn" onclick="expandAllPanels()">Expand All</button>
-                                <button type="button" class="expansion-panel-control-btn" onclick="collapseAllPanels()">Collapse All</button>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <!-- Transport Expansion Panel -->
-                        <div class="expansion-panel" id="transport-panel">
-                            <div class="expansion-panel-header" onclick="toggleExpansionPanel('transport-panel')">
-                                <div class="expansion-panel-title">
-                                    <i class="fas fa-car text-cyan-500 mr-2"></i>Transport
-                                </div>
-                                <i class="fas fa-chevron-down expansion-panel-icon"></i>
-                            </div>
-                            <div class="expansion-panel-content">
-                                <div class="expansion-panel-body">
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-cyan-600 text-white">
-                                                <tr>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Vehicle</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Pickup</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Drop-off</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-slate-100">
-                                                {% if request.inbound_transports %}
-                                                    {% for transport in request.inbound_transports %}
-                                                    <tr class="hover:bg-slate-50">
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-500">{{ transport.vehicle_type or '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ transport.pickup_point or '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-500">{{ transport.drop_off_point or '-' }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <tr>
-                                                        <td colspan="4" class="px-2 py-1.5 text-center text-slate-400">No transport added</td>
-                                                    </tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-panel-controls">
-                                <button type="button" class="expansion-panel-control-btn" onclick="expandAllPanels()">Expand All</button>
-                                <button type="button" class="expansion-panel-control-btn" onclick="collapseAllPanels()">Collapse All</button>
+                        <!-- Guides Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-user-tie text-teal-500 mr-2"></i> Guide Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Guide Name</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Language</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Telephone</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-guides">
+                                        {% if request.inbound_guides %}
+                                            {% for guide in request.inbound_guides %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <!-- Guides Expansion Panel -->
-                        <div class="expansion-panel" id="guides-panel">
-                            <div class="expansion-panel-header" onclick="toggleExpansionPanel('guides-panel')">
-                                <div class="expansion-panel-title">
-                                    <i class="fas fa-user-tie text-teal-500 mr-2"></i>Guides
-                                </div>
-                                <i class="fas fa-chevron-down expansion-panel-icon"></i>
-                            </div>
-                            <div class="expansion-panel-content">
-                                <div class="expansion-panel-body">
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-teal-600 text-white">
-                                                <tr>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Guide Name</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Language</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-slate-100">
-                                                {% if request.inbound_guides %}
-                                                    {% for guide in request.inbound_guides %}
-                                                    <tr class="hover:bg-slate-50">
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ guide.guide_name or '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-500">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ guide.language or '-' }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <tr>
-                                                        <td colspan="3" class="px-2 py-1.5 text-center text-slate-400">No guides added</td>
-                                                    </tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-panel-controls">
-                                <button type="button" class="expansion-panel-control-btn" onclick="expandAllPanels()">Expand All</button>
-                                <button type="button" class="expansion-panel-control-btn" onclick="collapseAllPanels()">Collapse All</button>
+                        <!-- Meals Table -->
+                        <div class="mb-2">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-utensils text-amber-500 mr-2"></i> Meal Services
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Meal Type</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Restaurant</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Location</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-meals">
+                                        {% if request.inbound_meals %}
+                                            {% for meal in request.inbound_meals %}
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.meal_type or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.location or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.pax_count or 0 }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         
-                        <!-- Meals Expansion Panel -->
-                        <div class="expansion-panel" id="meals-panel">
-                            <div class="expansion-panel-header" onclick="toggleExpansionPanel('meals-panel')">
-                                <div class="expansion-panel-title">
-                                    <i class="fas fa-utensils text-amber-500 mr-2"></i>Meals
-                                </div>
-                                <i class="fas fa-chevron-down expansion-panel-icon"></i>
-                            </div>
-                            <div class="expansion-panel-content">
-                                <div class="expansion-panel-body">
-                                    <div class="overflow-x-auto">
-                                        <table class="w-full text-xs">
-                                            <thead class="bg-amber-600 text-white">
-                                                <tr>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Date</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Meal Type</th>
-                                                    <th class="px-2 py-1.5 text-left text-xs font-semibold uppercase tracking-wide">Restaurant</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-slate-100">
-                                                {% if request.inbound_meals %}
-                                                    {% for meal in request.inbound_meals %}
-                                                    <tr class="hover:bg-slate-50">
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-500">{{ meal.meal_type or '-' }}</td>
-                                                        <td class="px-2 py-1.5 text-slate-700">{{ meal.restaurant_name or '-' }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                {% else %}
-                                                    <tr>
-                                                        <td colspan="3" class="px-2 py-1.5 text-center text-slate-400">No meals added</td>
-                                                    </tr>
-                                                {% endif %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="expansion-panel-controls">
-                                <button type="button" class="expansion-panel-control-btn" onclick="expandAllPanels()">Expand All</button>
-                                <button type="button" class="expansion-panel-control-btn" onclick="collapseAllPanels()">Collapse All</button>
-                            </div>
+                        <!-- Print Button -->
+                        <div class="flex justify-end mt-3">
+                            <button onclick="printFullSummary()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs font-medium">
+                                <i class="fas fa-print mr-1"></i> Print Summary
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -2435,21 +2221,6 @@ function autoSaveServiceData(serviceType) {
             formData[field.id] = field.value;
         }
     });
-    
-    // Add global date range if applicable
-    if (currentServiceContext.rowId === null) {
-        const globalFrom = document.getElementById(`${serviceType}_global_from`);
-        const globalTo = document.getElementById(`${serviceType}_global_to`);
-        
-        if (globalFrom && globalTo) {
-            if (!globalFrom.value || !globalTo.value) {
-                showNotification('Please select both From Date and To Date for global services', 'error');
-                return;
-            }
-            formData.global_from = globalFrom.value;
-            formData.global_to = globalTo.value;
-        }
-    }
     
     const payload = {
         service_type: serviceType,
@@ -3391,26 +3162,6 @@ function printSummaryTable() {
     }
 }
 
-// Expansion Panel Functions
-function toggleExpansionPanel(panelId) {
-    const panel = document.getElementById(panelId);
-    if (panel) {
-        panel.classList.toggle('expanded');
-    }
-}
-
-function expandAllPanels() {
-    document.querySelectorAll('.expansion-panel').forEach(panel => {
-        panel.classList.add('expanded');
-    });
-}
-
-function collapseAllPanels() {
-    document.querySelectorAll('.expansion-panel').forEach(panel => {
-        panel.classList.remove('expanded');
-    });
-}
-
 // Manual save function called by Save buttons
 function saveServiceData(serviceType) {
     // Clear inputs after save logic is handled in generic function, 
@@ -3937,88 +3688,6 @@ function applyWizardLayout(mode) {
     setActiveWizardMode(mode);
     calculateTotalGuests();
     clearAllErrors();
-    
-    // Show room guest names section if there are rooms
-    if (layout.sgl > 0 || layout.dbl > 0 || layout.trp > 0) {
-        showRoomGuestNames();
-    }
-}
-
-function showRoomGuestNames() {
-    const roomGuestNames = document.getElementById('room-guest-names');
-    if (roomGuestNames) {
-        roomGuestNames.style.display = 'block';
-        generateRoomCards();
-    }
-}
-
-function generateRoomCards() {
-    const container = document.getElementById('room-allocation-container');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    const sglRooms = parseInt(document.getElementById('hotel_single_rooms').value) || 0;
-    const dblRooms = parseInt(document.getElementById('hotel_double_rooms').value) || 0;
-    const trpRooms = parseInt(document.getElementById('hotel_triple_rooms').value) || 0;
-    
-    // Generate single room cards
-    for (let i = 1; i <= sglRooms; i++) {
-        const roomCard = createRoomCard('Single', 1, i);
-        container.appendChild(roomCard);
-    }
-    
-    // Generate double room cards
-    for (let i = 1; i <= dblRooms; i++) {
-        const roomCard = createRoomCard('Double', 2, i);
-        container.appendChild(roomCard);
-    }
-    
-    // Generate triple room cards
-    for (let i = 1; i <= trpRooms; i++) {
-        const roomCard = createRoomCard('Triple', 3, i);
-        container.appendChild(roomCard);
-    }
-}
-
-function createRoomCard(type, capacity, roomNumber) {
-    const roomCard = document.createElement('div');
-    roomCard.className = 'room-card';
-    
-    const roomHeader = document.createElement('div');
-    roomHeader.className = 'room-card-header';
-    
-    const roomType = document.createElement('div');
-    roomType.className = 'room-type';
-    roomType.textContent = `${type} Room ${roomNumber}`;
-    
-    const roomCapacity = document.createElement('div');
-    roomCapacity.className = 'room-capacity';
-    roomCapacity.textContent = `Capacity: ${capacity}`;
-    
-    roomHeader.appendChild(roomType);
-    roomHeader.appendChild(roomCapacity);
-    
-    const roomGuests = document.createElement('div');
-    roomGuests.className = 'room-guests';
-    
-    // Create guest input fields
-    for (let i = 1; i <= capacity; i++) {
-        const guestInput = document.createElement('input');
-        guestInput.type = 'text';
-        guestInput.className = 'guest-input';
-        guestInput.placeholder = `Guest ${i} Name`;
-        guestInput.dataset.roomType = type;
-        guestInput.dataset.roomNumber = roomNumber;
-        guestInput.dataset.guestNumber = i;
-        
-        roomGuests.appendChild(guestInput);
-    }
-    
-    roomCard.appendChild(roomHeader);
-    roomCard.appendChild(roomGuests);
-    
-    return roomCard;
 }
 
 function selectRoomMode(mode) {
@@ -4214,33 +3883,6 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     }
 });
 
-// Room distribution mode buttons
-document.addEventListener('DOMContentLoaded', function() {
-    const modeButtons = document.querySelectorAll('.room-distribution-mode-btn');
-    modeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            modeButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            const mode = this.dataset.mode;
-            if (mode === 'auto') {
-                autoAssignGuestNames();
-            }
-        });
-    });
-});
-
-function autoAssignGuestNames() {
-    const guestInputs = document.querySelectorAll('.guest-input');
-    const guestNames = ['Guest 1', 'Guest 2', 'Guest 3', 'Guest 4', 'Guest 5', 'Guest 6', 'Guest 7', 'Guest 8', 'Guest 9', 'Guest 10'];
-    
-    guestInputs.forEach((input, index) => {
-        if (index < guestNames.length) {
-            input.value = guestNames[index];
-        }
-    });
-}
-
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editMode');
@@ -4279,12 +3921,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initializeRoomWizard();
-    
-    // Initialize expansion panels
-    const panels = document.querySelectorAll('.expansion-panel');
-    panels.forEach(panel => {
-        panel.classList.remove('expanded');
-    });
 });
 
 // Status Updates
