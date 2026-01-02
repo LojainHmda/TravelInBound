@@ -9,6 +9,7 @@
 {% set eff_meal = row_meal or global_meal or row.linked_meal %}
 <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
     data-row-id="{{ row.id }}"
+    data-date="{{ row.itinerary_date.strftime('%Y-%m-%d') if row.itinerary_date else '' }}"
     data-hotel-name="{{ eff_hotel.hotel_name if eff_hotel else '' }}"
     data-hotel-cat="{{ eff_hotel.hotel_category if eff_hotel else '' }}"
     data-transport-vehicle="{{ eff_transport.vehicle_type if eff_transport else '' }}"
