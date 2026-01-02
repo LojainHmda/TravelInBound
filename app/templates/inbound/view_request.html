@@ -3115,6 +3115,9 @@ function saveServiceData(serviceType) {
         payload.apply_to_specific_days = true;
     }
     
+    // Remove any previous notifications before sending request
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
     fetch(`/inbound/api/${requestId}/save-service-data`, {
         method: 'POST',
         headers: {
@@ -3127,16 +3130,9 @@ function saveServiceData(serviceType) {
     .then(({ ok, data }) => {
         if (ok && data.success) {
             clearInlineError(serviceType);
-            showNotification(data.message || 'Service data saved!', 'success');
             
-            // Update itinerary if needed
-            if (data.itinerary_html) {
-                const tbody = document.querySelector('#itineraryTable tbody');
-                if (tbody) tbody.innerHTML = data.itinerary_html;
-            }
-            
-            // Update service table
-            updateServiceTable(serviceType, data);
+            // Update summary tables instead of service table
+            updateSummaryTables(serviceType, data);
             
             // Update summary counts
             updateSummaryCounts();
@@ -3246,6 +3242,143 @@ function parseDateFromText(dateText) {
     const year = parts.length > 2 ? parseInt(parts[2]) : new Date().getFullYear();
     
     return new Date(year, month, day);
+}
+
+// Function to update summary tables after saving a service
+function updateSummaryTables(serviceType, data) {
+    // Update summary tables instead of service tables
+    if (data.service_entries_html) {
+        const tableMap = {
+            'hotel': 'full-summary-hotels',
+            'arrival': 'full-summary-flights',
+            'departure': 'full-summary-flights',
+            'guide': 'full-summary-guides',
+            'transport': 'full-summary-transports',
+            'meal': 'full-summary-meals'
+        };
+        
+        const tableId = tableMap[serviceType];
+        if (tableId) {
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
+                if (serviceType === 'arrival' || serviceType === 'departure') {
+                    updateFlightsSummaryTable();
+                } else {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.service_entries_html;
+                    const newRows = Array.from(tempDiv.children);
+                    
+                    newRows.forEach(rowHtml => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = rowHtml.innerHTML;
+                        tableBody.appendChild(row);
+                    });
+                }
+            }
+        }
+    }
+    
+    // Update visible summary section
+    updateVisibleSummary(serviceType, data);
+}
+
+// Function to update visible summary badges
+function updateVisibleSummary(serviceType, data) {
+    if (serviceType === 'hotel') {
+        const hotelsContainer = document.getElementById('summary_hotel_list');
+        if (hotelsContainer && data.service_entry) {
+            const entry = data.service_entry;
+            const hotelHtml = `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-hotel"></i> ${entry.hotel_name || 'Unnamed'}
+                ${entry.nights ? `<span class="text-blue-500">(${entry.nights}N)</span>` : ''}
+            </span>`;
+            
+            const existingHotels = hotelsContainer.querySelectorAll('span');
+            let hotelExists = false;
+            
+            existingHotels.forEach(hotel => {
+                if (hotel.textContent.includes(entry.hotel_name)) {
+                    hotelExists = true;
+                }
+            });
+            
+            if (!hotelExists) {
+                hotelsContainer.insertAdjacentHTML('beforeend', hotelHtml);
+            }
+        }
+    } else if (serviceType === 'arrival' || serviceType === 'departure') {
+        const flightsContainer = document.getElementById('summary_flights');
+        if (flightsContainer && data.service_entry) {
+            const entry = data.service_entry;
+            const flightType = serviceType === 'arrival' ? 'arrival' : 'departure';
+            const flightIcon = serviceType === 'arrival' ? 'plane-arrival' : 'plane-departure';
+            const flightColor = serviceType === 'arrival' ? 'green' : 'orange';
+            const flightDate = entry[`${flightType}_date`] ? new Date(entry[`${flightType}_date`]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'TBA';
+            
+            const flightHtml = `<span class="inline-flex items-center gap-1 bg-${flightColor}-100 text-${flightColor}-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-${flightIcon}"></i> ${flightDate}
+            </span>`;
+            
+            flightsContainer.insertAdjacentHTML('beforeend', flightHtml);
+        }
+    }
+}
+
+// Function to refresh flights summary table
+function updateFlightsSummaryTable() {
+    fetch(`/inbound/api/${requestId}/get-flights-data`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const flightsTableBody = document.getElementById('full-summary-flights');
+            if (flightsTableBody) {
+                flightsTableBody.innerHTML = '';
+                
+                if (data.arrivals && data.arrivals.length > 0) {
+                    data.arrivals.forEach(arrival => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.arrival_date ? new Date(arrival.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.arrival_time || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.arrival_point || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.flight_number || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.pax_count || 0}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.driver_name || '-'}</td>
+                        `;
+                        flightsTableBody.appendChild(row);
+                    });
+                }
+                
+                if (data.departures && data.departures.length > 0) {
+                    data.departures.forEach(departure => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.departure_date ? new Date(departure.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.departure_time || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.departure_point || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.flight_number || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.pax_count || 0}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.driver_name || '-'}</td>
+                        `;
+                        flightsTableBody.appendChild(row);
+                    });
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error updating flights table:', error);
+    });
 }
 
 // Delete service functions

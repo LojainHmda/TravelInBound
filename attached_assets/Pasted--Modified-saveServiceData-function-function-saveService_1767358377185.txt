@@ -1,0 +1,421 @@
+// Modified saveServiceData function
+function saveServiceData(serviceType) {
+    // Validate date range for global services
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateValidation = validateDateRange(serviceType);
+        if (!dateValidation.valid) {
+            showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+    }
+    
+    // Validate room distribution for hotels
+    if (serviceType === 'hotel') {
+        const validation = validateRoomDistribution();
+        if (!validation.valid) {
+            showInlineError('hotel', validation.message);
+            return;
+        }
+    }
+    
+    // Collect form data
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    // Determine date range for application
+    let fromDate, toDate;
+    
+    switch(serviceType) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            break;
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = document.getElementById('arrival_date')?.value;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = document.getElementById('departure_date')?.value;
+            break;
+    }
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData,
+        apply_to_specific_days: true,
+        from_date: fromDate,
+        to_date: toDate
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+        payload.apply_to_specific_days = true;
+    }
+    
+    // Remove any previous notifications before sending request
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            
+            // Update summary tables instead of service table
+            updateSummaryTables(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icons only for the specified date range
+            if (!currentServiceContext.rowId && fromDate && toDate) {
+                activateIconsForDateRange(serviceType, fromDate, toDate);
+                const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                showNotification(`Saved! Applied to ${startDate} - ${endDate}. Add another?`, 'success');
+                // Clear form for next entry
+                setTimeout(() => clearServiceForm(serviceType), 300);
+            } else if (currentServiceContext.rowId) {
+                // For day-specific services, activate only that day's icon
+                activateIcon(currentServiceContext.rowId, serviceType);
+                showNotification('Service saved for this day!', 'success');
+            } else {
+                showNotification('Service saved!', 'success');
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
+
+// Modified activateIconsForDateRange function
+function activateIconsForDateRange(serviceType, fromDate, toDate) {
+    const serviceIconMap = {
+        'hotel': 'hotel',
+        'guide': 'guide',
+        'transport': 'transport',
+        'meal': 'meal',
+        'arrival': 'arrival',
+        'departure': 'departure'
+    };
+    
+    const iconClass = serviceIconMap[serviceType];
+    if (!iconClass) return;
+    
+    // Convert dates to Date objects for comparison
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    
+    // Find all rows in the table
+    const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
+    
+    rows.forEach(row => {
+        // Get the date for this row (assuming it's stored in data-date attribute or in a specific cell)
+        let rowDateStr = row.dataset.date;
+        if (!rowDateStr) {
+            // Try to get date from the date cell (second column)
+            const dateCell = row.cells[1];
+            if (dateCell) {
+                rowDateStr = dateCell.textContent.trim();
+            }
+        }
+        
+        if (rowDateStr) {
+            // Parse the row date (format might be "DD Mon" or "DD Mon YYYY")
+            const rowDate = parseDateFromText(rowDateStr);
+            
+            // Check if this row's date is within the specified range
+            if (rowDate && rowDate >= startDate && rowDate <= endDate) {
+                // Activate the icon for this service type on this row
+                const icon = row.querySelector(`.service-icon-toggle.${iconClass}`);
+                if (icon) {
+                    icon.classList.add('active');
+                }
+            }
+        }
+    });
+}
+
+// Add new function to update summary tables
+function updateSummaryTables(serviceType, data) {
+    // Update summary tables instead of service tables
+    if (data.service_entries_html) {
+        // Update internal tables in full summary section
+        const tableMap = {
+            'hotel': 'full-summary-hotels',
+            'arrival': 'full-summary-flights',
+            'departure': 'full-summary-flights',
+            'guide': 'full-summary-guides',
+            'transport': 'full-summary-transports',
+            'meal': 'full-summary-meals'
+        };
+        
+        const tableId = tableMap[serviceType];
+        if (tableId) {
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
+                // For flights (arrival/departure), we need special handling
+                if (serviceType === 'arrival' || serviceType === 'departure') {
+                    // Update entire flights table
+                    updateFlightsSummaryTable();
+                } else {
+                    // For other services, add new rows
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.service_entries_html;
+                    const newRows = Array.from(tempDiv.children);
+                    
+                    newRows.forEach(rowHtml => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = rowHtml.innerHTML;
+                        tableBody.appendChild(row);
+                    });
+                }
+            }
+        }
+    }
+    
+    // Update visible summary section
+    updateVisibleSummary(serviceType, data);
+}
+
+// Function to update visible summary
+function updateVisibleSummary(serviceType, data) {
+    if (serviceType === 'hotel') {
+        const hotelsContainer = document.getElementById('summary_hotel_list');
+        if (hotelsContainer && data.service_entry) {
+            const entry = data.service_entry;
+            const hotelHtml = `<span class="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-hotel"></i> ${entry.hotel_name || 'Unnamed'}
+                ${entry.nights ? `<span class="text-blue-500">(${entry.nights}N)</span>` : ''}
+            </span>`;
+            
+            // Check if hotel already exists
+            const existingHotels = hotelsContainer.querySelectorAll('span');
+            let hotelExists = false;
+            
+            existingHotels.forEach(hotel => {
+                if (hotel.textContent.includes(entry.hotel_name)) {
+                    hotelExists = true;
+                }
+            });
+            
+            if (!hotelExists) {
+                hotelsContainer.insertAdjacentHTML('beforeend', hotelHtml);
+            }
+        }
+    } else if (serviceType === 'arrival' || serviceType === 'departure') {
+        const flightsContainer = document.getElementById('summary_flights');
+        if (flightsContainer && data.service_entry) {
+            const entry = data.service_entry;
+            const flightType = serviceType === 'arrival' ? 'arrival' : 'departure';
+            const flightIcon = serviceType === 'arrival' ? 'plane-arrival' : 'plane-departure';
+            const flightColor = serviceType === 'arrival' ? 'green' : 'orange';
+            const flightDate = entry[`${flightType}_date`] ? new Date(entry[`${flightType}_date`]).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : 'TBA';
+            
+            const flightHtml = `<span class="inline-flex items-center gap-1 bg-${flightColor}-100 text-${flightColor}-700 px-1.5 py-0.5 rounded text-[10px]">
+                <i class="fas fa-${flightIcon}"></i> ${flightDate}
+            </span>`;
+            
+            flightsContainer.insertAdjacentHTML('beforeend', flightHtml);
+        }
+    }
+}
+
+// Function to update flights summary table
+function updateFlightsSummaryTable() {
+    fetch(`/inbound/api/${requestId}/get-flights-data`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const flightsTableBody = document.getElementById('full-summary-flights');
+            if (flightsTableBody) {
+                flightsTableBody.innerHTML = '';
+                
+                // Add arrival data
+                if (data.arrivals && data.arrivals.length > 0) {
+                    data.arrivals.forEach(arrival => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.arrival_date ? new Date(arrival.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.arrival_time || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.arrival_point || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.flight_number || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.pax_count || 0}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${arrival.driver_name || '-'}</td>
+                        `;
+                        flightsTableBody.appendChild(row);
+                    });
+                }
+                
+                // Add departure data
+                if (data.departures && data.departures.length > 0) {
+                    data.departures.forEach(departure => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.departure_date ? new Date(departure.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.departure_time || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.departure_point || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.flight_number || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.pax_count || 0}</td>
+                            <td class="border border-gray-300 px-2 py-1.5">${departure.driver_name || '-'}</td>
+                        `;
+                        flightsTableBody.appendChild(row);
+                    });
+                }
+                
+                // If no flights
+                if ((!data.arrivals || data.arrivals.length === 0) && (!data.departures || data.departures.length === 0)) {
+                    flightsTableBody.innerHTML = '<tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>';
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Modified showNotification function
+function showNotification(message, type) {
+    // Remove any existing notifications
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
+    const notification = document.createElement('div');
+    let bgColor = 'bg-green-500';
+    let icon = 'check';
+    
+    if (type === 'error') {
+        bgColor = 'bg-red-500';
+        icon = 'exclamation-circle';
+    } else if (type === 'info') {
+        bgColor = 'bg-blue-500';
+        icon = 'spinner fa-spin';
+    }
+    
+    notification.className = `tw-notification fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg z-50 ${bgColor} text-white flex items-center gap-2 text-sm`;
+    notification.innerHTML = `<i class="fas fa-${icon}"></i><span>${message}</span>`;
+    document.body.appendChild(notification);
+    
+    if (type !== 'info') {
+        setTimeout(() => notification.remove(), 3000);
+    }
+}
+
+// Modified autoSaveServiceData function
+function autoSaveServiceData(serviceType) {
+    showAutoSaveIndicator();
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    // Collect form data
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            
+            // Update summary tables instead of service table
+            updateSummaryTables(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icons only for the specified date range
+            if (!currentServiceContext.rowId) {
+                const dateValidation = validateDateRange(serviceType);
+                if (dateValidation.valid && dateValidation.fromDate && dateValidation.toDate) {
+                    activateIconsForDateRange(serviceType, dateValidation.fromDate, dateValidation.toDate);
+                }
+            } else {
+                // For day-specific services, activate only that day's icon
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}
