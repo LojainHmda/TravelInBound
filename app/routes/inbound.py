@@ -1139,24 +1139,37 @@ def api_save_service_data(request_id):
         
         elif service_type == 'transport':
             if is_global:
-                transport = InboundTransport.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
-                if not transport:
+                # Parse date range from form
+                from_date_str = form_data.get('transport_from_date', '')
+                to_date_str = form_data.get('transport_to_date', '')
+                
+                if from_date_str and to_date_str:
+                    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+                else:
+                    from_date = request_obj.from_date or date_type.today()
+                    to_date = request_obj.to_date or date_type.today()
+                
+                # Create transport entry for each day in date range
+                current_date = from_date
+                created_count = 0
+                while current_date <= to_date:
                     transport = InboundTransport(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        date=current_date
                     )
+                    transport.vehicle_type = form_data.get('transport_vehicle', '')
+                    transport.pickup_location = form_data.get('transport_pickup', '')
+                    transport.dropoff_location = form_data.get('transport_dropoff', '')
+                    transport.driver_name = form_data.get('transport_driver', '')
+                    transport.driver_phone = form_data.get('transport_phone', '')
+                    transport.status = form_data.get('transport_status', 'REQUESTED')
+                    transport.cost = float(form_data.get('transport_cost', 0) or 0)
                     db.session.add(transport)
+                    created_count += 1
+                    current_date += timedelta(days=1)
                 
-                transport.vehicle_type = form_data.get('transport_vehicle', '')
-                transport.pickup_location = form_data.get('transport_pickup', '')
-                transport.dropoff_location = form_data.get('transport_dropoff', '')
-                transport.driver_name = form_data.get('transport_driver', '')
-                transport.driver_phone = form_data.get('transport_phone', '')
-                transport.status = form_data.get('transport_status', 'REQUESTED')
-                transport.cost = float(form_data.get('transport_cost', 0) or 0)
-                
-                if form_data.get('transport_date'):
-                    transport.date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
+                print(f"[SAVE SERVICE] Created {created_count} transport entries from {from_date} to {to_date}")
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
@@ -1182,21 +1195,34 @@ def api_save_service_data(request_id):
         
         elif service_type == 'guide':
             if is_global:
-                guide = InboundGuide.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
-                if not guide:
+                # Parse date range from form
+                from_date_str = form_data.get('guide_from_date', '')
+                to_date_str = form_data.get('guide_to_date', '')
+                
+                if from_date_str and to_date_str:
+                    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+                else:
+                    from_date = request_obj.from_date or date_type.today()
+                    to_date = request_obj.to_date or date_type.today()
+                
+                # Create guide entry for each day in date range
+                current_date = from_date
+                created_count = 0
+                while current_date <= to_date:
                     guide = InboundGuide(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        date=current_date
                     )
+                    guide.guide_name = form_data.get('guide_name', '')
+                    guide.language = form_data.get('guide_language', '')
+                    guide.telephone_number = form_data.get('guide_phone', '')
+                    guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     db.session.add(guide)
+                    created_count += 1
+                    current_date += timedelta(days=1)
                 
-                guide.guide_name = form_data.get('guide_name', '')
-                guide.language = form_data.get('guide_language', '')
-                guide.telephone_number = form_data.get('guide_phone', '')
-                guide.cost = float(form_data.get('guide_cost', 0) or 0)
-                
-                if form_data.get('guide_date'):
-                    guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
+                print(f"[SAVE SERVICE] Created {created_count} guide entries from {from_date} to {to_date}")
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
@@ -1219,20 +1245,33 @@ def api_save_service_data(request_id):
         
         elif service_type == 'meal':
             if is_global:
-                meal = InboundMeal.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
-                if not meal:
+                # Parse date range from form
+                from_date_str = form_data.get('meal_from_date', '')
+                to_date_str = form_data.get('meal_to_date', '')
+                
+                if from_date_str and to_date_str:
+                    from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+                    to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+                else:
+                    from_date = request_obj.from_date or date_type.today()
+                    to_date = request_obj.to_date or date_type.today()
+                
+                # Create meal entry for each day in date range
+                current_date = from_date
+                created_count = 0
+                while current_date <= to_date:
                     meal = InboundMeal(
                         request_id=request_id,
-                        date=request_obj.from_date or date_type.today()
+                        date=current_date
                     )
+                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    meal.meal_type = form_data.get('meal_type', '')
+                    meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
                     db.session.add(meal)
+                    created_count += 1
+                    current_date += timedelta(days=1)
                 
-                meal.restaurant = form_data.get('meal_restaurant', '')
-                meal.meal_type = form_data.get('meal_type', '')
-                meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
-                
-                if form_data.get('meal_date'):
-                    meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
+                print(f"[SAVE SERVICE] Created {created_count} meal entries from {from_date} to {to_date}")
             else:
                 row = ItineraryRow.query.get(row_id)
                 if row:
