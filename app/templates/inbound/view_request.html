@@ -959,11 +959,11 @@ html { scroll-behavior: smooth; }
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date <span class="text-red-500">*</span></label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date</label>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date <span class="text-red-500">*</span></label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
@@ -1074,7 +1074,7 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_name" placeholder="Guide name" data-service="guide">
@@ -1083,8 +1083,12 @@ html { scroll-behavior: smooth; }
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_date" data-service="guide">
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From Date <span class="text-red-500">*</span></label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="guide">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">To Date <span class="text-red-500">*</span></label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="guide">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Language</label>
@@ -1141,10 +1145,14 @@ html { scroll-behavior: smooth; }
                                     <i class="fas fa-car-side text-cyan-500 text-xs"></i>
                                     <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                                     <div>
-                                        <label class="block text-xs font-medium text-slate-600 mb-1">Service Date</label>
-                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_date" data-service="transport">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">From Date <span class="text-red-500">*</span></label>
+                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="transport">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">To Date <span class="text-red-500">*</span></label>
+                                        <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport">
                                     </div>
                                     <div class="field-wrapper" data-field="transport_vehicle">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">
@@ -1229,10 +1237,14 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Meal Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Service Date</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_date" data-service="meal">
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From Date <span class="text-red-500">*</span></label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="meal">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">To Date <span class="text-red-500">*</span></label>
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="meal">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
@@ -2919,10 +2931,58 @@ function printSummaryTable() {
     }
 }
 
+// Validate date range for global services
+function validateDateRange(serviceType) {
+    let fromDate, toDate, errorContainer;
+    
+    switch(serviceType) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            errorContainer = 'hotel';
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            errorContainer = 'guide';
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            errorContainer = 'transport';
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            errorContainer = 'meal';
+            break;
+        default:
+            return { valid: true };
+    }
+    
+    if (!fromDate || !toDate) {
+        return { valid: false, message: 'Both From Date and To Date are required', errorContainer };
+    }
+    
+    if (new Date(fromDate) > new Date(toDate)) {
+        return { valid: false, message: 'From Date must be before To Date', errorContainer };
+    }
+    
+    return { valid: true };
+}
+
 // Manual save function called by Save buttons
 function saveServiceData(serviceType) {
-    // Clear inputs after save logic is handled in generic function, 
-    // but we explicitly clear here to encourage multiple entries
+    // Validate date range for global services (hotel, guide, transport, meal)
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateValidation = validateDateRange(serviceType);
+        if (!dateValidation.valid) {
+            showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+    }
+    
+    // Additional hotel validation
     if (serviceType === 'hotel') {
         const validation = validateRoomDistribution();
         if (!validation.valid) {
