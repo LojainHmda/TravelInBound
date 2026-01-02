@@ -3402,6 +3402,9 @@ function updateSummaryTables(serviceType, data) {
             } else {
                 // REPLACE table content instead of appending
                 tableBody.innerHTML = data.service_entries_html;
+                // Update badges and colors after replacing content
+                updateTabBadges();
+                updateTabColors();
             }
         }
     }
