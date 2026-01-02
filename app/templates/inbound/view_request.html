@@ -3146,10 +3146,15 @@ function saveServiceData(serviceType) {
                 activateIconsForDateRange(serviceType, fromDate, toDate);
                 const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-                showNotification(`Service applied to days ${startDate} - ${endDate} only`, 'info');
+                showNotification(`Saved! Applied to ${startDate} - ${endDate}. Add another?`, 'success');
+                // Clear form for next entry
+                setTimeout(() => clearServiceForm(serviceType), 300);
             } else if (currentServiceContext.rowId) {
                 // For day-specific services, activate only that day's icon
                 activateIcon(currentServiceContext.rowId, serviceType);
+                showNotification('Service saved for this day!', 'success');
+            } else {
+                showNotification('Service saved!', 'success');
             }
         } else {
             const errorMsg = data.error || 'Error saving service data';
@@ -3160,14 +3165,6 @@ function saveServiceData(serviceType) {
         console.error('Error:', error);
         showNotification('Error saving service data', 'error');
     });
-    
-    // Clear form fields after saving for easy addition of another item
-    setTimeout(() => {
-        if (!currentServiceContext.rowId) {
-            clearServiceForm(serviceType);
-            showNotification('Saved. You can add another item.', 'success');
-        }
-    }, 500);
 }
 
 // Function to activate icons only for rows within a specific date range
