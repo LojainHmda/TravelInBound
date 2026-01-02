@@ -3392,17 +3392,14 @@ function updateSummaryTables(serviceType, data) {
             const tableBody = document.getElementById(tableId);
             if (tableBody) {
                 if (serviceType === 'arrival' || serviceType === 'departure') {
-                    updateFlightsSummaryTable();
-                } else {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = data.service_entries_html;
-                    const newRows = Array.from(tempDiv.children);
-                    
-                    newRows.forEach(rowHtml => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = rowHtml.innerHTML;
-                        tableBody.appendChild(row);
+                    // For flights, use async fetch then update badges after
+                    updateFlightsSummaryTable().then(() => {
+                        updateTabBadges();
+                        updateTabColors();
                     });
+                } else {
+                    // REPLACE table content instead of appending to avoid duplicates
+                    tableBody.innerHTML = data.service_entries_html;
                 }
             }
         }
@@ -3454,9 +3451,9 @@ function updateVisibleSummary(serviceType, data) {
     }
 }
 
-// Function to refresh flights summary table
+// Function to refresh flights summary table - returns Promise for chaining
 function updateFlightsSummaryTable() {
-    fetch(`/inbound/api/${requestId}/get-flights-data`, {
+    return fetch(`/inbound/api/${requestId}/get-flights-data`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
@@ -3505,6 +3502,7 @@ function updateFlightsSummaryTable() {
                 }
             }
         }
+        return data;
     })
     .catch(error => {
         console.error('Error updating flights table:', error);
