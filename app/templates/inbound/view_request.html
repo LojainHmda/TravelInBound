@@ -1403,7 +1403,7 @@ html { scroll-behavior: smooth; }
                                     <tbody id="full-summary-hotels">
                                         {% if request.inbound_hotels %}
                                             {% for hotel in request.inbound_hotels %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
@@ -1498,7 +1498,7 @@ html { scroll-behavior: smooth; }
                                     <tbody id="full-summary-transports">
                                         {% if request.inbound_transports %}
                                             {% for transport in request.inbound_transports %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
@@ -1568,7 +1568,7 @@ html { scroll-behavior: smooth; }
                                     <tbody id="full-summary-meals">
                                         {% if request.inbound_meals %}
                                             {% for meal in request.inbound_meals %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant_name or '' }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ meal.meal_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
@@ -1893,10 +1893,10 @@ function getServiceCounts() {
     return {
         'arrival': arrivalCount,
         'departure': departureCount,
-        'hotel': countDataRows('full-summary-hotels'),
+        'hotel': countUniqueByAttr('full-summary-hotels', 'data-hotel-name'),
         'guide': countUniqueByAttr('full-summary-guides', 'data-guide-name'),
-        'transport': countDataRows('full-summary-transports'),
-        'meal': countDataRows('full-summary-meals')
+        'transport': countUniqueByAttr('full-summary-transports', 'data-transport-key'),
+        'meal': countUniqueByAttr('full-summary-meals', 'data-meal-key')
     };
 }
 
@@ -2512,7 +2512,7 @@ function updateFullSummaryTables() {
                 const status = cells[4]?.textContent.trim() || 'PENDING';
                 const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
-                return `<tr class="hover:bg-gray-50">
+                return `<tr class="hover:bg-gray-50" data-hotel-name="${name}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${name}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${checkIn}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${checkOut}</td>
@@ -2572,14 +2572,18 @@ function updateFullSummaryTables() {
         if (transportRows.length > 0) {
             transportSummaryBody.innerHTML = transportRows.map(tr => {
                 const cells = tr.cells;
+                const vehicleType = cells[1]?.textContent.trim() || '';
+                const pickup = cells[2]?.textContent.trim() || '';
+                const dropoff = cells[3]?.textContent.trim() || '';
+                const transportKey = `${vehicleType}-${pickup}-${dropoff}`;
                 const status = cells[4]?.textContent.trim() || 'PENDING';
                 const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
-                return `<tr class="hover:bg-gray-50">
+                return `<tr class="hover:bg-gray-50" data-transport-key="${transportKey}">
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">${cells[1]?.textContent.trim() || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${vehicleType || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${pickup || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${dropoff || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
                 </tr>`;
             }).join('');
@@ -2615,10 +2619,13 @@ function updateFullSummaryTables() {
         if (mealRows.length > 0) {
             mealsSummaryBody.innerHTML = mealRows.map(tr => {
                 const cells = tr.cells;
-                return `<tr class="hover:bg-gray-50">
+                const mealType = cells[1]?.textContent.trim() || '';
+                const restaurant = cells[2]?.textContent.trim() || '';
+                const mealKey = `${mealType}-${restaurant}`;
+                return `<tr class="hover:bg-gray-50" data-meal-key="${mealKey}">
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">${cells[1]?.textContent.trim() || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${cells[2]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${mealType || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${restaurant || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
                 </tr>`;
