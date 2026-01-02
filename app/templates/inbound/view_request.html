@@ -1827,6 +1827,158 @@ function initializeRoomDistribution() {
 }
 
 /**
+ * TAB STATE MANAGEMENT
+ */
+
+// Initialize tab states on page load
+function initializeTabStates() {
+    // Set the correct tab colors based on existing data
+    updateTabColors();
+    
+    // Update badge counts
+    updateTabBadges();
+    
+    // Check if there was a previously active tab (don't auto-open, just ensure proper styling)
+    const activeService = localStorage.getItem('activeServiceTab');
+    if (activeService) {
+        // Ensure all tabs are properly styled without the active state
+        document.querySelectorAll('.service-btn').forEach(btn => {
+            btn.classList.remove('active-tab', 'font-semibold');
+            btn.style.border = 'none';
+            btn.style.color = '';
+            const icon = btn.querySelector('i');
+            if (icon) icon.style.color = '';
+        });
+    }
+    
+    // Apply colors to all tabs
+    updateTabColors();
+}
+
+// Helper function to get service counts from summary tables
+function getServiceCounts() {
+    // Count arrivals and departures from flights table by looking at the badges
+    const flightRows = document.querySelectorAll('#full-summary-flights tr');
+    let arrivalCount = 0, departureCount = 0;
+    flightRows.forEach(row => {
+        const badge = row.querySelector('span');
+        if (badge) {
+            if (badge.textContent.includes('Arrival')) arrivalCount++;
+            if (badge.textContent.includes('Departure')) departureCount++;
+        }
+    });
+    
+    // Helper function to count rows excluding "no data" placeholder rows
+    function countDataRows(tbodyId) {
+        const tbody = document.getElementById(tbodyId);
+        if (!tbody) return 0;
+        return Array.from(tbody.querySelectorAll('tr')).filter(row => {
+            const td = row.querySelector('td[colspan]');
+            return !td;
+        }).length;
+    }
+    
+    return {
+        'arrival': arrivalCount,
+        'departure': departureCount,
+        'hotel': countDataRows('full-summary-hotels'),
+        'guide': countDataRows('full-summary-guides'),
+        'transport': countDataRows('full-summary-transports'),
+        'meal': countDataRows('full-summary-meals')
+    };
+}
+
+// Update tab colors based on whether they have data
+function updateTabColors() {
+    const counts = getServiceCounts();
+    
+    const tabConfigs = {
+        'arrival': { 
+            count: counts.arrival,
+            bgHas: 'bg-green-100', textHas: 'text-green-700', iconHas: 'text-green-500', badgeBg: 'bg-green-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        },
+        'departure': { 
+            count: counts.departure,
+            bgHas: 'bg-orange-100', textHas: 'text-orange-700', iconHas: 'text-orange-500', badgeBg: 'bg-orange-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        },
+        'hotel': { 
+            count: counts.hotel,
+            bgHas: 'bg-blue-100', textHas: 'text-blue-700', iconHas: 'text-blue-500', badgeBg: 'bg-blue-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        },
+        'guide': { 
+            count: counts.guide,
+            bgHas: 'bg-teal-100', textHas: 'text-teal-700', iconHas: 'text-teal-500', badgeBg: 'bg-teal-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        },
+        'transport': { 
+            count: counts.transport,
+            bgHas: 'bg-cyan-100', textHas: 'text-cyan-700', iconHas: 'text-cyan-500', badgeBg: 'bg-cyan-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        },
+        'meal': { 
+            count: counts.meal,
+            bgHas: 'bg-amber-100', textHas: 'text-amber-700', iconHas: 'text-amber-500', badgeBg: 'bg-amber-500',
+            bgDefault: 'bg-white', textDefault: 'text-slate-500', iconDefault: 'text-slate-400'
+        }
+    };
+    
+    for (const [service, config] of Object.entries(tabConfigs)) {
+        const tab = document.getElementById(`tab-${service}`);
+        if (!tab) continue;
+        
+        // Check if this tab is currently active
+        const isActive = tab.classList.contains('active-tab');
+        
+        const icon = tab.querySelector('i');
+        let badge = tab.querySelector('.tab-count-badge');
+        
+        // Only update colors if the tab is not active
+        if (!isActive) {
+            // Remove old classes
+            tab.classList.remove(config.bgDefault, config.textDefault, config.bgHas, config.textHas);
+            if (icon) icon.classList.remove(config.iconDefault, config.iconHas);
+            
+            if (config.count > 0) {
+                // Has data - apply colored styling
+                tab.classList.add(config.bgHas, config.textHas);
+                if (icon) icon.classList.add(config.iconHas);
+                
+                // Add or update badge
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+                    tab.appendChild(badge);
+                }
+                badge.textContent = config.count;
+                badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            } else {
+                // No data - apply default styling
+                tab.classList.add(config.bgDefault, config.textDefault);
+                if (icon) icon.classList.add(config.iconDefault);
+                
+                // Remove badge
+                if (badge) badge.remove();
+            }
+        } else {
+            // For active tabs, ensure badge count is correct
+            if (config.count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+                    tab.appendChild(badge);
+                }
+                badge.textContent = config.count;
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+    }
+}
+
+/**
  * SERVICE TAB LOGIC (Global vs Specific)
  */
 function switchServiceTab(serviceName, rowId = null) {
@@ -1840,16 +1992,19 @@ function switchServiceTab(serviceName, rowId = null) {
         rowId: rowId
     };
 
+    // Save the active service tab to localStorage
+    localStorage.setItem('activeServiceTab', serviceName);
+
     if (targetPanel && tabContainer) {
         const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
         
-        // Reset all tabs to inactive state
+        // Reset all tabs to inactive state and restore their original colors
         document.querySelectorAll('.service-btn').forEach(btn => {
             btn.classList.remove('active-tab', 'font-semibold');
             btn.style.border = 'none';
-            btn.style.color = '#64748b';
+            btn.style.color = '';
             const icon = btn.querySelector('i');
-            if (icon) icon.style.color = '#94a3b8';
+            if (icon) icon.style.color = '';
         });
         
         // Hide all panels inside container
@@ -1860,6 +2015,10 @@ function switchServiceTab(serviceName, rowId = null) {
         if (isCurrentlyActive && rowId === null) {
             tabContainer.classList.add('hidden');
             resetContext();
+            // Clear the saved active tab when closing
+            localStorage.removeItem('activeServiceTab');
+            // Update tab colors after closing
+            updateTabColors();
         } else {
             if (!tabContainer.contains(targetPanel)) {
                 tabContainer.appendChild(targetPanel);
@@ -1874,6 +2033,8 @@ function switchServiceTab(serviceName, rowId = null) {
             if (activeIcon) activeIcon.style.color = '#3b82f6';
 
             updateServiceContextUI(serviceName, rowId);
+            // Update colors for non-active tabs
+            updateTabColors();
         }
     }
 }
@@ -3137,8 +3298,9 @@ function saveServiceData(serviceType) {
             // Update summary counts
             updateSummaryCounts();
             
-            // Explicitly update tab badges
+            // Explicitly update tab badges and colors
             updateTabBadges();
+            updateTabColors();
             
             // Activate icons only for the specific date range
             if (!currentServiceContext.rowId && fromDate && toDate) {
@@ -3400,13 +3562,15 @@ function updateFlightsSummaryTable() {
 
 // Function to update tab badges with service counts
 function updateTabBadges() {
-    const serviceCounts = {
-        'arrival': document.querySelectorAll('#arrival-table-body tr').length,
-        'departure': document.querySelectorAll('#departure-table-body tr').length,
-        'hotel': document.querySelectorAll('#hotels-table-body tr').length,
-        'guide': document.querySelectorAll('#guides-table-body tr').length,
-        'transport': document.querySelectorAll('#transports-table-body tr').length,
-        'meal': document.querySelectorAll('#meals-table-body tr').length
+    const serviceCounts = getServiceCounts();
+    
+    const colorMap = {
+        'arrival': 'bg-green-500',
+        'departure': 'bg-orange-500',
+        'hotel': 'bg-blue-500',
+        'guide': 'bg-teal-500',
+        'transport': 'bg-cyan-500',
+        'meal': 'bg-amber-500'
     };
     
     Object.keys(serviceCounts).forEach(serviceType => {
@@ -3419,15 +3583,6 @@ function updateTabBadges() {
         
         // Add new badge if count > 0
         if (serviceCounts[serviceType] > 0) {
-            const colorMap = {
-                'arrival': 'bg-green-500',
-                'departure': 'bg-orange-500',
-                'hotel': 'bg-blue-500',
-                'guide': 'bg-teal-500',
-                'transport': 'bg-cyan-500',
-                'meal': 'bg-amber-500'
-            };
-            
             const badge = document.createElement('span');
             badge.className = `ml-1 ${colorMap[serviceType]} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
             badge.textContent = serviceCounts[serviceType];
@@ -3503,8 +3658,9 @@ function deleteFlightService(flightType, serviceId) {
             // Update summary counts
             updateSummaryCounts();
             
-            // Update tab badges
+            // Update tab badges and colors
             updateTabBadges();
+            updateTabColors();
             
             // Mark summary tables as stale
             if (typeof markSummaryTablesStale === 'function') {
@@ -3561,8 +3717,9 @@ function deleteService(serviceType, serviceId) {
             // Update summary counts
             updateSummaryCounts();
             
-            // Update tab badges
+            // Update tab badges and colors
             updateTabBadges();
+            updateTabColors();
         } else {
             showNotification('Error deleting service: ' + (data.error || ''), 'error');
         }
@@ -4180,7 +4337,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     initializeRoomWizard();
     setupDateFieldListeners();
-    updateTabBadges();
+    initializeTabStates();
 });
 
 // Status Updates

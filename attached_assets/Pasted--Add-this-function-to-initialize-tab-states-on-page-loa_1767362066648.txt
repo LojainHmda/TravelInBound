@@ -1,0 +1,247 @@
+// Add this function to initialize tab states on page load
+function initializeTabStates() {
+    // Set the correct tab colors based on existing data
+    updateTabColors();
+    
+    // Update badge counts
+    updateTabBadges();
+    
+    // Initialize any active service panels if needed
+    const activeService = localStorage.getItem('activeServiceTab');
+    if (activeService) {
+        // Don't automatically open the tab, just ensure it's properly styled
+        const tab = document.getElementById(`tab-${activeService}`);
+        if (tab) {
+            // Reset all tabs first
+            document.querySelectorAll('.service-btn').forEach(btn => {
+                btn.classList.remove('active-tab', 'font-semibold');
+                btn.style.border = 'none';
+            });
+        }
+    }
+}
+
+// Fix the updateTabBadges function to correctly count items
+function updateTabBadges() {
+    const serviceCounts = {
+        'arrival': document.querySelectorAll('#arrival-table-body tr').length,
+        'departure': document.querySelectorAll('#departure-table-body tr').length,
+        'hotel': document.querySelectorAll('#hotels-table-body tr').length,
+        'guide': document.querySelectorAll('#guides-table-body tr').length,
+        'transport': document.querySelectorAll('#transports-table-body tr').length,
+        'meal': document.querySelectorAll('#meals-table-body tr').length
+    };
+    
+    Object.keys(serviceCounts).forEach(serviceType => {
+        const tab = document.getElementById(`tab-${serviceType}`);
+        if (!tab) return;
+        
+        // Remove existing badge if any
+        const existingBadge = tab.querySelector('.tab-count-badge');
+        if (existingBadge) existingBadge.remove();
+        
+        // Add new badge if count > 0
+        if (serviceCounts[serviceType] > 0) {
+            const colorMap = {
+                'arrival': 'bg-green-500',
+                'departure': 'bg-orange-500',
+                'hotel': 'bg-blue-500',
+                'guide': 'bg-teal-500',
+                'transport': 'bg-cyan-500',
+                'meal': 'bg-amber-500'
+            };
+            
+            const badge = document.createElement('span');
+            badge.className = `ml-1 ${colorMap[serviceType]} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            badge.textContent = serviceCounts[serviceType];
+            tab.appendChild(badge);
+        }
+    });
+}
+
+// Fix the switchServiceTab function to properly save state
+function switchServiceTab(serviceName, rowId = null) {
+    const targetPanel = document.getElementById('service-panel-' + serviceName);
+    const tabContainer = document.getElementById('service-tab-content');
+    const activeBtn = document.querySelector('.service-btn[data-service="' + serviceName + '"]');
+    
+    // Update Context
+    currentServiceContext = {
+        serviceName: serviceName,
+        rowId: rowId
+    };
+
+    // Save the active service tab to localStorage
+    localStorage.setItem('activeServiceTab', serviceName);
+
+    if (targetPanel && tabContainer) {
+        const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
+        
+        // Reset all tabs to inactive state
+        document.querySelectorAll('.service-btn').forEach(btn => {
+            btn.classList.remove('active-tab', 'font-semibold');
+            btn.style.border = 'none';
+            btn.style.color = '#64748b';
+            const icon = btn.querySelector('i');
+            if (icon) icon.style.color = '#94a3b8';
+        });
+        
+        // Hide all panels inside container
+        tabContainer.querySelectorAll('.service-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+        
+        if (isCurrentlyActive && rowId === null) {
+            tabContainer.classList.add('hidden');
+            resetContext();
+            // Clear the saved active tab when closing
+            localStorage.removeItem('activeServiceTab');
+        } else {
+            if (!tabContainer.contains(targetPanel)) {
+                tabContainer.appendChild(targetPanel);
+            }
+            tabContainer.classList.remove('hidden');
+            targetPanel.classList.remove('hidden');
+            
+            activeBtn.classList.add('active-tab', 'font-semibold');
+            activeBtn.style.border = '2px solid #3b82f6';
+            activeBtn.style.color = '#3b82f6';
+            const activeIcon = activeBtn.querySelector('i');
+            if (activeIcon) activeIcon.style.color = '#3b82f6';
+
+            updateServiceContextUI(serviceName, rowId);
+        }
+    }
+}
+
+// Fix the updateTabColors function to properly preserve colors
+function updateTabColors() {
+    const tabConfigs = {
+        'arrival': { 
+            count: document.querySelectorAll('#arrival-table-body tr').length,
+            bgHas: 'bg-green-100', textHas: 'text-green-700', iconHas: 'text-green-500', badgeBg: 'bg-green-500'
+        },
+        'departure': { 
+            count: document.querySelectorAll('#departure-table-body tr').length,
+            bgHas: 'bg-orange-100', textHas: 'text-orange-700', iconHas: 'text-orange-500', badgeBg: 'bg-orange-500'
+        },
+        'hotel': { 
+            count: document.querySelectorAll('#hotels-table-body tr').length,
+            bgHas: 'bg-blue-100', textHas: 'text-blue-700', iconHas: 'text-blue-500', badgeBg: 'bg-blue-500'
+        },
+        'guide': { 
+            count: document.querySelectorAll('#guides-table-body tr').length,
+            bgHas: 'bg-teal-100', textHas: 'text-teal-700', iconHas: 'text-teal-500', badgeBg: 'bg-teal-500'
+        },
+        'transport': { 
+            count: document.querySelectorAll('#transports-table-body tr').length,
+            bgHas: 'bg-cyan-100', textHas: 'text-cyan-700', iconHas: 'text-cyan-500', badgeBg: 'bg-cyan-500'
+        },
+        'meal': { 
+            count: document.querySelectorAll('#meals-table-body tr').length,
+            bgHas: 'bg-amber-100', textHas: 'text-amber-700', iconHas: 'text-amber-500', badgeBg: 'bg-amber-500'
+        }
+    };
+    
+    for (const [service, config] of Object.entries(tabConfigs)) {
+        const tab = document.getElementById(`tab-${service}`);
+        if (!tab) continue;
+        
+        // Check if this tab is currently active
+        const isActive = tab.classList.contains('active-tab');
+        
+        const icon = tab.querySelector('i');
+        let badge = tab.querySelector('.tab-count-badge');
+        
+        // Only update colors if the tab is not active
+        if (!isActive) {
+            // Remove old classes
+            tab.classList.remove('bg-white', 'text-slate-500', config.bgHas, config.textHas);
+            if (icon) icon.classList.remove('text-slate-400', config.iconHas);
+            
+            if (config.count > 0) {
+                // Has data - apply colored styling
+                tab.classList.add(config.bgHas, config.textHas);
+                if (icon) icon.classList.add(config.iconHas);
+                
+                // Add or update badge
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+                    tab.appendChild(badge);
+                }
+                badge.textContent = config.count;
+                badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+            } else {
+                // No data - apply default styling
+                tab.classList.add('bg-white', 'text-slate-500');
+                if (icon) icon.classList.add('text-slate-400');
+                
+                // Remove badge
+                if (badge) badge.remove();
+            }
+        } else {
+            // For active tabs, ensure badge count is correct
+            if (config.count > 0) {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
+                    tab.appendChild(badge);
+                }
+                badge.textContent = config.count;
+            } else if (badge) {
+                badge.remove();
+            }
+        }
+    }
+}
+
+// Update the initialization code
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing initialization code ...
+    
+    // Initialize tab states
+    initializeTabStates();
+    
+    // Rest of your existing initialization code
+    const form = document.getElementById('editMode');
+    if (form) {
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            if (field.id === 'fromDate' || field.id === 'toDate') {
+                field.addEventListener('change', function() { calculateDays(); autoSaveChanges(); });
+            } else {
+                field.addEventListener('change', autoSaveChanges);
+                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+                    field.addEventListener('input', autoSaveChanges);
+                }
+            }
+        });
+    }
+    
+    const tableBody = document.getElementById('itineraryTableBody');
+    const hasRows = tableBody && tableBody.querySelectorAll('tr[data-row-id]').length > 0;
+    if (!hasRows) {
+        // Auto-create default itinerary if needed (similar to existing logic)
+        const fromDate = document.getElementById('fromDate').value;
+        const toDate = document.getElementById('toDate').value;
+        if (fromDate && toDate) {
+             fetch(`/inbound/api/${requestId}/create-default-itinerary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({
+                    from_date: fromDate,
+                    to_date: toDate,
+                    pax: document.querySelector('[name="pax"]').value || 1
+                })
+            }).then(r => r.json()).then(data => {
+                if(data.success) {
+                    // After creating default itinerary, update tab states
+                    initializeTabStates();
+                }
+            });
+        }
+    }
+    
+    initializeRoomWizard();
+    setupDateFieldListeners();
+});
