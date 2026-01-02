@@ -2616,69 +2616,6 @@ function updateFullSummaryTables() {
     }
 }
 
-// Function to update tab colors when they have data
-function updateTabColors() {
-    const tabConfigs = {
-        'arrival': { 
-            count: document.querySelectorAll('#arrival-table-body tr').length,
-            bgHas: 'bg-green-100', textHas: 'text-green-700', iconHas: 'text-green-500', badgeBg: 'bg-green-500'
-        },
-        'departure': { 
-            count: document.querySelectorAll('#departure-table-body tr').length,
-            bgHas: 'bg-orange-100', textHas: 'text-orange-700', iconHas: 'text-orange-500', badgeBg: 'bg-orange-500'
-        },
-        'hotel': { 
-            count: document.querySelectorAll('#hotels-table-body tr').length,
-            bgHas: 'bg-blue-100', textHas: 'text-blue-700', iconHas: 'text-blue-500', badgeBg: 'bg-blue-500'
-        },
-        'guide': { 
-            count: document.querySelectorAll('#guides-table-body tr').length,
-            bgHas: 'bg-teal-100', textHas: 'text-teal-700', iconHas: 'text-teal-500', badgeBg: 'bg-teal-500'
-        },
-        'transport': { 
-            count: document.querySelectorAll('#transports-table-body tr').length,
-            bgHas: 'bg-cyan-100', textHas: 'text-cyan-700', iconHas: 'text-cyan-500', badgeBg: 'bg-cyan-500'
-        },
-        'meal': { 
-            count: document.querySelectorAll('#meals-table-body tr').length,
-            bgHas: 'bg-amber-100', textHas: 'text-amber-700', iconHas: 'text-amber-500', badgeBg: 'bg-amber-500'
-        }
-    };
-    
-    for (const [service, config] of Object.entries(tabConfigs)) {
-        const tab = document.getElementById(`tab-${service}`);
-        if (!tab) continue;
-        
-        const icon = tab.querySelector('i');
-        let badge = tab.querySelector('.tab-count-badge');
-        
-        // Remove old classes
-        tab.classList.remove('bg-white', 'text-slate-500', config.bgHas, config.textHas);
-        if (icon) icon.classList.remove('text-slate-400', config.iconHas);
-        
-        if (config.count > 0) {
-            // Has data - apply colored styling
-            tab.classList.add(config.bgHas, config.textHas);
-            if (icon) icon.classList.add(config.iconHas);
-            
-            // Add or update badge
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
-                tab.appendChild(badge);
-            }
-            badge.textContent = config.count;
-            badge.className = `ml-1 ${config.badgeBg} text-white text-[10px] px-1.5 rounded-full tab-count-badge`;
-        } else {
-            // No data - apply default styling
-            tab.classList.add('bg-white', 'text-slate-500');
-            if (icon) icon.classList.add('text-slate-400');
-            
-            // Remove badge
-            if (badge) badge.remove();
-        }
-    }
-}
 
 // Function to toggle full summary section
 let summaryTablesLoaded = false;
