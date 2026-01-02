@@ -1888,14 +1888,77 @@ function updateServiceContextUI(serviceName, rowId) {
         badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700";
         populateFormWithDayData(serviceName, rowId);
     } else {
-        badge.textContent = "Global (Applies to All)";
-        badge.className = "text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500";
+        // For global services, show the specific date range
+        let fromDate, toDate;
+        
+        switch(serviceName) {
+            case 'hotel':
+                fromDate = document.getElementById('hotel_check_in')?.value;
+                toDate = document.getElementById('hotel_check_out')?.value;
+                break;
+            case 'guide':
+                fromDate = document.getElementById('guide_from_date')?.value;
+                toDate = document.getElementById('guide_to_date')?.value;
+                break;
+            case 'transport':
+                fromDate = document.getElementById('transport_from_date')?.value;
+                toDate = document.getElementById('transport_to_date')?.value;
+                break;
+            case 'meal':
+                fromDate = document.getElementById('meal_from_date')?.value;
+                toDate = document.getElementById('meal_to_date')?.value;
+                break;
+            case 'arrival':
+                fromDate = document.getElementById('arrival_date')?.value;
+                toDate = document.getElementById('arrival_date')?.value;
+                break;
+            case 'departure':
+                fromDate = document.getElementById('departure_date')?.value;
+                toDate = document.getElementById('departure_date')?.value;
+                break;
+        }
+        
+        if (fromDate && toDate) {
+            const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            badge.textContent = `Specific Days (${startDate} - ${endDate})`;
+            badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700";
+        } else {
+            badge.textContent = "Global (Applies to All)";
+            badge.className = "text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500";
+        }
+        
         clearServiceForm(serviceName);
     }
     
     if (serviceName === 'hotel') {
         initializeRoomDistribution();
     }
+}
+
+// Update badge when date fields change
+function setupDateFieldListeners() {
+    const dateFields = {
+        'hotel': ['hotel_check_in', 'hotel_check_out'],
+        'guide': ['guide_from_date', 'guide_to_date'],
+        'transport': ['transport_from_date', 'transport_to_date'],
+        'meal': ['meal_from_date', 'meal_to_date'],
+        'arrival': ['arrival_date'],
+        'departure': ['departure_date']
+    };
+    
+    Object.keys(dateFields).forEach(serviceType => {
+        dateFields[serviceType].forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('change', function() {
+                    if (currentServiceContext.serviceName === serviceType && !currentServiceContext.rowId) {
+                        updateServiceContextUI(serviceType, null);
+                    }
+                });
+            }
+        });
+    });
 }
 
 function resetContext() {
@@ -2971,9 +3034,9 @@ function validateDateRange(serviceType) {
     return { valid: true };
 }
 
-// Manual save function called by Save buttons
+// Manual save function called by Save buttons - applies service only to specific date range
 function saveServiceData(serviceType) {
-    // Validate date range for global services (hotel, guide, transport, meal)
+    // Validate date range for global services
     if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
         const dateValidation = validateDateRange(serviceType);
         if (!dateValidation.valid) {
@@ -2982,7 +3045,7 @@ function saveServiceData(serviceType) {
         }
     }
     
-    // Additional hotel validation
+    // Validate room distribution for hotels
     if (serviceType === 'hotel') {
         const validation = validateRoomDistribution();
         if (!validation.valid) {
@@ -2991,15 +3054,118 @@ function saveServiceData(serviceType) {
         }
     }
     
-    // Perform Save
-    autoSaveServiceData(serviceType);
+    // Collect form data
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
     
-    // IMPORTANT: Clear form fields after saving to allow adding another item easily
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    // Determine date range for application
+    let fromDate, toDate;
+    
+    switch(serviceType) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            break;
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = document.getElementById('arrival_date')?.value;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = document.getElementById('departure_date')?.value;
+            break;
+    }
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData,
+        apply_to_specific_days: true,
+        from_date: fromDate,
+        to_date: toDate
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+        payload.apply_to_specific_days = true;
+    }
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            showNotification(data.message || 'Service data saved!', 'success');
+            
+            // Update itinerary if needed
+            if (data.itinerary_html) {
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
+            }
+            
+            // Update service table
+            updateServiceTable(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Activate icon if needed
+            if (currentServiceContext.rowId) {
+                activateIcon(currentServiceContext.rowId, serviceType);
+            }
+            
+            // Notify user that service was applied to specific days only
+            if (!currentServiceContext.rowId && fromDate && toDate) {
+                const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                showNotification(`Service applied to days ${startDate} - ${endDate}`, 'info');
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+    
+    // Clear form fields after saving for easy addition of another item
     setTimeout(() => {
-        // Only clear if it was a global save (rowId is null)
         if (!currentServiceContext.rowId) {
             clearServiceForm(serviceType);
-            showNotification('Saved. You can add another item.', 'success');
         }
     }, 500);
 }
@@ -3738,6 +3904,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     initializeRoomWizard();
+    setupDateFieldListeners();
 });
 
 // Status Updates
