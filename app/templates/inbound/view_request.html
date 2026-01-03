@@ -3307,6 +3307,10 @@ function parseDateFromText(dateText) {
 
 // Function to update summary tables after saving a service
 function updateSummaryTables(serviceType, data) {
+    console.log('[updateSummaryTables] Called with serviceType:', serviceType);
+    console.log('[updateSummaryTables] data.summary_entries_html exists:', !!data.summary_entries_html);
+    console.log('[updateSummaryTables] data.service_entries_html exists:', !!data.service_entries_html);
+    
     // Map service types to their summary table body IDs
     const tableMap = {
         'hotel': 'full-summary-hotels',
@@ -3318,6 +3322,7 @@ function updateSummaryTables(serviceType, data) {
     };
     
     const tableId = tableMap[serviceType];
+    console.log('[updateSummaryTables] Target tableId:', tableId);
     
     if (tableId) {
         if (serviceType === 'arrival' || serviceType === 'departure') {
@@ -3331,8 +3336,11 @@ function updateSummaryTables(serviceType, data) {
         } else if (data.summary_entries_html || data.service_entries_html) {
             // For other services, use summary_entries_html (consolidated) if available, else service_entries_html
             const tableBody = document.getElementById(tableId);
+            console.log('[updateSummaryTables] Found tableBody:', !!tableBody);
             if (tableBody) {
-                tableBody.innerHTML = data.summary_entries_html || data.service_entries_html;
+                const htmlToInsert = data.summary_entries_html || data.service_entries_html;
+                console.log('[updateSummaryTables] HTML length:', htmlToInsert?.length || 0);
+                tableBody.innerHTML = htmlToInsert;
                 // Update badges and colors after replacing content
                 updateTabBadges();
                 updateTabColors();
@@ -3424,8 +3432,19 @@ function createSummaryRowHtml(serviceType, entry) {
     }
 }
 
-// Function to update visible summary badges
+// Function to update visible summary badges and show summary section
 function updateVisibleSummary(serviceType, data) {
+    // Show the full summary section after adding a service
+    const fullSummarySection = document.getElementById('fullSummarySection');
+    if (fullSummarySection) {
+        fullSummarySection.classList.remove('hidden');
+        const toggleBtn = document.getElementById('toggleSummaryText');
+        if (toggleBtn) {
+            toggleBtn.textContent = 'Hide Summary';
+        }
+    }
+    
+    // Legacy code for summary containers (now removed from template)
     if (serviceType === 'hotel') {
         const hotelsContainer = document.getElementById('summary_hotel_list');
         if (hotelsContainer && data.service_entry) {
