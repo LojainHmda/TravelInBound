@@ -1455,7 +1455,7 @@ def api_save_service_data(request_id):
                         'meal_type': m.meal_type,
                         'restaurant': m.restaurant,
                         'location': getattr(m, 'location', None),
-                        'pax_count': m.pax_count,
+                        'total_cost': m.total_cost or 0,
                         'dates': []
                     }
                 if m.date:
@@ -1480,7 +1480,7 @@ def api_save_service_data(request_id):
                     <td class="border border-gray-300 px-2 py-1.5">{{ m.meal_type or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ m.restaurant or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ m.location or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ m.pax_count or 0 }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">-</td>
                 </tr>
                 {% else %}
                 <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
