@@ -1,0 +1,246 @@
+// Replace the existing updateSummaryTables function with this improved version
+function updateSummaryTables(serviceType, data) {
+    // Map service types to their summary table body IDs
+    const tableMap = {
+        'hotel': 'full-summary-hotels',
+        'arrival': 'full-summary-flights',
+        'departure': 'full-summary-flights',
+        'guide': 'full-summary-guides',
+        'transport': 'full-summary-transports',
+        'meal': 'full-summary-meals'
+    };
+    
+    const tableId = tableMap[serviceType];
+    
+    if (tableId) {
+        if (serviceType === 'arrival' || serviceType === 'departure') {
+            // For flights, use async fetch then update badges after
+            updateFlightsSummaryTable().then(() => {
+                updateTabBadges();
+                updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
+            });
+        } else if (data.service_entries_html) {
+            // For other services, REPLACE table content instead of appending
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
+                tableBody.innerHTML = data.service_entries_html;
+                // Update badges and colors after replacing content
+                updateTabBadges();
+                updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
+            }
+        } else if (data.service_entry) {
+            // If service_entries_html is not available but service_entry is, create the row manually
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
+                const rowHtml = createSummaryRowHtml(serviceType, data.service_entry);
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+                // Update badges and colors after adding content
+                updateTabBadges();
+                updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
+            }
+        }
+    }
+}
+
+// Add this new function to create HTML for summary rows
+function createSummaryRowHtml(serviceType, entry) {
+    switch(serviceType) {
+        case 'hotel':
+            return `
+                <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.hotel_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.nights || 0}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:${entry.single_rooms}</span>` : ''}
+                        ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:${entry.double_rooms}</span>` : ''}
+                        ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:${entry.triple_rooms}</span>` : ''}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                </tr>
+            `;
+        case 'guide':
+            return `
+                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.guide_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.language || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.telephone || '-'}</td>
+                </tr>
+            `;
+        case 'transport':
+            return `
+                <tr class="hover:bg-gray-50" data-transport-key="${entry.vehicle_type || ''}-${entry.pickup_point || ''}-${entry.drop_off_point || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.vehicle_type || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.pickup_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.drop_off_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                </tr>
+            `;
+        case 'meal':
+            return `
+                <tr class="hover:bg-gray-50" data-meal-key="${entry.meal_type || ''}-${entry.restaurant_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.meal_type || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.restaurant_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.location || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.pax_count || 0}</td>
+                </tr>
+            `;
+        default:
+            return '';
+    }
+}
+
+// Also update the saveServiceData function to ensure proper flow
+function saveServiceData(serviceType) {
+    // Validate date range for global services
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateValidation = validateDateRange(serviceType);
+        if (!dateValidation.valid) {
+            showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+    }
+    
+    // Validate room distribution for hotels
+    if (serviceType === 'hotel') {
+        const validation = validateRoomDistribution();
+        if (!validation.valid) {
+            showInlineError('hotel', validation.message);
+            return;
+        }
+    }
+    
+    // Collect form data
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+    });
+    
+    // Determine date range for application
+    let fromDate, toDate;
+    
+    switch(serviceType) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            break;
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = document.getElementById('arrival_date')?.value;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = document.getElementById('departure_date')?.value;
+            break;
+    }
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData,
+        apply_to_specific_days: true,
+        from_date: fromDate,
+        to_date: toDate
+    };
+
+    // Add context information
+    if (currentServiceContext.rowId) {
+        payload.row_id = currentServiceContext.rowId;
+        payload.is_global = false;
+    } else {
+        payload.is_global = true;
+        payload.apply_to_specific_days = true;
+    }
+    
+    // Remove any previous notifications before sending request
+    document.querySelectorAll('.tw-notification').forEach(n => n.remove());
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            
+            // Update summary tables instead of service table
+            updateSummaryTables(serviceType, data);
+            
+            // Update summary counts
+            updateSummaryCounts();
+            
+            // Explicitly update tab badges and colors
+            updateTabBadges();
+            updateTabColors();
+            
+            // Activate icons only for the specific date range
+            if (!currentServiceContext.rowId && fromDate && toDate) {
+                activateIconsForDateRange(serviceType, fromDate, toDate);
+                const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                showNotification(`Saved! Applied to ${startDate} - ${endDate}. Add another?`, 'success');
+                // Clear form for next entry
+                setTimeout(() => clearServiceForm(serviceType), 300);
+            } else if (currentServiceContext.rowId) {
+                // For day-specific services, activate only that day's icon
+                activateIcon(currentServiceContext.rowId, serviceType);
+                showNotification('Service saved for this day!', 'success');
+            } else {
+                showNotification('Service saved!', 'success');
+            }
+        } else {
+            const errorMsg = data.error || 'Error saving service data';
+            showInlineError(serviceType, errorMsg);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving service data', 'error');
+    });
+}

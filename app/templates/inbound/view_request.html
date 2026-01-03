@@ -3390,27 +3390,109 @@ function updateSummaryTables(serviceType, data) {
     
     const tableId = tableMap[serviceType];
     
-    if (tableId && data.service_entries_html) {
-        const tableBody = document.getElementById(tableId);
-        if (tableBody) {
-            if (serviceType === 'arrival' || serviceType === 'departure') {
-                // For flights, use async fetch then update badges after
-                updateFlightsSummaryTable().then(() => {
-                    updateTabBadges();
-                    updateTabColors();
-                });
-            } else {
-                // REPLACE table content instead of appending
+    if (tableId) {
+        if (serviceType === 'arrival' || serviceType === 'departure') {
+            // For flights, use async fetch then update badges after
+            updateFlightsSummaryTable().then(() => {
+                updateTabBadges();
+                updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
+            });
+        } else if (data.service_entries_html) {
+            // For other services, REPLACE table content instead of appending
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
                 tableBody.innerHTML = data.service_entries_html;
                 // Update badges and colors after replacing content
                 updateTabBadges();
                 updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
+            }
+        } else if (data.service_entry) {
+            // If service_entries_html is not available but service_entry is, create the row manually
+            const tableBody = document.getElementById(tableId);
+            if (tableBody) {
+                // Remove "no data" placeholder if exists
+                const placeholder = tableBody.querySelector('tr td[colspan]');
+                if (placeholder) {
+                    placeholder.closest('tr').remove();
+                }
+                const rowHtml = createSummaryRowHtml(serviceType, data.service_entry);
+                tableBody.insertAdjacentHTML('beforeend', rowHtml);
+                // Update badges and colors after adding content
+                updateTabBadges();
+                updateTabColors();
+                // Update visible summary section
+                updateVisibleSummary(serviceType, data);
             }
         }
     }
-    
-    // Update visible summary section
-    updateVisibleSummary(serviceType, data);
+}
+
+// Function to create HTML for summary rows when service_entries_html is not available
+function createSummaryRowHtml(serviceType, entry) {
+    switch(serviceType) {
+        case 'hotel':
+            return `
+                <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.hotel_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.nights || 0}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:${entry.single_rooms}</span>` : ''}
+                        ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:${entry.double_rooms}</span>` : ''}
+                        ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:${entry.triple_rooms}</span>` : ''}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                </tr>
+            `;
+        case 'guide':
+            return `
+                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.guide_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.language || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.telephone || '-'}</td>
+                </tr>
+            `;
+        case 'transport':
+            return `
+                <tr class="hover:bg-gray-50" data-transport-key="${entry.vehicle_type || ''}-${entry.pickup_point || ''}-${entry.drop_off_point || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.vehicle_type || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.pickup_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.drop_off_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${
+                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${entry.status || 'PENDING'}</span>
+                    </td>
+                </tr>
+            `;
+        case 'meal':
+            return `
+                <tr class="hover:bg-gray-50" data-meal-key="${entry.meal_type || ''}-${entry.restaurant_name || ''}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.meal_type || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.restaurant_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.location || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.pax_count || 0}</td>
+                </tr>
+            `;
+        default:
+            return '';
+    }
 }
 
 // Function to update visible summary badges
