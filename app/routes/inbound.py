@@ -1409,7 +1409,7 @@ def api_save_service_data(request_id):
                     guide_groups[key] = {
                         'guide_name': g.guide_name,
                         'language': g.language,
-                        'telephone': g.telephone,
+                        'telephone': g.telephone_number,
                         'dates': []
                     }
                 if g.date:
