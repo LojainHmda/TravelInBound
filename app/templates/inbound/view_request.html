@@ -3399,11 +3399,11 @@ function updateSummaryTables(serviceType, data) {
                 // Update visible summary section
                 updateVisibleSummary(serviceType, data);
             });
-        } else if (data.service_entries_html) {
-            // For other services, REPLACE table content instead of appending
+        } else if (data.summary_entries_html || data.service_entries_html) {
+            // For other services, use summary_entries_html (consolidated) if available, else service_entries_html
             const tableBody = document.getElementById(tableId);
             if (tableBody) {
-                tableBody.innerHTML = data.service_entries_html;
+                tableBody.innerHTML = data.summary_entries_html || data.service_entries_html;
                 // Update badges and colors after replacing content
                 updateTabBadges();
                 updateTabColors();

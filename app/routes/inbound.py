@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, abort, send_file
+from flask import Blueprint, render_template, render_template_string, redirect, url_for, flash, request, jsonify, abort, send_file
 from flask_login import login_required
 from datetime import datetime, timedelta
 from typing import cast, Any
@@ -1335,36 +1335,146 @@ def api_save_service_data(request_id):
         
         # Also render the service-specific entries table
         service_entries_html = None
+        summary_entries_html = None
+        
         if service_type == 'hotel':
             service_entries_html = render_template(
                 'components/hotel_entries.html',
                 hotels=fresh_request.inbound_hotels,
                 view_only=False
             )
+            # Hotels are already unique, use same format for summary
+            summary_entries_html = service_entries_html
+            
         elif service_type == 'transport':
             service_entries_html = render_template(
                 'components/transport_entries.html',
                 transports=fresh_request.inbound_transports,
                 view_only=False
             )
+            # Consolidate transports by vehicle+pickup+dropoff for summary
+            transport_groups = {}
+            for t in fresh_request.inbound_transports:
+                key = f"{t.vehicle_type or ''}-{t.pickup_location or ''}-{t.dropoff_location or ''}"
+                if key not in transport_groups:
+                    transport_groups[key] = {
+                        'vehicle_type': t.vehicle_type,
+                        'pickup_location': t.pickup_location,
+                        'dropoff_location': t.dropoff_location,
+                        'status': t.status,
+                        'dates': []
+                    }
+                if t.date:
+                    transport_groups[key]['dates'].append(t.date)
+            
+            summary_entries_html = render_template_string('''
+                {% for key, t in groups.items() %}
+                <tr class="hover:bg-gray-50" data-transport-key="{{ key }}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        {% if t.dates|length > 1 %}
+                            {{ t.dates|min|strftime('%d %b') }} - {{ t.dates|max|strftime('%d %b') }}
+                        {% elif t.dates %}
+                            {{ t.dates[0]|strftime('%d %b') }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ t.vehicle_type or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ t.pickup_location or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ t.dropoff_location or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] {% if t.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif t.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ t.status or 'PENDING' }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
+                {% endfor %}
+            ''', groups=transport_groups)
+            
         elif service_type == 'guide':
             service_entries_html = render_template(
                 'components/guide_entries.html',
                 guides=fresh_request.inbound_guides,
                 view_only=False
             )
+            # Consolidate guides by name for summary
+            guide_groups = {}
+            for g in fresh_request.inbound_guides:
+                key = g.guide_name or ''
+                if key not in guide_groups:
+                    guide_groups[key] = {
+                        'guide_name': g.guide_name,
+                        'language': g.language,
+                        'telephone': g.telephone,
+                        'dates': []
+                    }
+                if g.date:
+                    guide_groups[key]['dates'].append(g.date)
+            
+            summary_entries_html = render_template_string('''
+                {% for key, g in groups.items() %}
+                <tr class="hover:bg-gray-50" data-guide-name="{{ g.guide_name or '' }}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ g.guide_name or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        {% if g.dates|length > 1 %}
+                            {{ g.dates|min|strftime('%d %b') }} - {{ g.dates|max|strftime('%d %b') }}
+                        {% elif g.dates %}
+                            {{ g.dates[0]|strftime('%d %b') }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ g.language or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ g.telephone or '-' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+                {% endfor %}
+            ''', groups=guide_groups)
+            
         elif service_type == 'meal':
             service_entries_html = render_template(
                 'components/meal_entries.html',
                 meals=fresh_request.inbound_meals,
                 view_only=False
             )
+            # Consolidate meals by type+restaurant for summary
+            meal_groups = {}
+            for m in fresh_request.inbound_meals:
+                key = f"{m.meal_type or ''}-{m.restaurant or ''}"
+                if key not in meal_groups:
+                    meal_groups[key] = {
+                        'meal_type': m.meal_type,
+                        'restaurant': m.restaurant,
+                        'location': getattr(m, 'location', None),
+                        'pax_count': m.pax_count,
+                        'dates': []
+                    }
+                if m.date:
+                    meal_groups[key]['dates'].append(m.date)
+            
+            summary_entries_html = render_template_string('''
+                {% for key, m in groups.items() %}
+                <tr class="hover:bg-gray-50" data-meal-key="{{ key }}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        {% if m.dates|length > 1 %}
+                            {{ m.dates|min|strftime('%d %b') }} - {{ m.dates|max|strftime('%d %b') }}
+                        {% elif m.dates %}
+                            {{ m.dates[0]|strftime('%d %b') }}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ m.meal_type or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ m.restaurant or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ m.location or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ m.pax_count or 0 }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
+                {% endfor %}
+            ''', groups=meal_groups)
         
         return jsonify({
             'success': True, 
             'message': f'{service_type.capitalize()} data saved',
             'itinerary_html': itinerary_html,
             'service_entries_html': service_entries_html,
+            'summary_entries_html': summary_entries_html,
             'service_type': service_type
         })
     
