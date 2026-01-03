@@ -1367,16 +1367,22 @@ def api_save_service_data(request_id):
                 if t.date:
                     transport_groups[key]['dates'].append(t.date)
             
+            # Format date ranges for summary
+            for key in transport_groups:
+                dates = transport_groups[key]['dates']
+                if dates:
+                    dates.sort()
+                    if len(dates) > 1:
+                        transport_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                    else:
+                        transport_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                else:
+                    transport_groups[key]['date_range'] = '-'
+            
             summary_entries_html = render_template_string('''
                 {% for key, t in groups.items() %}
                 <tr class="hover:bg-gray-50" data-transport-key="{{ key }}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        {% if t.dates|length > 1 %}
-                            {{ t.dates|min|strftime('%d %b') }} - {{ t.dates|max|strftime('%d %b') }}
-                        {% elif t.dates %}
-                            {{ t.dates[0]|strftime('%d %b') }}
-                        {% else %}-{% endif %}
-                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ t.date_range }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ t.vehicle_type or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ t.pickup_location or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ t.dropoff_location or '-' }}</td>
@@ -1409,17 +1415,23 @@ def api_save_service_data(request_id):
                 if g.date:
                     guide_groups[key]['dates'].append(g.date)
             
+            # Format date ranges for summary
+            for key in guide_groups:
+                dates = guide_groups[key]['dates']
+                if dates:
+                    dates.sort()
+                    if len(dates) > 1:
+                        guide_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                    else:
+                        guide_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                else:
+                    guide_groups[key]['date_range'] = '-'
+            
             summary_entries_html = render_template_string('''
                 {% for key, g in groups.items() %}
                 <tr class="hover:bg-gray-50" data-guide-name="{{ g.guide_name or '' }}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ g.guide_name or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        {% if g.dates|length > 1 %}
-                            {{ g.dates|min|strftime('%d %b') }} - {{ g.dates|max|strftime('%d %b') }}
-                        {% elif g.dates %}
-                            {{ g.dates[0]|strftime('%d %b') }}
-                        {% else %}-{% endif %}
-                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ g.date_range }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ g.language or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ g.telephone or '-' }}</td>
                 </tr>
@@ -1449,16 +1461,22 @@ def api_save_service_data(request_id):
                 if m.date:
                     meal_groups[key]['dates'].append(m.date)
             
+            # Format date ranges for summary
+            for key in meal_groups:
+                dates = meal_groups[key]['dates']
+                if dates:
+                    dates.sort()
+                    if len(dates) > 1:
+                        meal_groups[key]['date_range'] = f"{dates[0].strftime('%d %b')} - {dates[-1].strftime('%d %b')}"
+                    else:
+                        meal_groups[key]['date_range'] = dates[0].strftime('%d %b')
+                else:
+                    meal_groups[key]['date_range'] = '-'
+            
             summary_entries_html = render_template_string('''
                 {% for key, m in groups.items() %}
                 <tr class="hover:bg-gray-50" data-meal-key="{{ key }}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        {% if m.dates|length > 1 %}
-                            {{ m.dates|min|strftime('%d %b') }} - {{ m.dates|max|strftime('%d %b') }}
-                        {% elif m.dates %}
-                            {{ m.dates[0]|strftime('%d %b') }}
-                        {% else %}-{% endif %}
-                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ m.date_range }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ m.meal_type or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ m.restaurant or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ m.location or '-' }}</td>
