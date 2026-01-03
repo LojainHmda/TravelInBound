@@ -1304,34 +1304,6 @@ html { scroll-behavior: smooth; }
                     </div>
                 </div>
                 <div class="p-3">
-                    <!-- Trip Overview Row -->
-                    <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2">
-                        <div class="bg-blue-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-blue-600">{{ request.no_of_days or 0 }}</div>
-                            <div class="text-[10px] text-slate-500">Days</div>
-                        </div>
-                        <div class="bg-purple-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-purple-600">{{ request.pax or 0 }}</div>
-                            <div class="text-[10px] text-slate-500">PAX</div>
-                        </div>
-                        <div class="bg-teal-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-teal-600" id="summary_hotels">{{ request.inbound_hotels|length if request.inbound_hotels else 0 }}</div>
-                            <div class="text-[10px] text-slate-500">Hotels</div>
-                        </div>
-                        <div class="bg-cyan-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-cyan-600" id="summary_transport">{{ request.inbound_transports|length if request.inbound_transports else 0 }}</div>
-                            <div class="text-[10px] text-slate-500">Transport</div>
-                        </div>
-                        <div class="bg-green-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-green-600" id="summary_guides">{{ request.inbound_guides|length if request.inbound_guides else 0 }}</div>
-                            <div class="text-[10px] text-slate-500">Guides</div>
-                        </div>
-                        <div class="bg-amber-50 rounded-lg p-2 text-center">
-                            <div class="text-sm font-bold text-amber-600" id="summary_meals">{{ request.inbound_meals|length if request.inbound_meals else 0 }}</div>
-                            <div class="text-[10px] text-slate-500">Meals</div>
-                        </div>
-                    </div>
-                    
                     <!-- Flights & Hotels Detail -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <!-- Arrivals & Departures -->
