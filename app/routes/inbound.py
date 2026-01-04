@@ -10,7 +10,7 @@ from app import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,
-    COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
+    HotelRoom, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
 )
 from werkzeug.utils import secure_filename
 import uuid
