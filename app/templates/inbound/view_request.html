@@ -3926,7 +3926,7 @@ function archiveRequest() {
 
 function handleCustomerSelectionInView(customer) {
     document.getElementById('selectedCustomerId').value = customer.id;
-    document.getElementById('selectedCustomerName').value = customer.name + (customer.company_name ? ` (${customer.company_name})` : '');
+    document.getElementById('selectedCustomerName').value = customer.name + (customer.company ? ` (${customer.company})` : '');
 }
 
 // Auto-save with debounce

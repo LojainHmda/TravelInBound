@@ -366,9 +366,9 @@ window.selectCustomer = function(customerId) {
     const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
     modal.hide();
     
-    // Call callback with customer id and name
+    // Call callback with full customer object
     if (window.customerSelectionCallback && customer) {
-        window.customerSelectionCallback(customer.id, customer.name);
+        window.customerSelectionCallback(customer);
     }
 }
 

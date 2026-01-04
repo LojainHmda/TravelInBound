@@ -1220,12 +1220,7 @@ function exportVoucher(layout = 'vertical') {
     window.open(`/inbound/${requestId}/voucher?layout=${layout}`, '_blank');
 }
 
-// Customer selection functions
-function handleCustomerSelection(customerId, customerName) {
-    // Update the hidden input and display
-    document.getElementById('selectedCustomerId').value = customerId;
-    document.getElementById('selectedCustomerDisplay').value = customerName || 'No customer selected';
-}
+// Customer selection functions - duplicate removed, using the one defined earlier that accepts customer object
 
 // Initialize customer modal functionality when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
