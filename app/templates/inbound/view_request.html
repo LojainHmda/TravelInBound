@@ -793,15 +793,15 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Arrival Point *</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_point" data-service="arrival">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport - Aqaba">King Hussein International Airport - Aqaba</option>
@@ -812,13 +812,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_flight_number" placeholder="e.g., RJ123" data-service="arrival">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_vehicle_type" data-service="arrival">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -828,15 +828,15 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_driver_name" placeholder="Driver name" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival" onchange="autoSaveServiceData('arrival')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival">
                                 </div>
                             </div>
                             <div class="flex justify-end mt-2">
@@ -861,15 +861,15 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Departure Point *</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_point" data-service="departure">
                                         <option value="">Select...</option>
                                         <option value="Queen Alia International Airport">Queen Alia International Airport</option>
                                         <option value="King Hussein International Airport">King Hussein International Airport</option>
@@ -880,13 +880,13 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_flight_number" placeholder="e.g., RJ123" data-service="departure">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Vehicle Type</label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_vehicle_type" data-service="departure">
                                         <option value="">Select...</option>
                                         <option value="Sedan">Sedan (1-3 PAX)</option>
                                         <option value="Van">Van (4-7 PAX)</option>
@@ -896,15 +896,15 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">PAX Count</label>
-                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Driver Name</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_driver_name" placeholder="Driver name" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Notes</label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure" onchange="autoSaveServiceData('departure')">
+                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_notes" placeholder="Notes" data-service="departure">
                                 </div>
                             </div>
                              <div class="flex justify-end mt-2">
