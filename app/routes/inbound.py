@@ -1102,28 +1102,53 @@ def api_save_service_data(request_id):
                 # Flush to get hotel ID before creating rooms
                 db.session.flush()
                 
-                # Only create rooms if there's a room distribution provided
-                total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
-                if total_rooms > 0:
-                    # Check if existing rooms match new distribution
-                    existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
-                    existing_count = len(existing_rooms)
+                # Check if room_list data was provided from the Room List tab
+                room_list_data = data.get('room_list', [])
+                
+                if room_list_data:
+                    # Use room list data provided by user (with guest names)
+                    HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                    board_basis = form_data.get('hotel_board', 'BB')
                     
-                    # Only recreate if distribution changed
-                    if existing_count != total_rooms:
-                        HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                    for room_data in room_list_data:
+                        room = HotelRoom(
+                            hotel_id=hotel.id,
+                            room_type=room_data.get('room_type', 'Double'),
+                            room_count=1,
+                            board_basis=board_basis,
+                            adults=room_data.get('adults', 2),
+                            children=room_data.get('children', 0),
+                            guest_names=room_data.get('guest_names', '')
+                        )
+                        db.session.add(room)
+                    
+                    # Update room distribution counts based on room list
+                    hotel.single_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Single')
+                    hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
+                    hotel.triple_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Triple', 'Suite'])
+                else:
+                    # Use distribution counts to create rooms (without guest names)
+                    total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
+                    if total_rooms > 0:
+                        # Check if existing rooms match new distribution
+                        existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
+                        existing_count = len(existing_rooms)
                         
-                        # Create individual room records based on distribution
-                        board_basis = form_data.get('hotel_board', 'BB')
-                        for i in range(hotel.single_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1)
-                            db.session.add(room)
-                        for i in range(hotel.double_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2)
-                            db.session.add(room)
-                        for i in range(hotel.triple_rooms):
-                            room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3)
-                            db.session.add(room)
+                        # Only recreate if distribution changed
+                        if existing_count != total_rooms:
+                            HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                            
+                            # Create individual room records based on distribution
+                            board_basis = form_data.get('hotel_board', 'BB')
+                            for i in range(hotel.single_rooms):
+                                room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1)
+                                db.session.add(room)
+                            for i in range(hotel.double_rooms):
+                                room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2)
+                                db.session.add(room)
+                            for i in range(hotel.triple_rooms):
+                                room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3)
+                                db.session.add(room)
             else:
                 # Apply to specific day
                 row = ItineraryRow.query.get(row_id)

@@ -975,10 +975,22 @@ html { scroll-behavior: smooth; }
                                     </select>
                                 </div>
                             </div>
-                            <!-- Room Distribution -->
+                            <!-- Room Distribution with Tabs -->
                             <div class="mb-2">
-                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">ROOM DISTRIBUTION</label>
-                                <div class="rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide">ROOMS</label>
+                                    <div class="flex gap-1 ml-2">
+                                        <button type="button" onclick="switchRoomTab('distribution')" id="room-tab-distribution" class="px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-blue-100 text-blue-700">
+                                            Distribution
+                                        </button>
+                                        <button type="button" onclick="switchRoomTab('roomlist')" id="room-tab-roomlist" class="px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-slate-100 text-slate-500 hover:bg-slate-200">
+                                            Room List
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Distribution Tab Content -->
+                                <div id="room-content-distribution" class="rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
                                     <!-- ROW 1: Checkbox Options -->
                                     <div class="flex items-center gap-4 mb-2">
                                         <label class="flex items-center gap-1 cursor-pointer text-xs">
@@ -1020,6 +1032,23 @@ html { scroll-behavior: smooth; }
                                             <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
                                             <span id="room-capacity-note" class="text-[10px] mt-0.5 font-bold" style="color: #ef5350;"></span>
                                         </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Room List Tab Content -->
+                                <div id="room-content-roomlist" class="hidden rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+                                    <div class="text-xs text-slate-500 mb-2 flex items-center justify-between">
+                                        <span><i class="fas fa-info-circle mr-1"></i>Assign guest names to each room (optional)</span>
+                                        <button type="button" onclick="addRoomListRow()" class="px-2 py-0.5 bg-blue-500 text-white rounded text-xs hover:bg-blue-600">
+                                            <i class="fas fa-plus mr-1"></i>Add Room
+                                        </button>
+                                    </div>
+                                    <div id="room-list-container" class="space-y-2 max-h-48 overflow-y-auto">
+                                        <!-- Room rows will be generated here -->
+                                    </div>
+                                    <div id="room-list-empty" class="text-center py-4 text-slate-400 text-xs">
+                                        <i class="fas fa-bed mb-1"></i>
+                                        <p>Set room distribution first, then click Room List tab</p>
                                     </div>
                                 </div>
                             </div>
@@ -3304,6 +3333,14 @@ function saveServiceData(serviceType) {
         payload.apply_to_specific_days = true;
     }
     
+    // For hotel: include room list data if any rooms were configured
+    if (serviceType === 'hotel') {
+        const roomListData = getRoomListData();
+        if (roomListData.length > 0) {
+            payload.room_list = roomListData;
+        }
+    }
+    
     // Remove any previous notifications before sending request
     document.querySelectorAll('.tw-notification').forEach(n => n.remove());
     
@@ -3330,14 +3367,21 @@ function saveServiceData(serviceType) {
             updateTabBadges();
             updateTabColors();
             
-            // For hotel: open room distribution modal after save
-            if (serviceType === 'hotel' && data.hotel_id && data.rooms) {
-                const hotelName = document.getElementById('hotel_name')?.value || 'Hotel';
+            // For hotel: show success and clear form
+            if (serviceType === 'hotel') {
+                const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                const roomCount = data.rooms ? data.rooms.length : 0;
+                const roomMsg = roomCount > 0 ? ` with ${roomCount} rooms` : '';
+                showNotification(`Hotel saved${roomMsg}! (${startDate} - ${endDate})`, 'success');
+                activateIconsForDateRange(serviceType, fromDate, toDate);
                 setTimeout(() => {
-                    openRoomDistributionModal(data.hotel_id, hotelName, data.rooms);
+                    clearServiceForm(serviceType);
+                    // Reset room list tab
+                    switchRoomTab('distribution');
+                    document.getElementById('room-list-container').innerHTML = '';
+                    document.getElementById('room-list-empty').classList.remove('hidden');
                 }, 300);
-                showNotification('Hotel saved! Now assign guest names to rooms.', 'success');
-                setTimeout(() => clearServiceForm(serviceType), 300);
             }
             // Activate icons only for the specific date range
             else if (!currentServiceContext.rowId && fromDate && toDate) {
@@ -4254,6 +4298,145 @@ function selectRoomMode(mode) {
         if (isManualMode) exitManualMode();
         applyWizardLayout(mode);
     }
+}
+
+// Room List Tab Functions
+function switchRoomTab(tab) {
+    const distTab = document.getElementById('room-tab-distribution');
+    const listTab = document.getElementById('room-tab-roomlist');
+    const distContent = document.getElementById('room-content-distribution');
+    const listContent = document.getElementById('room-content-roomlist');
+    
+    if (tab === 'distribution') {
+        distTab.className = 'px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-blue-100 text-blue-700';
+        listTab.className = 'px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-slate-100 text-slate-500 hover:bg-slate-200';
+        distContent.classList.remove('hidden');
+        listContent.classList.add('hidden');
+    } else {
+        listTab.className = 'px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-blue-100 text-blue-700';
+        distTab.className = 'px-2 py-0.5 text-xs rounded-full font-medium transition-all bg-slate-100 text-slate-500 hover:bg-slate-200';
+        listContent.classList.remove('hidden');
+        distContent.classList.add('hidden');
+        generateRoomListRows();
+    }
+}
+
+function generateRoomListRows() {
+    const sgl = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
+    const dbl = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
+    const trp = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
+    
+    const container = document.getElementById('room-list-container');
+    const emptyMsg = document.getElementById('room-list-empty');
+    
+    const totalRooms = sgl + dbl + trp;
+    
+    if (totalRooms === 0) {
+        container.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        return;
+    }
+    
+    emptyMsg.classList.add('hidden');
+    
+    // Check if rows already exist with same count
+    const existingRows = container.querySelectorAll('.room-list-row');
+    if (existingRows.length === totalRooms) {
+        return; // Don't regenerate if count matches
+    }
+    
+    container.innerHTML = '';
+    let roomNum = 1;
+    
+    // Generate Single rooms
+    for (let i = 0; i < sgl; i++) {
+        container.appendChild(createRoomListRow(roomNum++, 'Single', 1));
+    }
+    // Generate Double rooms
+    for (let i = 0; i < dbl; i++) {
+        container.appendChild(createRoomListRow(roomNum++, 'Double', 2));
+    }
+    // Generate Triple rooms
+    for (let i = 0; i < trp; i++) {
+        container.appendChild(createRoomListRow(roomNum++, 'Triple', 3));
+    }
+}
+
+function createRoomListRow(roomNum, roomType, defaultAdults) {
+    const row = document.createElement('div');
+    row.className = 'room-list-row flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200';
+    row.dataset.roomNum = roomNum;
+    row.dataset.roomType = roomType;
+    
+    row.innerHTML = `
+        <div class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
+            ${roomNum}
+        </div>
+        <div class="flex-shrink-0">
+            <select class="room-type-select px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type">
+                <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>SGL</option>
+                <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>DBL</option>
+                <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>TWN</option>
+                <option value="Triple" ${roomType === 'Triple' ? 'selected' : ''}>TRP</option>
+                <option value="Suite" ${roomType === 'Suite' ? 'selected' : ''}>Suite</option>
+            </select>
+        </div>
+        <div class="flex-grow">
+            <input type="text" class="w-full px-2 py-1 border border-slate-200 rounded text-xs" 
+                   placeholder="Guest names (e.g., John Smith, Jane Doe)" data-field="guest_names">
+        </div>
+        <div class="flex-shrink-0 flex items-center gap-1">
+            <span class="text-xs text-slate-400">Adults:</span>
+            <input type="number" class="w-10 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
+                   value="${defaultAdults}" min="1" max="6" data-field="adults">
+        </div>
+        <button type="button" onclick="removeRoomListRow(this)" class="flex-shrink-0 w-6 h-6 rounded-full hover:bg-red-100 text-slate-400 hover:text-red-500 flex items-center justify-center">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+    `;
+    
+    return row;
+}
+
+function addRoomListRow() {
+    const container = document.getElementById('room-list-container');
+    const emptyMsg = document.getElementById('room-list-empty');
+    emptyMsg.classList.add('hidden');
+    
+    const existingRows = container.querySelectorAll('.room-list-row');
+    const roomNum = existingRows.length + 1;
+    
+    container.appendChild(createRoomListRow(roomNum, 'Double', 2));
+}
+
+function removeRoomListRow(btn) {
+    const row = btn.closest('.room-list-row');
+    row.remove();
+    
+    // Renumber remaining rows
+    const container = document.getElementById('room-list-container');
+    const rows = container.querySelectorAll('.room-list-row');
+    rows.forEach((r, idx) => {
+        r.dataset.roomNum = idx + 1;
+        r.querySelector('.rounded-full').textContent = idx + 1;
+    });
+    
+    // Show empty message if no rows
+    if (rows.length === 0) {
+        document.getElementById('room-list-empty').classList.remove('hidden');
+    }
+}
+
+function getRoomListData() {
+    const container = document.getElementById('room-list-container');
+    const rows = container.querySelectorAll('.room-list-row');
+    
+    return Array.from(rows).map(row => ({
+        room_type: row.querySelector('[data-field="room_type"]')?.value || 'Double',
+        guest_names: row.querySelector('[data-field="guest_names"]')?.value || '',
+        adults: parseInt(row.querySelector('[data-field="adults"]')?.value) || 2,
+        children: 0
+    }));
 }
 
 function setActiveWizardMode(mode) {
