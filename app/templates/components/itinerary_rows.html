@@ -72,6 +72,50 @@
             </div>
         </div>
     </td>
+    <td class="py-3 px-3 text-center">
+        {% set statuses = [] %}
+        {% if eff_hotel and eff_hotel.hotel_name %}
+            {% if eff_hotel.status == 'CONFIRMED' %}
+                {% set _ = statuses.append({'type': 'H', 'status': 'CONF', 'color': 'green'}) %}
+            {% elif eff_hotel.status == 'CANCELLED' %}
+                {% set _ = statuses.append({'type': 'H', 'status': 'CAN', 'color': 'red'}) %}
+            {% else %}
+                {% set _ = statuses.append({'type': 'H', 'status': 'REQ', 'color': 'amber'}) %}
+            {% endif %}
+        {% endif %}
+        {% if eff_transport and eff_transport.vehicle_type %}
+            {% if eff_transport.status == 'CONFIRMED' %}
+                {% set _ = statuses.append({'type': 'T', 'status': 'CONF', 'color': 'green'}) %}
+            {% elif eff_transport.status == 'CANCELLED' %}
+                {% set _ = statuses.append({'type': 'T', 'status': 'CAN', 'color': 'red'}) %}
+            {% else %}
+                {% set _ = statuses.append({'type': 'T', 'status': 'REQ', 'color': 'amber'}) %}
+            {% endif %}
+        {% endif %}
+        {% if eff_guide and eff_guide.guide_name %}
+            {% if eff_guide.status == 'CONFIRMED' %}
+                {% set _ = statuses.append({'type': 'G', 'status': 'CONF', 'color': 'green'}) %}
+            {% elif eff_guide.status == 'CANCELLED' %}
+                {% set _ = statuses.append({'type': 'G', 'status': 'CAN', 'color': 'red'}) %}
+            {% else %}
+                {% set _ = statuses.append({'type': 'G', 'status': 'REQ', 'color': 'amber'}) %}
+            {% endif %}
+        {% endif %}
+        {% if eff_meal and eff_meal.restaurant %}
+            {% if eff_meal.status == 'CONFIRMED' %}
+                {% set _ = statuses.append({'type': 'M', 'status': 'CONF', 'color': 'green'}) %}
+            {% elif eff_meal.status == 'CANCELLED' %}
+                {% set _ = statuses.append({'type': 'M', 'status': 'CAN', 'color': 'red'}) %}
+            {% else %}
+                {% set _ = statuses.append({'type': 'M', 'status': 'REQ', 'color': 'amber'}) %}
+            {% endif %}
+        {% endif %}
+        <div class="flex flex-wrap gap-0.5 justify-center">
+            {% for s in statuses %}
+            <span class="service-flag bg-{{ s.color }}-100 text-{{ s.color }}-700 border border-{{ s.color }}-200">{{ s.type }}:{{ s.status }}</span>
+            {% endfor %}
+        </div>
+    </td>
     <td class="py-3 px-3 text-right">
         {% set row_cost = (eff_hotel.cost_per_night or 0) if eff_hotel else 0 %}
         {% set row_cost = row_cost + ((eff_transport.cost or 0) if eff_transport else 0) %}
