@@ -4671,6 +4671,37 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     }
 });
 
+// Date validation: To Date cannot be before From Date
+function setupDateValidation(fromDateId, toDateId) {
+    const fromDateEl = document.getElementById(fromDateId);
+    const toDateEl = document.getElementById(toDateId);
+    
+    if (fromDateEl && toDateEl) {
+        fromDateEl.addEventListener('change', function() {
+            if (this.value) {
+                toDateEl.min = this.value;
+                // Clear to date if it's before from date
+                if (toDateEl.value && toDateEl.value < this.value) {
+                    toDateEl.value = '';
+                }
+            } else {
+                toDateEl.removeAttribute('min');
+            }
+        });
+        
+        // Set initial min if from date already has a value
+        if (fromDateEl.value) {
+            toDateEl.min = fromDateEl.value;
+        }
+    }
+}
+
+// Apply date validation to all service forms
+setupDateValidation('hotel_check_in', 'hotel_check_out');
+setupDateValidation('guide_from_date', 'guide_to_date');
+setupDateValidation('transport_from_date', 'transport_to_date');
+setupDateValidation('meal_from_date', 'meal_to_date');
+
 // Room Distribution Modal Logic
 let currentRoomDistHotelId = null;
 let roomDistributionData = [];
