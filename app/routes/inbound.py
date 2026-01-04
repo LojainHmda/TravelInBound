@@ -276,12 +276,32 @@ def view_request(id):
     # Sort by preferred city order
     sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
     
+    # Build service lookup maps for template (same pattern as save_service_data)
+    hotel_map = {h.source_itinerary_id: h for h in request_obj.inbound_hotels}
+    transport_map = {t.source_itinerary_id: t for t in request_obj.inbound_transports}
+    guide_map = {g.source_itinerary_id: g for g in request_obj.inbound_guides}
+    meal_map = {m.source_itinerary_id: m for m in request_obj.inbound_meals}
+    
+    # Global fallbacks (source_itinerary_id=None)
+    global_hotel = hotel_map.get(None)
+    global_transport = transport_map.get(None)
+    global_guide = guide_map.get(None)
+    global_meal = meal_map.get(None)
+    
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
                            rows=request_obj.itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
-                           hotels_by_city=sorted_hotels_by_city)
+                           hotels_by_city=sorted_hotels_by_city,
+                           hotel_map=hotel_map,
+                           transport_map=transport_map,
+                           guide_map=guide_map,
+                           meal_map=meal_map,
+                           global_hotel=global_hotel,
+                           global_transport=global_transport,
+                           global_guide=global_guide,
+                           global_meal=global_meal)
 
 
 @inbound_bp.route('/<int:id>/delete')
