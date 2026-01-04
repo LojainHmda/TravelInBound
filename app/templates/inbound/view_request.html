@@ -4696,7 +4696,8 @@ function setupDateValidation(fromDateId, toDateId) {
     }
 }
 
-// Apply date validation to all service forms
+// Apply date validation to all date pairs
+setupDateValidation('fromDate', 'toDate');  // Main Request Details dates
 setupDateValidation('hotel_check_in', 'hotel_check_out');
 setupDateValidation('guide_from_date', 'guide_to_date');
 setupDateValidation('transport_from_date', 'transport_to_date');
