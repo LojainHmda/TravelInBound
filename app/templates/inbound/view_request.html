@@ -4671,37 +4671,117 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     }
 });
 
-// Date validation: To Date cannot be before From Date
-function setupDateValidation(fromDateId, toDateId) {
-    const fromDateEl = document.getElementById(fromDateId);
-    const toDateEl = document.getElementById(toDateId);
+// Date validation: To Date cannot be before From Date (for main request dates)
+function setupMainDateValidation() {
+    const fromDateEl = document.getElementById('fromDate');
+    const toDateEl = document.getElementById('toDate');
     
     if (fromDateEl && toDateEl) {
         fromDateEl.addEventListener('change', function() {
             if (this.value) {
                 toDateEl.min = this.value;
-                // Clear to date if it's before from date
                 if (toDateEl.value && toDateEl.value < this.value) {
                     toDateEl.value = '';
                 }
             } else {
                 toDateEl.removeAttribute('min');
             }
+            // Update service form date restrictions
+            updateServiceDateRestrictions();
         });
         
-        // Set initial min if from date already has a value
+        toDateEl.addEventListener('change', function() {
+            // Update service form date restrictions
+            updateServiceDateRestrictions();
+        });
+        
+        // Set initial min
         if (fromDateEl.value) {
             toDateEl.min = fromDateEl.value;
         }
     }
 }
 
-// Apply date validation to all date pairs
-setupDateValidation('fromDate', 'toDate');  // Main Request Details dates
-setupDateValidation('hotel_check_in', 'hotel_check_out');
-setupDateValidation('guide_from_date', 'guide_to_date');
-setupDateValidation('transport_from_date', 'transport_to_date');
-setupDateValidation('meal_from_date', 'meal_to_date');
+// Restrict service form dates to be within main Request Details date range
+function updateServiceDateRestrictions() {
+    const mainFromDate = document.getElementById('fromDate')?.value;
+    const mainToDate = document.getElementById('toDate')?.value;
+    
+    // List of service form date field IDs
+    const serviceDateFields = [
+        { from: 'hotel_check_in', to: 'hotel_check_out' },
+        { from: 'guide_from_date', to: 'guide_to_date' },
+        { from: 'transport_from_date', to: 'transport_to_date' },
+        { from: 'meal_from_date', to: 'meal_to_date' }
+    ];
+    
+    serviceDateFields.forEach(pair => {
+        const fromEl = document.getElementById(pair.from);
+        const toEl = document.getElementById(pair.to);
+        
+        if (fromEl) {
+            // Service From Date: min = main From Date, max = main To Date
+            if (mainFromDate) fromEl.min = mainFromDate;
+            else fromEl.removeAttribute('min');
+            
+            if (mainToDate) fromEl.max = mainToDate;
+            else fromEl.removeAttribute('max');
+            
+            // Clear if outside range
+            if (fromEl.value) {
+                if (mainFromDate && fromEl.value < mainFromDate) fromEl.value = mainFromDate;
+                if (mainToDate && fromEl.value > mainToDate) fromEl.value = '';
+            }
+        }
+        
+        if (toEl) {
+            // Service To Date: min = service From Date (or main From Date), max = main To Date
+            const serviceFromValue = fromEl?.value;
+            if (serviceFromValue) toEl.min = serviceFromValue;
+            else if (mainFromDate) toEl.min = mainFromDate;
+            else toEl.removeAttribute('min');
+            
+            if (mainToDate) toEl.max = mainToDate;
+            else toEl.removeAttribute('max');
+            
+            // Clear if outside range
+            if (toEl.value) {
+                if (toEl.min && toEl.value < toEl.min) toEl.value = '';
+                if (mainToDate && toEl.value > mainToDate) toEl.value = '';
+            }
+        }
+    });
+}
+
+// Setup service form date validation (within-form: To >= From, plus update restrictions)
+function setupServiceDateValidation(fromDateId, toDateId) {
+    const fromDateEl = document.getElementById(fromDateId);
+    const toDateEl = document.getElementById(toDateId);
+    
+    if (fromDateEl && toDateEl) {
+        fromDateEl.addEventListener('change', function() {
+            if (this.value) {
+                // To Date must be >= From Date
+                if (!toDateEl.min || this.value > toDateEl.min) {
+                    toDateEl.min = this.value;
+                }
+                if (toDateEl.value && toDateEl.value < this.value) {
+                    toDateEl.value = '';
+                }
+            }
+        });
+    }
+}
+
+// Apply date validation
+setupMainDateValidation();
+setupServiceDateValidation('hotel_check_in', 'hotel_check_out');
+setupServiceDateValidation('guide_from_date', 'guide_to_date');
+setupServiceDateValidation('transport_from_date', 'transport_to_date');
+setupServiceDateValidation('meal_from_date', 'meal_to_date');
+
+// Initialize service date restrictions on page load
+updateServiceDateRestrictions();
 
 // Room Distribution Modal Logic
 let currentRoomDistHotelId = null;
