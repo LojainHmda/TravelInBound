@@ -1347,14 +1347,16 @@ def api_save_service_data(request_id):
             summary_entries_html = service_entries_html
             
         elif service_type == 'transport':
+            # Convert to list to avoid multiple iterations consuming the relationship
+            transports_list = list(fresh_request.inbound_transports)
             service_entries_html = render_template(
                 'components/transport_entries.html',
-                transports=fresh_request.inbound_transports,
+                transports=transports_list,
                 view_only=False
             )
             # Consolidate transports by vehicle+pickup+dropoff for summary
             transport_groups = {}
-            for t in fresh_request.inbound_transports:
+            for t in transports_list:
                 key = f"{t.vehicle_type or ''}-{t.pickup_location or ''}-{t.dropoff_location or ''}"
                 if key not in transport_groups:
                     transport_groups[key] = {
@@ -1396,14 +1398,20 @@ def api_save_service_data(request_id):
             ''', groups=transport_groups)
             
         elif service_type == 'guide':
+            # Convert to list to avoid multiple iterations consuming the relationship
+            guides_list = list(fresh_request.inbound_guides)
+            print(f"[SAVE SERVICE] Guide count in fresh_request: {len(guides_list)}")
+            for g in guides_list:
+                print(f"[SAVE SERVICE] Guide entry: id={g.id}, name={g.guide_name}, date={g.date}")
+            
             service_entries_html = render_template(
                 'components/guide_entries.html',
-                guides=fresh_request.inbound_guides,
+                guides=guides_list,
                 view_only=False
             )
             # Consolidate guides by name for summary
             guide_groups = {}
-            for g in fresh_request.inbound_guides:
+            for g in guides_list:
                 key = g.guide_name or ''
                 if key not in guide_groups:
                     guide_groups[key] = {
@@ -1441,14 +1449,16 @@ def api_save_service_data(request_id):
             ''', groups=guide_groups)
             
         elif service_type == 'meal':
+            # Convert to list to avoid multiple iterations consuming the relationship
+            meals_list = list(fresh_request.inbound_meals)
             service_entries_html = render_template(
                 'components/meal_entries.html',
-                meals=fresh_request.inbound_meals,
+                meals=meals_list,
                 view_only=False
             )
             # Consolidate meals by type+restaurant for summary
             meal_groups = {}
-            for m in fresh_request.inbound_meals:
+            for m in meals_list:
                 key = f"{m.meal_type or ''}-{m.restaurant or ''}"
                 if key not in meal_groups:
                     meal_groups[key] = {
