@@ -2198,6 +2198,9 @@ function autoSaveServiceData(serviceType) {
             // Update summary counts
             updateSummaryCounts();
             
+            // Reset form fields for next entry (so dropdown works for subsequent additions)
+            resetServiceForm(serviceType);
+            
             // Activate icon if needed
             if (currentServiceContext.rowId) {
                 activateIcon(currentServiceContext.rowId, serviceType);
@@ -3778,6 +3781,33 @@ function showInlineError(serviceType, message) {
 function clearInlineError(serviceType) {
     const errorContainer = document.getElementById(`${serviceType}-error-container`);
     if (errorContainer) errorContainer.classList.add('hidden');
+}
+
+function resetServiceForm(serviceType) {
+    const fieldResetMap = {
+        'hotel': ['hotel_name', 'hotel_category', 'hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_board', 'hotel_status', 'hotel_cost', 'hotel_notes'],
+        'guide': ['guide_name', 'guide_language', 'guide_phone', 'guide_cost', 'guide_notes'],
+        'transport': ['transport_vehicle', 'transport_pickup', 'transport_dropoff', 'transport_driver', 'transport_phone', 'transport_status', 'transport_cost'],
+        'meal': ['meal_type', 'meal_restaurant', 'meal_location', 'meal_pax', 'meal_cost', 'meal_notes'],
+        'arrival': ['arrival_time', 'arrival_flight_number', 'arrival_vehicle_type', 'arrival_pax_count', 'arrival_driver_name', 'arrival_notes'],
+        'departure': ['departure_time', 'departure_flight_number', 'departure_vehicle_type', 'departure_pax_count', 'departure_driver_name', 'departure_notes']
+    };
+    
+    const fields = fieldResetMap[serviceType];
+    if (!fields) return;
+    
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === 'SELECT') {
+                field.selectedIndex = 0;
+            } else {
+                field.value = '';
+            }
+        }
+    });
+    
+    console.log('[resetServiceForm] Reset form for', serviceType);
 }
 
 function showNotification(message, type) {
