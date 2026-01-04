@@ -1082,9 +1082,15 @@ def api_save_service_data(request_id):
     try:
         if service_type == 'hotel':
             if is_global:
-                # Apply to all days - create or update hotel for request
-                hotel = InboundHotel.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
+                # Check if editing existing hotel or creating new one
+                hotel_id = form_data.get('hotel_id')
+                hotel = None
+                if hotel_id:
+                    # Editing existing hotel
+                    hotel = InboundHotel.query.filter_by(id=int(hotel_id), request_id=request_id).first()
+                
                 if not hotel:
+                    # Create a new hotel entry
                     hotel = InboundHotel(
                         request_id=request_id,
                         check_in_date=request_obj.from_date or date_type.today(),
@@ -1399,8 +1405,27 @@ def api_save_service_data(request_id):
                 hotels=fresh_request.inbound_hotels,
                 view_only=False
             )
-            # Hotels are already unique, use same format for summary
-            summary_entries_html = service_entries_html
+            # Generate proper summary HTML for hotels with rooms column
+            summary_entries_html = render_template_string('''
+                {% for hotel in hotels %}
+                <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.nights or 0 }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:{{ hotel.single_rooms }}</span>{% endif %}
+                        {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:{{ hotel.double_rooms }}</span>{% endif %}
+                        {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:{{ hotel.triple_rooms }}</span>{% endif %}
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
+                {% endfor %}
+            ''', hotels=fresh_request.inbound_hotels)
             
         elif service_type == 'transport':
             service_entries_html = render_template(
