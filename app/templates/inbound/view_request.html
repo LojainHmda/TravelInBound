@@ -735,6 +735,9 @@ html { scroll-behavior: smooth; }
                         <button type="button" onclick="switchServiceTab('transport')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="transport" id="tab-transport">
                             <i class="fas fa-car text-slate-400"></i> Transport
                         </button>
+                        <button type="button" onclick="switchServiceTab('meal')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="meal" id="tab-meal">
+                            <i class="fas fa-utensils text-slate-400"></i> Meal
+                        </button>
                     </div>
                     <!-- Tab Content Container -->
                     <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-2"></div>
@@ -742,8 +745,37 @@ html { scroll-behavior: smooth; }
                 
                 <div class="border-t border-slate-200"></div>
 
-                <!-- Service Content Panels Container -->
+                <!-- Itinerary Table (Always Visible) -->
                 <div class="p-3">
+                    {% if request.itinerary_rows %}
+                    <div class="overflow-x-auto" id="itineraryTable">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                    <th class="py-2 px-2 w-16">Day</th>
+                                    <th class="py-2 px-2 w-24">Date</th>
+                                    <th class="py-2 px-2">Description</th>
+                                    <th class="py-2 px-2 w-32">Restaurant</th>
+                                    <th class="py-2 px-2 w-28 text-center">Services</th>
+                                    <th class="py-2 px-2 w-20 text-right">Cost</th>
+                                    <th class="py-2 px-2 w-28">Comments</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itineraryTableBody">
+                                {% include 'components/itinerary_rows.html' with context %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8" id="itineraryEmptyState">
+                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-route text-xl text-slate-400"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
+                        <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
+                    </div>
+                    {% endif %}
+                    
                     <!-- Service Content Panels (Unified View & Edit) -->
                     
                     <!-- Arrival Panel -->
@@ -1482,45 +1514,6 @@ html { scroll-behavior: smooth; }
                             </button>
                         </div>
                     </div>
-                    
-                    <!-- Itinerary Summary Table (Below Services) -->
-                    <div class="mt-4 border-t border-slate-200 pt-4">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm mb-3">
-                            <i class="fas fa-route text-purple-500"></i> Itinerary Summary
-                            {% if request.itinerary_rows %}
-                            <span class="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full">{{ request.itinerary_rows|length }} days</span>
-                            {% endif %}
-                        </h3>
-                        {% if request.itinerary_rows %}
-                        <div class="overflow-x-auto" id="itineraryTable">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                        <th class="py-2 px-2 w-16">Day</th>
-                                        <th class="py-2 px-2 w-24">Date</th>
-                                        <th class="py-2 px-2">Description</th>
-                                        <th class="py-2 px-2 w-32">Restaurant</th>
-                                        <th class="py-2 px-2 w-28 text-center">Services</th>
-                                        <th class="py-2 px-2 w-32 text-center">Status</th>
-                                        <th class="py-2 px-2 w-20 text-right">Cost</th>
-                                        <th class="py-2 px-2 w-28">Comments</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="itineraryTableBody">
-                                    {% include 'components/itinerary_rows.html' with context %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-8" id="itineraryEmptyState">
-                            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <i class="fas fa-route text-xl text-slate-400"></i>
-                            </div>
-                            <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
-                            <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
-                        </div>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
     </div>
@@ -2188,15 +2181,8 @@ function autoSaveServiceData(serviceType) {
             
             // Update itinerary if needed
             if (data.itinerary_html) {
-                const tbody = document.getElementById('itineraryTableBody');
-                if (tbody) {
-                    tbody.innerHTML = data.itinerary_html;
-                    console.log('[saveServiceData] Updated itinerary with', data.itinerary_html.length, 'chars');
-                } else {
-                    console.error('[saveServiceData] itineraryTableBody not found');
-                }
-            } else {
-                console.warn('[saveServiceData] No itinerary_html in response');
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
             // Update service table - this is the key part
@@ -2204,9 +2190,6 @@ function autoSaveServiceData(serviceType) {
             
             // Update summary counts
             updateSummaryCounts();
-            
-            // Reset form fields for next entry (so dropdown works for subsequent additions)
-            resetServiceForm(serviceType);
             
             // Activate icon if needed
             if (currentServiceContext.rowId) {
@@ -3694,11 +3677,8 @@ function deleteService(serviceType, serviceId) {
             showNotification(data.message || 'Service deleted!', 'success');
             
             if (data.itinerary_html) {
-                const tbody = document.getElementById('itineraryTableBody');
-                if (tbody) {
-                    tbody.innerHTML = data.itinerary_html;
-                    console.log('[deleteService] Updated itinerary with', data.itinerary_html.length, 'chars');
-                }
+                const tbody = document.querySelector('#itineraryTable tbody');
+                if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
             const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
@@ -3788,33 +3768,6 @@ function showInlineError(serviceType, message) {
 function clearInlineError(serviceType) {
     const errorContainer = document.getElementById(`${serviceType}-error-container`);
     if (errorContainer) errorContainer.classList.add('hidden');
-}
-
-function resetServiceForm(serviceType) {
-    const fieldResetMap = {
-        'hotel': ['hotel_name', 'hotel_category', 'hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_board', 'hotel_status', 'hotel_cost', 'hotel_notes'],
-        'guide': ['guide_name', 'guide_language', 'guide_phone', 'guide_cost', 'guide_notes'],
-        'transport': ['transport_vehicle', 'transport_pickup', 'transport_dropoff', 'transport_driver', 'transport_phone', 'transport_status', 'transport_cost'],
-        'meal': ['meal_type', 'meal_restaurant', 'meal_location', 'meal_pax', 'meal_cost', 'meal_notes'],
-        'arrival': ['arrival_time', 'arrival_flight_number', 'arrival_vehicle_type', 'arrival_pax_count', 'arrival_driver_name', 'arrival_notes'],
-        'departure': ['departure_time', 'departure_flight_number', 'departure_vehicle_type', 'departure_pax_count', 'departure_driver_name', 'departure_notes']
-    };
-    
-    const fields = fieldResetMap[serviceType];
-    if (!fields) return;
-    
-    fields.forEach(fieldId => {
-        const field = document.getElementById(fieldId);
-        if (field) {
-            if (field.tagName === 'SELECT') {
-                field.selectedIndex = 0;
-            } else {
-                field.value = '';
-            }
-        }
-    });
-    
-    console.log('[resetServiceForm] Reset form for', serviceType);
 }
 
 function showNotification(message, type) {

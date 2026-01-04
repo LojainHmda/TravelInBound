@@ -276,32 +276,12 @@ def view_request(id):
     # Sort by preferred city order
     sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
     
-    # Build service lookup maps for template (same pattern as save_service_data)
-    hotel_map = {h.source_itinerary_id: h for h in request_obj.inbound_hotels}
-    transport_map = {t.source_itinerary_id: t for t in request_obj.inbound_transports}
-    guide_map = {g.source_itinerary_id: g for g in request_obj.inbound_guides}
-    meal_map = {m.source_itinerary_id: m for m in request_obj.inbound_meals}
-    
-    # Global fallbacks (source_itinerary_id=None)
-    global_hotel = hotel_map.get(None)
-    global_transport = transport_map.get(None)
-    global_guide = guide_map.get(None)
-    global_meal = meal_map.get(None)
-    
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
                            rows=request_obj.itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
-                           hotels_by_city=sorted_hotels_by_city,
-                           hotel_map=hotel_map,
-                           transport_map=transport_map,
-                           guide_map=guide_map,
-                           meal_map=meal_map,
-                           global_hotel=global_hotel,
-                           global_transport=global_transport,
-                           global_guide=global_guide,
-                           global_meal=global_meal)
+                           hotels_by_city=sorted_hotels_by_city)
 
 
 @inbound_bp.route('/<int:id>/delete')
@@ -1118,12 +1098,6 @@ def api_save_service_data(request_id):
                 hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
                 hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
                 hotel.notes = form_data.get('hotel_notes', '')
-                
-                # Auto-set itinerary row flags for all days in hotel date range
-                for row in request_obj.itinerary_rows:
-                    if row.date and hotel.check_in_date and hotel.check_out_date:
-                        if hotel.check_in_date <= row.date < hotel.check_out_date:
-                            row.flag_hotel = True
             else:
                 # Apply to specific day
                 row = ItineraryRow.query.get(row_id)
@@ -1162,9 +1136,6 @@ def api_save_service_data(request_id):
                     hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
                     hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
                     hotel.notes = form_data.get('hotel_notes', '')
-                    
-                    # Auto-set itinerary row flag
-                    row.flag_hotel = True
         
         elif service_type == 'transport':
             if is_global:
@@ -1195,12 +1166,6 @@ def api_save_service_data(request_id):
                     transport.status = form_data.get('transport_status', 'REQUESTED')
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
                     db.session.add(transport)
-                    
-                    # Auto-set itinerary row flag for this date
-                    matching_row = ItineraryRow.query.filter_by(request_id=request_id, date=current_date).first()
-                    if matching_row:
-                        matching_row.flag_transport = True
-                    
                     created_count += 1
                     current_date += timedelta(days=1)
                 
@@ -1227,9 +1192,6 @@ def api_save_service_data(request_id):
                     
                     if form_data.get('transport_date'):
                         transport.date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
-                    
-                    # Auto-set itinerary row flag
-                    row.flag_transport = True
         
         elif service_type == 'guide':
             if is_global:
@@ -1257,12 +1219,6 @@ def api_save_service_data(request_id):
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     db.session.add(guide)
-                    
-                    # Auto-set itinerary row flag for this date
-                    matching_row = ItineraryRow.query.filter_by(request_id=request_id, date=current_date).first()
-                    if matching_row:
-                        matching_row.flag_guide = True
-                    
                     created_count += 1
                     current_date += timedelta(days=1)
                 
@@ -1286,9 +1242,6 @@ def api_save_service_data(request_id):
                     
                     if form_data.get('guide_date'):
                         guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
-                    
-                    # Auto-set itinerary row flag
-                    row.flag_guide = True
         
         elif service_type == 'meal':
             if is_global:
@@ -1315,12 +1268,6 @@ def api_save_service_data(request_id):
                     meal.meal_type = form_data.get('meal_type', '')
                     meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
                     db.session.add(meal)
-                    
-                    # Auto-set itinerary row flag for this date
-                    matching_row = ItineraryRow.query.filter_by(request_id=request_id, date=current_date).first()
-                    if matching_row:
-                        matching_row.flag_meal = True
-                    
                     created_count += 1
                     current_date += timedelta(days=1)
                 
@@ -1343,9 +1290,6 @@ def api_save_service_data(request_id):
                     
                     if form_data.get('meal_date'):
                         meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
-                    
-                    # Auto-set itinerary row flag
-                    row.flag_meal = True
         
         db.session.commit()
         print(f"[SAVE SERVICE] Commit successful for {service_type}")
