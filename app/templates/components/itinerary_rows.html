@@ -64,12 +64,6 @@
                  title="Guide">
                 <i class="fas fa-user"></i>
             </div>
-            <div class="service-icon-toggle meal{% if eff_meal and eff_meal.restaurant %} active{% endif %}" 
-                 data-row-id="{{ row.id }}"
-                 onclick="switchServiceTab('meal', {{ row.id }})"
-                 title="Meal">
-                <i class="fas fa-utensils"></i>
-            </div>
         </div>
     </td>
     <td class="py-3 px-3 text-center">
@@ -99,15 +93,6 @@
                 {% set _ = statuses.append({'type': 'G', 'status': 'CAN', 'color': 'red'}) %}
             {% else %}
                 {% set _ = statuses.append({'type': 'G', 'status': 'REQ', 'color': 'amber'}) %}
-            {% endif %}
-        {% endif %}
-        {% if eff_meal and eff_meal.restaurant %}
-            {% if eff_meal.status == 'CONFIRMED' %}
-                {% set _ = statuses.append({'type': 'M', 'status': 'CONF', 'color': 'green'}) %}
-            {% elif eff_meal.status == 'CANCELLED' %}
-                {% set _ = statuses.append({'type': 'M', 'status': 'CAN', 'color': 'red'}) %}
-            {% else %}
-                {% set _ = statuses.append({'type': 'M', 'status': 'REQ', 'color': 'amber'}) %}
             {% endif %}
         {% endif %}
         <div class="flex flex-wrap gap-0.5 justify-center">
