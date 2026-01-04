@@ -4368,12 +4368,22 @@ function createRoomListRow(roomNum, roomType, defaultAdults) {
     row.dataset.roomNum = roomNum;
     row.dataset.roomType = roomType;
     
+    // Determine number of guest fields based on room type
+    const guestCount = getGuestCountForRoomType(roomType);
+    
+    // Generate guest name input fields
+    let guestFieldsHtml = '';
+    for (let i = 1; i <= guestCount; i++) {
+        guestFieldsHtml += `<input type="text" class="guest-name-input flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs" 
+               placeholder="Guest ${i}" data-guest-index="${i}">`;
+    }
+    
     row.innerHTML = `
         <div class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
             ${roomNum}
         </div>
         <div class="flex-shrink-0">
-            <select class="room-type-select px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type">
+            <select class="room-type-select px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" onchange="updateGuestFields(this)">
                 <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>SGL</option>
                 <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>DBL</option>
                 <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>TWN</option>
@@ -4381,14 +4391,8 @@ function createRoomListRow(roomNum, roomType, defaultAdults) {
                 <option value="Suite" ${roomType === 'Suite' ? 'selected' : ''}>Suite</option>
             </select>
         </div>
-        <div class="flex-grow">
-            <input type="text" class="w-full px-2 py-1 border border-slate-200 rounded text-xs" 
-                   placeholder="Guest names (e.g., John Smith, Jane Doe)" data-field="guest_names">
-        </div>
-        <div class="flex-shrink-0 flex items-center gap-1">
-            <span class="text-xs text-slate-400">Adults:</span>
-            <input type="number" class="w-10 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
-                   value="${defaultAdults}" min="1" max="6" data-field="adults">
+        <div class="guest-fields-container flex-grow flex gap-1">
+            ${guestFieldsHtml}
         </div>
         <button type="button" onclick="removeRoomListRow(this)" class="flex-shrink-0 w-6 h-6 rounded-full hover:bg-red-100 text-slate-400 hover:text-red-500 flex items-center justify-center">
             <i class="fas fa-times text-xs"></i>
@@ -4396,6 +4400,40 @@ function createRoomListRow(roomNum, roomType, defaultAdults) {
     `;
     
     return row;
+}
+
+function getGuestCountForRoomType(roomType) {
+    switch(roomType) {
+        case 'Single': return 1;
+        case 'Double': return 2;
+        case 'Twin': return 2;
+        case 'Triple': return 3;
+        case 'Suite': return 2;
+        default: return 2;
+    }
+}
+
+function updateGuestFields(selectEl) {
+    const row = selectEl.closest('.room-list-row');
+    const container = row.querySelector('.guest-fields-container');
+    const roomType = selectEl.value;
+    const newCount = getGuestCountForRoomType(roomType);
+    
+    // Get existing guest names
+    const existingInputs = container.querySelectorAll('.guest-name-input');
+    const existingNames = Array.from(existingInputs).map(inp => inp.value);
+    
+    // Rebuild guest fields
+    let guestFieldsHtml = '';
+    for (let i = 1; i <= newCount; i++) {
+        const existingValue = existingNames[i-1] || '';
+        guestFieldsHtml += `<input type="text" class="guest-name-input flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs" 
+               placeholder="Guest ${i}" data-guest-index="${i}" value="${existingValue}">`;
+    }
+    container.innerHTML = guestFieldsHtml;
+    
+    // Update row data
+    row.dataset.roomType = roomType;
 }
 
 function addRoomListRow() {
@@ -4431,12 +4469,26 @@ function getRoomListData() {
     const container = document.getElementById('room-list-container');
     const rows = container.querySelectorAll('.room-list-row');
     
-    return Array.from(rows).map(row => ({
-        room_type: row.querySelector('[data-field="room_type"]')?.value || 'Double',
-        guest_names: row.querySelector('[data-field="guest_names"]')?.value || '',
-        adults: parseInt(row.querySelector('[data-field="adults"]')?.value) || 2,
-        children: 0
-    }));
+    return Array.from(rows).map(row => {
+        const roomType = row.querySelector('[data-field="room_type"]')?.value || 'Double';
+        
+        // Collect all guest names from individual fields
+        const guestInputs = row.querySelectorAll('.guest-name-input');
+        const guestNames = Array.from(guestInputs)
+            .map(inp => inp.value.trim())
+            .filter(name => name.length > 0)
+            .join(', ');
+        
+        // Adults count based on room type
+        const adults = getGuestCountForRoomType(roomType);
+        
+        return {
+            room_type: roomType,
+            guest_names: guestNames,
+            adults: adults,
+            children: 0
+        };
+    });
 }
 
 function setActiveWizardMode(mode) {
