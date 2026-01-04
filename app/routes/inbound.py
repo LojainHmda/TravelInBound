@@ -1291,6 +1291,88 @@ def api_save_service_data(request_id):
                     if form_data.get('meal_date'):
                         meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
         
+        elif service_type == 'arrival':
+            from app.models.inbound import ArrivalBatch
+            
+            # Parse date and time
+            arrival_date = None
+            arrival_time = None
+            if form_data.get('arrival_date'):
+                try:
+                    arrival_date = datetime.strptime(form_data['arrival_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            if form_data.get('arrival_time'):
+                try:
+                    arrival_time = datetime.strptime(form_data['arrival_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Check if we're updating an existing batch or creating new
+            batch_id = form_data.get('arrival_id') or form_data.get('batch_id')
+            if batch_id:
+                arrival = ArrivalBatch.query.filter_by(id=batch_id, request_id=request_id).first()
+            else:
+                arrival = None
+            
+            if not arrival:
+                # Create new batch
+                arrival = ArrivalBatch(request_id=request_id)
+                db.session.add(arrival)
+                print(f"[SAVE SERVICE] Creating new arrival batch")
+            else:
+                print(f"[SAVE SERVICE] Updating existing arrival batch id={batch_id}")
+            
+            # Update fields
+            arrival.arrival_date = arrival_date or request_obj.from_date
+            arrival.arrival_point = form_data.get('arrival_point', '')
+            arrival.arrival_time = arrival_time
+            arrival.flight_number = form_data.get('arrival_flight_number', '')
+            arrival.vehicle_details = form_data.get('arrival_vehicle_type', '')
+            arrival.pax_count = int(form_data.get('arrival_pax_count', 0) or 0)
+            arrival.driver_name = form_data.get('arrival_driver_name', '')
+        
+        elif service_type == 'departure':
+            from app.models.inbound import DepartureBatch
+            
+            # Parse date and time
+            departure_date = None
+            departure_time = None
+            if form_data.get('departure_date'):
+                try:
+                    departure_date = datetime.strptime(form_data['departure_date'], '%Y-%m-%d').date()
+                except:
+                    pass
+            if form_data.get('departure_time'):
+                try:
+                    departure_time = datetime.strptime(form_data['departure_time'], '%H:%M').time()
+                except:
+                    pass
+            
+            # Check if we're updating an existing batch or creating new
+            batch_id = form_data.get('departure_id') or form_data.get('batch_id')
+            if batch_id:
+                departure = DepartureBatch.query.filter_by(id=batch_id, request_id=request_id).first()
+            else:
+                departure = None
+            
+            if not departure:
+                # Create new batch
+                departure = DepartureBatch(request_id=request_id)
+                db.session.add(departure)
+                print(f"[SAVE SERVICE] Creating new departure batch")
+            else:
+                print(f"[SAVE SERVICE] Updating existing departure batch id={batch_id}")
+            
+            # Update fields
+            departure.departure_date = departure_date or request_obj.to_date
+            departure.departure_point = form_data.get('departure_point', '')
+            departure.departure_time = departure_time
+            departure.flight_number = form_data.get('departure_flight_number', '')
+            departure.vehicle_details = form_data.get('departure_vehicle_type', '')
+            departure.pax_count = int(form_data.get('departure_pax_count', 0) or 0)
+            departure.driver_name = form_data.get('departure_driver_name', '')
+        
         db.session.commit()
         print(f"[SAVE SERVICE] Commit successful for {service_type}")
         
@@ -1496,6 +1578,44 @@ def api_save_service_data(request_id):
                 <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
                 {% endfor %}
             ''', groups=meal_groups)
+        
+        elif service_type in ('arrival', 'departure'):
+            from app.models.inbound import ArrivalBatch, DepartureBatch
+            
+            arrivals = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
+            departures = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
+            
+            # For flights, service_entries_html and summary_entries_html are the same
+            # (flights are unique entries, not consolidated by date range)
+            flights_html = render_template_string('''
+                {% for arr in arrivals %}
+                <tr class="hover:bg-gray-50" data-arrival-id="{{ arr.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_date.strftime('%d %b') if arr.arrival_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.arrival_point or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.flight_number or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.pax_count or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.driver_name or '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% for dep in departures %}
+                <tr class="hover:bg-gray-50 bg-orange-50" data-departure-id="{{ dep.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b') if dep.departure_date else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.departure_point or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.flight_number or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.pax_count or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.driver_name or '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not arrivals and not departures %}
+                <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                {% endif %}
+            ''', arrivals=arrivals, departures=departures)
+            
+            # Use same HTML for both (flights are unique entries)
+            service_entries_html = flights_html
+            summary_entries_html = flights_html
         
         return jsonify({
             'success': True, 
@@ -2139,6 +2259,50 @@ def api_get_departures(request_id):
         })
     
     return jsonify({'success': True, 'batches': batches_data})
+
+@inbound_bp.route('/api/<int:request_id>/get-flights-data', methods=['GET'])
+@csrf.exempt
+def api_get_flights_data(request_id):
+    """Get combined arrivals and departures for summary table"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    from app.models.inbound import ArrivalBatch, DepartureBatch
+    
+    arrivals = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
+    departures = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
+    
+    arrivals_data = []
+    for arr in arrivals:
+        arrivals_data.append({
+            'id': arr.id,
+            'arrival_date': arr.arrival_date.strftime('%Y-%m-%d') if arr.arrival_date else '',
+            'arrival_time': arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '',
+            'arrival_point': arr.arrival_point or '',
+            'flight_number': arr.flight_number or '',
+            'pax_count': arr.pax_count or 0,
+            'driver_name': arr.driver_name or ''
+        })
+    
+    departures_data = []
+    for dep in departures:
+        departures_data.append({
+            'id': dep.id,
+            'departure_date': dep.departure_date.strftime('%Y-%m-%d') if dep.departure_date else '',
+            'departure_time': dep.departure_time.strftime('%H:%M') if dep.departure_time else '',
+            'departure_point': dep.departure_point or '',
+            'flight_number': dep.flight_number or '',
+            'pax_count': dep.pax_count or 0,
+            'driver_name': dep.driver_name or ''
+        })
+    
+    return jsonify({
+        'success': True,
+        'arrivals': arrivals_data,
+        'departures': departures_data
+    })
 
 @inbound_bp.route('/api/<int:request_id>/arrivals/<int:arrival_id>', methods=['DELETE'])
 @csrf.exempt
