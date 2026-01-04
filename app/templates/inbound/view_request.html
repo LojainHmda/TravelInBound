@@ -2181,8 +2181,15 @@ function autoSaveServiceData(serviceType) {
             
             // Update itinerary if needed
             if (data.itinerary_html) {
-                const tbody = document.querySelector('#itineraryTable tbody');
-                if (tbody) tbody.innerHTML = data.itinerary_html;
+                const tbody = document.getElementById('itineraryTableBody');
+                if (tbody) {
+                    tbody.innerHTML = data.itinerary_html;
+                    console.log('[saveServiceData] Updated itinerary with', data.itinerary_html.length, 'chars');
+                } else {
+                    console.error('[saveServiceData] itineraryTableBody not found');
+                }
+            } else {
+                console.warn('[saveServiceData] No itinerary_html in response');
             }
             
             // Update service table - this is the key part
@@ -3677,8 +3684,11 @@ function deleteService(serviceType, serviceId) {
             showNotification(data.message || 'Service deleted!', 'success');
             
             if (data.itinerary_html) {
-                const tbody = document.querySelector('#itineraryTable tbody');
-                if (tbody) tbody.innerHTML = data.itinerary_html;
+                const tbody = document.getElementById('itineraryTableBody');
+                if (tbody) {
+                    tbody.innerHTML = data.itinerary_html;
+                    console.log('[deleteService] Updated itinerary with', data.itinerary_html.length, 'chars');
+                }
             }
             
             const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
