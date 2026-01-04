@@ -1329,7 +1329,9 @@ def api_save_service_data(request_id):
             arrival.arrival_time = arrival_time
             arrival.flight_number = form_data.get('arrival_flight_number', '')
             arrival.vehicle_details = form_data.get('arrival_vehicle_type', '')
-            arrival.pax_count = int(form_data.get('arrival_pax_count', 0) or 0)
+            # Use request.pax as fallback when pax_count is empty
+            pax_val = form_data.get('arrival_pax_count', '')
+            arrival.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             arrival.driver_name = form_data.get('arrival_driver_name', '')
         
         elif service_type == 'departure':
@@ -1370,7 +1372,9 @@ def api_save_service_data(request_id):
             departure.departure_time = departure_time
             departure.flight_number = form_data.get('departure_flight_number', '')
             departure.vehicle_details = form_data.get('departure_vehicle_type', '')
-            departure.pax_count = int(form_data.get('departure_pax_count', 0) or 0)
+            # Use request.pax as fallback when pax_count is empty
+            pax_val = form_data.get('departure_pax_count', '')
+            departure.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             departure.driver_name = form_data.get('departure_driver_name', '')
         
         db.session.commit()

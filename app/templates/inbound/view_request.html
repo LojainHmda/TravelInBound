@@ -738,43 +738,47 @@ html { scroll-behavior: smooth; }
                         <button type="button" onclick="switchServiceTab('meal')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="meal" id="tab-meal">
                             <i class="fas fa-utensils text-slate-400"></i> Meal
                         </button>
+                        <button type="button" onclick="switchServiceTab('itinerary')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-purple-600 text-white shadow-md" data-service="itinerary" id="tab-itinerary">
+                            <i class="fas fa-route text-white"></i> Itinerary
+                        </button>
                     </div>
                     <!-- Tab Content Container -->
                     <div id="service-tab-content" class="hidden border border-slate-200 rounded-xl bg-slate-50 mt-2"></div>
                 </div>
                 
-                <div class="border-t border-slate-200"></div>
-
-                <!-- Itinerary Table (Always Visible) -->
-                <div class="p-3">
-                    {% if request.itinerary_rows %}
-                    <div class="overflow-x-auto" id="itineraryTable">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                    <th class="py-2 px-2 w-16">Day</th>
-                                    <th class="py-2 px-2 w-24">Date</th>
-                                    <th class="py-2 px-2">Description</th>
-                                    <th class="py-2 px-2 w-32">Restaurant</th>
-                                    <th class="py-2 px-2 w-28 text-center">Services</th>
-                                    <th class="py-2 px-2 w-20 text-right">Cost</th>
-                                    <th class="py-2 px-2 w-28">Comments</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itineraryTableBody">
-                                {% include 'components/itinerary_rows.html' with context %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-8" id="itineraryEmptyState">
-                        <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i class="fas fa-route text-xl text-slate-400"></i>
+                <!-- Itinerary Panel (Tab Content) -->
+                <div id="service-panel-itinerary" class="service-panel">
+                    <div class="p-3">
+                        {% if request.itinerary_rows %}
+                        <div class="overflow-x-auto" id="itineraryTable">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-2 px-2 w-16">Day</th>
+                                        <th class="py-2 px-2 w-24">Date</th>
+                                        <th class="py-2 px-2">Description</th>
+                                        <th class="py-2 px-2 w-32">Restaurant</th>
+                                        <th class="py-2 px-2 w-28 text-center">Services</th>
+                                        <th class="py-2 px-2 w-20 text-right">Cost</th>
+                                        <th class="py-2 px-2 w-28">Comments</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itineraryTableBody">
+                                    {% include 'components/itinerary_rows.html' with context %}
+                                </tbody>
+                            </table>
                         </div>
-                        <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
-                        <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
+                        {% else %}
+                        <div class="text-center py-8" id="itineraryEmptyState">
+                            <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-route text-xl text-slate-400"></i>
+                            </div>
+                            <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
+                            <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
+                </div>
                     
                     <!-- Service Content Panels (Unified View & Edit) -->
                     
@@ -1755,27 +1759,63 @@ function initializeRoomDistribution() {
 
 // Initialize tab states on page load
 function initializeTabStates() {
+    // Hide all service panels initially except itinerary
+    document.querySelectorAll('.service-panel').forEach(panel => {
+        if (panel.id !== 'service-panel-itinerary') {
+            panel.classList.add('hidden');
+        }
+    });
+    
+    // Hide the service-tab-content container (for non-itinerary services)
+    const tabContainer = document.getElementById('service-tab-content');
+    if (tabContainer) tabContainer.classList.add('hidden');
+    
+    // Show itinerary panel by default
+    const itineraryPanel = document.getElementById('service-panel-itinerary');
+    if (itineraryPanel) itineraryPanel.classList.remove('hidden');
+    
+    // Check if there was a previously saved tab
+    const savedTab = localStorage.getItem('activeServiceTab');
+    const activeService = savedTab || 'itinerary';
+    
+    // Reset all tabs to default inactive state
+    document.querySelectorAll('.service-btn').forEach(btn => {
+        btn.classList.remove('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
+        btn.classList.add('bg-white', 'text-slate-500');
+        btn.style.border = 'none';
+        btn.style.color = '';
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.remove('text-white');
+            icon.classList.add('text-slate-400');
+            icon.style.color = '';
+        }
+    });
+    
+    // If itinerary tab should be active (default or saved)
+    if (activeService === 'itinerary') {
+        const itinBtn = document.querySelector('.service-btn[data-service="itinerary"]');
+        if (itinBtn) {
+            itinBtn.classList.add('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
+            itinBtn.classList.remove('bg-white', 'text-slate-500');
+            itinBtn.style.color = 'white';
+            const itinIcon = itinBtn.querySelector('i');
+            if (itinIcon) {
+                itinIcon.classList.remove('text-slate-400');
+                itinIcon.classList.add('text-white');
+                itinIcon.style.color = 'white';
+            }
+        }
+    } else if (savedTab) {
+        // Restore the previously saved tab
+        switchServiceTab(savedTab);
+    }
+    
     // Set the correct tab colors based on existing data
     updateTabColors();
     
     // Update badge counts
     updateTabBadges();
-    
-    // Check if there was a previously active tab (don't auto-open, just ensure proper styling)
-    const activeService = localStorage.getItem('activeServiceTab');
-    if (activeService) {
-        // Ensure all tabs are properly styled without the active state
-        document.querySelectorAll('.service-btn').forEach(btn => {
-            btn.classList.remove('active-tab', 'font-semibold');
-            btn.style.border = 'none';
-            btn.style.color = '';
-            const icon = btn.querySelector('i');
-            if (icon) icon.style.color = '';
-        });
-    }
-    
-    // Apply colors to all tabs
-    updateTabColors();
 }
 
 // Helper function to get UNIQUE service counts from summary tables
@@ -1921,6 +1961,7 @@ function updateTabColors() {
 function switchServiceTab(serviceName, rowId = null) {
     const targetPanel = document.getElementById('service-panel-' + serviceName);
     const tabContainer = document.getElementById('service-tab-content');
+    const itineraryPanel = document.getElementById('service-panel-itinerary');
     const activeBtn = document.querySelector('.service-btn[data-service="' + serviceName + '"]');
     
     // Update Context
@@ -1932,29 +1973,76 @@ function switchServiceTab(serviceName, rowId = null) {
     // Save the active service tab to localStorage
     localStorage.setItem('activeServiceTab', serviceName);
 
-    if (targetPanel && tabContainer) {
-        const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
-        
-        // Reset all tabs to inactive state and restore their original colors
-        document.querySelectorAll('.service-btn').forEach(btn => {
-            btn.classList.remove('active-tab', 'font-semibold');
-            btn.style.border = 'none';
-            btn.style.color = '';
-            const icon = btn.querySelector('i');
-            if (icon) icon.style.color = '';
-        });
-        
-        // Hide all panels inside container
+    // Reset all tabs to inactive state
+    document.querySelectorAll('.service-btn').forEach(btn => {
+        btn.classList.remove('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
+        btn.classList.add('bg-white', 'text-slate-500');
+        btn.style.border = 'none';
+        btn.style.color = '';
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.remove('text-white');
+            icon.classList.add('text-slate-400');
+            icon.style.color = '';
+        }
+    });
+    
+    // Hide all service panels in container
+    if (tabContainer) {
         tabContainer.querySelectorAll('.service-panel').forEach(panel => {
             panel.classList.add('hidden');
         });
+    }
+    
+    // Handle itinerary tab specially (it's outside the container)
+    if (serviceName === 'itinerary') {
+        // Hide other service panels container
+        if (tabContainer) tabContainer.classList.add('hidden');
+        
+        // Show itinerary panel
+        if (itineraryPanel) itineraryPanel.classList.remove('hidden');
+        
+        // Style itinerary tab as active (purple theme)
+        if (activeBtn) {
+            activeBtn.classList.add('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
+            activeBtn.classList.remove('bg-white', 'text-slate-500');
+            activeBtn.style.color = 'white';
+            const activeIcon = activeBtn.querySelector('i');
+            if (activeIcon) {
+                activeIcon.classList.remove('text-slate-400');
+                activeIcon.classList.add('text-white');
+                activeIcon.style.color = 'white';
+            }
+        }
+        updateTabColors();
+        return;
+    }
+    
+    // Hide itinerary panel when switching to other tabs
+    if (itineraryPanel) itineraryPanel.classList.add('hidden');
+
+    if (targetPanel && tabContainer) {
+        const isCurrentlyActive = activeBtn && activeBtn.classList.contains('active-tab');
         
         if (isCurrentlyActive && rowId === null) {
             tabContainer.classList.add('hidden');
             resetContext();
-            // Clear the saved active tab when closing
             localStorage.removeItem('activeServiceTab');
-            // Update tab colors after closing
+            // Show itinerary by default when closing a service tab
+            if (itineraryPanel) itineraryPanel.classList.remove('hidden');
+            const itinBtn = document.querySelector('.service-btn[data-service="itinerary"]');
+            if (itinBtn) {
+                itinBtn.classList.add('active-tab', 'font-semibold', 'bg-purple-600', 'shadow-md');
+                itinBtn.classList.remove('bg-white', 'text-slate-500');
+                itinBtn.style.color = 'white';
+                const itinIcon = itinBtn.querySelector('i');
+                if (itinIcon) {
+                    itinIcon.classList.remove('text-slate-400');
+                    itinIcon.classList.add('text-white');
+                    itinIcon.style.color = 'white';
+                }
+            }
+            localStorage.setItem('activeServiceTab', 'itinerary');
             updateTabColors();
         } else {
             if (!tabContainer.contains(targetPanel)) {
@@ -1964,13 +2052,16 @@ function switchServiceTab(serviceName, rowId = null) {
             targetPanel.classList.remove('hidden');
             
             activeBtn.classList.add('active-tab', 'font-semibold');
+            activeBtn.classList.remove('bg-white', 'text-slate-500');
             activeBtn.style.border = '2px solid #3b82f6';
             activeBtn.style.color = '#3b82f6';
             const activeIcon = activeBtn.querySelector('i');
-            if (activeIcon) activeIcon.style.color = '#3b82f6';
+            if (activeIcon) {
+                activeIcon.classList.remove('text-slate-400');
+                activeIcon.style.color = '#3b82f6';
+            }
 
             updateServiceContextUI(serviceName, rowId);
-            // Update colors for non-active tabs
             updateTabColors();
         }
     }
