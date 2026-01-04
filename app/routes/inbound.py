@@ -1638,6 +1638,7 @@ def api_save_service_data(request_id):
 @csrf.exempt
 def api_add_hotel():
     """Add a new hotel to the suppliers list"""
+    from app.models.supplier import Supplier
     try:
         data = request.get_json()
         hotel_name = data.get('name', '').strip()
