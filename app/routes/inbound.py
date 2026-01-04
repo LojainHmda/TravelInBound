@@ -1098,6 +1098,32 @@ def api_save_service_data(request_id):
                 hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
                 hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
                 hotel.notes = form_data.get('hotel_notes', '')
+                
+                # Flush to get hotel ID before creating rooms
+                db.session.flush()
+                
+                # Only create rooms if there's a room distribution provided
+                total_rooms = hotel.single_rooms + hotel.double_rooms + hotel.triple_rooms
+                if total_rooms > 0:
+                    # Check if existing rooms match new distribution
+                    existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
+                    existing_count = len(existing_rooms)
+                    
+                    # Only recreate if distribution changed
+                    if existing_count != total_rooms:
+                        HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
+                        
+                        # Create individual room records based on distribution
+                        board_basis = form_data.get('hotel_board', 'BB')
+                        for i in range(hotel.single_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Single', room_count=1, board_basis=board_basis, adults=1)
+                            db.session.add(room)
+                        for i in range(hotel.double_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Double', room_count=1, board_basis=board_basis, adults=2)
+                            db.session.add(room)
+                        for i in range(hotel.triple_rooms):
+                            room = HotelRoom(hotel_id=hotel.id, room_type='Triple', room_count=1, board_basis=board_basis, adults=3)
+                            db.session.add(room)
             else:
                 # Apply to specific day
                 row = ItineraryRow.query.get(row_id)
@@ -1621,14 +1647,33 @@ def api_save_service_data(request_id):
             service_entries_html = flights_html
             summary_entries_html = flights_html
         
-        return jsonify({
+        response_data = {
             'success': True, 
             'message': f'{service_type.capitalize()} data saved',
             'itinerary_html': itinerary_html,
             'service_entries_html': service_entries_html,
             'summary_entries_html': summary_entries_html,
             'service_type': service_type
-        })
+        }
+        
+        # For hotel: include hotel_id and rooms data for room distribution modal
+        if service_type == 'hotel' and 'hotel' in locals():
+            hotel_obj = hotel  # Reference the hotel object created/updated above
+            if hotel_obj and hotel_obj.id:
+                rooms = HotelRoom.query.filter_by(hotel_id=hotel_obj.id).all()
+                response_data['hotel_id'] = hotel_obj.id
+                response_data['rooms'] = [{
+                    'id': r.id,
+                    'room_type': r.room_type,
+                    'room_option': r.room_option or '',
+                    'board_basis': r.board_basis or 'BB',
+                    'dietary_requirements': r.dietary_requirements or '',
+                    'adults': r.adults or 1,
+                    'children': r.children or 0,
+                    'guest_names': r.guest_names or ''
+                } for r in rooms]
+        
+        return jsonify(response_data)
     
     except Exception as e:
         db.session.rollback()
@@ -1676,6 +1721,74 @@ def api_add_hotel():
                 'name': new_hotel.name,
                 'city': new_hotel.city
             }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/hotel/<int:hotel_id>/rooms', methods=['POST'])
+@csrf.exempt
+def api_save_hotel_rooms(hotel_id):
+    """Save room distribution details for a hotel"""
+    try:
+        hotel = InboundHotel.query.get_or_404(hotel_id)
+        data = request.get_json()
+        rooms_data = data.get('rooms', [])
+        
+        # Validate - don't allow completely empty room list if hotel already has rooms
+        existing_count = HotelRoom.query.filter_by(hotel_id=hotel_id).count()
+        if len(rooms_data) == 0 and existing_count > 0:
+            return jsonify({'success': False, 'error': 'Cannot save empty room list. Add at least one room or cancel.'}), 400
+        
+        # Update existing rooms or delete and recreate
+        # Get existing room IDs for matching
+        existing_rooms = {r.id: r for r in HotelRoom.query.filter_by(hotel_id=hotel_id).all()}
+        updated_ids = set()
+        
+        for room_data in rooms_data:
+            room_id = room_data.get('id')
+            if room_id and room_id in existing_rooms:
+                # Update existing room
+                room = existing_rooms[room_id]
+                room.room_type = room_data.get('room_type', room.room_type)
+                room.room_option = room_data.get('room_option', '')
+                room.board_basis = room_data.get('board_basis', 'BB')
+                room.dietary_requirements = room_data.get('dietary_requirements', '')
+                room.adults = room_data.get('adults', 1)
+                room.children = room_data.get('children', 0)
+                room.guest_names = room_data.get('guest_names', '')
+                updated_ids.add(room_id)
+            else:
+                # Create new room
+                room = HotelRoom(
+                    hotel_id=hotel_id,
+                    room_type=room_data.get('room_type', 'Single'),
+                    room_count=1,
+                    room_option=room_data.get('room_option', ''),
+                    board_basis=room_data.get('board_basis', 'BB'),
+                    dietary_requirements=room_data.get('dietary_requirements', ''),
+                    adults=room_data.get('adults', 1),
+                    children=room_data.get('children', 0),
+                    guest_names=room_data.get('guest_names', '')
+                )
+                db.session.add(room)
+        
+        # Delete rooms that were removed
+        for room_id, room in existing_rooms.items():
+            if room_id not in updated_ids:
+                db.session.delete(room)
+        
+        # Update hotel room counts
+        hotel.single_rooms = sum(1 for r in rooms_data if r.get('room_type') == 'Single')
+        hotel.double_rooms = sum(1 for r in rooms_data if r.get('room_type') in ['Double', 'Twin', 'King'])
+        hotel.triple_rooms = sum(1 for r in rooms_data if r.get('room_type') in ['Triple', 'Suite'])
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{len(rooms_data)} rooms saved'
         })
         
     except Exception as e:

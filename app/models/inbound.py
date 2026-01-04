@@ -380,6 +380,14 @@ class HotelRoom(db.Model):
     notes = db.Column(db.Text, nullable=True)
     confirmation = db.Column(db.String(200), nullable=True)  # Confirmation code/number from supplier
     
+    # Room details for guest assignment
+    room_option = db.Column(db.String(100), nullable=True)  # e.g., Sea View, Premium, Standard
+    board_basis = db.Column(db.String(20), nullable=True)  # BB, HB, FB, RO
+    dietary_requirements = db.Column(db.String(200), nullable=True)  # e.g., Vegetarian, Halal
+    adults = db.Column(db.Integer, default=1)
+    children = db.Column(db.Integer, default=0)
+    guest_names = db.Column(db.Text, nullable=True)  # Lead passenger/guest names for this room
+    
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

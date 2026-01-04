@@ -1729,6 +1729,59 @@ html { scroll-behavior: smooth; }
     </div>
 </div>
 
+<!-- Room Distribution Details Modal -->
+<div id="roomDistributionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-800 text-white">
+            <h3 class="text-sm font-semibold flex items-center gap-2">
+                <i class="fas fa-bed text-amber-400"></i>
+                Room Distribution - <span id="roomDistModalHotelName">Hotel Name</span>
+            </h3>
+            <button type="button" onclick="closeRoomDistributionModal()" class="text-white/70 hover:text-white">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <div class="p-4 overflow-y-auto flex-1">
+            <div id="roomDistError" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            
+            <!-- Rooms Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-700 text-white">
+                            <th class="px-2 py-2 text-left w-10">#</th>
+                            <th class="px-2 py-2 text-left">Category</th>
+                            <th class="px-2 py-2 text-left">Room Option</th>
+                            <th class="px-2 py-2 text-left">Board Basis</th>
+                            <th class="px-2 py-2 text-left">Dietary Req.</th>
+                            <th class="px-2 py-2 text-center w-16">Adults</th>
+                            <th class="px-2 py-2 text-center w-16">Children</th>
+                            <th class="px-2 py-2 text-left">Lead Passenger</th>
+                            <th class="px-2 py-2 text-center w-10">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roomDistributionBody">
+                        <!-- Rows will be dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Room Summary -->
+            <div class="mt-3 text-xs text-slate-600" id="roomDistSummary">
+                0 rooms
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+            <button type="button" onclick="closeRoomDistributionModal()" class="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xs font-medium">
+                Cancel
+            </button>
+            <button type="button" onclick="saveRoomDistribution()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium">
+                <i class="fas fa-save mr-1"></i>Save Rooms
+            </button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -3277,8 +3330,17 @@ function saveServiceData(serviceType) {
             updateTabBadges();
             updateTabColors();
             
+            // For hotel: open room distribution modal after save
+            if (serviceType === 'hotel' && data.hotel_id && data.rooms) {
+                const hotelName = document.getElementById('hotel_name')?.value || 'Hotel';
+                setTimeout(() => {
+                    openRoomDistributionModal(data.hotel_id, hotelName, data.rooms);
+                }, 300);
+                showNotification('Hotel saved! Now assign guest names to rooms.', 'success');
+                setTimeout(() => clearServiceForm(serviceType), 300);
+            }
             // Activate icons only for the specific date range
-            if (!currentServiceContext.rowId && fromDate && toDate) {
+            else if (!currentServiceContext.rowId && fromDate && toDate) {
                 activateIconsForDateRange(serviceType, fromDate, toDate);
                 const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
@@ -4373,6 +4435,172 @@ document.getElementById('hotel_name').addEventListener('change', function() {
         openAddHotelModal();
     }
 });
+
+// Room Distribution Modal Logic
+let currentRoomDistHotelId = null;
+let roomDistributionData = [];
+
+function openRoomDistributionModal(hotelId, hotelName, rooms) {
+    currentRoomDistHotelId = hotelId;
+    document.getElementById('roomDistModalHotelName').textContent = hotelName;
+    
+    // Populate the rooms table
+    const tbody = document.getElementById('roomDistributionBody');
+    tbody.innerHTML = '';
+    roomDistributionData = [];
+    
+    rooms.forEach((room, index) => {
+        roomDistributionData.push({
+            id: room.id || null,
+            room_type: room.room_type,
+            room_option: room.room_option || '',
+            board_basis: room.board_basis || 'BB',
+            dietary_requirements: room.dietary_requirements || '',
+            adults: room.adults || 1,
+            children: room.children || 0,
+            guest_names: room.guest_names || ''
+        });
+        addRoomRow(index, room);
+    });
+    
+    updateRoomSummary();
+    
+    document.getElementById('roomDistributionModal').classList.remove('hidden');
+    document.getElementById('roomDistributionModal').classList.add('flex');
+}
+
+function addRoomRow(index, room) {
+    const tbody = document.getElementById('roomDistributionBody');
+    const row = document.createElement('tr');
+    row.className = 'border-b border-slate-200 hover:bg-slate-50';
+    row.dataset.roomIndex = index;
+    
+    row.innerHTML = `
+        <td class="px-2 py-2 text-center font-medium">${index + 1}</td>
+        <td class="px-2 py-2">
+            <select class="w-full px-2 py-1 border border-slate-300 rounded text-xs" onchange="updateRoomData(${index}, 'room_type', this.value)">
+                <option value="Single" ${room.room_type === 'Single' ? 'selected' : ''}>Single</option>
+                <option value="Double" ${room.room_type === 'Double' ? 'selected' : ''}>Double</option>
+                <option value="Twin" ${room.room_type === 'Twin' ? 'selected' : ''}>Twin</option>
+                <option value="Triple" ${room.room_type === 'Triple' ? 'selected' : ''}>Triple</option>
+                <option value="King" ${room.room_type === 'King' ? 'selected' : ''}>King</option>
+                <option value="Suite" ${room.room_type === 'Suite' ? 'selected' : ''}>Suite</option>
+            </select>
+        </td>
+        <td class="px-2 py-2">
+            <select class="w-full px-2 py-1 border border-slate-300 rounded text-xs" onchange="updateRoomData(${index}, 'room_option', this.value)">
+                <option value="">Select...</option>
+                <option value="Standard" ${room.room_option === 'Standard' ? 'selected' : ''}>Standard</option>
+                <option value="Sea View" ${room.room_option === 'Sea View' ? 'selected' : ''}>Sea View</option>
+                <option value="Garden View" ${room.room_option === 'Garden View' ? 'selected' : ''}>Garden View</option>
+                <option value="Premium" ${room.room_option === 'Premium' ? 'selected' : ''}>Premium</option>
+                <option value="Deluxe" ${room.room_option === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
+            </select>
+        </td>
+        <td class="px-2 py-2">
+            <select class="w-full px-2 py-1 border border-slate-300 rounded text-xs" onchange="updateRoomData(${index}, 'board_basis', this.value)">
+                <option value="BB" ${room.board_basis === 'BB' ? 'selected' : ''}>B&B</option>
+                <option value="HB" ${room.board_basis === 'HB' ? 'selected' : ''}>HB</option>
+                <option value="FB" ${room.board_basis === 'FB' ? 'selected' : ''}>FB</option>
+                <option value="RO" ${room.board_basis === 'RO' ? 'selected' : ''}>RO</option>
+            </select>
+        </td>
+        <td class="px-2 py-2">
+            <select class="w-full px-2 py-1 border border-slate-300 rounded text-xs" onchange="updateRoomData(${index}, 'dietary_requirements', this.value)">
+                <option value="">None</option>
+                <option value="Vegetarian" ${room.dietary_requirements === 'Vegetarian' ? 'selected' : ''}>Vegetarian</option>
+                <option value="Halal" ${room.dietary_requirements === 'Halal' ? 'selected' : ''}>Halal</option>
+                <option value="Vegan" ${room.dietary_requirements === 'Vegan' ? 'selected' : ''}>Vegan</option>
+                <option value="Gluten-Free" ${room.dietary_requirements === 'Gluten-Free' ? 'selected' : ''}>Gluten-Free</option>
+                <option value="Vegetarian, Halal" ${room.dietary_requirements === 'Vegetarian, Halal' ? 'selected' : ''}>Vegetarian, Halal</option>
+            </select>
+        </td>
+        <td class="px-2 py-2">
+            <input type="number" class="w-full px-2 py-1 border border-slate-300 rounded text-xs text-center" 
+                   value="${room.adults || 1}" min="0" max="6" onchange="updateRoomData(${index}, 'adults', parseInt(this.value))">
+        </td>
+        <td class="px-2 py-2">
+            <input type="number" class="w-full px-2 py-1 border border-slate-300 rounded text-xs text-center" 
+                   value="${room.children || 0}" min="0" max="6" onchange="updateRoomData(${index}, 'children', parseInt(this.value))">
+        </td>
+        <td class="px-2 py-2">
+            <input type="text" class="w-full px-2 py-1 border border-slate-300 rounded text-xs" 
+                   value="${room.guest_names || ''}" placeholder="Lead passenger" onchange="updateRoomData(${index}, 'guest_names', this.value)">
+        </td>
+        <td class="px-2 py-2 text-center">
+            <button type="button" onclick="removeRoomRow(${index})" class="text-slate-400 hover:text-red-500 transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+function updateRoomData(index, field, value) {
+    if (roomDistributionData[index]) {
+        roomDistributionData[index][field] = value;
+    }
+    updateRoomSummary();
+}
+
+function removeRoomRow(index) {
+    roomDistributionData.splice(index, 1);
+    rebuildRoomTable();
+    updateRoomSummary();
+}
+
+function rebuildRoomTable() {
+    const tbody = document.getElementById('roomDistributionBody');
+    tbody.innerHTML = '';
+    roomDistributionData.forEach((room, i) => {
+        addRoomRow(i, room);
+    });
+}
+
+function updateRoomSummary() {
+    const summary = document.getElementById('roomDistSummary');
+    const counts = {};
+    roomDistributionData.forEach(room => {
+        const type = room.room_type || 'Unknown';
+        const abbrev = type === 'Single' ? 'SGL' : type === 'Double' ? 'DBL' : type === 'Twin' ? 'TWN' : type === 'Triple' ? 'TRP' : type.substring(0, 3).toUpperCase();
+        counts[abbrev] = (counts[abbrev] || 0) + 1;
+    });
+    const parts = Object.entries(counts).map(([k, v]) => `${v} ${k}`);
+    summary.textContent = roomDistributionData.length + ' rooms' + (parts.length ? ' (' + parts.join(', ') + ')' : '');
+}
+
+function closeRoomDistributionModal() {
+    document.getElementById('roomDistributionModal').classList.add('hidden');
+    document.getElementById('roomDistributionModal').classList.remove('flex');
+    currentRoomDistHotelId = null;
+    roomDistributionData = [];
+}
+
+function saveRoomDistribution() {
+    if (!currentRoomDistHotelId) return;
+    
+    fetch(`/inbound/api/hotel/${currentRoomDistHotelId}/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ rooms: roomDistributionData })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Room distribution saved', 'success');
+            closeRoomDistributionModal();
+            window.location.reload();
+        } else {
+            document.getElementById('roomDistError').textContent = data.error || 'Error saving rooms';
+            document.getElementById('roomDistError').classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        document.getElementById('roomDistError').textContent = 'Error saving room distribution';
+        document.getElementById('roomDistError').classList.remove('hidden');
+    });
+}
 
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
