@@ -10,7 +10,8 @@ from app import db, csrf
 from app.models.inbound import (
     InboundRequest, ItineraryRow, InboundHotel, InboundTransport, 
     InboundMeal, InboundGuide, InboundCashExpense, InboundDocument,
-    HotelRoom, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP
+    HotelRoom, COST_UNIT_PER_PERSON, COST_UNIT_PER_GROUP,
+    ArrivalBatch, DepartureBatch
 )
 from werkzeug.utils import secure_filename
 import uuid
@@ -1003,6 +1004,19 @@ def api_auto_save_and_regenerate(request_id):
             
             current_date += timedelta(days=1)
             day_counter += 1
+        
+        # Auto-update existing ArrivalBatch and DepartureBatch records when dates change
+        # Update all arrival records to use new from_date
+        if request_obj.from_date:
+            ArrivalBatch.query.filter_by(request_id=request_id).update(
+                {'arrival_date': request_obj.from_date}
+            )
+        
+        # Update all departure records to use new to_date
+        if request_obj.to_date:
+            DepartureBatch.query.filter_by(request_id=request_id).update(
+                {'departure_date': request_obj.to_date}
+            )
         
         db.session.commit()
     

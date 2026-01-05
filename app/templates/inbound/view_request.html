@@ -4164,6 +4164,28 @@ function saveAndRefreshItinerary() {
             const daysField = document.getElementById('noOfDays');
             if (daysField) daysField.value = data.no_of_days;
             
+            // Sync arrival and departure date fields when dates change
+            if (data.dates_changed) {
+                const fromDate = document.getElementById('from_date')?.value;
+                const toDate = document.getElementById('to_date')?.value;
+                
+                // Update arrival date field value and bounds
+                const arrivalDateField = document.getElementById('arrival_date');
+                if (arrivalDateField && fromDate) {
+                    arrivalDateField.value = fromDate;
+                    arrivalDateField.min = fromDate;
+                    arrivalDateField.max = toDate;
+                }
+                
+                // Update departure date field value and bounds
+                const departureDateField = document.getElementById('departure_date');
+                if (departureDateField && toDate) {
+                    departureDateField.value = toDate;
+                    departureDateField.min = fromDate;
+                    departureDateField.max = toDate;
+                }
+            }
+            
             if (data.itinerary_html) {
                 const tableBody = document.getElementById('itineraryTableBody');
                 const itineraryTable = document.getElementById('itineraryTable');
