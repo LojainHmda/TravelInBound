@@ -56,29 +56,6 @@
                onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
         {% endif %}
     </td>
-    <td class="py-3 px-3">
-        <div class="flex items-center justify-center gap-1">
-            <div class="service-icon-toggle hotel{% if eff_hotel and eff_hotel.hotel_name %} active{% endif %}" 
-                 data-row-id="{{ row.id }}"
-                 onclick="switchServiceTab('hotel', {{ row.id }})"
-                 title="Hotel">
-                <i class="fas fa-bed"></i>
-            </div>
-            <div class="service-icon-toggle transport{% if eff_transport and eff_transport.vehicle_type %} active{% endif %}" 
-                 data-row-id="{{ row.id }}"
-                 onclick="switchServiceTab('transport', {{ row.id }})"
-                 title="Transport">
-                <i class="fas fa-car"></i>
-            </div>
-            <div class="service-icon-toggle guide{% if eff_guide and eff_guide.guide_name %} active{% endif %}" 
-                 data-row-id="{{ row.id }}"
-                 onclick="switchServiceTab('guide', {{ row.id }})"
-                 title="Guide">
-                <i class="fas fa-user"></i>
-            </div>
-            <!-- Meal icon hidden per user request - meals now managed in itinerary row -->
-        </div>
-    </td>
     <td class="py-3 px-3 text-right">
         {% set row_cost = (eff_hotel.cost_per_night or 0) if eff_hotel else 0 %}
         {% set row_cost = row_cost + ((eff_transport.cost or 0) if eff_transport else 0) %}
