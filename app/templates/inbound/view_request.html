@@ -1030,6 +1030,18 @@ html { scroll-behavior: smooth; }
                                             <i class="fas fa-plus mr-1"></i>Add Room
                                         </button>
                                     </div>
+                                    <!-- Room List Header -->
+                                    <div id="room-list-header" class="hidden flex flex-wrap items-center gap-2 p-2 bg-slate-600 text-white rounded-lg mb-1 text-xs font-medium">
+                                        <div class="w-6 text-center">#</div>
+                                        <div class="w-[72px]">Category</div>
+                                        <div class="w-[100px]">Room Option</div>
+                                        <div class="w-[60px]">Board</div>
+                                        <div class="w-[90px]">Dietary Req</div>
+                                        <div class="w-12 text-center">Adt</div>
+                                        <div class="w-12 text-center">Chd</div>
+                                        <div class="flex-grow min-w-[120px]">Lead Passenger</div>
+                                        <div class="w-6"></div>
+                                    </div>
                                     <div id="room-list-container" class="space-y-2 max-h-48 overflow-y-auto">
                                         <!-- Room rows will be generated here -->
                                     </div>
@@ -4375,6 +4387,7 @@ function switchRoomTab(tab) {
 function generateRoomListRows() {
     const container = document.getElementById('room-list-container');
     const emptyMsg = document.getElementById('room-list-empty');
+    const header = document.getElementById('room-list-header');
     
     // Check if we have existing room data for the current hotel being edited
     if (currentEditingHotelId && hotelRoomsData[currentEditingHotelId] && hotelRoomsData[currentEditingHotelId].length > 0) {
@@ -4388,6 +4401,7 @@ function generateRoomListRows() {
         
         container.innerHTML = '';
         emptyMsg.classList.add('hidden');
+        header.classList.remove('hidden');
         
         // Generate rows from existing room data
         existingRooms.forEach((room, index) => {
@@ -4408,10 +4422,12 @@ function generateRoomListRows() {
     if (totalRooms === 0) {
         container.innerHTML = '';
         emptyMsg.classList.remove('hidden');
+        header.classList.add('hidden');
         return;
     }
     
     emptyMsg.classList.add('hidden');
+    header.classList.remove('hidden');
     
     // Check if rows already exist with same count
     const existingRows = container.querySelectorAll('.room-list-row');
@@ -4549,7 +4565,9 @@ function updateGuestFields(selectEl) {
 function addRoomListRow() {
     const container = document.getElementById('room-list-container');
     const emptyMsg = document.getElementById('room-list-empty');
+    const header = document.getElementById('room-list-header');
     emptyMsg.classList.add('hidden');
+    header.classList.remove('hidden');
     
     const existingRows = container.querySelectorAll('.room-list-row');
     const roomNum = existingRows.length + 1;
@@ -4569,9 +4587,10 @@ function removeRoomListRow(btn) {
         r.querySelector('.rounded-full').textContent = idx + 1;
     });
     
-    // Show empty message if no rows
+    // Show empty message and hide header if no rows
     if (rows.length === 0) {
         document.getElementById('room-list-empty').classList.remove('hidden');
+        document.getElementById('room-list-header').classList.add('hidden');
     }
 }
 
