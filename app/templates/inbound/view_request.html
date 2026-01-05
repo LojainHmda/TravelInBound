@@ -3361,6 +3361,15 @@ function saveServiceData(serviceType) {
                 activateIconsForDateRange(serviceType, fromDate, toDate);
                 setTimeout(() => {
                     clearServiceForm(serviceType);
+                    // Reset room distribution fields to 0
+                    const sglField = document.getElementById('hotel_single_rooms');
+                    const dblField = document.getElementById('hotel_double_rooms');
+                    const trpField = document.getElementById('hotel_triple_rooms');
+                    if (sglField) sglField.value = 0;
+                    if (dblField) dblField.value = 0;
+                    if (trpField) trpField.value = 0;
+                    // Update capacity display
+                    calculateTotalGuests();
                     // Reset room list tab
                     switchRoomTab('distribution');
                     document.getElementById('room-list-container').innerHTML = '';
