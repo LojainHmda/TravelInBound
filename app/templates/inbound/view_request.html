@@ -2737,16 +2737,17 @@ function toggleFullSummary() {
     if (section.classList.contains('hidden')) {
         section.classList.remove('hidden');
         btnText.textContent = 'Hide Summary';
-        // Check if server already rendered content - don't overwrite on first load
-        // Only call updateFullSummaryTables if the source tables exist (they don't on initial load)
+        // Check if we need to update from source tables
+        // On initial page load, source tables don't exist - server has already rendered content via Jinja2
+        // Only try to update if source tables exist (after AJAX saves create them) AND we haven't loaded yet
         if (!summaryTablesLoaded) {
-            // Check if source tables exist before trying to update from them
             const hasSourceTables = document.getElementById('hotels-table-body') !== null;
             if (hasSourceTables) {
                 updateFullSummaryTables();
+                summaryTablesLoaded = true;
             }
-            // Mark as loaded so we don't check again
-            summaryTablesLoaded = true;
+            // If source tables don't exist, keep summaryTablesLoaded = false
+            // This preserves server-rendered content and allows future AJAX updates to trigger refresh
         }
     } else {
         section.classList.add('hidden');
