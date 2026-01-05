@@ -995,46 +995,29 @@ html { scroll-behavior: smooth; }
                                 
                                 <!-- Distribution Tab Content -->
                                 <div id="room-content-distribution" class="rounded-xl p-2" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
-                                    <!-- ROW 1: Checkbox Options -->
-                                    <div class="flex items-center gap-4 mb-2">
-                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
-                                            <input type="checkbox" name="room_mode_economic" checked class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('economic')">
-                                            <span class="text-slate-600">Economic</span>
-                                        </label>
-                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
-                                            <input type="checkbox" name="room_mode_dbl" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('dbl')">
-                                            <span class="text-slate-600">DBL</span>
-                                        </label>
-                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
-                                            <input type="checkbox" name="room_mode_privacy" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('privacy')">
-                                            <span class="text-slate-600">Privacy</span>
-                                        </label>
-                                        <label class="flex items-center gap-1 cursor-pointer text-xs">
-                                            <input type="checkbox" name="room_mode_manual" class="wizard-check w-4 h-4 rounded border border-slate-300 text-green-500 focus:ring-green-500 accent-green-500" onchange="selectRoomMode('manual')">
-                                            <span class="font-semibold text-slate-700">Manual</span>
-                                        </label>
-                                        <span class="ml-auto text-xs text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
-                                    </div>
-                                    <!-- ROW 2: Room Fields + Capacity -->
+                                    <!-- Room Fields + Capacity -->
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
                                             <div class="flex items-center gap-1">
                                                 <span class="text-xs text-slate-500">SGL</span>
-                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_single_rooms" min="0" value="0" data-service="hotel" oninput="updateRoomCapacity()">
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <span class="text-xs text-slate-500">DBL</span>
-                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_double_rooms" min="0" value="0" data-service="hotel" oninput="updateRoomCapacity()">
                                             </div>
                                             <div class="flex items-center gap-1">
                                                 <span class="text-xs text-slate-500">TRP</span>
-                                                <input type="number" class="w-8 px-1 py-0.5 border-0 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" readonly>
+                                                <input type="number" class="w-10 px-1 py-0.5 border border-slate-300 rounded text-xs text-center font-semibold bg-white text-slate-600 shadow-sm" id="hotel_triple_rooms" min="0" value="0" data-service="hotel" oninput="updateRoomCapacity()">
                                             </div>
                                         </div>
-                                        <!-- Capacity Display -->
-                                        <div class="flex flex-col items-center">
-                                            <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
-                                            <span id="room-capacity-note" class="text-[10px] mt-0.5 font-bold" style="color: #ef5350;"></span>
+                                        <!-- PAX + Capacity Display -->
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xs text-slate-500">PAX: <span class="font-bold text-slate-800" id="hotel_pax_display">{{ request.pax or 0 }}</span></span>
+                                            <div class="flex flex-col items-center">
+                                                <span class="px-2 py-0.5 rounded-md text-xs font-bold text-white" style="background-color: #22c55e;" id="hotel_total_guests">0</span>
+                                                <span id="room-capacity-note" class="text-[10px] mt-0.5 font-bold" style="color: #ef5350;"></span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1838,11 +1821,8 @@ let currentServiceContext = {
     rowId: null // null = Global (Applies to All), Integer = Specific Row ID
 };
 
-// Initialize room distribution with Economic layout
+// Initialize room distribution - manual mode only
 function initializeRoomDistribution() {
-    if (typeof applyWizardLayout === 'function') {
-        applyWizardLayout('economic');
-    }
     if (typeof calculateTotalGuests === 'function') {
         calculateTotalGuests();
     }
@@ -3274,14 +3254,7 @@ function saveServiceData(serviceType) {
         }
     }
     
-    // Validate room distribution for hotels
-    if (serviceType === 'hotel') {
-        const validation = validateRoomDistribution();
-        if (!validation.valid) {
-            showInlineError('hotel', validation.message);
-            return;
-        }
-    }
+    // Room distribution note is informational only - no validation blocking
     
     // Collect form data
     const activePanel = document.getElementById(`service-panel-${serviceType}`);
@@ -4273,18 +4246,12 @@ function getPaxValue() {
 const globalPaxInput = document.querySelector('form#editMode input[name="pax"]');
 if (globalPaxInput) {
     globalPaxInput.addEventListener('input', function() {
-        // Update the PAX display inside the hotel wizard
-        updateWizardPreviews();
+        // Update the PAX display inside the hotel panel
+        const paxDisplay = document.getElementById('hotel_pax_display');
+        if (paxDisplay) paxDisplay.textContent = getPaxValue();
         
-        // Recalculate total guest capacity based on rooms
+        // Recalculate total guest capacity (for display only - don't change room values)
         calculateTotalGuests();
-
-        // If NOT in manual mode, recalculate room distribution based on new PAX
-        if (!isManualMode) {
-             // Determine the currently selected mode (Economic/DBL/Privacy)
-             const currentMode = document.querySelector('.wizard-check:checked')?.name.replace('room_mode_', '') || 'economic';
-             applyWizardLayout(currentMode);
-        }
     });
 }
 
@@ -4325,44 +4292,11 @@ function updateWizardPreviews() {
 }
 
 function applyWizardLayout(mode) {
-    const pax = getPaxValue();
-    let layout;
-    
-    switch(mode) {
-        case 'economic': layout = calculateEconomicLayout(pax); break;
-        case 'dbl': layout = calculateDblLayout(pax); break;
-        case 'privacy': layout = calculatePrivacyLayout(pax); break;
-        default: return;
-    }
-    
-    // Add null checks to prevent errors when elements don't exist yet
-    const sglField = document.getElementById('hotel_single_rooms');
-    const dblField = document.getElementById('hotel_double_rooms');
-    const trpField = document.getElementById('hotel_triple_rooms');
-    const othField = document.getElementById('hotel_other_rooms');
-    
-    if (sglField) sglField.value = layout.sgl;
-    if (dblField) dblField.value = layout.dbl;
-    if (trpField) trpField.value = layout.trp;
-    if (othField) othField.value = layout.oth;
-    
-    if (isManualMode) exitManualMode();
-    setActiveWizardMode(mode);
-    calculateTotalGuests();
-    clearAllErrors();
+    // No-op: wizard mode removed, always manual
 }
 
 function selectRoomMode(mode) {
-    document.querySelectorAll('.wizard-check').forEach(cb => cb.checked = false);
-    const checkbox = document.querySelector(`input[name="room_mode_${mode}"]`);
-    if (checkbox) checkbox.checked = true;
-    
-    if (mode === 'manual') {
-        enableManualMode();
-    } else {
-        if (isManualMode) exitManualMode();
-        applyWizardLayout(mode);
-    }
+    // No-op: wizard mode removed, always manual
 }
 
 // Room List Tab Functions
@@ -4557,38 +4491,15 @@ function getRoomListData() {
 }
 
 function setActiveWizardMode(mode) {
-    document.querySelectorAll('.wizard-check').forEach(cb => cb.checked = false);
-    const checkbox = document.querySelector(`input[name="room_mode_${mode}"]`);
-    if (checkbox) checkbox.checked = true;
+    // No-op: wizard mode checkboxes removed, always manual
 }
 
 function enableManualMode() {
-    isManualMode = true;
-    ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) {
-            field.removeAttribute('readonly');
-            field.style.border = '2px solid #fb923c';
-            field.style.backgroundColor = '#ffffff';
-        }
-    });
-    setActiveWizardMode('manual');
+    // No-op: always in manual mode now
 }
 
 function exitManualMode() {
-    isManualMode = false;
-    ['hotel_single_rooms', 'hotel_double_rooms', 'hotel_triple_rooms', 'hotel_other_rooms'].forEach(id => {
-        const field = document.getElementById(id);
-        if (field) {
-            field.setAttribute('readonly', true);
-            field.style.border = '0';
-            field.style.backgroundColor = '#ffffff';
-        }
-    });
-    document.getElementById('hotel_other_rooms').value = 0;
-    setActiveWizardMode('economic');
-    applyWizardLayout('economic');
-    clearAllErrors();
+    // No-op: always in manual mode now, fields stay editable
 }
 
 function clearAllErrors() {
@@ -4637,28 +4548,17 @@ function calculateTotalGuests() {
 }
 
 function validateRoomDistribution() {
-    const pax = getPaxValue();
-    const totalGuests = calculateTotalGuests();
-    
-    if (totalGuests !== pax) {
-        return { valid: false, message: `Room capacity (${totalGuests}) must equal Total Guests (${pax})` };
-    }
+    // Always valid - capacity note is informational only
     return { valid: true };
 }
 
+// Alias for manual room input - updates capacity display
+function updateRoomCapacity() {
+    calculateTotalGuests();
+}
+
 function initializeRoomWizard() {
-    updateWizardPreviews();
-    const pax = getPaxValue();
-    if (pax > 0) {
-        const layout = calculateEconomicLayout(pax);
-        const sglField = document.getElementById('hotel_single_rooms');
-        const dblField = document.getElementById('hotel_double_rooms');
-        const trpField = document.getElementById('hotel_triple_rooms');
-        
-        if (sglField) sglField.value = layout.sgl;
-        if (dblField) dblField.value = layout.dbl;
-        if (trpField) trpField.value = layout.trp;
-    }
+    // No auto-layout - keep fields at 0 for manual entry
     calculateTotalGuests();
 }
 
@@ -4671,7 +4571,7 @@ function initializeRoomWizard() {
 });
 
 document.querySelector('[name="pax"]')?.addEventListener('input', function() {
-    updateWizardPreviews();
+    // Just update capacity display - don't auto-change room values
     calculateTotalGuests();
 });
 
