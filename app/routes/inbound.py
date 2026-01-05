@@ -1464,6 +1464,12 @@ def api_save_service_data(request_id):
             pax_val = form_data.get('arrival_pax_count', '')
             arrival.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             arrival.driver_name = form_data.get('arrival_driver_name', '')
+            
+            # New fields: visa_status, meet_assist, representative_name
+            arrival.visa_status = form_data.get('arrival_visa_status', 'NOT_INCLUDED')
+            meet_assist_val = form_data.get('arrival_meet_assist', 'no')
+            arrival.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
+            arrival.representative_name = form_data.get('arrival_representative_name', '')
         
         elif service_type == 'departure':
             from app.models.inbound import DepartureBatch
@@ -1507,6 +1513,11 @@ def api_save_service_data(request_id):
             departure.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             departure.driver_name = form_data.get('departure_driver_name', '')
             departure.departure_tax = form_data.get('departure_tax', 'NOT_INCLUDED')
+            
+            # New fields: meet_assist, representative_name
+            meet_assist_val = form_data.get('departure_meet_assist', 'no')
+            departure.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
+            departure.representative_name = form_data.get('departure_representative_name', '')
             
             # Parse program date
             if form_data.get('departure_program_date'):
