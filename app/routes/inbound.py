@@ -1117,15 +1117,23 @@ def api_save_service_data(request_id):
     try:
         if service_type == 'hotel':
             if is_global:
-                # Apply to all days - create or update hotel for request
-                hotel = InboundHotel.query.filter_by(request_id=request_id, source_itinerary_id=None).first()
-                if not hotel:
+                # Check if editing an existing hotel (hotel_id provided) or adding new
+                hotel_id = data.get('hotel_id')
+                if hotel_id:
+                    # Update existing hotel
+                    hotel = InboundHotel.query.filter_by(id=hotel_id, request_id=request_id).first()
+                    if not hotel:
+                        return jsonify({'success': False, 'error': 'Hotel not found'}), 404
+                    print(f"[SAVE SERVICE] Updating existing hotel id={hotel_id}")
+                else:
+                    # Create new hotel entry
                     hotel = InboundHotel(
                         request_id=request_id,
                         check_in_date=request_obj.from_date or date_type.today(),
                         check_out_date=request_obj.to_date or date_type.today()
                     )
                     db.session.add(hotel)
+                    print(f"[SAVE SERVICE] Creating new hotel entry")
                 
                 hotel_name_value = form_data.get('hotel_name', '')
                 print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
