@@ -51,6 +51,7 @@ class InboundRequest(db.Model):
     
     # Status and tracking
     status = db.Column(db.String(20), default=STATUS_REQUEST)
+    is_saved = db.Column(db.Boolean, default=False)  # True when user explicitly saves with final sequence number
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=True)  # Link to customer
     booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=True)  # Link to normal booking

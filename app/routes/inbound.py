@@ -186,8 +186,12 @@ def new_request():
     from_date = datetime.now().date()
     to_date = (datetime.now() + timedelta(days=3)).date()
     
+    # Use temporary placeholder - sequence will be assigned when user saves with final from_date
+    import uuid
+    temp_request_number = f"IN-NEW-{str(uuid.uuid4())[:6].upper()}"
+    
     request_obj = InboundRequest(
-        request_number=InboundRequest.generate_request_number(from_date),
+        request_number=temp_request_number,
         from_date=from_date,
         to_date=to_date,
         customer_type='AGENCY',  # Default customer type
@@ -195,7 +199,8 @@ def new_request():
         nationality='TBA',  # Default value to avoid null constraint
         pax=1,
         user_id=1,
-        status=STATUS_REQUEST
+        status=STATUS_REQUEST,
+        is_saved=False  # Mark as not yet saved with final sequence
     )
     request_obj.calculate_days()
     
@@ -999,6 +1004,56 @@ def api_auto_save_and_regenerate(request_id):
         'dates_changed': dates_changed,
         'no_of_days': request_obj.no_of_days,
         'itinerary_html': rows_html
+    })
+
+@inbound_bp.route('/api/<int:request_id>/save-request', methods=['POST'])
+@csrf.exempt
+def api_save_request(request_id):
+    """Save request and assign final sequence number based on from_date month"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    data = request.get_json()
+    
+    # Update from_date if provided
+    if data.get('from_date'):
+        request_obj.from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
+    if data.get('to_date'):
+        request_obj.to_date = datetime.strptime(data.get('to_date'), '%Y-%m-%d').date()
+    if data.get('pax'):
+        request_obj.pax = int(data.get('pax'))
+    if data.get('customer_type'):
+        request_obj.customer_type = data.get('customer_type')
+    if data.get('contact_name'):
+        request_obj.contact_name = data.get('contact_name')
+    if data.get('nationality'):
+        request_obj.nationality = data.get('nationality')
+    if data.get('customer_id'):
+        request_obj.customer_id = int(data.get('customer_id'))
+    if data.get('agent_ref'):
+        request_obj.agent_ref = data.get('agent_ref')
+    
+    # Recalculate days
+    request_obj.calculate_days()
+    
+    # Only generate sequence number if not already saved AND has placeholder number
+    # This protects existing requests that already have valid sequence numbers
+    if not request_obj.is_saved and request_obj.request_number.startswith('IN-NEW-'):
+        # Generate sequence number based on from_date month
+        request_obj.request_number = InboundRequest.generate_request_number(request_obj.from_date)
+        request_obj.is_saved = True
+    elif not request_obj.is_saved:
+        # Legacy request without is_saved flag but with valid number - just mark as saved
+        request_obj.is_saved = True
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'request_number': request_obj.request_number,
+        'message': 'Request saved successfully'
     })
 
 @inbound_bp.route('/api/<int:request_id>/save-service-data', methods=['POST'])

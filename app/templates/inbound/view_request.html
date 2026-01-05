@@ -537,7 +537,7 @@ html { scroll-behavior: smooth; }
             <div class="flex items-center gap-3">
                 <div>
                 <h1 class="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    {% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}
+                    <span id="headerRequestNumber">{% if request.is_saved %}{% if request.document_sequence %}{{ request.document_sequence }}{% else %}{{ request.request_number }}{% endif %}{% else %}<span class="text-amber-600">New Request (Unsaved)</span>{% endif %}</span>
                     <span id="headerStatusBadge" class="status-badge 
                         {% if request.status == 'REQUEST' %}status-request
                         {% elif request.status == 'QUOTED' %}status-quoted
@@ -590,6 +590,12 @@ html { scroll-behavior: smooth; }
                 </div>
             </div>
             
+            {% if not view_only %}
+            <button type="button" id="saveRequestBtn" class="tw-btn tw-btn-primary tw-btn-sm" onclick="saveRequest()">
+                <i class="fas fa-save"></i>
+                <span>Save Request</span>
+            </button>
+            {% endif %}
             <a href="{{ url_for('main.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
                 <i class="fas fa-home"></i>
                 <span class="hidden sm:inline">Dashboard</span>
@@ -4098,6 +4104,60 @@ function saveAndRefreshItinerary() {
         isSaving = false;
         console.error('Error:', error);
         showNotification('Error saving', 'error');
+    });
+}
+
+// Save Request with final sequence number
+function saveRequest() {
+    const saveBtn = document.getElementById('saveRequestBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+    
+    const data = {
+        from_date: document.getElementById('fromDate')?.value || '',
+        to_date: document.getElementById('toDate')?.value || '',
+        pax: document.querySelector('[name="pax"]')?.value || '',
+        customer_type: document.querySelector('[name="customer_type"]')?.value || '',
+        contact_name: document.querySelector('[name="contact_name"]')?.value || '',
+        nationality: document.querySelector('[name="nationality"]')?.value || '',
+        customer_id: document.getElementById('selectedCustomerId')?.value || '',
+        agent_ref: document.querySelector('[name="agent_ref"]')?.value || ''
+    };
+    
+    fetch(`/inbound/api/${requestId}/save-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Request</span>';
+        }
+        if (data.success) {
+            // Update the header with new request number
+            const headerEl = document.getElementById('headerRequestNumber');
+            if (headerEl) {
+                headerEl.innerHTML = data.request_number;
+            }
+            showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
+        } else {
+            showNotification(data.message || 'Error saving request', 'error');
+        }
+    })
+    .catch(error => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Request</span>';
+        }
+        console.error('Error:', error);
+        showNotification('Error saving request', 'error');
     });
 }
 
