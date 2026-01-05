@@ -6453,7 +6453,9 @@ def api_upload_document(request_id):
                 "id": doc.id,
                 "document_type": doc.document_type,
                 "original_filename": doc.original_filename,
+                "filepath": doc.filepath,
                 "file_size": doc.file_size,
+                "uploaded_at": doc.uploaded_at.strftime("%d %b %Y") if doc.uploaded_at else "",
                 "is_image": doc.is_image,
                 "is_pdf": doc.is_pdf
             }
