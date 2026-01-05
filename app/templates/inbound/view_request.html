@@ -2737,9 +2737,15 @@ function toggleFullSummary() {
     if (section.classList.contains('hidden')) {
         section.classList.remove('hidden');
         btnText.textContent = 'Hide Summary';
-        // Only update tables on first open or when data has changed
+        // Check if server already rendered content - don't overwrite on first load
+        // Only call updateFullSummaryTables if the source tables exist (they don't on initial load)
         if (!summaryTablesLoaded) {
-            updateFullSummaryTables();
+            // Check if source tables exist before trying to update from them
+            const hasSourceTables = document.getElementById('hotels-table-body') !== null;
+            if (hasSourceTables) {
+                updateFullSummaryTables();
+            }
+            // Mark as loaded so we don't check again
             summaryTablesLoaded = true;
         }
     } else {
