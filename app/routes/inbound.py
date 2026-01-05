@@ -1324,6 +1324,7 @@ def api_save_service_data(request_id):
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                    guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                     db.session.add(guide)
                     created_count += 1
                     current_date += timedelta(days=1)
@@ -1345,6 +1346,7 @@ def api_save_service_data(request_id):
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                    guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
                     
                     if form_data.get('guide_date'):
                         guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
@@ -1372,6 +1374,7 @@ def api_save_service_data(request_id):
                     )
                     meal.restaurant = form_data.get('meal_restaurant', '')
                     meal.meal_type = form_data.get('meal_type', '')
+                    meal.meal_note = form_data.get('meal_notes', '')
                     meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
                     db.session.add(meal)
                     created_count += 1
@@ -1477,11 +1480,18 @@ def api_save_service_data(request_id):
             departure.departure_point = form_data.get('departure_point', '')
             departure.departure_time = departure_time
             departure.flight_number = form_data.get('departure_flight_number', '')
-            departure.vehicle_details = form_data.get('departure_vehicle_type', '')
             # Use request.pax as fallback when pax_count is empty
             pax_val = form_data.get('departure_pax_count', '')
             departure.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             departure.driver_name = form_data.get('departure_driver_name', '')
+            departure.departure_tax = form_data.get('departure_tax', 'NOT_INCLUDED')
+            
+            # Parse program date
+            if form_data.get('departure_program_date'):
+                try:
+                    departure.program_date = datetime.strptime(form_data['departure_program_date'], '%Y-%m-%d').date()
+                except:
+                    pass
         
         db.session.commit()
         print(f"[SAVE SERVICE] Commit successful for {service_type}")

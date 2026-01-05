@@ -476,6 +476,7 @@ class InboundMeal(db.Model):
     restaurant = db.Column(db.String(200), nullable=True)
     location = db.Column(db.String(200), nullable=True)
     meal_time = db.Column(db.Time, nullable=True)
+    meal_note = db.Column(db.Text, nullable=True)  # Additional notes for restaurant/meal
     
     # Costing
     cost_per_person = db.Column(db.Float, default=0.0)
@@ -517,6 +518,7 @@ class InboundGuide(db.Model):
     duration_hours = db.Column(db.Float, nullable=True)  # Keep for legacy, hide in UI
     meeting_point = db.Column(db.String(200), nullable=True)  # Keep for legacy, hide in UI
     meeting_time = db.Column(db.Time, nullable=True)
+    is_cancelled = db.Column(db.Boolean, default=False)  # CXL status for guide
     additional_comments = db.Column(db.Text, nullable=True)  # Additional comments
     internal_comments = db.Column(db.Text, nullable=True)  # Internal comments (not printed)
     
@@ -661,10 +663,11 @@ class DepartureBatch(db.Model):
     
     batch_name = db.Column(db.String(100), nullable=True)
     departure_date = db.Column(db.Date, nullable=False)
+    program_date = db.Column(db.Date, nullable=True)  # Program date for departure
     departure_point = db.Column(db.String(200), nullable=True)
     departure_time = db.Column(db.Time, nullable=True)
     driver_name = db.Column(db.String(200), nullable=True)  # Keep for legacy but hide in UI
-    vehicle_details = db.Column(db.String(200), nullable=True)
+    vehicle_details = db.Column(db.String(200), nullable=True)  # Legacy - hidden in UI
     pax_count = db.Column(db.Integer, default=0)
     flight_number = db.Column(db.String(50), nullable=True)
     meet_greet = db.Column(db.Boolean, default=False)  # Legacy field
@@ -672,7 +675,7 @@ class DepartureBatch(db.Model):
     # NEW FIELDS for ARD 1
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
-    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED
+    departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED, NONE
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
