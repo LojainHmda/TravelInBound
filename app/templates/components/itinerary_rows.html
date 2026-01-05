@@ -63,8 +63,5 @@
         {% set row_cost = row_cost + ((eff_meal.total_cost or 0) if eff_meal else 0) %}
         <span class="font-semibold text-slate-700">{{ "%.0f"|format(row_cost) }}</span>
     </td>
-    <td class="py-3 px-3">
-        <span class="text-slate-400 text-xs">{{ row.comment or '' }}</span>
-    </td>
 </tr>
 {% endfor %}
