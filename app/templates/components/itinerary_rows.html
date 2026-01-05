@@ -76,12 +76,7 @@
                  title="Guide">
                 <i class="fas fa-user"></i>
             </div>
-            <div class="service-icon-toggle meal{% if eff_meal and eff_meal.restaurant %} active{% endif %}" 
-                 data-row-id="{{ row.id }}"
-                 onclick="switchServiceTab('meal', {{ row.id }})"
-                 title="Meal">
-                <i class="fas fa-utensils"></i>
-            </div>
+            <!-- Meal icon hidden per user request - meals now managed in itinerary row -->
         </div>
     </td>
     <td class="py-3 px-3 text-right">

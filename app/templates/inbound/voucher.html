@@ -120,6 +120,13 @@
                         <div>
                             <h6 class="mb-1">{{ row.date.strftime('%A, %d %B %Y') }}</h6>
                             <p class="mb-2">{{ row.description }}</p>
+                            {% if row.meal_type or row.restaurant %}
+                            <p class="mb-2 text-muted">
+                                {% if row.meal_type %}<strong>{{ row.meal_type }}</strong>{% endif %}
+                                {% if row.meal_type and row.restaurant %} at {% endif %}
+                                {% if row.restaurant %}{{ row.restaurant }}{% endif %}
+                            </p>
+                            {% endif %}
                             <div class="small">
                                 {% if row.flag_hotel %}<span class="badge bg-primary me-1">Hotel</span>{% endif %}
                                 {% if row.flag_transport %}<span class="badge bg-info me-1">Transport</span>{% endif %}
