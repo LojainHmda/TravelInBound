@@ -3525,6 +3525,11 @@ function updateSummaryTables(serviceType, data) {
                 // Update visible summary section
                 updateVisibleSummary(serviceType, data);
             });
+        } else if (!data || (data.summary_entries_html === undefined && data.service_entries_html === undefined && data.service_entry === undefined)) {
+            // No data object or all fields undefined - preserve server-rendered content (initial page load)
+            // Note: empty string '' is a valid payload for clearing tables, so we only skip on undefined
+            console.log('[updateSummaryTables] No data payload (undefined), preserving server-rendered content');
+            return;
         } else if (data.summary_entries_html || data.service_entries_html) {
             // For other services, use summary_entries_html (consolidated) if available, else service_entries_html
             const tableBody = document.getElementById(tableId);
