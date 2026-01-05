@@ -261,8 +261,10 @@ def view_request(id):
     from app.models.supplier import Supplier
     
     # Use eager loading for all service relationships to ensure they're loaded for template
+    # Include subqueryload for hotel rooms to avoid N+1 queries
+    from sqlalchemy.orm import subqueryload
     request_obj = InboundRequest.query.options(
-        selectinload(InboundRequest.inbound_hotels),
+        selectinload(InboundRequest.inbound_hotels).subqueryload(InboundHotel.rooms),
         selectinload(InboundRequest.inbound_transports),
         selectinload(InboundRequest.inbound_guides),
         selectinload(InboundRequest.inbound_meals),
@@ -1179,16 +1181,18 @@ def api_save_service_data(request_id):
                 room_list_data = data.get('room_list', [])
                 
                 if room_list_data:
-                    # Use room list data provided by user (with guest names)
+                    # Use room list data provided by user (with guest names and new fields)
                     HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
-                    board_basis = form_data.get('hotel_board', 'BB')
+                    default_board_basis = form_data.get('hotel_board', 'BB')
                     
                     for room_data in room_list_data:
                         room = HotelRoom(
                             hotel_id=hotel.id,
                             room_type=room_data.get('room_type', 'Double'),
                             room_count=1,
-                            board_basis=board_basis,
+                            room_option=room_data.get('room_option', ''),
+                            board_basis=room_data.get('board_basis', default_board_basis),
+                            dietary_requirements=room_data.get('dietary_requirements', ''),
                             adults=room_data.get('adults', 2),
                             children=room_data.get('children', 0),
                             guest_names=room_data.get('guest_names', '')

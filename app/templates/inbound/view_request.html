@@ -1815,6 +1815,29 @@ html { scroll-behavior: smooth; }
 const requestId = {{ request.id }};
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+// Hotel room data from server - keyed by hotel_id
+const hotelRoomsData = {
+    {% for hotel in request.inbound_hotels %}
+    {{ hotel.id }}: [
+        {% for room in hotel.rooms %}
+        {
+            id: {{ room.id }},
+            room_type: "{{ room.room_type or 'Double' }}",
+            room_option: "{{ room.room_option or '' }}",
+            board_basis: "{{ room.board_basis or 'BB' }}",
+            dietary_requirements: "{{ room.dietary_requirements or '' }}",
+            adults: {{ room.adults or 1 }},
+            children: {{ room.children or 0 }},
+            guest_names: "{{ room.guest_names or '' }}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]{% if not loop.last %},{% endif %}
+    {% endfor %}
+};
+
+// Track current hotel being edited
+let currentEditingHotelId = null;
+
 // Global Context Variable to track if we are editing Global or Specific Day
 let currentServiceContext = {
     serviceName: null,
@@ -3366,6 +3389,12 @@ function saveServiceData(serviceType) {
                 const roomMsg = roomCount > 0 ? ` with ${roomCount} rooms` : '';
                 showNotification(`Hotel saved${roomMsg}! (${startDate} - ${endDate})`, 'success');
                 activateIconsForDateRange(serviceType, fromDate, toDate);
+                
+                // Update hotelRoomsData cache with new room data from response
+                if (data.hotel_id && data.rooms) {
+                    hotelRoomsData[data.hotel_id] = data.rooms;
+                }
+                
                 setTimeout(() => {
                     clearServiceForm(serviceType);
                     // Reset room distribution fields to 0
@@ -3381,6 +3410,8 @@ function saveServiceData(serviceType) {
                     switchRoomTab('distribution');
                     document.getElementById('room-list-container').innerHTML = '';
                     document.getElementById('room-list-empty').classList.remove('hidden');
+                    // Clear current editing hotel ID for new hotel entry
+                    currentEditingHotelId = null;
                 }, 300);
             }
             // Activate icons only for the specific date range
@@ -4342,12 +4373,35 @@ function switchRoomTab(tab) {
 }
 
 function generateRoomListRows() {
+    const container = document.getElementById('room-list-container');
+    const emptyMsg = document.getElementById('room-list-empty');
+    
+    // Check if we have existing room data for the current hotel being edited
+    if (currentEditingHotelId && hotelRoomsData[currentEditingHotelId] && hotelRoomsData[currentEditingHotelId].length > 0) {
+        const existingRooms = hotelRoomsData[currentEditingHotelId];
+        
+        // Check if rows already exist with same count
+        const existingRows = container.querySelectorAll('.room-list-row');
+        if (existingRows.length === existingRooms.length) {
+            return; // Don't regenerate if count matches
+        }
+        
+        container.innerHTML = '';
+        emptyMsg.classList.add('hidden');
+        
+        // Generate rows from existing room data
+        existingRooms.forEach((room, index) => {
+            const roomType = room.room_type || 'Double';
+            const defaultAdults = roomType === 'Single' ? 1 : roomType === 'Triple' ? 3 : 2;
+            container.appendChild(createRoomListRow(index + 1, roomType, defaultAdults, room));
+        });
+        return;
+    }
+    
+    // Fallback: generate from distribution counts for new hotels
     const sgl = parseInt(document.getElementById('hotel_single_rooms')?.value) || 0;
     const dbl = parseInt(document.getElementById('hotel_double_rooms')?.value) || 0;
     const trp = parseInt(document.getElementById('hotel_triple_rooms')?.value) || 0;
-    
-    const container = document.getElementById('room-list-container');
-    const emptyMsg = document.getElementById('room-list-empty');
     
     const totalRooms = sgl + dbl + trp;
     
@@ -4382,37 +4436,73 @@ function generateRoomListRows() {
     }
 }
 
-function createRoomListRow(roomNum, roomType, defaultAdults) {
+function createRoomListRow(roomNum, roomType, defaultAdults, roomData = {}) {
     const row = document.createElement('div');
-    row.className = 'room-list-row flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200';
+    row.className = 'room-list-row flex flex-wrap items-center gap-2 p-2 bg-white rounded-lg border border-slate-200';
     row.dataset.roomNum = roomNum;
     row.dataset.roomType = roomType;
     
-    // Determine number of guest fields based on room type
-    const guestCount = getGuestCountForRoomType(roomType);
-    
-    // Generate guest name input fields
-    let guestFieldsHtml = '';
-    for (let i = 1; i <= guestCount; i++) {
-        guestFieldsHtml += `<input type="text" class="guest-name-input flex-1 min-w-0 px-2 py-1 border border-slate-200 rounded text-xs" 
-               placeholder="Guest ${i}" data-guest-index="${i}">`;
-    }
+    // Default values from roomData or empty
+    const roomOption = roomData.room_option || '';
+    const boardBasis = roomData.board_basis || 'BB';
+    const dietaryReq = roomData.dietary_requirements || '';
+    const adults = roomData.adults || defaultAdults;
+    const children = roomData.children || 0;
+    const guestNames = roomData.guest_names || '';
     
     row.innerHTML = `
         <div class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600">
             ${roomNum}
         </div>
         <div class="flex-shrink-0">
-            <select class="room-type-select px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" onchange="updateGuestFields(this)">
-                <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>SGL</option>
-                <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>DBL</option>
-                <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>TWN</option>
-                <option value="Triple" ${roomType === 'Triple' ? 'selected' : ''}>TRP</option>
+            <select class="room-type-select px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_type" title="Category">
+                <option value="Single" ${roomType === 'Single' ? 'selected' : ''}>Single</option>
+                <option value="Double" ${roomType === 'Double' ? 'selected' : ''}>Double</option>
+                <option value="Twin" ${roomType === 'Twin' ? 'selected' : ''}>Twin</option>
+                <option value="Triple" ${roomType === 'Triple' ? 'selected' : ''}>Triple</option>
+                <option value="King" ${roomType === 'King' ? 'selected' : ''}>King</option>
                 <option value="Suite" ${roomType === 'Suite' ? 'selected' : ''}>Suite</option>
             </select>
         </div>
-        <div class="guest-fields-container flex-grow flex gap-1">
-            ${guestFieldsHtml}
+        <div class="flex-shrink-0">
+            <select class="px-2 py-1 border border-slate-200 rounded text-xs" data-field="room_option" title="Room Option">
+                <option value="">Room Option</option>
+                <option value="Standard" ${roomOption === 'Standard' ? 'selected' : ''}>Standard</option>
+                <option value="Sea View" ${roomOption === 'Sea View' ? 'selected' : ''}>Sea View</option>
+                <option value="Garden View" ${roomOption === 'Garden View' ? 'selected' : ''}>Garden View</option>
+                <option value="Premium" ${roomOption === 'Premium' ? 'selected' : ''}>Premium</option>
+                <option value="Deluxe" ${roomOption === 'Deluxe' ? 'selected' : ''}>Deluxe</option>
+                <option value="Sea View, Premium" ${roomOption === 'Sea View, Premium' ? 'selected' : ''}>Sea View, Premium</option>
+            </select>
+        </div>
+        <div class="flex-shrink-0">
+            <select class="px-2 py-1 border border-slate-200 rounded text-xs" data-field="board_basis" title="Board Basis">
+                <option value="BB" ${boardBasis === 'BB' ? 'selected' : ''}>B&B</option>
+                <option value="HB" ${boardBasis === 'HB' ? 'selected' : ''}>HB</option>
+                <option value="FB" ${boardBasis === 'FB' ? 'selected' : ''}>FB</option>
+                <option value="RO" ${boardBasis === 'RO' ? 'selected' : ''}>RO</option>
+                <option value="AI" ${boardBasis === 'AI' ? 'selected' : ''}>All Inc</option>
+            </select>
+        </div>
+        <div class="flex-shrink-0">
+            <select class="px-2 py-1 border border-slate-200 rounded text-xs" data-field="dietary_requirements" title="Dietary Requirements">
+                <option value="">Dietary Req</option>
+                <option value="Vegetarian" ${dietaryReq === 'Vegetarian' ? 'selected' : ''}>Vegetarian</option>
+                <option value="Halal" ${dietaryReq === 'Halal' ? 'selected' : ''}>Halal</option>
+                <option value="Vegan" ${dietaryReq === 'Vegan' ? 'selected' : ''}>Vegan</option>
+                <option value="Gluten-Free" ${dietaryReq === 'Gluten-Free' ? 'selected' : ''}>Gluten-Free</option>
+                <option value="Vegetarian, Halal" ${dietaryReq === 'Vegetarian, Halal' ? 'selected' : ''}>Veg, Halal</option>
+            </select>
+        </div>
+        <div class="flex-shrink-0 flex items-center gap-1">
+            <input type="number" class="w-12 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
+                   data-field="adults" value="${adults}" min="0" max="6" title="Adults">
+            <input type="number" class="w-12 px-1 py-1 border border-slate-200 rounded text-xs text-center" 
+                   data-field="children" value="${children}" min="0" max="6" title="Children">
+        </div>
+        <div class="flex-grow min-w-[120px]">
+            <input type="text" class="w-full px-2 py-1 border border-slate-200 rounded text-xs" 
+                   data-field="guest_names" value="${guestNames}" placeholder="Lead passenger" title="Lead Passenger">
         </div>
         <button type="button" onclick="removeRoomListRow(this)" class="flex-shrink-0 w-6 h-6 rounded-full hover:bg-red-100 text-slate-400 hover:text-red-500 flex items-center justify-center">
             <i class="fas fa-times text-xs"></i>
@@ -4491,22 +4581,21 @@ function getRoomListData() {
     
     return Array.from(rows).map(row => {
         const roomType = row.querySelector('[data-field="room_type"]')?.value || 'Double';
-        
-        // Collect all guest names from individual fields
-        const guestInputs = row.querySelectorAll('.guest-name-input');
-        const guestNames = Array.from(guestInputs)
-            .map(inp => inp.value.trim())
-            .filter(name => name.length > 0)
-            .join(', ');
-        
-        // Adults count based on room type
-        const adults = getGuestCountForRoomType(roomType);
+        const roomOption = row.querySelector('[data-field="room_option"]')?.value || '';
+        const boardBasis = row.querySelector('[data-field="board_basis"]')?.value || 'BB';
+        const dietaryReq = row.querySelector('[data-field="dietary_requirements"]')?.value || '';
+        const adults = parseInt(row.querySelector('[data-field="adults"]')?.value) || 1;
+        const children = parseInt(row.querySelector('[data-field="children"]')?.value) || 0;
+        const guestNames = row.querySelector('[data-field="guest_names"]')?.value || '';
         
         return {
             room_type: roomType,
-            guest_names: guestNames,
+            room_option: roomOption,
+            board_basis: boardBasis,
+            dietary_requirements: dietaryReq,
             adults: adults,
-            children: 0
+            children: children,
+            guest_names: guestNames
         };
     });
 }
