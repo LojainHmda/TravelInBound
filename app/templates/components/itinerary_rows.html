@@ -36,6 +36,18 @@
     </td>
     <td class="py-3 px-3">
         {% if view_only %}
+        <span class="text-slate-600">{{ row.meal_type or '' }}</span>
+        {% else %}
+        <select class="tw-input text-sm py-1.5" onchange="autoSaveItineraryRow({{ row.id }}, 'meal_type', this.value)">
+            <option value="">Select...</option>
+            <option value="Breakfast" {{ 'selected' if row.meal_type == 'Breakfast' else '' }}>Breakfast</option>
+            <option value="Lunch" {{ 'selected' if row.meal_type == 'Lunch' else '' }}>Lunch</option>
+            <option value="Dinner" {{ 'selected' if row.meal_type == 'Dinner' else '' }}>Dinner</option>
+        </select>
+        {% endif %}
+    </td>
+    <td class="py-3 px-3">
+        {% if view_only %}
         <span class="text-slate-600">{{ row.restaurant or '' }}</span>
         {% else %}
         <input type="text" class="tw-input text-sm py-1.5" 

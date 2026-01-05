@@ -196,6 +196,7 @@ class ItineraryRow(db.Model):
     hotel_other_rooms = db.Column(db.Integer, default=0)
     
     # Additional fields for itinerary display
+    meal_type = db.Column(db.String(50), nullable=True)  # Breakfast, Lunch, Dinner
     restaurant = db.Column(db.String(200), nullable=True)
     cash_expense = db.Column(db.Float, default=0.0)
     comment = db.Column(db.Text, nullable=True)

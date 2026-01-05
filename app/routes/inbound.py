@@ -1816,6 +1816,39 @@ def api_save_service_data(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@inbound_bp.route('/api/itinerary-row/<int:row_id>/update-field', methods=['POST'])
+@csrf.exempt
+def api_update_itinerary_row_field(row_id):
+    """Update a single field on an itinerary row"""
+    try:
+        row = ItineraryRow.query.get_or_404(row_id)
+        data = request.get_json()
+        
+        field = data.get('field')
+        value = data.get('value')
+        
+        # Only allow specific fields to be updated
+        allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense']
+        
+        if field not in allowed_fields:
+            return jsonify({'success': False, 'error': f'Field {field} not allowed'}), 400
+        
+        # Update the field
+        if field == 'cash_expense':
+            try:
+                value = float(value) if value else 0.0
+            except ValueError:
+                value = 0.0
+        
+        setattr(row, field, value)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/add-hotel', methods=['POST'])
 @csrf.exempt
 def api_add_hotel():

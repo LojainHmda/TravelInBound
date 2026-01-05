@@ -763,6 +763,7 @@ html { scroll-behavior: smooth; }
                                         <th class="py-2 px-2 w-16">Day</th>
                                         <th class="py-2 px-2 w-24">Date</th>
                                         <th class="py-2 px-2">Description</th>
+                                        <th class="py-2 px-2 w-24">Meal Type</th>
                                         <th class="py-2 px-2 w-32">Restaurant</th>
                                         <th class="py-2 px-2 w-28 text-center">Services</th>
                                         <th class="py-2 px-2 w-20 text-right">Cost</th>
@@ -4125,6 +4126,27 @@ function archiveRequest() {
 function handleCustomerSelectionInView(customer) {
     document.getElementById('selectedCustomerId').value = customer.id;
     document.getElementById('selectedCustomerName').value = customer.name + (customer.company ? ` (${customer.company})` : '');
+}
+
+// Auto-save individual itinerary row field
+function autoSaveItineraryRow(rowId, fieldName, value) {
+    fetch(`/inbound/api/itinerary-row/${rowId}/update-field`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ field: fieldName, value: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAutoSaveIndicator();
+        } else {
+            console.error('Error saving field:', data.error);
+        }
+    })
+    .catch(error => console.error('Error saving field:', error));
 }
 
 // Auto-save with debounce
