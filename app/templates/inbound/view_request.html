@@ -2358,10 +2358,17 @@ function calculateDays() {
     if (fromDate && toDate) {
         const from = new Date(fromDate);
         const to = new Date(toDate);
-        const diffTime = Math.abs(to - from);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        document.getElementById('noOfDays').value = diffDays;
-        autoSaveChanges();
+        
+        // Only calculate if to_date >= from_date
+        if (to >= from) {
+            const diffTime = to - from;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            document.getElementById('noOfDays').value = diffDays;
+        } else {
+            // Invalid range - show 0 or empty
+            document.getElementById('noOfDays').value = '';
+        }
+        // Do NOT auto-save when dates change - user must click Save explicitly
     }
 }
 

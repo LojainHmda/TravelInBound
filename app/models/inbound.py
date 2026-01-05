@@ -155,7 +155,11 @@ class InboundRequest(db.Model):
         """Calculate number of days between from_date and to_date"""
         if self.from_date and self.to_date:
             delta = self.to_date - self.from_date
-            self.no_of_days = delta.days + 1  # Include both start and end days
+            # Ensure days is never negative (to_date must be >= from_date)
+            if delta.days >= 0:
+                self.no_of_days = delta.days + 1  # Include both start and end days
+            else:
+                self.no_of_days = 0  # Invalid range
         return self.no_of_days
 
 class ItineraryRow(db.Model):
