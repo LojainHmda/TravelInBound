@@ -260,7 +260,17 @@ def view_request(id):
     from flask import request as flask_request
     from app.models.supplier import Supplier
     
-    request_obj = InboundRequest.query.get_or_404(id)
+    # Use eager loading for all service relationships to ensure they're loaded for template
+    request_obj = InboundRequest.query.options(
+        selectinload(InboundRequest.inbound_hotels),
+        selectinload(InboundRequest.inbound_transports),
+        selectinload(InboundRequest.inbound_guides),
+        selectinload(InboundRequest.inbound_meals),
+        selectinload(InboundRequest.inbound_optionals),
+        selectinload(InboundRequest.itinerary_rows),
+        selectinload(InboundRequest.arrival_batches),
+        selectinload(InboundRequest.departure_batches)
+    ).get_or_404(id)
     
     # Get mode parameter (view or edit)
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
