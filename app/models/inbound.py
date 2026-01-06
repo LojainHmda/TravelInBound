@@ -84,28 +84,28 @@ class InboundRequest(db.Model):
     
     @classmethod
     def generate_request_number(cls, from_date=None):
-        """Generate auto request number in format YYYYMM#### based on trip start month"""
+        """Generate auto request number in format YYMM### based on trip start month"""
         # Use provided from_date or current date
         date_to_use = from_date if from_date else datetime.now().date()
-        prefix = date_to_use.strftime('%Y%m')  # e.g., 202601
+        prefix = date_to_use.strftime('%y%m')  # e.g., 2601 for Jan 2026
         
-        # Find the highest number for this month (format: YYYYMM####)
+        # Find the highest number for this month (format: YYMM###)
         latest = cls.query.filter(
             cls.request_number.like(f"{prefix}%"),
-            db.func.length(cls.request_number) >= 10  # Ensure it's the new format (6+4 digits)
+            db.func.length(cls.request_number) == 7  # Ensure it's the new format (4+3 digits)
         ).order_by(cls.request_number.desc()).first()
         
         if latest:
-            # Extract the sequence number (last 4 digits after YYYYMM)
+            # Extract the sequence number (last 3 digits after YYMM)
             try:
-                last_num = int(latest.request_number[6:])  # Get digits after YYYYMM
+                last_num = int(latest.request_number[4:])  # Get digits after YYMM
                 next_num = last_num + 1
             except:
                 next_num = 1
         else:
             next_num = 1
         
-        return f"{prefix}{next_num:04d}"  # e.g., 2026010001
+        return f"{prefix}{next_num:03d}"  # e.g., 2601001
     
     @classmethod
     def generate_document_sequence(cls, from_date=None):
