@@ -294,12 +294,22 @@ def view_request(id):
     # Sort by preferred city order
     sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
     
+    # Get suppliers for other service types
+    transport_suppliers = Supplier.query.filter_by(supplier_type='TRANSPORT', is_active=True).order_by(Supplier.name).all()
+    guide_suppliers = Supplier.query.filter_by(supplier_type='GUIDE', is_active=True).order_by(Supplier.name).all()
+    restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
+    ground_handler_suppliers = Supplier.query.filter_by(supplier_type='GROUND_HANDLER', is_active=True).order_by(Supplier.name).all()
+    
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
                            rows=request_obj.itinerary_rows,
                            hotel_suppliers=hotel_suppliers,
-                           hotels_by_city=sorted_hotels_by_city)
+                           hotels_by_city=sorted_hotels_by_city,
+                           transport_suppliers=transport_suppliers,
+                           guide_suppliers=guide_suppliers,
+                           restaurant_suppliers=restaurant_suppliers,
+                           ground_handler_suppliers=ground_handler_suppliers)
 
 
 @inbound_bp.route('/<int:id>/delete')

@@ -198,13 +198,24 @@ class ItineraryRow(db.Model):
     
     # Additional fields for itinerary display
     meal_type = db.Column(db.String(50), nullable=True)  # Breakfast, Lunch, Dinner
-    restaurant = db.Column(db.String(200), nullable=True)
+    restaurant = db.Column(db.String(200), nullable=True)  # Legacy text field
+    restaurant_supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Restaurant)
     cash_expense = db.Column(db.Float, default=0.0)
     comment = db.Column(db.Text, nullable=True)
     
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship for restaurant supplier
+    restaurant_supplier = db.relationship('Supplier', foreign_keys=[restaurant_supplier_id], lazy='joined')
+    
+    @property
+    def restaurant_name(self):
+        """Get restaurant name from supplier relationship or legacy text field"""
+        if self.restaurant_supplier:
+            return self.restaurant_supplier.name
+        return self.restaurant
     
     def __repr__(self):
         return f'<ItineraryRow {self.date} - {self.description[:50]}>'
@@ -438,7 +449,8 @@ class InboundTransport(db.Model):
     end_date = db.Column(db.Date, nullable=True)  # To Date (for multi-day transport services)
     pax = db.Column(db.Integer, default=0)  # Passenger count
     vehicle_type = db.Column(db.String(100), nullable=True)
-    supplier = db.Column(db.String(200), nullable=True)  # Supplier/company name
+    supplier = db.Column(db.String(200), nullable=True)  # Legacy text field
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier
     driver_name = db.Column(db.String(200), nullable=True)  # Driver assigned to this transport
     driver_phone = db.Column(db.String(50), nullable=True)  # Driver phone number
     pickup_location = db.Column(db.String(200), nullable=True)  # Pickup point
@@ -461,6 +473,16 @@ class InboundTransport(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationship
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
+    
+    @property
+    def supplier_name(self):
+        """Get supplier name from relationship or legacy text field"""
+        if self.supplier_ref:
+            return self.supplier_ref.name
+        return self.supplier
+    
     def __repr__(self):
         return f'<InboundTransport {self.vehicle_type} - {self.date}>'
 
@@ -479,7 +501,8 @@ class InboundMeal(db.Model):
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day meal packages
     meal_type = db.Column(db.String(50), nullable=True)  # Breakfast, Lunch, Dinner
-    restaurant = db.Column(db.String(200), nullable=True)
+    restaurant = db.Column(db.String(200), nullable=True)  # Legacy text field
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Restaurant)
     location = db.Column(db.String(200), nullable=True)
     meal_time = db.Column(db.Time, nullable=True)
     meal_note = db.Column(db.Text, nullable=True)  # Additional notes for restaurant/meal
@@ -496,6 +519,16 @@ class InboundMeal(db.Model):
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
+    
+    @property
+    def supplier_name(self):
+        """Get supplier name from relationship or legacy text field"""
+        if self.supplier_ref:
+            return self.supplier_ref.name
+        return self.restaurant
     
     def __repr__(self):
         return f'<InboundMeal {self.meal_type} - {self.date}>'
@@ -514,6 +547,7 @@ class InboundGuide(db.Model):
     # Guide details
     date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)  # For multi-day guide services
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Guide company)
     guide_name = db.Column(db.String(100), nullable=True)  # Name
     telephone_number = db.Column(db.String(50), nullable=True)  # Telephone Number
     language = db.Column(db.String(50), nullable=True)  # Language
@@ -539,6 +573,16 @@ class InboundGuide(db.Model):
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
+    
+    @property
+    def supplier_name(self):
+        """Get supplier name from relationship"""
+        if self.supplier_ref:
+            return self.supplier_ref.name
+        return None
     
     def __repr__(self):
         return f'<InboundGuide {self.guide_name} - {self.date}>'
@@ -653,9 +697,20 @@ class ArrivalBatch(db.Model):
     visa_status = db.Column(db.String(50), default='NOT_INCLUDED')  # VISA_FREE, RESTRICTED, INCLUDED, NOT_INCLUDED
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
+    
+    @property
+    def supplier_name(self):
+        """Get supplier name from relationship"""
+        if self.supplier_ref:
+            return self.supplier_ref.name
+        return None
     
     def __repr__(self):
         return f'<ArrivalBatch {self.batch_name or self.id}>'
@@ -682,9 +737,20 @@ class DepartureBatch(db.Model):
     meet_assist = db.Column(db.Boolean, default=False)  # Meet & Assist Yes/No
     representative_name = db.Column(db.String(200), nullable=True)  # Representative Name for Meet & Assist
     departure_tax = db.Column(db.String(50), default='NOT_INCLUDED')  # INCLUDED, NOT_INCLUDED, NONE
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.id'), nullable=True)  # FK to Supplier (Ground handler)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    supplier_ref = db.relationship('Supplier', foreign_keys=[supplier_id], lazy='joined')
+    
+    @property
+    def supplier_name(self):
+        """Get supplier name from relationship"""
+        if self.supplier_ref:
+            return self.supplier_ref.name
+        return None
     
     def __repr__(self):
         return f'<DepartureBatch {self.batch_name or self.id}>'
