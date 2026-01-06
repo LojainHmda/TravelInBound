@@ -56,12 +56,5 @@
                onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
         {% endif %}
     </td>
-    <td class="py-3 px-3 text-right">
-        {% set row_cost = (eff_hotel.cost_per_night or 0) if eff_hotel else 0 %}
-        {% set row_cost = row_cost + ((eff_transport.cost or 0) if eff_transport else 0) %}
-        {% set row_cost = row_cost + ((eff_guide.cost or 0) if eff_guide else 0) %}
-        {% set row_cost = row_cost + ((eff_meal.total_cost or 0) if eff_meal else 0) %}
-        <span class="font-semibold text-slate-700">{{ "%.0f"|format(row_cost) }}</span>
-    </td>
 </tr>
 {% endfor %}
