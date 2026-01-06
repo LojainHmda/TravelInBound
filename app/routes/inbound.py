@@ -1305,6 +1305,9 @@ def api_save_service_data(request_id):
                 # Create transport entry for each day in date range
                 current_date = from_date
                 created_count = 0
+                # Handle supplier_id
+                supplier_id = form_data.get('transport_supplier')
+                supplier_id = int(supplier_id) if supplier_id else None
                 while current_date <= to_date:
                     transport = InboundTransport(
                         request_id=request_id,
@@ -1317,6 +1320,7 @@ def api_save_service_data(request_id):
                     transport.driver_phone = form_data.get('transport_phone', '')
                     transport.status = form_data.get('transport_status', 'REQUESTED')
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    transport.supplier_id = supplier_id
                     db.session.add(transport)
                     created_count += 1
                     current_date += timedelta(days=1)
@@ -1341,6 +1345,9 @@ def api_save_service_data(request_id):
                     transport.driver_phone = form_data.get('transport_phone', '')
                     transport.status = form_data.get('transport_status', 'REQUESTED')
                     transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    # Handle supplier_id
+                    supplier_id = form_data.get('transport_supplier')
+                    transport.supplier_id = int(supplier_id) if supplier_id else None
                     
                     if form_data.get('transport_date'):
                         transport.date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
@@ -1361,6 +1368,9 @@ def api_save_service_data(request_id):
                 # Create guide entry for each day in date range
                 current_date = from_date
                 created_count = 0
+                # Handle supplier_id
+                supplier_id = form_data.get('guide_supplier')
+                supplier_id = int(supplier_id) if supplier_id else None
                 while current_date <= to_date:
                     guide = InboundGuide(
                         request_id=request_id,
@@ -1371,6 +1381,7 @@ def api_save_service_data(request_id):
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                    guide.supplier_id = supplier_id
                     db.session.add(guide)
                     created_count += 1
                     current_date += timedelta(days=1)
@@ -1393,6 +1404,9 @@ def api_save_service_data(request_id):
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                    # Handle supplier_id
+                    supplier_id = form_data.get('guide_supplier')
+                    guide.supplier_id = int(supplier_id) if supplier_id else None
                     
                     if form_data.get('guide_date'):
                         guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
@@ -1838,7 +1852,7 @@ def api_update_itinerary_row_field(row_id):
         value = data.get('value')
         
         # Only allow specific fields to be updated
-        allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense']
+        allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense', 'restaurant_supplier_id']
         
         if field not in allowed_fields:
             return jsonify({'success': False, 'error': f'Field {field} not allowed'}), 400
@@ -1849,6 +1863,11 @@ def api_update_itinerary_row_field(row_id):
                 value = float(value) if value else 0.0
             except ValueError:
                 value = 0.0
+        elif field == 'restaurant_supplier_id':
+            try:
+                value = int(value) if value else None
+            except ValueError:
+                value = None
         
         setattr(row, field, value)
         db.session.commit()
@@ -2741,6 +2760,10 @@ def api_save_departures(request_id):
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1']
             
+            # Handle supplier_id
+            supplier_id = batch_data.get('supplier_id')
+            supplier_id = int(supplier_id) if supplier_id else None
+            
             batch = DepartureBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -2754,7 +2777,8 @@ def api_save_departures(request_id):
                 meet_greet=meet_greet,
                 meet_assist=meet_assist,
                 representative_name=batch_data.get('representative_name') or None,
-                departure_tax=batch_data.get('departure_tax', 'NOT_INCLUDED')
+                departure_tax=batch_data.get('departure_tax', 'NOT_INCLUDED'),
+                supplier_id=supplier_id
             )
             db.session.add(batch)
         
@@ -2838,6 +2862,10 @@ def api_save_arrivals(request_id):
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
             
+            # Handle supplier_id
+            supplier_id = batch_data.get('supplier_id')
+            supplier_id = int(supplier_id) if supplier_id else None
+            
             batch = ArrivalBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -2850,7 +2878,8 @@ def api_save_arrivals(request_id):
                 flight_number=batch_data.get('flight_number') or None,
                 visa_status=batch_data.get('visa_status', 'NOT_INCLUDED'),
                 meet_assist=meet_assist,
-                representative_name=batch_data.get('representative_name') or None
+                representative_name=batch_data.get('representative_name') or None,
+                supplier_id=supplier_id
             )
             db.session.add(batch)
         

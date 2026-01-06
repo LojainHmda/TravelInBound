@@ -48,12 +48,14 @@
     </td>
     <td class="py-3 px-3">
         {% if view_only %}
-        <span class="text-slate-600">{{ row.restaurant or '' }}</span>
+        <span class="text-slate-600">{{ row.restaurant_name or row.restaurant or '' }}</span>
         {% else %}
-        <input type="text" class="tw-input text-sm py-1.5" 
-               value="{{ row.restaurant or '' }}"
-               placeholder="Restaurant..."
-               onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant', this.value)">
+        <select class="tw-input text-sm py-1.5" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
+            <option value="">Select...</option>
+            {% for supplier in restaurant_suppliers %}
+            <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
+            {% endfor %}
+        </select>
         {% endif %}
     </td>
 </tr>

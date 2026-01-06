@@ -796,7 +796,16 @@ html { scroll-behavior: smooth; }
                         <!-- Form -->
                         {% if not view_only %}
                         <div class="p-3 bg-slate-50 border-b border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Supplier</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_supplier" data-service="arrival">
+                                        <option value="">Select supplier...</option>
+                                        {% for supplier in ground_handler_suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival">
@@ -872,7 +881,16 @@ html { scroll-behavior: smooth; }
                         </div>
                         {% if not view_only %}
                         <div class="p-3 bg-slate-50 border-b border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Supplier</label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_supplier" data-service="departure">
+                                        <option value="">Select supplier...</option>
+                                        {% for supplier in ground_handler_suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
                                     <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure">
@@ -1109,7 +1127,16 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Supplier <span class="text-red-500">*</span></label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier" data-service="guide">
+                                        <option value="">Select supplier...</option>
+                                        {% for supplier in guide_suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_name" placeholder="Guide name" data-service="guide">
@@ -1180,7 +1207,7 @@ html { scroll-behavior: smooth; }
                                     <i class="fas fa-car-side text-cyan-500 text-xs"></i>
                                     <span class="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Transport Details</span>
                                 </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
                                     <div>
                                         <label class="block text-xs font-medium text-slate-600 mb-1">From Date <span class="text-red-500">*</span></label>
                                         <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="transport">
@@ -1188,6 +1215,17 @@ html { scroll-behavior: smooth; }
                                     <div>
                                         <label class="block text-xs font-medium text-slate-600 mb-1">To Date <span class="text-red-500">*</span></label>
                                         <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="transport">
+                                    </div>
+                                    <div class="field-wrapper" data-field="transport_supplier">
+                                        <label class="block text-xs font-medium text-slate-600 mb-1">
+                                            Supplier <span class="text-red-500">*</span>
+                                        </label>
+                                        <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all" id="transport_supplier" data-service="transport">
+                                            <option value="">Select supplier...</option>
+                                            {% for supplier in transport_suppliers %}
+                                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
                                     <div class="field-wrapper" data-field="transport_vehicle">
                                         <label class="block text-xs font-medium text-slate-600 mb-1">
@@ -1276,7 +1314,12 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant <span class="text-red-500">*</span></label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" placeholder="Restaurant name" data-service="meal">
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" data-service="meal">
+                                        <option value="">Select restaurant...</option>
+                                        {% for supplier in restaurant_suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                     <div id="meal-error-container" class="hidden mt-1">
                                         <span id="meal-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
