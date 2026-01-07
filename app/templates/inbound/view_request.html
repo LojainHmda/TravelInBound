@@ -807,11 +807,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else (now() + timedelta(days=1)).strftime('%Y-%m-%d') }}" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_time" data-service="arrival">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Arrival Point *</label>
@@ -895,11 +895,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else (now() + timedelta(days=4)).strftime('%Y-%m-%d') }}" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Time</label>
-                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_time" data-service="departure">
+                                    <input type="time" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500" id="departure_time" data-service="departure">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Departure Point *</label>
@@ -994,11 +994,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-in Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_check_in" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Check-out Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="hotel_check_out" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="hotel">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Category</label>
@@ -1155,11 +1155,11 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="guide">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500" id="guide_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="guide">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">To Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="guide">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500" id="guide_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="guide">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Language</label>
@@ -1314,11 +1314,11 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">From Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="meal">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_from_date" value="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" data-service="meal">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">To Date <span class="text-red-500">*</span></label>
-                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="meal">
+                                    <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500" id="meal_to_date" value="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="meal">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
