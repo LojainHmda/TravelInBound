@@ -735,15 +735,14 @@ html { scroll-behavior: smooth; }
                         <button type="button" onclick="switchServiceTab('hotel')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="hotel" id="tab-hotel">
                             <i class="fas fa-hotel text-slate-400"></i> Hotel
                         </button>
-                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="guide" id="tab-guide">
-                            <i class="fas fa-user-tie text-slate-400"></i> Guide
+                        <button type="button" onclick="switchServiceTab('itinerary')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-purple-600 text-white shadow-md" data-service="itinerary" id="tab-itinerary">
+                            <i class="fas fa-route text-white"></i> Itinerary
                         </button>
                         <button type="button" onclick="switchServiceTab('transport')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="transport" id="tab-transport">
                             <i class="fas fa-car text-slate-400"></i> Transport
                         </button>
-                        <!-- Meal tab hidden per user request -->
-                        <button type="button" onclick="switchServiceTab('itinerary')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-purple-600 text-white shadow-md" data-service="itinerary" id="tab-itinerary">
-                            <i class="fas fa-route text-white"></i> Itinerary
+                        <button type="button" onclick="switchServiceTab('guide')" class="service-btn flex flex-1 items-center justify-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-white text-slate-500" data-service="guide" id="tab-guide">
+                            <i class="fas fa-user-tie text-slate-400"></i> Guide
                         </button>
                     </div>
                     <!-- Tab Content Container -->
@@ -1395,53 +1394,10 @@ html { scroll-behavior: smooth; }
                 <div class="p-3">
                     <!-- Full Summary Section (Hidden by default) -->
                     <div id="fullSummarySection" class="hidden mt-4 border-t border-slate-200 pt-4">
-                        <!-- Hotels Table -->
+                        <!-- Flights Table (Arrivals & Departures) -->
                         <div class="mb-4">
                             <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                <i class="fas fa-hotel text-blue-500 mr-2"></i> Hotel Accommodations
-                            </h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-xs border-collapse">
-                                    <thead>
-                                        <tr class="bg-gray-100">
-                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Hotel Name</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-in</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-out</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Nights</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Rooms</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="full-summary-hotels">
-                                        {% if request.inbound_hotels %}
-                                            {% for hotel in request.inbound_hotels %}
-                                            <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}">
-                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.nights or 0 }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:{{ hotel.single_rooms }}</span>{% endif %}
-                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:{{ hotel.double_rooms }}</span>{% endif %}
-                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:{{ hotel.triple_rooms }}</span>{% endif %}
-                                                </td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        {% else %}
-                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <!-- Flights Table -->
-                        <div class="mb-4">
-                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                <i class="fas fa-plane text-green-500 mr-2"></i> Flight Details
+                                <i class="fas fa-plane text-green-500 mr-2"></i> Arrival & Departure Details
                             </h4>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs border-collapse">
@@ -1485,6 +1441,49 @@ html { scroll-behavior: smooth; }
                                         {% endif %}
                                         {% if not request.arrival_batches and not request.departure_batches %}
                                             <tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Hotels Table -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                                <i class="fas fa-hotel text-blue-500 mr-2"></i> Hotel Accommodations
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-gray-100">
+                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Hotel Name</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-in</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Check-out</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Nights</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Rooms</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="full-summary-hotels">
+                                        {% if request.inbound_hotels %}
+                                            {% for hotel in request.inbound_hotels %}
+                                            <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}">
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.nights or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    {% if hotel.single_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:{{ hotel.single_rooms }}</span>{% endif %}
+                                                    {% if hotel.double_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:{{ hotel.double_rooms }}</span>{% endif %}
+                                                    {% if hotel.triple_rooms %}<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:{{ hotel.triple_rooms }}</span>{% endif %}
+                                                </td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -3113,79 +3112,11 @@ function generateSummaryTable() {
             </div>
             
             <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                <!-- Hotels Section -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                        <i class="fas fa-hotel text-blue-500 mr-2"></i>
-                        Hotel Accommodations
-                    </h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Hotel Name</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">City</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-in</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-out</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Nights</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Rooms</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Board</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Status</th>
-                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost/Night</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-    `;
-    
-    const hotelRows = document.querySelectorAll('#hotels-table-body tr');
-    if (hotelRows.length > 0) {
-        hotelRows.forEach(row => {
-            const cells = row.cells;
-            const hotelName = cells[0].textContent.trim();
-            const dates = cells[1].textContent.trim().split(' - ');
-            const nights = cells[2].textContent.trim();
-            const rooms = cells[3].innerHTML.trim();
-            const status = cells[4].textContent.trim();
-            
-            tableHTML += `
-                <tr class="hover:bg-gray-50">
-                    <td class="border border-gray-300 px-4 py-2 font-medium">${hotelName}</td>
-                    <td class="border border-gray-300 px-4 py-2">-</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[0] || '-'}</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[1] || '-'}</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">${nights}</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">${rooms}</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">-</td>
-                    <td class="border border-gray-300 px-4 py-2 text-center">
-                        <span class="px-2 py-1 rounded text-xs ${
-                            status.includes('CONFIRMED') ? 'bg-green-100 text-green-700' : 
-                            status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-gray-100 text-gray-700'
-                        }">${status}</span>
-                    </td>
-                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
-                </tr>
-            `;
-        });
-    } else {
-        tableHTML += `
-            <tr>
-                <td colspan="9" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No hotels added</td>
-            </tr>
-        `;
-    }
-    
-    tableHTML += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Flights Section -->
+                <!-- Flights Section (Arrivals & Departures) -->
                 <div class="mb-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
                         <i class="fas fa-plane text-green-500 mr-2"></i>
-                        Flight Details
+                        Arrival & Departure Details
                     </h3>
                     <div class="overflow-x-auto">
                         <table class="w-full border-collapse">
@@ -3250,6 +3181,74 @@ function generateSummaryTable() {
         tableHTML += `
             <tr>
                 <td colspan="8" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No flights added</td>
+            </tr>
+        `;
+    }
+    
+    tableHTML += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Hotels Section -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-hotel text-blue-500 mr-2"></i>
+                        Hotel Accommodations
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">Hotel Name</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-left font-semibold">City</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-in</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Check-out</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Nights</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Rooms</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Board</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-center font-semibold">Status</th>
+                                    <th class="border border-gray-300 px-4 py-2 text-right font-semibold">Cost/Night</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+    `;
+    
+    const hotelRows = document.querySelectorAll('#hotels-table-body tr');
+    if (hotelRows.length > 0) {
+        hotelRows.forEach(row => {
+            const cells = row.cells;
+            const hotelName = cells[0].textContent.trim();
+            const dates = cells[1].textContent.trim().split(' - ');
+            const nights = cells[2].textContent.trim();
+            const rooms = cells[3].innerHTML.trim();
+            const status = cells[4].textContent.trim();
+            
+            tableHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="border border-gray-300 px-4 py-2 font-medium">${hotelName}</td>
+                    <td class="border border-gray-300 px-4 py-2">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[0] || '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${dates[1] || '-'}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${nights}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">${rooms}</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">-</td>
+                    <td class="border border-gray-300 px-4 py-2 text-center">
+                        <span class="px-2 py-1 rounded text-xs ${
+                            status.includes('CONFIRMED') ? 'bg-green-100 text-green-700' : 
+                            status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-700' : 
+                            'bg-gray-100 text-gray-700'
+                        }">${status}</span>
+                    </td>
+                    <td class="border border-gray-300 px-4 py-2 text-right">-</td>
+                </tr>
+            `;
+        });
+    } else {
+        tableHTML += `
+            <tr>
+                <td colspan="9" class="border border-gray-300 px-4 py-4 text-center text-gray-500">No hotels added</td>
             </tr>
         `;
     }
