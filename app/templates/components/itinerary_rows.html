@@ -56,11 +56,8 @@
                 {% for supplier in restaurant_suppliers %}
                 <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
                 {% endfor %}
-                <optgroup label="──────────">
-                    <option value="__ADD_NEW__">+ Add New...</option>
-                </optgroup>
             </select>
-            <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 text-xs" onclick="openAddRestaurantModal()" title="Add New Restaurant">
+            <button type="button" class="px-1.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 text-xs" onclick="openAddRestaurantModal()" title="Add New Restaurant">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
