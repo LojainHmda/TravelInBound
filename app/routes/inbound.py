@@ -1803,27 +1803,41 @@ def api_save_service_data(request_id):
             # (flights are unique entries, not consolidated by date range)
             flights_html = render_template_string('''
                 {% for arr in arrivals %}
-                <tr class="hover:bg-gray-50" data-arrival-id="{{ arr.id }}">
+                <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ arr.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_date.strftime('%d %b') if arr.arrival_date else '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.arrival_time.strftime('%H:%M') if arr.arrival_time else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ arr.arrival_point or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ arr.flight_number or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ arr.pax_count or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ arr.driver_name or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="handleEditServiceRow('arrival', {{ arr.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="handleRemoveServiceRow('arrival', {{ arr.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
                 {% for dep in departures %}
-                <tr class="hover:bg-gray-50 bg-orange-50" data-departure-id="{{ dep.id }}">
+                <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ dep.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_date.strftime('%d %b') if dep.departure_date else '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.departure_time.strftime('%H:%M') if dep.departure_time else '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ dep.departure_point or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ dep.flight_number or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">{{ dep.pax_count or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5">{{ dep.driver_name or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="handleEditServiceRow('departure', {{ dep.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button onclick="handleRemoveServiceRow('departure', {{ dep.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
                 {% if not arrivals and not departures %}
-                <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                <tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
                 {% endif %}
             ''', arrivals=arrivals, departures=departures)
             
