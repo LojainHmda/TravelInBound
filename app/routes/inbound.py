@@ -2226,6 +2226,176 @@ def api_delete_service(request_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@inbound_bp.route('/api/<int:request_id>/service/<service_type>/<int:record_id>', methods=['GET'])
+def api_get_service_record(request_id, service_type, record_id):
+    """Get a service record for editing in the summary table"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        record_data = None
+        
+        if service_type == 'arrival':
+            record = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'arrival_date': record.arrival_date.strftime('%Y-%m-%d') if record.arrival_date else '',
+                    'arrival_time': record.arrival_time.strftime('%H:%M') if record.arrival_time else '',
+                    'arrival_point': record.arrival_point or '',
+                    'flight_number': record.flight_number or '',
+                    'pax_count': record.pax_count or 0,
+                    'driver_name': record.driver_name or '',
+                    'visa_status': record.visa_status or '',
+                    'meet_assist': record.meet_assist or False,
+                    'representative_name': record.representative_name or '',
+                    'notes': record.notes or '',
+                    'supplier_id': record.supplier_id
+                }
+        
+        elif service_type == 'departure':
+            record = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'departure_date': record.departure_date.strftime('%Y-%m-%d') if record.departure_date else '',
+                    'departure_time': record.departure_time.strftime('%H:%M') if record.departure_time else '',
+                    'departure_point': record.departure_point or '',
+                    'flight_number': record.flight_number or '',
+                    'pax_count': record.pax_count or 0,
+                    'departure_tax': record.departure_tax or '',
+                    'meet_assist': record.meet_assist or False,
+                    'representative_name': record.representative_name or '',
+                    'supplier_id': record.supplier_id
+                }
+        
+        elif service_type == 'hotel':
+            record = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'hotel_name': record.hotel_name or '',
+                    'hotel_category': record.hotel_category or '',
+                    'check_in_date': record.check_in_date.strftime('%Y-%m-%d') if record.check_in_date else '',
+                    'check_out_date': record.check_out_date.strftime('%Y-%m-%d') if record.check_out_date else '',
+                    'nights': record.nights or 0,
+                    'status': record.status or 'REQUESTED',
+                    'supplier_id': record.supplier_id,
+                    'meal_plan': record.meal_plan or 'BB',
+                    'single_rooms': record.single_rooms or 0,
+                    'double_rooms': record.double_rooms or 0,
+                    'triple_rooms': record.triple_rooms or 0,
+                    'notes': record.notes or ''
+                }
+        
+        elif service_type == 'transport':
+            record = InboundTransport.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'vehicle_type': record.vehicle_type or '',
+                    'pickup_point': record.pickup_location or '',
+                    'drop_off_point': record.dropoff_location or '',
+                    'driver_name': record.driver_name or '',
+                    'driver_phone': record.driver_phone or '',
+                    'status': record.status or 'REQUESTED',
+                    'supplier_id': record.supplier_id
+                }
+        
+        elif service_type == 'guide':
+            record = InboundGuide.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'guide_name': record.guide_name or '',
+                    'language': record.language or '',
+                    'telephone': record.telephone_number or '',
+                    'supplier_id': record.supplier_id
+                }
+        
+        elif service_type == 'meal':
+            record = InboundMeal.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'meal_type': record.meal_type or '',
+                    'restaurant_name': record.restaurant_name or '',
+                    'location': record.location or '',
+                    'pax_count': record.pax_count or 0,
+                    'supplier_id': record.supplier_id
+                }
+        
+        else:
+            return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
+        
+        if record_data:
+            return jsonify({'success': True, 'record': record_data})
+        else:
+            return jsonify({'success': False, 'error': 'Record not found'}), 404
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@inbound_bp.route('/api/<int:request_id>/service/<service_type>/<int:record_id>', methods=['DELETE'])
+@csrf.exempt
+def api_delete_service_record(request_id, service_type, record_id):
+    """Delete a specific service record from the summary table"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+    
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    try:
+        service = None
+        
+        if service_type == 'arrival':
+            service = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
+        elif service_type == 'departure':
+            service = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
+        elif service_type == 'hotel':
+            service = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
+            if service:
+                # Also delete associated rooms
+                HotelRoom.query.filter_by(hotel_id=record_id).delete()
+        elif service_type == 'transport':
+            service = InboundTransport.query.filter_by(id=record_id, request_id=request_id).first()
+        elif service_type == 'guide':
+            service = InboundGuide.query.filter_by(id=record_id, request_id=request_id).first()
+        elif service_type == 'meal':
+            service = InboundMeal.query.filter_by(id=record_id, request_id=request_id).first()
+        else:
+            return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
+        
+        if service:
+            db.session.delete(service)
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': f'{service_type.capitalize()} record deleted successfully',
+                'deleted_id': record_id,
+                'deleted_type': service_type
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Record not found'}), 404
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @inbound_bp.route('/api/<int:request_id>/create-default-itinerary', methods=['POST'])
 @csrf.exempt
 def api_create_default_itinerary(request_id):

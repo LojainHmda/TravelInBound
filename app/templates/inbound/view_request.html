@@ -1416,12 +1416,13 @@ html { scroll-behavior: smooth; }
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Flight No.</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Driver</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-flights">
                                         {% if request.arrival_batches %}
                                             {% for batch in request.arrival_batches %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="{{ batch.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
@@ -1429,12 +1430,16 @@ html { scroll-behavior: smooth; }
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% endif %}
                                         {% if request.departure_batches %}
                                             {% for batch in request.departure_batches %}
-                                            <tr class="hover:bg-gray-50">
+                                            <tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="{{ batch.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
@@ -1442,11 +1447,15 @@ html { scroll-behavior: smooth; }
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% endif %}
                                         {% if not request.arrival_batches and not request.departure_batches %}
-                                            <tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
+                                            <tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -1468,12 +1477,13 @@ html { scroll-behavior: smooth; }
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Nights</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Rooms</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-hotels">
                                         {% if request.inbound_hotels %}
                                             {% for hotel in request.inbound_hotels %}
-                                            <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}">
+                                            <tr class="hover:bg-gray-50" data-hotel-name="{{ hotel.hotel_name or '' }}" data-service-type="hotel" data-record-id="{{ hotel.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ hotel.hotel_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_in_date.strftime('%d %b') if hotel.check_in_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ hotel.check_out_date.strftime('%d %b') if hotel.check_out_date else '-' }}</td>
@@ -1486,10 +1496,14 @@ html { scroll-behavior: smooth; }
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
                                                 </td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
+                                            <tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -1510,12 +1524,13 @@ html { scroll-behavior: smooth; }
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Pickup</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Drop-off</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Status</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-transports">
                                         {% if request.inbound_transports %}
                                             {% for transport in request.inbound_transports %}
-                                            <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}">
+                                            <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
@@ -1523,10 +1538,14 @@ html { scroll-behavior: smooth; }
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
                                                 </td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -1546,20 +1565,25 @@ html { scroll-behavior: smooth; }
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Language</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Telephone</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-guides">
                                         {% if request.inbound_guides %}
                                             {% for guide in request.inbound_guides %}
-                                            <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}">
+                                            <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -1580,21 +1604,26 @@ html { scroll-behavior: smooth; }
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Restaurant</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Location</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
+                                            <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-meals">
                                         {% if request.inbound_meals %}
                                             {% for meal in request.inbound_meals %}
-                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant_name or '' }}">
+                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant_name or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ meal.meal_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ meal.location or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.pax_count or 0 }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
+                                                    <button onclick="handleEditServiceRow('meal', {{ meal.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
+                                                    <button onclick="handleRemoveServiceRow('meal', {{ meal.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                </td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -3681,6 +3710,183 @@ function updateDepartureRecord() {
         return;
     }
     saveServiceData('departure');
+}
+
+// Handle Edit button click from summary table - loads record data into form
+function handleEditServiceRow(serviceType, recordId) {
+    console.log(`[handleEditServiceRow] Editing ${serviceType} record ${recordId}`);
+    
+    // Set the context for editing
+    currentServiceContext = { serviceName: serviceType, rowId: recordId };
+    
+    // Switch to the appropriate tab
+    switchServiceTab(serviceType);
+    
+    // Scroll to the service panel
+    const panel = document.getElementById(`service-panel-${serviceType}`);
+    if (panel) {
+        setTimeout(() => {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+    
+    // Fetch record data and populate form
+    fetch(`/inbound/api/${requestId}/service/${serviceType}/${recordId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                populateServiceForm(serviceType, data.record);
+                
+                // Update panel badge to show editing
+                const badge = document.getElementById(`panel-context-badge-${serviceType}`);
+                if (badge) {
+                    badge.textContent = `Editing #${recordId}`;
+                    badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-blue-100 text-blue-700';
+                }
+                
+                showNotification(`Loaded ${serviceType} record for editing. Click Save to update.`, 'info');
+            } else {
+                showNotification(data.error || 'Failed to load record data', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching record data:', error);
+            showNotification('Error loading record. Please try again.', 'error');
+        });
+}
+
+// Populate form fields with record data
+function populateServiceForm(serviceType, record) {
+    if (!record) return;
+    
+    // Map service types to their field prefixes
+    const fieldMappings = {
+        'arrival': {
+            'arrival_date': record.arrival_date,
+            'arrival_time': record.arrival_time,
+            'arrival_point': record.arrival_point,
+            'arrival_flight_number': record.flight_number,
+            'arrival_pax_count': record.pax_count,
+            'arrival_driver_name': record.driver_name,
+            'arrival_visa_status': record.visa_status,
+            'arrival_meet_assist': record.meet_assist ? 'yes' : 'no',
+            'arrival_representative_name': record.representative_name,
+            'arrival_notes': record.notes,
+            'arrival_supplier': record.supplier_id
+        },
+        'departure': {
+            'departure_date': record.departure_date,
+            'departure_time': record.departure_time,
+            'departure_point': record.departure_point,
+            'departure_flight_number': record.flight_number,
+            'departure_pax_count': record.pax_count,
+            'departure_tax': record.departure_tax,
+            'departure_meet_assist': record.meet_assist ? 'yes' : 'no',
+            'departure_representative_name': record.representative_name,
+            'departure_supplier': record.supplier_id
+        },
+        'hotel': {
+            'hotel_name': record.hotel_name,
+            'hotel_check_in': record.check_in_date,
+            'hotel_check_out': record.check_out_date,
+            'hotel_status': record.status,
+            'hotel_supplier': record.supplier_id
+        },
+        'transport': {
+            'transport_from_date': record.from_date || record.service_date,
+            'transport_to_date': record.to_date || record.service_date,
+            'transport_vehicle_type': record.vehicle_type,
+            'transport_pickup_point': record.pickup_point,
+            'transport_drop_off_point': record.drop_off_point,
+            'transport_driver_name': record.driver_name,
+            'transport_driver_phone': record.driver_phone,
+            'transport_status': record.status,
+            'transport_supplier': record.supplier_id
+        },
+        'guide': {
+            'guide_from_date': record.from_date || record.service_date,
+            'guide_to_date': record.to_date || record.service_date,
+            'guide_name': record.guide_name,
+            'guide_language': record.language,
+            'guide_telephone': record.telephone,
+            'guide_supplier': record.supplier_id
+        },
+        'meal': {
+            'meal_from_date': record.from_date || record.service_date,
+            'meal_to_date': record.to_date || record.service_date,
+            'meal_type': record.meal_type,
+            'meal_restaurant': record.restaurant_name,
+            'meal_location': record.location,
+            'meal_pax_count': record.pax_count,
+            'meal_supplier': record.supplier_id
+        }
+    };
+    
+    const mapping = fieldMappings[serviceType];
+    if (!mapping) return;
+    
+    // Populate fields
+    for (const [fieldId, value] of Object.entries(mapping)) {
+        const field = document.getElementById(fieldId);
+        if (field && value !== undefined && value !== null) {
+            if (field.tagName === 'SELECT') {
+                // For select elements, try to find matching option
+                const options = Array.from(field.options);
+                const matchingOption = options.find(opt => opt.value == value || opt.textContent == value);
+                if (matchingOption) {
+                    field.value = matchingOption.value;
+                }
+            } else {
+                field.value = value;
+            }
+        }
+    }
+}
+
+// Handle Remove button click from summary table - deletes the record
+function handleRemoveServiceRow(serviceType, recordId) {
+    if (!confirm(`Are you sure you want to delete this ${serviceType} record? This action cannot be undone.`)) {
+        return;
+    }
+    
+    console.log(`[handleRemoveServiceRow] Deleting ${serviceType} record ${recordId}`);
+    
+    fetch(`/inbound/api/${requestId}/service/${serviceType}/${recordId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the row from the summary table
+            const row = document.querySelector(`tr[data-service-type="${serviceType}"][data-record-id="${recordId}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            // Clear context if we were editing this record
+            if (currentServiceContext.rowId == recordId) {
+                currentServiceContext = { serviceName: null, rowId: null };
+                clearServiceForm(serviceType);
+            }
+            
+            // Update counts and badges
+            updateSummaryCounts();
+            updateTabBadges();
+            updateTabColors();
+            
+            showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} record deleted successfully!`, 'success');
+        } else {
+            showNotification(data.error || 'Failed to delete record', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting record:', error);
+        showNotification('Error deleting record. Please try again.', 'error');
+    });
 }
 
 // Manual save function called by Save buttons - applies service only to specific date range
