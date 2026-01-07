@@ -2547,7 +2547,7 @@ function updateServiceContextUI(serviceName, rowId) {
     }
 }
 
-// Update badge when date fields change
+// Update badge when date fields change - only updates the badge text, does NOT clear form
 function setupDateFieldListeners() {
     const dateFields = {
         'hotel': ['hotel_check_in', 'hotel_check_out'],
@@ -2563,13 +2563,60 @@ function setupDateFieldListeners() {
             const field = document.getElementById(fieldId);
             if (field) {
                 field.addEventListener('change', function() {
+                    // Only update the badge text when dates change, don't call full updateServiceContextUI
+                    // which would clear form fields
                     if (currentServiceContext.serviceName === serviceType && !currentServiceContext.rowId) {
-                        updateServiceContextUI(serviceType, null);
+                        updateServiceBadgeOnly(serviceType);
                     }
                 });
             }
         });
     });
+}
+
+// Update only the badge text without clearing form - used when date fields change
+function updateServiceBadgeOnly(serviceName) {
+    const badge = document.getElementById('panel-context-badge-' + serviceName);
+    if (!badge) return;
+
+    let fromDate, toDate;
+    
+    switch(serviceName) {
+        case 'hotel':
+            fromDate = document.getElementById('hotel_check_in')?.value;
+            toDate = document.getElementById('hotel_check_out')?.value;
+            break;
+        case 'guide':
+            fromDate = document.getElementById('guide_from_date')?.value;
+            toDate = document.getElementById('guide_to_date')?.value;
+            break;
+        case 'transport':
+            fromDate = document.getElementById('transport_from_date')?.value;
+            toDate = document.getElementById('transport_to_date')?.value;
+            break;
+        case 'meal':
+            fromDate = document.getElementById('meal_from_date')?.value;
+            toDate = document.getElementById('meal_to_date')?.value;
+            break;
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = document.getElementById('arrival_date')?.value;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = document.getElementById('departure_date')?.value;
+            break;
+    }
+    
+    if (fromDate && toDate) {
+        const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        badge.textContent = `Specific Days (${startDate} - ${endDate})`;
+        badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700";
+    } else {
+        badge.textContent = "Global (Applies to All)";
+        badge.className = "text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500";
+    }
 }
 
 function resetContext() {
@@ -3707,6 +3754,7 @@ function addNewServiceRecord(serviceType) {
 }
 
 // Clear form fields for a service type after adding
+// NOTE: Preserves date inputs to prevent user frustration with cleared dates
 function clearServiceForm(serviceType) {
     const fields = document.querySelectorAll(`[data-service="${serviceType}"]`);
     fields.forEach(field => {
@@ -3714,7 +3762,8 @@ function clearServiceForm(serviceType) {
             field.selectedIndex = 0;
         } else if (field.type === 'checkbox' || field.type === 'radio') {
             field.checked = false;
-        } else {
+        } else if (field.type !== 'date' && field.type !== 'time') {
+            // Skip date and time inputs - don't clear them
             field.value = '';
         }
     });
