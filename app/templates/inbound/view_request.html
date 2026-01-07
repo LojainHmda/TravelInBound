@@ -5133,20 +5133,11 @@ function saveNewGuide() {
     });
 }
 
-// Initialize Select2 for searchable guide dropdown
-$(document).ready(function() {
-    if ($('#guide_supplier_id').length) {
-        $('#guide_supplier_id').select2({
-            placeholder: 'Select guide...',
-            allowClear: true,
-            width: '100%',
-            theme: 'bootstrap-5'
-        }).on('select2:select', function(e) {
-            if (e.params.data.id === '__ADD_NEW__') {
-                $(this).val('').trigger('change');
-                openAddGuideModal();
-            }
-        });
+// Handle Add New option in guide dropdown (like hotel)
+document.getElementById('guide_supplier_id')?.addEventListener('change', function() {
+    if (this.value === '__ADD_NEW__') {
+        this.value = '';
+        openAddGuideModal();
     }
 });
 
