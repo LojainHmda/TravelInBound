@@ -911,6 +911,45 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                         </div>
                         {% endif %}
+                        
+                        <!-- Arrivals Table -->
+                        <div id="arrival-table-container" class="p-3 {% if not request.arrival_batches %}hidden{% endif %}">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-green-50">
+                                            <th class="px-2 py-1.5 text-left font-semibold text-green-800 border-b border-green-200">Date</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-green-800 border-b border-green-200">Time</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-green-800 border-b border-green-200">Point</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-green-800 border-b border-green-200">Flight No.</th>
+                                            <th class="px-2 py-1.5 text-center font-semibold text-green-800 border-b border-green-200">PAX</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-green-800 border-b border-green-200">Driver</th>
+                                            <th class="px-2 py-1.5 text-center font-semibold text-green-800 border-b border-green-200 w-20">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="arrival-table-body">
+                                        {% for batch in request.arrival_batches %}
+                                        <tr class="hover:bg-slate-50" data-service-type="arrival" data-record-id="{{ batch.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_date.strftime('%d %b') if batch.arrival_date else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.arrival_time.strftime('%H:%M') if batch.arrival_time else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700">{{ batch.arrival_point or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('arrival', {{ batch.id }})" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" title="Remove">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Departure Panel -->
@@ -994,6 +1033,45 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                         </div>
                         {% endif %}
+                        
+                        <!-- Departures Table -->
+                        <div id="departure-table-container" class="p-3 {% if not request.departure_batches %}hidden{% endif %}">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-orange-50">
+                                            <th class="px-2 py-1.5 text-left font-semibold text-orange-800 border-b border-orange-200">Date</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-orange-800 border-b border-orange-200">Time</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-orange-800 border-b border-orange-200">Point</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-orange-800 border-b border-orange-200">Flight No.</th>
+                                            <th class="px-2 py-1.5 text-center font-semibold text-orange-800 border-b border-orange-200">PAX</th>
+                                            <th class="px-2 py-1.5 text-left font-semibold text-orange-800 border-b border-orange-200">Driver</th>
+                                            <th class="px-2 py-1.5 text-center font-semibold text-orange-800 border-b border-orange-200 w-20">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="departure-table-body">
+                                        {% for batch in request.departure_batches %}
+                                        <tr class="hover:bg-slate-50" data-service-type="departure" data-record-id="{{ batch.id }}">
+                                            <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_date.strftime('%d %b') if batch.departure_date else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.departure_time.strftime('%H:%M') if batch.departure_time else '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700">{{ batch.departure_point or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.flight_number or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-slate-700 text-center">{{ batch.pax_count or 0 }}</td>
+                                            <td class="px-2 py-1.5 text-slate-500">{{ batch.driver_name or '-' }}</td>
+                                            <td class="px-2 py-1.5 text-center">
+                                                <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('departure', {{ batch.id }})" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('departure', {{ batch.id }})" title="Remove">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Hotel Panel -->
@@ -2857,7 +2935,7 @@ function createServiceRowHtml(serviceType, entry) {
             `;
         case 'arrival':
             return `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50" data-service-type="arrival" data-record-id="${entry.id}">
                     <td class="px-2 py-1.5 text-slate-700">${entry.arrival_date ? new Date(entry.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.arrival_time ? new Date('1970-01-01T' + entry.arrival_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700">${entry.arrival_point || '-'}</td>
@@ -2865,15 +2943,18 @@ function createServiceRowHtml(serviceType, entry) {
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
                     <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteArrivalBatch(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
+                        <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('arrival', ${entry.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('arrival', ${entry.id})" title="Remove">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
             `;
         case 'departure':
             return `
-                <tr class="hover:bg-slate-50">
+                <tr class="hover:bg-slate-50" data-service-type="departure" data-record-id="${entry.id}">
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_date ? new Date(entry.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.departure_time ? new Date('1970-01-01T' + entry.departure_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700">${entry.departure_point || '-'}</td>
@@ -2881,8 +2962,11 @@ function createServiceRowHtml(serviceType, entry) {
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
                     <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteDepartureBatch(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
+                        <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('departure', ${entry.id})" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('departure', ${entry.id})" title="Remove">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>
