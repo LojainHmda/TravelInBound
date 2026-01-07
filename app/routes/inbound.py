@@ -1986,6 +1986,53 @@ def api_add_guide():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@inbound_bp.route('/api/add-transport', methods=['POST'])
+@csrf.exempt
+def api_add_transport():
+    """Add a new transport supplier to the suppliers list"""
+    from app.models.supplier import Supplier
+    try:
+        data = request.get_json()
+        transport_name = data.get('name', '').strip()
+        transport_phone = data.get('phone', '').strip()
+        
+        if not transport_name:
+            return jsonify({'success': False, 'error': 'Supplier name is required'}), 400
+        
+        # Check if transport supplier already exists
+        existing = Supplier.query.filter_by(name=transport_name, supplier_type='TRANSPORT').first()
+        if existing:
+            return jsonify({'success': False, 'error': 'Transport supplier already exists'}), 400
+        
+        # Generate unique code
+        count = Supplier.query.filter(Supplier.code.like('TRN-%')).count()
+        new_code = f'TRN-{count + 1:03d}'
+        
+        # Create new supplier
+        new_transport = Supplier(
+            name=transport_name,
+            code=new_code,
+            supplier_type='TRANSPORT',
+            phone=transport_phone,
+            is_active=True
+        )
+        db.session.add(new_transport)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'supplier_id': new_transport.id,
+            'transport': {
+                'id': new_transport.id,
+                'name': new_transport.name,
+                'phone': new_transport.phone
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/hotel/<int:hotel_id>/rooms', methods=['POST'])
 @csrf.exempt
 def api_save_hotel_rooms(hotel_id):
