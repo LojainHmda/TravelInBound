@@ -1127,19 +1127,15 @@ html { scroll-behavior: smooth; }
                         {% if not view_only %}
                         <!-- Add Guide Form Fields (Below Table) -->
                         <div class="p-3 bg-slate-50 border-t border-slate-200">
-                            <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
                                 <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Supplier <span class="text-red-500">*</span></label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier" data-service="guide">
-                                        <option value="">Select supplier...</option>
+                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
+                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier_id" data-service="guide">
+                                        <option value="">Select guide...</option>
                                         {% for supplier in guide_suppliers %}
                                         <option value="{{ supplier.id }}">{{ supplier.name }}</option>
                                         {% endfor %}
                                     </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
-                                    <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_name" placeholder="Guide name" data-service="guide">
                                     <div id="guide-error-container" class="hidden mt-1">
                                         <span id="guide-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
@@ -1526,7 +1522,7 @@ html { scroll-behavior: smooth; }
                                     <tbody id="full-summary-guides">
                                         {% if request.inbound_guides %}
                                             {% for guide in request.inbound_guides %}
-                                            <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}">
+                                            <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
@@ -2389,7 +2385,7 @@ function populateFormWithDayData(service, rowId) {
         setInput('transport_pickup', row.dataset.transportPickup);
         setInput('transport_dropoff', row.dataset.transportDropoff);
     } else if (service === 'guide') {
-        setInput('guide_name', row.dataset.guideName);
+        setSelect('guide_supplier_id', row.dataset.guideSupplierId);
     } else if (service === 'meal') {
         setInput('meal_restaurant', row.dataset.mealRestaurant);
         setInput('meal_type', row.dataset.mealType);
@@ -2397,6 +2393,11 @@ function populateFormWithDayData(service, rowId) {
 }
 
 function setInput(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.value = value || '';
+}
+
+function setSelect(id, value) {
     const el = document.getElementById(id);
     if (el) el.value = value || '';
 }
@@ -3765,7 +3766,7 @@ function createSummaryRowHtml(serviceType, entry) {
             `;
         case 'guide':
             return `
-                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}">
+                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.guide_name || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.language || '-'}</td>

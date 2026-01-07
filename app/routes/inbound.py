@@ -1368,20 +1368,26 @@ def api_save_service_data(request_id):
                 # Create guide entry for each day in date range
                 current_date = from_date
                 created_count = 0
-                # Handle supplier_id
-                supplier_id = form_data.get('guide_supplier')
-                supplier_id = int(supplier_id) if supplier_id else None
+                # Handle supplier_id from guide_supplier_id dropdown
+                guide_supplier_id = form_data.get('guide_supplier_id')
+                guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
+                # Look up supplier name
+                guide_name_text = ''
+                if guide_supplier_id:
+                    from app.models.supplier import Supplier
+                    supplier = Supplier.query.get(guide_supplier_id)
+                    guide_name_text = supplier.name if supplier else ''
                 while current_date <= to_date:
                     guide = InboundGuide(
                         request_id=request_id,
                         date=current_date
                     )
-                    guide.guide_name = form_data.get('guide_name', '')
+                    guide.guide_name = guide_name_text
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
-                    guide.supplier_id = supplier_id
+                    guide.supplier_id = guide_supplier_id
                     db.session.add(guide)
                     created_count += 1
                     current_date += timedelta(days=1)
@@ -1399,14 +1405,21 @@ def api_save_service_data(request_id):
                         )
                         db.session.add(guide)
                     
-                    guide.guide_name = form_data.get('guide_name', '')
+                    # Handle supplier_id from guide_supplier_id dropdown
+                    guide_supplier_id = form_data.get('guide_supplier_id')
+                    guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
+                    # Look up supplier name
+                    if guide_supplier_id:
+                        from app.models.supplier import Supplier
+                        supplier = Supplier.query.get(guide_supplier_id)
+                        guide.guide_name = supplier.name if supplier else ''
+                    else:
+                        guide.guide_name = ''
+                    guide.supplier_id = guide_supplier_id
                     guide.language = form_data.get('guide_language', '')
                     guide.telephone_number = form_data.get('guide_phone', '')
                     guide.cost = float(form_data.get('guide_cost', 0) or 0)
                     guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
-                    # Handle supplier_id
-                    supplier_id = form_data.get('guide_supplier')
-                    guide.supplier_id = int(supplier_id) if supplier_id else None
                     
                     if form_data.get('guide_date'):
                         guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
