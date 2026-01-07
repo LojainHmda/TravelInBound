@@ -2781,12 +2781,12 @@ function autoSaveServiceData(serviceType) {
 // Function to update service tables
 function updateServiceTable(serviceType, data) {
     const tableMap = {
-        'hotel': { tbodyId: 'hotels-table-body', containerId: 'hotels-table-container' },
-        'arrival': { tbodyId: 'arrival-table-body', containerId: 'arrival-table-container' },
-        'departure': { tbodyId: 'departure-table-body', containerId: 'departure-table-container' },
-        'guide': { tbodyId: 'guides-table-body', containerId: 'guides-table-container' },
-        'transport': { tbodyId: 'transports-table-body', containerId: 'transports-table-container' },
-        'meal': { tbodyId: 'meals-table-body', containerId: 'meals-table-container' }
+        'hotel': { tbodyId: 'full-summary-hotels', containerId: null },
+        'arrival': { tbodyId: 'full-summary-flights', containerId: null },
+        'departure': { tbodyId: 'full-summary-flights', containerId: null },
+        'guide': { tbodyId: 'full-summary-guides', containerId: null },
+        'transport': { tbodyId: 'full-summary-transports', containerId: null },
+        'meal': { tbodyId: 'full-summary-meals', containerId: null }
     };
     
     const tableInfo = tableMap[serviceType];
@@ -4647,21 +4647,9 @@ function deleteService(serviceType, serviceId) {
                 if (tbody) tbody.innerHTML = data.itinerary_html;
             }
             
-            const serviceRow = document.querySelector(`[data-${serviceType}-id="${serviceId}"]`);
+            // Remove the row from Trip Summary tables
+            const serviceRow = document.querySelector(`[data-service-type="${serviceType}"][data-record-id="${serviceId}"]`);
             if (serviceRow) serviceRow.remove();
-            
-            // Check if table is empty and hide container
-            const tableContainerId = serviceType === 'hotel' ? 'hotels-table-container' : 
-                                      serviceType === 'guide' ? 'guides-table-container' : 
-                                      serviceType === 'transport' ? 'transports-table-container' : 
-                                      serviceType === 'meal' ? 'meals-table-container' : 
-                                      serviceType === 'arrival' ? 'arrival-table-container' : 
-                                      serviceType === 'departure' ? 'departure-table-container' : '';
-            const tbody = document.querySelector(`#${serviceType}-table-body`);
-            if (tbody && tbody.children.length === 0) {
-                 const container = document.getElementById(tableContainerId);
-                 if (container) container.style.display = 'none';
-            }
             
             // Update summary counts
             updateSummaryCounts();
