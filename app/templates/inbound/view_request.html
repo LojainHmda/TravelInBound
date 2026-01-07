@@ -1470,9 +1470,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1487,9 +1489,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.flight_number or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1536,9 +1540,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
                                                 </td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1578,9 +1584,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
                                                 </td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1616,9 +1624,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1656,9 +1666,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ meal.location or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.pax_count or 0 }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">
-                                                    <button onclick="handleEditServiceRow('meal', {{ meal.id }})" class="text-blue-600 hover:text-blue-800 mr-1" title="Edit"><i class="fas fa-edit"></i></button>
-                                                    <button onclick="handleRemoveServiceRow('meal', {{ meal.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    <div class="flex items-center justify-center gap-1">
+                                                        <button onclick="handleEditServiceRow('meal', {{ meal.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('meal', {{ meal.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
