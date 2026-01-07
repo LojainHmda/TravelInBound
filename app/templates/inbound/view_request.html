@@ -3629,6 +3629,15 @@ function addNewDepartureRecord() {
 
 // Generic function to add a new service record and clear form after success
 function addNewServiceRecord(serviceType) {
+    // Validate date range for global services
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateRangeError = validateServiceDates(serviceType);
+        if (dateRangeError) {
+            showInlineError(serviceType, dateRangeError);
+            return;
+        }
+    }
+    
     // Collect form data
     const activePanel = document.getElementById(`service-panel-${serviceType}`);
     const formData = {};
@@ -3936,6 +3945,13 @@ function saveServiceData(serviceType) {
         const dateValidation = validateDateRange(serviceType);
         if (!dateValidation.valid) {
             showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+        
+        // Also validate against main request date range
+        const dateRangeError = validateServiceDates(serviceType);
+        if (dateRangeError) {
+            showInlineError(serviceType, dateRangeError);
             return;
         }
     }
@@ -5736,6 +5752,7 @@ document.getElementById('meal_restaurant')?.addEventListener('change', function(
 });
 
 // Date validation: To Date cannot be before From Date (for main request dates)
+// Only sets min attribute - does NOT aggressively clear values
 function setupMainDateValidation() {
     const fromDateEl = document.getElementById('fromDate');
     const toDateEl = document.getElementById('toDate');
@@ -5744,19 +5761,20 @@ function setupMainDateValidation() {
         fromDateEl.addEventListener('change', function() {
             if (this.value) {
                 toDateEl.min = this.value;
-                if (toDateEl.value && toDateEl.value < this.value) {
-                    toDateEl.value = '';
-                }
             } else {
                 toDateEl.removeAttribute('min');
             }
             // Update service form date restrictions
             updateServiceDateRestrictions();
+            // Recalculate days
+            calculateDays();
         });
         
         toDateEl.addEventListener('change', function() {
             // Update service form date restrictions
             updateServiceDateRestrictions();
+            // Recalculate days
+            calculateDays();
         });
         
         // Set initial min
@@ -5767,6 +5785,7 @@ function setupMainDateValidation() {
 }
 
 // Restrict service form dates to be within main Request Details date range
+// Sets min/max attributes only - validation is done before save
 function updateServiceDateRestrictions() {
     const mainFromDate = document.getElementById('fromDate')?.value;
     const mainToDate = document.getElementById('toDate')?.value;
@@ -5790,12 +5809,6 @@ function updateServiceDateRestrictions() {
             
             if (mainToDate) fromEl.max = mainToDate;
             else fromEl.removeAttribute('max');
-            
-            // Clear if outside range
-            if (fromEl.value) {
-                if (mainFromDate && fromEl.value < mainFromDate) fromEl.value = mainFromDate;
-                if (mainToDate && fromEl.value > mainToDate) fromEl.value = '';
-            }
         }
         
         if (toEl) {
@@ -5807,17 +5820,51 @@ function updateServiceDateRestrictions() {
             
             if (mainToDate) toEl.max = mainToDate;
             else toEl.removeAttribute('max');
-            
-            // Clear if outside range
-            if (toEl.value) {
-                if (toEl.min && toEl.value < toEl.min) toEl.value = '';
-                if (mainToDate && toEl.value > mainToDate) toEl.value = '';
-            }
         }
     });
 }
 
+// Validate date fields before save - returns error message or null if valid
+function validateServiceDates(serviceType) {
+    const mainFromDate = document.getElementById('fromDate')?.value;
+    const mainToDate = document.getElementById('toDate')?.value;
+    
+    const dateFieldMap = {
+        'hotel': { from: 'hotel_check_in', to: 'hotel_check_out', fromLabel: 'Check-in', toLabel: 'Check-out' },
+        'guide': { from: 'guide_from_date', to: 'guide_to_date', fromLabel: 'From Date', toLabel: 'To Date' },
+        'transport': { from: 'transport_from_date', to: 'transport_to_date', fromLabel: 'From Date', toLabel: 'To Date' },
+        'meal': { from: 'meal_from_date', to: 'meal_to_date', fromLabel: 'From Date', toLabel: 'To Date' }
+    };
+    
+    const config = dateFieldMap[serviceType];
+    if (!config) return null; // No validation needed for this service type
+    
+    const fromEl = document.getElementById(config.from);
+    const toEl = document.getElementById(config.to);
+    
+    if (fromEl && toEl && fromEl.value && toEl.value) {
+        // Check To >= From
+        if (toEl.value < fromEl.value) {
+            return `${config.toLabel} cannot be before ${config.fromLabel}`;
+        }
+    }
+    
+    // Check within main date range (only if main dates are set)
+    if (fromEl && fromEl.value && mainFromDate && fromEl.value < mainFromDate) {
+        return `${config.fromLabel} cannot be before the request start date`;
+    }
+    if (fromEl && fromEl.value && mainToDate && fromEl.value > mainToDate) {
+        return `${config.fromLabel} cannot be after the request end date`;
+    }
+    if (toEl && toEl.value && mainToDate && toEl.value > mainToDate) {
+        return `${config.toLabel} cannot be after the request end date`;
+    }
+    
+    return null; // Valid
+}
+
 // Setup service form date validation (within-form: To >= From, plus update restrictions)
+// Only sets min attribute - does NOT clear values aggressively
 function setupServiceDateValidation(fromDateId, toDateId) {
     const fromDateEl = document.getElementById(fromDateId);
     const toDateEl = document.getElementById(toDateId);
@@ -5825,13 +5872,8 @@ function setupServiceDateValidation(fromDateId, toDateId) {
     if (fromDateEl && toDateEl) {
         fromDateEl.addEventListener('change', function() {
             if (this.value) {
-                // To Date must be >= From Date
-                if (!toDateEl.min || this.value > toDateEl.min) {
-                    toDateEl.min = this.value;
-                }
-                if (toDateEl.value && toDateEl.value < this.value) {
-                    toDateEl.value = '';
-                }
+                // To Date must be >= From Date - only set min, don't clear
+                toDateEl.min = this.value;
             }
         });
     }
