@@ -18,27 +18,28 @@
     data-guide-name="{{ eff_guide.guide_name if eff_guide else '' }}"
     data-meal-restaurant="{{ eff_meal.restaurant if eff_meal else '' }}"
     data-meal-type="{{ eff_meal.meal_type if eff_meal else '' }}">
-    <td class="py-3 px-3">
-        <span class="font-medium text-slate-700">Day {{ row.day_number }}{% if row.description and ('Arrival' in row.description or 'Departure' in row.description) %} - {{ 'Arrival' if 'Arrival' in row.description else 'Departure' }}{% endif %}</span>
+    <td class="py-2 px-2 w-14">
+        <span class="font-medium text-slate-700 text-xs">Day {{ row.day_number }}{% if row.description and ('Arrival' in row.description or 'Departure' in row.description) %} - {{ 'Arr' if 'Arrival' in row.description else 'Dep' }}{% endif %}</span>
     </td>
-    <td class="py-3 px-3">
-        <span class="text-slate-600">{{ row.itinerary_date.strftime('%d/%m/%Y') if row.itinerary_date else '' }}</span>
+    <td class="py-2 px-2 w-20">
+        <span class="text-slate-600 text-xs">{{ row.itinerary_date.strftime('%d/%m') if row.itinerary_date else '' }}</span>
     </td>
-    <td class="py-3 px-3">
+    <td class="py-2 px-2 w-32">
         {% if view_only %}
-        <span class="text-slate-700">{{ row.description or '' }}</span>
+        <span class="text-slate-700 text-xs truncate block max-w-[120px]" title="{{ row.description or '' }}">{{ row.description or '' }}</span>
         {% else %}
-        <input type="text" class="tw-input text-sm py-1.5" 
+        <input type="text" class="tw-input text-xs py-1 w-full max-w-[120px]" 
                value="{{ row.description or '' }}"
                placeholder="Description..."
+               title="{{ row.description or '' }}"
                onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
         {% endif %}
     </td>
-    <td class="py-3 px-3">
+    <td class="py-2 px-2 w-24">
         {% if view_only %}
-        <span class="text-slate-600">{{ row.meal_type or '' }}</span>
+        <span class="text-slate-600 text-xs">{{ row.meal_type or '' }}</span>
         {% else %}
-        <select class="tw-input text-sm py-1.5" onchange="autoSaveItineraryRow({{ row.id }}, 'meal_type', this.value)">
+        <select class="tw-input text-xs py-1 w-full" onchange="autoSaveItineraryRow({{ row.id }}, 'meal_type', this.value)">
             <option value="">Select...</option>
             <option value="Breakfast" {{ 'selected' if row.meal_type == 'Breakfast' else '' }}>Breakfast</option>
             <option value="Lunch" {{ 'selected' if row.meal_type == 'Lunch' else '' }}>Lunch</option>
@@ -46,18 +47,18 @@
         </select>
         {% endif %}
     </td>
-    <td class="py-3 px-3">
+    <td class="py-2 px-2 min-w-[180px]">
         {% if view_only %}
-        <span class="text-slate-600">{{ row.restaurant_name or row.restaurant or '' }}</span>
+        <span class="text-slate-600 text-xs">{{ row.restaurant_name or row.restaurant or '' }}</span>
         {% else %}
-        <div class="flex gap-1">
-            <select class="tw-input text-sm py-1.5 flex-1" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
-                <option value="">Select...</option>
+        <div class="flex gap-1 items-center">
+            <select class="tw-input text-xs py-1 flex-1 min-w-[140px]" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
+                <option value="">Select restaurant...</option>
                 {% for supplier in restaurant_suppliers %}
                 <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
                 {% endfor %}
             </select>
-            <button type="button" class="px-1.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 text-xs" onclick="openAddRestaurantModal()" title="Add New Restaurant">
+            <button type="button" class="px-1 py-0.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 text-xs flex-shrink-0" onclick="openAddRestaurantModal()" title="Add New Restaurant">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
