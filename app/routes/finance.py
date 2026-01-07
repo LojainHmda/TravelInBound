@@ -838,9 +838,39 @@ def export_supplier_payments_csv(report_data, start_date, end_date):
     pass
 
 @finance.route('/suppliers')
-
 def list_suppliers():
     """List all suppliers with prepayment data - same as supplier costs"""
+    # Get search/filter parameters
+    query = request.args.get('query', '').strip()
+    country = request.args.get('country', '')
+    supplier_type = request.args.get('supplier_type', '')
+    
+    # Build base query for suppliers with filters
+    suppliers_query = Supplier.query
+    
+    # Apply search filter (name, code, email)
+    if query:
+        search_term = f'%{query}%'
+        suppliers_query = suppliers_query.filter(
+            db.or_(
+                Supplier.name.ilike(search_term),
+                Supplier.code.ilike(search_term),
+                Supplier.email.ilike(search_term),
+                Supplier.contact_person.ilike(search_term)
+            )
+        )
+    
+    # Apply country filter
+    if country:
+        suppliers_query = suppliers_query.filter(Supplier.country == country)
+    
+    # Apply supplier type filter
+    if supplier_type:
+        suppliers_query = suppliers_query.filter(Supplier.supplier_type == supplier_type)
+    
+    # Get filtered suppliers
+    all_suppliers = suppliers_query.order_by(Supplier.name).all()
+    
     # Get all prepayment lines with supplier info
     prepayment_query = db.session.query(
         SupplierPrepaymentLine,
@@ -875,8 +905,7 @@ def list_suppliers():
         if line.service_item and line.service_item.status != 'CANCELLED':
             supplier_stats[supplier.id]['active_services'] += 1
     
-    # Convert to list and include suppliers with no prepayments
-    all_suppliers = Supplier.query.order_by(Supplier.name).all()
+    # Build final stats list from filtered suppliers
     final_stats = []
     
     for supplier in all_suppliers:
@@ -890,7 +919,16 @@ def list_suppliers():
                 'prepayment_lines': []
             })
     
-    return render_template('finance/suppliers_simple.html', supplier_stats=final_stats)
+    # Build form choices for dropdowns
+    from app.forms.supplier import SupplierSearchForm
+    form = SupplierSearchForm()
+    
+    return render_template('finance/suppliers_simple.html', 
+                          supplier_stats=final_stats,
+                          form=form,
+                          query=query,
+                          country=country,
+                          supplier_type=supplier_type)
 
 @finance.route('/new-supplier', methods=['GET', 'POST'])
 

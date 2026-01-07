@@ -96,3 +96,41 @@ class SupplierDocumentForm(FlaskForm):
         FileAllowed(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'], 'Only PDF, Word, and image files allowed!')
     ])
     submit = SubmitField('Upload Document')
+
+
+class SupplierSearchForm(FlaskForm):
+    """Form for searching and filtering suppliers"""
+    query = StringField('Search', validators=[Optional()])
+    country = SelectField('Country', choices=[
+        ('', 'All Countries'),
+        ('Egypt', 'Egypt'),
+        ('USA', 'USA'),
+        ('UK', 'United Kingdom'),
+        ('UAE', 'UAE'),
+        ('Saudi Arabia', 'Saudi Arabia'),
+        ('Jordan', 'Jordan'),
+        ('Lebanon', 'Lebanon'),
+        ('Morocco', 'Morocco'),
+        ('Tunisia', 'Tunisia'),
+        ('Turkey', 'Turkey'),
+        ('Greece', 'Greece'),
+        ('Italy', 'Italy'),
+        ('France', 'France'),
+        ('Spain', 'Spain'),
+        ('Germany', 'Germany'),
+        ('Other', 'Other')
+    ], validators=[Optional()])
+    supplier_type = SelectField('Supplier Type', choices=[
+        ('', 'All Types'),
+        ('AIRLINE', 'Airline'),
+        ('HOTEL', 'Hotel'),
+        ('TRANSPORT', 'Transport'),
+        ('VISA', 'Visa Service'),
+        ('INSURANCE', 'Insurance'),
+        ('TOUR_OPERATOR', 'Tour Operator'),
+        ('GUIDE', 'Guide'),
+        ('RESTAURANT', 'Restaurant'),
+        ('GROUND_HANDLER', 'Ground Handler'),
+        ('OTHER', 'Other')
+    ], validators=[Optional()])
+    submit = SubmitField('Search')
