@@ -861,9 +861,12 @@ html { scroll-behavior: smooth; }
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500" id="arrival_notes" placeholder="Notes" data-service="arrival">
                                 </div>
                             </div>
-                            <div class="flex justify-end mt-2">
-                                <button type="button" onclick="saveServiceData('arrival')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Add Arrival
+                            <div class="flex justify-end gap-2 mt-2">
+                                <button type="button" onclick="addNewArrivalRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add
+                                </button>
+                                <button type="button" onclick="saveServiceData('arrival')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-save mr-1"></i>Save
                                 </button>
                             </div>
                         </div>
@@ -941,9 +944,12 @@ html { scroll-behavior: smooth; }
                                     <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm" id="departure_pax_count" min="1" value="{{ request.pax or 1 }}" data-service="departure">
                                 </div>
                             </div>
-                             <div class="flex justify-end mt-2">
-                                <button type="button" onclick="saveServiceData('departure')" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Add Departure
+                             <div class="flex justify-end gap-2 mt-2">
+                                <button type="button" onclick="addNewDepartureRecord()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add
+                                </button>
+                                <button type="button" onclick="saveServiceData('departure')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-save mr-1"></i>Save
                                 </button>
                             </div>
                         </div>
@@ -3532,6 +3538,167 @@ function validateDateRange(serviceType) {
     }
     
     return { valid: true };
+}
+
+// Add new arrival record - saves as new record, then clears form for next entry
+function addNewArrivalRecord() {
+    // Reset context to ensure this creates a NEW record
+    currentServiceContext = { serviceName: 'arrival', rowId: null };
+    
+    // Save the current form data as a new record
+    saveServiceDataWithCallback('arrival', function() {
+        // After successful save, clear form for next entry
+        clearArrivalForm();
+    });
+}
+
+// Clear arrival form fields for next entry
+function clearArrivalForm() {
+    const fields = document.querySelectorAll('[data-service="arrival"]');
+    fields.forEach(field => {
+        if (field.tagName === 'SELECT') {
+            field.selectedIndex = 0;
+        } else if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = false;
+        } else if (field.type !== 'date') {
+            field.value = '';
+        }
+    });
+    // Keep the date field with default value
+    const dateField = document.getElementById('arrival_date');
+    if (dateField) {
+        dateField.value = '{{ request.from_date.strftime("%Y-%m-%d") if request.from_date else "" }}';
+    }
+    // Reset PAX to default
+    const paxField = document.getElementById('arrival_pax_count');
+    if (paxField) {
+        paxField.value = '{{ request.pax or 1 }}';
+    }
+    // Reset context for next new entry
+    currentServiceContext = { serviceName: 'arrival', rowId: null };
+}
+
+// Add new departure record - saves as new record, then clears form for next entry
+function addNewDepartureRecord() {
+    // Reset context to ensure this creates a NEW record
+    currentServiceContext = { serviceName: 'departure', rowId: null };
+    
+    // Save the current form data as a new record
+    saveServiceDataWithCallback('departure', function() {
+        // After successful save, clear form for next entry
+        clearDepartureForm();
+    });
+}
+
+// Clear departure form fields for next entry
+function clearDepartureForm() {
+    const fields = document.querySelectorAll('[data-service="departure"]');
+    fields.forEach(field => {
+        if (field.tagName === 'SELECT') {
+            field.selectedIndex = 0;
+        } else if (field.type === 'checkbox' || field.type === 'radio') {
+            field.checked = false;
+        } else if (field.type !== 'date') {
+            field.value = '';
+        }
+    });
+    // Keep the date field with default value
+    const dateField = document.getElementById('departure_date');
+    if (dateField) {
+        dateField.value = '{{ request.to_date.strftime("%Y-%m-%d") if request.to_date else "" }}';
+    }
+    // Reset PAX to default
+    const paxField = document.getElementById('departure_pax_count');
+    if (paxField) {
+        paxField.value = '{{ request.pax or 1 }}';
+    }
+    // Reset context for next new entry
+    currentServiceContext = { serviceName: 'departure', rowId: null };
+}
+
+// Save service data with callback for post-save actions
+function saveServiceDataWithCallback(serviceType, successCallback) {
+    // Validate date range for global services
+    if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
+        const dateValidation = validateDateRange(serviceType);
+        if (!dateValidation.valid) {
+            showInlineError(serviceType, dateValidation.message);
+            return;
+        }
+    }
+    
+    // Collect form data
+    const activePanel = document.getElementById(`service-panel-${serviceType}`);
+    const formData = {};
+    
+    const fields = activePanel 
+        ? activePanel.querySelectorAll(`[data-service="${serviceType}"]`)
+        : document.querySelectorAll(`[data-service="${serviceType}"]`);
+    
+    fields.forEach(field => {
+        if (field.id) {
+            formData[field.id] = field.value;
+        }
+        if (field.type === 'radio' && field.name && field.checked) {
+            formData[field.name] = field.value;
+        }
+    });
+    
+    // Determine date range
+    let fromDate, toDate;
+    switch(serviceType) {
+        case 'arrival':
+            fromDate = document.getElementById('arrival_date')?.value;
+            toDate = fromDate;
+            break;
+        case 'departure':
+            fromDate = document.getElementById('departure_date')?.value;
+            toDate = fromDate;
+            break;
+        default:
+            fromDate = document.getElementById(`${serviceType}_from_date`)?.value;
+            toDate = document.getElementById(`${serviceType}_to_date`)?.value;
+    }
+    
+    const payload = {
+        service_type: serviceType,
+        data: formData,
+        apply_to_specific_days: true,
+        from_date: fromDate,
+        to_date: toDate,
+        is_global: true
+    };
+    
+    fetch(`/inbound/api/${requestId}/save-service-data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            clearInlineError(serviceType);
+            updateSummaryTables(serviceType, data);
+            updateSummaryCounts();
+            updateTabBadges();
+            updateTabColors();
+            showNotification(`${serviceType.charAt(0).toUpperCase() + serviceType.slice(1)} record added!`, 'success');
+            
+            // Call the success callback
+            if (successCallback) {
+                successCallback();
+            }
+        } else {
+            showNotification(data.error || 'Failed to save data', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error saving service data:', error);
+        showNotification('Error saving data. Please try again.', 'error');
+    });
 }
 
 // Manual save function called by Save buttons - applies service only to specific date range
