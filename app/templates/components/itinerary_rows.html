@@ -24,14 +24,13 @@
     <td class="py-2 px-2 w-20">
         <span class="text-slate-600 text-xs">{{ row.itinerary_date.strftime('%d/%m') if row.itinerary_date else '' }}</span>
     </td>
-    <td class="py-2 px-2 w-32">
+    <td class="py-2 px-2">
         {% if view_only %}
-        <span class="text-slate-700 text-xs truncate block max-w-[120px]" title="{{ row.description or '' }}">{{ row.description or '' }}</span>
+        <span class="text-slate-700 text-xs">{{ row.description or '' }}</span>
         {% else %}
-        <input type="text" class="tw-input text-xs py-1 w-full max-w-[120px]" 
+        <input type="text" class="tw-input text-xs py-1 w-full min-w-0" 
                value="{{ row.description or '' }}"
                placeholder="Description..."
-               title="{{ row.description or '' }}"
                onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
         {% endif %}
     </td>
@@ -47,13 +46,13 @@
         </select>
         {% endif %}
     </td>
-    <td class="py-2 px-2 min-w-[180px]">
+    <td class="py-2 px-2 w-[150px]">
         {% if view_only %}
         <span class="text-slate-600 text-xs">{{ row.restaurant_name or row.restaurant or '' }}</span>
         {% else %}
         <div class="flex gap-1 items-center">
-            <select class="tw-input text-xs py-1 flex-1 min-w-[140px]" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
-                <option value="">Select restaurant...</option>
+            <select class="tw-input text-xs py-1 w-[120px]" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
+                <option value="">Select...</option>
                 {% for supplier in restaurant_suppliers %}
                 <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
                 {% endfor %}
