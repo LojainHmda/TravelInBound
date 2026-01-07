@@ -76,6 +76,7 @@ html { scroll-behavior: smooth; }
     font-size: 0.875rem;
     transition: all 0.15s ease;
     background: white;
+    color: #1e293b;
 }
 .tw-input:focus {
     outline: none;
@@ -85,6 +86,33 @@ html { scroll-behavior: smooth; }
 .tw-input:disabled, .tw-input[readonly] {
     background: #f8fafc;
     cursor: not-allowed;
+    color: #64748b;
+}
+
+/* Date input specific styling */
+input[type="date"] {
+    color: #1e293b !important;
+    background-color: white !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+input[type="date"]::-webkit-datetime-edit {
+    color: #1e293b;
+}
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: #1e293b;
+}
+input[type="time"] {
+    color: #1e293b !important;
+    background-color: white !important;
 }
 
 .tw-label {
