@@ -1476,6 +1476,11 @@ def api_save_service_data(request_id):
         elif service_type == 'arrival':
             from app.models.inbound import ArrivalBatch
             
+            # Validate required fields
+            arrival_point = form_data.get('arrival_point', '').strip()
+            if not arrival_point:
+                return jsonify({'success': False, 'error': 'Arrival Point is required'}), 400
+            
             # Parse date and time
             arrival_date = None
             arrival_time = None
@@ -1507,7 +1512,7 @@ def api_save_service_data(request_id):
             
             # Update fields
             arrival.arrival_date = arrival_date or request_obj.from_date
-            arrival.arrival_point = form_data.get('arrival_point', '')
+            arrival.arrival_point = arrival_point
             arrival.arrival_time = arrival_time
             arrival.flight_number = form_data.get('arrival_flight_number', '')
             arrival.vehicle_details = form_data.get('arrival_vehicle_type', '')
@@ -1524,6 +1529,11 @@ def api_save_service_data(request_id):
         
         elif service_type == 'departure':
             from app.models.inbound import DepartureBatch
+            
+            # Validate required fields
+            departure_point = form_data.get('departure_point', '').strip()
+            if not departure_point:
+                return jsonify({'success': False, 'error': 'Departure Point is required'}), 400
             
             # Parse date and time
             departure_date = None
@@ -1556,7 +1566,7 @@ def api_save_service_data(request_id):
             
             # Update fields
             departure.departure_date = departure_date or request_obj.to_date
-            departure.departure_point = form_data.get('departure_point', '')
+            departure.departure_point = departure_point
             departure.departure_time = departure_time
             departure.flight_number = form_data.get('departure_flight_number', '')
             # Use request.pax as fallback when pax_count is empty
