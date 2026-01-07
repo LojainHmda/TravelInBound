@@ -1130,12 +1130,20 @@ html { scroll-behavior: smooth; }
                             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Guide Name <span class="text-red-500">*</span></label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier_id" data-service="guide">
-                                        <option value="">Select guide...</option>
-                                        {% for supplier in guide_suppliers %}
-                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="flex gap-2">
+                                        <select class="guide-select2 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_supplier_id" data-service="guide">
+                                            <option value="">Select guide...</option>
+                                            {% for supplier in guide_suppliers %}
+                                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                            {% endfor %}
+                                            <optgroup label="──────────">
+                                                <option value="__ADD_NEW__">+ Add New Guide...</option>
+                                            </optgroup>
+                                        </select>
+                                        <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600" onclick="openAddGuideModal()" title="Add New Guide">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                     <div id="guide-error-container" class="hidden mt-1">
                                         <span id="guide-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
@@ -1868,6 +1876,41 @@ html { scroll-behavior: smooth; }
             </button>
             <button type="button" onclick="saveNewHotel()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs">
                 <i class="fas fa-save mr-1"></i>Add Hotel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Guide Modal -->
+<div id="addGuideModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-teal-500 mr-2"></i>Add New Guide
+            </h3>
+            <button type="button" onclick="closeAddGuideModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <div id="add-guide-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Guide Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="new_guide_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter guide name">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Phone Number</label>
+                    <input type="text" id="new_guide_phone" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" placeholder="Enter phone number">
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
+            <button type="button" onclick="closeAddGuideModal()" class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xs">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewGuide()" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-xs">
+                <i class="fas fa-save mr-1"></i>Add Guide
             </button>
         </div>
     </div>
@@ -5034,6 +5077,76 @@ document.getElementById('hotel_name').addEventListener('change', function() {
     if (this.value === '__ADD_NEW__') {
         this.value = '';
         openAddHotelModal();
+    }
+});
+
+// Add Guide Modal Logic
+function openAddGuideModal() {
+    document.getElementById('addGuideModal').classList.remove('hidden');
+    document.getElementById('addGuideModal').classList.add('flex');
+    document.getElementById('new_guide_name').focus();
+}
+function closeAddGuideModal() {
+    document.getElementById('addGuideModal').classList.add('hidden');
+    document.getElementById('addGuideModal').classList.remove('flex');
+    document.getElementById('new_guide_name').value = '';
+    document.getElementById('new_guide_phone').value = '';
+    document.getElementById('add-guide-error').classList.add('hidden');
+}
+function saveNewGuide() {
+    const guideName = document.getElementById('new_guide_name').value.trim();
+    const guidePhone = document.getElementById('new_guide_phone').value.trim();
+    if (!guideName) {
+        document.getElementById('add-guide-error').textContent = 'Please enter a guide name';
+        document.getElementById('add-guide-error').classList.remove('hidden');
+        return;
+    }
+    fetch('/inbound/api/add-guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ name: guideName, phone: guidePhone })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.getElementById('guide_supplier_id');
+            const separator = select.querySelector('optgroup[label="──────────"]');
+            const option = document.createElement('option');
+            option.value = data.supplier_id;
+            option.textContent = guideName;
+            select.insertBefore(option, separator);
+            select.value = data.supplier_id;
+            // Update Select2 if initialized
+            if ($(select).hasClass('select2-hidden-accessible')) {
+                $(select).trigger('change');
+            }
+            closeAddGuideModal();
+            showNotification('Guide added successfully', 'success');
+        } else {
+            document.getElementById('add-guide-error').textContent = data.error || 'Error adding guide';
+            document.getElementById('add-guide-error').classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        document.getElementById('add-guide-error').textContent = 'Error adding guide';
+        document.getElementById('add-guide-error').classList.remove('hidden');
+    });
+}
+
+// Initialize Select2 for searchable guide dropdown
+$(document).ready(function() {
+    if ($('#guide_supplier_id').length) {
+        $('#guide_supplier_id').select2({
+            placeholder: 'Select guide...',
+            allowClear: true,
+            width: '100%',
+            theme: 'bootstrap-5'
+        }).on('select2:select', function(e) {
+            if (e.params.data.id === '__ADD_NEW__') {
+                $(this).val('').trigger('change');
+                openAddGuideModal();
+            }
+        });
     }
 });
 
