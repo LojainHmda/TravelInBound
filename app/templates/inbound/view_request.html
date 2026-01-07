@@ -4483,6 +4483,8 @@ function updateFlightsSummaryTable() {
                     data.arrivals.forEach(arrival => {
                         const row = document.createElement('tr');
                         row.className = 'hover:bg-gray-50';
+                        row.setAttribute('data-service-type', 'arrival');
+                        row.setAttribute('data-record-id', arrival.id);
                         row.innerHTML = `
                             <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.arrival_date ? new Date(arrival.arrival_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
@@ -4491,6 +4493,12 @@ function updateFlightsSummaryTable() {
                             <td class="border border-gray-300 px-2 py-1.5">${arrival.flight_number || '-'}</td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.pax_count || 0}</td>
                             <td class="border border-gray-300 px-2 py-1.5">${arrival.driver_name || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button onclick="handleEditServiceRow('arrival', ${arrival.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button onclick="handleRemoveServiceRow('arrival', ${arrival.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
                         `;
                         flightsTableBody.appendChild(row);
                     });
@@ -4500,6 +4508,8 @@ function updateFlightsSummaryTable() {
                     data.departures.forEach(departure => {
                         const row = document.createElement('tr');
                         row.className = 'hover:bg-gray-50';
+                        row.setAttribute('data-service-type', 'departure');
+                        row.setAttribute('data-record-id', departure.id);
                         row.innerHTML = `
                             <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.departure_date ? new Date(departure.departure_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
@@ -4508,6 +4518,12 @@ function updateFlightsSummaryTable() {
                             <td class="border border-gray-300 px-2 py-1.5">${departure.flight_number || '-'}</td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.pax_count || 0}</td>
                             <td class="border border-gray-300 px-2 py-1.5">${departure.driver_name || '-'}</td>
+                            <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1">
+                                    <button onclick="handleEditServiceRow('departure', ${departure.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                    <button onclick="handleRemoveServiceRow('departure', ${departure.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </td>
                         `;
                         flightsTableBody.appendChild(row);
                     });
