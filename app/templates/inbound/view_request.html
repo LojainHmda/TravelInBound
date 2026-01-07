@@ -1326,12 +1326,20 @@ html { scroll-behavior: smooth; }
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant <span class="text-red-500">*</span></label>
-                                    <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" data-service="meal">
-                                        <option value="">Select restaurant...</option>
-                                        {% for supplier in restaurant_suppliers %}
-                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                                        {% endfor %}
-                                    </select>
+                                    <div class="flex gap-2">
+                                        <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="meal_restaurant" data-service="meal">
+                                            <option value="">Select restaurant...</option>
+                                            {% for supplier in restaurant_suppliers %}
+                                            <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                            {% endfor %}
+                                            <optgroup label="──────────">
+                                                <option value="__ADD_NEW__">+ Add New Restaurant...</option>
+                                            </optgroup>
+                                        </select>
+                                        <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600" onclick="openAddRestaurantModal()" title="Add New Restaurant">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                     <div id="meal-error-container" class="hidden mt-1">
                                         <span id="meal-error-message" class="text-red-600 text-xs flex items-center gap-1"><i class="fas fa-exclamation-circle"></i></span>
                                     </div>
@@ -1884,6 +1892,41 @@ html { scroll-behavior: smooth; }
             </button>
             <button type="button" onclick="saveNewHotel()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs">
                 <i class="fas fa-save mr-1"></i>Add Hotel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Restaurant Modal -->
+<div id="addRestaurantModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-800">
+                <i class="fas fa-plus-circle text-amber-500 mr-2"></i>Add New Restaurant
+            </h3>
+            <button type="button" onclick="closeAddRestaurantModal()" class="text-slate-400 hover:text-slate-600">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <div id="add-restaurant-error" class="hidden mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs"></div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Restaurant Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="new_restaurant_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" placeholder="Enter restaurant name">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-700 mb-1">Location</label>
+                    <input type="text" id="new_restaurant_location" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500" placeholder="Enter location">
+                </div>
+            </div>
+        </div>
+        <div class="px-4 py-3 border-t border-slate-200 flex justify-end gap-2">
+            <button type="button" onclick="closeAddRestaurantModal()" class="px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-xs">
+                Cancel
+            </button>
+            <button type="button" onclick="saveNewRestaurant()" class="px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-xs">
+                <i class="fas fa-save mr-1"></i>Add Restaurant
             </button>
         </div>
     </div>
@@ -5238,6 +5281,63 @@ document.getElementById('transport_supplier')?.addEventListener('change', functi
     if (this.value === '__ADD_NEW__') {
         this.value = '';
         openAddTransportModal();
+    }
+});
+
+// Add Restaurant Modal Logic
+function openAddRestaurantModal() {
+    document.getElementById('addRestaurantModal').classList.remove('hidden');
+    document.getElementById('addRestaurantModal').classList.add('flex');
+    document.getElementById('new_restaurant_name').focus();
+}
+function closeAddRestaurantModal() {
+    document.getElementById('addRestaurantModal').classList.add('hidden');
+    document.getElementById('addRestaurantModal').classList.remove('flex');
+    document.getElementById('new_restaurant_name').value = '';
+    document.getElementById('new_restaurant_location').value = '';
+    document.getElementById('add-restaurant-error').classList.add('hidden');
+}
+function saveNewRestaurant() {
+    const restaurantName = document.getElementById('new_restaurant_name').value.trim();
+    const restaurantLocation = document.getElementById('new_restaurant_location').value.trim();
+    if (!restaurantName) {
+        document.getElementById('add-restaurant-error').textContent = 'Please enter a restaurant name';
+        document.getElementById('add-restaurant-error').classList.remove('hidden');
+        return;
+    }
+    fetch('/inbound/api/add-restaurant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ name: restaurantName, location: restaurantLocation })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const select = document.getElementById('meal_restaurant');
+            const separator = select.querySelector('optgroup[label="──────────"]');
+            const option = document.createElement('option');
+            option.value = data.supplier_id;
+            option.textContent = restaurantName;
+            select.insertBefore(option, separator);
+            select.value = data.supplier_id;
+            closeAddRestaurantModal();
+            showNotification('Restaurant added successfully', 'success');
+        } else {
+            document.getElementById('add-restaurant-error').textContent = data.error || 'Error adding restaurant';
+            document.getElementById('add-restaurant-error').classList.remove('hidden');
+        }
+    })
+    .catch(error => {
+        document.getElementById('add-restaurant-error').textContent = 'Error adding restaurant';
+        document.getElementById('add-restaurant-error').classList.remove('hidden');
+    });
+}
+
+// Handle Add New option in restaurant dropdown
+document.getElementById('meal_restaurant')?.addEventListener('change', function() {
+    if (this.value === '__ADD_NEW__') {
+        this.value = '';
+        openAddRestaurantModal();
     }
 });
 
