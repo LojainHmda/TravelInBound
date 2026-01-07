@@ -50,12 +50,20 @@
         {% if view_only %}
         <span class="text-slate-600">{{ row.restaurant_name or row.restaurant or '' }}</span>
         {% else %}
-        <select class="tw-input text-sm py-1.5" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
-            <option value="">Select...</option>
-            {% for supplier in restaurant_suppliers %}
-            <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
-            {% endfor %}
-        </select>
+        <div class="flex gap-1">
+            <select class="tw-input text-sm py-1.5 flex-1" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
+                <option value="">Select...</option>
+                {% for supplier in restaurant_suppliers %}
+                <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
+                {% endfor %}
+                <optgroup label="──────────">
+                    <option value="__ADD_NEW__">+ Add New...</option>
+                </optgroup>
+            </select>
+            <button type="button" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-600 text-xs" onclick="openAddRestaurantModal()" title="Add New Restaurant">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
         {% endif %}
     </td>
 </tr>
