@@ -28,7 +28,6 @@ def get_customers():
                 'email': customer.email,
                 'phone': customer.phone,
                 'company': customer.company_name,
-                'nationality': customer.nationality,
                 'created_at': customer.created_at.isoformat() if customer.created_at else None,
                 'booking_count': booking_count or 0
             })
@@ -62,9 +61,7 @@ def get_customer(customer_id):
                 'email': customer.email,
                 'phone': customer.phone,
                 'company': customer.company_name,
-                'nationality': customer.nationality,
                 'address': customer.address,
-                'passport_number': customer.passport_number,
                 'created_at': customer.created_at.isoformat() if customer.created_at else None,
                 'booking_count': booking_count
             }

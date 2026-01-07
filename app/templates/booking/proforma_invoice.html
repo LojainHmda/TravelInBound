@@ -123,7 +123,6 @@ body {
                     <p><strong>Name:</strong> {{ customer.first_name }} {{ customer.last_name }}</p>
                     <p><strong>Email:</strong> {{ customer.email }}</p>
                     <p><strong>Phone:</strong> {{ customer.phone }}</p>
-                    <p><strong>Nationality:</strong> {{ customer.nationality or 'N/A' }}</p>
                     {% else %}
                     <p class="text-muted">Customer information not available</p>
                     {% endif %}

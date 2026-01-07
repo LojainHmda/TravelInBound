@@ -207,7 +207,7 @@ body {
                             <th>Name</th>
                             <th>Contact</th>
                             <th>Type</th>
-                            <th>Nationality</th>
+                            <th>Country</th>
                             <th>Documents</th>
                             <th>Actions</th>
                         </tr>
@@ -239,7 +239,7 @@ body {
                                     {{ customer.customer_type }}
                                 </span>
                             </td>
-                            <td>{{ customer.nationality or customer.country or 'N/A' }}</td>
+                            <td>{{ customer.country or 'N/A' }}</td>
                             <td>
                                 {% set doc_count = customer.documents|length %}
                                 {% if doc_count > 0 %}

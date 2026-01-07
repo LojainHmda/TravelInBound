@@ -12,12 +12,6 @@ class Customer(db.Model):
     city = db.Column(db.String(50))
     country = db.Column(db.String(50))
     
-    # Personal information
-    passport_number = db.Column(db.String(50))
-    passport_expiry = db.Column(db.Date)
-    date_of_birth = db.Column(db.Date)
-    nationality = db.Column(db.String(50))
-    
     # Business information
     customer_type = db.Column(db.String(20), default='Individual')  # Individual, Corporate, Group
     company_name = db.Column(db.String(100))

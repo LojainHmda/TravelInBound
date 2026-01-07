@@ -57,39 +57,6 @@
             </div>
             
             <div class="col-md-6">
-              <h6 class="fw-bold">Travel Document Information</h6>
-              <table class="table table-borderless">
-                <tr>
-                  <th style="width: 35%">Nationality:</th>
-                  <td>{{ customer.nationality or 'Not provided' }}</td>
-                </tr>
-                <tr>
-                  <th>Date of Birth:</th>
-                  <td>{{ customer.date_of_birth.strftime('%d %b, %Y') if customer.date_of_birth else 'Not provided' }}</td>
-                </tr>
-                <tr>
-                  <th>Passport Number:</th>
-                  <td>{{ customer.passport_number or 'Not provided' }}</td>
-                </tr>
-                <tr>
-                  <th>Passport Expiry:</th>
-                  <td>
-                    {% if customer.passport_expiry %}
-                      {{ customer.passport_expiry.strftime('%d %b, %Y') }}
-                      {% if customer.passport_expiry < now.date() %}
-                        <span class="badge bg-danger">Expired</span>
-                      {% elif (customer.passport_expiry - now.date()).days < 180 %}
-                        <span class="badge bg-warning text-dark">Expiring soon</span>
-                      {% else %}
-                        <span class="badge bg-success">Valid</span>
-                      {% endif %}
-                    {% else %}
-                      Not provided
-                    {% endif %}
-                  </td>
-                </tr>
-              </table>
-              
               {% if customer.notes %}
               <h6 class="fw-bold mt-3">Notes</h6>
               <div class="card">

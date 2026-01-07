@@ -3,7 +3,6 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import StringField, TextAreaField, SelectField, DateField, SubmitField
 from wtforms.validators import DataRequired, Email, Optional, Length
-from app.data.nationalities import NATIONALITIES
 
 class CustomerForm(FlaskForm):
     """Form for creating and editing customers"""
@@ -14,13 +13,6 @@ class CustomerForm(FlaskForm):
     address = TextAreaField('Address', validators=[Optional()])
     city = StringField('City', validators=[Optional(), Length(max=50)])
     country = StringField('Country', validators=[Optional(), Length(max=50)])
-    passport_number = StringField('Passport Number', validators=[Optional(), Length(max=50)])
-    passport_expiry = DateField('Passport Expiry', format='%Y-%m-%d', validators=[Optional()])
-    date_of_birth = DateField('Date of Birth', format='%Y-%m-%d', validators=[Optional()])
-    # Use nationalities from the data file, with a default empty option
-    nationality = SelectField('Nationality', 
-                             choices=[('', 'Select Nationality')] + NATIONALITIES,
-                             validators=[Optional()])
     customer_type = SelectField('Customer Type', choices=[
         ('Individual', 'Individual'),
         ('Corporate', 'Corporate'),

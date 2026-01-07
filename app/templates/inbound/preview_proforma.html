@@ -64,9 +64,6 @@
                             {% if invoice.customer.phone %}
                             <p style="margin-bottom: 5px;"><strong>Phone:</strong> {{ invoice.customer.phone }}</p>
                             {% endif %}
-                            {% if invoice.customer.nationality %}
-                            <p style="margin-bottom: 5px;"><strong>Nationality:</strong> {{ invoice.customer.nationality }}</p>
-                            {% endif %}
                         </div>
                         <div class="col-md-6 text-end">
                             <p style="margin-bottom: 5px;"><strong>Invoice Number:</strong> {{ invoice.invoice_number }}</p>

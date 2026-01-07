@@ -86,10 +86,6 @@ def new_customer():
             address=form.address.data,
             city=form.city.data,
             country=form.country.data,
-            passport_number=form.passport_number.data,
-            passport_expiry=form.passport_expiry.data,
-            date_of_birth=form.date_of_birth.data,
-            nationality=form.nationality.data,
             customer_type=form.customer_type.data,
             company_name=form.company_name.data,
             tax_number=form.tax_number.data,
@@ -258,7 +254,6 @@ def api_list_customers():
             'phone': c.phone,
             'customer_type': c.customer_type,
             'company_name': c.company_name,
-            'nationality': c.nationality,
             'created_at': c.created_at.isoformat() if c.created_at else None,
             'updated_at': c.updated_at.isoformat() if c.updated_at else None,
             'booking_count': len(c.bookings) if hasattr(c, 'bookings') and c.bookings else 0
@@ -363,8 +358,7 @@ def api_search_customers():
         'email': c.email,
         'phone': c.phone,
         'customer_type': c.customer_type,
-        'company_name': c.company_name or '',
-        'nationality': c.nationality or ''
+        'company_name': c.company_name or ''
     } for c in customers]
     
     return jsonify({'results': results})
@@ -412,7 +406,6 @@ def api_create_customer():
             last_name=data.get('last_name', ''),
             email=data.get('email'),
             phone=data.get('phone'),
-            nationality=data.get('nationality', ''),
             customer_type=data.get('customer_type', 'Individual'),
             company_name=data.get('company_name', ''),
         )

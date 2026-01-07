@@ -326,12 +326,6 @@ function renderCustomerList() {
                     <i class="fas fa-suitcase"></i>
                     <span class="customer-stats">${customer.booking_count || 0} bookings</span>
                 </div>
-                ${customer.nationality ? `
-                <div class="customer-meta-item">
-                    <i class="fas fa-flag"></i>
-                    <span>${customer.nationality}</span>
-                </div>
-                ` : ''}
             </div>
         </div>
     `).join('');
