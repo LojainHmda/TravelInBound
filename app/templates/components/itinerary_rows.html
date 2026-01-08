@@ -9,15 +9,18 @@
 {% set eff_meal = row_meal or global_meal or row.linked_meal %}
 <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors" 
     data-row-id="{{ row.id }}"
+    data-day="{{ row.day_number }}"
     data-date="{{ row.itinerary_date.strftime('%Y-%m-%d') if row.itinerary_date else '' }}"
+    data-description="{{ row.description or '' }}"
+    data-meal-type="{{ row.meal_type or '' }}"
+    data-restaurant-id="{{ row.restaurant_supplier_id or '' }}"
     data-hotel-name="{{ eff_hotel.hotel_name if eff_hotel else '' }}"
     data-hotel-cat="{{ eff_hotel.hotel_category if eff_hotel else '' }}"
     data-transport-vehicle="{{ eff_transport.vehicle_type if eff_transport else '' }}"
     data-transport-pickup="{{ eff_transport.pickup_location if eff_transport else '' }}"
     data-transport-dropoff="{{ eff_transport.dropoff_location if eff_transport else '' }}"
     data-guide-name="{{ eff_guide.guide_name if eff_guide else '' }}"
-    data-meal-restaurant="{{ eff_meal.restaurant if eff_meal else '' }}"
-    data-meal-type="{{ eff_meal.meal_type if eff_meal else '' }}">
+    data-meal-restaurant="{{ eff_meal.restaurant if eff_meal else '' }}">
     <td class="py-2 px-2 w-14">
         <span class="font-medium text-slate-700 text-xs">Day {{ row.day_number }}{% if row.description and ('Arrival' in row.description or 'Departure' in row.description) %} - {{ 'Arr' if 'Arrival' in row.description else 'Dep' }}{% endif %}</span>
     </td>
@@ -25,43 +28,25 @@
         <span class="text-slate-600 text-xs">{{ row.itinerary_date.strftime('%d/%m') if row.itinerary_date else '' }}</span>
     </td>
     <td class="py-2 px-2">
-        {% if view_only %}
         <span class="text-slate-700 text-xs">{{ row.description or '' }}</span>
-        {% else %}
-        <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" 
-               value="{{ row.description or '' }}"
-               placeholder="Description..."
-               onchange="autoSaveItineraryRow({{ row.id }}, 'description', this.value)">
-        {% endif %}
     </td>
     <td class="py-2 px-2 w-24">
-        {% if view_only %}
         <span class="text-slate-600 text-xs">{{ row.meal_type or '' }}</span>
-        {% else %}
-        <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" onchange="autoSaveItineraryRow({{ row.id }}, 'meal_type', this.value)">
-            <option value="">Select...</option>
-            <option value="Breakfast" {{ 'selected' if row.meal_type == 'Breakfast' else '' }}>Breakfast</option>
-            <option value="Lunch" {{ 'selected' if row.meal_type == 'Lunch' else '' }}>Lunch</option>
-            <option value="Dinner" {{ 'selected' if row.meal_type == 'Dinner' else '' }}>Dinner</option>
-        </select>
-        {% endif %}
     </td>
     <td class="py-2 px-2 w-[150px]">
-        {% if view_only %}
         <span class="text-slate-600 text-xs">{{ row.restaurant_name or row.restaurant or '' }}</span>
-        {% else %}
-        <div class="flex gap-1 items-center">
-            <select class="flex-1 px-2 py-1.5 border border-slate-300 rounded-lg text-xs" onchange="autoSaveItineraryRow({{ row.id }}, 'restaurant_supplier_id', this.value)">
-                <option value="">Select...</option>
-                {% for supplier in restaurant_suppliers %}
-                <option value="{{ supplier.id }}" {{ 'selected' if row.restaurant_supplier_id == supplier.id else '' }}>{{ supplier.name }}</option>
-                {% endfor %}
-            </select>
-            <button type="button" class="px-1.5 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg text-slate-600 text-xs flex-shrink-0" onclick="openAddRestaurantModal()" title="Add New Restaurant">
-                <i class="fas fa-plus"></i>
+    </td>
+    {% if not view_only %}
+    <td class="py-2 px-2 w-20">
+        <div class="flex gap-1">
+            <button type="button" class="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs" onclick="editItineraryRow({{ row.id }})" title="Edit">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs" onclick="deleteItineraryRow({{ row.id }})" title="Delete">
+                <i class="fas fa-trash"></i>
             </button>
         </div>
-        {% endif %}
     </td>
+    {% endif %}
 </tr>
 {% endfor %}

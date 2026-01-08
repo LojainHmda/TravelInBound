@@ -791,6 +791,65 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                 
                 <!-- Itinerary Panel (Tab Content) -->
                 <div id="service-panel-itinerary" class="service-panel">
+                    <div class="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-white">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2 text-sm">
+                            <i class="fas fa-route text-purple-600"></i> Itinerary Details
+                            <span id="panel-context-badge-itinerary" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global</span>
+                        </h3>
+                    </div>
+                    
+                    <!-- Form for Adding/Editing Itinerary -->
+                    {% if not view_only %}
+                    <div class="p-3 bg-slate-50 border-b border-slate-200">
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Day *</label>
+                                <input type="number" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500" id="itinerary_day" min="1" placeholder="1" data-service="itinerary">
+                                <span id="itinerary_day_error" class="text-red-500 text-xs mt-1 hidden"></span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Date *</label>
+                                <input type="date" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500" id="itinerary_date" min="{{ request.from_date.strftime('%Y-%m-%d') if request.from_date else '' }}" max="{{ request.to_date.strftime('%Y-%m-%d') if request.to_date else '' }}" data-service="itinerary" style="background-color: #ffffff !important; color: #1e293b !important;">
+                                <span id="itinerary_date_error" class="text-red-500 text-xs mt-1 hidden"></span>
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Description *</label>
+                                <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500" id="itinerary_description" placeholder="e.g., Full day tour of Petra" data-service="itinerary">
+                                <span id="itinerary_description_error" class="text-red-500 text-xs mt-1 hidden"></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Meal Type</label>
+                                <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500" id="itinerary_meal_type" data-service="itinerary">
+                                    <option value="">Select...</option>
+                                    <option value="Breakfast">Breakfast</option>
+                                    <option value="Lunch">Lunch</option>
+                                    <option value="Dinner">Dinner</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Restaurant</label>
+                                <select class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500" id="itinerary_restaurant" data-service="itinerary">
+                                    <option value="">Select...</option>
+                                    {% for supplier in restaurant_suppliers %}
+                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" id="itinerary_edit_row_id" value="">
+                        <div class="flex justify-end gap-2 mt-3">
+                            <button type="button" onclick="addNewItineraryRow()" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-xs">
+                                <i class="fas fa-plus mr-1"></i>Add
+                            </button>
+                            <button type="button" onclick="saveItineraryChanges()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                                <i class="fas fa-save mr-1"></i>Save
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
                     <div class="p-3">
                         {% if request.itinerary_rows %}
                         <div class="overflow-x-auto" id="itineraryTable">
@@ -802,6 +861,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                         <th class="py-2 px-2">Description</th>
                                         <th class="py-2 px-2 w-24">Meal Type</th>
                                         <th class="py-2 px-2 w-[150px]">Restaurant</th>
+                                        {% if not view_only %}<th class="py-2 px-2 w-20">Actions</th>{% endif %}
                                     </tr>
                                 </thead>
                                 <tbody id="itineraryTableBody">
@@ -815,7 +875,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                 <i class="fas fa-route text-xl text-slate-400"></i>
                             </div>
                             <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
-                            <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
+                            <p class="text-slate-400 text-xs">Use the form above to add itinerary entries, or set the travel dates to generate automatically.</p>
                         </div>
                         {% endif %}
                     </div>
@@ -3694,6 +3754,172 @@ function addNewDepartureRecord() {
     addNewServiceRecord('departure');
 }
 
+// Add new itinerary row - creates a NEW row
+function addNewItineraryRow() {
+    // Clear edit row ID to ensure we create a new record
+    document.getElementById('itinerary_edit_row_id').value = '';
+    saveItineraryChanges();
+}
+
+// Save itinerary changes (add new or update existing)
+function saveItineraryChanges() {
+    const editRowId = document.getElementById('itinerary_edit_row_id').value;
+    const day = document.getElementById('itinerary_day').value;
+    const date = document.getElementById('itinerary_date').value;
+    const description = document.getElementById('itinerary_description').value;
+    const mealType = document.getElementById('itinerary_meal_type').value;
+    const restaurantId = document.getElementById('itinerary_restaurant').value;
+    
+    // Validate required fields
+    let hasError = false;
+    clearFieldErrors('itinerary');
+    
+    if (!day) {
+        showFieldError('itinerary_day', 'Day is required');
+        hasError = true;
+    }
+    if (!date) {
+        showFieldError('itinerary_date', 'Date is required');
+        hasError = true;
+    }
+    if (!description) {
+        showFieldError('itinerary_description', 'Description is required');
+        hasError = true;
+    }
+    
+    if (hasError) return;
+    
+    const data = {
+        row_id: editRowId || null,
+        day_number: day,
+        itinerary_date: date,
+        description: description,
+        meal_type: mealType,
+        restaurant_supplier_id: restaurantId || null
+    };
+    
+    fetch(`/inbound/api/${requestId}/itinerary-row`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(editRowId ? 'Itinerary row updated' : 'Itinerary row added', 'success');
+            clearItineraryForm();
+            refreshItineraryTable();
+        } else {
+            showNotification(data.error || 'Save failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Save failed', 'error');
+    });
+}
+
+// Edit itinerary row - populate form with row data
+function editItineraryRow(rowId) {
+    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
+    if (!row) return;
+    
+    document.getElementById('itinerary_edit_row_id').value = rowId;
+    document.getElementById('itinerary_day').value = row.dataset.day || '';
+    document.getElementById('itinerary_date').value = row.dataset.date || '';
+    document.getElementById('itinerary_description').value = row.dataset.description || '';
+    document.getElementById('itinerary_meal_type').value = row.dataset.mealType || '';
+    document.getElementById('itinerary_restaurant').value = row.dataset.restaurantId || '';
+    
+    // Scroll to form
+    document.getElementById('itinerary_day').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('itinerary_day').focus();
+}
+
+// Delete itinerary row
+function deleteItineraryRow(rowId) {
+    if (!confirm('Are you sure you want to delete this itinerary row?')) return;
+    
+    fetch(`/inbound/api/itinerary-row/${rowId}/delete`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Itinerary row deleted', 'success');
+            refreshItineraryTable();
+        } else {
+            showNotification(data.error || 'Delete failed', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Delete failed', 'error');
+    });
+}
+
+// Clear itinerary form
+function clearItineraryForm() {
+    document.getElementById('itinerary_edit_row_id').value = '';
+    document.getElementById('itinerary_day').value = '';
+    document.getElementById('itinerary_date').value = '';
+    document.getElementById('itinerary_description').value = '';
+    document.getElementById('itinerary_meal_type').value = '';
+    document.getElementById('itinerary_restaurant').value = '';
+    clearFieldErrors('itinerary');
+}
+
+// Refresh itinerary table
+function refreshItineraryTable() {
+    fetch(`/inbound/api/${requestId}/itinerary-rows-html`)
+        .then(response => response.text())
+        .then(html => {
+            const tbody = document.getElementById('itineraryTableBody');
+            if (tbody) {
+                tbody.innerHTML = html;
+            }
+            // Show table if it was hidden
+            const table = document.getElementById('itineraryTable');
+            const emptyState = document.getElementById('itineraryEmptyState');
+            if (table) table.classList.remove('hidden');
+            if (emptyState) emptyState.classList.add('hidden');
+        })
+        .catch(error => console.error('Error refreshing itinerary:', error));
+}
+
+// Show field error
+function showFieldError(fieldId, message) {
+    const errorSpan = document.getElementById(`${fieldId}_error`);
+    const field = document.getElementById(fieldId);
+    if (errorSpan) {
+        errorSpan.textContent = message;
+        errorSpan.classList.remove('hidden');
+    }
+    if (field) {
+        field.classList.add('border-red-500');
+    }
+}
+
+// Clear field errors for a service type
+function clearFieldErrors(serviceType) {
+    const errorSpans = document.querySelectorAll(`[id^="${serviceType}_"][id$="_error"]`);
+    errorSpans.forEach(span => {
+        span.textContent = '';
+        span.classList.add('hidden');
+    });
+    const fields = document.querySelectorAll(`[data-service="${serviceType}"]`);
+    fields.forEach(field => {
+        field.classList.remove('border-red-500');
+    });
+}
+
 // Generic function to add a new service record and clear form after success
 function addNewServiceRecord(serviceType) {
     // Validate date range for global services
@@ -5933,6 +6159,7 @@ function updateServiceDateRestrictions() {
     // List of service form date field IDs
     const serviceDateFields = [
         { from: 'arrival_date', to: 'departure_date' },
+        { from: 'itinerary_date', to: null },
         { from: 'hotel_check_in', to: 'hotel_check_out' },
         { from: 'guide_from_date', to: 'guide_to_date' },
         { from: 'transport_from_date', to: 'transport_to_date' },

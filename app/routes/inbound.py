@@ -1923,6 +1923,120 @@ def api_update_itinerary_row_field(row_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@inbound_bp.route('/api/<int:request_id>/itinerary-row', methods=['POST'])
+@csrf.exempt
+def api_save_itinerary_row(request_id):
+    """Add or update an itinerary row"""
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        # Authorization check
+        if request_obj.user_id != 1:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+        data = request.get_json()
+        
+        row_id = data.get('row_id')
+        day_number = data.get('day_number')
+        itinerary_date = data.get('itinerary_date')
+        description = data.get('description', '')
+        meal_type = data.get('meal_type', '')
+        restaurant_supplier_id = data.get('restaurant_supplier_id')
+        
+        # Validate required fields
+        if not day_number:
+            return jsonify({'success': False, 'error': 'Day is required'}), 400
+        if not itinerary_date:
+            return jsonify({'success': False, 'error': 'Date is required'}), 400
+        if not description:
+            return jsonify({'success': False, 'error': 'Description is required'}), 400
+        
+        # Parse date
+        date_obj = datetime.strptime(itinerary_date, '%Y-%m-%d').date()
+        
+        # Parse restaurant supplier ID
+        if restaurant_supplier_id:
+            try:
+                restaurant_supplier_id = int(restaurant_supplier_id)
+            except ValueError:
+                restaurant_supplier_id = None
+        else:
+            restaurant_supplier_id = None
+        
+        if row_id:
+            # Update existing row
+            row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
+            if not row:
+                return jsonify({'success': False, 'error': 'Row not found'}), 404
+            
+            row.day_number = int(day_number)
+            row.itinerary_date = date_obj
+            row.date = date_obj  # Keep backward compatibility
+            row.description = description
+            row.meal_type = meal_type
+            row.restaurant_supplier_id = restaurant_supplier_id
+        else:
+            # Create new row
+            row = ItineraryRow(
+                request_id=request_id,
+                day_number=int(day_number),
+                itinerary_date=date_obj,
+                date=date_obj,
+                description=description,
+                meal_type=meal_type,
+                restaurant_supplier_id=restaurant_supplier_id
+            )
+            db.session.add(row)
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'row_id': row.id})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/itinerary-row/<int:row_id>/delete', methods=['POST'])
+@csrf.exempt
+def api_delete_itinerary_row_by_id(row_id):
+    """Delete an itinerary row by ID"""
+    try:
+        row = ItineraryRow.query.get_or_404(row_id)
+        
+        # Authorization check
+        request_obj = InboundRequest.query.get_or_404(row.request_id)
+        if request_obj.user_id != 1:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+        db.session.delete(row)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/itinerary-rows-html', methods=['GET'])
+def api_get_itinerary_rows_html(request_id):
+    """Get the HTML for the itinerary rows table"""
+    from app.models.supplier import Supplier
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        rows = request_obj.itinerary_rows
+        
+        # Get restaurant suppliers for the dropdown
+        restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
+        
+        return render_template('components/itinerary_rows.html',
+            rows=rows,
+            restaurant_suppliers=restaurant_suppliers,
+            view_only=False
+        )
+    
+    except Exception as e:
+        return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
+
 @inbound_bp.route('/api/add-hotel', methods=['POST'])
 @csrf.exempt
 def api_add_hotel():
