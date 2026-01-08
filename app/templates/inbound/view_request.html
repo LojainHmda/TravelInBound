@@ -863,6 +863,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                         <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
                                         <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
                                     </select>
+                                    <span id="arrival_point_error" class="text-red-500 text-xs mt-1 hidden"></span>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
@@ -951,6 +952,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                         <option value="Sheikh Hussein Bridge">Sheikh Hussein Bridge</option>
                                         <option value="Wadi Araba Crossing">Wadi Araba Crossing</option>
                                     </select>
+                                    <span id="departure_point_error" class="text-red-500 text-xs mt-1 hidden"></span>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Flight Number</label>
@@ -3751,6 +3753,7 @@ function addNewServiceRecord(serviceType) {
     .then(({ ok, data }) => {
         if (ok && data.success) {
             clearInlineError(serviceType);
+            clearFieldErrors(serviceType);
             updateSummaryTables(serviceType, data);
             updateSummaryCounts();
             updateTabBadges();
@@ -3762,7 +3765,12 @@ function addNewServiceRecord(serviceType) {
             // Clear form for next entry
             clearServiceForm(serviceType);
         } else {
-            showNotification(data.error || 'Failed to add record', 'error');
+            // Handle field-specific errors
+            if (data.field_errors) {
+                showFieldErrors(data.field_errors);
+            } else {
+                showNotification(data.error || 'Failed to add record', 'error');
+            }
         }
     })
     .catch(error => {
@@ -4750,6 +4758,67 @@ function showInlineError(serviceType, message) {
 function clearInlineError(serviceType) {
     const errorContainer = document.getElementById(`${serviceType}-error-container`);
     if (errorContainer) errorContainer.classList.add('hidden');
+}
+
+// Show field-specific inline errors under form fields
+function showFieldErrors(fieldErrors) {
+    for (const [fieldId, message] of Object.entries(fieldErrors)) {
+        const field = document.getElementById(fieldId);
+        const errorSpan = document.getElementById(`${fieldId}_error`);
+        
+        if (field) {
+            // Add red border to the field
+            field.classList.add('border-red-500', 'ring-2', 'ring-red-200');
+            
+            // Show error message below the field
+            if (errorSpan) {
+                errorSpan.textContent = message;
+                errorSpan.classList.remove('hidden');
+            }
+            
+            // Focus on first error field
+            field.focus();
+            
+            // Clear error on change
+            const clearFieldError = function() {
+                field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+                if (errorSpan) {
+                    errorSpan.textContent = '';
+                    errorSpan.classList.add('hidden');
+                }
+                field.removeEventListener('change', clearFieldError);
+                field.removeEventListener('input', clearFieldError);
+            };
+            field.addEventListener('change', clearFieldError, { once: true });
+            field.addEventListener('input', clearFieldError, { once: true });
+        }
+    }
+}
+
+// Clear all field errors for a service type
+function clearFieldErrors(serviceType) {
+    const fieldMap = {
+        'arrival': ['arrival_point'],
+        'departure': ['departure_point'],
+        'hotel': ['hotel_name'],
+        'transport': ['transport_vehicle'],
+        'guide': ['guide_name'],
+        'meal': ['meal_restaurant']
+    };
+    
+    const fields = fieldMap[serviceType] || [];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        const errorSpan = document.getElementById(`${fieldId}_error`);
+        
+        if (field) {
+            field.classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        }
+        if (errorSpan) {
+            errorSpan.textContent = '';
+            errorSpan.classList.add('hidden');
+        }
+    });
 }
 
 function showNotification(message, type) {

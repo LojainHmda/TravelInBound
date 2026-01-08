@@ -1479,7 +1479,11 @@ def api_save_service_data(request_id):
             # Validate required fields
             arrival_point = form_data.get('arrival_point', '').strip()
             if not arrival_point:
-                return jsonify({'success': False, 'error': 'Arrival Point is required'}), 400
+                return jsonify({
+                    'success': False, 
+                    'error': 'Arrival Point is required',
+                    'field_errors': {'arrival_point': 'Arrival Point is required'}
+                }), 400
             
             # Parse date and time
             arrival_date = None
@@ -1533,7 +1537,11 @@ def api_save_service_data(request_id):
             # Validate required fields
             departure_point = form_data.get('departure_point', '').strip()
             if not departure_point:
-                return jsonify({'success': False, 'error': 'Departure Point is required'}), 400
+                return jsonify({
+                    'success': False, 
+                    'error': 'Departure Point is required',
+                    'field_errors': {'departure_point': 'Departure Point is required'}
+                }), 400
             
             # Parse date and time
             departure_date = None
