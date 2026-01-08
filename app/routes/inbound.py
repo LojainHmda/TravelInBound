@@ -2040,10 +2040,14 @@ def api_get_itinerary_summary_html(request_id):
         request_obj = InboundRequest.query.get_or_404(request_id)
         rows = request_obj.itinerary_rows
         
-        # Build HTML rows for the summary table
+        # Build HTML rows for the summary table - only show rows with meal or restaurant
         html_rows = []
         if rows:
             for row in rows:
+                # Skip rows that have no meal_type AND no restaurant
+                if not row.meal_type and not row.restaurant_supplier_id:
+                    continue
+                    
                 date_str = row.date.strftime('%d %b') if row.date else '-'
                 meal_type = escape(row.meal_type) if row.meal_type else '-'
                 restaurant = escape(row.restaurant_name) if row.restaurant_name else '-'
@@ -2065,7 +2069,10 @@ def api_get_itinerary_summary_html(request_id):
                         </td>
                     </tr>
                 ''')
-            return ''.join(html_rows)
+            if html_rows:
+                return ''.join(html_rows)
+            else:
+                return '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>'
         else:
             return '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
     
