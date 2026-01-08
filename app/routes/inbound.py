@@ -1937,22 +1937,19 @@ def api_save_itinerary_row(request_id):
         data = request.get_json()
         
         row_id = data.get('row_id')
-        day_number = data.get('day_number')
         itinerary_date = data.get('itinerary_date')
         description = data.get('description', '')
         meal_type = data.get('meal_type', '')
         restaurant_supplier_id = data.get('restaurant_supplier_id')
         
-        # Validate required fields
-        if not day_number:
-            return jsonify({'success': False, 'error': 'Day is required'}), 400
-        if not itinerary_date:
-            return jsonify({'success': False, 'error': 'Date is required'}), 400
-        if not description:
-            return jsonify({'success': False, 'error': 'Description is required'}), 400
-        
-        # Parse date
-        date_obj = datetime.strptime(itinerary_date, '%Y-%m-%d').date()
+        # Parse date (use from_date as default for new rows)
+        date_obj = None
+        if itinerary_date:
+            date_obj = datetime.strptime(itinerary_date, '%Y-%m-%d').date()
+        elif request_obj.from_date:
+            date_obj = request_obj.from_date
+        else:
+            date_obj = datetime.now().date()
         
         # Parse restaurant supplier ID
         if restaurant_supplier_id:
@@ -1969,9 +1966,7 @@ def api_save_itinerary_row(request_id):
             if not row:
                 return jsonify({'success': False, 'error': 'Row not found'}), 404
             
-            row.day_number = int(day_number)
-            row.itinerary_date = date_obj
-            row.date = date_obj  # Keep backward compatibility
+            row.date = date_obj
             row.description = description
             row.meal_type = meal_type
             row.restaurant_supplier_id = restaurant_supplier_id
@@ -1979,10 +1974,8 @@ def api_save_itinerary_row(request_id):
             # Create new row
             row = ItineraryRow(
                 request_id=request_id,
-                day_number=int(day_number),
-                itinerary_date=date_obj,
                 date=date_obj,
-                description=description,
+                description=description or 'New day',
                 meal_type=meal_type,
                 restaurant_supplier_id=restaurant_supplier_id
             )
@@ -2036,6 +2029,46 @@ def api_get_itinerary_rows_html(request_id):
     
     except Exception as e:
         return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
+
+@inbound_bp.route('/api/<int:request_id>/itinerary-summary-html', methods=['GET'])
+def api_get_itinerary_summary_html(request_id):
+    """Get the HTML for the itinerary summary table in Trip Summary"""
+    from markupsafe import escape
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        rows = request_obj.itinerary_rows
+        
+        # Build HTML rows for the summary table
+        html_rows = []
+        if rows:
+            for row in rows:
+                date_str = row.date.strftime('%d %b') if row.date else '-'
+                meal_type = escape(row.meal_type) if row.meal_type else '-'
+                restaurant = escape(row.restaurant_name) if row.restaurant_name else '-'
+                description = escape(row.description) if row.description else '-'
+                pax = request_obj.pax or 0
+                
+                html_rows.append(f'''
+                    <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{row.id}">
+                        <td class="border border-gray-300 px-2 py-1.5 text-center">{date_str}</td>
+                        <td class="border border-gray-300 px-2 py-1.5">{meal_type}</td>
+                        <td class="border border-gray-300 px-2 py-1.5 font-medium">{restaurant}</td>
+                        <td class="border border-gray-300 px-2 py-1.5">{description}</td>
+                        <td class="border border-gray-300 px-2 py-1.5 text-center">{pax}</td>
+                        <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                            <div class="flex items-center justify-center gap-1">
+                                <button onclick="handleEditServiceRow('itinerary', {row.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                <button onclick="handleRemoveServiceRow('itinerary', {row.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                ''')
+            return ''.join(html_rows)
+        else:
+            return '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
+    
+    except Exception as e:
+        return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
 
 @inbound_bp.route('/api/<int:request_id>/itinerary-rows-bulk', methods=['POST'])
 def api_save_itinerary_rows_bulk(request_id):
