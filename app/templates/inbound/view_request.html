@@ -4226,6 +4226,7 @@ function addNewServiceData(serviceType) {
 
 // Save function - creates new if no row_id, updates existing if row_id present
 function saveServiceData(serviceType) {
+    console.log(`[saveServiceData] serviceType=${serviceType}, currentServiceContext=`, JSON.stringify(currentServiceContext));
     // Validate date range for global services
     if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
         const dateValidation = validateDateRange(serviceType);
