@@ -922,10 +922,10 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                             <div class="flex justify-end gap-2 mt-2">
                                 <button type="button" onclick="addNewArrivalRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Add
+                                    <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
-                                <button type="button" onclick="updateArrivalRecord()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-save mr-1"></i>Save
+                                <button type="button" id="save-btn-arrival" onclick="updateArrivalRecord()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs hidden">
+                                    <i class="fas fa-save mr-1"></i>Save Changes
                                 </button>
                             </div>
                         </div>
@@ -1005,11 +1005,11 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                 </div>
                             </div>
                              <div class="flex justify-end gap-2 mt-2">
-                                <button type="button" onclick="addNewDepartureRecord()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Add
+                                <button type="button" onclick="addNewDepartureRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
-                                <button type="button" onclick="updateDepartureRecord()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-save mr-1"></i>Save
+                                <button type="button" id="save-btn-departure" onclick="updateDepartureRecord()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs hidden">
+                                    <i class="fas fa-save mr-1"></i>Save Changes
                                 </button>
                             </div>
                         </div>
@@ -1170,10 +1170,13 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="hotel_notes" placeholder="Notes" data-service="hotel">
                                 </div>
                             </div>
-                            <!-- Save Button -->
-                            <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('hotel')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Save Hotel
+                            <!-- Add/Save Buttons -->
+                            <div class="flex justify-end gap-2">
+                                <button type="button" onclick="addNewServiceData('hotel')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add New
+                                </button>
+                                <button type="button" id="save-btn-hotel" onclick="saveServiceData('hotel')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs hidden">
+                                    <i class="fas fa-save mr-1"></i>Save Changes
                                 </button>
                             </div>
                         </div>
@@ -1248,10 +1251,13 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                     <input type="text" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs" id="guide_notes" placeholder="Additional notes" data-service="guide">
                                 </div>
                             </div>
-                            <!-- Save Button -->
-                            <div class="flex justify-end">
-                                <button type="button" onclick="saveServiceData('guide')" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-xs">
-                                    <i class="fas fa-plus mr-1"></i>Save Guide
+                            <!-- Add/Save Buttons -->
+                            <div class="flex justify-end gap-2">
+                                <button type="button" onclick="addNewServiceData('guide')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                    <i class="fas fa-plus mr-1"></i>Add New
+                                </button>
+                                <button type="button" id="save-btn-guide" onclick="saveServiceData('guide')" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-xs hidden">
+                                    <i class="fas fa-save mr-1"></i>Save Changes
                                 </button>
                             </div>
                         </div>
@@ -1349,10 +1355,13 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                 </div>
                             </div>
                             
-                            <!-- Save Button -->
-                            <div class="flex justify-end pt-1">
-                                <button type="button" onclick="saveServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
-                                    <i class="fas fa-plus mr-1"></i>Save Transport
+                            <!-- Add/Save Buttons -->
+                            <div class="flex justify-end gap-2 pt-1">
+                                <button type="button" onclick="addNewServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
+                                    <i class="fas fa-plus mr-1"></i>Add New
+                                </button>
+                                <button type="button" id="save-btn-transport" onclick="saveServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm hidden">
+                                    <i class="fas fa-save mr-1"></i>Save Changes
                                 </button>
                             </div>
                         </div>
@@ -4031,7 +4040,13 @@ function handleEditServiceRow(serviceType, recordId) {
                     badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-blue-100 text-blue-700';
                 }
                 
-                showNotification(`Loaded ${serviceType} record for editing. Click Save to update.`, 'info');
+                // Show the Save Changes button for editing mode
+                const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+                if (saveBtn) {
+                    saveBtn.classList.remove('hidden');
+                }
+                
+                showNotification(`Loaded ${serviceType} record for editing. Click "Save Changes" to update.`, 'info');
             } else {
                 showNotification(data.error || 'Failed to load record data', 'error');
             }
@@ -4190,7 +4205,27 @@ function handleRemoveServiceRow(serviceType, recordId) {
     });
 }
 
-// Manual save function called by Save buttons - applies service only to specific date range
+// Add new service record (always creates new, never updates existing)
+function addNewServiceData(serviceType) {
+    // Clear any existing row_id context to ensure new record creation
+    currentServiceContext = { serviceName: serviceType, rowId: null };
+    
+    // Hide save button since we're creating new
+    const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+    if (saveBtn) saveBtn.classList.add('hidden');
+    
+    // Update badge to show "New"
+    const badge = document.getElementById(`panel-context-badge-${serviceType}`);
+    if (badge) {
+        badge.textContent = 'Adding New';
+        badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-green-100 text-green-700';
+    }
+    
+    // Call the main save function which will create new record (no row_id)
+    saveServiceData(serviceType);
+}
+
+// Save function - creates new if no row_id, updates existing if row_id present
 function saveServiceData(serviceType) {
     // Validate date range for global services
     if (['hotel', 'guide', 'transport', 'meal'].includes(serviceType)) {
