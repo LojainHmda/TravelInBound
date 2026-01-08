@@ -1669,10 +1669,10 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                         </div>
                         
-                        <!-- Itinerary Table -->
+                        <!-- Meals Table (filtered itinerary rows with meal/restaurant) -->
                         <div class="mb-2">
                             <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                <i class="fas fa-route text-purple-500 mr-2"></i> Itinerary
+                                <i class="fas fa-utensils text-purple-500 mr-2"></i> Meals
                             </h4>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs border-collapse">
@@ -1681,19 +1681,19 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">Date</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Meal Type</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Restaurant</th>
-                                            <th class="border border-gray-300 px-2 py-1.5 text-left font-semibold">Location</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold">PAX</th>
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="full-summary-itinerary">
-                                        {% if request.itinerary_rows %}
-                                            {% for row in request.itinerary_rows %}
+                                        {% set has_meals = false %}
+                                        {% for row in request.itinerary_rows|sort(attribute='date') %}
+                                            {% if row.meal_type or row.restaurant_supplier_id %}
+                                                {% set has_meals = true %}
                                             <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{{ row.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ row.date.strftime('%d %b') if row.date else '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ row.meal_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ row.restaurant_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5">{{ row.description or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ request.pax or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
                                                     <div class="flex items-center justify-center gap-1">
@@ -1702,9 +1702,10 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                     </div>
                                                 </td>
                                             </tr>
-                                            {% endfor %}
-                                        {% else %}
-                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if not has_meals %}
+                                            <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>

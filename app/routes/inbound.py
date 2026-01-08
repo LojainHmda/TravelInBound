@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, render_template_string, redirect, url_for, flash, request, jsonify, abort, send_file
 from flask_login import login_required
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import cast, Any
 import json
 import os
@@ -2040,10 +2040,13 @@ def api_get_itinerary_summary_html(request_id):
         request_obj = InboundRequest.query.get_or_404(request_id)
         rows = request_obj.itinerary_rows
         
-        # Build HTML rows for the summary table - only show rows with meal or restaurant
+        # Build HTML rows for the summary table - only show rows with meal or restaurant, sorted by date
         html_rows = []
         if rows:
-            for row in rows:
+            # Sort rows by date and filter for meal/restaurant entries
+            sorted_rows = sorted([r for r in rows], key=lambda x: x.date or date(1900, 1, 1))
+            
+            for row in sorted_rows:
                 # Skip rows that have no meal_type AND no restaurant
                 if not row.meal_type and not row.restaurant_supplier_id:
                     continue
@@ -2051,7 +2054,6 @@ def api_get_itinerary_summary_html(request_id):
                 date_str = row.date.strftime('%d %b') if row.date else '-'
                 meal_type = escape(row.meal_type) if row.meal_type else '-'
                 restaurant = escape(row.restaurant_name) if row.restaurant_name else '-'
-                description = escape(row.description) if row.description else '-'
                 pax = request_obj.pax or 0
                 
                 html_rows.append(f'''
@@ -2059,7 +2061,6 @@ def api_get_itinerary_summary_html(request_id):
                         <td class="border border-gray-300 px-2 py-1.5 text-center">{date_str}</td>
                         <td class="border border-gray-300 px-2 py-1.5">{meal_type}</td>
                         <td class="border border-gray-300 px-2 py-1.5 font-medium">{restaurant}</td>
-                        <td class="border border-gray-300 px-2 py-1.5">{description}</td>
                         <td class="border border-gray-300 px-2 py-1.5 text-center">{pax}</td>
                         <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
                             <div class="flex items-center justify-center gap-1">
@@ -2072,9 +2073,9 @@ def api_get_itinerary_summary_html(request_id):
             if html_rows:
                 return ''.join(html_rows)
             else:
-                return '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>'
+                return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>'
         else:
-            return '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
+            return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
     
     except Exception as e:
         return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
