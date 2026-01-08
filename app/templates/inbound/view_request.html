@@ -6235,6 +6235,29 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeRoomWizard();
     setupDateFieldListeners();
     initializeTabStates();
+    
+    // Set departure date min based on arrival date
+    const arrivalDateField = document.getElementById('arrival_date');
+    const departureDateField = document.getElementById('departure_date');
+    
+    if (arrivalDateField && departureDateField) {
+        // Update departure min when arrival changes
+        arrivalDateField.addEventListener('change', function() {
+            const arrivalDate = this.value;
+            if (arrivalDate) {
+                departureDateField.min = arrivalDate;
+                // If departure is before arrival, reset to arrival date
+                if (departureDateField.value && departureDateField.value < arrivalDate) {
+                    departureDateField.value = arrivalDate;
+                }
+            }
+        });
+        
+        // Initialize on page load if arrival has a value
+        if (arrivalDateField.value) {
+            departureDateField.min = arrivalDateField.value;
+        }
+    }
 });
 
 // Status Updates
