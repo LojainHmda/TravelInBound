@@ -4012,11 +4012,8 @@ function handleEditServiceRow(serviceType, recordId) {
         return;
     }
     
-    // Set the context for editing
-    currentServiceContext = { serviceName: serviceType, rowId: recordId };
-    
-    // Switch to the appropriate tab
-    switchServiceTab(serviceType);
+    // Switch to the appropriate tab with the recordId to preserve edit context
+    switchServiceTab(serviceType, recordId);
     
     // Scroll to the service panel
     const panel = document.getElementById(`service-panel-${serviceType}`);
