@@ -1122,8 +1122,8 @@ def api_save_service_data(request_id):
     if not is_global and not row_id:
         return jsonify({'success': False, 'error': 'Missing row_id for day-specific save'}), 400
     
-    # Validate row exists for day-specific saves
-    if not is_global:
+    # Validate row exists for day-specific saves (skip for arrival/departure which use different tables)
+    if not is_global and service_type not in ['arrival', 'departure']:
         row = ItineraryRow.query.get(row_id)
         if not row or row.request_id != request_id:
             return jsonify({'success': False, 'error': 'Invalid row_id'}), 400
@@ -1500,7 +1500,8 @@ def api_save_service_data(request_id):
                     pass
             
             # Check if we're updating an existing batch or creating new
-            batch_id = form_data.get('arrival_id') or form_data.get('batch_id')
+            # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
+            batch_id = row_id or form_data.get('arrival_id') or form_data.get('batch_id')
             if batch_id:
                 arrival = ArrivalBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
@@ -1558,7 +1559,8 @@ def api_save_service_data(request_id):
                     pass
             
             # Check if we're updating an existing batch or creating new
-            batch_id = form_data.get('departure_id') or form_data.get('batch_id')
+            # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
+            batch_id = row_id or form_data.get('departure_id') or form_data.get('batch_id')
             if batch_id:
                 departure = DepartureBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
