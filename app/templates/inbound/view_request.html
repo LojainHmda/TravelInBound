@@ -1500,9 +1500,9 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1519,9 +1519,9 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1570,9 +1570,9 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
                                                 </td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1614,9 +1614,9 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
                                                 </td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1654,9 +1654,9 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                                    <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                    <div class="flex items-center justify-center gap-2">
+                                                        <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -2907,12 +2907,14 @@ function createServiceRowHtml(serviceType, entry) {
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
                     <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('arrival', ${entry.id})" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('arrival', ${entry.id})" title="Remove">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="flex items-center justify-center gap-2">
+                            <button type="button" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" onclick="handleEditServiceRow('arrival', ${entry.id})" title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button type="button" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" onclick="handleRemoveServiceRow('arrival', ${entry.id})" title="Remove">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -2926,12 +2928,14 @@ function createServiceRowHtml(serviceType, entry) {
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.driver_name || '-'}</td>
                     <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-blue-600 hover:text-blue-800 mr-1" onclick="handleEditServiceRow('departure', ${entry.id})" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button type="button" class="text-red-600 hover:text-red-800" onclick="handleRemoveServiceRow('departure', ${entry.id})" title="Remove">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="flex items-center justify-center gap-2">
+                            <button type="button" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" onclick="handleEditServiceRow('departure', ${entry.id})" title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button type="button" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" onclick="handleRemoveServiceRow('departure', ${entry.id})" title="Remove">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -4741,9 +4745,9 @@ function updateFlightsSummaryTable() {
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${arrival.pax_count || 0}</td>
                             <td class="border border-gray-300 px-2 py-1.5">${arrival.driver_name || '-'}</td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button onclick="handleEditServiceRow('arrival', ${arrival.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                    <button onclick="handleRemoveServiceRow('arrival', ${arrival.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="handleEditServiceRow('arrival', ${arrival.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                    <button onclick="handleRemoveServiceRow('arrival', ${arrival.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                 </div>
                             </td>
                         `;
@@ -4766,9 +4770,9 @@ function updateFlightsSummaryTable() {
                             <td class="border border-gray-300 px-2 py-1.5 text-center">${departure.pax_count || 0}</td>
                             <td class="border border-gray-300 px-2 py-1.5">${departure.driver_name || '-'}</td>
                             <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-1">
-                                    <button onclick="handleEditServiceRow('departure', ${departure.id})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                    <button onclick="handleRemoveServiceRow('departure', ${departure.id})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="handleEditServiceRow('departure', ${departure.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                                    <button onclick="handleRemoveServiceRow('departure', ${departure.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                 </div>
                             </td>
                         `;
