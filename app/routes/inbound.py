@@ -2037,6 +2037,50 @@ def api_get_itinerary_rows_html(request_id):
     except Exception as e:
         return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
 
+@inbound_bp.route('/api/<int:request_id>/itinerary-rows-bulk', methods=['POST'])
+def api_save_itinerary_rows_bulk(request_id):
+    """Save all itinerary rows in bulk"""
+    try:
+        request_obj = InboundRequest.query.get_or_404(request_id)
+        
+        # Authorization check
+        if request_obj.user_id != 1:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+        data = request.get_json()
+        updates = data.get('updates', [])
+        
+        for update in updates:
+            row_id = update.get('row_id')
+            if not row_id:
+                continue
+                
+            row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
+            if not row:
+                continue
+            
+            # Update fields
+            row.description = update.get('description', '')
+            row.meal_type = update.get('meal_type', '')
+            
+            # Handle restaurant supplier ID
+            restaurant_id = update.get('restaurant_supplier_id')
+            if restaurant_id:
+                try:
+                    row.restaurant_supplier_id = int(restaurant_id)
+                except ValueError:
+                    row.restaurant_supplier_id = None
+            else:
+                row.restaurant_supplier_id = None
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @inbound_bp.route('/api/add-hotel', methods=['POST'])
 @csrf.exempt
 def api_add_hotel():

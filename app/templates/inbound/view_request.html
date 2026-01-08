@@ -796,11 +796,6 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             <i class="fas fa-route text-purple-600"></i> Itinerary Details
                             <span id="panel-context-badge-itinerary" class="text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-500">Global</span>
                         </h3>
-                        {% if not view_only %}
-                        <button type="button" onclick="saveAllItineraryRows()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
-                            <i class="fas fa-save mr-1"></i>Save
-                        </button>
-                        {% endif %}
                     </div>
                     
                     <div class="p-3">
@@ -828,6 +823,17 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                             <h3 class="font-semibold text-slate-600 mb-1 text-sm">No Itinerary Yet</h3>
                             <p class="text-slate-400 text-xs">Set the travel dates above to generate the itinerary automatically.</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if not view_only %}
+                        <div class="flex justify-end gap-2 mt-3">
+                            <button type="button" onclick="addNewItineraryRow()" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-xs">
+                                <i class="fas fa-plus mr-1"></i>Add
+                            </button>
+                            <button type="button" onclick="saveAllItineraryRows()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
+                                <i class="fas fa-save mr-1"></i>Save
+                            </button>
                         </div>
                         {% endif %}
                     </div>
@@ -3706,64 +3712,42 @@ function addNewDepartureRecord() {
     addNewServiceRecord('departure');
 }
 
-// Add new itinerary row - creates a NEW row
-function addNewItineraryRow() {
-    // Clear edit row ID to ensure we create a new record
-    document.getElementById('itinerary_edit_row_id').value = '';
-    saveItineraryChanges();
-}
-
-// Save itinerary changes (add new or update existing)
-function saveItineraryChanges() {
-    const editRowId = document.getElementById('itinerary_edit_row_id').value;
-    const day = document.getElementById('itinerary_day').value;
-    const date = document.getElementById('itinerary_date').value;
-    const description = document.getElementById('itinerary_description').value;
-    const mealType = document.getElementById('itinerary_meal_type').value;
-    const restaurantId = document.getElementById('itinerary_restaurant').value;
+// Save all itinerary rows - collects data from all inline editable fields and saves in bulk
+function saveAllItineraryRows() {
+    const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
+    const updates = [];
     
-    // Validate required fields
-    let hasError = false;
-    clearFieldErrors('itinerary');
+    rows.forEach(row => {
+        const rowId = row.dataset.rowId;
+        const descriptionInput = row.querySelector('[data-field="description"]');
+        const mealTypeSelect = row.querySelector('[data-field="meal_type"]');
+        const restaurantSelect = row.querySelector('[data-field="restaurant_supplier_id"]');
+        
+        updates.push({
+            row_id: rowId,
+            description: descriptionInput ? descriptionInput.value : '',
+            meal_type: mealTypeSelect ? mealTypeSelect.value : '',
+            restaurant_supplier_id: restaurantSelect ? restaurantSelect.value : ''
+        });
+    });
     
-    if (!day) {
-        showFieldError('itinerary_day', 'Day is required');
-        hasError = true;
-    }
-    if (!date) {
-        showFieldError('itinerary_date', 'Date is required');
-        hasError = true;
-    }
-    if (!description) {
-        showFieldError('itinerary_description', 'Description is required');
-        hasError = true;
+    if (updates.length === 0) {
+        showNotification('No itinerary rows to save', 'info');
+        return;
     }
     
-    if (hasError) return;
-    
-    const data = {
-        row_id: editRowId || null,
-        day_number: day,
-        itinerary_date: date,
-        description: description,
-        meal_type: mealType,
-        restaurant_supplier_id: restaurantId || null
-    };
-    
-    fetch(`/inbound/api/${requestId}/itinerary-row`, {
+    fetch(`/inbound/api/${requestId}/itinerary-rows-bulk`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ updates: updates })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(editRowId ? 'Itinerary row updated' : 'Itinerary row added', 'success');
-            clearItineraryForm();
-            refreshItineraryTable();
+            showNotification('Itinerary saved successfully', 'success');
         } else {
             showNotification(data.error || 'Save failed', 'error');
         }
@@ -3774,58 +3758,43 @@ function saveItineraryChanges() {
     });
 }
 
-// Edit itinerary row - populate form with row data
-function editItineraryRow(rowId) {
-    const row = document.querySelector(`tr[data-row-id="${rowId}"]`);
-    if (!row) return;
+// Add new itinerary row - adds an empty row to the table
+function addNewItineraryRow() {
+    // Get next day number
+    const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
+    let nextDay = rows.length + 1;
     
-    document.getElementById('itinerary_edit_row_id').value = rowId;
-    document.getElementById('itinerary_day').value = row.dataset.day || '';
-    document.getElementById('itinerary_date').value = row.dataset.date || '';
-    document.getElementById('itinerary_description').value = row.dataset.description || '';
-    document.getElementById('itinerary_meal_type').value = row.dataset.mealType || '';
-    document.getElementById('itinerary_restaurant').value = row.dataset.restaurantId || '';
+    // Get request date range for the new row date
+    const fromDate = document.getElementById('fromDate')?.value || '';
     
-    // Scroll to form
-    document.getElementById('itinerary_day').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    document.getElementById('itinerary_day').focus();
-}
-
-// Delete itinerary row
-function deleteItineraryRow(rowId) {
-    if (!confirm('Are you sure you want to delete this itinerary row?')) return;
-    
-    fetch(`/inbound/api/itinerary-row/${rowId}/delete`, {
+    // Create new row via API
+    fetch(`/inbound/api/${requestId}/itinerary-row`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrfToken
-        }
+        },
+        body: JSON.stringify({
+            day_number: nextDay,
+            itinerary_date: fromDate,
+            description: 'New day',
+            meal_type: '',
+            restaurant_supplier_id: null
+        })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('Itinerary row deleted', 'success');
+            showNotification('New itinerary row added', 'success');
             refreshItineraryTable();
         } else {
-            showNotification(data.error || 'Delete failed', 'error');
+            showNotification(data.error || 'Add failed', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Delete failed', 'error');
+        showNotification('Add failed', 'error');
     });
-}
-
-// Clear itinerary form
-function clearItineraryForm() {
-    document.getElementById('itinerary_edit_row_id').value = '';
-    document.getElementById('itinerary_day').value = '';
-    document.getElementById('itinerary_date').value = '';
-    document.getElementById('itinerary_description').value = '';
-    document.getElementById('itinerary_meal_type').value = '';
-    document.getElementById('itinerary_restaurant').value = '';
-    clearFieldErrors('itinerary');
 }
 
 // Refresh itinerary table
@@ -3844,32 +3813,6 @@ function refreshItineraryTable() {
             if (emptyState) emptyState.classList.add('hidden');
         })
         .catch(error => console.error('Error refreshing itinerary:', error));
-}
-
-// Show field error
-function showFieldError(fieldId, message) {
-    const errorSpan = document.getElementById(`${fieldId}_error`);
-    const field = document.getElementById(fieldId);
-    if (errorSpan) {
-        errorSpan.textContent = message;
-        errorSpan.classList.remove('hidden');
-    }
-    if (field) {
-        field.classList.add('border-red-500');
-    }
-}
-
-// Clear field errors for a service type
-function clearFieldErrors(serviceType) {
-    const errorSpans = document.querySelectorAll(`[id^="${serviceType}_"][id$="_error"]`);
-    errorSpans.forEach(span => {
-        span.textContent = '';
-        span.classList.add('hidden');
-    });
-    const fields = document.querySelectorAll(`[data-service="${serviceType}"]`);
-    fields.forEach(field => {
-        field.classList.remove('border-red-500');
-    });
 }
 
 // Generic function to add a new service record and clear form after success
