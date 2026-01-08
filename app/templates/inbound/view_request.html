@@ -4344,11 +4344,12 @@ function saveServiceData(serviceType) {
             
             // For hotel: show success and clear form
             if (serviceType === 'hotel') {
+                const isEditMode = !!currentServiceContext.rowId;
                 const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
                 const roomCount = data.rooms ? data.rooms.length : 0;
                 const roomMsg = roomCount > 0 ? ` with ${roomCount} rooms` : '';
-                showNotification(`Hotel saved${roomMsg}! (${startDate} - ${endDate})`, 'success');
+                showNotification(isEditMode ? 'Hotel updated successfully!' : `Hotel saved${roomMsg}! (${startDate} - ${endDate})`, 'success');
                 activateIconsForDateRange(serviceType, fromDate, toDate);
                 
                 // Update hotelRoomsData cache with new room data from response
@@ -4373,6 +4374,18 @@ function saveServiceData(serviceType) {
                     document.getElementById('room-list-empty').classList.remove('hidden');
                     // Clear current editing hotel ID for new hotel entry
                     currentEditingHotelId = null;
+                    
+                    // Reset context to Add mode (for both new and edit)
+                    currentServiceContext = { serviceName: 'hotel', rowId: null };
+                    // Hide Save button
+                    const saveBtn = document.getElementById('save-btn-hotel');
+                    if (saveBtn) saveBtn.classList.add('hidden');
+                    // Reset badge
+                    const badge = document.getElementById('panel-context-badge-hotel');
+                    if (badge) {
+                        badge.textContent = 'Ready';
+                        badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-600';
+                    }
                 }, 300);
             }
             // Activate icons only for the specific date range
@@ -4384,9 +4397,25 @@ function saveServiceData(serviceType) {
                 // Clear form for next entry
                 setTimeout(() => clearServiceForm(serviceType), 300);
             } else if (currentServiceContext.rowId) {
-                // For day-specific services, activate only that day's icon
+                // For edit mode - update completed, reset to Add mode
                 activateIcon(currentServiceContext.rowId, serviceType);
-                showNotification('Service saved for this day!', 'success');
+                showNotification('Record updated successfully!', 'success');
+                
+                // Reset to Add New mode after successful edit
+                setTimeout(() => {
+                    clearServiceForm(serviceType);
+                    // Reset context to Add mode
+                    currentServiceContext = { serviceName: serviceType, rowId: null };
+                    // Hide Save button
+                    const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+                    if (saveBtn) saveBtn.classList.add('hidden');
+                    // Reset badge to show ready for new entry
+                    const badge = document.getElementById(`panel-context-badge-${serviceType}`);
+                    if (badge) {
+                        badge.textContent = 'Ready';
+                        badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-slate-100 text-slate-600';
+                    }
+                }, 300);
             } else {
                 showNotification('Service saved!', 'success');
             }

@@ -1122,8 +1122,10 @@ def api_save_service_data(request_id):
     if not is_global and not row_id:
         return jsonify({'success': False, 'error': 'Missing row_id for day-specific save'}), 400
     
-    # Validate row exists for day-specific saves (skip for arrival/departure which use different tables)
-    if not is_global and service_type not in ['arrival', 'departure']:
+    # Validate row exists for day-specific saves
+    # Skip validation for service types that use their own table IDs (not ItineraryRow IDs)
+    service_uses_own_table = ['arrival', 'departure', 'hotel', 'transport', 'guide', 'meal']
+    if not is_global and service_type not in service_uses_own_table:
         row = ItineraryRow.query.get(row_id)
         if not row or row.request_id != request_id:
             return jsonify({'success': False, 'error': 'Invalid row_id'}), 400
@@ -1152,24 +1154,26 @@ def api_save_service_data(request_id):
     
     try:
         if service_type == 'hotel':
-            if is_global:
-                # Check if editing an existing hotel (hotel_id provided) or adding new
-                hotel_id = data.get('hotel_id')
-                if hotel_id:
-                    # Update existing hotel
-                    hotel = InboundHotel.query.filter_by(id=hotel_id, request_id=request_id).first()
-                    if not hotel:
-                        return jsonify({'success': False, 'error': 'Hotel not found'}), 404
-                    print(f"[SAVE SERVICE] Updating existing hotel id={hotel_id}")
-                else:
-                    # Create new hotel entry
-                    hotel = InboundHotel(
-                        request_id=request_id,
-                        check_in_date=request_obj.from_date or date_type.today(),
-                        check_out_date=request_obj.to_date or date_type.today()
-                    )
-                    db.session.add(hotel)
-                    print(f"[SAVE SERVICE] Creating new hotel entry")
+            # Check if editing an existing hotel (row_id or hotel_id provided) or adding new
+            # row_id is passed when editing from Trip Summary
+            hotel_id = row_id or data.get('hotel_id')
+            if hotel_id:
+                # Update existing hotel
+                hotel = InboundHotel.query.filter_by(id=hotel_id, request_id=request_id).first()
+                if not hotel:
+                    return jsonify({'success': False, 'error': 'Hotel not found'}), 404
+                print(f"[SAVE SERVICE] Updating existing hotel id={hotel_id}")
+            else:
+                # Create new hotel entry
+                hotel = InboundHotel(
+                    request_id=request_id,
+                    check_in_date=request_obj.from_date or date_type.today(),
+                    check_out_date=request_obj.to_date or date_type.today()
+                )
+                db.session.add(hotel)
+                print(f"[SAVE SERVICE] Creating new hotel entry")
+            
+            if True:  # Keep indentation for the rest of the hotel logic
                 
                 hotel_name_value = form_data.get('hotel_name', '')
                 print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
@@ -1290,8 +1294,27 @@ def api_save_service_data(request_id):
                     hotel.notes = form_data.get('hotel_notes', '')
         
         elif service_type == 'transport':
-            if is_global:
-                # Parse date range from form
+            # Check if editing an existing transport record via row_id
+            if row_id:
+                transport = InboundTransport.query.filter_by(id=row_id, request_id=request_id).first()
+                if transport:
+                    # Update existing transport
+                    print(f"[SAVE SERVICE] Updating existing transport id={row_id}")
+                    transport.vehicle_type = form_data.get('transport_vehicle', '')
+                    transport.pickup_location = form_data.get('transport_pickup', '')
+                    transport.dropoff_location = form_data.get('transport_dropoff', '')
+                    transport.driver_name = form_data.get('transport_driver', '')
+                    transport.driver_phone = form_data.get('transport_phone', '')
+                    transport.status = form_data.get('transport_status', 'REQUESTED')
+                    transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                    supplier_id = form_data.get('transport_supplier')
+                    transport.supplier_id = int(supplier_id) if supplier_id else None
+                    if form_data.get('transport_from_date'):
+                        transport.date = datetime.strptime(form_data['transport_from_date'], '%Y-%m-%d').date()
+                else:
+                    return jsonify({'success': False, 'error': 'Transport record not found'}), 404
+            else:
+                # Create new transport entries for date range
                 from_date_str = form_data.get('transport_from_date', '')
                 to_date_str = form_data.get('transport_to_date', '')
                 
@@ -1302,10 +1325,8 @@ def api_save_service_data(request_id):
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
                 
-                # Create transport entry for each day in date range
                 current_date = from_date
                 created_count = 0
-                # Handle supplier_id
                 supplier_id = form_data.get('transport_supplier')
                 supplier_id = int(supplier_id) if supplier_id else None
                 while current_date <= to_date:
@@ -1326,35 +1347,33 @@ def api_save_service_data(request_id):
                     current_date += timedelta(days=1)
                 
                 print(f"[SAVE SERVICE] Created {created_count} transport entries from {from_date} to {to_date}")
-            else:
-                row = ItineraryRow.query.get(row_id)
-                if row:
-                    transport = InboundTransport.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
-                    if not transport:
-                        transport = InboundTransport(
-                            request_id=request_id,
-                            source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
-                        )
-                        db.session.add(transport)
-                    
-                    transport.vehicle_type = form_data.get('transport_vehicle', '')
-                    transport.pickup_location = form_data.get('transport_pickup', '')
-                    transport.dropoff_location = form_data.get('transport_dropoff', '')
-                    transport.driver_name = form_data.get('transport_driver', '')
-                    transport.driver_phone = form_data.get('transport_phone', '')
-                    transport.status = form_data.get('transport_status', 'REQUESTED')
-                    transport.cost = float(form_data.get('transport_cost', 0) or 0)
-                    # Handle supplier_id
-                    supplier_id = form_data.get('transport_supplier')
-                    transport.supplier_id = int(supplier_id) if supplier_id else None
-                    
-                    if form_data.get('transport_date'):
-                        transport.date = datetime.strptime(form_data['transport_date'], '%Y-%m-%d').date()
         
         elif service_type == 'guide':
-            if is_global:
-                # Parse date range from form
+            # Check if editing an existing guide record via row_id
+            if row_id:
+                guide = InboundGuide.query.filter_by(id=row_id, request_id=request_id).first()
+                if guide:
+                    # Update existing guide
+                    print(f"[SAVE SERVICE] Updating existing guide id={row_id}")
+                    guide_supplier_id = form_data.get('guide_supplier_id')
+                    guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
+                    if guide_supplier_id:
+                        from app.models.supplier import Supplier
+                        supplier = Supplier.query.get(guide_supplier_id)
+                        guide.guide_name = supplier.name if supplier else ''
+                    else:
+                        guide.guide_name = form_data.get('guide_name', '')
+                    guide.supplier_id = guide_supplier_id
+                    guide.language = form_data.get('guide_language', '')
+                    guide.telephone_number = form_data.get('guide_phone', '')
+                    guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                    guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                    if form_data.get('guide_from_date'):
+                        guide.date = datetime.strptime(form_data['guide_from_date'], '%Y-%m-%d').date()
+                else:
+                    return jsonify({'success': False, 'error': 'Guide record not found'}), 404
+            else:
+                # Create new guide entries for date range
                 from_date_str = form_data.get('guide_from_date', '')
                 to_date_str = form_data.get('guide_to_date', '')
                 
@@ -1365,13 +1384,10 @@ def api_save_service_data(request_id):
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
                 
-                # Create guide entry for each day in date range
                 current_date = from_date
                 created_count = 0
-                # Handle supplier_id from guide_supplier_id dropdown
                 guide_supplier_id = form_data.get('guide_supplier_id')
                 guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
-                # Look up supplier name
                 guide_name_text = ''
                 if guide_supplier_id:
                     from app.models.supplier import Supplier
@@ -1393,40 +1409,24 @@ def api_save_service_data(request_id):
                     current_date += timedelta(days=1)
                 
                 print(f"[SAVE SERVICE] Created {created_count} guide entries from {from_date} to {to_date}")
-            else:
-                row = ItineraryRow.query.get(row_id)
-                if row:
-                    guide = InboundGuide.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
-                    if not guide:
-                        guide = InboundGuide(
-                            request_id=request_id,
-                            source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
-                        )
-                        db.session.add(guide)
-                    
-                    # Handle supplier_id from guide_supplier_id dropdown
-                    guide_supplier_id = form_data.get('guide_supplier_id')
-                    guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
-                    # Look up supplier name
-                    if guide_supplier_id:
-                        from app.models.supplier import Supplier
-                        supplier = Supplier.query.get(guide_supplier_id)
-                        guide.guide_name = supplier.name if supplier else ''
-                    else:
-                        guide.guide_name = ''
-                    guide.supplier_id = guide_supplier_id
-                    guide.language = form_data.get('guide_language', '')
-                    guide.telephone_number = form_data.get('guide_phone', '')
-                    guide.cost = float(form_data.get('guide_cost', 0) or 0)
-                    guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
-                    
-                    if form_data.get('guide_date'):
-                        guide.date = datetime.strptime(form_data['guide_date'], '%Y-%m-%d').date()
         
         elif service_type == 'meal':
-            if is_global:
-                # Parse date range from form
+            # Check if editing an existing meal record via row_id
+            if row_id:
+                meal = InboundMeal.query.filter_by(id=row_id, request_id=request_id).first()
+                if meal:
+                    # Update existing meal
+                    print(f"[SAVE SERVICE] Updating existing meal id={row_id}")
+                    meal.restaurant = form_data.get('meal_restaurant', '')
+                    meal.meal_type = form_data.get('meal_type', '')
+                    meal.meal_note = form_data.get('meal_notes', '')
+                    meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
+                    if form_data.get('meal_from_date'):
+                        meal.date = datetime.strptime(form_data['meal_from_date'], '%Y-%m-%d').date()
+                else:
+                    return jsonify({'success': False, 'error': 'Meal record not found'}), 404
+            else:
+                # Create new meal entries for date range
                 from_date_str = form_data.get('meal_from_date', '')
                 to_date_str = form_data.get('meal_to_date', '')
                 
@@ -1437,7 +1437,6 @@ def api_save_service_data(request_id):
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
                 
-                # Create meal entry for each day in date range
                 current_date = from_date
                 created_count = 0
                 while current_date <= to_date:
@@ -1454,24 +1453,6 @@ def api_save_service_data(request_id):
                     current_date += timedelta(days=1)
                 
                 print(f"[SAVE SERVICE] Created {created_count} meal entries from {from_date} to {to_date}")
-            else:
-                row = ItineraryRow.query.get(row_id)
-                if row:
-                    meal = InboundMeal.query.filter_by(request_id=request_id, source_itinerary_id=row_id).first()
-                    if not meal:
-                        meal = InboundMeal(
-                            request_id=request_id,
-                            source_itinerary_id=row_id,
-                            date=row.date or date_type.today()
-                        )
-                        db.session.add(meal)
-                    
-                    meal.restaurant = form_data.get('meal_restaurant', '')
-                    meal.meal_type = form_data.get('meal_type', '')
-                    meal.total_cost = float(form_data.get('meal_cost', 0) or 0)
-                    
-                    if form_data.get('meal_date'):
-                        meal.date = datetime.strptime(form_data['meal_date'], '%Y-%m-%d').date()
         
         elif service_type == 'arrival':
             from app.models.inbound import ArrivalBatch
