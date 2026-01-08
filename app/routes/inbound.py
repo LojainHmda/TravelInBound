@@ -2475,7 +2475,6 @@ def api_get_service_record(request_id, service_type, record_id):
                     'visa_status': record.visa_status or '',
                     'meet_assist': record.meet_assist or False,
                     'representative_name': record.representative_name or '',
-                    'notes': record.notes or '',
                     'supplier_id': record.supplier_id
                 }
         
