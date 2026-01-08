@@ -2506,7 +2506,6 @@ def api_get_service_record(request_id, service_type, record_id):
                     'check_out_date': record.check_out_date.strftime('%Y-%m-%d') if record.check_out_date else '',
                     'nights': record.nights or 0,
                     'status': record.status or 'REQUESTED',
-                    'supplier_id': record.supplier_id,
                     'meal_plan': record.meal_plan or 'BB',
                     'single_rooms': record.single_rooms or 0,
                     'double_rooms': record.double_rooms or 0,

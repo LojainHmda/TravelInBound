@@ -4076,8 +4076,13 @@ function populateServiceForm(serviceType, record) {
             'hotel_name': record.hotel_name,
             'hotel_check_in': record.check_in_date,
             'hotel_check_out': record.check_out_date,
+            'hotel_category': record.hotel_category,
+            'hotel_board': record.meal_plan,
+            'hotel_single_rooms': record.single_rooms,
+            'hotel_double_rooms': record.double_rooms,
+            'hotel_triple_rooms': record.triple_rooms,
             'hotel_status': record.status,
-            'hotel_supplier': record.supplier_id
+            'hotel_notes': record.notes
         },
         'transport': {
             'transport_from_date': record.from_date || record.service_date,
