@@ -2527,6 +2527,18 @@ def api_get_service_record(request_id, service_type, record_id):
                     'supplier_id': record.supplier_id
                 }
         
+        elif service_type == 'itinerary':
+            record = ItineraryRow.query.filter_by(id=record_id, request_id=request_id).first()
+            if record:
+                record_data = {
+                    'id': record.id,
+                    'date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'description': record.description or '',
+                    'meal_type': record.meal_type or '',
+                    'restaurant_supplier_id': record.restaurant_supplier_id,
+                    'restaurant_name': record.restaurant_name or ''
+                }
+        
         else:
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
         
@@ -2566,6 +2578,8 @@ def api_delete_service_record(request_id, service_type, record_id):
             service = InboundGuide.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'meal':
             service = InboundMeal.query.filter_by(id=record_id, request_id=request_id).first()
+        elif service_type == 'itinerary':
+            service = ItineraryRow.query.filter_by(id=record_id, request_id=request_id).first()
         else:
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
         

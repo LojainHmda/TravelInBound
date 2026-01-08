@@ -1660,10 +1660,10 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                         </div>
                         
-                        <!-- Meals Table -->
+                        <!-- Itinerary Table -->
                         <div class="mb-2">
                             <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center">
-                                <i class="fas fa-utensils text-amber-500 mr-2"></i> Meal Services
+                                <i class="fas fa-route text-purple-500 mr-2"></i> Itinerary
                             </h4>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-xs border-collapse">
@@ -1677,25 +1677,25 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                             <th class="border border-gray-300 px-2 py-1.5 text-center font-semibold w-20">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="full-summary-meals">
-                                        {% if request.inbound_meals %}
-                                            {% for meal in request.inbound_meals %}
-                                            <tr class="hover:bg-gray-50" data-meal-key="{{ meal.meal_type or '' }}-{{ meal.restaurant_name or '' }}" data-service-type="meal" data-record-id="{{ meal.id }}">
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.service_date.strftime('%d %b') if meal.service_date else '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.meal_type or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ meal.restaurant_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5">{{ meal.location or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ meal.pax_count or 0 }}</td>
+                                    <tbody id="full-summary-itinerary">
+                                        {% if request.itinerary_rows %}
+                                            {% for row in request.itinerary_rows %}
+                                            <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{{ row.id }}">
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ row.date.strftime('%d %b') if row.date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ row.meal_type or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ row.restaurant_name or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5">{{ row.description or '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ request.pax or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
                                                     <div class="flex items-center justify-center gap-1">
-                                                        <button onclick="handleEditServiceRow('meal', {{ meal.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
-                                                        <button onclick="handleRemoveServiceRow('meal', {{ meal.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
+                                                        <button onclick="handleEditServiceRow('itinerary', {{ row.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
+                                                        <button onclick="handleRemoveServiceRow('itinerary', {{ row.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
                                                     </div>
                                                 </td>
                                             </tr>
                                             {% endfor %}
                                         {% else %}
-                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
+                                            <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>
                                         {% endif %}
                                     </tbody>
                                 </table>
@@ -3748,6 +3748,8 @@ function saveAllItineraryRows() {
     .then(data => {
         if (data.success) {
             showNotification('Itinerary saved successfully', 'success');
+            // Refresh the summary table to show updated data
+            refreshItinerarySummaryTable();
         } else {
             showNotification(data.error || 'Save failed', 'error');
         }
@@ -3787,6 +3789,8 @@ function addNewItineraryRow() {
         if (data.success) {
             showNotification('New itinerary row added', 'success');
             refreshItineraryTable();
+            // Also refresh the summary table
+            refreshItinerarySummaryTable();
         } else {
             showNotification(data.error || 'Add failed', 'error');
         }
@@ -3813,6 +3817,19 @@ function refreshItineraryTable() {
             if (emptyState) emptyState.classList.add('hidden');
         })
         .catch(error => console.error('Error refreshing itinerary:', error));
+}
+
+// Refresh itinerary summary table in Trip Summary
+function refreshItinerarySummaryTable() {
+    fetch(`/inbound/api/${requestId}/itinerary-summary-html`)
+        .then(response => response.text())
+        .then(html => {
+            const tbody = document.getElementById('full-summary-itinerary');
+            if (tbody) {
+                tbody.innerHTML = html;
+            }
+        })
+        .catch(error => console.error('Error refreshing itinerary summary:', error));
 }
 
 // Generic function to add a new service record and clear form after success
@@ -3960,6 +3977,31 @@ function updateDepartureRecord() {
 // Handle Edit button click from summary table - loads record data into form
 function handleEditServiceRow(serviceType, recordId) {
     console.log(`[handleEditServiceRow] Editing ${serviceType} record ${recordId}`);
+    
+    // Special handling for itinerary - scroll to the itinerary panel and highlight the row
+    if (serviceType === 'itinerary') {
+        // Switch to the itinerary tab
+        switchServiceTab('itinerary');
+        
+        // Scroll to the itinerary panel
+        const panel = document.getElementById('service-panel-itinerary');
+        if (panel) {
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Highlight the row being edited
+                const row = document.querySelector(`#itineraryTableBody tr[data-row-id="${recordId}"]`);
+                if (row) {
+                    row.classList.add('bg-blue-50', 'ring-2', 'ring-blue-300');
+                    setTimeout(() => {
+                        row.classList.remove('bg-blue-50', 'ring-2', 'ring-blue-300');
+                    }, 3000);
+                }
+            }, 100);
+        }
+        
+        showNotification('Edit the row inline and click Save to update.', 'info');
+        return;
+    }
     
     // Set the context for editing
     currentServiceContext = { serviceName: serviceType, rowId: recordId };
@@ -4110,6 +4152,15 @@ function handleRemoveServiceRow(serviceType, recordId) {
             const row = document.querySelector(`tr[data-service-type="${serviceType}"][data-record-id="${recordId}"]`);
             if (row) {
                 row.remove();
+            }
+            
+            // For itinerary, also remove from the itinerary table and refresh
+            if (serviceType === 'itinerary') {
+                const itineraryRow = document.querySelector(`#itineraryTableBody tr[data-row-id="${recordId}"]`);
+                if (itineraryRow) {
+                    itineraryRow.remove();
+                }
+                refreshItinerarySummaryTable();
             }
             
             // Clear context if we were editing this record
