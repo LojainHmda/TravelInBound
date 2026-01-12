@@ -6101,15 +6101,24 @@ function setupMainDateValidation() {
         });
         
         toDateEl.addEventListener('change', function() {
+            // Set max on fromDate so Start Date cannot exceed End Date
+            if (this.value) {
+                fromDateEl.max = this.value;
+            } else {
+                fromDateEl.removeAttribute('max');
+            }
             // Update service form date restrictions
             updateServiceDateRestrictions();
             // Recalculate days
             calculateDays();
         });
         
-        // Set initial min
+        // Set initial min/max constraints
         if (fromDateEl.value) {
             toDateEl.min = fromDateEl.value;
+        }
+        if (toDateEl.value) {
+            fromDateEl.max = toDateEl.value;
         }
     }
 }
