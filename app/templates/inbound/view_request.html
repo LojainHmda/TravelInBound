@@ -4875,6 +4875,87 @@ function clearFieldErrors(serviceType) {
     });
 }
 
+// Update all date dropdowns in service tabs when request dates change
+function updateServiceDateDropdowns(fromDate, toDate) {
+    if (!fromDate || !toDate) return;
+    
+    // Generate date options HTML
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    let optionsHtml = '<option value="">Select Date</option>';
+    
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+        const dateStr = currentDate.toISOString().split('T')[0];
+        const displayDate = currentDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        optionsHtml += `<option value="${dateStr}">${displayDate}</option>`;
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Update hotel date fields (use date inputs with min/max)
+    const hotelCheckIn = document.getElementById('hotel_check_in');
+    const hotelCheckOut = document.getElementById('hotel_check_out');
+    if (hotelCheckIn) {
+        hotelCheckIn.min = fromDate;
+        hotelCheckIn.max = toDate;
+        if (!hotelCheckIn.value || hotelCheckIn.value < fromDate || hotelCheckIn.value > toDate) {
+            hotelCheckIn.value = fromDate;
+        }
+    }
+    if (hotelCheckOut) {
+        hotelCheckOut.min = fromDate;
+        hotelCheckOut.max = toDate;
+        if (!hotelCheckOut.value || hotelCheckOut.value < fromDate || hotelCheckOut.value > toDate) {
+            hotelCheckOut.value = toDate;
+        }
+    }
+    
+    // Update transport date fields
+    const transportFrom = document.getElementById('transport_from_date');
+    const transportTo = document.getElementById('transport_to_date');
+    if (transportFrom) {
+        transportFrom.min = fromDate;
+        transportFrom.max = toDate;
+        if (!transportFrom.value || transportFrom.value < fromDate || transportFrom.value > toDate) {
+            transportFrom.value = fromDate;
+        }
+    }
+    if (transportTo) {
+        transportTo.min = fromDate;
+        transportTo.max = toDate;
+        if (!transportTo.value || transportTo.value < fromDate || transportTo.value > toDate) {
+            transportTo.value = toDate;
+        }
+    }
+    
+    // Update guide date fields
+    const guideFrom = document.getElementById('guide_from_date');
+    const guideTo = document.getElementById('guide_to_date');
+    if (guideFrom) {
+        guideFrom.min = fromDate;
+        guideFrom.max = toDate;
+        if (!guideFrom.value || guideFrom.value < fromDate || guideFrom.value > toDate) {
+            guideFrom.value = fromDate;
+        }
+    }
+    if (guideTo) {
+        guideTo.min = fromDate;
+        guideTo.max = toDate;
+        if (!guideTo.value || guideTo.value < fromDate || guideTo.value > toDate) {
+            guideTo.value = toDate;
+        }
+    }
+    
+    // Update optional date field if exists
+    const optionalDate = document.getElementById('optional_date');
+    if (optionalDate) {
+        optionalDate.min = fromDate;
+        optionalDate.max = toDate;
+    }
+    
+    console.log('[updateServiceDateDropdowns] Updated date fields with range:', fromDate, 'to', toDate);
+}
+
 function showNotification(message, type) {
     document.querySelectorAll('.tw-notification').forEach(n => n.remove());
     
@@ -5198,7 +5279,53 @@ function saveRequest() {
             if (headerEl) {
                 headerEl.innerHTML = data.request_number;
             }
-            showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
+            
+            // Update number of days field
+            const daysField = document.getElementById('noOfDays');
+            if (daysField && data.no_of_days) daysField.value = data.no_of_days;
+            
+            // If dates changed, update itinerary and date dropdowns dynamically
+            if (data.dates_changed) {
+                const fromDate = document.getElementById('fromDate')?.value;
+                const toDate = document.getElementById('toDate')?.value;
+                
+                // Update itinerary table
+                if (data.itinerary_html) {
+                    const tableBody = document.getElementById('itineraryTableBody');
+                    const itineraryTable = document.getElementById('itineraryTable');
+                    const emptyState = document.getElementById('itineraryEmptyState');
+                    
+                    if (tableBody) tableBody.innerHTML = data.itinerary_html;
+                    if (itineraryTable) itineraryTable.classList.remove('hidden');
+                    if (emptyState) emptyState.classList.add('hidden');
+                }
+                
+                // Update all date dropdowns in service tabs
+                updateServiceDateDropdowns(fromDate, toDate);
+                
+                // Update arrival/departure date field bounds
+                const arrivalDateField = document.getElementById('arrival_date');
+                if (arrivalDateField) {
+                    arrivalDateField.min = fromDate;
+                    arrivalDateField.max = toDate;
+                    if (arrivalDateField.value < fromDate || arrivalDateField.value > toDate) {
+                        arrivalDateField.value = fromDate;
+                    }
+                }
+                
+                const departureDateField = document.getElementById('departure_date');
+                if (departureDateField) {
+                    departureDateField.min = fromDate;
+                    departureDateField.max = toDate;
+                    if (departureDateField.value < fromDate || departureDateField.value > toDate) {
+                        departureDateField.value = toDate;
+                    }
+                }
+                
+                showNotification('Request saved! Itinerary regenerated for new dates.', 'success');
+            } else {
+                showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
+            }
         } else {
             showNotification(data.message || 'Error saving request', 'error');
         }
