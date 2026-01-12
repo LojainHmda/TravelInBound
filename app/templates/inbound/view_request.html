@@ -6283,16 +6283,22 @@ document.getElementById('meal_restaurant')?.addEventListener('change', function(
     }
 });
 
-// Date validation: To Date cannot be before From Date (for main request dates)
-// Only sets min attribute - does NOT aggressively clear values
+// Date validation: Bidirectional constraints for main request dates
+// FROM date picker: only enables dates up to TO date
+// TO date picker: only enables dates from FROM date onwards
 function setupMainDateValidation() {
     const fromDateEl = document.getElementById('fromDate');
     const toDateEl = document.getElementById('toDate');
     
     if (fromDateEl && toDateEl) {
+        // When FROM date changes: set TO date min (can't select dates before FROM)
         fromDateEl.addEventListener('change', function() {
             if (this.value) {
                 toDateEl.min = this.value;
+                // If TO is now before FROM, clear TO
+                if (toDateEl.value && toDateEl.value < this.value) {
+                    toDateEl.value = '';
+                }
             } else {
                 toDateEl.removeAttribute('min');
             }
@@ -6302,16 +6308,29 @@ function setupMainDateValidation() {
             calculateDays();
         });
         
+        // When TO date changes: set FROM date max (can't select dates after TO)
         toDateEl.addEventListener('change', function() {
+            if (this.value) {
+                fromDateEl.max = this.value;
+                // If FROM is now after TO, clear FROM
+                if (fromDateEl.value && fromDateEl.value > this.value) {
+                    fromDateEl.value = '';
+                }
+            } else {
+                fromDateEl.removeAttribute('max');
+            }
             // Update service form date restrictions
             updateServiceDateRestrictions();
             // Recalculate days
             calculateDays();
         });
         
-        // Set initial min
+        // Set initial constraints based on existing values
         if (fromDateEl.value) {
             toDateEl.min = fromDateEl.value;
+        }
+        if (toDateEl.value) {
+            fromDateEl.max = toDateEl.value;
         }
     }
 }
