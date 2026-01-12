@@ -1176,20 +1176,17 @@ def api_save_request(request_id):
         # Delete existing itinerary rows
         ItineraryRow.query.filter_by(request_id=request_id).delete()
         
-        # Generate new itinerary rows
+        # Generate new itinerary rows (day_number is calculated property, only set date)
         current_date = request_obj.from_date
-        day_number = 1
         while current_date <= request_obj.to_date:
             new_row = ItineraryRow(
                 request_id=request_id,
-                day_number=day_number,
                 date=current_date,
                 location='',
                 description=''
             )
             db.session.add(new_row)
             current_date += timedelta(days=1)
-            day_number += 1
         
         db.session.flush()
         
