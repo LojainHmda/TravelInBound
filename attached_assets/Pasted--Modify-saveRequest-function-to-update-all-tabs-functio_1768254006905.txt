@@ -1,0 +1,211 @@
+// Modify saveRequest function to update all tabs
+function saveRequest() {
+    const saveBtn = document.getElementById('saveRequestBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+    
+    // Only request details data
+    const data = {
+        from_date: document.getElementById('fromDate')?.value || '',
+        to_date: document.getElementById('toDate')?.value || '',
+        pax: document.querySelector('[name="pax"]')?.value || '',
+        customer_type: document.querySelector('[name="customer_type"]')?.value || '',
+        contact_name: document.querySelector('[name="contact_name"]')?.value || '',
+        nationality: document.querySelector('[name="nationality"]')?.value || '',
+        customer_id: document.getElementById('selectedCustomerId')?.value || '',
+        agent_ref: document.querySelector('[name="agent_ref')?.value || ''
+    };
+    
+    fetch(`/inbound/api/${requestId}/save-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Request</span>';
+        }
+        if (data.success) {
+            // Update fields after save
+            const daysField = document.getElementById('noOfDays');
+            if (daysField && data.no_of_days) daysField.value = data.no_of_days;
+            
+            const headerEl = document.getElementById('headerRequestNumber');
+            if (headerEl) headerEl.innerHTML = data.request_number;
+            
+            // Update all tabs with new request data
+            updateAllTabsWithNewRequestData(data);
+            
+            showNotification('Request details saved and tabs updated!', 'success');
+        } else {
+            showNotification(data.message || 'Error saving request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error saving request', 'error');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Request</span>';
+        }
+    });
+}
+
+// New function to update all tabs with new data
+function updateAllTabsWithNewRequestData(requestData) {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const pax = document.querySelector('[name="pax"]').value;
+    
+    // 1. Update date restrictions in all tabs
+    updateServiceDateRestrictions();
+    
+    // 2. Update default dates in tabs
+    updateDefaultDatesInTabs(fromDate, toDate);
+    
+    // 3. Update pax count in all tabs
+    updatePaxInAllTabs(pax);
+    
+    // 4. Update date badges in tabs
+    updateDateBadgesInTabs(fromDate, toDate);
+    
+    // 5. If dates changed significantly, show notification
+    if (requestData.dates_changed) {
+        showNotification('Date ranges updated in all service tabs', 'info');
+    }
+}
+
+// Update default dates in tabs
+function updateDefaultDatesInTabs(fromDate, toDate) {
+    // Hotel tab
+    const hotelCheckIn = document.getElementById('hotel_check_in');
+    const hotelCheckOut = document.getElementById('hotel_check_out');
+    if (hotelCheckIn && (!hotelCheckIn.value || hotelCheckIn.value < fromDate || hotelCheckIn.value > toDate)) {
+        hotelCheckIn.value = fromDate;
+    }
+    if (hotelCheckOut && (!hotelCheckOut.value || hotelCheckOut.value < fromDate || hotelCheckOut.value > toDate)) {
+        hotelCheckOut.value = toDate;
+    }
+    
+    // Transport tab
+    const transportFrom = document.getElementById('transport_from_date');
+    const transportTo = document.getElementById('transport_to_date');
+    if (transportFrom && (!transportFrom.value || transportFrom.value < fromDate || transportFrom.value > toDate)) {
+        transportFrom.value = fromDate;
+    }
+    if (transportTo && (!transportTo.value || transportTo.value < fromDate || transportTo.value > toDate)) {
+        transportTo.value = toDate;
+    }
+    
+    // Guide tab
+    const guideFrom = document.getElementById('guide_from_date');
+    const guideTo = document.getElementById('guide_to_date');
+    if (guideFrom && (!guideFrom.value || guideFrom.value < fromDate || guideFrom.value > toDate)) {
+        guideFrom.value = fromDate;
+    }
+    if (guideTo && (!guideTo.value || guideTo.value < fromDate || guideTo.value > toDate)) {
+        guideTo.value = toDate;
+    }
+    
+    // Meal tab
+    const mealFrom = document.getElementById('meal_from_date');
+    const mealTo = document.getElementById('meal_to_date');
+    if (mealFrom && (!mealFrom.value || mealFrom.value < fromDate || mealFrom.value > toDate)) {
+        mealFrom.value = fromDate;
+    }
+    if (mealTo && (!mealTo.value || mealTo.value < fromDate || mealTo.value > toDate)) {
+        mealTo.value = toDate;
+    }
+    
+    // Arrival & Departure tabs
+    const arrivalDate = document.getElementById('arrival_date');
+    const departureDate = document.getElementById('departure_date');
+    if (arrivalDate && (!arrivalDate.value || arrivalDate.value < fromDate || arrivalDate.value > toDate)) {
+        arrivalDate.value = fromDate;
+    }
+    if (departureDate && (!departureDate.value || departureDate.value < fromDate || departureDate.value > toDate)) {
+        departureDate.value = toDate;
+    }
+}
+
+// Update pax count in all tabs
+function updatePaxInAllTabs(pax) {
+    const paxFields = [
+        'hotel_pax_display',
+        'arrival_pax_count',
+        'departure_pax_count',
+        'meal_pax'
+    ];
+    
+    paxFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.value = pax;
+            // If it's a display field (like hotel_pax_display)
+            if (field.tagName !== 'INPUT') {
+                field.textContent = pax;
+            }
+        }
+    });
+    
+    // Update room capacity calculation in Hotel tab
+    calculateTotalGuests();
+}
+
+// Update date badges in tabs
+function updateDateBadgesInTabs(fromDate, toDate) {
+    if (fromDate && toDate) {
+        const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        
+        // Update badges in tabs that show date range
+        const serviceTypes = ['hotel', 'guide', 'transport', 'meal'];
+        
+        serviceTypes.forEach(serviceType => {
+            const badge = document.getElementById(`panel-context-badge-${serviceType}`);
+            if (badge && !currentServiceContext.rowId) { // Only if not in edit mode
+                badge.textContent = `Specific Days (${startDate} - ${endDate})`;
+                badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700";
+            }
+        });
+    }
+}
+
+// Modify initialization function - remove all auto-save
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editMode');
+    if (form) {
+        form.querySelectorAll('input, select, textarea').forEach(field => {
+            if (field.id === 'fromDate' || field.id === 'toDate') {
+                field.addEventListener('change', function() { 
+                    calculateDays(); // Only calculate days, no save
+                });
+            }
+            // No auto-save listeners added
+        });
+    }
+    
+    initializeRoomWizard();
+    setupDateFieldListeners();
+    initializeTabStates();
+    
+    // Rest of the code...
+});
+
+// Disable all auto-save functions
+function autoSaveChanges() {
+    // Disabled - do nothing
+    return;
+}
+
+function autoSaveRequestDetails() {
+    // Disabled - do nothing
+    return;
+}

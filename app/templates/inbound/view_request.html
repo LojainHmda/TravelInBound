@@ -5284,48 +5284,10 @@ function saveRequest() {
             const daysField = document.getElementById('noOfDays');
             if (daysField && data.no_of_days) daysField.value = data.no_of_days;
             
-            // If dates changed, update itinerary and date dropdowns dynamically
-            if (data.dates_changed) {
-                const fromDate = document.getElementById('fromDate')?.value;
-                const toDate = document.getElementById('toDate')?.value;
-                
-                // Update itinerary table
-                if (data.itinerary_html) {
-                    const tableBody = document.getElementById('itineraryTableBody');
-                    const itineraryTable = document.getElementById('itineraryTable');
-                    const emptyState = document.getElementById('itineraryEmptyState');
-                    
-                    if (tableBody) tableBody.innerHTML = data.itinerary_html;
-                    if (itineraryTable) itineraryTable.classList.remove('hidden');
-                    if (emptyState) emptyState.classList.add('hidden');
-                }
-                
-                // Update all date dropdowns in service tabs
-                updateServiceDateDropdowns(fromDate, toDate);
-                
-                // Update arrival/departure date field bounds
-                const arrivalDateField = document.getElementById('arrival_date');
-                if (arrivalDateField) {
-                    arrivalDateField.min = fromDate;
-                    arrivalDateField.max = toDate;
-                    if (arrivalDateField.value < fromDate || arrivalDateField.value > toDate) {
-                        arrivalDateField.value = fromDate;
-                    }
-                }
-                
-                const departureDateField = document.getElementById('departure_date');
-                if (departureDateField) {
-                    departureDateField.min = fromDate;
-                    departureDateField.max = toDate;
-                    if (departureDateField.value < fromDate || departureDateField.value > toDate) {
-                        departureDateField.value = toDate;
-                    }
-                }
-                
-                showNotification('Request saved! Itinerary regenerated for new dates.', 'success');
-            } else {
-                showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
-            }
+            // Update all tabs with new request data
+            updateAllTabsWithNewRequestData(data);
+            
+            showNotification('Request details saved and tabs updated!', 'success');
         } else {
             showNotification(data.message || 'Error saving request', 'error');
         }
@@ -5338,6 +5300,129 @@ function saveRequest() {
         console.error('Error:', error);
         showNotification('Error saving request', 'error');
     });
+}
+
+// Update all tabs with new request data
+function updateAllTabsWithNewRequestData(requestData) {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const pax = document.querySelector('[name="pax"]').value;
+    
+    // Update itinerary if dates changed
+    if (requestData.dates_changed && requestData.itinerary_html) {
+        const tableBody = document.getElementById('itineraryTableBody');
+        const itineraryTable = document.getElementById('itineraryTable');
+        const emptyState = document.getElementById('itineraryEmptyState');
+        
+        if (tableBody) tableBody.innerHTML = requestData.itinerary_html;
+        if (itineraryTable) itineraryTable.classList.remove('hidden');
+        if (emptyState) emptyState.classList.add('hidden');
+    }
+    
+    // Update date restrictions in all tabs
+    updateServiceDateDropdowns(fromDate, toDate);
+    
+    // Update default dates in tabs
+    updateDefaultDatesInTabs(fromDate, toDate);
+    
+    // Update pax count in all tabs
+    updatePaxInAllTabs(pax);
+    
+    // Update date badges in tabs
+    updateDateBadgesInTabs(fromDate, toDate);
+    
+    // Show additional notification if dates changed
+    if (requestData.dates_changed) {
+        showNotification('Date ranges updated in all service tabs', 'info');
+    }
+}
+
+// Update default dates in tabs
+function updateDefaultDatesInTabs(fromDate, toDate) {
+    // Hotel tab
+    const hotelCheckIn = document.getElementById('hotel_check_in');
+    const hotelCheckOut = document.getElementById('hotel_check_out');
+    if (hotelCheckIn && (!hotelCheckIn.value || hotelCheckIn.value < fromDate || hotelCheckIn.value > toDate)) {
+        hotelCheckIn.value = fromDate;
+    }
+    if (hotelCheckOut && (!hotelCheckOut.value || hotelCheckOut.value < fromDate || hotelCheckOut.value > toDate)) {
+        hotelCheckOut.value = toDate;
+    }
+    
+    // Transport tab
+    const transportFrom = document.getElementById('transport_from_date');
+    const transportTo = document.getElementById('transport_to_date');
+    if (transportFrom && (!transportFrom.value || transportFrom.value < fromDate || transportFrom.value > toDate)) {
+        transportFrom.value = fromDate;
+    }
+    if (transportTo && (!transportTo.value || transportTo.value < fromDate || transportTo.value > toDate)) {
+        transportTo.value = toDate;
+    }
+    
+    // Guide tab
+    const guideFrom = document.getElementById('guide_from_date');
+    const guideTo = document.getElementById('guide_to_date');
+    if (guideFrom && (!guideFrom.value || guideFrom.value < fromDate || guideFrom.value > toDate)) {
+        guideFrom.value = fromDate;
+    }
+    if (guideTo && (!guideTo.value || guideTo.value < fromDate || guideTo.value > toDate)) {
+        guideTo.value = toDate;
+    }
+    
+    // Arrival & Departure tabs
+    const arrivalDate = document.getElementById('arrival_date');
+    const departureDate = document.getElementById('departure_date');
+    if (arrivalDate && (!arrivalDate.value || arrivalDate.value < fromDate || arrivalDate.value > toDate)) {
+        arrivalDate.value = fromDate;
+    }
+    if (departureDate && (!departureDate.value || departureDate.value < fromDate || departureDate.value > toDate)) {
+        departureDate.value = toDate;
+    }
+}
+
+// Update pax count in all tabs
+function updatePaxInAllTabs(pax) {
+    const paxFields = [
+        'hotel_pax_display',
+        'arrival_pax_count',
+        'departure_pax_count',
+        'meal_pax'
+    ];
+    
+    paxFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            if (field.tagName === 'INPUT' || field.tagName === 'SELECT') {
+                field.value = pax;
+            } else {
+                field.textContent = pax;
+            }
+        }
+    });
+    
+    // Update room capacity calculation in Hotel tab if function exists
+    if (typeof calculateTotalGuests === 'function') {
+        calculateTotalGuests();
+    }
+}
+
+// Update date badges in tabs
+function updateDateBadgesInTabs(fromDate, toDate) {
+    if (fromDate && toDate) {
+        const startDate = new Date(fromDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        const endDate = new Date(toDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        
+        // Update badges in tabs that show date range
+        const serviceTypes = ['hotel', 'guide', 'transport', 'meal'];
+        
+        serviceTypes.forEach(serviceType => {
+            const badge = document.getElementById(`panel-context-badge-${serviceType}`);
+            if (badge && (!currentServiceContext || !currentServiceContext.rowId)) {
+                badge.textContent = `${startDate} - ${endDate}`;
+                badge.className = "text-xs font-semibold px-2 py-0.5 rounded bg-amber-100 text-amber-700";
+            }
+        });
+    }
 }
 
 // Cancel Request
@@ -6504,19 +6589,25 @@ function saveRoomDistribution() {
     });
 }
 
+// Disabled auto-save functions - all saves now require explicit "Save Request" button
+function autoSaveChanges() {
+    return; // Disabled - do nothing
+}
+
+function autoSaveRequestDetails() {
+    return; // Disabled - do nothing
+}
+
 // Initialization
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editMode');
     if (form) {
         form.querySelectorAll('input, select, textarea').forEach(field => {
             if (field.id === 'fromDate' || field.id === 'toDate') {
-                field.addEventListener('change', function() { calculateDays(); autoSaveChanges(); });
-            } else {
-                field.addEventListener('change', autoSaveChanges);
-                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
-                    field.addEventListener('input', autoSaveChanges);
-                }
+                // Only calculate days, no auto-save
+                field.addEventListener('change', function() { calculateDays(); });
             }
+            // No auto-save listeners added - user must click "Save Request"
         });
     }
     
