@@ -5159,14 +5159,24 @@ let requestIsSaved = {{ 'true' if request.is_saved else 'false' }};
 // Save Request with final sequence number
 function saveRequest() {
     const saveBtn = document.getElementById('saveRequestBtn');
+    
+    // Validate dates before saving
+    const fromDate = document.getElementById('fromDate')?.value || '';
+    const toDate = document.getElementById('toDate')?.value || '';
+    
+    if (fromDate && toDate && fromDate > toDate) {
+        showNotification('Start Date cannot be later than End Date', 'error');
+        return;
+    }
+    
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     }
     
     const data = {
-        from_date: document.getElementById('fromDate')?.value || '',
-        to_date: document.getElementById('toDate')?.value || '',
+        from_date: fromDate,
+        to_date: toDate,
         pax: document.querySelector('[name="pax"]')?.value || '',
         customer_type: document.querySelector('[name="customer_type"]')?.value || '',
         contact_name: document.querySelector('[name="contact_name"]')?.value || '',
