@@ -1610,8 +1610,8 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
 
 
 
-<!-- Auto-save Indicator -->
-<div class="auto-save-indicator" id="autoSaveIndicator">
+<!-- Auto-save Indicator (disabled - manual save only) -->
+<div class="auto-save-indicator hidden" id="autoSaveIndicator">
     <i class="fas fa-spinner"></i>
     <span>Saving...</span>
 </div>
@@ -6479,15 +6479,12 @@ function saveRoomDistribution() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editMode');
     if (form) {
+        // Only attach calculateDays to date fields - NO auto-save
         form.querySelectorAll('input, select, textarea').forEach(field => {
             if (field.id === 'fromDate' || field.id === 'toDate') {
-                field.addEventListener('change', function() { calculateDays(); autoSaveChanges(); });
-            } else {
-                field.addEventListener('change', autoSaveChanges);
-                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
-                    field.addEventListener('input', autoSaveChanges);
-                }
+                field.addEventListener('change', function() { calculateDays(); });
             }
+            // No auto-save listeners - user must click "Save Request" manually
         });
     }
     
