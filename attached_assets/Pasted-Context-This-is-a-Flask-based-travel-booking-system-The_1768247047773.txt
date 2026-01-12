@@ -1,0 +1,93 @@
+Context: This is a Flask-based travel booking system. The following changes were made to simplify the workflow, fix bugs, and improve the user experience.
+Changes Made:
+1. Status System Simplification
+Reduced status workflow from 7 states to 3: Request, Confirmed, Invoiced
+Updated all status displays, filters, and API endpoints
+Added backward compatibility mapping for old status values
+Files: app/routes/inbound.py, app/templates/inbound/view_request.html, app/templates/inbound/index.html, app/templates/index.html, app/routes/main.py
+2. Auto-Save Removal
+Removed all auto-save functionality from Request Details form
+Users must click "Save Request" to persist changes
+Removed event listeners that triggered auto-save on input/change events
+Files: app/templates/inbound/view_request.html
+3. Service Tab Improvements
+Fixed tab switching between Arrival, Departure, Hotel, Transport, Guide, and Itinerary tabs
+Implemented Add/Save button toggle: show "Add" for new records, "Save" for editing
+Fixed Trip Summary action buttons to always render Edit/Remove buttons
+Files: app/templates/inbound/view_request.html
+4. Service Date Range Implementation
+Transport services: create single row with date (from_date) and end_date (to_date) instead of per-day entries
+Guide services: create single row with date range instead of per-day entries
+Added date range display properties to models
+Files: app/routes/inbound.py, app/models/inbound.py, app/templates/inbound/view_request.html
+5. Invoice Integration
+Automatic invoice creation when request status changes to INVOICED
+Added inbound_request_id to Invoice model
+Made booking_id nullable in Invoice model
+Added redirect to invoice page after status transition to INVOICED
+Files: app/models/invoice.py, app/routes/inbound.py, update_invoice_for_inbound_requests.py, migrations/009_add_inbound_request_to_invoice.sql
+6. UI Component Removal
+Removed status sidebar component from request view page
+Removed stage-bar component (bottom advancement dropdown)
+Removed Dashboard and View buttons from request header
+Files: app/templates/inbound/view_request.html
+7. Action Buttons Implementation
+Added Cancel button: cancels request (sets status to CANCELLED)
+Added Submit button: transitions REQUEST → CONFIRMED, CONFIRMED → INVOICED
+Added "Go to Invoice" button for INVOICED status
+Removed confirmation popup for Submit action
+Files: app/routes/inbound.py, app/templates/inbound/view_request.html
+8. Save Validation
+Mandatory save before submit: prevents submission of unsaved requests
+Conditional visibility: "Save Request" button hidden for CONFIRMED and INVOICED statuses
+Dynamic is_saved flag tracking
+Files: app/templates/inbound/view_request.html, app/models/inbound.py
+9. Dashboard Enhancements
+Added 3 status cards (Requested, Confirmed, Invoiced) to main dashboard
+Added status cards to inbound index page
+Excluded unsaved draft requests from counts and displays
+Files: app/templates/index.html, app/templates/inbound/index.html, app/routes/main.py, app/routes/inbound.py
+10. Itinerary Management
+Removed "Add" button from itinerary tab (only "Save" remains)
+Itinerary always in edit/update mode
+Data persistence: entered data remains visible after save (no form reset)
+Trip Summary filtering: only shows itinerary rows with meal_type OR restaurant_supplier_id
+Fixed itinerary day increment logic
+Files: app/templates/inbound/view_request.html, app/routes/inbound.py
+11. Restaurant Dropdown Update
+Fixed restaurant dropdown to update dynamically after adding new restaurant
+Updates all restaurant dropdowns in itinerary table without page refresh
+Files: app/templates/inbound/view_request.html
+12. Guide Service Validation Fix
+Fixed false validation error: accepts either guide name OR supplier selection
+Guide name auto-populated from supplier if supplier is selected
+Files: app/routes/inbound.py
+13. Database & Configuration Fixes
+Fixed database connection timeout error for SQLite
+Fixed port binding issues (changed to 8080)
+Added error handling for missing database columns
+Files: app/__init__.py, main.py, app/routes/finance.py
+14. Template Components
+Created dedicated hotel summary template for Trip Summary
+Updated hotel entries template with data attributes
+Files: app/templates/components/hotel_summary_entries.html (new), app/templates/components/hotel_entries.html
+15. Test Data & Migrations
+Added default suppliers script (3 examples per supplier type)
+Created invoice migration script for both SQLite and PostgreSQL
+Files: add_default_suppliers.py (new), update_invoice_for_inbound_requests.py (new), migrations/009_add_inbound_request_to_invoice.sql (new)
+16. Bug Fixes
+Fixed incorrect URL endpoint in find_bookings page
+Fixed PAX field auto-update in room distribution
+Fixed invoice icon display for INVOICED status
+Files: app/templates/booking/find_bookings.html, app/templates/inbound/view_request.html, app/templates/inbound/index.html
+Total Files Changed:
+Modified: 14 files
+Added: 4 files
+Deleted: 0 files
+Key Architectural Changes:
+Status workflow: 7 states → 3 states
+Service creation: per-day entries → date range entries
+Save behavior: auto-save → manual save required
+Invoice creation: manual → automatic on INVOICED status
+UI: complex sidebar navigation → simplified action buttons
+This prompt can be used to document the changes, recreate them in another environment, or explain the modifications to another developer or AI system.
