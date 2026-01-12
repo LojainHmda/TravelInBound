@@ -1610,8 +1610,8 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
 
 
 
-<!-- Auto-save Indicator (disabled - manual save only) -->
-<div class="auto-save-indicator hidden" id="autoSaveIndicator">
+<!-- Auto-save Indicator -->
+<div class="auto-save-indicator" id="autoSaveIndicator">
     <i class="fas fa-spinner"></i>
     <span>Saving...</span>
 </div>
@@ -5159,24 +5159,14 @@ let requestIsSaved = {{ 'true' if request.is_saved else 'false' }};
 // Save Request with final sequence number
 function saveRequest() {
     const saveBtn = document.getElementById('saveRequestBtn');
-    
-    // Validate dates before saving
-    const fromDate = document.getElementById('fromDate')?.value || '';
-    const toDate = document.getElementById('toDate')?.value || '';
-    
-    if (fromDate && toDate && fromDate > toDate) {
-        showNotification('Start Date cannot be later than End Date', 'error');
-        return;
-    }
-    
     if (saveBtn) {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     }
     
     const data = {
-        from_date: fromDate,
-        to_date: toDate,
+        from_date: document.getElementById('fromDate')?.value || '',
+        to_date: document.getElementById('toDate')?.value || '',
         pax: document.querySelector('[name="pax"]')?.value || '',
         customer_type: document.querySelector('[name="customer_type"]')?.value || '',
         contact_name: document.querySelector('[name="contact_name"]')?.value || '',
@@ -5208,32 +5198,6 @@ function saveRequest() {
             if (headerEl) {
                 headerEl.innerHTML = data.request_number;
             }
-            
-            // If dates changed, update itinerary and reload page for service tabs
-            if (data.dates_changed) {
-                // Update itinerary table if HTML provided
-                if (data.itinerary_html) {
-                    const tableBody = document.getElementById('itineraryTableBody');
-                    const itineraryTable = document.getElementById('itineraryTable');
-                    const emptyState = document.getElementById('itineraryEmptyState');
-                    
-                    if (tableBody) tableBody.innerHTML = data.itinerary_html;
-                    if (itineraryTable) itineraryTable.classList.remove('hidden');
-                    if (emptyState) emptyState.classList.add('hidden');
-                }
-                
-                // Update number of days
-                const daysField = document.getElementById('noOfDays');
-                if (daysField && data.no_of_days) daysField.value = data.no_of_days;
-                
-                // Reload page to update all service tabs with new dates
-                showNotification('Request saved! Dates changed - reloading...', 'success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-                return;
-            }
-            
             showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
         } else {
             showNotification(data.message || 'Error saving request', 'error');
@@ -6127,24 +6091,15 @@ function setupMainDateValidation() {
         });
         
         toDateEl.addEventListener('change', function() {
-            // Set max on fromDate so Start Date cannot exceed End Date
-            if (this.value) {
-                fromDateEl.max = this.value;
-            } else {
-                fromDateEl.removeAttribute('max');
-            }
             // Update service form date restrictions
             updateServiceDateRestrictions();
             // Recalculate days
             calculateDays();
         });
         
-        // Set initial min/max constraints
+        // Set initial min
         if (fromDateEl.value) {
             toDateEl.min = fromDateEl.value;
-        }
-        if (toDateEl.value) {
-            fromDateEl.max = toDateEl.value;
         }
     }
 }
@@ -6426,12 +6381,15 @@ function saveRoomDistribution() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editMode');
     if (form) {
-        // Only attach calculateDays to date fields - NO auto-save
         form.querySelectorAll('input, select, textarea').forEach(field => {
             if (field.id === 'fromDate' || field.id === 'toDate') {
-                field.addEventListener('change', function() { calculateDays(); });
+                field.addEventListener('change', function() { calculateDays(); autoSaveChanges(); });
+            } else {
+                field.addEventListener('change', autoSaveChanges);
+                if (field.type === 'text' || field.tagName === 'TEXTAREA') {
+                    field.addEventListener('input', autoSaveChanges);
+                }
             }
-            // No auto-save listeners - user must click "Save Request" manually
         });
     }
     
