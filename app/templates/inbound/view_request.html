@@ -4,6 +4,9 @@
 
 {% block styles %}
 <style>
+/* Ensure hidden class works */
+.hidden { display: none !important; }
+
 /* Tailwind CSS Overrides */
 .tw-container { max-width: 1600px; margin: 0 auto; padding: 1rem 2rem; }
 
@@ -186,255 +189,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
 /* =================================================== */
 
 /* --- Toggle Button --- */
-.sidebar-toggle-btn {
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1050;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    padding: 12px 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-.sidebar-toggle-btn:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-.sidebar-toggle-btn i {
-    font-size: 1.1rem;
-}
-
-/* --- Backdrop --- */
-.sidebar-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1055;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
-
-.sidebar-backdrop.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* --- Main Sidebar Panel --- */
-.sidebar-panel {
-    position: fixed;
-    top: 0;
-    right: -100%;
-    width: 280px;
-    max-width: 90vw;
-    height: 100vh;
-    background: #ffffff;
-    z-index: 1060;
-    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
-    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-}
-
-.sidebar-panel.open {
-    right: 0;
-}
-
-/* --- Sidebar Header --- */
-.sidebar-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.sidebar-header-content h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-.sidebar-header-content p {
-    margin: 0.25rem 0 0;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.sidebar-close-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.sidebar-close-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-/* --- Sidebar Body --- */
-.sidebar-body {
-    flex-grow: 1;
-    padding: 2rem 1.5rem;
-    overflow-y: auto;
-}
-
-/* --- Progress Track --- */
-.progress-track {
-    position: relative;
-}
-
-.progress-line {
-    position: absolute;
-    left: 19px;
-    top: 35px;
-    width: 2px;
-    height: 0;
-    background: #e2e8f0;
-    transition: height 0.5s ease-in-out, background 0.3s ease;
-    z-index: 1;
-}
-
-/* --- Status Step --- */
-.status-step {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.status-step:hover {
-    transform: translateX(-5px);
-}
-
-.status-step:last-child {
-    margin-bottom: 0;
-}
-
-/* --- Status Indicator --- */
-.status-indicator {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #f1f5f9;
-    border: 3px solid #e2e8f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-    font-size: 14px;
-    flex-shrink: 0;
-    margin-right: 1rem;
-    transition: all 0.3s ease;
-    z-index: 2;
-    position: relative;
-}
-
-.status-step.completed .status-indicator {
-    background: #10b981;
-    border-color: #10b981;
-    color: white;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-}
-
-.status-step.active .status-indicator {
-    background: #3b82f6;
-    border-color: #3b82f6;
-    color: white;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-    }
-    70% {
-        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-    }
-}
-
-/* --- Status Content --- */
-.status-content {
-    padding-top: 5px;
-}
-
-.status-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #1e293b;
-    margin-bottom: 0.25rem;
-}
-
-.status-desc {
-    font-size: 0.875rem;
-    color: #64748b;
-    line-height: 1.4;
-}
-
-.status-step.active .status-title {
-    color: #3b82f6;
-}
-
-.status-step.completed .status-title {
-    color: #10b981;
-}
-
-/* --- Responsive Design --- */
-@media (max-width: 768px) {
-    .sidebar-panel {
-        width: 100vw;
-        max-width: 100vw;
-        border-radius: 0;
-    }
-    .sidebar-toggle-btn {
-        right: 10px;
-        padding: 10px 14px;
-    }
-}
-
-/* Workflow stage bar */
-.stage-bar {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #1e293b;
-    padding: 0.5rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    z-index: 100;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-}
 
 /* Hotel card */
 .hotel-card {
@@ -564,7 +319,6 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
 /* Responsive */
 @media (max-width: 768px) {
     .tw-container { padding: 1rem; }
-    .stage-bar { flex-wrap: wrap; gap: 0.5rem; }
 }
 </style>
 {% endblock %}
@@ -630,23 +384,47 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                 </div>
             </div>
             
-            {% if not view_only %}
+            {% set mapped_status = request.status %}
+            {% if request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] %}
+                {% set mapped_status = 'CONFIRMED' %}
+            {% elif request.status in ['INVOICE', 'COMPLETED', 'INVOICED'] %}
+                {% set mapped_status = 'INVOICED' %}
+            {% endif %}
+            
+            {% if not view_only and mapped_status != 'CONFIRMED' and mapped_status != 'INVOICED' %}
             <button type="button" id="saveRequestBtn" class="tw-btn tw-btn-primary tw-btn-sm" onclick="saveRequest()">
                 <i class="fas fa-save"></i>
                 <span>Save Request</span>
             </button>
             {% endif %}
-            <a href="{{ url_for('main.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
-                <i class="fas fa-home"></i>
-                <span class="hidden sm:inline">Dashboard</span>
+            
+            {% if mapped_status == 'REQUEST' and not view_only %}
+            <button type="button" class="tw-btn tw-btn-danger tw-btn-sm" onclick="cancelRequest()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+            <button type="button" class="tw-btn tw-btn-success tw-btn-sm" onclick="submitRequest()">
+                <i class="fas fa-check"></i>
+                <span>Submit</span>
+            </button>
+            {% elif mapped_status == 'CONFIRMED' and not view_only %}
+            <button type="button" class="tw-btn tw-btn-danger tw-btn-sm" onclick="cancelRequest()">
+                <i class="fas fa-times"></i>
+                <span>Cancel</span>
+            </button>
+            <button type="button" class="tw-btn tw-btn-success tw-btn-sm" onclick="submitRequest()">
+                <i class="fas fa-check"></i>
+                <span>Submit</span>
+            </button>
+            {% elif mapped_status == 'INVOICED' and not view_only %}
+            <a href="{{ url_for('inbound.generate_invoice', request_id=request.id) }}" class="tw-btn tw-btn-primary tw-btn-sm">
+                <i class="fas fa-file-invoice"></i>
+                <span>Go to Invoice</span>
             </a>
+            {% endif %}
             <a href="{{ url_for('inbound.index') }}" class="tw-btn tw-btn-secondary tw-btn-sm">
                 <i class="fas fa-list"></i>
                 <span class="hidden sm:inline">Orders List</span>
-            </a>
-            <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode={{ 'edit' if view_only else 'view' }}" class="tw-btn tw-btn-secondary tw-btn-sm">
-                <i class="fas {{ 'fa-edit' if view_only else 'fa-eye' }}"></i>
-                {{ 'Edit' if view_only else 'View' }}
             </a>
             </div>
         </div>
@@ -828,9 +606,6 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                         
                         {% if not view_only %}
                         <div class="flex justify-end gap-2 mt-3">
-                            <button type="button" onclick="addNewItineraryRow()" class="px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium text-xs">
-                                <i class="fas fa-plus mr-1"></i>Add
-                            </button>
                             <button type="button" onclick="saveAllItineraryRows()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs">
                                 <i class="fas fa-save mr-1"></i>Save
                             </button>
@@ -921,7 +696,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                 </div>
                             </div>
                             <div class="flex justify-end gap-2 mt-2">
-                                <button type="button" onclick="addNewArrivalRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                <button type="button" id="add-btn-arrival" onclick="addNewArrivalRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
                                     <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
                                 <button type="button" id="save-btn-arrival" onclick="updateArrivalRecord()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs hidden">
@@ -1005,7 +780,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                 </div>
                             </div>
                              <div class="flex justify-end gap-2 mt-2">
-                                <button type="button" onclick="addNewDepartureRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                <button type="button" id="add-btn-departure" onclick="addNewDepartureRecord()" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
                                     <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
                                 <button type="button" id="save-btn-departure" onclick="updateDepartureRecord()" class="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium text-xs hidden">
@@ -1172,7 +947,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                             <!-- Add/Save Buttons -->
                             <div class="flex justify-end gap-2">
-                                <button type="button" onclick="addNewServiceData('hotel')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                <button type="button" id="add-btn-hotel" onclick="addNewServiceData('hotel')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
                                     <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
                                 <button type="button" id="save-btn-hotel" onclick="saveServiceData('hotel')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-xs hidden">
@@ -1253,7 +1028,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             </div>
                             <!-- Add/Save Buttons -->
                             <div class="flex justify-end gap-2">
-                                <button type="button" onclick="addNewServiceData('guide')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
+                                <button type="button" id="add-btn-guide" onclick="addNewServiceData('guide')" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-xs">
                                     <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
                                 <button type="button" id="save-btn-guide" onclick="saveServiceData('guide')" class="px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium text-xs hidden">
@@ -1357,7 +1132,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                             
                             <!-- Add/Save Buttons -->
                             <div class="flex justify-end gap-2 pt-1">
-                                <button type="button" onclick="addNewServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
+                                <button type="button" id="add-btn-transport" onclick="addNewServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm">
                                     <i class="fas fa-plus mr-1"></i>Add New
                                 </button>
                                 <button type="button" id="save-btn-transport" onclick="saveServiceData('transport')" class="inline-flex items-center px-3 py-1.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-all font-medium text-xs shadow-sm hidden">
@@ -1500,10 +1275,14 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button onclick="handleEditServiceRow('arrival', {{ batch.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
                                                         <button onclick="handleRemoveServiceRow('arrival', {{ batch.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1519,10 +1298,14 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ batch.pax_count or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ batch.driver_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button onclick="handleEditServiceRow('departure', {{ batch.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
                                                         <button onclick="handleRemoveServiceRow('departure', {{ batch.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1570,10 +1353,14 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if hotel.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif hotel.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ hotel.status or 'PENDING' }}</span>
                                                 </td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button onclick="handleEditServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
                                                         <button onclick="handleRemoveServiceRow('hotel', {{ hotel.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1606,7 +1393,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                         {% if request.inbound_transports %}
                                             {% for transport in request.inbound_transports %}
                                             <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ transport.date_range_display if transport.end_date and transport.end_date != transport.date else (transport.service_date.strftime('%d %b') if transport.service_date else '-') }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or '-' }}</td>
@@ -1614,10 +1401,14 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                     <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
                                                 </td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
                                                         <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1650,14 +1441,18 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                             {% for guide in request.inbound_guides %}
                                             <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
-                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}</td>
+                                                <td class="border border-gray-300 px-2 py-1.5 text-center">{{ guide.date_range_display if guide.end_date and guide.end_date != guide.date else (guide.service_date.strftime('%d %b') if guide.service_date else '-') }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-2">
                                                         <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
                                                         <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endfor %}
@@ -1696,10 +1491,14 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
                                                 <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ row.restaurant_name or '-' }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center">{{ request.pax or 0 }}</td>
                                                 <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                                                    {% if not view_only %}
                                                     <div class="flex items-center justify-center gap-1">
                                                         <button onclick="handleEditServiceRow('itinerary', {{ row.id }})" class="text-blue-600 hover:text-blue-800" title="Edit"><i class="fas fa-edit"></i></button>
                                                         <button onclick="handleRemoveServiceRow('itinerary', {{ row.id }})" class="text-red-600 hover:text-red-800" title="Remove"><i class="fas fa-trash"></i></button>
                                                     </div>
+                                                    {% else %}
+                                                    <span class="text-gray-400 text-xs">-</span>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% endif %}
@@ -1809,159 +1608,7 @@ input[type="time"]::-webkit-datetime-edit-fields-wrapper {
     </div>
 </div>
 
-<!-- Redesigned Status Sidebar Toggle -->
-<button class="sidebar-toggle-btn" onclick="toggleStatusSidebar()" aria-label="Toggle Status Sidebar">
-    <i class="fas fa-stream"></i>
-</button>
 
-<!-- Status Sidebar Backdrop -->
-<div class="sidebar-backdrop" id="statusSidebarBackdrop" onclick="toggleStatusSidebar()"></div>
-
-<!-- Redesigned Status Sidebar -->
-<div class="sidebar-panel" id="statusSidebarOverlay">
-    <!-- Sidebar Header -->
-    <div class="sidebar-header">
-        <div class="sidebar-header-content">
-            <h2 class="sidebar-title">Request Workflow</h2>
-            <p class="sidebar-subtitle">Track your progress</p>
-        </div>
-        <button class="sidebar-close-btn" onclick="toggleStatusSidebar()" aria-label="Close Sidebar">
-            <i class="fas fa-times"></i>
-        </button>
-    </div>
-
-    <!-- Sidebar Body -->
-    <div class="sidebar-body">
-        <div class="progress-track">
-            <!-- Progress Line -->
-            <div class="progress-line" id="progressLine"></div>
-            
-            <!-- Status Steps -->
-            <div class="status-step {% if request.status == 'REQUEST' %}active{% elif request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="REQUEST" onclick="updateRequestStatus('REQUEST')">
-                <div class="status-indicator">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Request</div>
-                    <div class="status-desc">Initial request received</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'SUPPLIER_CONFIRMED' %}active{% elif request.status in ['QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="SUPPLIER_CONFIRMED" onclick="updateRequestStatus('SUPPLIER_CONFIRMED')">
-                <div class="status-indicator">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Supplier Confirmed</div>
-                    <div class="status-desc">All suppliers confirmed</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'QUOTED' %}active{% elif request.status in ['CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="QUOTED" onclick="updateRequestStatus('QUOTED')">
-                <div class="status-indicator">
-                    <i class="fas fa-calculator"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Quoted</div>
-                    <div class="status-desc">Quote sent to customer</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'CONFIRMED' %}active{% elif request.status in ['INVOICE', 'PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="CONFIRMED" onclick="updateRequestStatus('CONFIRMED')">
-                <div class="status-indicator">
-                    <i class="fas fa-handshake"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Confirmed</div>
-                    <div class="status-desc">Customer confirmed booking</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'INVOICE' %}active{% elif request.status in ['PROCESSING', 'COMPLETED'] %}completed{% endif %}" 
-                 data-status="INVOICE" onclick="updateRequestStatus('INVOICE')">
-                <div class="status-indicator">
-                    <i class="fas fa-file-invoice"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Invoice</div>
-                    <div class="status-desc">Invoice generated</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'PROCESSING' %}active{% elif request.status == 'COMPLETED' %}completed{% endif %}" 
-                 data-status="PROCESSING" onclick="updateRequestStatus('PROCESSING')">
-                <div class="status-indicator">
-                    <i class="fas fa-cog"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Processing</div>
-                    <div class="status-desc">Trip in progress</div>
-                </div>
-            </div>
-            
-            <div class="status-step {% if request.status == 'COMPLETED' %}active{% endif %}" 
-                 data-status="COMPLETED" onclick="updateRequestStatus('COMPLETED')">
-                <div class="status-indicator">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="status-content">
-                    <div class="status-title">Completed</div>
-                    <div class="status-desc">Trip completed successfully</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Workflow Stage Bar (Bottom) -->
-<div class="stage-bar">
-    <span class="text-white/60 text-xs">
-        <i class="fas fa-forward mr-1"></i>Advance to:
-    </span>
-    <select id="confirmStageSelect" onchange="confirmStageChange()" 
-            class="bg-slate-700 text-white border border-slate-600 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <option value="">Select next stage...</option>
-        {% if request.status != 'REQUEST' %}
-        <option value="REQUEST">Request</option>
-        {% endif %}
-        {% if request.status != 'SUPPLIER_CONFIRMED' %}
-        <option value="SUPPLIER_CONFIRMED">Supplier Confirmed</option>
-        {% endif %}
-        {% if request.status != 'QUOTED' %}
-        <option value="QUOTED">Quoted</option>
-        {% endif %}
-        {% if request.status != 'CONFIRMED' %}
-        <option value="CONFIRMED">Confirmed</option>
-        {% endif %}
-        {% if request.status != 'INVOICE' %}
-        <option value="INVOICE">Invoice</option>
-        {% endif %}
-        {% if request.status != 'PROCESSING' %}
-        <option value="PROCESSING">Processing</option>
-        {% endif %}
-        {% if request.status != 'COMPLETED' %}
-        <option value="COMPLETED">Completed</option>
-        {% endif %}
-    </select>
-    <div class="ml-auto flex items-center gap-2">
-        <span class="text-white/40 text-xs">Current:</span>
-        <span class="status-badge 
-            {% if request.status == 'REQUEST' %}status-request
-            {% elif request.status == 'QUOTED' %}status-quoted
-            {% elif request.status == 'SUPPLIER_CONFIRMED' %}status-supplier-confirmed
-            {% elif request.status == 'CONFIRMED' %}status-confirmed
-            {% elif request.status == 'INVOICE' %}status-invoice
-            {% elif request.status == 'PROCESSING' %}status-processing
-            {% elif request.status == 'COMPLETED' %}status-completed
-            {% endif %}">
-            {{ request.status.replace('_', ' ').title() }}
-        </span>
-    </div>
-</div>
 
 <!-- Auto-save Indicator -->
 <div class="auto-save-indicator" id="autoSaveIndicator">
@@ -2705,12 +2352,6 @@ function clearServiceForm(service) {
     });
 }
 
-function toggleStatusSidebar() {
-    const sidebar = document.getElementById('statusSidebarOverlay');
-    const backdrop = document.getElementById('statusSidebarBackdrop');
-    sidebar.classList.toggle('open');
-    backdrop.classList.toggle('show');
-}
 
 function toggleRightMenu() {
     const dropdown = document.getElementById('rightMenuDropdown');
@@ -2868,32 +2509,30 @@ function updateServiceTable(serviceType, data) {
 function createServiceRowHtml(serviceType, entry) {
     switch(serviceType) {
         case 'hotel':
+            const checkInDate = entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+            const checkOutDate = entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+            const statusClass = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                               entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                               'bg-gray-100 text-gray-700';
             return `
-                <tr class="hover:bg-slate-50" data-hotel-id="${entry.id}">
-                    <td class="px-2 py-1.5 text-slate-700 font-medium">${entry.hotel_name || '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500 text-xs">
-                        ${entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'} - 
-                        ${entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}
+                <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}" data-service-type="hotel" data-record-id="${entry.id}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.hotel_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${checkInDate}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${checkOutDate}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.nights || 0}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:${entry.single_rooms}</span>` : ''}
+                        ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">D:${entry.double_rooms}</span>` : ''}
+                        ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:${entry.triple_rooms}</span>` : ''}
                     </td>
-                    <td class="px-2 py-1.5 text-slate-700 text-center">${entry.nights || 0}</td>
-                    <td class="px-2 py-1.5 text-center">
-                        <div class="flex items-center justify-center gap-1 text-xs">
-                            ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Single rooms"><i class="fas fa-user text-slate-400"></i> ${entry.single_rooms}</span>` : ''}
-                            ${entry.double_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Twin/Double rooms"><i class="fas fa-user-friends text-slate-400"></i> ${entry.double_rooms}</span>` : ''}
-                            ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded" title="Triple rooms"><i class="fas fa-users text-slate-400"></i> ${entry.triple_rooms}</span>` : ''}
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${entry.status || 'PENDING'}</span>
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('hotel', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('hotel', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
                         </div>
-                    </td>
-                    <td class="px-2 py-1.5">
-                        <span class="px-2 py-0.5 rounded text-xs ${
-                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
-                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-slate-100 text-slate-700'
-                        }">${entry.status || 'PENDING'}</span>
-                    </td>
-                    <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteHotel(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
-                        </button>
                     </td>
                 </tr>
             `;
@@ -2940,37 +2579,61 @@ function createServiceRowHtml(serviceType, entry) {
                 </tr>
             `;
         case 'guide':
+            // Format date range if end_date exists and is different from date
+            let guideDate = '-';
+            if (entry.service_date) {
+                const startDate = new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                if (entry.end_date && entry.end_date !== entry.service_date) {
+                    const endDate = new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                    guideDate = `${startDate} - ${endDate}`;
+                } else {
+                    guideDate = startDate;
+                }
+            }
             return `
-                <tr class="hover:bg-slate-50" data-guide-id="${entry.id}">
-                    <td class="px-2 py-1.5 text-slate-700">${entry.guide_name || '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-700">${entry.language || '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.telephone || '-'}</td>
-                    <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteGuide(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
-                        </button>
+                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}" data-service-type="guide" data-record-id="${entry.id}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.guide_name || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${guideDate}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.language || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.telephone || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('guide', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('guide', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
         case 'transport':
-            return `
-                <tr class="hover:bg-slate-50" data-transport-id="${entry.id}">
-                    <td class="px-2 py-1.5 text-slate-700">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.vehicle_type || '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-700">${entry.pickup_point || '-'}</td>
-                    <td class="px-2 py-1.5 text-slate-500">${entry.drop_off_point || '-'}</td>
-                    <td class="px-2 py-1.5">
-                        <span class="px-2 py-0.5 rounded text-xs ${
-                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+            // Format date range if end_date exists and is different from date
+            let transportDate = '-';
+            if (entry.service_date) {
+                const startDate = new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                if (entry.end_date && entry.end_date !== entry.service_date) {
+                    const endDate = new Date(entry.end_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                    transportDate = `${startDate} - ${endDate}`;
+                } else {
+                    transportDate = startDate;
+                }
+            }
+            const transportKey = `${entry.vehicle_type || ''}-${entry.pickup_point || ''}-${entry.drop_off_point || ''}`;
+            const transportStatusClass = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                             entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-slate-100 text-slate-700'
-                        }">${entry.status || 'PENDING'}</span>
+                                        'bg-gray-100 text-gray-700';
+            return `
+                <tr class="hover:bg-gray-50" data-transport-key="${transportKey}" data-service-type="transport" data-record-id="${entry.id}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${transportDate}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.vehicle_type || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.pickup_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">${entry.drop_off_point || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">
+                        <span class="px-2 py-0.5 rounded text-[10px] ${transportStatusClass}">${entry.status || 'PENDING'}</span>
                     </td>
-                    <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteTransport(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
-                        </button>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('transport', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('transport', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -2982,10 +2645,15 @@ function createServiceRowHtml(serviceType, entry) {
                     <td class="px-2 py-1.5 text-slate-700">${entry.restaurant_name || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-500">${entry.location || '-'}</td>
                     <td class="px-2 py-1.5 text-slate-700 text-center">${entry.pax_count || 0}</td>
-                    <td class="px-2 py-1.5 text-center">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-0.5" onclick="deleteMeal(${entry.id})">
-                            <i class="far fa-trash-alt"></i>
+                    <td class="px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button type="button" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" onclick="handleEditServiceRow('meal', ${entry.id})" title="Edit">
+                                <i class="fas fa-edit text-sm"></i>
                         </button>
+                            <button type="button" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" onclick="handleRemoveServiceRow('meal', ${entry.id})" title="Remove">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -3061,17 +2729,24 @@ function updateFullSummaryTables() {
                 const status = cells[4]?.textContent.trim() || 'PENDING';
                 const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
-                return `<tr class="hover:bg-gray-50" data-hotel-name="${name}">
+                const recordId = tr.getAttribute('data-record-id') || tr.getAttribute('data-hotel-id') || '';
+                return `<tr class="hover:bg-gray-50" data-hotel-name="${name}" data-service-type="hotel" data-record-id="${recordId}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${name}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${checkIn}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${checkOut}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${nights}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${rooms}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('hotel', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('hotel', ${recordId})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         } else {
-            hotelsSummaryBody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>';
+            hotelsSummaryBody.innerHTML = '<tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No hotels added</td></tr>';
         }
     }
     
@@ -3084,7 +2759,8 @@ function updateFullSummaryTables() {
         let flightsHtml = '';
         arrivalRows.forEach(tr => {
             const cells = tr.cells;
-            flightsHtml += `<tr class="hover:bg-gray-50">
+            const recordId = tr.getAttribute('data-record-id') || '';
+            flightsHtml += `<tr class="hover:bg-gray-50" data-service-type="arrival" data-record-id="${recordId}">
                 <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-green-100 text-green-800"><i class="fas fa-plane-arrival mr-1"></i>Arrival</span></td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
@@ -3092,11 +2768,18 @@ function updateFullSummaryTables() {
                 <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
                 <td class="border border-gray-300 px-2 py-1.5">${cells[5]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="handleEditServiceRow('arrival', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                        <button onclick="handleRemoveServiceRow('arrival', ${recordId})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                    </div>
+                </td>
             </tr>`;
         });
         departureRows.forEach(tr => {
             const cells = tr.cells;
-            flightsHtml += `<tr class="hover:bg-gray-50">
+            const recordId = tr.getAttribute('data-record-id') || '';
+            flightsHtml += `<tr class="hover:bg-gray-50" data-service-type="departure" data-record-id="${recordId}">
                 <td class="border border-gray-300 px-2 py-1.5"><span class="px-2 py-0.5 rounded-full text-[10px] bg-orange-100 text-orange-800"><i class="fas fa-plane-departure mr-1"></i>Departure</span></td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
@@ -3104,13 +2787,19 @@ function updateFullSummaryTables() {
                 <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
                 <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[4]?.textContent.trim() || '0'}</td>
                 <td class="border border-gray-300 px-2 py-1.5">${cells[5]?.textContent.trim() || '-'}</td>
+                <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="handleEditServiceRow('departure', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                        <button onclick="handleRemoveServiceRow('departure', ${recordId})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                    </div>
+                </td>
             </tr>`;
         });
         
         if (flightsHtml) {
             flightsSummaryBody.innerHTML = flightsHtml;
         } else {
-            flightsSummaryBody.innerHTML = '<tr><td colspan="7" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>';
+            flightsSummaryBody.innerHTML = '<tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>';
         }
     }
     
@@ -3128,16 +2817,23 @@ function updateFullSummaryTables() {
                 const status = cells[4]?.textContent.trim() || 'PENDING';
                 const statusClass = status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
                                    status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700';
-                return `<tr class="hover:bg-gray-50" data-transport-key="${transportKey}">
+                const recordId = tr.getAttribute('data-record-id') || tr.getAttribute('data-transport-id') || '';
+                return `<tr class="hover:bg-gray-50" data-transport-key="${transportKey}" data-service-type="transport" data-record-id="${recordId}">
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[0]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${vehicleType || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${pickup || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${dropoff || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] ${statusClass}">${status}</span></td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('transport', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('transport', ${recordId})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         } else {
-            transportSummaryBody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>';
+            transportSummaryBody.innerHTML = '<tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>';
         }
     }
     
@@ -3149,15 +2845,22 @@ function updateFullSummaryTables() {
             guidesSummaryBody.innerHTML = guideRows.map(tr => {
                 const cells = tr.cells;
                 const guideName = cells[0]?.textContent.trim() || '';
-                return `<tr class="hover:bg-gray-50" data-guide-name="${guideName}">
+                const recordId = tr.getAttribute('data-record-id') || tr.getAttribute('data-guide-id') || '';
+                return `<tr class="hover:bg-gray-50" data-guide-name="${guideName}" data-service-type="guide" data-record-id="${recordId}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${guideName || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${cells[1]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${cells[2]?.textContent.trim() || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${cells[3]?.textContent.trim() || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('guide', ${recordId})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('guide', ${recordId})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
         } else {
-            guidesSummaryBody.innerHTML = '<tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>';
+            guidesSummaryBody.innerHTML = '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>';
         }
     }
     
@@ -3762,8 +3465,11 @@ function saveAllItineraryRows() {
     .then(data => {
         if (data.success) {
             showNotification('Itinerary saved successfully', 'success');
-            // Refresh the summary table to show updated data
+            // Only refresh the summary table - do NOT refresh the main itinerary table
+            // This ensures the user's entered data remains visible and editable
             refreshItinerarySummaryTable();
+            // Note: We intentionally do NOT call refreshItineraryTable() here
+            // to preserve the user's entered data in the inline editable fields
         } else {
             showNotification(data.error || 'Save failed', 'error');
         }
@@ -3776,12 +3482,47 @@ function saveAllItineraryRows() {
 
 // Add new itinerary row - adds an empty row to the table
 function addNewItineraryRow() {
-    // Get next day number
+    // Get existing rows to find the last date
     const rows = document.querySelectorAll('#itineraryTableBody tr[data-row-id]');
-    let nextDay = rows.length + 1;
-    
-    // Get request date range for the new row date
     const fromDate = document.getElementById('fromDate')?.value || '';
+    const toDate = document.getElementById('toDate')?.value || '';
+    
+    // Find the maximum date from existing rows
+    let maxDate = null;
+    if (fromDate) {
+        maxDate = new Date(fromDate);
+    }
+    
+    // Get all dates from existing rows and find the maximum
+    rows.forEach(row => {
+        const rowDateStr = row.getAttribute('data-date');
+        if (rowDateStr) {
+            const rowDate = new Date(rowDateStr);
+            if (!maxDate || rowDate > maxDate) {
+                maxDate = rowDate;
+            }
+        }
+    });
+    
+    // Calculate next date (add one day to the maximum date, or use fromDate if no rows exist)
+    let nextDate;
+    if (maxDate) {
+        nextDate = new Date(maxDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+    } else if (fromDate) {
+        nextDate = new Date(fromDate);
+    } else {
+        nextDate = new Date();
+    }
+    
+    // Format date as YYYY-MM-DD
+    const nextDateStr = nextDate.toISOString().split('T')[0];
+    
+    // Check if next date exceeds toDate
+    if (toDate && nextDateStr > toDate) {
+        showNotification('Cannot add more days beyond the travel end date', 'error');
+        return;
+    }
     
     // Create new row via API
     fetch(`/inbound/api/${requestId}/itinerary-row`, {
@@ -3791,14 +3532,18 @@ function addNewItineraryRow() {
             'X-CSRFToken': csrfToken
         },
         body: JSON.stringify({
-            day_number: nextDay,
-            itinerary_date: fromDate,
+            itinerary_date: nextDateStr,
             description: 'New day',
             meal_type: '',
             restaurant_supplier_id: null
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => Promise.reject(new Error(err.error || `HTTP ${response.status}`)));
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showNotification('New itinerary row added', 'success');
@@ -3810,8 +3555,8 @@ function addNewItineraryRow() {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        showNotification('Add failed', 'error');
+        console.error('Error adding itinerary row:', error);
+        showNotification('Add failed: ' + (error.message || 'Unknown error'), 'error');
     });
 }
 
@@ -3962,6 +3707,19 @@ function clearServiceForm(serviceType) {
     // Reset context for next new entry
     currentServiceContext = { serviceName: serviceType, rowId: null };
     
+    // Show Add button and hide Save button for new entry mode
+    const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+    const addBtn = document.getElementById(`add-btn-${serviceType}`);
+    console.log(`[clearServiceForm] Toggling buttons for ${serviceType}:`, { saveBtn: !!saveBtn, addBtn: !!addBtn });
+    if (saveBtn) {
+        saveBtn.classList.add('hidden');
+        console.log(`[clearServiceForm] Save button hidden for ${serviceType}`);
+    }
+    if (addBtn) {
+        addBtn.classList.remove('hidden');
+        console.log(`[clearServiceForm] Add button shown for ${serviceType}`);
+    }
+    
     // Update badge to show ready for new entry
     const badge = document.getElementById(`panel-context-badge-${serviceType}`);
     if (badge) {
@@ -4042,11 +3800,26 @@ function handleEditServiceRow(serviceType, recordId) {
                     badge.className = 'text-xs font-normal px-2 py-0.5 rounded bg-blue-100 text-blue-700';
                 }
                 
-                // Show the Save Changes button for editing mode
+                // Show Save button and hide Add button for editing mode
                 const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+                const addBtn = document.getElementById(`add-btn-${serviceType}`);
+                console.log(`[handleEditServiceRow] Toggling buttons for ${serviceType}:`, { saveBtn: !!saveBtn, addBtn: !!addBtn });
                 if (saveBtn) {
                     saveBtn.classList.remove('hidden');
+                    console.log(`[handleEditServiceRow] Save button shown for ${serviceType}`);
+                } else {
+                    console.warn(`[handleEditServiceRow] Save button not found: save-btn-${serviceType}`);
                 }
+                if (addBtn) {
+                    addBtn.classList.add('hidden');
+                    console.log(`[handleEditServiceRow] Add button hidden for ${serviceType}`);
+                } else {
+                    console.warn(`[handleEditServiceRow] Add button not found: add-btn-${serviceType}`);
+                }
+                
+                // Update currentServiceContext to track we're editing
+                currentServiceContext = { serviceName: serviceType, rowId: recordId };
+                console.log(`[handleEditServiceRow] Context updated:`, currentServiceContext);
                 
                 showNotification(`Loaded ${serviceType} record for editing. Click "Save Changes" to update.`, 'info');
             } else {
@@ -4211,9 +3984,22 @@ function addNewServiceData(serviceType) {
     // Clear any existing row_id context to ensure new record creation
     currentServiceContext = { serviceName: serviceType, rowId: null };
     
-    // Hide save button since we're creating new
+    // Show Add button and hide Save button since we're creating new
     const saveBtn = document.getElementById(`save-btn-${serviceType}`);
-    if (saveBtn) saveBtn.classList.add('hidden');
+    const addBtn = document.getElementById(`add-btn-${serviceType}`);
+    console.log(`[addNewServiceData] Toggling buttons for ${serviceType}:`, { saveBtn: !!saveBtn, addBtn: !!addBtn });
+    if (saveBtn) {
+        saveBtn.classList.add('hidden');
+        console.log(`[addNewServiceData] Save button hidden for ${serviceType}`);
+    } else {
+        console.warn(`[addNewServiceData] Save button not found: save-btn-${serviceType}`);
+    }
+    if (addBtn) {
+        addBtn.classList.remove('hidden');
+        console.log(`[addNewServiceData] Add button shown for ${serviceType}`);
+    } else {
+        console.warn(`[addNewServiceData] Add button not found: add-btn-${serviceType}`);
+    }
     
     // Update badge to show "New"
     const badge = document.getElementById(`panel-context-badge-${serviceType}`);
@@ -4381,9 +4167,11 @@ function saveServiceData(serviceType) {
                     
                     // Reset context to Add mode (for both new and edit)
                     currentServiceContext = { serviceName: 'hotel', rowId: null };
-                    // Hide Save button
+                    // Show Add button and hide Save button
                     const saveBtn = document.getElementById('save-btn-hotel');
+                    const addBtn = document.getElementById('add-btn-hotel');
                     if (saveBtn) saveBtn.classList.add('hidden');
+                    if (addBtn) addBtn.classList.remove('hidden');
                     // Reset badge
                     const badge = document.getElementById('panel-context-badge-hotel');
                     if (badge) {
@@ -4410,9 +4198,11 @@ function saveServiceData(serviceType) {
                     clearServiceForm(serviceType);
                     // Reset context to Add mode
                     currentServiceContext = { serviceName: serviceType, rowId: null };
-                    // Hide Save button
+                    // Show Add button and hide Save button
                     const saveBtn = document.getElementById(`save-btn-${serviceType}`);
+                    const addBtn = document.getElementById(`add-btn-${serviceType}`);
                     if (saveBtn) saveBtn.classList.add('hidden');
+                    if (addBtn) addBtn.classList.remove('hidden');
                     // Reset badge to show ready for new entry
                     const badge = document.getElementById(`panel-context-badge-${serviceType}`);
                     if (badge) {
@@ -4601,11 +4391,16 @@ function updateSummaryTables(serviceType, data) {
 function createSummaryRowHtml(serviceType, entry) {
     switch(serviceType) {
         case 'hotel':
+            const hotelCheckIn = entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+            const hotelCheckOut = entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+            const hotelStatusClass = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                                     entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                                     'bg-gray-100 text-gray-700';
             return `
-                <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}">
+                <tr class="hover:bg-gray-50" data-hotel-name="${entry.hotel_name || ''}" data-service-type="hotel" data-record-id="${entry.id}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.hotel_name || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_in_date ? new Date(entry.check_in_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.check_out_date ? new Date(entry.check_out_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${hotelCheckIn}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${hotelCheckOut}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.nights || 0}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">
                         ${entry.single_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">S:${entry.single_rooms}</span>` : ''}
@@ -4613,36 +4408,52 @@ function createSummaryRowHtml(serviceType, entry) {
                         ${entry.triple_rooms ? `<span class="px-1 py-0.5 bg-slate-100 rounded text-[10px]">T:${entry.triple_rooms}</span>` : ''}
                     </td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] ${
-                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
-                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-gray-100 text-gray-700'
-                        }">${entry.status || 'PENDING'}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] ${hotelStatusClass}">${entry.status || 'PENDING'}</span>
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('hotel', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('hotel', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
         case 'guide':
+            const guideDate2 = entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
             return `
-                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}">
+                <tr class="hover:bg-gray-50" data-guide-name="${entry.guide_name || ''}" data-guide-supplier-id="${entry.supplier_id || ''}" data-service-type="guide" data-record-id="${entry.id}">
                     <td class="border border-gray-300 px-2 py-1.5 font-medium">${entry.guide_name || '-'}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${guideDate2}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.language || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.telephone || '-'}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('guide', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('guide', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
+                    </td>
                 </tr>
             `;
         case 'transport':
+            const transportDate2 = entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-';
+            const transportKey2 = `${entry.vehicle_type || ''}-${entry.pickup_point || ''}-${entry.drop_off_point || ''}`;
+            const transportStatusClass2 = entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
+                                          entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
+                                          'bg-gray-100 text-gray-700';
             return `
-                <tr class="hover:bg-gray-50" data-transport-key="${entry.vehicle_type || ''}-${entry.pickup_point || ''}-${entry.drop_off_point || ''}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">${entry.service_date ? new Date(entry.service_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '-'}</td>
+                <tr class="hover:bg-gray-50" data-transport-key="${transportKey2}" data-service-type="transport" data-record-id="${entry.id}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">${transportDate2}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.vehicle_type || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.pickup_point || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5">${entry.drop_off_point || '-'}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] ${
-                            entry.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' : 
-                            entry.status === 'REQUESTED' ? 'bg-yellow-100 text-yellow-700' : 
-                            'bg-gray-100 text-gray-700'
-                        }">${entry.status || 'PENDING'}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] ${transportStatusClass2}">${entry.status || 'PENDING'}</span>
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('transport', ${entry.id})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('transport', ${entry.id})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -5342,6 +5153,9 @@ function saveAndRefreshItinerary() {
     });
 }
 
+// Track if request is saved (updated dynamically after save)
+let requestIsSaved = {{ 'true' if request.is_saved else 'false' }};
+
 // Save Request with final sequence number
 function saveRequest() {
     const saveBtn = document.getElementById('saveRequestBtn');
@@ -5376,6 +5190,9 @@ function saveRequest() {
             saveBtn.innerHTML = '<i class="fas fa-save"></i> <span>Save Request</span>';
         }
         if (data.success) {
+            // Mark request as saved
+            requestIsSaved = true;
+            
             // Update the header with new request number
             const headerEl = document.getElementById('headerRequestNumber');
             if (headerEl) {
@@ -5393,6 +5210,99 @@ function saveRequest() {
         }
         console.error('Error:', error);
         showNotification('Error saving request', 'error');
+    });
+}
+
+// Cancel Request
+function cancelRequest() {
+    if (!confirm('Are you sure you want to cancel this request? This action cannot be undone.')) {
+        return;
+    }
+    
+    fetch(`/inbound/api/${requestId}/cancel-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Request cancelled successfully', 'success');
+            setTimeout(() => {
+                // Redirect to main dashboard
+                window.location.href = '{{ url_for("main.index") }}';
+            }, 1500);
+        } else {
+            showNotification(data.message || 'Error cancelling request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error cancelling request:', error);
+        showNotification('Error cancelling request', 'error');
+    });
+}
+
+// Submit Request (REQUEST → CONFIRMED or CONFIRMED → INVOICED)
+function submitRequest() {
+    // Mandatory Save Before Submit - Check if request is saved
+    // Check both the dynamic flag and the request number (IN-NEW- indicates unsaved)
+    const headerEl = document.getElementById('headerRequestNumber');
+    const requestNumberText = headerEl ? headerEl.textContent.trim() : '';
+    const hasUnsavedIndicator = requestNumberText.includes('New Request (Unsaved)') || requestNumberText.startsWith('IN-NEW-');
+    
+    if (!requestIsSaved || hasUnsavedIndicator) {
+        showNotification('Please save the request before submitting. Click "Save Request" first.', 'error');
+        return;
+    }
+    
+    const currentStatus = '{{ request.status }}';
+    let targetStatus = '';
+    
+    // Map status to determine target
+    if (currentStatus === 'REQUEST') {
+        targetStatus = 'CONFIRMED';
+    } else if (['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'].includes(currentStatus)) {
+        targetStatus = 'INVOICED';
+    } else {
+        showNotification('Invalid status for submission', 'error');
+        return;
+    }
+    
+    fetch(`/inbound/api/${requestId}/submit-request`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ target_status: targetStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(`Request submitted successfully. Status updated to ${targetStatus}`, 'success');
+            
+            // For INVOICED status, stay on current page (don't navigate away)
+            // The "Go to Invoice" button will be available for manual navigation
+            if (targetStatus === 'INVOICED') {
+                // Reload to show the "Go to Invoice" button
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // For CONFIRMED, reload the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        } else {
+            showNotification(data.message || 'Error submitting request', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting request:', error);
+        showNotification('Error submitting request', 'error');
     });
 }
 
@@ -6106,13 +6016,40 @@ function saveNewRestaurant() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const select = document.getElementById('meal_restaurant');
-            const separator = select.querySelector('optgroup[label="──────────"]');
-            const option = document.createElement('option');
-            option.value = data.supplier_id;
-            option.textContent = restaurantName;
-            select.insertBefore(option, separator);
-            select.value = data.supplier_id;
+            // Update meal_restaurant dropdown (in meal service tab)
+            const mealSelect = document.getElementById('meal_restaurant');
+            if (mealSelect) {
+                const separator = mealSelect.querySelector('optgroup[label="──────────"]');
+                const option = document.createElement('option');
+                option.value = data.supplier_id;
+                option.textContent = restaurantName;
+                if (separator) {
+                    mealSelect.insertBefore(option, separator);
+                } else {
+                    mealSelect.appendChild(option);
+                }
+                mealSelect.value = data.supplier_id;
+            }
+            
+            // Update all restaurant dropdowns in itinerary table
+            const itinerarySelects = document.querySelectorAll('#itineraryTableBody select[data-field="restaurant_supplier_id"]');
+            itinerarySelects.forEach(select => {
+                // Check if option already exists
+                const existingOption = Array.from(select.options).find(opt => opt.value == data.supplier_id);
+                if (!existingOption) {
+                    const option = document.createElement('option');
+                    option.value = data.supplier_id;
+                    option.textContent = restaurantName;
+                    // Insert before the last option (if there's a separator) or append
+                    const lastOption = select.options[select.options.length - 1];
+                    if (lastOption && lastOption.value === '') {
+                        select.insertBefore(option, lastOption);
+                    } else {
+                        select.appendChild(option);
+                    }
+                }
+            });
+            
             closeAddRestaurantModal();
             showNotification('Restaurant added successfully', 'success');
         } else {
@@ -6506,17 +6443,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Status Updates
-const STATUS_ORDER = ['REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'INVOICE', 'PROCESSING', 'COMPLETED'];
-function updateSidebarState(newStatus) {
-    const statusIndex = STATUS_ORDER.indexOf(newStatus);
-    document.querySelectorAll('.status-step').forEach(step => {
-        const stepStatus = step.dataset.status;
-        const stepIndex = STATUS_ORDER.indexOf(stepStatus);
-        step.classList.remove('active', 'completed');
-        if (stepIndex < statusIndex) step.classList.add('completed');
-        else if (stepIndex === statusIndex) step.classList.add('active');
-    });
-    
+function updateStatusBadge(newStatus) {
     const updateBadge = (id, status) => {
         const badge = document.getElementById(id);
         if(badge) {
@@ -6525,12 +6452,6 @@ function updateSidebarState(newStatus) {
         }
     };
     updateBadge('headerStatusBadge', newStatus);
-    // Assuming bottom badge exists
-    const bottomBadge = document.querySelector('.stage-bar .status-badge');
-    if(bottomBadge) {
-        bottomBadge.className = 'status-badge status-' + newStatus.toLowerCase().replace('_', '-');
-        bottomBadge.textContent = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
 }
 
 function updateRequestStatus(status) {
@@ -6542,20 +6463,13 @@ function updateRequestStatus(status) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            updateSidebarState(status);
+            updateStatusBadge(status);
             showNotification('Status updated', 'success');
-            const select = document.getElementById('confirmStageSelect');
-            if (select) select.value = '';
         } else {
             showNotification(data.message || 'Error', 'error');
         }
     })
     .catch(e => showNotification('Error', 'error'));
-}
-
-function confirmStageChange() {
-    const select = document.getElementById('confirmStageSelect');
-    if (select.value) updateRequestStatus(select.value);
 }
 
 </script>

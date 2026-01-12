@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, date
 from typing import cast, Any
 import json
 import os
+import sys
 from sqlalchemy.orm import selectinload
 
 from app import db, csrf
@@ -30,55 +31,133 @@ inbound_bp = Blueprint('inbound', __name__, url_prefix='/inbound')
 def index():
     """List all inbound requests with filtering and run-down plan"""
     query = InboundRequest.query.filter_by(user_id=1)
-    
+
+    # Always exclude unsaved draft requests (temporary IN-NEW- numbers)
+    from sqlalchemy import or_
+    query = query.filter(
+        or_(
+            InboundRequest.is_saved == True,  # Explicitly saved requests
+            ~InboundRequest.request_number.like('IN-NEW-%')  # Legacy requests without is_saved flag but with proper numbers
+        )
+    )
+
     # Apply filters
     request_number = request.args.get('request_number', '')
     if request_number:
         query = query.filter(InboundRequest.request_number.contains(request_number))
-    
+
     agent = request.args.get('agent', '')
     if agent:
         query = query.filter(InboundRequest.agent_ref.contains(agent))
-    
+
     date_from = request.args.get('date_from', '')
     if date_from:
         query = query.filter(InboundRequest.from_date >= datetime.strptime(date_from, '%Y-%m-%d'))
-    
+
     date_to = request.args.get('date_to', '')
     if date_to:
         query = query.filter(InboundRequest.to_date <= datetime.strptime(date_to, '%Y-%m-%d'))
-    
+
     status = request.args.get('status', '')
     if status:
-        query = query.filter(InboundRequest.status == status)
-    
+        # Map old statuses to new 3-state system for filtering
+        def map_status_for_filter(status_val):
+            """Map old statuses to new 3-state system"""
+            if not status_val:
+                return None
+            status_upper = str(status_val).upper()
+            if status_upper in ['REQUEST']:
+                return 'REQUEST'
+            if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+                return 'CONFIRMED'
+            if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
+                return 'INVOICED'
+            return None
+
+        # Map the filter status to new system
+        mapped_filter_status = map_status_for_filter(status)
+
+        if mapped_filter_status == 'REQUEST':
+            # Filter for REQUEST status and only show saved requests
+            # Exclude unsaved requests (temporary IN-NEW- numbers that haven't been saved)
+            from sqlalchemy import or_
+            query = query.filter(
+                InboundRequest.status == 'REQUEST'
+            ).filter(
+                or_(
+                    InboundRequest.is_saved == True,  # Explicitly saved requests
+                    ~InboundRequest.request_number.like('IN-NEW-%')  # Legacy requests without is_saved flag but with proper numbers
+                )
+            )
+        elif mapped_filter_status == 'CONFIRMED':
+            # Filter for all statuses that map to CONFIRMED
+            query = query.filter(InboundRequest.status.in_(['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']))
+        elif mapped_filter_status == 'INVOICED':
+            # Filter for all statuses that map to INVOICED
+            query = query.filter(InboundRequest.status.in_(['INVOICE', 'COMPLETED', 'INVOICED']))
+
     # Order by most recent
     requests = query.order_by(InboundRequest.created_at.desc()).all()
-    
+
     # Get run-down plan data for confirmed itineraries
     run_down_data = get_run_down_data_by_date()
-    
+
+    # Get status-filtered requests for dashboard cards (3-state system)
+    all_requests = InboundRequest.query.filter_by(user_id=1).order_by(InboundRequest.created_at.desc()).all()
+
+    def map_status_for_dashboard(status_val):
+        """Map old statuses to new 3-state system"""
+        if not status_val:
+            return 'REQUEST'
+        status_upper = str(status_val).upper()
+        if status_upper in ['REQUEST']:
+            return 'REQUEST'
+        if status_upper in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+            return 'CONFIRMED'
+        if status_upper in ['INVOICE', 'COMPLETED', 'INVOICED']:
+            return 'INVOICED'
+        return 'REQUEST'
+
+    # Filter requests by mapped status for dashboard cards
+    # Only include saved requests (exclude unsaved drafts with IN-NEW- prefix)
+    requested_requests = [
+        r for r in all_requests 
+        if map_status_for_dashboard(r.status) == 'REQUEST' 
+        and (r.is_saved == True or not (r.request_number and r.request_number.startswith('IN-NEW-')))
+    ]
+    confirmed_requests = [
+        r for r in all_requests 
+        if map_status_for_dashboard(r.status) == 'CONFIRMED'
+    ]
+    invoiced_requests = [
+        r for r in all_requests 
+        if map_status_for_dashboard(r.status) == 'INVOICED'
+    ]
+
     return render_template('inbound/index.html', 
                          requests=requests,
+                         requested_requests=requested_requests,
+                         confirmed_requests=confirmed_requests,
+                         invoiced_requests=invoiced_requests,
                          run_down_data=run_down_data)
 
 def get_run_down_data_by_date():
     """Get confirmed itineraries grouped by date with activities"""
     from app.models.customer import Customer
-    
+
     # Get date range (next 30 days)
     today = datetime.now().date()
     date_to = today + timedelta(days=30)
-    
+
     # Get all confirmed requests with their itinerary rows
     confirmed_requests = InboundRequest.query.filter(
         InboundRequest.user_id == 1,
         InboundRequest.status.in_(['CONFIRMED', 'BOOKED'])
     ).all()
-    
+
     # Group activities by date
     activities_by_date = {}
-    
+
     for req in confirmed_requests:
         # Get customer info
         customer_name = "TBA"
@@ -89,25 +168,25 @@ def get_run_down_data_by_date():
                 customer_name = customer.name
         elif req.contact_name:
             customer_name = req.contact_name
-        
+
         # Process itinerary rows
         for row in req.itinerary_rows:
             if row.date < today or row.date > date_to:
                 continue
-                
+
             date_key = row.date.strftime('%Y-%m-%d')
-            
+
             if date_key not in activities_by_date:
                 activities_by_date[date_key] = {
                     'date': row.date,
                     'date_formatted': row.date.strftime('%A, %B %d, %Y'),
                     'activities': []
                 }
-            
+
             # Build activity info with detailed service data
             services = []
             base_cost = row.base_cost or 0
-            
+
             if row.flag_hotel:
                 # Build room breakdown
                 room_details = []
@@ -119,7 +198,7 @@ def get_run_down_data_by_date():
                     room_details.append(f"{row.hotel_triple_rooms} Triple")
                 if row.hotel_other_rooms > 0:
                     room_details.append(f"{row.hotel_other_rooms} Other")
-                
+
                 services.append({
                     'type': 'HOTEL',
                     'icon': 'fa-hotel',
@@ -163,7 +242,7 @@ def get_run_down_data_by_date():
                     'cost': 0,
                     'pax': req.pax
                 })
-            
+
             if services:  # Only add if there are services
                 activities_by_date[date_key]['activities'].append({
                     'request_number': req.request_number,
@@ -174,7 +253,7 @@ def get_run_down_data_by_date():
                     'status': req.status,
                     'status_color': get_status_color(req.status)
                 })
-    
+
     # Sort by date
     sorted_data = sorted(activities_by_date.values(), key=lambda x: x['date'])
     return sorted_data
@@ -186,11 +265,11 @@ def new_request():
     # Create a new request with default values
     from_date = datetime.now().date()
     to_date = (datetime.now() + timedelta(days=3)).date()
-    
+
     # Use temporary placeholder - sequence will be assigned when user saves with final from_date
     import uuid
     temp_request_number = f"IN-NEW-{str(uuid.uuid4())[:6].upper()}"
-    
+
     request_obj = InboundRequest(
         request_number=temp_request_number,
         from_date=from_date,
@@ -204,15 +283,15 @@ def new_request():
         is_saved=False  # Mark as not yet saved with final sequence
     )
     request_obj.calculate_days()
-    
+
     db.session.add(request_obj)
     db.session.flush()  # Get ID for the request
-    
+
     # Create default itinerary rows immediately (no flash/reload needed)
     current_date = from_date
     day_counter = 1
     total_days = (to_date - from_date).days + 1
-    
+
     while current_date <= to_date:
         # Generate description based on day
         if day_counter == 1:
@@ -221,7 +300,7 @@ def new_request():
             description = "Departure Day"
         else:
             description = f"Day {day_counter}"
-        
+
         row = ItineraryRow(
             request_id=request_obj.id,
             date=current_date,
@@ -233,12 +312,12 @@ def new_request():
             flag_airport=(day_counter == 1 or day_counter == total_days)  # Airport on first and last day
         )
         db.session.add(row)
-        
+
         current_date += timedelta(days=1)
         day_counter += 1
-    
+
     db.session.commit()
-    
+
     # Redirect to view page which now has unified edit functionality
     return redirect(url_for('inbound.view_request', id=request_obj.id))
 
@@ -246,12 +325,12 @@ def new_request():
 def edit_request(id):
     """Redirect to unified view/edit page"""
     request_obj = InboundRequest.query.get_or_404(id)
-    
+
     # Check ownership
     if request_obj.user_id != 1:
         flash('Access denied.', 'error')
         return redirect(url_for('inbound.index'))
-    
+
     # Redirect to the unified view_request page in edit mode
     return redirect(url_for('inbound.view_request', id=id, mode='edit'))
 
@@ -260,7 +339,7 @@ def view_request(id):
     """View inbound request details with unified edit functionality"""
     from flask import request as flask_request
     from app.models.supplier import Supplier
-    
+
     # Use eager loading for all service relationships to ensure they're loaded for template
     # Include subqueryload for hotel rooms to avoid N+1 queries
     from sqlalchemy.orm import subqueryload
@@ -274,14 +353,14 @@ def view_request(id):
         selectinload(InboundRequest.arrival_batches),
         selectinload(InboundRequest.departure_batches)
     ).get_or_404(id)
-    
+
     # Get mode parameter (view or edit)
     mode = flask_request.args.get('mode', 'edit')  # Default to edit for backward compatibility
     view_only = (mode == 'view')
-    
+
     # Get hotel suppliers for dropdown, grouped by city
     hotel_suppliers = Supplier.query.filter_by(supplier_type='HOTEL', is_active=True).order_by(Supplier.city, Supplier.name).all()
-    
+
     # Group hotels by city for the dropdown
     hotels_by_city = {}
     city_order = ['Amman', 'Aqaba', 'Petra', 'Dead Sea', 'Other']
@@ -290,16 +369,16 @@ def view_request(id):
         if city not in hotels_by_city:
             hotels_by_city[city] = []
         hotels_by_city[city].append(hotel)
-    
+
     # Sort by preferred city order
     sorted_hotels_by_city = {city: hotels_by_city.get(city, []) for city in city_order if city in hotels_by_city}
-    
+
     # Get suppliers for other service types
     transport_suppliers = Supplier.query.filter_by(supplier_type='TRANSPORT', is_active=True).order_by(Supplier.name).all()
     guide_suppliers = Supplier.query.filter_by(supplier_type='GUIDE', is_active=True).order_by(Supplier.name).all()
     restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
     ground_handler_suppliers = Supplier.query.filter_by(supplier_type='GROUND_HANDLER', is_active=True).order_by(Supplier.name).all()
-    
+
     return render_template('inbound/view_request.html', 
                            request=request_obj, 
                            view_only=view_only,
@@ -317,7 +396,7 @@ def view_request(id):
 def delete_request(id):
     """Delete an inbound request"""
     request_obj = InboundRequest.query.get_or_404(id)
-    
+
     try:
         db.session.delete(request_obj)
         db.session.commit()
@@ -325,7 +404,7 @@ def delete_request(id):
     except Exception as e:
         db.session.rollback()
         flash(f'Error deleting request: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.index'))
 
 
@@ -336,13 +415,13 @@ def delete_request(id):
 def api_update_request(request_id):
     """Update inbound request master details"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     try:
         data = request.get_json()
-        
+
         # Update master details
         # Properly handle customer_id - convert to int if provided, keep existing if not provided
         customer_id_value = data.get('customer_id')
@@ -361,11 +440,11 @@ def api_update_request(request_id):
         request_obj.nationality = data.get('nationality', request_obj.nationality)
         request_obj.pax = int(data.get('pax', request_obj.pax))
         request_obj.special_note = data.get('special_note', request_obj.special_note)
-        
+
         # Update arrival/departure details
         request_obj.arrival_point = data.get('arrival_point', request_obj.arrival_point)
         request_obj.departure_point = data.get('departure_point', request_obj.departure_point)
-        
+
         # Handle arrival/departure time updates
         if data.get('arrival_time'):
             try:
@@ -374,7 +453,7 @@ def api_update_request(request_id):
                 pass  # Invalid time format, skip
         elif data.get('arrival_time') == '':
             request_obj.arrival_time = None
-            
+
         if data.get('departure_time'):
             try:
                 request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
@@ -382,7 +461,7 @@ def api_update_request(request_id):
                 pass  # Invalid time format, skip
         elif data.get('departure_time') == '':
             request_obj.departure_time = None
-        
+
         # Update dates
         from_date_str = data.get('from_date')
         to_date_str = data.get('to_date')
@@ -390,17 +469,17 @@ def api_update_request(request_id):
             request_obj.from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
         if to_date_str:
             request_obj.to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-        
+
         # Recalculate days if dates changed
         if from_date_str or to_date_str:
             request_obj.calculate_days()
-        
+
         # Generate document sequence on save if not already assigned
         request_obj.assign_document_sequence()
-        
+
         db.session.commit()
         return jsonify({'success': True, 'message': 'Request updated successfully', 'document_sequence': request_obj.document_sequence})
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -412,25 +491,25 @@ def api_update_request(request_id):
 def api_save_itinerary(request_id):
     """Save itinerary data for inbound request - auto-generates days if empty"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     try:
         data = request.get_json()
         rows_data = data.get('rows', [])
-        
+
         print(f"DEBUG: Saving itinerary for request {request_id}")
         print(f"DEBUG: Received {len(rows_data)} rows")
-        
+
         # Auto-generate days if no rows provided but we have dates
         if not rows_data and request_obj.from_date and request_obj.to_date:
             print("DEBUG: No rows provided, auto-generating days from date range")
-            
+
             # Generate one row per day
             current_date = request_obj.from_date
             day_counter = 1
-            
+
             while current_date <= request_obj.to_date:
                 row_data = {
                     'date': current_date.strftime('%Y-%m-%d'),
@@ -449,16 +528,16 @@ def api_save_itinerary(request_id):
                     'hotel_other_rooms': 0
                 }
                 rows_data.append(row_data)
-                
+
                 current_date += timedelta(days=1)
                 day_counter += 1
-            
+
             print(f"DEBUG: Auto-generated {len(rows_data)} rows")
-        
+
         # Clear existing itinerary rows
         deleted_count = ItineraryRow.query.filter_by(request_id=request_id).delete()
         print(f"DEBUG: Deleted {deleted_count} existing rows")
-        
+
         # Add new rows
         for i, row_data in enumerate(rows_data):
             print(f"DEBUG: Processing row {i}: {row_data}")
@@ -481,14 +560,14 @@ def api_save_itinerary(request_id):
             )
             db.session.add(row)
             print(f"DEBUG: Added row {i} to session")
-        
+
         # Recalculate totals
         request_obj.calculate_total()
-        
+
         db.session.commit()
         print("DEBUG: Successfully saved itinerary")
         return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -500,10 +579,10 @@ def api_save_itinerary(request_id):
 def api_get_itinerary(request_id):
     """Get itinerary rows for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     rows = []
     for row in request_obj.itinerary_rows:
         rows.append({
@@ -525,7 +604,7 @@ def api_get_itinerary(request_id):
             'hotel_other_rooms': getattr(row, 'hotel_other_rooms', 0),
             'row_cost': row.calculate_row_cost(request_obj.pax)
         })
-    
+
     # Handle arrival/departure times - could be datetime.time, string, or None
     arrival_time_str = ''
     if request_obj.arrival_time:
@@ -533,14 +612,14 @@ def api_get_itinerary(request_id):
             arrival_time_str = request_obj.arrival_time.strftime('%H:%M')
         elif isinstance(request_obj.arrival_time, str):
             arrival_time_str = request_obj.arrival_time
-    
+
     departure_time_str = ''
     if request_obj.departure_time:
         if hasattr(request_obj.departure_time, 'strftime'):
             departure_time_str = request_obj.departure_time.strftime('%H:%M')
         elif isinstance(request_obj.departure_time, str):
             departure_time_str = request_obj.departure_time
-    
+
     return jsonify({
         'rows': rows,
         'total': request_obj.calculate_total(),
@@ -556,23 +635,23 @@ def api_get_itinerary(request_id):
 def api_save_itinerary_original(request_id):
     """Save itinerary rows for a request (original version)"""
     print(f"[DEBUG] api_save_itinerary_original called for request_id: {request_id}")
-    
+
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         if request_obj.user_id != 1:
             print(f"[DEBUG] Access denied: user {1} != owner {request_obj.user_id}")
             return jsonify({'error': 'Access denied'}), 403
-        
+
         data = request.get_json()
         if not data:
             print("[DEBUG] No JSON data received")
             return jsonify({'success': False, 'message': 'No data received'}), 400
-            
+
         print(f"[DEBUG] Received data keys: {data.keys() if data else 'None'}")
         rows_data = data.get('rows', [])
         print(f"[DEBUG] Number of rows to save: {len(rows_data)}")
-        
+
         # Update arrival/departure details if provided
         if 'arrival_point' in data:
             request_obj.arrival_point = data.get('arrival_point') or None
@@ -592,7 +671,7 @@ def api_save_itinerary_original(request_id):
                 request_obj.departure_time = None
         elif 'departure_time' in data and not data.get('departure_time'):
             request_obj.departure_time = None
-        
+
         # Update new arrival/departure fields
         if 'visa_type' in data:
             request_obj.visa_type = data.get('visa_type') or 'NOT_INCLUDED'
@@ -611,20 +690,20 @@ def api_save_itinerary_original(request_id):
                 request_obj.meeting_assistance = False
         if 'departure_tax' in data:
             request_obj.departure_tax = data.get('departure_tax') or 'NOT_INCLUDED'
-        
+
         # Update or create rows using row IDs for matching (handles multiple rows per date)
         # Get existing rows indexed by ID
         existing_rows_dict = {row.id: row for row in ItineraryRow.query.filter_by(request_id=request_id).all()}
         submitted_ids = set()
-        
+
         # Import models needed for service deletion
         from app.models.inbound import InboundHotel, InboundTransport, InboundMeal, InboundGuide
-        
+
         # Process each row from the submitted data
         for row_data in rows_data:
             row_date = datetime.strptime(row_data['date'], '%Y-%m-%d').date()
             row_id = row_data.get('id')  # May be None for new rows
-            
+
             # Update existing row or create new one
             if row_id and row_id in existing_rows_dict:
                 # Update existing row by ID
@@ -673,18 +752,18 @@ def api_save_itinerary_original(request_id):
                     hotel_other_rooms=int(row_data.get('hotel_other_rooms', 0))
                 )
                 db.session.add(row)
-            
+
             db.session.flush()  # Get the ID for new rows
-            
+
             # Delete existing auto-generated services for this row to avoid duplicates
             InboundHotel.query.filter_by(source_itinerary_id=row.id).delete()
             InboundTransport.query.filter_by(source_itinerary_id=row.id).delete()
             InboundMeal.query.filter_by(source_itinerary_id=row.id).delete()
             InboundGuide.query.filter_by(source_itinerary_id=row.id).delete()
-            
+
             # Regenerate service records based on current flags
             _auto_generate_services(request_obj, row)
-        
+
         # Delete orphaned rows (rows whose IDs are no longer in the submitted data)
         orphaned_rows = [row for row in existing_rows_dict.values() if row.id not in submitted_ids]
         for orphaned_row in orphaned_rows:
@@ -695,14 +774,14 @@ def api_save_itinerary_original(request_id):
             InboundGuide.query.filter_by(source_itinerary_id=orphaned_row.id).delete()
             # Now delete the row itself
             db.session.delete(orphaned_row)
-        
+
         # Recalculate total
         request_obj.calculate_total()
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'total': request_obj.total_amount})
-    
+
     except Exception as e:
         db.session.rollback()
         print(f"[DEBUG] Error saving itinerary: {str(e)}")
@@ -714,17 +793,17 @@ def api_save_itinerary_original(request_id):
 def api_generate_by_days(request_id):
     """Generate itinerary rows by days"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     # Clear existing rows
     ItineraryRow.query.filter_by(request_id=request_id).delete()
-    
+
     # Generate one row per day
     current_date = request_obj.from_date
     day_counter = 1
-    
+
     while current_date <= request_obj.to_date:
         row = ItineraryRow(
             request_id=request_id,
@@ -735,12 +814,12 @@ def api_generate_by_days(request_id):
             currency=request_obj.total_currency
         )
         db.session.add(row)
-        
+
         current_date += timedelta(days=1)
         day_counter += 1
-    
+
     db.session.commit()
-    
+
     return jsonify({'success': True})
 
 @inbound_bp.route('/api/<int:request_id>/generate-sections', methods=['POST'])
@@ -749,13 +828,13 @@ def api_generate_by_days(request_id):
 def api_generate_by_sections(request_id):
     """Generate itinerary rows by service sections"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     # Clear existing rows
     ItineraryRow.query.filter_by(request_id=request_id).delete()
-    
+
     # Generate rows grouped by service type
     services = [
         ('Accommodation', True, False, False, False, False),  # Hotel flag
@@ -764,7 +843,7 @@ def api_generate_by_sections(request_id):
         ('Guide Services', False, True, False, False, False),  # Guide flag
         ('Airport Services', False, False, False, False, True)  # Airport flag
     ]
-    
+
     for service_name, hotel, guide, transport, meal, airport in services:
         row = ItineraryRow(
             request_id=request_id,
@@ -780,20 +859,20 @@ def api_generate_by_sections(request_id):
             flag_airport=airport
         )
         db.session.add(row)
-    
+
     db.session.commit()
-    
+
     return jsonify({'success': True})
 
 def _auto_generate_services(request_obj, itinerary_row):
     """Auto-generate service records based on itinerary row flags"""
-    
+
     if itinerary_row.flag_hotel:
         # Generate hotel record - auto-inherit check-in/out from request dates
         check_in = request_obj.from_date
         check_out = request_obj.to_date
         nights = (check_out - check_in).days
-        
+
         hotel = InboundHotel(
             request_id=request_obj.id,
             source_itinerary_id=itinerary_row.id,
@@ -806,7 +885,7 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(hotel)
-    
+
     if itinerary_row.flag_transport:
         # Generate transport record
         # Default vehicle type based on pax size
@@ -816,7 +895,7 @@ def _auto_generate_services(request_obj, itinerary_row):
             vehicle_type = 'Van'
         else:
             vehicle_type = 'Bus'
-        
+
         transport = InboundTransport(
             request_id=request_obj.id,
             source_itinerary_id=itinerary_row.id,
@@ -826,7 +905,7 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(transport)
-    
+
     if itinerary_row.flag_airport:
         # Generate airport transfer (special transport)
         transport = InboundTransport(
@@ -839,7 +918,7 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(transport)
-    
+
     if itinerary_row.flag_meal:
         # Generate meal record
         meal = InboundMeal(
@@ -852,7 +931,7 @@ def _auto_generate_services(request_obj, itinerary_row):
             currency=itinerary_row.currency
         )
         db.session.add(meal)
-    
+
     if itinerary_row.flag_guide:
         # Generate guide record
         # Default language from nationality mapping
@@ -867,9 +946,9 @@ def _auto_generate_services(request_obj, itinerary_row):
             'Korean': 'Korean',
             'Arabic': 'Arabic'
         }
-        
+
         language = language_map.get(request_obj.nationality, 'English')
-        
+
         guide = InboundGuide(
             request_id=request_obj.id,
             source_itinerary_id=itinerary_row.id,
@@ -888,12 +967,12 @@ def _auto_generate_services(request_obj, itinerary_row):
 def api_update_master_details(request_id):
     """Update master details"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
-    
+
     # Update master details
     request_obj.agent = data.get('agent', request_obj.agent)
     request_obj.contact_name = data.get('contact_name', request_obj.contact_name)
@@ -911,17 +990,17 @@ def api_update_master_details(request_id):
     elif customer_id_value == '' or customer_id_value is None:
         if 'customer_id' in data:
             request_obj.customer_id = None
-    
+
     # Update arrival/departure details
     request_obj.arrival_point = data.get('arrival_point', request_obj.arrival_point)
     request_obj.departure_point = data.get('departure_point', request_obj.departure_point)
-    
+
     # Handle date updates
     if data.get('from_date'):
         request_obj.from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
     if data.get('to_date'):
         request_obj.to_date = datetime.strptime(data.get('to_date'), '%Y-%m-%d').date()
-    
+
     # Handle time updates
     if data.get('arrival_time'):
         try:
@@ -930,7 +1009,7 @@ def api_update_master_details(request_id):
             pass  # Invalid time format, skip
     elif data.get('arrival_time') == '':
         request_obj.arrival_time = None
-        
+
     if data.get('departure_time'):
         try:
             request_obj.departure_time = datetime.strptime(data.get('departure_time'), '%H:%M').time()
@@ -938,12 +1017,12 @@ def api_update_master_details(request_id):
             pass  # Invalid time format, skip
     elif data.get('departure_time') == '':
         request_obj.departure_time = None
-    
+
     # Recalculate days
     request_obj.calculate_days()
-    
+
     db.session.commit()
-    
+
     return jsonify({
         'success': True, 
         'no_of_days': request_obj.no_of_days,
@@ -955,17 +1034,17 @@ def api_update_master_details(request_id):
 def api_auto_save_and_regenerate(request_id):
     """Auto-save master details and regenerate itinerary rows"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
-    
+
     # Track if dates changed
     dates_changed = False
     old_from_date = request_obj.from_date
     old_to_date = request_obj.to_date
-    
+
     # Update master details
     if data.get('from_date'):
         new_from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
@@ -977,7 +1056,7 @@ def api_auto_save_and_regenerate(request_id):
         if new_to_date != old_to_date:
             request_obj.to_date = new_to_date
             dates_changed = True
-    
+
     if data.get('pax'):
         request_obj.pax = int(data.get('pax'))
     if data.get('customer_type'):
@@ -986,21 +1065,21 @@ def api_auto_save_and_regenerate(request_id):
         request_obj.contact_name = data.get('contact_name')
     if data.get('nationality'):
         request_obj.nationality = data.get('nationality')
-    
+
     # Recalculate days
     request_obj.calculate_days()
-    
+
     db.session.commit()
-    
+
     # Regenerate itinerary if dates changed
     if dates_changed and request_obj.from_date and request_obj.to_date:
         # Clear existing rows
         ItineraryRow.query.filter_by(request_id=request_id).delete()
-        
+
         # Generate one row per day
         current_date = request_obj.from_date
         day_counter = 1
-        
+
         while current_date <= request_obj.to_date:
             row = ItineraryRow(
                 request_id=request_id,
@@ -1011,30 +1090,30 @@ def api_auto_save_and_regenerate(request_id):
                 currency=request_obj.total_currency
             )
             db.session.add(row)
-            
+
             current_date += timedelta(days=1)
             day_counter += 1
-        
+
         # Auto-update existing ArrivalBatch and DepartureBatch records when dates change
         # Update all arrival records to use new from_date
         if request_obj.from_date:
             ArrivalBatch.query.filter_by(request_id=request_id).update(
                 {'arrival_date': request_obj.from_date}
             )
-        
+
         # Update all departure records to use new to_date
         if request_obj.to_date:
             DepartureBatch.query.filter_by(request_id=request_id).update(
                 {'departure_date': request_obj.to_date}
             )
-        
+
         db.session.commit()
-    
+
     # Render the itinerary rows HTML using the component template
     rows_html = render_template('components/itinerary_rows.html', 
                                 rows=request_obj.itinerary_rows,
                                 view_only=False)
-    
+
     return jsonify({
         'success': True,
         'dates_changed': dates_changed,
@@ -1047,12 +1126,12 @@ def api_auto_save_and_regenerate(request_id):
 def api_save_request(request_id):
     """Save request and assign final sequence number based on from_date month"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
-    
+
     # Update from_date if provided
     if data.get('from_date'):
         request_obj.from_date = datetime.strptime(data.get('from_date'), '%Y-%m-%d').date()
@@ -1070,10 +1149,10 @@ def api_save_request(request_id):
         request_obj.customer_id = int(data.get('customer_id'))
     if data.get('agent_ref'):
         request_obj.agent_ref = data.get('agent_ref')
-    
+
     # Recalculate days
     request_obj.calculate_days()
-    
+
     # Only generate sequence number if not already saved AND has placeholder number
     # This protects existing requests that already have valid sequence numbers
     if not request_obj.is_saved and request_obj.request_number.startswith('IN-NEW-'):
@@ -1083,9 +1162,9 @@ def api_save_request(request_id):
     elif not request_obj.is_saved:
         # Legacy request without is_saved flag but with valid number - just mark as saved
         request_obj.is_saved = True
-    
+
     db.session.commit()
-    
+
     return jsonify({
         'success': True,
         'request_number': request_obj.request_number,
@@ -1097,31 +1176,31 @@ def api_save_request(request_id):
 def api_save_service_data(request_id):
     """Save service data (hotel, transport, guide, meal) for itinerary"""
     from datetime import date as date_type
-    
+
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     service_type = data.get('service_type')
     form_data = data.get('data', {})
     row_id = data.get('row_id')
     is_global = data.get('is_global', False)
-    
+
     # Debug logging - use print for immediate visibility
     print(f"[SAVE SERVICE] type={service_type}, is_global={is_global}, row_id={row_id}")
     print(f"[SAVE SERVICE] form_data keys: {list(form_data.keys())}")
     print(f"[SAVE SERVICE] hotel_name value: '{form_data.get('hotel_name', 'NOT_FOUND')}'")
     print(f"[SAVE SERVICE] full form_data: {form_data}")
-    
+
     # Validate context
     if not service_type:
         return jsonify({'success': False, 'error': 'Missing service_type'}), 400
-    
+
     if not is_global and not row_id:
         return jsonify({'success': False, 'error': 'Missing row_id for day-specific save'}), 400
-    
+
     # Validate row exists for day-specific saves
     # Skip validation for service types that use their own table IDs (not ItineraryRow IDs)
     service_uses_own_table = ['arrival', 'departure', 'hotel', 'transport', 'guide', 'meal']
@@ -1129,7 +1208,7 @@ def api_save_service_data(request_id):
         row = ItineraryRow.query.get(row_id)
         if not row or row.request_id != request_id:
             return jsonify({'success': False, 'error': 'Invalid row_id'}), 400
-    
+
     # Validate required fields based on service type
     validation_errors = []
     if service_type == 'hotel':
@@ -1139,19 +1218,22 @@ def api_save_service_data(request_id):
         if not form_data.get('transport_vehicle', '').strip():
             validation_errors.append('Vehicle Type is required')
     elif service_type == 'guide':
-        if not form_data.get('guide_name', '').strip():
-            validation_errors.append('Guide Name is required')
+        # Guide name can come from either direct input or supplier selection
+        guide_name = form_data.get('guide_name', '').strip()
+        guide_supplier_id = form_data.get('guide_supplier_id', '').strip()
+        if not guide_name and not guide_supplier_id:
+            validation_errors.append('Guide Name or Guide Supplier is required')
     elif service_type == 'meal':
         if not form_data.get('meal_restaurant', '').strip():
             validation_errors.append('Restaurant is required')
-    
+
     if validation_errors:
         return jsonify({
             'success': False, 
             'error': ', '.join(validation_errors),
             'validation_errors': validation_errors
         }), 400
-    
+
     try:
         if service_type == 'hotel':
             # Check if editing an existing hotel (row_id or hotel_id provided) or adding new
@@ -1172,47 +1254,47 @@ def api_save_service_data(request_id):
                 )
                 db.session.add(hotel)
                 print(f"[SAVE SERVICE] Creating new hotel entry")
-            
+
             if True:  # Keep indentation for the rest of the hotel logic
-                
+
                 hotel_name_value = form_data.get('hotel_name', '')
                 print(f"[SAVE SERVICE] Assigning hotel_name: '{hotel_name_value}' to hotel id: {hotel.id if hotel.id else 'NEW'}")
                 hotel.hotel_name = hotel_name_value
                 hotel.hotel_category = form_data.get('hotel_category', '')
                 hotel.meal_plan = form_data.get('hotel_board', 'BB')
                 hotel.status = form_data.get('hotel_status', 'REQUESTED')
-                
+
                 # Parse dates
                 if form_data.get('hotel_check_in'):
                     hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
                 if form_data.get('hotel_check_out'):
                     hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
-                
+
                 # Calculate nights and cost
                 if hotel.check_in_date and hotel.check_out_date:
                     hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-                
+
                 cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
                 hotel.cost_per_night = cost_per_night
                 hotel.total_cost = cost_per_night * (hotel.nights or 1)
-                
+
                 # Room distribution
                 hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
                 hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
                 hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
                 hotel.notes = form_data.get('hotel_notes', '')
-                
+
                 # Flush to get hotel ID before creating rooms
                 db.session.flush()
-                
+
                 # Check if room_list data was provided from the Room List tab
                 room_list_data = data.get('room_list', [])
-                
+
                 if room_list_data:
                     # Use room list data provided by user (with guest names and new fields)
                     HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
                     default_board_basis = form_data.get('hotel_board', 'BB')
-                    
+
                     for room_data in room_list_data:
                         room = HotelRoom(
                             hotel_id=hotel.id,
@@ -1226,7 +1308,7 @@ def api_save_service_data(request_id):
                             guest_names=room_data.get('guest_names', '')
                         )
                         db.session.add(room)
-                    
+
                     # Update room distribution counts based on room list
                     hotel.single_rooms = sum(1 for r in room_list_data if r.get('room_type') == 'Single')
                     hotel.double_rooms = sum(1 for r in room_list_data if r.get('room_type') in ['Double', 'Twin'])
@@ -1238,11 +1320,11 @@ def api_save_service_data(request_id):
                         # Check if existing rooms match new distribution
                         existing_rooms = HotelRoom.query.filter_by(hotel_id=hotel.id).all()
                         existing_count = len(existing_rooms)
-                        
+
                         # Only recreate if distribution changed
                         if existing_count != total_rooms:
                             HotelRoom.query.filter_by(hotel_id=hotel.id).delete()
-                            
+
                             # Create individual room records based on distribution
                             board_basis = form_data.get('hotel_board', 'BB')
                             for i in range(hotel.single_rooms):
@@ -1267,32 +1349,32 @@ def api_save_service_data(request_id):
                             check_out_date=row.date or date_type.today()
                         )
                         db.session.add(hotel)
-                    
+
                     hotel.hotel_name = form_data.get('hotel_name', '')
                     hotel.hotel_category = form_data.get('hotel_category', '')
                     hotel.meal_plan = form_data.get('hotel_board', 'BB')
                     hotel.status = form_data.get('hotel_status', 'REQUESTED')
-                    
+
                     # Parse dates
                     if form_data.get('hotel_check_in'):
                         hotel.check_in_date = datetime.strptime(form_data['hotel_check_in'], '%Y-%m-%d').date()
                     if form_data.get('hotel_check_out'):
                         hotel.check_out_date = datetime.strptime(form_data['hotel_check_out'], '%Y-%m-%d').date()
-                    
+
                     # Calculate nights and cost
                     if hotel.check_in_date and hotel.check_out_date:
                         hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-                    
+
                     cost_per_night = float(form_data.get('hotel_cost', 0) or 0)
                     hotel.cost_per_night = cost_per_night
                     hotel.total_cost = cost_per_night * (hotel.nights or 1)
-                    
+
                     # Room distribution
                     hotel.single_rooms = int(form_data.get('hotel_single_rooms', 0) or 0)
                     hotel.double_rooms = int(form_data.get('hotel_double_rooms', 0) or 0)
                     hotel.triple_rooms = int(form_data.get('hotel_triple_rooms', 0) or 0)
                     hotel.notes = form_data.get('hotel_notes', '')
-        
+
         elif service_type == 'transport':
             # Check if editing an existing transport record via row_id
             if row_id:
@@ -1314,40 +1396,38 @@ def api_save_service_data(request_id):
                 else:
                     return jsonify({'success': False, 'error': 'Transport record not found'}), 404
             else:
-                # Create new transport entries for date range
+                # Create a single transport entry with date range (from_date → to_date)
                 from_date_str = form_data.get('transport_from_date', '')
                 to_date_str = form_data.get('transport_to_date', '')
-                
+
                 if from_date_str and to_date_str:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
                 else:
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
-                
-                current_date = from_date
-                created_count = 0
+
+                # Create a single transport entry with date range
                 supplier_id = form_data.get('transport_supplier')
                 supplier_id = int(supplier_id) if supplier_id else None
-                while current_date <= to_date:
-                    transport = InboundTransport(
-                        request_id=request_id,
-                        date=current_date
-                    )
-                    transport.vehicle_type = form_data.get('transport_vehicle', '')
-                    transport.pickup_location = form_data.get('transport_pickup', '')
-                    transport.dropoff_location = form_data.get('transport_dropoff', '')
-                    transport.driver_name = form_data.get('transport_driver', '')
-                    transport.driver_phone = form_data.get('transport_phone', '')
-                    transport.status = form_data.get('transport_status', 'REQUESTED')
-                    transport.cost = float(form_data.get('transport_cost', 0) or 0)
-                    transport.supplier_id = supplier_id
-                    db.session.add(transport)
-                    created_count += 1
-                    current_date += timedelta(days=1)
-                
-                print(f"[SAVE SERVICE] Created {created_count} transport entries from {from_date} to {to_date}")
-        
+
+                transport = InboundTransport(
+                    request_id=request_id,
+                    date=from_date,  # Start date
+                    end_date=to_date  # End date for multi-day service
+                )
+                transport.vehicle_type = form_data.get('transport_vehicle', '')
+                transport.pickup_location = form_data.get('transport_pickup', '')
+                transport.dropoff_location = form_data.get('transport_dropoff', '')
+                transport.driver_name = form_data.get('transport_driver', '')
+                transport.driver_phone = form_data.get('transport_phone', '')
+                transport.status = form_data.get('transport_status', 'REQUESTED')
+                transport.cost = float(form_data.get('transport_cost', 0) or 0)
+                transport.supplier_id = supplier_id
+                db.session.add(transport)
+
+                print(f"[SAVE SERVICE] Created single transport entry from {from_date} to {to_date}")
+
         elif service_type == 'guide':
             # Check if editing an existing guide record via row_id
             if row_id:
@@ -1373,43 +1453,43 @@ def api_save_service_data(request_id):
                 else:
                     return jsonify({'success': False, 'error': 'Guide record not found'}), 404
             else:
-                # Create new guide entries for date range
+                # Create a single guide entry with date range (from_date → to_date)
                 from_date_str = form_data.get('guide_from_date', '')
                 to_date_str = form_data.get('guide_to_date', '')
-                
+
                 if from_date_str and to_date_str:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
                 else:
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
-                
-                current_date = from_date
-                created_count = 0
+
+                # Create a single guide entry with date range
                 guide_supplier_id = form_data.get('guide_supplier_id')
                 guide_supplier_id = int(guide_supplier_id) if guide_supplier_id else None
-                guide_name_text = ''
+                # Get guide name from direct input first, then from supplier if supplier is selected
+                guide_name_text = form_data.get('guide_name', '').strip()
                 if guide_supplier_id:
                     from app.models.supplier import Supplier
                     supplier = Supplier.query.get(guide_supplier_id)
-                    guide_name_text = supplier.name if supplier else ''
-                while current_date <= to_date:
-                    guide = InboundGuide(
-                        request_id=request_id,
-                        date=current_date
-                    )
-                    guide.guide_name = guide_name_text
-                    guide.language = form_data.get('guide_language', '')
-                    guide.telephone_number = form_data.get('guide_phone', '')
-                    guide.cost = float(form_data.get('guide_cost', 0) or 0)
-                    guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
-                    guide.supplier_id = guide_supplier_id
-                    db.session.add(guide)
-                    created_count += 1
-                    current_date += timedelta(days=1)
-                
-                print(f"[SAVE SERVICE] Created {created_count} guide entries from {from_date} to {to_date}")
-        
+                    if supplier:
+                        guide_name_text = supplier.name  # Override with supplier name if supplier is selected
+
+                guide = InboundGuide(
+                    request_id=request_id,
+                    date=from_date,  # Start date
+                    end_date=to_date  # End date for multi-day service
+                )
+                guide.guide_name = guide_name_text
+                guide.language = form_data.get('guide_language', '')
+                guide.telephone_number = form_data.get('guide_phone', '')
+                guide.cost = float(form_data.get('guide_cost', 0) or 0)
+                guide.is_cancelled = form_data.get('guide_cancelled') in ['true', 'True', True, 'on', '1']
+                guide.supplier_id = guide_supplier_id
+                db.session.add(guide)
+
+                print(f"[SAVE SERVICE] Created single guide entry from {from_date} to {to_date}")
+
         elif service_type == 'meal':
             # Check if editing an existing meal record via row_id
             if row_id:
@@ -1429,14 +1509,14 @@ def api_save_service_data(request_id):
                 # Create new meal entries for date range
                 from_date_str = form_data.get('meal_from_date', '')
                 to_date_str = form_data.get('meal_to_date', '')
-                
+
                 if from_date_str and to_date_str:
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
                 else:
                     from_date = request_obj.from_date or date_type.today()
                     to_date = request_obj.to_date or date_type.today()
-                
+
                 current_date = from_date
                 created_count = 0
                 while current_date <= to_date:
@@ -1451,12 +1531,12 @@ def api_save_service_data(request_id):
                     db.session.add(meal)
                     created_count += 1
                     current_date += timedelta(days=1)
-                
+
                 print(f"[SAVE SERVICE] Created {created_count} meal entries from {from_date} to {to_date}")
-        
+
         elif service_type == 'arrival':
             from app.models.inbound import ArrivalBatch
-            
+
             # Validate required fields
             arrival_point = form_data.get('arrival_point', '').strip()
             if not arrival_point:
@@ -1465,7 +1545,7 @@ def api_save_service_data(request_id):
                     'error': 'Arrival Point is required',
                     'field_errors': {'arrival_point': 'Arrival Point is required'}
                 }), 400
-            
+
             # Parse date and time
             arrival_date = None
             arrival_time = None
@@ -1479,7 +1559,7 @@ def api_save_service_data(request_id):
                     arrival_time = datetime.strptime(form_data['arrival_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             # Check if we're updating an existing batch or creating new
             # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
             batch_id = row_id or form_data.get('arrival_id') or form_data.get('batch_id')
@@ -1487,7 +1567,7 @@ def api_save_service_data(request_id):
                 arrival = ArrivalBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 arrival = None
-            
+
             if not arrival:
                 # Create new batch
                 arrival = ArrivalBatch(request_id=request_id)
@@ -1495,7 +1575,7 @@ def api_save_service_data(request_id):
                 print(f"[SAVE SERVICE] Creating new arrival batch")
             else:
                 print(f"[SAVE SERVICE] Updating existing arrival batch id={batch_id}")
-            
+
             # Update fields
             arrival.arrival_date = arrival_date or request_obj.from_date
             arrival.arrival_point = arrival_point
@@ -1506,16 +1586,16 @@ def api_save_service_data(request_id):
             pax_val = form_data.get('arrival_pax_count', '')
             arrival.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             arrival.driver_name = form_data.get('arrival_driver_name', '')
-            
+
             # New fields: visa_status, meet_assist, representative_name
             arrival.visa_status = form_data.get('arrival_visa_status', 'NOT_INCLUDED')
             meet_assist_val = form_data.get('arrival_meet_assist', 'no')
             arrival.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             arrival.representative_name = form_data.get('arrival_representative_name', '')
-        
+
         elif service_type == 'departure':
             from app.models.inbound import DepartureBatch
-            
+
             # Validate required fields
             departure_point = form_data.get('departure_point', '').strip()
             if not departure_point:
@@ -1524,7 +1604,7 @@ def api_save_service_data(request_id):
                     'error': 'Departure Point is required',
                     'field_errors': {'departure_point': 'Departure Point is required'}
                 }), 400
-            
+
             # Parse date and time
             departure_date = None
             departure_time = None
@@ -1538,7 +1618,7 @@ def api_save_service_data(request_id):
                     departure_time = datetime.strptime(form_data['departure_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             # Check if we're updating an existing batch or creating new
             # Use row_id from main data (when editing from Trip Summary) or batch_id from form_data
             batch_id = row_id or form_data.get('departure_id') or form_data.get('batch_id')
@@ -1546,7 +1626,7 @@ def api_save_service_data(request_id):
                 departure = DepartureBatch.query.filter_by(id=batch_id, request_id=request_id).first()
             else:
                 departure = None
-            
+
             if not departure:
                 # Create new batch
                 departure = DepartureBatch(request_id=request_id)
@@ -1554,7 +1634,7 @@ def api_save_service_data(request_id):
                 print(f"[SAVE SERVICE] Creating new departure batch")
             else:
                 print(f"[SAVE SERVICE] Updating existing departure batch id={batch_id}")
-            
+
             # Update fields
             departure.departure_date = departure_date or request_obj.to_date
             departure.departure_point = departure_point
@@ -1565,25 +1645,25 @@ def api_save_service_data(request_id):
             departure.pax_count = int(pax_val) if pax_val else (request_obj.pax or 1)
             departure.driver_name = form_data.get('departure_driver_name', '')
             departure.departure_tax = form_data.get('departure_tax', 'NOT_INCLUDED')
-            
+
             # New fields: meet_assist, representative_name
             meet_assist_val = form_data.get('departure_meet_assist', 'no')
             departure.meet_assist = meet_assist_val in ['yes', 'true', 'True', True, 1, '1', 'on']
             departure.representative_name = form_data.get('departure_representative_name', '')
-            
+
             # Parse program date
             if form_data.get('departure_program_date'):
                 try:
                     departure.program_date = datetime.strptime(form_data['departure_program_date'], '%Y-%m-%d').date()
                 except:
                     pass
-        
+
         db.session.commit()
         print(f"[SAVE SERVICE] Commit successful for {service_type}")
-        
+
         # Expire cached data and re-query with eager loading
         db.session.expire_all()
-        
+
         # Re-query fresh request with all service relationships eagerly loaded
         fresh_request = InboundRequest.query.options(
             selectinload(InboundRequest.inbound_hotels),
@@ -1592,19 +1672,19 @@ def api_save_service_data(request_id):
             selectinload(InboundRequest.inbound_meals),
             selectinload(InboundRequest.itinerary_rows)
         ).get(request_id)
-        
+
         # Build service lookup maps for template
         hotel_map = {h.source_itinerary_id: h for h in fresh_request.inbound_hotels}
         transport_map = {t.source_itinerary_id: t for t in fresh_request.inbound_transports}
         guide_map = {g.source_itinerary_id: g for g in fresh_request.inbound_guides}
         meal_map = {m.source_itinerary_id: m for m in fresh_request.inbound_meals}
-        
+
         # Global fallbacks (source_itinerary_id=None)
         global_hotel = hotel_map.get(None)
         global_transport = transport_map.get(None)
         global_guide = guide_map.get(None)
         global_meal = meal_map.get(None)
-        
+
         # Render updated HTML partials for instant DOM update
         itinerary_html = render_template(
             'components/itinerary_rows.html',
@@ -1619,20 +1699,24 @@ def api_save_service_data(request_id):
             global_guide=global_guide,
             global_meal=global_meal
         )
-        
+
         # Also render the service-specific entries table
         service_entries_html = None
         summary_entries_html = None
-        
+
         if service_type == 'hotel':
             service_entries_html = render_template(
                 'components/hotel_entries.html',
                 hotels=fresh_request.inbound_hotels,
                 view_only=False
             )
-            # Hotels are already unique, use same format for summary
-            summary_entries_html = service_entries_html
-            
+            # Use Trip Summary format for summary_entries_html
+            summary_entries_html = render_template(
+                'components/hotel_summary_entries.html',
+                hotels=fresh_request.inbound_hotels,
+                view_only=False
+            )
+
         elif service_type == 'transport':
             # Convert to list to avoid multiple iterations consuming the relationship
             transports_list = list(fresh_request.inbound_transports)
@@ -1655,7 +1739,7 @@ def api_save_service_data(request_id):
                     }
                 if t.date:
                     transport_groups[key]['dates'].append(t.date)
-            
+
             # Format date ranges for summary
             for key in transport_groups:
                 dates = transport_groups[key]['dates']
@@ -1667,30 +1751,38 @@ def api_save_service_data(request_id):
                         transport_groups[key]['date_range'] = dates[0].strftime('%d %b')
                 else:
                     transport_groups[key]['date_range'] = '-'
-            
+
+            # Generate individual transport records for Trip Summary (not grouped)
+            # Use properties: pickup_point, drop_off_point, service_date
             summary_entries_html = render_template_string('''
-                {% for key, t in groups.items() %}
-                <tr class="hover:bg-gray-50" data-transport-key="{{ key }}">
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ t.date_range }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ t.vehicle_type or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ t.pickup_location or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ t.dropoff_location or '-' }}</td>
+                {% for transport in transports %}
+                <tr class="hover:bg-gray-50" data-transport-key="{{ transport.vehicle_type or '' }}-{{ transport.pickup_point or '' }}-{{ transport.drop_off_point or '' }}" data-service-type="transport" data-record-id="{{ transport.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if transport.end_date and transport.end_date != transport.date %}{{ transport.date.strftime('%d %b') if transport.date else '-' }} - {{ transport.end_date.strftime('%d %b') if transport.end_date else '-' }}{% else %}{{ transport.service_date.strftime('%d %b') if transport.service_date else '-' }}{% endif %}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.vehicle_type or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.pickup_point or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ transport.drop_off_point or '-' }}</td>
                     <td class="border border-gray-300 px-2 py-1.5 text-center">
-                        <span class="px-2 py-0.5 rounded text-[10px] {% if t.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif t.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ t.status or 'PENDING' }}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] {% if transport.status == 'CONFIRMED' %}bg-green-100 text-green-700{% elif transport.status == 'REQUESTED' %}bg-yellow-100 text-yellow-700{% else %}bg-gray-100 text-gray-700{% endif %}">{{ transport.status or 'PENDING' }}</span>
+                    </td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('transport', {{ transport.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
+                <tr><td colspan="6" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No transport added</td></tr>
                 {% endfor %}
-            ''', groups=transport_groups)
-            
+            ''', transports=transports_list)
+
         elif service_type == 'guide':
             # Convert to list to avoid multiple iterations consuming the relationship
             guides_list = list(fresh_request.inbound_guides)
             print(f"[SAVE SERVICE] Guide count in fresh_request: {len(guides_list)}")
             for g in guides_list:
                 print(f"[SAVE SERVICE] Guide entry: id={g.id}, name={g.guide_name}, date={g.date}")
-            
+
             service_entries_html = render_template(
                 'components/guide_entries.html',
                 guides=guides_list,
@@ -1709,7 +1801,7 @@ def api_save_service_data(request_id):
                     }
                 if g.date:
                     guide_groups[key]['dates'].append(g.date)
-            
+
             # Format date ranges for summary
             for key in guide_groups:
                 dates = guide_groups[key]['dates']
@@ -1721,20 +1813,28 @@ def api_save_service_data(request_id):
                         guide_groups[key]['date_range'] = dates[0].strftime('%d %b')
                 else:
                     guide_groups[key]['date_range'] = '-'
-            
+
+            # Generate individual guide records for Trip Summary (not grouped)
+            # Use properties: service_date, telephone
             summary_entries_html = render_template_string('''
-                {% for key, g in groups.items() %}
-                <tr class="hover:bg-gray-50" data-guide-name="{{ g.guide_name or '' }}">
-                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ g.guide_name or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5 text-center">{{ g.date_range }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ g.language or '-' }}</td>
-                    <td class="border border-gray-300 px-2 py-1.5">{{ g.telephone or '-' }}</td>
+                {% for guide in guides %}
+                <tr class="hover:bg-gray-50" data-guide-name="{{ guide.guide_name or '' }}" data-guide-supplier-id="{{ guide.supplier_id or '' }}" data-service-type="guide" data-record-id="{{ guide.id }}">
+                    <td class="border border-gray-300 px-2 py-1.5 font-medium">{{ guide.guide_name or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center">{% if guide.end_date and guide.end_date != guide.date %}{{ guide.date.strftime('%d %b') if guide.date else '-' }} - {{ guide.end_date.strftime('%d %b') if guide.end_date else '-' }}{% else %}{{ guide.service_date.strftime('%d %b') if guide.service_date else '-' }}{% endif %}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ guide.language or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5">{{ guide.telephone or '-' }}</td>
+                    <td class="border border-gray-300 px-2 py-1.5 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="handleEditServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600 hover:text-gray-800 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                            <button onclick="handleRemoveServiceRow('guide', {{ guide.id }})" class="p-1.5 bg-gray-700 hover:bg-gray-800 rounded text-white transition-colors" title="Remove"><i class="fas fa-trash text-sm"></i></button>
+                        </div>
+                    </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="4" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
+                <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No guides added</td></tr>
                 {% endfor %}
-            ''', groups=guide_groups)
-            
+            ''', guides=guides_list)
+
         elif service_type == 'meal':
             # Convert to list to avoid multiple iterations consuming the relationship
             meals_list = list(fresh_request.inbound_meals)
@@ -1757,7 +1857,7 @@ def api_save_service_data(request_id):
                     }
                 if m.date:
                     meal_groups[key]['dates'].append(m.date)
-            
+
             # Format date ranges for summary
             for key in meal_groups:
                 dates = meal_groups[key]['dates']
@@ -1769,7 +1869,7 @@ def api_save_service_data(request_id):
                         meal_groups[key]['date_range'] = dates[0].strftime('%d %b')
                 else:
                     meal_groups[key]['date_range'] = '-'
-            
+
             summary_entries_html = render_template_string('''
                 {% for key, m in groups.items() %}
                 <tr class="hover:bg-gray-50" data-meal-key="{{ key }}">
@@ -1783,13 +1883,13 @@ def api_save_service_data(request_id):
                 <tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meals added</td></tr>
                 {% endfor %}
             ''', groups=meal_groups)
-        
+
         elif service_type in ('arrival', 'departure'):
             from app.models.inbound import ArrivalBatch, DepartureBatch
-            
+
             arrivals = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
             departures = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
-            
+
             # For flights, service_entries_html and summary_entries_html are the same
             # (flights are unique entries, not consolidated by date range)
             flights_html = render_template_string('''
@@ -1831,11 +1931,11 @@ def api_save_service_data(request_id):
                 <tr><td colspan="8" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No flights added</td></tr>
                 {% endif %}
             ''', arrivals=arrivals, departures=departures)
-            
+
             # Use same HTML for both (flights are unique entries)
             service_entries_html = flights_html
             summary_entries_html = flights_html
-        
+
         response_data = {
             'success': True, 
             'message': f'{service_type.capitalize()} data saved',
@@ -1844,7 +1944,7 @@ def api_save_service_data(request_id):
             'summary_entries_html': summary_entries_html,
             'service_type': service_type
         }
-        
+
         # For hotel: include hotel_id and rooms data for room distribution modal
         if service_type == 'hotel' and 'hotel' in locals():
             hotel_obj = hotel  # Reference the hotel object created/updated above
@@ -1861,9 +1961,9 @@ def api_save_service_data(request_id):
                     'children': r.children or 0,
                     'guest_names': r.guest_names or ''
                 } for r in rooms]
-        
+
         return jsonify(response_data)
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1875,16 +1975,16 @@ def api_update_itinerary_row_field(row_id):
     try:
         row = ItineraryRow.query.get_or_404(row_id)
         data = request.get_json()
-        
+
         field = data.get('field')
         value = data.get('value')
-        
+
         # Only allow specific fields to be updated
         allowed_fields = ['description', 'restaurant', 'meal_type', 'comment', 'cash_expense', 'restaurant_supplier_id']
-        
+
         if field not in allowed_fields:
             return jsonify({'success': False, 'error': f'Field {field} not allowed'}), 400
-        
+
         # Update the field
         if field == 'cash_expense':
             try:
@@ -1896,12 +1996,12 @@ def api_update_itinerary_row_field(row_id):
                 value = int(value) if value else None
             except ValueError:
                 value = None
-        
+
         setattr(row, field, value)
         db.session.commit()
-        
+
         return jsonify({'success': True})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1912,19 +2012,19 @@ def api_save_itinerary_row(request_id):
     """Add or update an itinerary row"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         # Authorization check
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
-        
+
         data = request.get_json()
-        
+
         row_id = data.get('row_id')
         itinerary_date = data.get('itinerary_date')
         description = data.get('description', '')
         meal_type = data.get('meal_type', '')
         restaurant_supplier_id = data.get('restaurant_supplier_id')
-        
+
         # Parse date (use from_date as default for new rows)
         date_obj = None
         if itinerary_date:
@@ -1933,7 +2033,7 @@ def api_save_itinerary_row(request_id):
             date_obj = request_obj.from_date
         else:
             date_obj = datetime.now().date()
-        
+
         # Parse restaurant supplier ID
         if restaurant_supplier_id:
             try:
@@ -1942,13 +2042,13 @@ def api_save_itinerary_row(request_id):
                 restaurant_supplier_id = None
         else:
             restaurant_supplier_id = None
-        
+
         if row_id:
             # Update existing row
             row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
             if not row:
                 return jsonify({'success': False, 'error': 'Row not found'}), 404
-            
+
             row.date = date_obj
             row.description = description
             row.meal_type = meal_type
@@ -1963,11 +2063,11 @@ def api_save_itinerary_row(request_id):
                 restaurant_supplier_id=restaurant_supplier_id
             )
             db.session.add(row)
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'row_id': row.id})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1978,17 +2078,17 @@ def api_delete_itinerary_row_by_id(row_id):
     """Delete an itinerary row by ID"""
     try:
         row = ItineraryRow.query.get_or_404(row_id)
-        
+
         # Authorization check
         request_obj = InboundRequest.query.get_or_404(row.request_id)
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
-        
+
         db.session.delete(row)
         db.session.commit()
-        
+
         return jsonify({'success': True})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2000,16 +2100,16 @@ def api_get_itinerary_rows_html(request_id):
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
         rows = request_obj.itinerary_rows
-        
+
         # Get restaurant suppliers for the dropdown
         restaurant_suppliers = Supplier.query.filter_by(supplier_type='RESTAURANT', is_active=True).order_by(Supplier.name).all()
-        
+
         return render_template('components/itinerary_rows.html',
             rows=rows,
             restaurant_suppliers=restaurant_suppliers,
             view_only=False
         )
-    
+
     except Exception as e:
         return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {str(e)}</td></tr>', 500
 
@@ -2020,23 +2120,23 @@ def api_get_itinerary_summary_html(request_id):
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
         rows = request_obj.itinerary_rows
-        
+
         # Build HTML rows for the summary table - only show rows with meal or restaurant, sorted by date
         html_rows = []
         if rows:
             # Sort rows by date and filter for meal/restaurant entries
             sorted_rows = sorted([r for r in rows], key=lambda x: x.date or date(1900, 1, 1))
-            
+
             for row in sorted_rows:
                 # Skip rows that have no meal_type AND no restaurant
                 if not row.meal_type and not row.restaurant_supplier_id:
                     continue
-                    
+
                 date_str = row.date.strftime('%d %b') if row.date else '-'
                 meal_type = escape(row.meal_type) if row.meal_type else '-'
                 restaurant = escape(row.restaurant_name) if row.restaurant_name else '-'
                 pax = request_obj.pax or 0
-                
+
                 html_rows.append(f'''
                     <tr class="hover:bg-gray-50" data-service-type="itinerary" data-record-id="{row.id}">
                         <td class="border border-gray-300 px-2 py-1.5 text-center">{date_str}</td>
@@ -2057,7 +2157,7 @@ def api_get_itinerary_summary_html(request_id):
                 return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No meal/restaurant entries found</td></tr>'
         else:
             return '<tr><td colspan="5" class="border border-gray-300 px-2 py-3 text-center text-gray-500">No itinerary rows added</td></tr>'
-    
+
     except Exception as e:
         return f'<tr><td colspan="6" class="text-center text-red-500">Error loading itinerary: {escape(str(e))}</td></tr>', 500
 
@@ -2066,27 +2166,27 @@ def api_save_itinerary_rows_bulk(request_id):
     """Save all itinerary rows in bulk"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         # Authorization check
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'error': 'Unauthorized'}), 403
-        
+
         data = request.get_json()
         updates = data.get('updates', [])
-        
+
         for update in updates:
             row_id = update.get('row_id')
             if not row_id:
                 continue
-                
+
             row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
             if not row:
                 continue
-            
+
             # Update fields
             row.description = update.get('description', '')
             row.meal_type = update.get('meal_type', '')
-            
+
             # Handle restaurant supplier ID
             restaurant_id = update.get('restaurant_supplier_id')
             if restaurant_id:
@@ -2096,11 +2196,11 @@ def api_save_itinerary_rows_bulk(request_id):
                     row.restaurant_supplier_id = None
             else:
                 row.restaurant_supplier_id = None
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Itinerary saved successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2114,21 +2214,21 @@ def api_add_hotel():
         data = request.get_json()
         hotel_name = data.get('name', '').strip()
         hotel_city = data.get('city', 'Amman')
-        
+
         if not hotel_name:
             return jsonify({'success': False, 'error': 'Hotel name is required'}), 400
-        
+
         # Check if hotel already exists
         existing = Supplier.query.filter_by(name=hotel_name, supplier_type='HOTEL').first()
         if existing:
             return jsonify({'success': False, 'error': 'Hotel already exists'}), 400
-        
+
         # Generate unique code
         import re
         city_code = re.sub(r'[^A-Z]', '', hotel_city.upper()[:3]) or 'OTH'
         count = Supplier.query.filter(Supplier.code.like(f'HTL-{city_code}-%')).count()
         new_code = f'HTL-{city_code}-{count + 1:03d}'
-        
+
         # Create new supplier
         new_hotel = Supplier(
             name=hotel_name,
@@ -2139,7 +2239,7 @@ def api_add_hotel():
         )
         db.session.add(new_hotel)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'hotel': {
@@ -2148,7 +2248,7 @@ def api_add_hotel():
                 'city': new_hotel.city
             }
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2162,19 +2262,19 @@ def api_add_guide():
         data = request.get_json()
         guide_name = data.get('name', '').strip()
         guide_phone = data.get('phone', '').strip()
-        
+
         if not guide_name:
             return jsonify({'success': False, 'error': 'Guide name is required'}), 400
-        
+
         # Check if guide already exists
         existing = Supplier.query.filter_by(name=guide_name, supplier_type='GUIDE').first()
         if existing:
             return jsonify({'success': False, 'error': 'Guide already exists'}), 400
-        
+
         # Generate unique code
         count = Supplier.query.filter(Supplier.code.like('GDE-%')).count()
         new_code = f'GDE-{count + 1:03d}'
-        
+
         # Create new supplier
         new_guide = Supplier(
             name=guide_name,
@@ -2185,7 +2285,7 @@ def api_add_guide():
         )
         db.session.add(new_guide)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'supplier_id': new_guide.id,
@@ -2195,7 +2295,7 @@ def api_add_guide():
                 'phone': new_guide.phone
             }
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2209,19 +2309,19 @@ def api_add_restaurant():
         data = request.get_json()
         restaurant_name = data.get('name', '').strip()
         restaurant_location = data.get('location', '').strip()
-        
+
         if not restaurant_name:
             return jsonify({'success': False, 'error': 'Restaurant name is required'}), 400
-        
+
         # Check if restaurant already exists
         existing = Supplier.query.filter_by(name=restaurant_name, supplier_type='RESTAURANT').first()
         if existing:
             return jsonify({'success': False, 'error': 'Restaurant already exists'}), 400
-        
+
         # Generate unique code
         count = Supplier.query.filter(Supplier.code.like('RST-%')).count()
         new_code = f'RST-{count + 1:03d}'
-        
+
         # Create new supplier
         new_restaurant = Supplier(
             name=restaurant_name,
@@ -2232,7 +2332,7 @@ def api_add_restaurant():
         )
         db.session.add(new_restaurant)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'supplier_id': new_restaurant.id,
@@ -2242,7 +2342,7 @@ def api_add_restaurant():
                 'location': new_restaurant.address
             }
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2256,19 +2356,19 @@ def api_add_transport():
         data = request.get_json()
         transport_name = data.get('name', '').strip()
         transport_phone = data.get('phone', '').strip()
-        
+
         if not transport_name:
             return jsonify({'success': False, 'error': 'Supplier name is required'}), 400
-        
+
         # Check if transport supplier already exists
         existing = Supplier.query.filter_by(name=transport_name, supplier_type='TRANSPORT').first()
         if existing:
             return jsonify({'success': False, 'error': 'Transport supplier already exists'}), 400
-        
+
         # Generate unique code
         count = Supplier.query.filter(Supplier.code.like('TRN-%')).count()
         new_code = f'TRN-{count + 1:03d}'
-        
+
         # Create new supplier
         new_transport = Supplier(
             name=transport_name,
@@ -2279,7 +2379,7 @@ def api_add_transport():
         )
         db.session.add(new_transport)
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'supplier_id': new_transport.id,
@@ -2289,7 +2389,7 @@ def api_add_transport():
                 'phone': new_transport.phone
             }
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2302,17 +2402,17 @@ def api_save_hotel_rooms(hotel_id):
         hotel = InboundHotel.query.get_or_404(hotel_id)
         data = request.get_json()
         rooms_data = data.get('rooms', [])
-        
+
         # Validate - don't allow completely empty room list if hotel already has rooms
         existing_count = HotelRoom.query.filter_by(hotel_id=hotel_id).count()
         if len(rooms_data) == 0 and existing_count > 0:
             return jsonify({'success': False, 'error': 'Cannot save empty room list. Add at least one room or cancel.'}), 400
-        
+
         # Update existing rooms or delete and recreate
         # Get existing room IDs for matching
         existing_rooms = {r.id: r for r in HotelRoom.query.filter_by(hotel_id=hotel_id).all()}
         updated_ids = set()
-        
+
         for room_data in rooms_data:
             room_id = room_data.get('id')
             if room_id and room_id in existing_rooms:
@@ -2340,24 +2440,24 @@ def api_save_hotel_rooms(hotel_id):
                     guest_names=room_data.get('guest_names', '')
                 )
                 db.session.add(room)
-        
+
         # Delete rooms that were removed
         for room_id, room in existing_rooms.items():
             if room_id not in updated_ids:
                 db.session.delete(room)
-        
+
         # Update hotel room counts
         hotel.single_rooms = sum(1 for r in rooms_data if r.get('room_type') == 'Single')
         hotel.double_rooms = sum(1 for r in rooms_data if r.get('room_type') in ['Double', 'Twin', 'King'])
         hotel.triple_rooms = sum(1 for r in rooms_data if r.get('room_type') in ['Triple', 'Suite'])
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': f'{len(rooms_data)} rooms saved'
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2367,18 +2467,18 @@ def api_save_hotel_rooms(hotel_id):
 def api_delete_service(request_id):
     """Delete a service (hotel, transport, guide, meal)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     try:
         data = request.get_json()
         service_type = data.get('service_type')
         service_id = data.get('service_id')
-        
+
         if not service_type or not service_id:
             return jsonify({'success': False, 'error': 'Missing service_type or service_id'}), 400
-        
+
         # Delete based on service type
         if service_type == 'hotel':
             service = InboundHotel.query.filter_by(id=service_id, request_id=request_id).first()
@@ -2390,11 +2490,11 @@ def api_delete_service(request_id):
             service = InboundMeal.query.filter_by(id=service_id, request_id=request_id).first()
         else:
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
-        
+
         if service:
             db.session.delete(service)
             db.session.commit()
-            
+
             # Expire cached data and re-query with eager loading
             db.session.expire_all()
             fresh_request = InboundRequest.query.options(
@@ -2404,13 +2504,13 @@ def api_delete_service(request_id):
                 selectinload(InboundRequest.inbound_meals),
                 selectinload(InboundRequest.itinerary_rows)
             ).get(request_id)
-            
+
             # Build service lookup maps for template
             hotel_map = {h.source_itinerary_id: h for h in fresh_request.inbound_hotels}
             transport_map = {t.source_itinerary_id: t for t in fresh_request.inbound_transports}
             guide_map = {g.source_itinerary_id: g for g in fresh_request.inbound_guides}
             meal_map = {m.source_itinerary_id: m for m in fresh_request.inbound_meals}
-            
+
             # Render updated HTML partials for instant DOM update
             itinerary_html = render_template(
                 'components/itinerary_rows.html',
@@ -2425,7 +2525,7 @@ def api_delete_service(request_id):
                 global_guide=guide_map.get(None),
                 global_meal=meal_map.get(None)
             )
-            
+
             return jsonify({
                 'success': True, 
                 'message': f'{service_type.capitalize()} deleted',
@@ -2435,7 +2535,7 @@ def api_delete_service(request_id):
             })
         else:
             return jsonify({'success': False, 'error': 'Service not found'}), 404
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2445,13 +2545,13 @@ def api_delete_service(request_id):
 def api_get_service_record(request_id, service_type, record_id):
     """Get a service record for editing in the summary table"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     try:
         record_data = None
-        
+
         if service_type == 'arrival':
             record = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
@@ -2468,7 +2568,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'representative_name': record.representative_name or '',
                     'supplier_id': record.supplier_id
                 }
-        
+
         elif service_type == 'departure':
             record = DepartureBatch.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
@@ -2484,7 +2584,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'representative_name': record.representative_name or '',
                     'supplier_id': record.supplier_id
                 }
-        
+
         elif service_type == 'hotel':
             record = InboundHotel.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
@@ -2502,15 +2602,17 @@ def api_get_service_record(request_id, service_type, record_id):
                     'triple_rooms': record.triple_rooms or 0,
                     'notes': record.notes or ''
                 }
-        
+
         elif service_type == 'transport':
             record = InboundTransport.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
+                # Use end_date for to_date if it exists, otherwise use date
+                to_date = record.end_date if record.end_date else record.date
                 record_data = {
                     'id': record.id,
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
-                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
                     'vehicle_type': record.vehicle_type or '',
                     'pickup_point': record.pickup_location or '',
                     'drop_off_point': record.dropoff_location or '',
@@ -2519,21 +2621,23 @@ def api_get_service_record(request_id, service_type, record_id):
                     'status': record.status or 'REQUESTED',
                     'supplier_id': record.supplier_id
                 }
-        
+
         elif service_type == 'guide':
             record = InboundGuide.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
+                # Use end_date for to_date if it exists, otherwise use date
+                to_date = record.end_date if record.end_date else record.date
                 record_data = {
                     'id': record.id,
                     'service_date': record.date.strftime('%Y-%m-%d') if record.date else '',
                     'from_date': record.date.strftime('%Y-%m-%d') if record.date else '',
-                    'to_date': record.date.strftime('%Y-%m-%d') if record.date else '',
+                    'to_date': to_date.strftime('%Y-%m-%d') if to_date else '',
                     'guide_name': record.guide_name or '',
                     'language': record.language or '',
                     'telephone': record.telephone_number or '',
                     'supplier_id': record.supplier_id
                 }
-        
+
         elif service_type == 'meal':
             record = InboundMeal.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
@@ -2548,7 +2652,7 @@ def api_get_service_record(request_id, service_type, record_id):
                     'pax_count': record.pax_count or 0,
                     'supplier_id': record.supplier_id
                 }
-        
+
         elif service_type == 'itinerary':
             record = ItineraryRow.query.filter_by(id=record_id, request_id=request_id).first()
             if record:
@@ -2560,15 +2664,15 @@ def api_get_service_record(request_id, service_type, record_id):
                     'restaurant_supplier_id': record.restaurant_supplier_id,
                     'restaurant_name': record.restaurant_name or ''
                 }
-        
+
         else:
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
-        
+
         if record_data:
             return jsonify({'success': True, 'record': record_data})
         else:
             return jsonify({'success': False, 'error': 'Record not found'}), 404
-    
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -2578,13 +2682,13 @@ def api_get_service_record(request_id, service_type, record_id):
 def api_delete_service_record(request_id, service_type, record_id):
     """Delete a specific service record from the summary table"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     try:
         service = None
-        
+
         if service_type == 'arrival':
             service = ArrivalBatch.query.filter_by(id=record_id, request_id=request_id).first()
         elif service_type == 'departure':
@@ -2604,7 +2708,7 @@ def api_delete_service_record(request_id, service_type, record_id):
             service = ItineraryRow.query.filter_by(id=record_id, request_id=request_id).first()
         else:
             return jsonify({'success': False, 'error': f'Unknown service type: {service_type}'}), 400
-        
+
         if service:
             db.session.delete(service)
             db.session.commit()
@@ -2616,7 +2720,7 @@ def api_delete_service_record(request_id, service_type, record_id):
             })
         else:
             return jsonify({'success': False, 'error': 'Record not found'}), 404
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2627,39 +2731,39 @@ def api_delete_service_record(request_id, service_type, record_id):
 def api_create_default_itinerary(request_id):
     """Create default itinerary rows for a new request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     # Check if itinerary already exists
     if request_obj.itinerary_rows and len(request_obj.itinerary_rows) > 0:
         return jsonify({'success': True, 'message': 'Itinerary already exists'})
-    
+
     try:
         data = request.get_json() or {}
-        
+
         # Get dates from request or use defaults
         from_date_str = data.get('from_date')
         to_date_str = data.get('to_date')
-        
+
         if from_date_str:
             request_obj.from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
         if to_date_str:
             request_obj.to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-        
+
         # If no dates set, use today + 3 days
         if not request_obj.from_date:
             request_obj.from_date = date.today()
         if not request_obj.to_date:
             request_obj.to_date = request_obj.from_date + timedelta(days=3)
-        
+
         # Calculate days
         request_obj.calculate_days()
-        
+
         # Create itinerary rows for each day
         current_date = request_obj.from_date
         day_counter = 1
-        
+
         while current_date <= request_obj.to_date:
             # Generate description based on day
             if day_counter == 1:
@@ -2668,7 +2772,7 @@ def api_create_default_itinerary(request_id):
                 description = "Departure Day"
             else:
                 description = f"Day {day_counter}"
-            
+
             row = ItineraryRow(
                 request_id=request_obj.id,
                 date=current_date,
@@ -2680,12 +2784,12 @@ def api_create_default_itinerary(request_id):
                 flag_airport=(day_counter == 1 or current_date == request_obj.to_date)  # Airport on first and last day
             )
             db.session.add(row)
-            
+
             current_date += timedelta(days=1)
             day_counter += 1
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Default itinerary created'})
     except Exception as e:
         db.session.rollback()
@@ -2697,27 +2801,141 @@ def api_create_default_itinerary(request_id):
 def api_update_status(request_id):
     """Update request status"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     new_status = data.get('status')
-    
+
     # Accept all workflow statuses used in the sidebar
     valid_statuses = [
         'REQUEST', 'SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 
         'INVOICE', 'PROCESSING', 'COMPLETED',
         STATUS_REQUEST, STATUS_BOOKED, STATUS_IN_PROGRESS, STATUS_CONFIRMED
     ]
-    
+
     if new_status not in valid_statuses:
         return jsonify({'error': 'Invalid status'}), 400
-    
+
     request_obj.status = new_status
     db.session.commit()
-    
+
     return jsonify({'success': True, 'status': new_status})
+
+@inbound_bp.route('/api/<int:request_id>/cancel-request', methods=['POST'])
+@csrf.exempt
+def api_cancel_request(request_id):
+    """Cancel a request - sets status to CANCELLED"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+
+    try:
+        request_obj.status = 'CANCELLED'
+        db.session.commit()
+        return jsonify({'success': True, 'status': 'CANCELLED'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@inbound_bp.route('/api/<int:request_id>/submit-request', methods=['POST'])
+@csrf.exempt
+def api_submit_request(request_id):
+    """Submit request - transitions REQUEST → CONFIRMED or CONFIRMED → INVOICED"""
+    request_obj = InboundRequest.query.get_or_404(request_id)
+
+    if request_obj.user_id != 1:
+        return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
+    target_status = data.get('target_status', '').upper()
+
+    # Map current status to determine valid transitions
+    current_status = str(request_obj.status).upper()
+
+    # Determine target status based on current status if not provided
+    if not target_status:
+        if current_status == 'REQUEST':
+            target_status = 'CONFIRMED'
+        elif current_status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS']:
+            target_status = 'INVOICED'
+        else:
+            return jsonify({'success': False, 'message': 'Invalid status for submission'}), 400
+
+    # Validate transition
+    if current_status == 'REQUEST' and target_status != 'CONFIRMED':
+        return jsonify({'success': False, 'message': 'Request status can only transition to CONFIRMED'}), 400
+
+    if current_status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] and target_status != 'INVOICED':
+        return jsonify({'success': False, 'message': 'Confirmed status can only transition to INVOICED'}), 400
+
+    try:
+        # Map to actual status values used in database
+        if target_status == 'CONFIRMED':
+            request_obj.status = 'CONFIRMED'
+        elif target_status == 'INVOICED':
+            request_obj.status = 'INVOICED'
+
+            # Automatically create invoice record when status changes to INVOICED
+            from app.models.invoice import Invoice
+
+            # Check if invoice already exists for this request (prevent duplicates)
+            existing_invoice = Invoice.query.filter_by(inbound_request_id=request_obj.id).first()
+
+            if not existing_invoice:
+                # Calculate total amount from itinerary rows
+                try:
+                    total = request_obj.calculate_total()
+                except Exception as calc_error:
+                    # Fallback to request's total_amount if calculation fails
+                    total = request_obj.total_amount or 0.0
+                    print(f"Error calculating total from itinerary, using request total_amount: {calc_error}", file=sys.stderr)
+
+                # Generate invoice number
+                # Use document_sequence if available, otherwise use request_number
+                invoice_number = request_obj.document_sequence or request_obj.request_number
+
+                # Ensure invoice number is unique by appending suffix if needed
+                base_invoice_number = invoice_number
+                counter = 1
+                while Invoice.query.filter_by(invoice_number=invoice_number).first():
+                    invoice_number = f"{base_invoice_number}-INV-{counter:03d}"
+                    counter += 1
+
+                # Create invoice record
+                invoice = Invoice(
+                    inbound_request_id=request_obj.id,
+                    booking_id=request_obj.booking_id,  # May be None
+                    invoice_number=invoice_number,
+                    invoice_date=datetime.utcnow(),
+                    total_amount=total,
+                    notes=request_obj.special_note
+                )
+                db.session.add(invoice)
+        else:
+            return jsonify({'success': False, 'message': 'Invalid target status'}), 400
+
+        db.session.commit()
+
+        # Prepare response with redirect URL if status changed to INVOICED
+        response_data = {
+            'success': True, 
+            'status': request_obj.status, 
+            'message': f'Request status updated to {request_obj.status}'
+        }
+
+        # Add redirect URL for INVOICED status
+        if target_status == 'INVOICED':
+            response_data['redirect_url'] = url_for('inbound.generate_invoice', request_id=request_obj.id)
+
+        return jsonify(response_data)
+    except Exception as e:
+        db.session.rollback()
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @inbound_bp.route('/api/<int:request_id>/generate-services', methods=['POST'])
 @csrf.exempt
@@ -2726,14 +2944,14 @@ def api_generate_services(request_id):
     """Generate services and create normal booking"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'error': 'Access denied'}), 403
-        
+
         # Import the necessary models
         from app.models import Booking, ServiceItem, Customer
         from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
-        
+
         # Create or get booking record
         if request_obj.booking_id:
             booking = Booking.query.get(request_obj.booking_id)
@@ -2741,7 +2959,7 @@ def api_generate_services(request_id):
                 booking = None
         else:
             booking = None
-            
+
         if not booking:
             # Use the customer from the inbound request if available
             # For existing requests without customer_id, try to find by contact name
@@ -2760,7 +2978,7 @@ def api_generate_services(request_id):
                     customer.nationality = request_obj.nationality
                     db.session.add(customer)
                     db.session.flush()
-            
+
             # Create new booking
             booking = Booking()
             booking.reference_number = request_obj.request_number
@@ -2770,20 +2988,20 @@ def api_generate_services(request_id):
             booking.total_amount = request_obj.total_amount
             db.session.add(booking)
             db.session.flush()
-            
+
             # Link booking to inbound request and update status to BOOKED
             request_obj.booking_id = booking.id
             request_obj.status = 'BOOKED'
-        
+
         # Clear existing service items
         ServiceItem.query.filter_by(booking_id=booking.id).delete()
-        
+
         services_created = 0
-        
+
         # Generate ServiceItem records based on itinerary flags
         for row in request_obj.itinerary_rows:
             row_cost = row.calculate_row_cost(request_obj.pax)
-            
+
             # Hotel service - include room distribution data
             if row.flag_hotel:
                 service_item = ServiceItem()
@@ -2799,7 +3017,7 @@ def api_generate_services(request_id):
                 service_item.description = f"Hotel accommodation - {row.description} | Rooms: {room_summary}"
                 db.session.add(service_item)
                 services_created += 1
-            
+
             # Transport service
             if row.flag_transport:
                 service_item = ServiceItem()
@@ -2812,7 +3030,7 @@ def api_generate_services(request_id):
                 service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
-            
+
             # Restaurant/Meal service
             if row.flag_meal:
                 service_item = ServiceItem()
@@ -2825,7 +3043,7 @@ def api_generate_services(request_id):
                 service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
-            
+
             # Guide service
             if row.flag_guide:
                 service_item = ServiceItem()
@@ -2838,18 +3056,18 @@ def api_generate_services(request_id):
                 service_item.status = STATUS_REQUEST
                 db.session.add(service_item)
                 services_created += 1
-        
+
         # Update booking total
         booking.calculate_total()
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': f"Generated {services_created} services",
             'booking_id': booking.id,
             'redirect_url': url_for('booking.details', booking_id=booking.id)
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -2861,13 +3079,13 @@ def api_generate_services(request_id):
 def generate_invoice(request_id):
     """Generate invoice for the request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     if request_obj.status == STATUS_REQUEST:
         abort(400, 'Cannot generate invoice for request status')
-    
+
     return render_template('inbound/invoice.html', request=request_obj)
 
 @inbound_bp.route('/<int:request_id>/voucher')
@@ -2877,31 +3095,31 @@ def generate_voucher(request_id):
     from weasyprint import HTML
     from flask import make_response
     import io
-    
+
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     # Temporarily disabled user validation for testing
     # if request_obj.user_id != 1:
     #     abort(403)
-    
+
     # Allow voucher generation for testing/preview
     # if request_obj.status in [STATUS_REQUEST, STATUS_BOOKED]:
     #     abort(400, 'Cannot generate voucher until confirmed')
-    
+
     # Get layout preference from query parameter (default to vertical)
     layout = request.args.get('layout', 'vertical')
-    
+
     # Choose template based on layout
     if layout == 'horizontal':
         template = 'inbound/voucher_timeline_horizontal.html'
     else:
         template = 'inbound/voucher_timeline.html'
-    
+
     # Render the timeline template
     html = render_template(template, 
                           request=request_obj,
                           now=datetime.now())
-    
+
     # Try to generate PDF using WeasyPrint
     try:
         # Create PDF from HTML
@@ -2909,18 +3127,18 @@ def generate_voucher(request_id):
         HTML(string=html).write_pdf(pdf_buffer)
         pdf = pdf_buffer.getvalue()
         pdf_buffer.close()
-        
+
         response = make_response(pdf)
         response.headers['Content-Type'] = 'application/pdf'
         response.headers['Content-Disposition'] = f'inline; filename=tour_itinerary_{request_obj.request_number}.pdf'
-        
+
         return response
     except Exception as e:
         # If PDF generation fails, return HTML version for debugging
         print(f"PDF generation failed: {e}")
         import traceback
         traceback.print_exc()
-        
+
         # Return HTML with error info for debugging
         error_html = f"<h1>Voucher Generation Error</h1><p>Error: {str(e)}</p><hr>{html}"
         return error_html
@@ -2931,10 +3149,10 @@ def generate_voucher(request_id):
 def api_create_booking(request_id):
     """Create a booking from an inbound request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     # Check if booking already exists by looking for existing services
     if request_obj.booking_id:
         booking = Booking.query.get(request_obj.booking_id)
@@ -2944,12 +3162,12 @@ def api_create_booking(request_id):
                 'message': 'Booking already exists',
                 'booking_url': url_for('booking.details', booking_id=booking.id)
             })
-    
+
     try:
         # Use the existing generate services function logic
         result = api_generate_services(request_id)
         result_data = result.get_json()
-        
+
         if result_data.get('success'):
             return jsonify({
                 'success': True,
@@ -2961,7 +3179,7 @@ def api_create_booking(request_id):
                 'success': False,
                 'message': result_data.get('error', 'Failed to create booking')
             }), 500
-            
+
     except Exception as e:
         return jsonify({
             'success': False,
@@ -2973,19 +3191,19 @@ def api_create_booking(request_id):
 def api_save_hotels(request_id):
     """Save hotel configuration data including rooms"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     hotels_data = data.get('hotels', [])
-    
+
     from app.models.inbound import InboundHotel, HotelRoom
-    
+
     try:
         # Delete existing hotels and their rooms for this request
         InboundHotel.query.filter_by(request_id=request_id).delete()
-        
+
         # Create new hotel records
         for hotel_data in hotels_data:
             hotel = InboundHotel(
@@ -2993,28 +3211,28 @@ def api_save_hotels(request_id):
                 hotel_name=hotel_data.get('hotel_name', ''),
                 status='REQUEST'
             )
-            
+
             # Get check-in/out from hotel-level date inputs (NOT from rooms)
             if hotel_data.get('check_in_date'):
                 hotel.check_in_date = datetime.strptime(hotel_data['check_in_date'], '%Y-%m-%d').date()
             if hotel_data.get('check_out_date'):
                 hotel.check_out_date = datetime.strptime(hotel_data['check_out_date'], '%Y-%m-%d').date()
-                    
+
             # If no hotel-level dates provided, auto-inherit from request dates
             if not hotel.check_in_date:
                 hotel.check_in_date = request_obj.from_date
             if not hotel.check_out_date:
                 hotel.check_out_date = request_obj.to_date
-            
+
             # Calculate nights based on hotel-level dates
             if hotel.check_in_date and hotel.check_out_date:
                 hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-            
+
             rooms = hotel_data.get('rooms', [])
-            
+
             db.session.add(hotel)
             db.session.flush()  # Get the hotel ID before creating rooms
-            
+
             # Create HotelRoom records for each room with detailed data
             for room_data in rooms:
                 # Determine room type
@@ -3027,7 +3245,7 @@ def api_save_hotels(request_id):
                     room_type = 'TRIPLE'
                 else:
                     room_type = 'OTHER'
-                
+
                 # Store additional room details as JSON in notes field
                 # Note: check_in/check_out are at HOTEL level only, rooms inherit via @property
                 room_details = {
@@ -3038,7 +3256,7 @@ def api_save_hotels(request_id):
                     'adults': room_data.get('adults', 1),
                     'children': room_data.get('children', 0)
                 }
-                
+
                 hotel_room = HotelRoom(  # type: ignore[call-arg]
                     hotel_id=hotel.id,
                     room_type=room_type,
@@ -3047,14 +3265,14 @@ def api_save_hotels(request_id):
                     notes=json.dumps(room_details)  # Store detailed data as JSON
                 )
                 db.session.add(hotel_room)
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': f'Saved {len(hotels_data)} hotel(s) successfully'
         })
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"Error saving hotels: {e}")
@@ -3067,14 +3285,14 @@ def api_save_hotels(request_id):
 def api_get_arrivals(request_id):
     """Get all arrival batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import ArrivalBatch
-    
+
     batches = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
-    
+
     batches_data = []
     for batch in batches:
         batches_data.append({
@@ -3091,7 +3309,7 @@ def api_get_arrivals(request_id):
             'meet_assist': getattr(batch, 'meet_assist', False),
             'representative_name': getattr(batch, 'representative_name', '')
         })
-    
+
     return jsonify({'success': True, 'batches': batches_data})
 
 @inbound_bp.route('/api/<int:request_id>/departures', methods=['GET'])
@@ -3099,14 +3317,14 @@ def api_get_arrivals(request_id):
 def api_get_departures(request_id):
     """Get all departure batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import DepartureBatch
-    
+
     batches = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
-    
+
     batches_data = []
     for batch in batches:
         batches_data.append({
@@ -3124,7 +3342,7 @@ def api_get_departures(request_id):
             'representative_name': getattr(batch, 'representative_name', ''),
             'departure_tax': getattr(batch, 'departure_tax', 'NOT_INCLUDED')
         })
-    
+
     return jsonify({'success': True, 'batches': batches_data})
 
 @inbound_bp.route('/api/<int:request_id>/get-flights-data', methods=['GET'])
@@ -3132,15 +3350,15 @@ def api_get_departures(request_id):
 def api_get_flights_data(request_id):
     """Get combined arrivals and departures for summary table"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import ArrivalBatch, DepartureBatch
-    
+
     arrivals = ArrivalBatch.query.filter_by(request_id=request_id).order_by(ArrivalBatch.arrival_date).all()
     departures = DepartureBatch.query.filter_by(request_id=request_id).order_by(DepartureBatch.departure_date).all()
-    
+
     arrivals_data = []
     for arr in arrivals:
         arrivals_data.append({
@@ -3152,7 +3370,7 @@ def api_get_flights_data(request_id):
             'pax_count': arr.pax_count or 0,
             'driver_name': arr.driver_name or ''
         })
-    
+
     departures_data = []
     for dep in departures:
         departures_data.append({
@@ -3164,7 +3382,7 @@ def api_get_flights_data(request_id):
             'pax_count': dep.pax_count or 0,
             'driver_name': dep.driver_name or ''
         })
-    
+
     return jsonify({
         'success': True,
         'arrivals': arrivals_data,
@@ -3176,22 +3394,22 @@ def api_get_flights_data(request_id):
 def api_delete_arrival(request_id, arrival_id):
     """Delete a specific arrival batch"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import ArrivalBatch, ItineraryRow
-    
+
     try:
         # Find and delete the specific arrival
         arrival = ArrivalBatch.query.filter_by(id=arrival_id, request_id=request_id).first()
         if arrival:
             db.session.delete(arrival)
             db.session.commit()
-            
+
             # Re-calculate flags for remaining arrivals
             ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
-            
+
             all_arrivals = ArrivalBatch.query.filter_by(request_id=request_id).all()
             for arr in all_arrivals:
                 if arr.arrival_date:
@@ -3201,13 +3419,13 @@ def api_delete_arrival(request_id, arrival_id):
                     ).all()
                     for row in arrival_rows:
                         row.flag_airport = True
-            
+
             db.session.commit()
-            
+
             return jsonify({'success': True, 'message': 'Arrival deleted successfully'})
         else:
             return jsonify({'error': 'Arrival not found'}), 404
-            
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -3217,22 +3435,22 @@ def api_delete_arrival(request_id, arrival_id):
 def api_delete_departure(request_id, departure_id):
     """Delete a specific departure batch"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import DepartureBatch, ItineraryRow
-    
+
     try:
         # Find and delete the specific departure
         departure = DepartureBatch.query.filter_by(id=departure_id, request_id=request_id).first()
         if departure:
             db.session.delete(departure)
             db.session.commit()
-            
+
             # Re-calculate flags for remaining departures
             ItineraryRow.query.filter_by(request_id=request_id).update({'flag_drive': False})
-            
+
             all_departures = DepartureBatch.query.filter_by(request_id=request_id).all()
             for dep in all_departures:
                 if dep.departure_date:
@@ -3242,13 +3460,13 @@ def api_delete_departure(request_id, departure_id):
                     ).all()
                     for row in departure_rows:
                         row.flag_drive = True
-            
+
             db.session.commit()
-            
+
             return jsonify({'success': True, 'message': 'Departure deleted successfully'})
         else:
             return jsonify({'error': 'Departure not found'}), 404
-            
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -3258,19 +3476,19 @@ def api_delete_departure(request_id, departure_id):
 def api_save_departures(request_id):
     """Save departure batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     batches_data = data.get('batches', [])
-    
+
     from app.models.inbound import DepartureBatch, ItineraryRow
-    
+
     try:
         # Don't delete existing batches - just add new ones
         # This allows multiple departures to be saved
-        
+
         # Create new batches
         for batch_data in batches_data:
             # Parse date
@@ -3280,10 +3498,10 @@ def api_save_departures(request_id):
                     departure_date = datetime.strptime(batch_data['departure_date'], '%Y-%m-%d').date()
                 except:
                     continue
-            
+
             if not departure_date:
                 continue
-            
+
             # Parse time
             departure_time = None
             if batch_data.get('departure_time'):
@@ -3291,7 +3509,7 @@ def api_save_departures(request_id):
                     departure_time = datetime.strptime(batch_data['departure_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             # Parse pax count
             pax_count = 0
             if batch_data.get('pax_count'):
@@ -3299,21 +3517,21 @@ def api_save_departures(request_id):
                     pax_count = int(batch_data['pax_count'])
                 except:
                     pax_count = 0
-            
+
             # Parse meet_greet boolean
             meet_greet = False
             if batch_data.get('meet_greet'):
                 meet_greet = batch_data['meet_greet'] in ['true', 'True', True, 1, '1']
-            
+
             # Parse meet_assist boolean
             meet_assist = False
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1']
-            
+
             # Handle supplier_id
             supplier_id = batch_data.get('supplier_id')
             supplier_id = int(supplier_id) if supplier_id else None
-            
+
             batch = DepartureBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -3331,13 +3549,13 @@ def api_save_departures(request_id):
                 supplier_id=supplier_id
             )
             db.session.add(batch)
-        
+
         db.session.commit()
-        
+
         # Auto-flag itinerary rows with flag_drive for ALL departure dates
         # First, clear all drive flags for this request
         ItineraryRow.query.filter_by(request_id=request_id).update({'flag_drive': False})
-        
+
         # Then, set flags for ALL saved departures (not just current batch)
         all_departures = DepartureBatch.query.filter_by(request_id=request_id).all()
         for departure in all_departures:
@@ -3348,11 +3566,11 @@ def api_save_departures(request_id):
                 ).all()
                 for row in departure_rows:
                     row.flag_drive = True
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Departures saved successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"Error saving departures: {e}")
@@ -3365,19 +3583,19 @@ def api_save_departures(request_id):
 def api_save_arrivals(request_id):
     """Save arrival batches for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     batches_data = data.get('batches', [])
-    
+
     from app.models.inbound import ArrivalBatch, ItineraryRow
-    
+
     try:
         # Don't delete existing batches - just add new ones
         # This allows multiple arrivals to be saved
-        
+
         # Create new batches
         for batch_data in batches_data:
             # Parse date
@@ -3387,10 +3605,10 @@ def api_save_arrivals(request_id):
                     arrival_date = datetime.strptime(batch_data['arrival_date'], '%Y-%m-%d').date()
                 except:
                     continue
-            
+
             if not arrival_date:
                 continue
-            
+
             # Parse time
             arrival_time = None
             if batch_data.get('arrival_time'):
@@ -3398,7 +3616,7 @@ def api_save_arrivals(request_id):
                     arrival_time = datetime.strptime(batch_data['arrival_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             # Parse pax count
             pax_count = 0
             if batch_data.get('pax_count'):
@@ -3406,16 +3624,16 @@ def api_save_arrivals(request_id):
                     pax_count = int(batch_data['pax_count'])
                 except:
                     pax_count = 0
-            
+
             # Parse meet_assist boolean
             meet_assist = False
             if batch_data.get('meet_assist'):
                 meet_assist = batch_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
-            
+
             # Handle supplier_id
             supplier_id = batch_data.get('supplier_id')
             supplier_id = int(supplier_id) if supplier_id else None
-            
+
             batch = ArrivalBatch(  # type: ignore[call-arg]
                 request_id=request_id,
                 batch_name=batch_data.get('batch_name') or None,
@@ -3432,13 +3650,13 @@ def api_save_arrivals(request_id):
                 supplier_id=supplier_id
             )
             db.session.add(batch)
-        
+
         db.session.commit()
-        
+
         # Auto-flag itinerary rows with flag_airport for ALL arrival dates
         # First, clear all airport flags for this request
         ItineraryRow.query.filter_by(request_id=request_id).update({'flag_airport': False})
-        
+
         # Then, set flags for ALL saved arrivals (not just current batch)
         all_arrivals = ArrivalBatch.query.filter_by(request_id=request_id).all()
         for arrival in all_arrivals:
@@ -3449,11 +3667,11 @@ def api_save_arrivals(request_id):
                 ).all()
                 for row in arrival_rows:
                     row.flag_airport = True
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Arrivals saved successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"Error saving arrivals: {e}")
@@ -3465,11 +3683,11 @@ def api_save_arrivals(request_id):
 def api_get_arrival_departures(request_id):
     """Get all arrival/departure records for a request (combined model)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     from app.models.inbound import ArrivalDeparture
-    
+
     records = ArrivalDeparture.query.filter_by(request_id=request_id).order_by(ArrivalDeparture.id).all()
-    
+
     records_list = []
     for record in records:
         records_list.append({
@@ -3489,7 +3707,7 @@ def api_get_arrival_departures(request_id):
             'representative_name': record.representative_name,
             'departure_tax': record.departure_tax
         })
-    
+
     return jsonify({'success': True, 'records': records_list})
 
 @inbound_bp.route('/api/<int:request_id>/arrival-departures', methods=['POST'])
@@ -3497,15 +3715,15 @@ def api_get_arrival_departures(request_id):
 def api_save_arrival_departures(request_id):
     """Save arrival/departure records for a request (combined model)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     data = request.get_json()
     records_data = data.get('records', [])
-    
+
     from app.models.inbound import ArrivalDeparture
-    
+
     try:
         for record_data in records_data:
             # Parse dates
@@ -3515,14 +3733,14 @@ def api_save_arrival_departures(request_id):
                     arrival_date = datetime.strptime(record_data['arrival_date'], '%Y-%m-%d').date()
                 except:
                     pass
-            
+
             departure_date = None
             if record_data.get('departure_date'):
                 try:
                     departure_date = datetime.strptime(record_data['departure_date'], '%Y-%m-%d').date()
                 except:
                     pass
-            
+
             # Parse times
             arrival_time = None
             if record_data.get('arrival_time'):
@@ -3530,14 +3748,14 @@ def api_save_arrival_departures(request_id):
                     arrival_time = datetime.strptime(record_data['arrival_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             departure_time = None
             if record_data.get('departure_time'):
                 try:
                     departure_time = datetime.strptime(record_data['departure_time'], '%H:%M').time()
                 except:
                     pass
-            
+
             # Parse pax count
             pax_count = 1
             if record_data.get('pax_count'):
@@ -3545,12 +3763,12 @@ def api_save_arrival_departures(request_id):
                     pax_count = int(record_data['pax_count'])
                 except:
                     pax_count = 1
-            
+
             # Parse meet_assist boolean
             meet_assist = False
             if record_data.get('meet_assist'):
                 meet_assist = record_data['meet_assist'] in ['true', 'True', True, 1, '1', 'on']
-            
+
             record = ArrivalDeparture(
                 request_id=request_id,
                 batch_name=record_data.get('batch_name') or None,
@@ -3569,10 +3787,10 @@ def api_save_arrival_departures(request_id):
                 departure_tax=record_data.get('departure_tax', 'NOT_INCLUDED')
             )
             db.session.add(record)
-        
+
         db.session.commit()
         return jsonify({'success': True, 'message': 'Arrival/Departure records saved successfully'})
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"Error saving arrival/departures: {e}")
@@ -3585,17 +3803,17 @@ def api_save_arrival_departures(request_id):
 def api_delete_arrival_departure(request_id, record_id):
     """Delete an arrival/departure record"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models.inbound import ArrivalDeparture
-    
+
     record = ArrivalDeparture.query.filter_by(id=record_id, request_id=request_id).first()
-    
+
     if not record:
         return jsonify({'error': 'Record not found'}), 404
-    
+
     try:
         db.session.delete(record)
         db.session.commit()
@@ -3612,12 +3830,12 @@ def api_generate_quote(request_id):
     # Import the necessary models
     from app.models import Booking, ServiceItem, Customer
     from app.models import SERVICE_HOTEL, SERVICE_TRANSPORT, SERVICE_RESTAURANT, SERVICE_GUIDE
-    
+
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     # Check if quote already exists
     if request_obj.booking_id:
         booking = Booking.query.get(request_obj.booking_id)
@@ -3627,9 +3845,9 @@ def api_generate_quote(request_id):
                 'message': 'Quote already exists',
                 'booking_id': booking.id
             })
-    
+
     try:
-        
+
         # Create or get customer
         customer_id = getattr(request_obj, 'customer_id', None)
         if customer_id:
@@ -3646,7 +3864,7 @@ def api_generate_quote(request_id):
                 customer.nationality = request_obj.nationality
                 db.session.add(customer)
                 db.session.flush()
-        
+
         # Create new booking with QUOTED status
         booking = Booking()
         booking.reference_number = request_obj.request_number
@@ -3656,16 +3874,16 @@ def api_generate_quote(request_id):
         booking.total_amount = request_obj.total_amount
         db.session.add(booking)
         db.session.flush()
-        
+
         # Link booking to inbound request and update status to QUOTED
         request_obj.booking_id = booking.id
         request_obj.status = 'QUOTED'
-        
+
         # Clear existing service items and create new ones
         ServiceItem.query.filter_by(booking_id=booking.id).delete()
-        
+
         services_created = 0
-        
+
         # Create service items based on itinerary flags
         for row in request_obj.itinerary_rows:
             if row.flag_hotel:
@@ -3679,7 +3897,7 @@ def api_generate_quote(request_id):
                 service_item.status = 'QUOTED'
                 db.session.add(service_item)
                 services_created += 1
-            
+
             if row.flag_transport:
                 service_item = ServiceItem()
                 service_item.booking_id = booking.id
@@ -3691,7 +3909,7 @@ def api_generate_quote(request_id):
                 service_item.status = 'QUOTED'
                 db.session.add(service_item)
                 services_created += 1
-            
+
             if row.flag_meal:
                 service_item = ServiceItem()
                 service_item.booking_id = booking.id
@@ -3703,7 +3921,7 @@ def api_generate_quote(request_id):
                 service_item.status = 'QUOTED'
                 db.session.add(service_item)
                 services_created += 1
-            
+
             if row.flag_guide:
                 service_item = ServiceItem()
                 service_item.booking_id = booking.id
@@ -3715,19 +3933,19 @@ def api_generate_quote(request_id):
                 service_item.status = 'QUOTED'
                 db.session.add(service_item)
                 services_created += 1
-        
+
         # Recalculate booking total
         booking.calculate_total()
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': f'Quote generated successfully with {services_created} services',
             'booking_id': booking.id,
             'services_count': services_created
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -3740,40 +3958,40 @@ def api_generate_quote(request_id):
 def api_confirm_all_suppliers(request_id):
     """Confirm all services with suppliers - changes all to RESERVED and updates request status"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models import STATUS_RESERVED
-    
+
     try:
         # Update all hotels to RESERVED (individual services)
         for hotel in request_obj.inbound_hotels:
             hotel.status = STATUS_RESERVED
-        
+
         # Update all transports to RESERVED (individual services)
         for transport in request_obj.inbound_transports:
             transport.status = STATUS_RESERVED
-        
+
         # Update all meals to RESERVED (individual services)
         for meal in request_obj.inbound_meals:
             meal.status = STATUS_RESERVED
-        
+
         # Update all guides to RESERVED (individual services)
         for guide in request_obj.inbound_guides:
             guide.status = STATUS_RESERVED
-        
+
         # Update parent request status to QUOTED (after all suppliers are confirmed)
         request_obj.status = STATUS_QUOTED
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'All services confirmed with suppliers. Status updated to QUOTED.',
             'new_status': STATUS_QUOTED
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -3783,15 +4001,15 @@ def api_confirm_all_suppliers(request_id):
 def api_confirm_supplier(request_id, service_id):
     """Confirm a service with supplier - changes status to RESERVED"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     from app.models import STATUS_RESERVED
     from app.models.inbound import InboundHotel, InboundTransport
-    
+
     service_type = request.json.get('service_type')
-    
+
     try:
         # Find and update the service
         if service_type == 'hotel':
@@ -3800,33 +4018,33 @@ def api_confirm_supplier(request_id, service_id):
             service = InboundTransport.query.filter_by(id=service_id, request_id=request_id).first()
         else:
             return jsonify({'error': 'Invalid service type'}), 400
-        
+
         if not service:
             return jsonify({'error': 'Service not found'}), 404
-        
+
         # Update status to RESERVED (supplier confirmed)
         service.status = STATUS_RESERVED
         db.session.commit()
-        
+
         # Check if all services are confirmed
         all_confirmed = True
         for hotel in request_obj.hotels:
             if hotel.status != STATUS_RESERVED and hotel.status != STATUS_QUOTED:
                 all_confirmed = False
                 break
-        
+
         for transport in request_obj.transports:
             if transport.status != STATUS_RESERVED and transport.status != STATUS_QUOTED:
                 all_confirmed = False
                 break
-        
+
         return jsonify({
             'success': True,
             'message': 'Supplier confirmation recorded',
             'new_status': STATUS_RESERVED,
             'all_confirmed': all_confirmed
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -3837,24 +4055,24 @@ def api_confirm_supplier(request_id, service_id):
 def api_generate_proforma(request_id):
     """Generate a proforma invoice for a confirmed booking - changes status to QUOTED"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
-    
+
+
     # Check if status is QUOTED (suppliers confirmed)
     if request_obj.status != STATUS_QUOTED:
         return jsonify({
             'success': False,
             'message': 'Please confirm all services with suppliers first. Status must be QUOTED to generate proforma invoice.'
         }), 400
-    
+
     if not request_obj.booking_id:
         return jsonify({
             'success': False,
             'message': 'No booking found. Please create a booking first.'
         }), 400
-    
+
     try:
         booking = Booking.query.get(request_obj.booking_id)
         if not booking:
@@ -3862,17 +4080,17 @@ def api_generate_proforma(request_id):
                 'success': False,
                 'message': 'Booking not found'
             }), 404
-        
+
         # Generate proforma invoice number if not exists
         if not booking.invoice_number:
             booking.generate_invoice_number()
-        
+
         # Status remains QUOTED (already set during supplier confirmation)
         booking.status = STATUS_QUOTED
         # request_obj.status already STATUS_QUOTED from supplier confirmation
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Proforma invoice generated successfully',
@@ -3880,7 +4098,7 @@ def api_generate_proforma(request_id):
             'booking_id': booking.id,
             'redirect_url': f'/booking/{booking.id}/proforma-invoice'
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -3893,10 +4111,10 @@ def api_generate_proforma(request_id):
 def preview_proforma(request_id):
     """Preview proforma invoice on a web page before exporting to Word"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     # CREATE BOOKING IF IT DOESN'T EXIST
     if not request_obj.booking_id:
         # Get or create customer
@@ -3913,7 +4131,7 @@ def preview_proforma(request_id):
                 customer.nationality = request_obj.nationality
                 db.session.add(customer)
                 db.session.flush()
-        
+
         # Create booking with QUOTED status
         booking = Booking()
         booking.reference_number = request_obj.request_number
@@ -3923,15 +4141,15 @@ def preview_proforma(request_id):
         booking.total_amount = request_obj.total_amount or 0
         db.session.add(booking)
         db.session.flush()
-        
+
         # Generate invoice number AFTER flush (so booking.id exists)
         booking.generate_invoice_number()
-        
+
         # Link booking to request
         request_obj.booking_id = booking.id
         request_obj.status = 'QUOTED'
         db.session.commit()
-    
+
     # Collect customer information
     customer_data = {}
     if request_obj.customer_id:
@@ -3950,7 +4168,7 @@ def preview_proforma(request_id):
             'name': request_obj.contact_name,
             'nationality': request_obj.nationality
         }
-    
+
     # Collect tour information
     tour_data = {
         'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
@@ -3958,10 +4176,10 @@ def preview_proforma(request_id):
         'pax': request_obj.pax,
         'nationality': request_obj.nationality
     }
-    
+
     # Collect all service items with date ranges
     service_items = []
-    
+
     # Add hotels
     for hotel in request_obj.inbound_hotels:
         service_items.append({
@@ -3973,7 +4191,7 @@ def preview_proforma(request_id):
             'unit_price': hotel.cost_per_night or 0,
             'total': hotel.total_cost or 0
         })
-    
+
     # Add transport
     for transport in request_obj.inbound_transports:
         service_items.append({
@@ -3985,7 +4203,7 @@ def preview_proforma(request_id):
             'unit_price': transport.cost or 0,
             'total': transport.cost or 0
         })
-    
+
     # Add meals
     for meal in request_obj.inbound_meals:
         service_items.append({
@@ -3997,7 +4215,7 @@ def preview_proforma(request_id):
             'unit_price': meal.cost_per_person or 0,
             'total': meal.total_cost or 0
         })
-    
+
     # Add guides
     for guide in request_obj.inbound_guides:
         service_items.append({
@@ -4009,25 +4227,25 @@ def preview_proforma(request_id):
             'unit_price': guide.cost or 0,
             'total': guide.cost or 0
         })
-    
+
     # Sort service items by date
     service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
-    
+
     # Calculate total
     grand_total = sum(item['total'] for item in service_items)
-    
+
     # Update status to QUOTED when generating proforma invoice preview
     if request_obj.status not in ['QUOTED', 'CONFIRMED']:
         request_obj.status = 'QUOTED'
-        
+
         # Also update booking status if it exists
         if request_obj.booking_id:
             booking = Booking.query.get(request_obj.booking_id)
             if booking:
                 booking.status = 'QUOTED'
-        
+
         db.session.commit()
-    
+
     # Prepare invoice data for template
     invoice_data = {
         'invoice_number': request_obj.request_number,
@@ -4039,7 +4257,7 @@ def preview_proforma(request_id):
         'service_items': service_items,
         'grand_total': grand_total
     }
-    
+
     return render_template('inbound/preview_proforma.html', 
                          request=request_obj,
                          invoice=invoice_data)
@@ -4050,14 +4268,14 @@ def preview_proforma(request_id):
 def update_proforma_prices(request_id):
     """Update pricing for proforma invoice service items"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+
     try:
         data = request.get_json()
         items = data.get('items', [])
-        
+
         # Collect all service models in order
         all_services = []
         for hotel in request_obj.inbound_hotels:
@@ -4068,13 +4286,13 @@ def update_proforma_prices(request_id):
             all_services.append(('meal', meal))
         for guide in request_obj.inbound_guides:
             all_services.append(('guide', guide))
-        
+
         # Update each service based on index
         for item in items:
             index = item['index']
             if index < len(all_services):
                 service_type, service = all_services[index]
-                
+
                 # Parse dates if provided
                 from datetime import datetime as dt
                 date_from = None
@@ -4089,7 +4307,7 @@ def update_proforma_prices(request_id):
                         date_to = dt.strptime(item['date_to'], '%Y-%m-%d').date()
                     except:
                         pass
-                
+
                 if service_type == 'hotel':
                     service.cost_per_night = item['unit_price']
                     service.total_cost = item['total']
@@ -4123,20 +4341,20 @@ def update_proforma_prices(request_id):
                         service.date = date_from
                     if date_to:
                         service.end_date = date_to
-        
+
         # Recalculate total
         total = sum(item['total'] for item in items)
         request_obj.total_amount = total
-        
+
         # Update booking total if exists
         if request_obj.booking_id:
             booking = Booking.query.get(request_obj.booking_id)
             if booking:
                 booking.total_amount = total
-        
+
         db.session.commit()
         return jsonify({'success': True, 'message': 'Prices updated successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -4147,22 +4365,22 @@ def update_proforma_prices(request_id):
 def update_pricing_mode(request_id):
     """Update pricing mode for proforma invoice (ITEMIZED or LUMPSUM)"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+
     try:
         data = request.get_json()
         pricing_mode = data.get('pricing_mode', 'ITEMIZED')
-        
+
         if pricing_mode not in ['ITEMIZED', 'LUMPSUM']:
             return jsonify({'success': False, 'message': 'Invalid pricing mode'}), 400
-        
+
         request_obj.pricing_mode = pricing_mode
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': f'Pricing mode updated to {pricing_mode}'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -4173,10 +4391,10 @@ def update_pricing_mode(request_id):
 def api_export_proforma_doc(request_id):
     """Export proforma invoice as Word document with service line items"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     try:
         # Collect customer information
         customer_data = {}
@@ -4196,7 +4414,7 @@ def api_export_proforma_doc(request_id):
                 'name': request_obj.contact_name,
                 'nationality': request_obj.nationality
             }
-        
+
         # Collect tour information
         tour_data = {
             'from_date': request_obj.from_date.strftime('%d %b %Y') if request_obj.from_date else '',
@@ -4204,10 +4422,10 @@ def api_export_proforma_doc(request_id):
             'pax': request_obj.pax,
             'nationality': request_obj.nationality
         }
-        
+
         # Collect all service items with date ranges
         service_items = []
-        
+
         # Add hotels
         for hotel in request_obj.inbound_hotels:
             service_items.append({
@@ -4218,7 +4436,7 @@ def api_export_proforma_doc(request_id):
                 'unit_price': hotel.cost_per_night,
                 'total': hotel.total_cost
             })
-        
+
         # Add transport
         for transport in request_obj.inbound_transports:
             service_items.append({
@@ -4229,7 +4447,7 @@ def api_export_proforma_doc(request_id):
                 'unit_price': transport.cost,
                 'total': transport.cost
             })
-        
+
         # Add meals
         for meal in request_obj.inbound_meals:
             service_items.append({
@@ -4240,7 +4458,7 @@ def api_export_proforma_doc(request_id):
                 'unit_price': meal.cost_per_person,
                 'total': meal.total_cost
             })
-        
+
         # Add guides
         for guide in request_obj.inbound_guides:
             service_items.append({
@@ -4251,10 +4469,10 @@ def api_export_proforma_doc(request_id):
                 'unit_price': guide.cost,
                 'total': guide.cost
             })
-        
+
         # Sort service items by date
         service_items.sort(key=lambda x: x['date_from'] if x['date_from'] else datetime.max.date())
-        
+
         # Update booking status to QUOTED when exporting proforma
         if request_obj.booking_id:
             booking = Booking.query.get(request_obj.booking_id)
@@ -4262,7 +4480,7 @@ def api_export_proforma_doc(request_id):
                 booking.status = 'QUOTED'
                 request_obj.status = 'QUOTED'
                 db.session.commit()
-        
+
         # Prepare invoice data
         invoice_data = {
             'invoice_number': request_obj.request_number,
@@ -4273,11 +4491,11 @@ def api_export_proforma_doc(request_id):
             'tour': tour_data,
             'service_items': service_items
         }
-        
+
         # Generate Word document
         generator = ProformaDocGenerator()
         output_path = generator.generate_proforma(invoice_data)
-        
+
         # Send file for download
         return send_file(
             output_path,
@@ -4285,7 +4503,7 @@ def api_export_proforma_doc(request_id):
             download_name=f'Proforma_{request_obj.request_number}.docx',
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        
+
     except Exception as e:
         flash(f'Error generating proforma document: {str(e)}', 'error')
         return redirect(url_for('inbound.view_request', request_id=request_id))
@@ -4296,10 +4514,10 @@ def api_export_proforma_doc(request_id):
 def api_export_voucher_doc(request_id):
     """Export trip voucher as Word document with full itinerary"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     try:
         # Collect tour information
         customer_name = request_obj.contact_name
@@ -4307,7 +4525,7 @@ def api_export_voucher_doc(request_id):
             customer = Customer.query.get(request_obj.customer_id)
             if customer:
                 customer_name = customer.name
-        
+
         tour_data = {
             'guest_name': customer_name,
             'nationality': request_obj.nationality,
@@ -4318,26 +4536,26 @@ def api_export_voucher_doc(request_id):
             'from_date': request_obj.from_date.strftime('%d-%b-%y') if request_obj.from_date else '',
             'to_date': request_obj.to_date.strftime('%d-%b-%y') if request_obj.to_date else ''
         }
-        
+
         # Collect arrivals/departures data from flagged transport services
         arrivals_data = []
         arrival_departure_transports = [
             t for t in request_obj.inbound_transports 
             if t.is_arrival or t.is_departure
         ]
-        
+
         if arrival_departure_transports:
             for transport in sorted(arrival_departure_transports, key=lambda x: x.date):
                 border = 'Airport'
                 if transport.pickup_location and 'border' in transport.pickup_location.lower():
                     border = 'Border'
-                
+
                 drop_point = transport.dropoff_location or 'TBA'
                 if transport.is_departure:
                     drop_point = transport.pickup_location or 'TBA'
-                
+
                 time_str = transport.pickup_time.strftime('%H:%M') if transport.pickup_time else ''
-                
+
                 arrivals_data.append({
                     'date': transport.date.strftime('%d-%b-%y'),
                     'border': border,
@@ -4370,7 +4588,7 @@ def api_export_voucher_doc(request_id):
                 'time': '',
                 'note': ''
             })
-        
+
         # Collect hotel details
         hotels_data = []
         for hotel in request_obj.inbound_hotels:
@@ -4380,7 +4598,7 @@ def api_export_voucher_doc(request_id):
             twin_rooms = 0
             triple_rooms = 0
             other_rooms = 0
-            
+
             # Find itinerary row with hotel flag for this hotel's check-in date
             for row in request_obj.itinerary_rows:
                 if row.flag_hotel and row.date == hotel.check_in_date:
@@ -4390,7 +4608,7 @@ def api_export_voucher_doc(request_id):
                     triple_rooms = row.hotel_triple_rooms or 0
                     other_rooms = row.hotel_other_rooms or 0
                     break
-            
+
             hotels_data.append({
                 'check_in': hotel.check_in_date.strftime('%d-%b-%y') if hotel.check_in_date else 'TBA',
                 'check_out': hotel.check_out_date.strftime('%d-%b-%y') if hotel.check_out_date else 'TBA',
@@ -4403,13 +4621,13 @@ def api_export_voucher_doc(request_id):
                 'triple_rooms': triple_rooms,
                 'other_rooms': other_rooms
             })
-        
+
         # Build itinerary organized by service type
         itinerary_days = []
-        
+
         # Group all services by date
         services_by_date = {}
-        
+
         # Add hotels
         for hotel in request_obj.inbound_hotels:
             current_date = hotel.check_in_date
@@ -4417,20 +4635,20 @@ def api_export_voucher_doc(request_id):
                 date_key = current_date.strftime('%d-%b-%y')
                 if date_key not in services_by_date:
                     services_by_date[date_key] = []
-                
+
                 services_by_date[date_key].append(f"Hotel: {hotel.hotel_name or 'TBA'}")
                 current_date += timedelta(days=1)
-        
+
         # Add transport
         for transport in request_obj.inbound_transports:
             date_key = transport.date.strftime('%d-%b-%y')
             if date_key not in services_by_date:
                 services_by_date[date_key] = []
-            
+
             services_by_date[date_key].append(
                 f"Transport: {transport.pickup_location or 'TBA'} → {transport.dropoff_location or 'TBA'}"
             )
-        
+
         # Add meals
         for meal in request_obj.inbound_meals:
             current_date = meal.date
@@ -4439,12 +4657,12 @@ def api_export_voucher_doc(request_id):
                 date_key = current_date.strftime('%d-%b-%y')
                 if date_key not in services_by_date:
                     services_by_date[date_key] = []
-                
+
                 services_by_date[date_key].append(
                     f"{meal.meal_type or 'Meal'}: {meal.restaurant or 'TBA'}"
                 )
                 current_date += timedelta(days=1)
-        
+
         # Add guides
         for guide in request_obj.inbound_guides:
             current_date = guide.date
@@ -4453,12 +4671,12 @@ def api_export_voucher_doc(request_id):
                 date_key = current_date.strftime('%d-%b-%y')
                 if date_key not in services_by_date:
                     services_by_date[date_key] = []
-                
+
                 services_by_date[date_key].append(
                     f"Guide: {guide.service_type or 'Guide Service'} ({guide.language or 'English'})"
                 )
                 current_date += timedelta(days=1)
-        
+
         # Convert to list format
         for date_key in sorted(services_by_date.keys(), key=lambda x: datetime.strptime(x, '%d-%b-%y')):
             description = '\n'.join(services_by_date[date_key])
@@ -4466,13 +4684,13 @@ def api_export_voucher_doc(request_id):
                 'date': date_key,
                 'description': description
             })
-        
+
         # Collect meals data
         meals_data = []
         for meal in request_obj.inbound_meals:
             start_date = meal.date
             end_date = meal.end_date if meal.end_date else meal.date
-            
+
             # Generate entry for each day in range
             current_date = start_date
             while current_date <= end_date:
@@ -4484,13 +4702,13 @@ def api_export_voucher_doc(request_id):
                     'note': ''
                 })
                 current_date += timedelta(days=1)
-        
+
         # Collect transport data
         transport_data = []
         for transport in request_obj.inbound_transports:
             start_date = transport.date
             end_date = transport.end_date if transport.end_date else transport.date
-            
+
             # Generate entry for date range
             current_date = start_date
             while current_date <= end_date:
@@ -4501,7 +4719,7 @@ def api_export_voucher_doc(request_id):
                     'driver': ''
                 })
                 break  # Only add once for range
-        
+
         # Collect guides data
         guides_data = []
         for guide in request_obj.inbound_guides:
@@ -4512,20 +4730,20 @@ def api_export_voucher_doc(request_id):
                 'language': guide.language or 'English',
                 'note': guide.service_type or ''
             })
-        
+
         # Collect cash expenses data
         cash_expenses_data = []
         for expense in request_obj.inbound_cash_expenses:
             start_date = expense.date
             end_date = expense.end_date if expense.end_date else expense.date
-            
+
             # Generate entry for each day in range
             current_date = start_date
             while current_date <= end_date:
                 amount_display = f"{expense.currency} {expense.amount:.2f}"
                 if expense.is_per_person:
                     amount_display += " pp"
-                
+
                 cash_expenses_data.append({
                     'date': current_date.strftime('%d-%b-%y'),
                     'category': expense.category or 'Expense',
@@ -4535,7 +4753,7 @@ def api_export_voucher_doc(request_id):
                     'note': expense.location or ''
                 })
                 current_date += timedelta(days=1)
-        
+
         # Prepare voucher data
         voucher_data = {
             'tour_file': request_obj.request_number,
@@ -4549,11 +4767,11 @@ def api_export_voucher_doc(request_id):
             'guides': guides_data,
             'cash_expenses': cash_expenses_data
         }
-        
+
         # Generate Word document
         generator = VoucherTripPlanGenerator()
         output_path = generator.generate_voucher(voucher_data)
-        
+
         # Send file for download
         return send_file(
             output_path,
@@ -4561,7 +4779,7 @@ def api_export_voucher_doc(request_id):
             download_name=f'Voucher_{request_obj.request_number}.docx',
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        
+
     except Exception as e:
         flash(f'Error generating voucher document: {str(e)}', 'error')
         return redirect(url_for('inbound.view_request', id=request_id))
@@ -4572,16 +4790,16 @@ def api_export_voucher_doc(request_id):
 def api_confirm_booking(request_id):
     """Confirm a booking after proforma invoice is generated"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     if not request_obj.booking_id:
         return jsonify({
             'success': False,
             'message': 'No booking found. Please generate a quote first.'
         }), 400
-    
+
     try:
         booking = Booking.query.get(request_obj.booking_id)
         if not booking:
@@ -4589,29 +4807,29 @@ def api_confirm_booking(request_id):
                 'success': False,
                 'message': 'Booking not found'
             }), 404
-        
+
         if booking.status not in ['QUOTED', 'PROFORMA_GENERATED']:
             return jsonify({
                 'success': False,
                 'message': 'Booking must have proforma invoice before confirmation'
             }), 400
-        
+
         # Confirm the booking and move to CONFIRMED status
         booking.status = 'CONFIRMED'
         request_obj.status = 'CONFIRMED'
-        
+
         # Update all service items to CONFIRMED status
         for service_item in booking.service_items:
             service_item.status = 'CONFIRMED'
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Booking confirmed successfully',
             'booking_id': booking.id
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -4625,33 +4843,33 @@ def api_confirm_booking(request_id):
 def api_start_processing(request_id):
     """Start processing an itinerary - change status from CONFIRMED to PROCESSING"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'error': 'Access denied'}), 403
-    
+
     if request_obj.status != 'CONFIRMED':
         return jsonify({
             'success': False,
             'message': 'Itinerary must be CONFIRMED before processing can start'
         }), 400
-    
+
     try:
         # Change status to PROCESSING (operations active)
         request_obj.status = 'PROCESSING'
-        
+
         if request_obj.booking_id:
             booking = Booking.query.get(request_obj.booking_id)
             if booking:
                 booking.status = 'PROCESSING'
-        
+
         db.session.commit()
-        
+
         return jsonify({
             'success': True,
             'message': 'Processing started successfully. Operations are now active.',
             'new_status': 'PROCESSING'
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({
@@ -4685,7 +4903,7 @@ def run_down_plan():
         user_id=1,
         status='PROCESSING'
     ).order_by(InboundRequest.from_date).all()
-    
+
     # Get counts by status for stats bar
     status_counts = {
         'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
@@ -4694,7 +4912,7 @@ def run_down_plan():
         'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
         'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
     }
-    
+
     return render_template('inbound/run_down.html',
                          processing_requests=processing_requests,
                          status_counts=status_counts)
@@ -4705,27 +4923,27 @@ def api_run_down_data():
     """API endpoint for run-down plan data"""
     from app.models.customer import Customer
     from sqlalchemy import and_
-    
+
     # Get filter parameters
     date_from_str = request.args.get('date_from')
     date_to_str = request.args.get('date_to')
     status_filter = request.args.get('status', '')
     booking_filter = request.args.get('booking', '')
-    
+
     # Parse dates
     try:
         if date_from_str:
             date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
         else:
             date_from = datetime.now().date() - timedelta(days=7)
-        
+
         if date_to_str:
             date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
         else:
             date_to = datetime.now().date() + timedelta(days=30)
     except ValueError:
         return jsonify({'error': 'Invalid date format'}), 400
-    
+
     # Build query - join ServiceItem with Booking and Customer
     query = db.session.query(
         ServiceItem.start_date.label('service_date'),
@@ -4756,26 +4974,26 @@ def api_run_down_data():
             ServiceItem.start_date <= date_to
         )
     )
-    
+
     # Apply status filter
     if status_filter:
         query = query.filter(Booking.status == status_filter)
-    
+
     # Apply booking number filter
     if booking_filter:
         query = query.filter(Booking.reference_number.contains(booking_filter))
-    
+
     # Order by date
     query = query.order_by(ServiceItem.start_date, Booking.reference_number)
-    
+
     # Execute query
     results = query.all()
-    
+
     # Format results by date
     run_down_data = {}
     for row in results:
         service_date = row.service_date.strftime('%Y-%m-%d')
-        
+
         # Initialize date bucket if not exists
         if service_date not in run_down_data:
             run_down_data[service_date] = {
@@ -4783,7 +5001,7 @@ def api_run_down_data():
                 'date_formatted': row.service_date.strftime('%A, %B %d, %Y'),
                 'services': []
             }
-        
+
         # Build guest name
         if row.first_name and row.last_name:
             guest_name = f"{row.first_name} {row.last_name}"
@@ -4793,7 +5011,7 @@ def api_run_down_data():
             guest_name = row.contact_name
         else:
             guest_name = "TBA"
-        
+
         # Add service to date bucket
         service_data = {
             'booking_number': row.booking_number,
@@ -4808,12 +5026,12 @@ def api_run_down_data():
             'status_color': get_status_color(row.booking_status),
             'service_status': row.service_status
         }
-        
+
         run_down_data[service_date]['services'].append(service_data)
-    
+
     # Convert to sorted list
     sorted_data = sorted(run_down_data.values(), key=lambda x: x['date'])
-    
+
     return jsonify({
         'success': True,
         'data': sorted_data,
@@ -4830,27 +5048,27 @@ def run_down_export_excel():
     from sqlalchemy import and_
     import io
     from flask import send_file
-    
+
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
     except ImportError:
         flash('Excel export requires openpyxl package', 'error')
         return redirect(url_for('inbound.run_down_plan'))
-    
+
     # Get filter parameters
     date_from_str = request.args.get('date_from')
     date_to_str = request.args.get('date_to')
     status_filter = request.args.get('status', '')
     booking_filter = request.args.get('booking', '')
-    
+
     # Parse dates
     try:
         if date_from_str:
             date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
         else:
             date_from = datetime.now().date() - timedelta(days=7)
-        
+
         if date_to_str:
             date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
         else:
@@ -4858,7 +5076,7 @@ def run_down_export_excel():
     except ValueError:
         flash('Invalid date format', 'error')
         return redirect(url_for('inbound.run_down_plan'))
-    
+
     # Build query
     query = db.session.query(
         ServiceItem.start_date.label('service_date'),
@@ -4887,20 +5105,20 @@ def run_down_export_excel():
             ServiceItem.start_date <= date_to
         )
     )
-    
+
     if status_filter:
         query = query.filter(Booking.status == status_filter)
     if booking_filter:
         query = query.filter(Booking.reference_number.contains(booking_filter))
-    
+
     query = query.order_by(ServiceItem.start_date, Booking.reference_number)
     results = query.all()
-    
+
     # Create Excel workbook
     wb = openpyxl.Workbook()
     ws = cast(Any, wb.active)
     ws.title = "Run-Down Plan"
-    
+
     # Header styling
     header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
     header_font = Font(bold=True, color="000000", size=12)
@@ -4911,13 +5129,13 @@ def run_down_export_excel():
         top=Side(style='thin'),
         bottom=Side(style='thin')
     )
-    
+
     # Title
     ws.merge_cells('A1:H1')
     ws['A1'] = f"Run-Down Plan: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
     ws['A1'].font = Font(bold=True, size=14)
     ws['A1'].alignment = Alignment(horizontal="center")
-    
+
     # Headers
     headers = ['Date', 'Booking #', 'Guest / Group', 'Pax', 'Service Type', 'Description', 'Amount', 'Status']
     for col, header in enumerate(headers, start=1):
@@ -4927,7 +5145,7 @@ def run_down_export_excel():
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = thin_border
-    
+
     # Data rows
     row = 4
     for result in results:
@@ -4940,7 +5158,7 @@ def run_down_export_excel():
             guest_name = result.contact_name
         else:
             guest_name = "TBA"
-        
+
         ws.cell(row=row, column=1, value=result.service_date.strftime('%Y-%m-%d')).border = thin_border
         ws.cell(row=row, column=2, value=result.booking_number).border = thin_border
         ws.cell(row=row, column=3, value=guest_name).border = thin_border
@@ -4950,9 +5168,9 @@ def run_down_export_excel():
         ws.cell(row=row, column=7, value=result.amount or 0).border = thin_border
         ws.cell(row=row, column=7, value=f"${result.amount or 0:.2f}").border = thin_border
         ws.cell(row=row, column=8, value=result.booking_status).border = thin_border
-        
+
         row += 1
-    
+
     # Adjust column widths
     ws.column_dimensions['A'].width = 12
     ws.column_dimensions['B'].width = 15
@@ -4962,14 +5180,14 @@ def run_down_export_excel():
     ws.column_dimensions['F'].width = 35
     ws.column_dimensions['G'].width = 12
     ws.column_dimensions['H'].width = 18
-    
+
     # Save to bytes
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
-    
+
     filename = f"RunDown_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
-    
+
     return send_file(
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -4983,20 +5201,20 @@ def run_down_export_pdf():
     """Export run-down plan to PDF"""
     from app.models.customer import Customer
     from sqlalchemy import and_
-    
+
     # Get filter parameters
     date_from_str = request.args.get('date_from')
     date_to_str = request.args.get('date_to')
     status_filter = request.args.get('status', '')
     booking_filter = request.args.get('booking', '')
-    
+
     # Parse dates
     try:
         if date_from_str:
             date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
         else:
             date_from = datetime.now().date() - timedelta(days=7)
-        
+
         if date_to_str:
             date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
         else:
@@ -5004,7 +5222,7 @@ def run_down_export_pdf():
     except ValueError:
         flash('Invalid date format', 'error')
         return redirect(url_for('inbound.run_down_plan'))
-    
+
     # Build query
     query = db.session.query(
         ServiceItem.start_date.label('service_date'),
@@ -5032,15 +5250,15 @@ def run_down_export_pdf():
             ServiceItem.start_date <= date_to
         )
     )
-    
+
     if status_filter:
         query = query.filter(Booking.status == status_filter)
     if booking_filter:
         query = query.filter(Booking.reference_number.contains(booking_filter))
-    
+
     query = query.order_by(ServiceItem.start_date, Booking.reference_number)
     results = query.all()
-    
+
     # Group by date
     run_down_data = {}
     for row in results:
@@ -5051,7 +5269,7 @@ def run_down_export_pdf():
                 'date_formatted': row.service_date.strftime('%A, %B %d, %Y'),
                 'services': []
             }
-        
+
         if row.first_name and row.last_name:
             guest_name = f"{row.first_name} {row.last_name}"
         elif row.company_name:
@@ -5060,7 +5278,7 @@ def run_down_export_pdf():
             guest_name = row.contact_name
         else:
             guest_name = "TBA"
-        
+
         run_down_data[service_date]['services'].append({
             'booking_number': row.booking_number,
             'guest_name': guest_name,
@@ -5071,12 +5289,12 @@ def run_down_export_pdf():
             'status': row.booking_status,
             'status_color': get_status_color(row.booking_status)
         })
-    
+
     sorted_data = sorted(run_down_data.values(), key=lambda x: x['date'])
-    
+
     # Calculate total services
     total_services = sum(len(day['services']) for day in sorted_data)
-    
+
     # Render PDF template
     return render_template('inbound/run_down_pdf.html',
                          data=sorted_data,
@@ -5092,19 +5310,19 @@ def run_down_export_pdf():
 def wizard_step1():
     """Wizard Step 1: Arrival & Departure Batches"""
     from flask import session
-    
+
     if request.method == 'POST':
         # Parse arrival batches
         arrivals = []
         departures = []
-        
+
         # Parse arrivals[INDEX][FIELD] format
         arrival_indices = set()
         for key in request.form.keys():
             if key.startswith('arrivals['):
                 index = key.split('[')[1].split(']')[0]
                 arrival_indices.add(index)
-        
+
         for index in arrival_indices:
             arrival_data = {
                 'point': request.form.get(f'arrivals[{index}][point]'),
@@ -5116,14 +5334,14 @@ def wizard_step1():
                 'vehicle': request.form.get(f'arrivals[{index}][vehicle]', '')
             }
             arrivals.append(arrival_data)
-        
+
         # Parse departures[INDEX][FIELD] format
         departure_indices = set()
         for key in request.form.keys():
             if key.startswith('departures['):
                 index = key.split('[')[1].split(']')[0]
                 departure_indices.add(index)
-        
+
         for index in departure_indices:
             departure_data = {
                 'point': request.form.get(f'departures[{index}][point]'),
@@ -5135,7 +5353,7 @@ def wizard_step1():
                 'vehicle': request.form.get(f'departures[{index}][vehicle]', '')
             }
             departures.append(departure_data)
-        
+
         # Calculate date range from first arrival to last departure
         all_dates = []
         for arrival in arrivals:
@@ -5144,7 +5362,7 @@ def wizard_step1():
         for departure in departures:
             if departure['date']:
                 all_dates.append(datetime.strptime(departure['date'], '%Y-%m-%d').date())
-        
+
         if all_dates:
             from_date = min(all_dates)
             to_date = max(all_dates)
@@ -5153,16 +5371,16 @@ def wizard_step1():
             from_date = datetime.now().date()
             to_date = from_date + timedelta(days=1)
             no_of_days = 1
-        
+
         # Get customer_id if selected, otherwise use contact_name
         customer_id = request.form.get('customer_id', '')
-        
+
         # Store wizard data in session
         session['wizard_data'] = {
             # Arrival/Departure batches
             'arrivals': arrivals,
             'departures': departures,
-            
+
             # Contact & Group info
             'customer_id': customer_id if customer_id else None,
             'contact_name': request.form.get('contact_name'),
@@ -5171,12 +5389,12 @@ def wizard_step1():
             'nationality': request.form.get('nationality'),
             'pax': int(request.form.get('pax', 1)),
             'special_note': request.form.get('special_note', ''),
-            
+
             # Calculated fields
             'from_date': from_date.strftime('%Y-%m-%d'),
             'to_date': to_date.strftime('%Y-%m-%d'),
             'no_of_days': no_of_days,
-            
+
             # Initialize service collections
             'hotels': [],
             'transports': [],
@@ -5185,7 +5403,7 @@ def wizard_step1():
         }
         session.modified = True
         return redirect(url_for('inbound.wizard_step2'))
-    
+
     # GET request - pass any existing wizard data to template
     wizard_data = session.get('wizard_data', {})
     return render_template('inbound/wizard_step1.html', wizard_data=wizard_data)
@@ -5196,11 +5414,11 @@ def wizard_step1():
 def wizard_step2():
     """Wizard Step 2: Add All Services"""
     from flask import session
-    
+
     if 'wizard_data' not in session:
         flash('Please start from step 1', 'warning')
         return redirect(url_for('inbound.wizard_step1'))
-    
+
     if request.method == 'POST':
         # Parse services from form (handles both 2-level and 3-level nested structures)
         services_data = {}
@@ -5208,40 +5426,40 @@ def wizard_step2():
             if key.startswith('services['):
                 parts = key.split('[')
                 index = parts[1].split(']')[0]
-                
+
                 if index not in services_data:
                     services_data[index] = {}
-                
+
                 # Check if this is a nested structure like services[0][rooms][0][field]
                 if len(parts) > 3 and 'rooms' in key:
                     # This is a hotel room field: services[INDEX][rooms][ROOM_INDEX][FIELD]
                     room_index = parts[3].split(']')[0]
                     field_name = parts[4].split(']')[0]
-                    
+
                     if 'rooms' not in services_data[index]:
                         services_data[index]['rooms'] = {}
                     if room_index not in services_data[index]['rooms']:
                         services_data[index]['rooms'][room_index] = {}
-                    
+
                     services_data[index]['rooms'][room_index][field_name] = value
                 else:
                     # Simple field: services[INDEX][FIELD]
                     field = parts[2].split(']')[0]
                     services_data[index][field] = value
-        
+
         # Validate at least one service
         if not services_data:
             flash('Please add at least one service before continuing to review', 'warning')
             wizard_data = session.get('wizard_data', {})
             return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
-        
+
         # Store services in session
         session['wizard_data']['services'] = services_data
         session.modified = True
-        
+
         # Redirect to step 3 (Review)
         return redirect(url_for('inbound.wizard_step3'))
-    
+
     # GET request - pass wizard data to template
     wizard_data = session.get('wizard_data', {})
     return render_template('inbound/wizard_step2.html', wizard_data=wizard_data)
@@ -5252,14 +5470,14 @@ def wizard_step2():
 def wizard_step3():
     """Wizard Step 3: Review & Create"""
     from flask import session
-    
+
     if 'wizard_data' not in session:
         flash('Please start from step 1', 'warning')
         return redirect(url_for('inbound.wizard_step1'))
-    
+
     if request.method == 'POST':
         wizard_data = session['wizard_data']
-        
+
         # Helper functions
         def safe_int(value, default=0):
             """Safely convert to int, handling empty strings"""
@@ -5269,7 +5487,7 @@ def wizard_step3():
                 return int(value)
             except (ValueError, TypeError):
                 return default
-        
+
         def safe_float(value, default=0.0):
             """Safely convert to float, handling empty strings"""
             if not value or value == '':
@@ -5278,7 +5496,7 @@ def wizard_step3():
                 return float(value)
             except (ValueError, TypeError):
                 return default
-        
+
         def date_range(start_date, end_date):
             """Generate list of dates between start and end (inclusive for start, exclusive for end for hotel nights)"""
             from datetime import timedelta
@@ -5288,21 +5506,21 @@ def wizard_step3():
                 dates.append(current)
                 current += timedelta(days=1)
             return dates
-        
+
         # Get services from session
         services_data = wizard_data.get('services', {})
-        
+
         # Validate that we have at least one service
         if not services_data:
             flash('Please add at least one service before creating the tour', 'error')
             return redirect(url_for('inbound.wizard_step2'))
-        
+
         # Start transaction
         try:
             from datetime import timedelta
             from_date = datetime.strptime(wizard_data['from_date'], '%Y-%m-%d').date()
             to_date = datetime.strptime(wizard_data['to_date'], '%Y-%m-%d').date()
-            
+
             # Create InboundRequest
             request_obj = InboundRequest(
                 request_number=InboundRequest.generate_request_number(from_date),
@@ -5319,10 +5537,10 @@ def wizard_step3():
                 user_id=1,
                 status=STATUS_REQUEST
             )
-            
+
             db.session.add(request_obj)
             db.session.flush()  # Get the ID
-            
+
             # Create arrival transport if driver/vehicle specified
             if wizard_data.get('arrival_driver') or wizard_data.get('arrival_vehicle'):
                 arrival_time_str = wizard_data.get('arrival_time')
@@ -5332,7 +5550,7 @@ def wizard_step3():
                         arrival_time = datetime.strptime(arrival_time_str, '%H:%M').time()
                     except:
                         pass
-                
+
                 arrival_transport = InboundTransport(
                     request_id=request_obj.id,
                     date=from_date,
@@ -5347,7 +5565,7 @@ def wizard_step3():
                     currency='USD'
                 )
                 db.session.add(arrival_transport)
-            
+
             # Create departure transport if driver/vehicle specified
             if wizard_data.get('departure_driver') or wizard_data.get('departure_vehicle'):
                 departure_time_str = wizard_data.get('departure_time')
@@ -5357,7 +5575,7 @@ def wizard_step3():
                         departure_time = datetime.strptime(departure_time_str, '%H:%M').time()
                     except:
                         pass
-                
+
                 departure_transport = InboundTransport(
                     request_id=request_obj.id,
                     date=to_date,
@@ -5372,41 +5590,41 @@ def wizard_step3():
                     currency='USD'
                 )
                 db.session.add(departure_transport)
-            
+
             # Track itinerary rows by date to merge services on same dates
             itinerary_by_date = {}
-            
+
             # Process each service and generate itinerary rows
             for index in sorted(services_data.keys(), key=int):
                 service = services_data[index]
                 service_type = service.get('type')
-                
+
                 if service_type == 'hotel':
                     # Hotel: create rows for each night with inherited rooming
                     check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
                     check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
-                    
+
                     # Validate hotel dates
                     if check_out <= check_in:
                         raise ValueError("Hotel check-out date must be after check-in date")
-                    
+
                     hotel_name = service.get('hotel_name', '')
                     location = service.get('location', '')
-                    
+
                     # Room distribution (inherited across all nights)
                     single = safe_int(service.get('single_rooms'))
                     double = safe_int(service.get('double_rooms'))
                     triple = safe_int(service.get('triple_rooms'))
                     other = safe_int(service.get('other_rooms'))
-                    
+
                     cost = safe_float(service.get('cost'))
                     cost_unit = service.get('cost_unit', COST_UNIT_PER_PERSON)
-                    
+
                     # Generate description
                     desc = f"Hotel: {hotel_name or 'TBD'}"
                     if location:
                         desc += f" ({location})"
-                    
+
                     # Create itinerary row for each night
                     for night_date in date_range(check_in, check_out):
                         if night_date not in itinerary_by_date:
@@ -5433,7 +5651,7 @@ def wizard_step3():
                             itinerary_by_date[night_date]['hotel_double_rooms'] = double
                             itinerary_by_date[night_date]['hotel_triple_rooms'] = triple
                             itinerary_by_date[night_date]['hotel_other_rooms'] = other
-                
+
                 elif service_type == 'transport':
                     # Transport: single date
                     transport_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
@@ -5442,11 +5660,11 @@ def wizard_step3():
                     vehicle = service.get('vehicle_type', '')
                     cost = safe_float(service.get('cost'))
                     cost_unit = service.get('cost_unit', COST_UNIT_PER_GROUP)
-                    
+
                     desc = f"Transport: {pickup} → {dropoff}"
                     if vehicle:
                         desc += f" ({vehicle})"
-                    
+
                     if transport_date not in itinerary_by_date:
                         itinerary_by_date[transport_date] = {
                             'date': transport_date,
@@ -5467,7 +5685,7 @@ def wizard_step3():
                         itinerary_by_date[transport_date]['description'] += f" | {desc}"
                         itinerary_by_date[transport_date]['base_cost'] += cost
                         itinerary_by_date[transport_date]['flag_transport'] = True
-                
+
                 elif service_type == 'meal':
                     # Meal: single date or date range (FROM/TO dates)
                     meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
@@ -5477,9 +5695,9 @@ def wizard_step3():
                     restaurant = service.get('restaurant', 'TBD')
                     cost = safe_float(service.get('cost'))
                     cost_unit = service.get('cost_unit', COST_UNIT_PER_PERSON)
-                    
+
                     desc = f"{meal_type} at {restaurant}"
-                    
+
                     # Create row for each day in range (inclusive)
                     meal_to_inclusive = meal_to + timedelta(days=1)
                     for meal_date in date_range(meal_from, meal_to_inclusive):
@@ -5503,7 +5721,7 @@ def wizard_step3():
                             itinerary_by_date[meal_date]['description'] += f" | {desc}"
                             itinerary_by_date[meal_date]['base_cost'] += cost
                             itinerary_by_date[meal_date]['flag_meal'] = True
-                
+
                 elif service_type == 'guide':
                     # Guide: single date or date range (optional TO date)
                     guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
@@ -5513,11 +5731,11 @@ def wizard_step3():
                     language = service.get('language', '')
                     cost = safe_float(service.get('cost'))
                     cost_unit = service.get('cost_unit', COST_UNIT_PER_GROUP)
-                    
+
                     desc = f"{guide_type}"
                     if language:
                         desc += f" ({language})"
-                    
+
                     # Create row for each day in range (inclusive)
                     guide_to_inclusive = guide_to + timedelta(days=1)
                     for guide_date in date_range(guide_from, guide_to_inclusive):
@@ -5541,11 +5759,11 @@ def wizard_step3():
                             itinerary_by_date[guide_date]['description'] += f" | {desc}"
                             itinerary_by_date[guide_date]['base_cost'] += cost
                             itinerary_by_date[guide_date]['flag_guide'] = True
-            
+
             # Create ItineraryRow objects from merged data
             for row_date in sorted(itinerary_by_date.keys()):
                 row_data = itinerary_by_date[row_date]
-                
+
                 row = ItineraryRow(
                     request_id=request_obj.id,
                     date=row_data['date'],
@@ -5562,22 +5780,22 @@ def wizard_step3():
                     hotel_triple_rooms=row_data['hotel_triple_rooms'],
                     hotel_other_rooms=row_data['hotel_other_rooms']
                 )
-                
+
                 db.session.add(row)
-            
+
             # Create service records directly from service data
             for service_idx, service in services_data.items():
                 service_type = service.get('type')
-                
+
                 if service_type == 'transport':
                     # Create InboundTransport record with arrival/departure flags
                     transport_date = datetime.strptime(service['date'], '%Y-%m-%d').date()
                     from_date_str = service.get('from_date')
                     to_date_str = service.get('to_date')
-                    
+
                     from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date() if from_date_str else transport_date
                     to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else transport_date
-                    
+
                     pickup_time_str = service.get('time')
                     pickup_time = None
                     if pickup_time_str:
@@ -5585,7 +5803,7 @@ def wizard_step3():
                             pickup_time = datetime.strptime(pickup_time_str, '%H:%M').time()
                         except:
                             pass
-                    
+
                     transport = InboundTransport(
                         request_id=request_obj.id,
                         date=from_date,
@@ -5601,13 +5819,13 @@ def wizard_step3():
                         currency='USD'
                     )
                     db.session.add(transport)
-                
+
                 elif service_type == 'meal':
                     # Create InboundMeal records
                     meal_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
                     meal_to_str = service.get('to_date', '')
                     meal_to = datetime.strptime(meal_to_str, '%Y-%m-%d').date() if meal_to_str else meal_from
-                    
+
                     meal = InboundMeal(
                         request_id=request_obj.id,
                         date=meal_from,
@@ -5618,13 +5836,13 @@ def wizard_step3():
                         currency='USD'
                     )
                     db.session.add(meal)
-                
+
                 elif service_type == 'guide':
                     # Create InboundGuide records (single date or date range)
                     guide_from = datetime.strptime(service['from_date'], '%Y-%m-%d').date()
                     guide_to_str = service.get('to_date', '')
                     guide_to = datetime.strptime(guide_to_str, '%Y-%m-%d').date() if guide_to_str else guide_from
-                    
+
                     guide = InboundGuide(
                         request_id=request_obj.id,
                         date=guide_from,
@@ -5635,13 +5853,13 @@ def wizard_step3():
                         currency='USD'
                     )
                     db.session.add(guide)
-                
+
                 elif service_type == 'hotel':
                     # Create InboundHotel record
                     check_in = datetime.strptime(service['check_in_date'], '%Y-%m-%d').date()
                     check_out = datetime.strptime(service['check_out_date'], '%Y-%m-%d').date()
                     nights = (check_out - check_in).days
-                    
+
                     hotel = InboundHotel(
                         request_id=request_obj.id,
                         hotel_name=service.get('hotel_name'),
@@ -5653,25 +5871,25 @@ def wizard_step3():
                         currency='USD'
                     )
                     db.session.add(hotel)
-            
+
             # Calculate total
             db.session.flush()
             request_obj.calculate_total()
-            
+
             # Commit transaction
             db.session.commit()
-            
+
             # Clear wizard data from session
             session.pop('wizard_data', None)
-            
+
             flash(f'Tour itinerary {request_obj.request_number} created successfully!', 'success')
             return redirect(url_for('inbound.view_request', id=request_obj.id))
-            
+
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating itinerary: {str(e)}', 'error')
             return redirect(url_for('inbound.wizard_step2'))
-    
+
     # GET request - show review page
     wizard_data = session.get('wizard_data', {})
     return render_template('inbound/wizard_step3.html', wizard_data=wizard_data)
@@ -5683,35 +5901,35 @@ def api_export_expense_report(request_id):
     from openpyxl.styles import Font, Alignment, PatternFill
     import os
     import tempfile
-    
+
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     try:
         wb = Workbook()
         ws = cast(Any, wb.active)
         ws.title = "Sheet1"
-        
+
         # Header
         ws['B2'] = 'Windows of Jordan'
         ws['B2'].font = Font(size=16, bold=True)
         ws['B3'] = ' Actual Expense Sheet'
         ws['B3'].font = Font(size=22)
-        
+
         # File info
         ws['B5'] = request_obj.request_number
         ws['E5'] = 'Date'
         ws['F5'] = request_obj.from_date if request_obj.from_date else datetime.now()
         ws['F5'].number_format = 'DD-MMM-YY'
-        
+
         ws['B8'] = f'File Expense {request_obj.agent or "N/A"}'
         ws['E8'] = 'Ref:'
         ws['F8'] = request_obj.contact_name or 'N/A'
         ws['E9'] = 'Pax:'
         ws['F9'] = str(request_obj.pax)
-        
+
         # Table header
         header_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
         ws['B11'] = 'Item'
@@ -5719,12 +5937,12 @@ def api_export_expense_report(request_id):
         ws['D11'] = 'Cost PP'
         ws['E11'] = 'Pax'
         ws['F11'] = 'Total'
-        
+
         for cell in ['B11', 'C11', 'D11', 'E11', 'F11']:
             ws[cell].font = Font(bold=True)
             ws[cell].fill = header_fill
             ws[cell].alignment = Alignment(horizontal='center')
-        
+
         # Add expense items
         row = 12
         for expense in sorted(request_obj.inbound_cash_expenses, key=lambda x: x.date):
@@ -5734,37 +5952,37 @@ def api_export_expense_report(request_id):
             ws[f'E{row}'] = request_obj.pax if expense.is_per_person else 1
             ws[f'F{row}'] = f'=SUM(D{row}*E{row})'
             row += 1
-        
+
         # Totals
         if row > 12:
             ws[f'F{row+1}'] = f'=SUM(F12:F{row-1})'
             ws[f'F{row+1}'].font = Font(bold=True)
-            
+
             ws[f'D{row+2}'] = 'Advance Payment'
             ws[f'D{row+2}'].font = Font(bold=True)
             ws[f'F{row+2}'] = 0
-            
+
             ws[f'D{row+3}'] = 'Total'
             ws[f'D{row+3}'].font = Font(bold=True, size=12)
             ws[f'F{row+3}'] = f'=F{row+1}-F{row+2}'
             ws[f'F{row+3}'].font = Font(bold=True, size=12)
-            
+
             # Signature lines
             ws[f'B{row+7}'] = 'Authorization:…................................................'
             ws[f'D{row+7}'] = 'Guide\\Driver:…............................'
-        
+
         # Save to temp file
         output_dir = tempfile.gettempdir()
         output_path = os.path.join(output_dir, f'Expense_Report_{request_obj.request_number}.xlsx')
         wb.save(output_path)
-        
+
         return send_file(
             output_path,
             as_attachment=True,
             download_name=f'Expense_Report_{request_obj.request_number}.xlsx',
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        
+
     except Exception as e:
         flash(f'Error generating expense report: {str(e)}', 'error')
         return redirect(url_for('inbound.view_request', id=request_id))
@@ -5774,18 +5992,18 @@ def api_export_expense_report(request_id):
 def add_cash_expense(request_id):
     """Add a cash expense item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     try:
         from app.models.inbound import ItineraryRow
-        
+
         expense_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         description = request.form['description']
         driver_name = request.form.get('driver_name', '')
         amount = float(request.form['amount'])
-        
+
         # Create the cash expense record
         expense = InboundCashExpense(
             request_id=request_obj.id,
@@ -5798,13 +6016,13 @@ def add_cash_expense(request_id):
         )
         db.session.add(expense)
         db.session.flush()
-        
+
         # Create or update itinerary row for this date
         existing_row = ItineraryRow.query.filter_by(
             request_id=request_obj.id,
             date=expense_date
         ).first()
-        
+
         if existing_row:
             # Add expense to existing row description
             expense_text = f"Cash: {description} (${amount:.2f})"
@@ -5817,7 +6035,7 @@ def add_cash_expense(request_id):
         else:
             # Create new itinerary row
             expense_text = f"Cash: {description} (${amount:.2f})"
-            
+
             itinerary_row = ItineraryRow(
                 request_id=request_obj.id,
                 date=expense_date,
@@ -5826,13 +6044,13 @@ def add_cash_expense(request_id):
                 currency='USD'
             )
             db.session.add(itinerary_row)
-        
+
         db.session.commit()
         flash('Cash expense added to itinerary successfully', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error adding cash expense: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/update-cash-expense/<int:expense_id>', methods=['POST'])
@@ -5840,15 +6058,15 @@ def add_cash_expense(request_id):
 def update_cash_expense(request_id, expense_id):
     """Update a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     expense = InboundCashExpense.query.get_or_404(expense_id)
-    
+
     if expense.request_id != request_id:
         abort(403)
-    
+
     try:
         if 'date' in request.form:
             expense.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
@@ -5858,12 +6076,12 @@ def update_cash_expense(request_id, expense_id):
             expense.driver_name = request.form['driver_name']
         if 'amount' in request.form:
             expense.amount = float(request.form['amount'])
-        
+
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         flash(f'Error updating cash expense: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-cash-expense/<int:expense_id>', methods=['POST'])
@@ -5871,15 +6089,15 @@ def update_cash_expense(request_id, expense_id):
 def delete_cash_expense(request_id, expense_id):
     """Delete a cash expense item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     expense = InboundCashExpense.query.get_or_404(expense_id)
-    
+
     if expense.request_id != request_id:
         abort(403)
-    
+
     try:
         db.session.delete(expense)
         db.session.commit()
@@ -5887,7 +6105,7 @@ def delete_cash_expense(request_id, expense_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Error deleting cash expense: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/add-meal', methods=['POST'])
@@ -5895,18 +6113,18 @@ def delete_cash_expense(request_id, expense_id):
 def add_meal(request_id):
     """Add a meal item and create itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     try:
         from app.models.inbound import ItineraryRow
-        
+
         meal_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         meal_type = request.form['meal_type']
         restaurant = request.form.get('restaurant', '')
         location = request.form.get('location', '')
-        
+
         # Create the meal record
         meal = InboundMeal(
             request_id=request_obj.id,
@@ -5920,13 +6138,13 @@ def add_meal(request_id):
         )
         db.session.add(meal)
         db.session.flush()
-        
+
         # Create or update itinerary row for this date
         existing_row = ItineraryRow.query.filter_by(
             request_id=request_obj.id,
             date=meal_date
         ).first()
-        
+
         if existing_row:
             # Add meal flag to existing row
             existing_row.has_meal = True
@@ -5941,7 +6159,7 @@ def add_meal(request_id):
                 description += f" at {restaurant}"
             if location:
                 description += f" ({location})"
-            
+
             itinerary_row = ItineraryRow(
                 request_id=request_obj.id,
                 date=meal_date,
@@ -5952,16 +6170,16 @@ def add_meal(request_id):
             )
             db.session.add(itinerary_row)
             db.session.flush()
-            
+
             # Link meal to itinerary row
             meal.source_itinerary_id = itinerary_row.id
-        
+
         db.session.commit()
         flash('Meal added to itinerary successfully', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error adding meal: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/<int:request_id>/delete-meal/<int:meal_id>', methods=['POST'])
@@ -5969,15 +6187,15 @@ def add_meal(request_id):
 def delete_meal(request_id, meal_id):
     """Delete a meal item"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         abort(403)
-    
+
     meal = InboundMeal.query.get_or_404(meal_id)
-    
+
     if meal.request_id != request_id:
         abort(403)
-    
+
     try:
         db.session.delete(meal)
         db.session.commit()
@@ -5985,7 +6203,7 @@ def delete_meal(request_id, meal_id):
     except Exception as e:
         db.session.rollback()
         flash(f'Error deleting meal: {str(e)}', 'error')
-    
+
     return redirect(url_for('inbound.view_request', id=request_id))
 
 @inbound_bp.route('/api/hotels/search')
@@ -5994,13 +6212,13 @@ def api_search_hotels():
     """API endpoint to search hotels for autocomplete"""
     query = request.args.get('query', '').strip()
     limit = request.args.get('limit', 20, type=int)
-    
+
     # Query distinct hotel names from InboundHotel table
     hotels_query = db.session.query(InboundHotel.hotel_name, InboundHotel.location).filter(
         InboundHotel.hotel_name.isnot(None),
         InboundHotel.hotel_name != ''
     )
-    
+
     # Apply search filter if query provided
     if query:
         hotels_query = hotels_query.filter(
@@ -6009,14 +6227,14 @@ def api_search_hotels():
                 InboundHotel.location.ilike(f'%{query}%')
             )
         )
-    
+
     # Get distinct hotel names with their most recent location
     hotels_query = hotels_query.distinct(InboundHotel.hotel_name).order_by(
         InboundHotel.hotel_name
     ).limit(limit)
-    
+
     hotels = hotels_query.all()
-    
+
     # Format for Select2
     results = []
     for hotel_name, location in hotels:
@@ -6026,7 +6244,7 @@ def api_search_hotels():
             'name': hotel_name,
             'location': location or ''
         })
-    
+
     return jsonify({'results': results})
 
 @inbound_bp.route('/api/<int:request_id>/update-itinerary-bulk', methods=['POST'])
@@ -6035,28 +6253,28 @@ def api_search_hotels():
 def api_update_itinerary_bulk(request_id):
     """API endpoint to bulk update itinerary rows"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+
     try:
         data = request.get_json()
         updates = data.get('updates', [])
-        
+
         for update in updates:
             row_id = update.get('row_id')
             row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first()
-            
+
             if row:
                 row.description = update.get('description', '')
                 row.restaurant = update.get('restaurant', '')
                 row.cash_expense = float(update.get('cash_expense', 0))
                 row.comment = update.get('comment', '')
-        
+
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Trip itinerary updated successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6067,20 +6285,20 @@ def api_update_itinerary_bulk(request_id):
 def api_add_itinerary_row(request_id):
     """API endpoint to add a new itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+
     try:
         data = request.get_json()
-        
+
         # Parse date
         date_str = data.get('date')
         if not date_str:
             return jsonify({'success': False, 'message': 'Date is required'}), 400
-        
+
         date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
-        
+
         # Create new itinerary row (for tours and restaurants only)
         new_row = ItineraryRow(
             request_id=request_id,
@@ -6090,12 +6308,12 @@ def api_add_itinerary_row(request_id):
             cash_expense=float(data.get('cash_expense', 0)),
             comment=data.get('comment', '')
         )
-        
+
         db.session.add(new_row)
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Itinerary item added successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6106,19 +6324,19 @@ def api_add_itinerary_row(request_id):
 def api_delete_itinerary_row(request_id, row_id):
     """API endpoint to delete an itinerary row"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if request_obj.user_id != 1:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+
     try:
         row = ItineraryRow.query.filter_by(id=row_id, request_id=request_id).first_or_404()
-        
+
         # Delete the row
         db.session.delete(row)
         db.session.commit()
-        
+
         return jsonify({'success': True, 'message': 'Itinerary item deleted successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6132,19 +6350,19 @@ def api_mark_hotel_reserved(hotel_id):
     try:
         hotel = InboundHotel.query.get_or_404(hotel_id)
         request_obj = InboundRequest.query.get_or_404(hotel.request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         # Update hotel status to RESERVED
         hotel.status = STATUS_RESERVED
         db.session.commit()
-        
+
         # Check if all services are now RESERVED, auto-update request to CONFIRMED
         check_and_update_request_status(request_obj.id)
-        
+
         return jsonify({'success': True, 'message': 'Hotel marked as Supplier Confirmed'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6157,19 +6375,19 @@ def api_mark_transport_reserved(transport_id):
     try:
         transport = InboundTransport.query.get_or_404(transport_id)
         request_obj = InboundRequest.query.get_or_404(transport.request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         # Update transport status to RESERVED
         transport.status = STATUS_RESERVED
         db.session.commit()
-        
+
         # Check if all services are now RESERVED, auto-update request to CONFIRMED
         check_and_update_request_status(request_obj.id)
-        
+
         return jsonify({'success': True, 'message': 'Transport marked as Supplier Confirmed'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6181,10 +6399,10 @@ def api_confirm_all_hotels(request_id):
     """Mark ALL hotels in a request as RESERVED (Supplier Confirmed)"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         # Update all hotels to RESERVED
         hotels = InboundHotel.query.filter_by(request_id=request_id).all()
         count = 0
@@ -6192,14 +6410,14 @@ def api_confirm_all_hotels(request_id):
             if hotel.status not in [STATUS_RESERVED, STATUS_CONFIRMED]:
                 hotel.status = STATUS_RESERVED
                 count += 1
-        
+
         db.session.commit()
-        
+
         # Check if all services are now RESERVED, auto-update request to CONFIRMED
         check_and_update_request_status(request_id)
-        
+
         return jsonify({'success': True, 'count': count, 'message': f'{count} hotel(s) marked as Supplier Confirmed'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6211,10 +6429,10 @@ def api_get_hotel(hotel_id):
     try:
         hotel = InboundHotel.query.get_or_404(hotel_id)
         request_obj = InboundRequest.query.get_or_404(hotel.request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         return jsonify({
             'success': True,
             'hotel': {
@@ -6230,7 +6448,7 @@ def api_get_hotel(hotel_id):
                 'nights': hotel.nights or 0
             }
         })
-    
+
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -6241,12 +6459,12 @@ def api_update_hotel(hotel_id):
     try:
         hotel = InboundHotel.query.get_or_404(hotel_id)
         request_obj = InboundRequest.query.get_or_404(hotel.request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         data = request.get_json()
-        
+
         # Update hotel fields
         if 'supplier_name' in data:
             hotel.supplier_name = data['supplier_name']
@@ -6258,24 +6476,24 @@ def api_update_hotel(hotel_id):
             hotel.currency = data['currency']
         if 'notes' in data:
             hotel.notes = data['notes']
-        
+
         # Update check-in/check-out dates
         if 'check_in_date' in data and data['check_in_date']:
             hotel.check_in_date = datetime.strptime(data['check_in_date'], '%Y-%m-%d').date()
         if 'check_out_date' in data and data['check_out_date']:
             hotel.check_out_date = datetime.strptime(data['check_out_date'], '%Y-%m-%d').date()
-            
+
             # Recalculate nights if both dates are set
             if hotel.check_in_date and hotel.check_out_date:
                 hotel.nights = (hotel.check_out_date - hotel.check_in_date).days
-        
+
         db.session.commit()
-        
+
         # Check if all services are confirmed
         check_and_update_request_status(request_obj.id)
-        
+
         return jsonify({'success': True, 'message': 'Hotel updated successfully'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6287,10 +6505,10 @@ def api_confirm_all_transports(request_id):
     """Mark ALL transports in a request as RESERVED (Supplier Confirmed)"""
     try:
         request_obj = InboundRequest.query.get_or_404(request_id)
-        
+
         if request_obj.user_id != 1:
             return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
+
         # Update all transports to RESERVED
         transports = InboundTransport.query.filter_by(request_id=request_id).all()
         count = 0
@@ -6298,14 +6516,14 @@ def api_confirm_all_transports(request_id):
             if transport.status not in [STATUS_RESERVED, STATUS_CONFIRMED]:
                 transport.status = STATUS_RESERVED
                 count += 1
-        
+
         db.session.commit()
-        
+
         # Check if all services are now RESERVED, auto-update request to CONFIRMED
         check_and_update_request_status(request_id)
-        
+
         return jsonify({'success': True, 'count': count, 'message': f'{count} transport(s) marked as Supplier Confirmed'})
-    
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -6319,27 +6537,27 @@ def check_and_update_request_status(request_id):
         request_obj = InboundRequest.query.get(request_id)
         if not request_obj:
             return
-        
+
         # Get all hotels
         hotels = InboundHotel.query.filter_by(request_id=request_id).all()
-        
+
         # If there are no hotels, don't auto-update
         if not hotels:
             return
-        
+
         # Check if ALL hotels are RESERVED or CONFIRMED
         all_hotels_confirmed = all(
             hotel.status in [STATUS_RESERVED, STATUS_CONFIRMED] 
             for hotel in hotels
         )
-        
+
         # If all hotels are confirmed, update request to CONFIRMED (Supplier Confirmed)
         if all_hotels_confirmed:
             if request_obj.status != STATUS_CONFIRMED:
                 request_obj.status = STATUS_CONFIRMED
                 db.session.commit()
                 print(f"✅ All hotels confirmed! InboundRequest {request_id} auto-updated to CONFIRMED (Supplier Confirmed) status")
-        
+
     except Exception as e:
         print(f"Error checking request status: {e}")
         db.session.rollback()
@@ -6352,7 +6570,7 @@ def check_and_update_request_status(request_id):
 def analytics_dashboard():
     """Comprehensive analytics dashboard with search across all services"""
     from app.models.inbound import InboundOptional
-    
+
     # Get filter parameters
     search_query = request.args.get('search', '').strip()
     # Support multi-select: get list of service types
@@ -6363,20 +6581,20 @@ def analytics_dashboard():
     date_from_str = request.args.get('date_from', '')
     date_to_str = request.args.get('date_to', '')
     request_number = request.args.get('request_number', '')
-    
+
     # Default to current month if dates not provided
     import calendar
     today = datetime.now().date()
     first_day_of_month = today.replace(day=1)
     last_day_of_month = today.replace(day=calendar.monthrange(today.year, today.month)[1])
-    
+
     # Parse dates with current month defaults
     date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else first_day_of_month
     date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else last_day_of_month
-    
+
     # Calculate service performance stats for dashboard cards
     service_stats = {}
-    
+
     # Hotels stats
     hotel_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
     if date_from_str:
@@ -6391,7 +6609,7 @@ def analytics_dashboard():
         'confirmed': hotel_confirmed,
         'pax': hotel_pax
     }
-    
+
     # Transport stats
     transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
     if date_from_str:
@@ -6406,7 +6624,7 @@ def analytics_dashboard():
         'confirmed': transport_confirmed,
         'pax': transport_pax
     }
-    
+
     # Guides stats
     guide_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
     if date_from_str:
@@ -6421,7 +6639,7 @@ def analytics_dashboard():
         'confirmed': guide_confirmed,
         'pax': guide_pax
     }
-    
+
     # Meals stats
     meal_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
     if date_from_str:
@@ -6436,7 +6654,7 @@ def analytics_dashboard():
         'confirmed': meal_confirmed,
         'pax': meal_pax
     }
-    
+
     # Optionals stats
     optional_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
     if date_from_str and date_to_str:
@@ -6454,7 +6672,7 @@ def analytics_dashboard():
         'confirmed': optional_confirmed,
         'pax': optional_pax
     }
-    
+
     # Calculate share percentages
     total_services = sum(s['total'] for s in service_stats.values())
     for stype in service_stats:
@@ -6466,10 +6684,10 @@ def analytics_dashboard():
             service_stats[stype]['confirmed_pct'] = round((service_stats[stype]['confirmed'] / service_stats[stype]['total']) * 100)
         else:
             service_stats[stype]['confirmed_pct'] = 0
-    
+
     # Collect all services from all tables
     all_services = []
-    
+
     # 1. Hotels
     if not service_types or 'HOTEL' in service_types:
         hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6490,7 +6708,7 @@ def analytics_dashboard():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for hotel in hotels_query.all():
             all_services.append({
                 'date': hotel.check_in_date,
@@ -6505,7 +6723,7 @@ def analytics_dashboard():
                 'cost': hotel.total_cost,
                 'currency': hotel.currency
             })
-    
+
     # 2. Transport
     if not service_types or 'TRANSPORT' in service_types:
         transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6528,7 +6746,7 @@ def analytics_dashboard():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for transport in transport_query.all():
             all_services.append({
                 'date': transport.date,
@@ -6543,7 +6761,7 @@ def analytics_dashboard():
                 'cost': transport.cost,
                 'currency': transport.currency
             })
-    
+
     # 3. Guides
     if not service_types or 'GUIDE' in service_types:
         guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6564,7 +6782,7 @@ def analytics_dashboard():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for guide in guides_query.all():
             all_services.append({
                 'date': guide.date,
@@ -6579,7 +6797,7 @@ def analytics_dashboard():
                 'cost': guide.cost,
                 'currency': guide.currency
             })
-    
+
     # 4. Meals
     if not service_types or 'MEAL' in service_types:
         meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6600,7 +6818,7 @@ def analytics_dashboard():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for meal in meals_query.all():
             all_services.append({
                 'date': meal.date,
@@ -6615,7 +6833,7 @@ def analytics_dashboard():
                 'cost': meal.total_cost,
                 'currency': meal.currency
             })
-    
+
     # 5. Optional Services
     if not service_types or 'OPTIONAL' in service_types:
         optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6639,7 +6857,7 @@ def analytics_dashboard():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for optional in optionals_query.all():
             all_services.append({
                 'date': optional.date or date_from,
@@ -6654,10 +6872,10 @@ def analytics_dashboard():
                 'cost': optional.total_cost,
                 'currency': optional.currency
             })
-    
+
     # Sort by date
     all_services.sort(key=lambda x: x['date'])
-    
+
     # Get status counts
     status_counts = {
         'REQUEST': InboundRequest.query.filter_by(user_id=1, status='REQUEST').count(),
@@ -6666,7 +6884,7 @@ def analytics_dashboard():
         'PROCESSING': InboundRequest.query.filter_by(user_id=1, status='PROCESSING').count(),
         'COMPLETED': InboundRequest.query.filter_by(user_id=1, status='COMPLETED').count()
     }
-    
+
     return render_template('inbound/analytics.html',
                          services=all_services,
                          status_counts=status_counts,
@@ -6686,7 +6904,7 @@ def analytics_export_excel():
     import io
     import openpyxl
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    
+
     # Get same filters as analytics dashboard
     search_query = request.args.get('search', '').strip()
     service_type = request.args.get('service_type', '')
@@ -6694,14 +6912,14 @@ def analytics_export_excel():
     date_from_str = request.args.get('date_from', '')
     date_to_str = request.args.get('date_to', '')
     request_number = request.args.get('request_number', '')
-    
+
     # Parse dates
     date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date() if date_from_str else (datetime.now().date() - timedelta(days=7))
     date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date() if date_to_str else (datetime.now().date() + timedelta(days=30))
-    
+
     # Collect all services (same logic as analytics_dashboard)
     all_services = []
-    
+
     # Hotels
     if not service_type or service_type == 'HOTEL':
         hotels_query = InboundHotel.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6721,7 +6939,7 @@ def analytics_export_excel():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for hotel in hotels_query.all():
             all_services.append({
                 'date': hotel.check_in_date,
@@ -6735,7 +6953,7 @@ def analytics_export_excel():
                 'cost': hotel.total_cost,
                 'currency': hotel.currency
             })
-    
+
     # Transport
     if not service_type or service_type == 'TRANSPORT':
         transport_query = InboundTransport.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6755,7 +6973,7 @@ def analytics_export_excel():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for transport in transport_query.all():
             all_services.append({
                 'date': transport.date,
@@ -6769,7 +6987,7 @@ def analytics_export_excel():
                 'cost': transport.cost,
                 'currency': transport.currency
             })
-    
+
     # Guides
     if not service_type or service_type == 'GUIDE':
         guides_query = InboundGuide.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6789,7 +7007,7 @@ def analytics_export_excel():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for guide in guides_query.all():
             all_services.append({
                 'date': guide.date,
@@ -6803,7 +7021,7 @@ def analytics_export_excel():
                 'cost': guide.cost,
                 'currency': guide.currency
             })
-    
+
     # Meals
     if not service_type or service_type == 'MEAL':
         meals_query = InboundMeal.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6823,7 +7041,7 @@ def analytics_export_excel():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for meal in meals_query.all():
             all_services.append({
                 'date': meal.date,
@@ -6837,7 +7055,7 @@ def analytics_export_excel():
                 'cost': meal.total_cost,
                 'currency': meal.currency
             })
-    
+
     # Optionals
     if not service_type or service_type == 'OPTIONAL':
         optionals_query = InboundOptional.query.join(InboundRequest).filter(InboundRequest.user_id == 1)
@@ -6859,7 +7077,7 @@ def analytics_export_excel():
                     InboundRequest.contact_name.contains(search_query)
                 )
             )
-        
+
         for optional in optionals_query.all():
             all_services.append({
                 'date': optional.date or date_from,
@@ -6873,15 +7091,15 @@ def analytics_export_excel():
                 'cost': optional.total_cost,
                 'currency': optional.currency
             })
-    
+
     # Sort by date
     all_services.sort(key=lambda x: x['date'])
-    
+
     # Create Excel workbook
     wb = openpyxl.Workbook()
     ws = cast(Any, wb.active)
     ws.title = "Services Analytics"
-    
+
     # Header styling
     header_fill = PatternFill(start_color="FFBF00", end_color="FFBF00", fill_type="solid")
     header_font = Font(bold=True, color="000000", size=12)
@@ -6892,13 +7110,13 @@ def analytics_export_excel():
         top=Side(style='thin'),
         bottom=Side(style='thin')
     )
-    
+
     # Title
     ws.merge_cells('A1:J1')
     ws['A1'] = f"Services Analytics: {date_from.strftime('%B %d, %Y')} - {date_to.strftime('%B %d, %Y')}"
     ws['A1'].font = Font(bold=True, size=14)
     ws['A1'].alignment = Alignment(horizontal="center")
-    
+
     # Headers
     headers = ['Date', 'Request #', 'Contact', 'PAX', 'Service Type', 'Description', 'Details', 'Status', 'Cost', 'Currency']
     for col, header in enumerate(headers, start=1):
@@ -6908,7 +7126,7 @@ def analytics_export_excel():
         cell.font = header_font
         cell.alignment = header_alignment
         cell.border = thin_border
-    
+
     # Data rows
     row = 4
     for service in all_services:
@@ -6923,7 +7141,7 @@ def analytics_export_excel():
         ws.cell(row=row, column=9, value=service['cost']).border = thin_border
         ws.cell(row=row, column=10, value=service['currency']).border = thin_border
         row += 1
-    
+
     # Adjust column widths
     ws.column_dimensions['A'].width = 12
     ws.column_dimensions['B'].width = 15
@@ -6935,14 +7153,14 @@ def analytics_export_excel():
     ws.column_dimensions['H'].width = 12
     ws.column_dimensions['I'].width = 10
     ws.column_dimensions['J'].width = 8
-    
+
     # Save to bytes
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
-    
+
     filename = f"Services_Analytics_{date_from.strftime('%Y%m%d')}_{date_to.strftime('%Y%m%d')}.xlsx"
-    
+
     return send_file(
         output,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -6963,9 +7181,9 @@ def allowed_document_file(filename):
 def api_list_documents(request_id):
     """List all documents for a request"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     documents = InboundDocument.query.filter_by(request_id=request_id).order_by(InboundDocument.uploaded_at.desc()).all()
-    
+
     return jsonify({
         "success": True,
         "documents": [{
@@ -6986,40 +7204,40 @@ def api_list_documents(request_id):
 def api_upload_document(request_id):
     """Upload a document attachment"""
     request_obj = InboundRequest.query.get_or_404(request_id)
-    
+
     if "file" not in request.files:
         return jsonify({"success": False, "message": "No file provided"}), 400
-    
+
     file = request.files["file"]
-    
+
     if file.filename == "":
         return jsonify({"success": False, "message": "No file selected"}), 400
-    
+
     if not allowed_document_file(file.filename):
         return jsonify({"success": False, "message": "File type not allowed"}), 400
-    
+
     try:
         # Generate unique filename
         original_filename = secure_filename(file.filename)
         file_ext = original_filename.rsplit(".", 1)[1].lower() if "." in original_filename else ""
         unique_filename = f"{uuid.uuid4().hex}_{original_filename}"
-        
+
         # Create upload directory
         upload_folder = os.path.join("app", "static", "uploads", "inbound_documents", str(request_id))
         os.makedirs(upload_folder, exist_ok=True)
-        
+
         # Save file
         filepath = os.path.join(upload_folder, unique_filename)
         file.save(filepath)
-        
+
         # Get file info
         file_size = os.path.getsize(filepath)
         mime_type = file.content_type or "application/octet-stream"
-        
+
         # Get document type from form
         document_type = request.form.get("document_type", "OTHER")
         description = request.form.get("description", "")
-        
+
         # Create database record
         doc = InboundDocument(  # type: ignore[call-arg]
             request_id=request_id,
@@ -7034,7 +7252,7 @@ def api_upload_document(request_id):
         )
         db.session.add(doc)
         db.session.commit()
-        
+
         return jsonify({
             "success": True,
             "message": "Document uploaded successfully",
@@ -7049,7 +7267,7 @@ def api_upload_document(request_id):
                 "is_pdf": doc.is_pdf
             }
         })
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -7059,19 +7277,19 @@ def api_upload_document(request_id):
 def api_delete_document(doc_id):
     """Delete a document"""
     doc = InboundDocument.query.get_or_404(doc_id)
-    
+
     try:
         # Delete file from filesystem
         full_path = os.path.join("app", "static", doc.filepath)
         if os.path.exists(full_path):
             os.remove(full_path)
-        
+
         # Delete database record
         db.session.delete(doc)
         db.session.commit()
-        
+
         return jsonify({"success": True, "message": "Document deleted successfully"})
-        
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "message": str(e)}), 500
@@ -7080,10 +7298,10 @@ def api_delete_document(doc_id):
 def view_document(doc_id):
     """View/download a document"""
     doc = InboundDocument.query.get_or_404(doc_id)
-    
+
     full_path = os.path.join("app", "static", doc.filepath)
     if not os.path.exists(full_path):
         abort(404)
-    
+
     return send_file(full_path, download_name=doc.original_filename)
 

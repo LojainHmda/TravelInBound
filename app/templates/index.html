@@ -285,6 +285,39 @@ body {
             </div>
             <p class="tile-label">Reports</p>
         </a>
+        
+        <!-- Requested Status Card -->
+        <a href="{{ url_for('inbound.index', status='REQUEST') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <p class="tile-label">Requested</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem;">
+                {{ status_counts.REQUEST }} orders
+            </p>
+        </a>
+        
+        <!-- Confirmed Status Card -->
+        <a href="{{ url_for('inbound.index', status='CONFIRMED') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-handshake"></i>
+            </div>
+            <p class="tile-label">Confirmed</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem;">
+                {{ status_counts.CONFIRMED }} orders
+            </p>
+        </a>
+        
+        <!-- Invoiced Status Card -->
+        <a href="{{ url_for('inbound.index', status='INVOICED') }}" class="hub-tile">
+            <div class="tile-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <p class="tile-label">Invoiced</p>
+            <p class="tile-brief" style="font-size: 0.7rem; color: #666; margin-top: 0.5rem;">
+                {{ status_counts.INVOICED }} orders
+            </p>
+        </a>
     </div>
     
     <!-- Quick Stats -->

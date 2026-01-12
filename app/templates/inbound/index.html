@@ -407,9 +407,8 @@
                 <select name="status">
                     <option value="">All Status</option>
                     <option value="REQUEST" {% if request.args.get('status') == 'REQUEST' %}selected{% endif %}>Request</option>
-                    <option value="BOOKED" {% if request.args.get('status') == 'BOOKED' %}selected{% endif %}>Booked</option>
-                    <option value="IN_PROGRESS" {% if request.args.get('status') == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
                     <option value="CONFIRMED" {% if request.args.get('status') == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+                    <option value="INVOICED" {% if request.args.get('status') == 'INVOICED' %}selected{% endif %}>Invoiced</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -426,7 +425,7 @@
     </div>
 
     <!-- Run-Down Plan Section -->
-    {% if run_down_data %}
+    {% if run_down_data and not request.args.get('status') %}
     <div class="run-down-section" style="margin-bottom: 30px;">
         <h2 style="font-size: 1.5rem; margin-bottom: 20px; color: #495057;">
             <i class="fas fa-calendar-day"></i> Daily Run-Down Plan (Next 30 Days)
@@ -538,10 +537,24 @@
                     </td>
                     <td>
                         <div class="action-buttons">
+                            {% set mapped_status = request.status %}
+                            {% if request.status in ['SUPPLIER_CONFIRMED', 'QUOTED', 'CONFIRMED', 'PROCESSING', 'BOOKED', 'IN_PROGRESS'] %}
+                                {% set mapped_status = 'CONFIRMED' %}
+                            {% elif request.status in ['INVOICE', 'COMPLETED', 'INVOICED'] %}
+                                {% set mapped_status = 'INVOICED' %}
+                            {% endif %}
+                            
+                            {% if mapped_status == 'INVOICED' %}
+                            <a href="{{ url_for('inbound.generate_invoice', request_id=request.id) }}" 
+                               class="btn-view" title="View Invoice">
+                                <i class="fas fa-file-invoice"></i>
+                            </a>
+                            {% else %}
                             <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=view" 
                                class="btn-view" title="View Only">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            {% endif %}
                             <a href="{{ url_for('inbound.view_request', id=request.id) }}?mode=edit" 
                                class="btn-edit" title="Edit">
                                 <i class="fas fa-edit"></i>
