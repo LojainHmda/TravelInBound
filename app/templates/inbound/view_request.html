@@ -5293,9 +5293,12 @@ function saveRequest() {
                     mealToDate.max = newToDate || '';
                 }
                 
-                // Update original dates for future comparisons
-                originalFromDate = newFromDate;
-                originalToDate = newToDate;
+                // Reload the page to reflect date changes in itinerary and all service tabs
+                showNotification('Request saved! Reloading to update dates...', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+                return; // Don't continue to the normal notification
             }
             
             showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
