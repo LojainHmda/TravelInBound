@@ -14,6 +14,7 @@ STATUS_RESERVED = 'RESERVED'  # Individual service confirmed by supplier (new st
 STATUS_BOOKED = 'BOOKED'  # Keep for backward compatibility but no longer used in new workflow
 STATUS_IN_PROGRESS = 'IN_PROGRESS'
 STATUS_CONFIRMED = 'CONFIRMED'
+STATUS_INVOICED = 'INVOICED'  # Final status after invoice is generated
 STATUS_COMPLETED = 'COMPLETED'  # Keep for backward compatibility
 
 # Import models
