@@ -1131,6 +1131,10 @@ def api_save_request(request_id):
         return jsonify({'error': 'Access denied'}), 403
 
     data = request.get_json()
+    
+    # Track original dates to detect changes
+    original_from = request_obj.from_date
+    original_to = request_obj.to_date
 
     # Update from_date if provided
     if data.get('from_date'):
@@ -1150,6 +1154,9 @@ def api_save_request(request_id):
     if data.get('agent_ref'):
         request_obj.agent_ref = data.get('agent_ref')
 
+    # Check if dates changed
+    dates_changed = (original_from != request_obj.from_date) or (original_to != request_obj.to_date)
+
     # Recalculate days
     request_obj.calculate_days()
 
@@ -1163,13 +1170,48 @@ def api_save_request(request_id):
         # Legacy request without is_saved flag but with valid number - just mark as saved
         request_obj.is_saved = True
 
+    # If dates changed, regenerate itinerary
+    itinerary_html = None
+    if dates_changed and request_obj.from_date and request_obj.to_date:
+        # Delete existing itinerary rows
+        ItineraryRow.query.filter_by(request_id=request_id).delete()
+        
+        # Generate new itinerary rows
+        current_date = request_obj.from_date
+        day_number = 1
+        while current_date <= request_obj.to_date:
+            new_row = ItineraryRow(
+                request_id=request_id,
+                day_number=day_number,
+                date=current_date,
+                location='',
+                description=''
+            )
+            db.session.add(new_row)
+            current_date += timedelta(days=1)
+            day_number += 1
+        
+        db.session.flush()
+        
+        # Render updated itinerary HTML
+        itinerary_html = render_template('components/itinerary_rows.html', 
+                                        rows=request_obj.itinerary_rows,
+                                        view_only=False)
+
     db.session.commit()
 
-    return jsonify({
+    response = {
         'success': True,
         'request_number': request_obj.request_number,
-        'message': 'Request saved successfully'
-    })
+        'message': 'Request saved successfully',
+        'dates_changed': dates_changed,
+        'no_of_days': request_obj.no_of_days
+    }
+    
+    if itinerary_html:
+        response['itinerary_html'] = itinerary_html
+    
+    return jsonify(response)
 
 @inbound_bp.route('/api/<int:request_id>/save-service-data', methods=['POST'])
 @csrf.exempt

@@ -5156,10 +5156,6 @@ function saveAndRefreshItinerary() {
 // Track if request is saved (updated dynamically after save)
 let requestIsSaved = {{ 'true' if request.is_saved else 'false' }};
 
-// Track original dates to detect changes
-let originalFromDate = '{{ request.from_date.strftime("%Y-%m-%d") if request.from_date else "" }}';
-let originalToDate = '{{ request.to_date.strftime("%Y-%m-%d") if request.to_date else "" }}';
-
 // Save Request with final sequence number
 function saveRequest() {
     const saveBtn = document.getElementById('saveRequestBtn');
@@ -5177,9 +5173,6 @@ function saveRequest() {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     }
-    
-    // Check if dates changed
-    const datesChanged = (fromDate !== originalFromDate) || (toDate !== originalToDate);
     
     const data = {
         from_date: fromDate,
@@ -5216,89 +5209,29 @@ function saveRequest() {
                 headerEl.innerHTML = data.request_number;
             }
             
-            // Only update service tab date fields if dates changed
-            if (datesChanged) {
-                const newFromDate = document.getElementById('fromDate')?.value;
-                const newToDate = document.getElementById('toDate')?.value;
-                
-                // Arrival date
-                const arrivalDate = document.getElementById('arrival_date');
-                if (arrivalDate) {
-                    arrivalDate.value = newFromDate || '';
-                    arrivalDate.min = newFromDate || '';
-                    arrivalDate.max = newToDate || '';
+            // If dates changed, update itinerary and reload page for service tabs
+            if (data.dates_changed) {
+                // Update itinerary table if HTML provided
+                if (data.itinerary_html) {
+                    const tableBody = document.getElementById('itineraryTableBody');
+                    const itineraryTable = document.getElementById('itineraryTable');
+                    const emptyState = document.getElementById('itineraryEmptyState');
+                    
+                    if (tableBody) tableBody.innerHTML = data.itinerary_html;
+                    if (itineraryTable) itineraryTable.classList.remove('hidden');
+                    if (emptyState) emptyState.classList.add('hidden');
                 }
                 
-                // Departure date
-                const departureDate = document.getElementById('departure_date');
-                if (departureDate) {
-                    departureDate.value = newToDate || '';
-                    departureDate.min = newFromDate || '';
-                    departureDate.max = newToDate || '';
-                }
+                // Update number of days
+                const daysField = document.getElementById('noOfDays');
+                if (daysField && data.no_of_days) daysField.value = data.no_of_days;
                 
-                // Hotel dates
-                const hotelCheckIn = document.getElementById('hotel_check_in');
-                const hotelCheckOut = document.getElementById('hotel_check_out');
-                if (hotelCheckIn) {
-                    hotelCheckIn.value = newFromDate || '';
-                    hotelCheckIn.min = newFromDate || '';
-                    hotelCheckIn.max = newToDate || '';
-                }
-                if (hotelCheckOut) {
-                    hotelCheckOut.value = newToDate || '';
-                    hotelCheckOut.min = newFromDate || '';
-                    hotelCheckOut.max = newToDate || '';
-                }
-                
-                // Guide dates
-                const guideFromDate = document.getElementById('guide_from_date');
-                const guideToDate = document.getElementById('guide_to_date');
-                if (guideFromDate) {
-                    guideFromDate.value = newFromDate || '';
-                    guideFromDate.min = newFromDate || '';
-                    guideFromDate.max = newToDate || '';
-                }
-                if (guideToDate) {
-                    guideToDate.value = newToDate || '';
-                    guideToDate.min = newFromDate || '';
-                    guideToDate.max = newToDate || '';
-                }
-                
-                // Transport dates
-                const transportFromDate = document.getElementById('transport_from_date');
-                const transportToDate = document.getElementById('transport_to_date');
-                if (transportFromDate) {
-                    transportFromDate.value = newFromDate || '';
-                    transportFromDate.min = newFromDate || '';
-                    transportFromDate.max = newToDate || '';
-                }
-                if (transportToDate) {
-                    transportToDate.value = newToDate || '';
-                    transportToDate.min = newFromDate || '';
-                    transportToDate.max = newToDate || '';
-                }
-                
-                // Meal dates
-                const mealFromDate = document.getElementById('meal_from_date');
-                const mealToDate = document.getElementById('meal_to_date');
-                if (mealFromDate) {
-                    mealFromDate.value = newFromDate || '';
-                    mealFromDate.min = newFromDate || '';
-                    mealFromDate.max = newToDate || '';
-                }
-                if (mealToDate) {
-                    mealToDate.value = newToDate || '';
-                    mealToDate.min = newFromDate || '';
-                    mealToDate.max = newToDate || '';
-                }
-                
-                // Reload the page to reflect date changes in itinerary and all service tabs
-                showNotification('Request saved! Reloading to update dates...', 'success');
+                // Reload page to update all service tabs with new dates
+                showNotification('Request saved! Dates changed - reloading...', 'success');
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
-                return; // Don't continue to the normal notification
+                return;
             }
             
             showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
