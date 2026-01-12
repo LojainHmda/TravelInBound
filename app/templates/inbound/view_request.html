@@ -5208,6 +5208,85 @@ function saveRequest() {
             if (headerEl) {
                 headerEl.innerHTML = data.request_number;
             }
+            
+            // Update all service tab date fields with new dates
+            const newFromDate = document.getElementById('fromDate')?.value;
+            const newToDate = document.getElementById('toDate')?.value;
+            
+            if (newFromDate || newToDate) {
+                // Arrival date
+                const arrivalDate = document.getElementById('arrival_date');
+                if (arrivalDate) {
+                    arrivalDate.value = newFromDate || '';
+                    arrivalDate.min = newFromDate || '';
+                    arrivalDate.max = newToDate || '';
+                }
+                
+                // Departure date
+                const departureDate = document.getElementById('departure_date');
+                if (departureDate) {
+                    departureDate.value = newToDate || '';
+                    departureDate.min = newFromDate || '';
+                    departureDate.max = newToDate || '';
+                }
+                
+                // Hotel dates
+                const hotelCheckIn = document.getElementById('hotel_check_in');
+                const hotelCheckOut = document.getElementById('hotel_check_out');
+                if (hotelCheckIn) {
+                    hotelCheckIn.value = newFromDate || '';
+                    hotelCheckIn.min = newFromDate || '';
+                    hotelCheckIn.max = newToDate || '';
+                }
+                if (hotelCheckOut) {
+                    hotelCheckOut.value = newToDate || '';
+                    hotelCheckOut.min = newFromDate || '';
+                    hotelCheckOut.max = newToDate || '';
+                }
+                
+                // Guide dates
+                const guideFromDate = document.getElementById('guide_from_date');
+                const guideToDate = document.getElementById('guide_to_date');
+                if (guideFromDate) {
+                    guideFromDate.value = newFromDate || '';
+                    guideFromDate.min = newFromDate || '';
+                    guideFromDate.max = newToDate || '';
+                }
+                if (guideToDate) {
+                    guideToDate.value = newToDate || '';
+                    guideToDate.min = newFromDate || '';
+                    guideToDate.max = newToDate || '';
+                }
+                
+                // Transport dates
+                const transportFromDate = document.getElementById('transport_from_date');
+                const transportToDate = document.getElementById('transport_to_date');
+                if (transportFromDate) {
+                    transportFromDate.value = newFromDate || '';
+                    transportFromDate.min = newFromDate || '';
+                    transportFromDate.max = newToDate || '';
+                }
+                if (transportToDate) {
+                    transportToDate.value = newToDate || '';
+                    transportToDate.min = newFromDate || '';
+                    transportToDate.max = newToDate || '';
+                }
+                
+                // Meal dates
+                const mealFromDate = document.getElementById('meal_from_date');
+                const mealToDate = document.getElementById('meal_to_date');
+                if (mealFromDate) {
+                    mealFromDate.value = newFromDate || '';
+                    mealFromDate.min = newFromDate || '';
+                    mealFromDate.max = newToDate || '';
+                }
+                if (mealToDate) {
+                    mealToDate.value = newToDate || '';
+                    mealToDate.min = newFromDate || '';
+                    mealToDate.max = newToDate || '';
+                }
+            }
+            
             showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
         } else {
             showNotification(data.message || 'Error saving request', 'error');
