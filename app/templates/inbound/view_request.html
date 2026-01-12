@@ -5156,6 +5156,10 @@ function saveAndRefreshItinerary() {
 // Track if request is saved (updated dynamically after save)
 let requestIsSaved = {{ 'true' if request.is_saved else 'false' }};
 
+// Track original dates to detect changes
+let originalFromDate = '{{ request.from_date.strftime("%Y-%m-%d") if request.from_date else "" }}';
+let originalToDate = '{{ request.to_date.strftime("%Y-%m-%d") if request.to_date else "" }}';
+
 // Save Request with final sequence number
 function saveRequest() {
     const saveBtn = document.getElementById('saveRequestBtn');
@@ -5173,6 +5177,9 @@ function saveRequest() {
         saveBtn.disabled = true;
         saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     }
+    
+    // Check if dates changed
+    const datesChanged = (fromDate !== originalFromDate) || (toDate !== originalToDate);
     
     const data = {
         from_date: fromDate,
@@ -5209,11 +5216,11 @@ function saveRequest() {
                 headerEl.innerHTML = data.request_number;
             }
             
-            // Update all service tab date fields with new dates
-            const newFromDate = document.getElementById('fromDate')?.value;
-            const newToDate = document.getElementById('toDate')?.value;
-            
-            if (newFromDate || newToDate) {
+            // Only update service tab date fields if dates changed
+            if (datesChanged) {
+                const newFromDate = document.getElementById('fromDate')?.value;
+                const newToDate = document.getElementById('toDate')?.value;
+                
                 // Arrival date
                 const arrivalDate = document.getElementById('arrival_date');
                 if (arrivalDate) {
@@ -5285,6 +5292,10 @@ function saveRequest() {
                     mealToDate.min = newFromDate || '';
                     mealToDate.max = newToDate || '';
                 }
+                
+                // Update original dates for future comparisons
+                originalFromDate = newFromDate;
+                originalToDate = newToDate;
             }
             
             showNotification('Request saved successfully! Number: ' + data.request_number, 'success');
